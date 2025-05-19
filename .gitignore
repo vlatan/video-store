@@ -1,0 +1,27 @@
+# extensions
+*.log
+*.db
+
+
+# directories
+.venv
+.vscode
+certs
+postgres_data
+redis_data
+
+
+# files
+db.load
+todo.txt
+
+
+# dotfiles
+.coverage
+.coverage*
+.env
+
+
+# avatars
+app/static/images/avatars/*
+!app/static/images/avatars/default_avatar.jpg

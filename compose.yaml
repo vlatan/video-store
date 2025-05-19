@@ -1,0 +1,75 @@
+name: fd
+
+services:
+  redis:
+    restart: always
+    image: redis/redis-stack-server
+    container_name: redis
+    environment:
+      - REDIS_ARGS=--requirepass $REDIS_PASSWORD
+      - REDISCLI_AUTH=$REDIS_PASSWORD
+    ports:
+      - "${EXPOSE_REDIS_PORT:-}:6379"
+    healthcheck:
+      test: [ "CMD-SHELL", "redis-cli PING | grep PONG || (redis-cli PING && exit 1)" ]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+    volumes:
+      - ./redis_data/:/data
+
+  postgres:
+    restart: always
+    image: postgres:14.7
+    container_name: postgres
+    environment:
+      - POSTGRES_DB=$DB_NAME
+      - POSTGRES_USER=$DB_USER
+      - POSTGRES_PASSWORD=$DB_PASSWORD
+    ports:
+      - "${EXPOSE_POSTGRES_PORT:-}:5432"
+    healthcheck:
+      test: [ "CMD", "pg_isready" ]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
+
+  worker:
+    build: .
+    container_name: worker
+    command: [ "python", "--version" ]
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  app:
+    restart: always
+    build: .
+    container_name: app
+    ports:
+      - $PORT:$PORT
+    env_file: .env
+    command: [ "python", "run.py" ]
+    # Bind only files/dirs that you need for hot reloading
+    # to avoid including unwanted files/dirs in the container
+    # because Docker's order of operations dictate that
+    # volume binding comes after .dockerignore parsing
+    # and the COPY command in Dockerfile
+    # https://stackoverflow.com/a/72485169/1148508
+    # https://medium.com/nerd-for-tech/bigger-dockerignore-smaller-docker-images-49fa22e51c7
+    volumes:
+      - ./app:/src/app
+      - ./config.py:/src/config.py
+      - ./gunicorn.conf.py:/src/gunicorn.conf.py
+      - ./run.py:/src/run.py
+      - ./certs:/src/certs # we need the certificates for local development
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
