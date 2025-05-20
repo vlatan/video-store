@@ -11,7 +11,6 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	// Register routes
 	mux.HandleFunc("/", s.HelloWorldHandler)
-
 	mux.HandleFunc("/health", s.healthHandler)
 
 	// Wrap the mux with CORS middleware
