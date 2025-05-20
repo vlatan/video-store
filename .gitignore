@@ -4,21 +4,11 @@
 
 
 # directories
-.venv
-.vscode
-certs
-postgres_data
-redis_data
-
-
-# files
-db.load
-todo.txt
-
+/.vscode/
+/bin/
+/tmp/
 
 # dotfiles
-.coverage
-.coverage*
 .env
 
 

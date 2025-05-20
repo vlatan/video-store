@@ -44,7 +44,13 @@ services:
       - $PORT:$PORT
     env_file: .env
     volumes:
-      - .:/src
+      - ./bin:/src/bin
+      - ./cmd:/src/cmd
+      - ./internal:/src/internal
+      - ./go.mod:/src/go.mod
+      - ./go.sum:/src/go.sum
+      - ./Makefile:/src/Makefile
+      - ./.air.toml:/src/.air.toml
     depends_on:
       postgres:
         condition: service_healthy

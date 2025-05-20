@@ -2,16 +2,16 @@
 
 build:
 	@echo "Building..."	
-	@go build -o main cmd/app/main.go
+	@go build -o ./bin/main ./cmd/app
 
 # Run the application
 run:
-	@go run cmd/app/main.go
+	@go run ./cmd/app
 
 # Clean the binary
 clean:
 	@echo "Cleaning..."
-	@rm -f main
+	@rm -f ./bin/main
 
 # Live Reload
 watch:
