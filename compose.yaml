@@ -35,6 +35,7 @@ services:
       retries: 3
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./migrations/000001_schema.up.sql:/docker-entrypoint-initdb.d/schema.sql
 
   app:
     image: cosmtrek/air
