@@ -44,7 +44,8 @@ func main() {
 	// Create a done channel to signal when the shutdown is complete
 	done := make(chan bool, 1)
 
-	// Run graceful shutdown in a separate goroutine
+	// Listen for SIGINT SIGTERM in a separate goroutine
+	// Gracefully shut down the server if so - return ErrServerClosed
 	go gracefulShutdown(server, done)
 
 	err := server.ListenAndServe()
