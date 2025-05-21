@@ -2,32 +2,37 @@ package server
 
 import (
 	"fmt"
+	"log"
 	"net/http"
-	"os"
-	"strconv"
 	"time"
 
-	_ "github.com/joho/godotenv/autoload"
+	"github.com/caarlos0/env"
 
+	"factual-docs/internal/config"
 	"factual-docs/internal/database"
 )
 
 type Server struct {
-	port int
-	db   database.Service
+	db     database.Service
+	config *config.Config
 }
 
 func NewServer() *http.Server {
-	port, _ := strconv.Atoi(os.Getenv("PORT"))
-	NewServer := &Server{
-		port: port,
-		db:   database.New(),
+
+	var cfg config.Config
+	if err := env.Parse(&cfg); err != nil {
+		log.Fatal("Config failed to parse: ", err)
+	}
+
+	newServer := &Server{
+		db:     database.New(&cfg),
+		config: &cfg,
 	}
 
 	// Declare Server config
 	server := &http.Server{
-		Addr:         fmt.Sprintf(":%d", NewServer.port),
-		Handler:      NewServer.RegisterRoutes(),
+		Addr:         fmt.Sprintf(":%d", cfg.Port),
+		Handler:      newServer.RegisterRoutes(),
 		IdleTimeout:  time.Minute,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 30 * time.Second,

@@ -3,8 +3,8 @@ module factual-docs
 go 1.23.0
 
 require (
+	github.com/caarlos0/env v3.5.0+incompatible
 	github.com/jackc/pgx/v5 v5.7.5
-	github.com/joho/godotenv v1.5.1
 )
 
 require (
