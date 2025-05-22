@@ -7,7 +7,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 	{{ $shared_css_url := printf "/static/css/shared.css?v=%s" .Version }}
-	{{ $app_name_words := split .Config.AppName " " }}
+	{{ $app_name_words := "Factual Docs" }}
 
 	{{ block "preload_css" . }}
 	<link rel="preload" href="{{ $shared_css_url }}" as="style">

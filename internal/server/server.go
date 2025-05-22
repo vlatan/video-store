@@ -14,6 +14,7 @@ import (
 
 type Server struct {
 	db     database.Service
+	tm     *templateManager
 	config *config.Config
 }
 
@@ -26,6 +27,7 @@ func NewServer() *http.Server {
 
 	newServer := &Server{
 		db:     database.New(&cfg),
+		tm:     newTemplateManager(),
 		config: &cfg,
 	}
 

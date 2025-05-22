@@ -48,6 +48,7 @@ services:
       - ./bin:/src/bin
       - ./cmd:/src/cmd
       - ./internal:/src/internal
+      - ./web:/src/web
       - ./go.mod:/src/go.mod
       - ./go.sum:/src/go.sum
       - ./Makefile:/src/Makefile
