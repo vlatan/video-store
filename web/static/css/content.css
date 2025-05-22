@@ -1,0 +1,126 @@
+.scroll-content {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  justify-content: stretch;
+  gap: var(--content-padding);
+}
+
+@media screen and (max-width: 1024px) {
+  .scroll-content {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+@media screen and (max-width: 700px) {
+  .scroll-content {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media screen and (max-width: 360px) {
+  .scroll-content {
+    grid-template-columns: 1fr;
+  }
+}
+.video-block {
+  position: relative;
+}
+
+a.video-link {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--content-padding) / 2);
+  text-decoration: none;
+  transition: var(--img-hover-transition-duration) filter;
+}
+
+a.video-link:hover {
+  filter: var(--img-hover-filter);
+}
+
+.video-img-wrap {
+  position: relative;
+  padding-bottom: 56.25%;
+  height: 0;
+  overflow: hidden;
+  max-width: 100%;
+  background: #000;
+  border-radius: var(--img-border-radius);
+}
+
+img.video-img {
+  position: absolute;
+  display: block;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  margin: auto;
+  max-width: 100%;
+  width: 100%;
+  height: auto;
+  border: none;
+  cursor: pointer;
+}
+
+h2.video-title {
+  font-weight: normal;
+  font-size: 0.9rem;
+}
+
+.sentinel {
+  margin: 4rem auto;
+  font-weight: 700;
+  display: flex;
+  justify-content: center;
+}
+
+#spinner {
+  border: 5px solid var(--primary-background-color);
+  border-top: 5px solid var(--primary-font-color);
+  border-bottom: 5px solid var(--primary-font-color);
+  border-radius: 50%;
+  width: 3rem;
+  height: 3rem;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+/* ################# Specific to User Library ################# */
+.remove-option {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--secondary-background-color);
+  font-size: 1.2rem;
+  line-height: 1;
+  color: white;
+  top: 8px;
+  right: 8px;
+  z-index: 1;
+  cursor: pointer;
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  border: 1px solid white;
+}
+
+.remove-option:hover,
+.remove-option:focus {
+  color: black;
+  background-color: white;
+  border: 1px solid black;
+}
+
+.content-title {
+  font-size: 1rem;
+  line-height: normal;
+  font-weight: normal;
+  margin-bottom: var(--content-padding);
+}

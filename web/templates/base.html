@@ -6,64 +6,71 @@
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-	{% set shared_css_url = url_for('static', filename='css/shared.css') | autoversion %}
-	{% set app_name_words = config.APP_NAME.split() %}
+	{{ $shared_css_url := printf "/static/css/shared.css?v=%s" .Version }}
+	{{ $app_name_words := split .Config.AppName " " }}
 
-	{% block preload_css %}
-	<link rel="preload" href="{{ shared_css_url }}" as="style">
-	{% endblock preload_css %}
+	{{ block "preload_css" . }}
+	<link rel="preload" href="{{ $shared_css_url }}" as="style">
+	{{ end }}
 
-	{% block css %}
-	<link rel="stylesheet" type="text/css" href="{{ shared_css_url }}">
-	{% endblock css %}
+	{{ template "extra_preload_css" .}}
 
-	<link rel="apple-touch-icon" sizes="180x180" href="{{ '/apple-touch-icon.png' | autoversion }}">
-	<link rel="icon" type="image/png" sizes="32x32" href="{{ '/favicon-32x32.png' | autoversion }}">
-	<link rel="icon" type="image/png" sizes="16x16" href="{{ '/favicon-16x16.png' | autoversion }}">
-	<link rel="manifest" href="{{ '/site.webmanifest' | autoversion }}">
+	{{ block "css" . }}
+	<link rel="stylesheet" type="text/css" href="{{ $shared_css_url }}">
+	{{end}}
 
-	{% block meta %}
-	<meta property='og:site_name' content='{{ config.APP_NAME }}'>
+	{{ template "extra_css" . }}
+
+	<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v={{ .Version }}">
+	<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v={{ .Version }}">
+	<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v={{ .Version }}">
+	<link rel="manifest" href="/site.webmanifest?v={{ .Version }}">
+
+	{{ block "meta" . }}
+	<meta property='og:site_name' content='{{ .Config.AppName }}'>
 	<meta name='twitter:card' content='summary_large_image'>
-	<meta property="twitter:domain" content="{{ config.DOMAIN }}">
-	{% endblock meta %}
+	<meta property="twitter:domain" content="{{ .Config.Domain }}">
+	{{ end }}
+
+	{{ template "extra_meta" . }}
 
 	<title>
-		{% block title_tag %}
-		{{ config.APP_NAME }}
-		{% endblock title_tag %}
+		{{ block "title_tag" . }}
+		{{ .Config.AppName }}
+		{{ end }}
 	</title>
 
-	{% if not config['DEBUG'] %}
-	{% include 'analytics.html' %}
-	{% endif %}
+	{{ if not .Config.Debug }}
+	{{ template "analytics.html" . }}
+	{{ end }}
 
-	{% if not current_user.is_authenticated and config.ADSENSE_ACCOUNT %}
+	{{ if and (not .CurrentUser.IsAuthenticated) .Config.AdsenseAccount }}
 	<script async
-		src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-{{ config.ADSENSE_ACCOUNT }}"
+		src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-{{.Config.AdsenseAccount}}"
 		crossorigin="anonymous"></script>
-	{% endif %}
+	{{ end }}
 </head>
 
 <body>
 	<div class="site-header-wrap">
 		<header class="site-header">
-			{% if title %}
+			{{ if .Title }}
 			<a class="logo" href="/">
-				<span>{{ app_name_words[0] }}</span>
-				<span>{{ app_name_words[1] }}</span>
+				<span>{{ index $app_name_words 0 }}</span>
+				<span>{{ index $app_name_words 1 }}</span>
 			</a>
-			{% else %}
+			{{ else }}
 			<h1>
 				<a class="logo" href="/">
-					<span>{{ app_name_words[0] }}</span>
-					<span>{{ app_name_words[1] }}</span>
+					<span>{{ index $app_name_words 0 }}</span>
+					<span>{{ index $app_name_words 1 }}</span>
 				</a>
 			</h1>
-			{% endif %}
+			{{ end }}
+
 			<nav class="navbar">
-				{% if g.search_form %}
-				<form id="searchForm" class="search-form" method="get" action="{{ url_for('search.search_results') }}">
+				{{ if .SearchForm }}
+				<form id="searchForm" class="search-form" method="get" action="/search">
 					<button type="button" aria-label="Collapse Search Field" class="search-arrow">
 						<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd"
 							clip-rule="evenodd">
@@ -71,7 +78,7 @@
 								d="M2.117 12l7.527 6.235-.644.765-9-7.521 9-7.479.645.764-7.529 6.236h21.884v1h-21.883z" />
 						</svg>
 					</button>
-					{{ g.search_form.q(size=20, class='search-form-input', placeholder=g.search_form.q.label.text) }}
+					<input name="q" size="20" class="search-form-input" placeholder="{{.SearchForm.Placeholder}}">
 					<button aria-label="Search" class="search-button">
 						<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd"
 							clip-rule="evenodd">
@@ -86,8 +93,7 @@
 							d="M15.853 16.56c-1.683 1.517-3.911 2.44-6.353 2.44-5.243 0-9.5-4.257-9.5-9.5s4.257-9.5 9.5-9.5 9.5 4.257 9.5 9.5c0 2.442-.923 4.67-2.44 6.353l7.44 7.44-.707.707-7.44-7.44zm-6.353-15.56c4.691 0 8.5 3.809 8.5 8.5s-3.809 8.5-8.5 8.5-8.5-3.809-8.5-8.5 3.809-8.5 8.5-8.5z" />
 					</svg>
 				</button>
-				<!-- <a class="nav-item support" href="https://www.patreon.com/">Contribute</a> -->
-				{% endif %}
+				{{ end }}
 
 				<div class="dropdown">
 					<button aria-label="Drop Categories Menu" class="nav-item categories">
@@ -99,32 +105,32 @@
 						</div>
 					</button>
 					<ul class="category-dropdown-content">
-						{% for category in categories() %}
+						{{ range .Categories }}
 						<li>
-							<a class="nav-item" href="{{ url_for('categories.category', slug=category.slug) }}">
-								{{ category.name }}
+							<a class="nav-item" href="/categories/{{ .Slug }}">
+								{{ .Name }}
 							</a>
 						</li>
-						{% endfor %}
+						{{ end }}
 					</ul>
 				</div>
 
-				{% if current_user.is_authenticated %}
+				{{ if .CurrentUser.IsAuthenticated }}
 				<div class="dropdown">
 					<button aria-label="Drop User Menu" class="nav-item username">
-						<img src="{{ url_for('static', filename=avatar(current_user)) | autoversion }}"
-							class="username-image" width="20" height="20" alt="">
-						<span class="username-text">{{ current_user.name }}</span>
+						<img src="/static/{{ .CurrentUser.Avatar }}?v={{ .Version }}" class="username-image" width="20"
+							height="20" alt="">
+						<span class="username-text">{{ .CurrentUser.Name }}</span>
 					</button>
 					<div class="dropdown-content">
-						{% if current_user.is_admin %}
-						<a class="nav-item" href="{{ url_for('posts.new_post') }}">New Video</a>
-						<a class="nav-item" href="{{ url_for('sources.new_playlist') }}">New Source</a>
-						<a class="nav-item" href="{{ url_for('pages.new_page') }}">New Page</a>
-						<a class="nav-item" href="{{ url_for('admin.dashboard') }}">Dashboard</a>
-						{% endif %}
-						<a class="nav-item" href="{{ url_for('users.favorites') }}">Watch Later</a>
-						<a class="nav-item" href="{{ url_for('auth.logout') }}">Log out</a>
+						{{ if .CurrentUser.IsAdmin }}
+						<a class="nav-item" href="/posts/new">New Video</a>
+						<a class="nav-item" href="/sources/new">New Source</a>
+						<a class="nav-item" href="/pages/new">New Page</a>
+						<a class="nav-item" href="/admin/dashboard">Dashboard</a>
+						{{ end }}
+						<a class="nav-item" href="/users/favorites">Watch Later</a>
+						<a class="nav-item" href="/auth/logout">Log out</a>
 						<a data-modal="account" class="nav-item delete-account" href="javascript:void(0)">
 							Delete Account
 						</a>
@@ -132,7 +138,7 @@
 				</div>
 
 				<div data-body="account" class="modal">
-					<form class="modal-content" action="{{ url_for('users.delete_account') }}" method="POST">
+					<form class="modal-content" action="/users/delete" method="POST">
 						<span data-close="account" class="close-modal" title="Close">&times;</span>
 						<h2 class="modal-title">Delete Account</h2>
 						<p>Are you sure you want to delete your account?<br>
@@ -147,7 +153,7 @@
 					</form>
 				</div>
 
-				{% else %}
+				{{else}}
 
 				<div class="login-wrap">
 					<a class="nav-item" data-modal="login" href="javascript:void(0)">Login</a>
@@ -157,15 +163,14 @@
 				<div data-body="login" class="modal">
 					<div class="modal-content login-modal-content">
 						<h3 class="login-text">Sign in to</h3>
-						<div class="logo-text">{{ config.APP_NAME }}</div>
+						<div class="logo-text">{{ .Config.AppName }}</div>
 						<p>
 							Log in to be able to <strong>save</strong> and <strong>like</strong> your favorite
 							documentaries.
 						</p>
 						<div class="login-buttons">
 							<button aria-label="Login via Google" data-close="login"
-								class="brand-login-button google-login"
-								onclick="popupWindow(`{{ url_for('auth.google') }}`, 'Google')">
+								class="brand-login-button google-login" onclick="popupWindow('/auth/google', 'Google')">
 								<div class="brand-logo google-logo">
 									<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 533.5 544.3"
 										class="google-svg">
@@ -185,59 +190,43 @@
 								</div>
 								<div class="brand-text">Sign In with Google</div>
 							</button>
-							<!-- <button aria-label="Login via Facebook" data-close="login"
-								class="brand-login-button facebook-login"
-								onclick="popupWindow(`{{ url_for('auth.facebook') }}`)">
-								<div class="brand-logo">
-									<svg xmlns="http://www.w3.org/2000/svg" viewBox="50 67 400 368"
-										class="facebook-svg">
-										<path
-											d="M432.5 250c0-100.8-81.7-182.5-182.5-182.5S67.5 149.2 67.5 250c0 91.1 66.7 166.6 154 180.3V302.8h-46.3V250h46.3v-40.2c0-45.7 27.2-71 68.9-71 20 0 40.9 3.6 40.9 3.6v44.9h-23c-22.7 0-29.7 14.1-29.7 28.5V250h50.6l-8.1 52.8h-42.5v127.5c87.2-13.7 153.9-89.2 153.9-180.3z"
-											fill="#fff"></path>
-										<path
-											d="M321 302.8l8.1-52.8h-50.6v-34.2c0-14.4 7.1-28.5 29.7-28.5h23v-44.9s-20.9-3.6-40.9-3.6c-41.7 0-68.9 25.3-68.9 71V250h-46.3v52.8h46.3v127.5c9.3 1.5 18.8 2.2 28.5 2.2s19.2-.8 28.5-2.2V302.8H321z"
-											fill="#1877f2"></path>
-									</svg>
-								</div>
-								<div class="brand-text">Login with Facebook</div>
-							</button> -->
 						</div>
 					</div>
 				</div>
-				{% endif %}
+				{{end}}
 			</nav>
 		</header>
 	</div>
 
 	<main role="main" class="content-wrap">
-		{% block content %}{% endblock content %}
+		{{ block "content" . }}{{end}}
 	</main>
 
 	<div id="footer" class="site-footer-wrap">
-		{% with messages = get_flashed_messages(with_categories=true) %}
-		{% if messages %}
-		{% for category, message in messages %}
-		<div class="alert alert-{{ category }}">
-			{{ message }}
+		{{ if .FlashMessages }}
+		{{ range .FlashMessages }}
+		<div class="alert alert-{{ .Category }}">
+			{{ .Message }}
 		</div>
-		{% endfor %}
-		{% endif %}
-		{% endwith %}
+		{{ end }}
+		{{ end }}
 
 		<footer class="site-footer">
-			<span class="site-copy">{{ config.APP_NAME }} &copy; {{ now.year }}</span>
-			<a class="nav-item" href="{{ url_for('sources.playlists') }}">Sources</a>
-			<a class="nav-item" href="{{ url_for('pages.page', slug='about') }}">About</a>
-			<a class="nav-item" href="{{ url_for('pages.page', slug='privacy') }}">Privacy</a>
+			<span class="site-copy">{{ .Config.AppName }} &copy; {{ .Now.Year }}</span>
+			<a class="nav-item" href="/sources">Sources</a>
+			<a class="nav-item" href="/pages/about">About</a>
+			<a class="nav-item" href="/pages/privacy">Privacy</a>
 		</footer>
 	</div>
 
-	{% block scripts %}
-	<script defer src="{{ url_for('static', filename='js/shared.js') | autoversion }}"></script>
-	{% if not current_user.is_authenticated %}
-	<script defer src="{{ url_for('static', filename='js/pop.js') | autoversion }}"></script>
-	{% endif %}
-	{% endblock scripts %}
+	{{ block "scripts" . }}
+	<script defer src="/static/js/shared.js?v={{ .Version }}"></script>
+	{{ if not .CurrentUser.IsAuthenticated }}
+	<script defer src="/static/js/pop.js?v={{ .Version }}"></script>
+	{{end}}
+	{{end}}
+
+	{{ template "extra_scripts" . }}
 </body>
 
 </html>

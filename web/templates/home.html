@@ -1,0 +1,52 @@
+{{ define "extra_preload_css" }}
+<link rel="preload" href="/static/css/content.css?v={{ .Version }}" as="style">
+{{end}}
+
+{{ define "extra_css" }}
+<link rel="stylesheet" type="text/css" href="/static/css/content.css?v={{ .Version }}">
+{{ end }}
+
+{{ define "extra_meta" }}
+{{ $url := .BaseURL }}
+{{ $large_favicon := printf "/android-chrome-512x512.png?v=%s" .Version }}
+<link rel="canonical" href="{{$url}}">
+<meta name="description" content="{{ .Config.AppDescription }}">
+<meta property="og:title" content="{{ .Config.AppName }}">
+<meta property="og:type" content="website">
+<meta property="og:url" content="{{ $url }}">
+<meta property="og:image" content="{{ $large_favicon }}">
+<meta property="og:description" content="{{ .Config.AppDescription }}">
+<meta name="twitter:title" content="{{ .Config.AppName }}">
+<meta property="twitter:url" content="{{ $url }}">
+<meta name="twitter:image" content="{{ $large_favicon }}">
+<meta name="twitter:description" content="{{ .Config.AppDescription }}">
+
+<script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "Factual Docs",
+        "url": "https://{{ .Config.Domain }}",
+        "potentialAction": {
+            "@type": "SearchAction",
+            "target": {
+                "@type": "EntryPoint",
+                "urlTemplate": "https://{{ .Config.Domain }}/search/?q={search_term}"
+            },
+            "query-input": "required name=search_term"
+        }
+    }
+</script>
+{{ end }}
+
+{{ define "title_tag" }}
+{{ .Config.AppName }} - Documentary Library
+{{ end }}
+
+{{ define "content" }}
+{{ template "content.html" . }}
+{{ end }}
+
+{{ define "extra_scripts" }}
+<script defer src="/static/js/scroll.js?v={{ .Version }}"></script>
+{{ end }}

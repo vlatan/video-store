@@ -1,0 +1,17 @@
+.page {
+  padding: calc(var(--content-padding) * 1.5);
+  background: var(--secondary-background-color);
+  border-radius: 1rem;
+  margin: 0 auto;
+  max-width: 800px;
+}
+
+.page a {
+  text-decoration: underline;
+  font-weight: bold;
+}
+
+.page p {
+  margin: 1rem 0;
+  color: var(--secondary-font-color);
+}
