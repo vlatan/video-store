@@ -7,12 +7,17 @@ import (
 	"net/http"
 )
 
-type TemplateManager struct {
+type Manager interface {
+	// Gets template from a map by name and executes it
+	Render(w http.ResponseWriter, name string, data any) error
+}
+
+type templateManager struct {
 	templates map[string]*template.Template
 }
 
-func Manager() *TemplateManager {
-	tm := &TemplateManager{
+func NewManager() Manager {
+	tm := &templateManager{
 		templates: make(map[string]*template.Template),
 	}
 
@@ -31,7 +36,7 @@ func Manager() *TemplateManager {
 	return tm
 }
 
-func (tm *TemplateManager) Render(w http.ResponseWriter, name string, data any) error {
+func (tm *templateManager) Render(w http.ResponseWriter, name string, data any) error {
 	tmpl, exists := tm.templates[name]
 	if !exists {
 		return fmt.Errorf("template %s not found", name)
