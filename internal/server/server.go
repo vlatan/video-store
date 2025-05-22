@@ -2,11 +2,8 @@ package server
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"time"
-
-	"github.com/caarlos0/env"
 
 	"factual-docs/internal/config"
 	"factual-docs/internal/database"
@@ -21,15 +18,12 @@ type Server struct {
 
 func NewServer() *http.Server {
 
-	var cfg config.Config
-	if err := env.Parse(&cfg); err != nil {
-		log.Fatal("Config failed to parse: ", err)
-	}
+	cfg := config.New()
 
 	newServer := &Server{
-		db:     database.New(&cfg),
+		db:     database.New(cfg),
 		tm:     templates.Manager(),
-		config: &cfg,
+		config: cfg,
 	}
 
 	// Declare Server config

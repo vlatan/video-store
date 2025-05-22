@@ -1,5 +1,11 @@
 package config
 
+import (
+	"log"
+
+	"github.com/caarlos0/env"
+)
+
 type Config struct {
 	// App settings
 	AppName         string `env:"APP_NAME"`
@@ -39,4 +45,12 @@ type Config struct {
 	// Local app host and port
 	Host string `env:"HOST" envDefault:"localhost"`
 	Port int    `env:"PORT" envDefault:"5000"`
+}
+
+func New() *Config {
+	var cfg Config
+	if err := env.Parse(&cfg); err != nil {
+		log.Fatal("Config failed to parse: ", err)
+	}
+	return &cfg
 }
