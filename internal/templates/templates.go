@@ -1,4 +1,4 @@
-package server
+package templates
 
 import (
 	"factual-docs/web"
@@ -7,12 +7,12 @@ import (
 	"net/http"
 )
 
-type templateManager struct {
+type TemplateManager struct {
 	templates map[string]*template.Template
 }
 
-func newTemplateManager() *templateManager {
-	tm := &templateManager{
+func Manager() *TemplateManager {
+	tm := &TemplateManager{
 		templates: make(map[string]*template.Template),
 	}
 
@@ -31,7 +31,7 @@ func newTemplateManager() *templateManager {
 	return tm
 }
 
-func (tm *templateManager) Render(w http.ResponseWriter, name string, data any) error {
+func (tm *TemplateManager) Render(w http.ResponseWriter, name string, data any) error {
 	tmpl, exists := tm.templates[name]
 	if !exists {
 		return fmt.Errorf("template %s not found", name)
