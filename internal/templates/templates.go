@@ -17,21 +17,19 @@ type Manager interface {
 	Render(http.ResponseWriter, string, any) error
 }
 
-type templateManager struct {
-	templates map[string]*template.Template
-}
+type Templates map[string]*template.Template
 
 func NewManager() Manager {
-	tm := &templateManager{
-		templates: make(map[string]*template.Template),
-	}
+
+	tm := make(Templates)
 
 	const base = "templates/base.html"
 	const partials = "templates/partials"
 
 	m := minify.New()
+	m.AddFunc("text/html", html.Minify)
 
-	tm.templates["home"] = template.Must(parseTemplates(
+	tm["home"] = template.Must(parseTemplates(
 		m, base,
 		partials+"/home.html",
 		partials+"/content.html",
@@ -40,8 +38,8 @@ func NewManager() Manager {
 	return tm
 }
 
-func (tm *templateManager) Render(w http.ResponseWriter, name string, data any) error {
-	tmpl, exists := tm.templates[name]
+func (tm Templates) Render(w http.ResponseWriter, name string, data any) error {
+	tmpl, exists := tm[name]
 	if !exists {
 		return fmt.Errorf("template %s not found", name)
 	}
@@ -52,8 +50,6 @@ func (tm *templateManager) Render(w http.ResponseWriter, name string, data any) 
 
 // Minify and parse the HTML templates as per the tdewolff/minify docs.
 func parseTemplates(m *minify.M, filepaths ...string) (*template.Template, error) {
-
-	m.AddFunc("text/html", html.Minify)
 
 	var tmpl *template.Template
 	for _, fp := range filepaths {
@@ -74,7 +70,12 @@ func parseTemplates(m *minify.M, filepaths ...string) (*template.Template, error
 		if err != nil {
 			return nil, err
 		}
-		tmpl.Parse(string(mb))
+
+		tmpl, err = tmpl.Parse(string(mb))
+		if err != nil {
+			return nil, err
+		}
 	}
+
 	return tmpl, nil
 }
