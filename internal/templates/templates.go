@@ -1,10 +1,12 @@
 package templates
 
 import (
+	"bytes"
 	"factual-docs/web"
 	"fmt"
 	"html/template"
 	"io/fs"
+	"log"
 	"net/http"
 	"path/filepath"
 
@@ -40,12 +42,22 @@ func New() Service {
 
 func (tm Templates) Render(w http.ResponseWriter, name string, data any) error {
 	tmpl, exists := tm[name]
+
 	if !exists {
 		return fmt.Errorf("template %s not found", name)
 	}
 
-	fmt.Println(tmpl.DefinedTemplates())
-	return tmpl.ExecuteTemplate(w, "base.html", data)
+	var buf bytes.Buffer
+	if err := tmpl.ExecuteTemplate(&buf, "base.html", data); err != nil {
+		return err
+	}
+
+	if _, err := buf.WriteTo(w); err != nil {
+		log.Printf("failed to write template to response: %v", err)
+		return err
+	}
+
+	return nil
 }
 
 // Minify and parse the HTML templates as per the tdewolff/minify docs.

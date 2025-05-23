@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"factual-docs/internal/config"
+	"factual-docs/internal/files"
 	"factual-docs/web"
 	"log"
 	"net/http"
@@ -42,17 +43,18 @@ func (s *Server) corsMiddleware(next http.Handler) http.Handler {
 }
 
 type HomePageData struct {
-	Config *config.Config
+	Config      *config.Config
+	StaticFiles files.StaticFiles
 }
 
 func (s *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
 
 	data := HomePageData{
-		Config: s.config,
+		Config:      s.config,
+		StaticFiles: s.sf,
 	}
 
-	err := s.tm.Render(w, "home", data)
-	if err != nil {
+	if err := s.tm.Render(w, "home", data); err != nil {
 		log.Println(err)
 		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
 	}
