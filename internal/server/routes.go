@@ -3,8 +3,6 @@ package server
 import (
 	"bytes"
 	"encoding/json"
-	"factual-docs/internal/config"
-	"factual-docs/internal/files"
 	"factual-docs/internal/templates"
 	"factual-docs/web"
 	"log"
@@ -24,14 +22,11 @@ func (s *Server) RegisterRoutes() http.Handler {
 	return mux
 }
 
-type HomePageData struct {
-	Config      *config.Config
-	StaticFiles files.StaticFiles
-}
-
 func (s *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
-
+	// Get standard data
 	data := templates.NewTemplateData(s.sf, s.config)
+
+	// TODO: Need to attach posts to data
 
 	if err := s.tm.Render(w, "home", data); err != nil {
 		log.Println(err)
