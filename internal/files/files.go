@@ -22,10 +22,9 @@ type fileInfo struct {
 
 type StaticFiles map[string]fileInfo
 
-var validJS = regexp.MustCompile("^(application|text)/(x-)?(java|ecma)script$")
-
 func NewStaticFiles() StaticFiles {
 	m := minify.New()
+	validJS := regexp.MustCompile("^(application|text)/(x-)?(java|ecma)script$")
 
 	m.AddFunc("text/css", css.Minify)
 	m.AddFuncRegexp(validJS, js.Minify)
@@ -38,10 +37,6 @@ func NewStaticFiles() StaticFiles {
 
 // Create minified versions of the static files and cache them in memory.
 func (sf StaticFiles) ParseStaticFiles(m *minify.M, dir string) {
-
-	m.AddFunc("text/css", css.Minify)
-	m.AddFuncRegexp(validJS, js.Minify)
-
 	// function used to process each file/dir in the root, including the root
 	walkDirFunc := func(path string, info fs.DirEntry, err error) error {
 		if err != nil {
