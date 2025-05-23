@@ -1,9 +1,9 @@
 {{ define "extra_preload_css" }}
-<link rel="preload" href="/static/css/content.css?v={{ .Version }}" as="style">
+<link rel="preload" href='{{ .StaticUrl "/static/css/content.css" }}' as="style">
 {{end}}
 
 {{ define "extra_css" }}
-<link rel="stylesheet" type="text/css" href="/static/css/content.css?v={{ .Version }}">
+<link rel="stylesheet" type="text/css" href='{{ .StaticUrl "/static/css/content.css" }}'>
 {{ end }}
 
 {{ define "extra_meta" }}

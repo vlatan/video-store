@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"factual-docs/internal/config"
 	"factual-docs/internal/files"
+	"factual-docs/internal/templates"
 	"factual-docs/web"
 	"log"
 	"net/http"
@@ -49,10 +50,7 @@ type HomePageData struct {
 
 func (s *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
 
-	data := HomePageData{
-		Config:      s.config,
-		StaticFiles: s.sf,
-	}
+	data := templates.NewTemplateData(s.sf, s.config)
 
 	if err := s.tm.Render(w, "home", data); err != nil {
 		log.Println(err)

@@ -9,16 +9,18 @@
 	{{ $app_name_words := "Factual Docs" }}
 
 	{{ block "preload_css" . }}
-	<link rel="preload" href="/static/css/shared.css?v={{ .Version }}" as="style">
+	<link rel="preload" href='{{ .StaticUrl "/static/css/shared.css" }}' as="style">
 	{{ end }}
 
-	{{ template "extra_preload_css" .}}
+	{{ block "extra_preload_css" . }}
+	{{ end }}
 
 	{{ block "css" . }}
-	<link rel="stylesheet" type="text/css" href="/static/css/shared.css?v={{ .Version }}">
-	{{end}}
+	<link rel="stylesheet" type="text/css" href='{{ .StaticUrl "/static/css/shared.css" }}'>
+	{{ end }}
 
-	{{ template "extra_css" . }}
+	{{ block "extra_css" . }}
+	{{ end }}
 
 	<link rel="apple-touch-icon" sizes="180x180" href="/static/favicons/apple-touch-icon.png?v={{ .Version }}">
 	<link rel="icon" type="image/png" sizes="32x32" href="/static/favicons/favicon-32x32.png?v={{ .Version }}">
