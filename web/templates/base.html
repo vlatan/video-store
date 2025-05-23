@@ -22,10 +22,10 @@
 	{{ block "extra_css" . }}
 	{{ end }}
 
-	<link rel="apple-touch-icon" sizes="180x180" href="/static/favicons/apple-touch-icon.png?v={{ .Version }}">
-	<link rel="icon" type="image/png" sizes="32x32" href="/static/favicons/favicon-32x32.png?v={{ .Version }}">
-	<link rel="icon" type="image/png" sizes="16x16" href="/static/favicons/favicon-16x16.png?v={{ .Version }}">
-	<link rel="manifest" href="/static/favicons/site.webmanifest?v={{ .Version }}">
+	<link rel="apple-touch-icon" sizes="180x180" href='{{ .StaticUrl "/static/favicons/apple-touch-icon.png" }}'>
+	<link rel="icon" type="image/png" sizes="32x32" href='{{ .StaticUrl "/static/favicons/favicon-32x32.png" }}'>
+	<link rel="icon" type="image/png" sizes="16x16" href='{{ .StaticUrl "/static/favicons/favicon-16x16.png" }}'>
+	<link rel="manifest" href='{{ .StaticUrl "/static/favicons/site.webmanifest" }}'>
 
 	{{ block "meta" . }}
 	<meta property='og:site_name' content='{{ .Config.AppName }}'>
@@ -33,7 +33,8 @@
 	<meta property="twitter:domain" content="{{ .Config.Domain }}">
 	{{ end }}
 
-	{{ template "extra_meta" . }}
+	{{ block "extra_meta" . }}
+	{{ end }}
 
 	<title>
 		{{ block "title_tag" . }}

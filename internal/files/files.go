@@ -16,7 +16,7 @@ import (
 
 type FileInfo struct {
 	Bytes     []byte
-	Mediatype string
+	MediaType string
 	Etag      string
 }
 
@@ -63,27 +63,32 @@ func (sf StaticFiles) ParseStaticFiles(m *minify.M, dir string) {
 		fileType := strings.Split(info.Name(), ".")[1]
 
 		// Set media type
-		var mediatype string
+		var mediaType string
 		switch fileType {
 		case "css":
-			mediatype = "text/css"
+			mediaType = "text/css"
 		case "js":
-			mediatype = "application/javascript"
-		default:
-			return nil
+			mediaType = "application/javascript"
 		}
 
-		// Minify the content
-		b, err = m.Bytes(mediatype, b)
-		if err != nil {
-			return err
+		// Minify the content (only CSS or JS)
+		if len(mediaType) != 0 {
+			b, err = m.Bytes(mediaType, b)
+			if err != nil {
+				return err
+			}
 		}
 
 		// Create Etag as a hexadecimal md5 hash of the file content
 		etag := fmt.Sprintf("%x", md5.Sum(b))
 
+		// Store empty bytes array if this is not CSS or JS
+		if len(mediaType) == 0 {
+			b = []byte{}
+		}
+
 		// Save all the data in the struct
-		sf[path] = FileInfo{b, mediatype, etag}
+		sf[path] = FileInfo{b, mediaType, etag}
 
 		return nil
 	}

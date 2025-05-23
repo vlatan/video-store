@@ -66,14 +66,21 @@ func (s *Server) staticHandler(w http.ResponseWriter, r *http.Request) {
 	// Set long max age cache conttrol
 	w.Header().Set("Cache-Control", "max-age=31536000")
 
+	// Set content type header if that info available
+	if len(fileInfo.MediaType) != 0 {
+		w.Header().Set("Content-Type", fileInfo.MediaType)
+	}
+
+	// Set Etag if etag available
+	if len(fileInfo.Etag) != 0 {
+		w.Header().Set("Etag", fileInfo.Etag)
+	}
+
 	// If the file is not in the cache or there's no cached content, try to serve from FS
 	if !ok || fileInfo.Bytes == nil {
 		http.ServeFileFS(w, r, web.Files, r.URL.Path)
 		return
 	}
-
-	w.Header().Set("Content-Type", fileInfo.Mediatype)
-	w.Header().Set("Etag", fileInfo.Etag)
 
 	// Server the file content
 	http.ServeContent(w, r, r.URL.Path, time.Time{}, bytes.NewReader(fileInfo.Bytes))
