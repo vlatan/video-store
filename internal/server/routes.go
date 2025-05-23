@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"factual-docs/internal/config"
 	"log"
 	"net/http"
 )
@@ -36,16 +37,20 @@ func (s *Server) corsMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+type HomePageData struct {
+	Config *config.Config
+}
+
 func (s *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
-	resp := map[string]string{"message": "Hello World"}
-	jsonResp, err := json.Marshal(resp)
-	if err != nil {
-		http.Error(w, "Failed to marshal response", http.StatusInternalServerError)
-		return
+
+	data := HomePageData{
+		Config: s.config,
 	}
-	w.Header().Set("Content-Type", "application/json")
-	if _, err := w.Write(jsonResp); err != nil {
-		log.Printf("Failed to write response: %v", err)
+
+	err := s.tm.Render(w, "home", data)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
 	}
 }
 

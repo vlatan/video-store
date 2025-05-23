@@ -1,0 +1,17 @@
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id={{ .config.GtagID }}"></script>
+{{ if current_user.analytics_id }}
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', '{{ .config.GtagID }}', { 'user_id': '{{ .current_user.analytics_id }}' });
+</script>
+{{ else }}
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', '{{ .config.GtagID }}');
+</script>
+{% endif %}

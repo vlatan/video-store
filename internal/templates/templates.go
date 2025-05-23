@@ -9,7 +9,7 @@ import (
 
 type Manager interface {
 	// Gets template from a map by name and executes it
-	Render(w http.ResponseWriter, name string, data any) error
+	Render(http.ResponseWriter, string, any) error
 }
 
 type templateManager struct {
@@ -21,17 +21,16 @@ func NewManager() Manager {
 		templates: make(map[string]*template.Template),
 	}
 
-	// const base = "templates/base.html"
-	// const partials = "templates/partials"
+	const base = "templates/base.html"
+	const partials = "templates/partials"
 
-	// tm.templates["home"] = template.Must(template.ParseFS(
-	// 	web.Files,
-	// 	base,
-	// 	partials+"/home.html",
-	// 	partials+"/content.html",
-	// ))
-
-	tm.templates["test"] = template.Must(template.ParseFS(web.Files, "templates/test.html"))
+	tm.templates["home"] = template.Must(template.ParseFS(
+		web.Files,
+		base,
+		partials+"/home.html",
+		partials+"/content.html",
+		partials+"/analytics.html",
+	))
 
 	return tm
 }
