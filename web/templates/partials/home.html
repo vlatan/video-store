@@ -43,9 +43,7 @@
 {{ .Config.AppName }} - Documentary Library
 {{ end }}
 
-{{ define "content" }}
 {{ template "content.html" . }}
-{{ end }}
 
 {{ define "extra_scripts" }}
 <script defer src="/static/js/scroll.js?v={{ .Version }}"></script>
