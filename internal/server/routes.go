@@ -1,18 +1,22 @@
 package server
 
 import (
+	"bytes"
 	"encoding/json"
 	"factual-docs/internal/config"
+	"factual-docs/web"
 	"log"
 	"net/http"
+	"time"
 )
 
 func (s *Server) RegisterRoutes() http.Handler {
 	mux := http.NewServeMux()
 
 	// Register routes
-	mux.HandleFunc("/{$}", s.homeHandler)
-	mux.HandleFunc("/health", s.healthHandler)
+	mux.HandleFunc("GET /{$}", s.homeHandler)
+	mux.HandleFunc("GET /health", s.healthHandler)
+	mux.HandleFunc("GET /static/", s.staticHandler)
 
 	// Wrap the mux with CORS middleware
 	return s.corsMiddleware(mux)
@@ -52,6 +56,27 @@ func (s *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
 	}
+}
+
+// Handle minified static file from cache
+func (s *Server) staticHandler(w http.ResponseWriter, r *http.Request) {
+	// Get the file information
+	fileInfo, ok := s.sf[r.URL.Path]
+
+	// Set long max age cache conttrol
+	w.Header().Set("Cache-Control", "max-age=31536000")
+
+	// If the file is not in the cache or there's no cached content, try to serve from FS
+	if !ok || fileInfo.Bytes == nil {
+		http.ServeFileFS(w, r, web.Files, r.URL.Path)
+		return
+	}
+
+	w.Header().Set("Content-Type", fileInfo.Mediatype)
+	w.Header().Set("Etag", fileInfo.Etag)
+
+	// Server the file content
+	http.ServeContent(w, r, r.URL.Path, time.Time{}, bytes.NewReader(fileInfo.Bytes))
 }
 
 func (s *Server) healthHandler(w http.ResponseWriter, r *http.Request) {

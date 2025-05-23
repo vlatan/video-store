@@ -14,13 +14,13 @@ import (
 	"github.com/tdewolff/minify/js"
 )
 
-type fileInfo struct {
-	bytes     []byte
-	mediatype string
+type FileInfo struct {
+	Bytes     []byte
+	Mediatype string
 	Etag      string
 }
 
-type StaticFiles map[string]fileInfo
+type StaticFiles map[string]FileInfo
 
 func New() StaticFiles {
 	m := minify.New()
@@ -37,34 +37,34 @@ func New() StaticFiles {
 
 // Create minified versions of the static files and cache them in memory.
 func (sf StaticFiles) ParseStaticFiles(m *minify.M, dir string) {
-	// function used to process each file/dir in the root, including the root
+	// Function used to process each file/dir in the root, including the root
 	walkDirFunc := func(path string, info fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
 
-		// skip directories
+		// Skip directories
 		if info.IsDir() {
 			return nil
 		}
 
-		// skip minified files
+		// Skip minified files
 		if strings.Contains(info.Name(), ".min.") {
 			return nil
 		}
 
-		// read the file
+		// Read the file
 		b, err := fs.ReadFile(web.Files, path)
 		if err != nil {
 			return err
 		}
 
-		// split the file path on dot
-		pathParts := strings.Split(path, ".")
+		// Get the fyle type
+		fileType := strings.Split(info.Name(), ".")[1]
 
-		// set media type
+		// Set media type
 		var mediatype string
-		switch pathParts[1] {
+		switch fileType {
 		case "css":
 			mediatype = "text/css"
 		case "js":
@@ -73,22 +73,22 @@ func (sf StaticFiles) ParseStaticFiles(m *minify.M, dir string) {
 			return nil
 		}
 
-		// minify the content
+		// Minify the content
 		b, err = m.Bytes(mediatype, b)
 		if err != nil {
 			return err
 		}
 
-		// create Etag as a hexadecimal md5 hash of the file content
+		// Create Etag as a hexadecimal md5 hash of the file content
 		etag := fmt.Sprintf("%x", md5.Sum(b))
 
-		// save all the data in the struct
-		sf[info.Name()] = fileInfo{b, mediatype, etag}
+		// Save all the data in the struct
+		sf[path] = FileInfo{b, mediatype, etag}
 
 		return nil
 	}
 
-	// walk the directory and process each file
+	// Walk the directory and process each file
 	if err := fs.WalkDir(web.Files, dir, walkDirFunc); err != nil {
 		log.Println(err)
 	}
