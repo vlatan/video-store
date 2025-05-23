@@ -7,12 +7,14 @@ import (
 
 	"factual-docs/internal/config"
 	"factual-docs/internal/database"
+	"factual-docs/internal/files"
 	"factual-docs/internal/templates"
 )
 
 type Server struct {
 	db     database.Service
 	tm     templates.Manager
+	sf     files.StaticFiles
 	config *config.Config
 }
 
@@ -24,6 +26,7 @@ func NewServer() *http.Server {
 	newServer := &Server{
 		db:     database.New(cfg),
 		tm:     templates.NewManager(),
+		sf:     files.NewStaticFiles(),
 		config: cfg,
 	}
 
