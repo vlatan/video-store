@@ -35,7 +35,6 @@ func NewManager() Manager {
 		m, base,
 		partials+"/home.html",
 		partials+"/content.html",
-		partials+"/analytics.html",
 	))
 
 	return tm
