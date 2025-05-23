@@ -9,6 +9,7 @@ import (
 	"factual-docs/web"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -21,7 +22,9 @@ func (s *Server) RegisterRoutes() http.Handler {
 	mux.HandleFunc("GET /static/", s.staticHandler)
 
 	// Wrap the mux with CORS middleware
-	return s.corsMiddleware(mux)
+	// return s.corsMiddleware(mux)
+
+	return mux
 }
 
 func (s *Server) corsMiddleware(next http.Handler) http.Handler {
@@ -60,25 +63,27 @@ func (s *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
 
 // Handle minified static file from cache
 func (s *Server) staticHandler(w http.ResponseWriter, r *http.Request) {
-	// Get the file information
-	fileInfo, ok := s.sf[r.URL.Path]
 
 	// Set long max age cache conttrol
 	w.Header().Set("Cache-Control", "max-age=31536000")
 
-	// Set content type header if that info available
-	if len(fileInfo.MediaType) != 0 {
+	// Get the file information
+	name := strings.TrimPrefix(r.URL.Path, "/")
+	fileInfo, ok := s.sf[name]
+
+	// Set content type header if media type available
+	if ok && len(fileInfo.MediaType) != 0 {
 		w.Header().Set("Content-Type", fileInfo.MediaType)
 	}
 
 	// Set Etag if etag available
-	if len(fileInfo.Etag) != 0 {
+	if ok && len(fileInfo.Etag) != 0 {
 		w.Header().Set("Etag", fileInfo.Etag)
 	}
 
-	// If the file is not in the cache or there's no cached content, try to serve from FS
-	if !ok || fileInfo.Bytes == nil {
-		http.ServeFileFS(w, r, web.Files, r.URL.Path)
+	// If the file is not in the cache or there are no cached bytes, try to serve from FS
+	if !ok || len(fileInfo.Bytes) == 0 {
+		http.ServeFileFS(w, r, web.Files, name)
 		return
 	}
 
@@ -89,7 +94,10 @@ func (s *Server) staticHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Server) healthHandler(w http.ResponseWriter, r *http.Request) {
 	resp, err := json.Marshal(s.db.Health())
 	if err != nil {
-		http.Error(w, "Failed to marshal health check response", http.StatusInternalServerError)
+		http.Error(w,
+			"Failed to marshal health check response",
+			http.StatusInternalServerError,
+		)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
