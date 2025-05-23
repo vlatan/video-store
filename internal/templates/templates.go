@@ -12,14 +12,14 @@ import (
 	"github.com/tdewolff/minify/html"
 )
 
-type Manager interface {
+type Service interface {
 	// Gets template from a map by name and executes it
 	Render(http.ResponseWriter, string, any) error
 }
 
 type Templates map[string]*template.Template
 
-func NewManager() Manager {
+func New() Service {
 
 	tm := make(Templates)
 
@@ -29,7 +29,7 @@ func NewManager() Manager {
 	m := minify.New()
 	m.AddFunc("text/html", html.Minify)
 
-	tm["home"] = template.Must(parseTemplates(
+	tm["home"] = template.Must(parseFiles(
 		m, base,
 		partials+"/home.html",
 		partials+"/content.html",
@@ -49,7 +49,7 @@ func (tm Templates) Render(w http.ResponseWriter, name string, data any) error {
 }
 
 // Minify and parse the HTML templates as per the tdewolff/minify docs.
-func parseTemplates(m *minify.M, filepaths ...string) (*template.Template, error) {
+func parseFiles(m *minify.M, filepaths ...string) (*template.Template, error) {
 
 	var tmpl *template.Template
 	for _, fp := range filepaths {
