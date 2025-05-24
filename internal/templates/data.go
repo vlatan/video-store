@@ -8,6 +8,7 @@ import (
 type TemplateData struct {
 	StaticFiles files.StaticFiles
 	Config      *config.Config
+	Title       string
 	Data        any
 }
 
