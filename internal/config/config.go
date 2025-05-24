@@ -7,6 +7,9 @@ import (
 )
 
 type Config struct {
+	// Running locally or not
+	Debug bool `env:"DEBUG" envDefault:"false"`
+
 	// App settings
 	AppName         string `env:"APP_NAME"`
 	AppDescription  string `env:"APP_DESCRIPTION"`
