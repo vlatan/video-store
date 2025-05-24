@@ -40,6 +40,9 @@ func New() Service {
 	return tm
 }
 
+// Check if template exists in the collection of templates (map)
+// Write the template to buffer to check for errors
+// Finally write the template to http response writer
 func (tm Templates) Render(w http.ResponseWriter, name string, data any) error {
 	tmpl, exists := tm[name]
 
