@@ -45,12 +45,12 @@ func (s *Server) staticHandler(w http.ResponseWriter, r *http.Request) {
 	fileInfo, ok := s.sf[name]
 
 	// Set content type header if media type available
-	if ok && len(fileInfo.MediaType) != 0 {
+	if ok && fileInfo.MediaType != "" {
 		w.Header().Set("Content-Type", fileInfo.MediaType)
 	}
 
 	// Set Etag if etag available
-	if ok && len(fileInfo.Etag) != 0 {
+	if ok && fileInfo.Etag != "" {
 		w.Header().Set("Etag", fileInfo.Etag)
 	}
 

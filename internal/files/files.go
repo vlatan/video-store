@@ -72,7 +72,7 @@ func (sf StaticFiles) ParseStaticFiles(m *minify.M, dir string) {
 		}
 
 		// Minify the content (only CSS or JS)
-		if len(mediaType) != 0 {
+		if mediaType != "" {
 			b, err = m.Bytes(mediaType, b)
 			if err != nil {
 				return err
@@ -83,8 +83,8 @@ func (sf StaticFiles) ParseStaticFiles(m *minify.M, dir string) {
 		etag := fmt.Sprintf("%x", md5.Sum(b))
 
 		// Store empty bytes array if this is not CSS or JS
-		if len(mediaType) == 0 {
-			b = []byte{}
+		if mediaType == "" {
+			b = make([]byte, 0)
 		}
 
 		// Save all the data in the struct
