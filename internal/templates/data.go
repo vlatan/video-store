@@ -19,7 +19,7 @@ func (td *TemplateData) StaticUrl(path string) string {
 	return path
 }
 
-func NewTemplateData(sf files.StaticFiles, cfg *config.Config) *TemplateData {
+func NewData(sf files.StaticFiles, cfg *config.Config) *TemplateData {
 	return &TemplateData{
 		StaticFiles: sf,
 		Config:      cfg,

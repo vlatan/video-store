@@ -12,22 +12,25 @@ import (
 )
 
 type Server struct {
+	config *config.Config
 	db     database.Service
 	tm     templates.Service
 	sf     files.StaticFiles
-	config *config.Config
+	data   *templates.TemplateData
 }
 
 func NewServer() *http.Server {
 
 	cfg := config.New()
+	sf := files.New()
 
 	// Create new Server struct
 	newServer := &Server{
+		config: cfg,
 		db:     database.New(cfg),
 		tm:     templates.New(),
-		sf:     files.New(),
-		config: cfg,
+		sf:     sf,
+		data:   templates.NewData(sf, cfg),
 	}
 
 	// Declare Server config

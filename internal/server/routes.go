@@ -3,7 +3,6 @@ package server
 import (
 	"bytes"
 	"encoding/json"
-	"factual-docs/internal/templates"
 	"factual-docs/web"
 	"log"
 	"net/http"
@@ -23,12 +22,9 @@ func (s *Server) RegisterRoutes() http.Handler {
 }
 
 func (s *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
-	// Get standard data
-	data := templates.NewTemplateData(s.sf, s.config)
+	// TODO: Need to attach posts to s.data
 
-	// TODO: Need to attach posts to data
-
-	if err := s.tm.Render(w, "home", data); err != nil {
+	if err := s.tm.Render(w, "home", s.data); err != nil {
 		log.Println(err)
 		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
 	}
