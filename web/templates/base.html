@@ -6,7 +6,7 @@
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-	{{ $app_name_words := "Factual Docs" }}
+	{{ $app_name_words := .Split .Config.AppName " " }}
 
 	{{ block "preload_css" . }}
 	<link rel="preload" href='{{ .StaticUrl "/static/css/shared.css" }}' as="style">
@@ -87,7 +87,6 @@
 			{{ end }}
 
 			<nav class="navbar">
-				{{ if .SearchForm }}
 				<form id="searchForm" class="search-form" method="get" action="/search">
 					<button type="button" aria-label="Collapse Search Field" class="search-arrow">
 						<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd"
@@ -96,8 +95,8 @@
 								d="M2.117 12l7.527 6.235-.644.765-9-7.521 9-7.479.645.764-7.529 6.236h21.884v1h-21.883z" />
 						</svg>
 					</button>
-					<input name="q" size="20" class="search-form-input" placeholder="{{ .SearchForm.Placeholder }}">
-					<button aria-label="Search" class="search-button">
+					<input name="q" size="20" class="search-form-input" placeholder="Search">
+					<button aria-label=" Search" class="search-button">
 						<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd"
 							clip-rule="evenodd">
 							<path fill="white"
@@ -111,7 +110,6 @@
 							d="M15.853 16.56c-1.683 1.517-3.911 2.44-6.353 2.44-5.243 0-9.5-4.257-9.5-9.5s4.257-9.5 9.5-9.5 9.5 4.257 9.5 9.5c0 2.442-.923 4.67-2.44 6.353l7.44 7.44-.707.707-7.44-7.44zm-6.353-15.56c4.691 0 8.5 3.809 8.5 8.5s-3.809 8.5-8.5 8.5-8.5-3.809-8.5-8.5 3.809-8.5 8.5-8.5z" />
 					</svg>
 				</button>
-				{{ end }}
 
 				<div class="dropdown">
 					<button aria-label="Drop Categories Menu" class="nav-item categories">
@@ -123,20 +121,20 @@
 						</div>
 					</button>
 					<ul class="category-dropdown-content">
-						{{ range .Categories }}
+						<!-- {{ range .Categories }}
 						<li>
 							<a class="nav-item" href="/categories/{{ .Slug }}">
 								{{ .Name }}
 							</a>
 						</li>
-						{{ end }}
+						{{ end }} -->
 					</ul>
 				</div>
 
-				{{ if .CurrentUser.IsAuthenticated }}
+				<!-- {{ if .CurrentUser.IsAuthenticated }}
 				<div class="dropdown">
 					<button aria-label="Drop User Menu" class="nav-item username">
-						<img src="/static/{{ .CurrentUser.Avatar }}?v={{ .Version }}" class="username-image" width="20"
+						<img src='{{ .StaticUrl "/static/.CurrentUser.Avatar" }}' class="username-image" width="20"
 							height="20" alt="">
 						<span class="username-text">{{ .CurrentUser.Name }}</span>
 					</button>
@@ -211,40 +209,40 @@
 						</div>
 					</div>
 				</div>
-				{{end}}
+				{{end}} -->
 			</nav>
 		</header>
 	</div>
 
 	<main role="main" class="content-wrap">
-		{{ block "content.html" . }}{{end}}
+		{{ block "content" . }}{{ end }}
 	</main>
 
 	<div id="footer" class="site-footer-wrap">
-		{{ if .FlashMessages }}
+		<!-- {{ if .FlashMessages }}
 		{{ range .FlashMessages }}
 		<div class="alert alert-{{ .Category }}">
 			{{ .Message }}
 		</div>
 		{{ end }}
-		{{ end }}
+		{{ end }} -->
 
 		<footer class="site-footer">
 			<span class="site-copy">{{ .Config.AppName }} &copy; {{ .Now.Year }}</span>
-			<a class="nav-item" href="/sources">Sources</a>
-			<a class="nav-item" href="/pages/about">About</a>
-			<a class="nav-item" href="/pages/privacy">Privacy</a>
+			<a class="nav-item" href="/sources/">Sources</a>
+			<a class="nav-item" href="/pages/about/">About</a>
+			<a class="nav-item" href="/pages/privacy/">Privacy</a>
 		</footer>
 	</div>
 
 	{{ block "scripts" . }}
-	<script defer src="/static/js/shared.js?v={{ .Version }}"></script>
-	{{ if not .CurrentUser.IsAuthenticated }}
-	<script defer src="/static/js/pop.js?v={{ .Version }}"></script>
-	{{end}}
+	<script defer src='{{ .StaticUrl "/static/js/shared.js" }}'></script>
+	<!-- {{ if not .CurrentUser.IsAuthenticated }}
+	<script defer src='{{ .StaticUrl "/static/js/pop.js" }}'></script>
+	{{end}} -->
 	{{end}}
 
-	{{ template "extra_scripts" . }}
+	{{ block "extra_scripts" . }}{{ end }}
 </body>
 
 </html>
