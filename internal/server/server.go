@@ -34,13 +34,11 @@ func NewServer() *http.Server {
 	}
 
 	// Declare Server config
-	server := &http.Server{
+	return &http.Server{
 		Addr:         fmt.Sprintf("%s:%d", cfg.Host, cfg.Port),
 		Handler:      newServer.RegisterRoutes(),
 		IdleTimeout:  time.Minute,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 30 * time.Second,
 	}
-
-	return server
 }
