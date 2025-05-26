@@ -14,6 +14,8 @@ import (
 
 // Service represents a service that interacts with a database.
 type Service interface {
+	// Get paginated posts
+	GetPosts(int) ([]Post, error)
 	// Health returns a map of health status information.
 	// The keys and values in the map are service-specific.
 	Health() map[string]string
@@ -56,6 +58,46 @@ func New(cfg *config.Config) Service {
 	}
 
 	return dbInstance
+}
+
+type Post struct {
+	VideoID    string
+	Title      string
+	Thumbnails []byte
+}
+
+const getPostsQuery = `
+SELECT video_id, title, thumbnails FROM post 
+ORDER BY upload_date DESC
+LIMIT $1 OFFSET $2
+`
+
+// Get the posts for listing on home page and other places
+func (s *service) GetPosts(page int) ([]Post, error) {
+
+	limit := s.config.PostsPerPage
+	offset := page * limit
+
+	rows, err := s.db.Query(getPostsQuery, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var posts []Post
+	for rows.Next() {
+		var post Post
+		if err := rows.Scan(&post.VideoID, &post.Title, &post.Thumbnails); err != nil {
+			return posts, err
+		}
+		posts = append(posts, post)
+	}
+
+	if err := rows.Err(); err != nil {
+		return posts, err
+	}
+
+	return posts, nil
 }
 
 // Health checks the health of the database connection by pinging the database.

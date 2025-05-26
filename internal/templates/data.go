@@ -11,7 +11,7 @@ type TemplateData struct {
 	StaticFiles files.StaticFiles
 	Config      *config.Config
 	Title       string
-	Data        any
+	Posts       any
 }
 
 func (td *TemplateData) StaticUrl(path string) string {

@@ -6,6 +6,7 @@ import (
 	"factual-docs/web"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -22,7 +23,25 @@ func (s *Server) RegisterRoutes() http.Handler {
 }
 
 func (s *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
-	// TODO: Need to attach posts to s.data
+
+	page := 1
+	pageStr := r.URL.Query().Get("page")
+	pageInt, err := strconv.Atoi(pageStr)
+	if err == nil || pageInt != 0 {
+		page = pageInt
+	}
+
+	posts, err := s.db.GetPosts(page)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
+		return
+	}
+
+	s.data.Posts = posts
+
+	// TODO: Postprocess thumbnails
+	// TODO: Return JSON for page > 1
 
 	if err := s.tm.Render(w, "home", s.data); err != nil {
 		log.Println(err)
