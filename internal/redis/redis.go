@@ -15,7 +15,7 @@ import (
 // Service represents a service that interacts with a database.
 type Service interface {
 	// Ping the redis server
-	Health(ctx context.Context) string
+	Health(ctx context.Context) map[string]string
 	// Close redis client
 	// It returns an error if the connection cannot be closed.
 	Close() error
@@ -31,7 +31,7 @@ var (
 	once        sync.Once
 )
 
-func New(ctx context.Context, cfg *config.Config) Service {
+func New(cfg *config.Config) Service {
 
 	once.Do(func() {
 		// Instantiate redis client
@@ -50,13 +50,17 @@ func New(ctx context.Context, cfg *config.Config) Service {
 	return rdbInstance
 }
 
-func (s *service) Health(ctx context.Context) string {
+func (s *service) Health(ctx context.Context) map[string]string {
 	// Perform basic diagnostic to check if the connection is working
 	status, err := s.rdb.Ping(ctx).Result()
 	if err != nil {
 		log.Fatal(err)
 	}
-	return fmt.Sprintf("Redis status: %s", status)
+
+	result := make(map[string]string)
+	result["Redis status"] = status
+
+	return result
 }
 
 func (s *service) Close() error {
@@ -64,9 +68,9 @@ func (s *service) Close() error {
 	return s.rdb.Close()
 }
 
-func WithCache[T any](ctx context.Context, redisClient *redis.Client, key string, fn func() (T, error), ttl time.Duration) (T, error) {
+func WithCache[T any](ctx context.Context, rdb *redis.Client, key string, fn func() (T, error), ttl time.Duration) (T, error) {
 	// Check redis first
-	cached, err := redisClient.Get(ctx, key).Result()
+	cached, err := rdb.Get(ctx, key).Result()
 	if err == nil {
 		var result T
 		json.Unmarshal([]byte(cached), &result)
@@ -81,7 +85,7 @@ func WithCache[T any](ctx context.Context, redisClient *redis.Client, key string
 
 	// Cache the result
 	data, _ := json.Marshal(result)
-	redisClient.Set(ctx, key, data, ttl)
+	rdb.Set(ctx, key, data, ttl)
 
 	return result, nil
 }

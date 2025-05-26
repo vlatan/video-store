@@ -2,9 +2,11 @@ package server
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"factual-docs/web"
 	"log"
+	"maps"
 	"net/http"
 	"strconv"
 	"strings"
@@ -80,7 +82,13 @@ func (s *Server) staticHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) healthHandler(w http.ResponseWriter, r *http.Request) {
-	resp, err := json.Marshal(s.db.Health())
+
+	dbStatus := s.db.Health()
+	rdbStatus := s.rdb.Health(context.Background())
+
+	maps.Copy(dbStatus, rdbStatus)
+
+	status, err := json.Marshal(dbStatus)
 	if err != nil {
 		http.Error(w,
 			"Failed to marshal health check response",
@@ -88,8 +96,9 @@ func (s *Server) healthHandler(w http.ResponseWriter, r *http.Request) {
 		)
 		return
 	}
+
 	w.Header().Set("Content-Type", "application/json")
-	if _, err := w.Write(resp); err != nil {
+	if _, err := w.Write(status); err != nil {
 		log.Printf("Failed to write response: %v", err)
 	}
 }

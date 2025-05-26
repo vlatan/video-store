@@ -8,12 +8,14 @@ import (
 	"factual-docs/internal/config"
 	"factual-docs/internal/database"
 	"factual-docs/internal/files"
+	"factual-docs/internal/redis"
 	"factual-docs/internal/templates"
 )
 
 type Server struct {
 	config *config.Config
 	db     database.Service
+	rdb    redis.Service
 	tm     templates.Service
 	sf     files.StaticFiles
 	data   *templates.TemplateData
@@ -28,6 +30,7 @@ func NewServer() *http.Server {
 	newServer := &Server{
 		config: cfg,
 		db:     database.New(cfg),
+		rdb:    redis.New(cfg),
 		tm:     templates.New(),
 		sf:     sf,
 		data:   templates.NewData(sf, cfg),

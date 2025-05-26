@@ -1,4 +1,5 @@
 * Finish redis setup
+* Start context from main
 * Try to recreate the homepage
     * Get posts
     * Get categories
