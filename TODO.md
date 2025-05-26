@@ -1,5 +1,4 @@
-* Templates are not minified?
-
+* Finish redis setup
 * Try to recreate the homepage
     * Get posts
     * Get categories
@@ -10,3 +9,4 @@
 
 * Add models, execute simple queries
 * Learn how the golang db migrations work
+* Templates are not minified?
