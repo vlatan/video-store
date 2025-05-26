@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"sync"
 	"time"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -30,32 +31,33 @@ type service struct {
 	config *config.Config
 }
 
-var dbInstance *service
+var (
+	dbInstance *service
+	once       sync.Once
+)
 
 func New(cfg *config.Config) Service {
-	// Reuse Connection
-	if dbInstance != nil {
-		return dbInstance
-	}
 
-	// Database URL
-	connStr := fmt.Sprintf("postgres://%s:%s@%s:%d/%s",
-		cfg.DBUsername,
-		cfg.DBPassword,
-		cfg.DBHost,
-		cfg.DBPort,
-		cfg.DBDatabase,
-	)
+	once.Do(func() {
+		// Database URL
+		connStr := fmt.Sprintf("postgres://%s:%s@%s:%d/%s",
+			cfg.DBUsername,
+			cfg.DBPassword,
+			cfg.DBHost,
+			cfg.DBPort,
+			cfg.DBDatabase,
+		)
 
-	db, err := sql.Open("pgx", connStr)
-	if err != nil {
-		log.Fatal(err)
-	}
+		db, err := sql.Open("pgx", connStr)
+		if err != nil {
+			log.Fatal(err)
+		}
 
-	dbInstance = &service{
-		db:     db,
-		config: cfg,
-	}
+		dbInstance = &service{
+			db:     db,
+			config: cfg,
+		}
+	})
 
 	return dbInstance
 }
