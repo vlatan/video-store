@@ -12,7 +12,7 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-// Service represents a service that interacts with a database.
+// Service represents a service that interacts with a redis client.
 type Service interface {
 	// Set a key-value pair in Redis with an expiration duration.
 	// The value will be marshaled to JSON if it's not a string or []byte.
@@ -37,8 +37,8 @@ var (
 	once        sync.Once
 )
 
+// Produce new singleton redis service
 func New(cfg *config.Config) Service {
-
 	once.Do(func() {
 		// Instantiate redis client
 		rdb := redis.NewClient(&redis.Options{
@@ -77,6 +77,7 @@ func (s *service) Set(ctx context.Context, key string, value any, expiration tim
 	}
 }
 
+// Check if the redis client is healthy
 func (s *service) Health(ctx context.Context) map[string]string {
 	// Perform basic diagnostic to check if the connection is working
 	status, err := s.rdb.Ping(ctx).Result()
@@ -90,21 +91,26 @@ func (s *service) Health(ctx context.Context) map[string]string {
 	return result
 }
 
+// Close the redis client
 func (s *service) Close() error {
 	log.Printf("Redis client closed: %s", s.config.RedisHost)
 	return s.rdb.Close()
 }
 
+// Generic wrapper getting and setting from cache
+// with provided anonymous function which in implementation will
+// call an underlying database method
+// Returns an error or nil
 func Cached[T any](
 	ctx context.Context,
 	redisService Service,
 	cacheKey string,
 	cacheDuration time.Duration,
 	target *T, // Pointer to the variable where the result should go
-	source func() (T, error), // Function to get the data if cache miss
+	dbFunc func() (T, error), // Function to get the data if cache miss
 ) error {
 
-	// 1. Try to get from Redis cache, unmarshall to target
+	// Try to get from Redis cache, unmarshall to target
 	cachedData, err := redisService.Get(ctx, cacheKey)
 	if err == nil && cachedData != "" {
 		err := json.Unmarshal([]byte(cachedData), target)
@@ -116,8 +122,8 @@ func Cached[T any](
 		log.Printf("Error getting data from Redis for key '%s': %v", cacheKey, err)
 	}
 
-	// 2. If not in cache or error, execute the source function
-	data, err := source()
+	// If not in cache or error, execute the database function
+	data, err := dbFunc()
 	if err != nil {
 		return err
 	}
@@ -125,7 +131,7 @@ func Cached[T any](
 	// Assign the data to the target pointer
 	*target = data
 
-	// 3. Cache the data for later use
+	// Cache the data for later use
 	err = redisService.Set(ctx, cacheKey, data, cacheDuration)
 	if err != nil {
 		// Don't return an error if unable to set redis cache
