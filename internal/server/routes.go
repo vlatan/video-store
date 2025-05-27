@@ -4,7 +4,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"factual-docs/internal/database"
+	"factual-docs/internal/redis"
 	"factual-docs/web"
+	"fmt"
 	"log"
 	"maps"
 	"net/http"
@@ -33,7 +36,21 @@ func (s *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
 		page = pageInt
 	}
 
-	posts, err := s.db.GetPosts(page)
+	var posts []database.Post
+	ctx := context.Background() // Or retrieve context from request
+
+	// Use the generic cache wrapper
+	err = redis.Cached(
+		ctx,
+		s.rdb,
+		fmt.Sprintf("posts_page_%d", page),
+		24*time.Hour,
+		&posts,
+		func() ([]database.Post, error) {
+			return s.db.GetPosts(page) // Call the actual underlying database method
+		},
+	)
+
 	if err != nil {
 		log.Println(err)
 		http.Error(w, "Something went wrong.", http.StatusInternalServerError)

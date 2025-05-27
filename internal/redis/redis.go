@@ -14,8 +14,14 @@ import (
 
 // Service represents a service that interacts with a database.
 type Service interface {
+	// Set a key-value pair in Redis with an expiration duration.
+	// The value will be marshaled to JSON if it's not a string or []byte.
+	Set(context.Context, string, any, time.Duration) error
+	// Get a value from Redis by key. Returns the value as a string.
+	// Returns redis.Nil error if the key does not exist.
+	Get(context.Context, string) (string, error)
 	// Ping the redis server
-	Health(ctx context.Context) map[string]string
+	Health(context.Context) map[string]string
 	// Close redis client
 	// It returns an error if the connection cannot be closed.
 	Close() error
@@ -50,6 +56,27 @@ func New(cfg *config.Config) Service {
 	return rdbInstance
 }
 
+// Get a value from Redis by key. Returns redis.Nil error if key does not exist.
+func (s *service) Get(ctx context.Context, key string) (string, error) {
+	return s.rdb.Get(ctx, key).Result()
+}
+
+// Set a key-value pair in Redis with an expiration duration.
+func (s *service) Set(ctx context.Context, key string, value any, expiration time.Duration) error {
+	switch v := value.(type) {
+	case string:
+		return s.rdb.Set(ctx, key, v, expiration).Err()
+	case []byte:
+		return s.rdb.Set(ctx, key, v, expiration).Err()
+	default:
+		jsonData, err := json.Marshal(value)
+		if err != nil {
+			return fmt.Errorf("failed to marshal value to JSON: %w", err)
+		}
+		return s.rdb.Set(ctx, key, jsonData, expiration).Err()
+	}
+}
+
 func (s *service) Health(ctx context.Context) map[string]string {
 	// Perform basic diagnostic to check if the connection is working
 	status, err := s.rdb.Ping(ctx).Result()
@@ -68,36 +95,42 @@ func (s *service) Close() error {
 	return s.rdb.Close()
 }
 
-func WithCache[T any](ctx context.Context, rdb *redis.Client, key string, fn func() (T, error), ttl time.Duration) (T, error) {
-	// Check redis first
-	cached, err := rdb.Get(ctx, key).Result()
-	if err == nil {
-		var result T
-		json.Unmarshal([]byte(cached), &result)
-		return result, nil
+func Cached[T any](
+	ctx context.Context,
+	redisService Service,
+	cacheKey string,
+	cacheDuration time.Duration,
+	target *T, // Pointer to the variable where the result should go
+	source func() (T, error), // Function to get the data if cache miss
+) error {
+
+	// 1. Try to get from Redis cache, unmarshall to target
+	cachedData, err := redisService.Get(ctx, cacheKey)
+	if err == nil && cachedData != "" {
+		err := json.Unmarshal([]byte(cachedData), target)
+		if err == nil {
+			return nil
+		}
+		log.Printf("Error unmarshaling cached data for key '%s': %v", cacheKey, err)
+	} else if err != redis.Nil { // redis.Nil means key not found, other errors mean a problem
+		log.Printf("Error getting data from Redis for key '%s': %v", cacheKey, err)
 	}
 
-	// Cache miss - call the function
-	result, err := fn()
+	// 2. If not in cache or error, execute the source function
+	data, err := source()
 	if err != nil {
-		return result, err
+		return err
 	}
 
-	// Cache the result
-	data, _ := json.Marshal(result)
-	rdb.Set(ctx, key, data, ttl)
+	// Assign the data to the target pointer
+	*target = data
 
-	return result, nil
+	// 3. Cache the data for later use
+	err = redisService.Set(ctx, cacheKey, data, cacheDuration)
+	if err != nil {
+		// Don't return an error if unable to set redis cache
+		log.Printf("Error setting cache in Redis for key '%s': %v", cacheKey, err)
+	}
+
+	return nil
 }
-
-// func (s *service) GetPosts(page int) ([]Post, error) {
-// 	return WithCache(s.redis, "posts:"+strconv.Itoa(page), func() ([]Post, error) {
-// 		return s.getPostsFromDB(page) // your current DB logic
-// 	}, 5*time.Minute)
-// }
-
-// func (s *service) GetCategories() ([]Category, error) {
-// 	return WithCache(s.redis, "categories", func() ([]Category, error) {
-// 		return s.getCategoriesFromDB()
-// 	}, 10*time.Minute)
-// }
