@@ -105,7 +105,7 @@ ALTER TABLE playlist RENAME COLUMN channel_thumbnails TO channel_thumbnails_pick
 ALTER TABLE playlist RENAME COLUMN channel_thumbnails_json TO channel_thumbnails;
 ALTER TABLE post RENAME COLUMN thumbnails TO thumbnails_pickle;
 ALTER TABLE post RENAME COLUMN thumbnails_json TO thumbnails;
-ALTER TABLE post RENAME COLUMN 'similar' TO related_pickle;
+ALTER TABLE post RENAME COLUMN "similar" TO related_pickle;
 ALTER TABLE post RENAME COLUMN related_json TO related;
 
 -- Set NOT NULL to the newly renamed columns

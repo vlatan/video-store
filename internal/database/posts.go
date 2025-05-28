@@ -11,7 +11,7 @@ type Post struct {
 }
 
 const getPostsQuery = `
-SELECT video_id, title, thumbnails_json FROM post 
+SELECT video_id, title, thumbnails FROM post 
 ORDER BY upload_date DESC
 LIMIT $1 OFFSET $2
 `

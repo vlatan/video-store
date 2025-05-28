@@ -1,5 +1,7 @@
 * Migrate pickled thumbs to JSONB
   https://claude.ai/chat/8b4acfae-869a-4037-aa56-4d66ddf9bf49
+
+* Make srcset
   
 * Try to recreate the homepage
     * Get posts
