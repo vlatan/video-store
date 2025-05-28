@@ -112,13 +112,15 @@ ALTER TABLE post RENAME COLUMN related_json TO related;
 ALTER TABLE playlist ALTER COLUMN thumbnails SET NOT NULL;
 ALTER TABLE playlist ALTER COLUMN channel_thumbnails SET NOT NULL;
 ALTER TABLE post ALTER COLUMN thumbnails SET NOT NULL;
-ALTER TABLE post ALTER COLUMN related SET NOT NULL;
 
 --Drop the BYTEA columns if everything is OK
 ALTER TABLE playlist DROP COLUMN thumbnails_pickle;
 ALTER TABLE playlist DROP COLUMN channel_thumbnails_pickle;
 ALTER TABLE post DROP COLUMN thumbnails_pickle;
 ALTER TABLE post DROP COLUMN related_pickle;
+
+-- FINALLY CHANGE FROM BYTEA TO JSONB IN THE SCHEMA
+-- AND CHANGE COLUMN NAME "similar" TO related IN post
 """
 
 
