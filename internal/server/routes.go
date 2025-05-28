@@ -47,7 +47,7 @@ func (s *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
 		24*time.Hour,
 		&posts,
 		func() ([]database.ProcessedPost, error) {
-			return s.db.GetPosts(page) // Call the actual underlying database method
+			return s.db.GetProcessedPosts(page) // Call the actual underlying database method
 		},
 	)
 
