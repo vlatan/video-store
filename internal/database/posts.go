@@ -49,22 +49,22 @@ type Thumbnail struct {
 	Height int    `json:"height"`
 }
 
-type ProcessedPost struct {
+type PPost struct {
 	VideoID, Title, Srcset string
 	Thumbnail              Thumbnail
 }
 
 // Get posts where thumbnails are processed
-func (s *service) GetProcessedPosts(page int) ([]ProcessedPost, error) {
+func (s *service) GetProcessedPosts(page int) ([]PPost, error) {
 
-	var pPosts []ProcessedPost
+	var pPosts []PPost
 	posts, err := s.GetPosts(page)
 	if err != nil {
 		return pPosts, err
 	}
 
 	for _, post := range posts {
-		pPost := ProcessedPost{
+		pPost := PPost{
 			VideoID: post.VideoID,
 			Title:   post.Title,
 		}

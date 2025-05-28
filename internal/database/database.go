@@ -15,7 +15,7 @@ type Service interface {
 	// Get paginated posts from the DB
 	GetPosts(int) ([]Post, error)
 	// GEt posts with thumbnails processed
-	GetProcessedPosts(int) ([]ProcessedPost, error)
+	GetProcessedPosts(int) ([]PPost, error)
 	// Health returns a map of health status information.
 	// The keys and values in the map are service-specific.
 	Health() map[string]string
