@@ -12,11 +12,20 @@
     {{ range .Posts }}
     <a class="video-link" href="/posts/{{ .VideoID }}">
         <span class="video-img-wrap">
-            <img class="video-img" alt="{{ .Title }}" src="" srcset="">
+            <img class="video-img" alt="{{ .Title }}" src="{{ .Thumbnail.URL }}" srcset="{{ .Srcset }}">
         </span>
         <h2 class="video-title">{{ .Title }}</h2>
     </a>
     {{ end }}
+
+    <!-- {{ range .Posts }}
+    <a class="video-link" href="/posts/{{ .VideoID }}">
+        <span class="video-img-wrap">
+            <img class="video-img" alt="{{ .Title }}" src="" srcset="">
+        </span>
+        <h2 class="video-title">{{ .Title }}</h2>
+    </a>
+    {{ end }} -->
 
     <template id="post_template">
         <a class="video-link" href="#">

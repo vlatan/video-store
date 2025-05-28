@@ -36,7 +36,7 @@ func (s *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
 		page = pageInt
 	}
 
-	var posts []database.Post
+	var posts []database.ProcessedPost
 	ctx := context.Background() // Or retrieve context from request
 
 	// Use the generic cache wrapper
@@ -46,7 +46,7 @@ func (s *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Sprintf("posts_page_%d", page),
 		24*time.Hour,
 		&posts,
-		func() ([]database.Post, error) {
+		func() ([]database.ProcessedPost, error) {
 			return s.db.GetPosts(page) // Call the actual underlying database method
 		},
 	)
@@ -59,7 +59,6 @@ func (s *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
 
 	s.data.Posts = posts
 
-	// TODO: Postprocess thumbnails
 	// TODO: Return JSON for page > 1
 
 	if err := s.tm.Render(w, "home", s.data); err != nil {
