@@ -5,8 +5,9 @@ import (
 )
 
 type Post struct {
-	VideoID, Title string
-	Thumbnails     []byte
+	VideoID    string `db:"video_id"`
+	Title      string `db:"title"`
+	Thumbnails []byte `db:"title"`
 }
 
 const getPostsQuery = `
