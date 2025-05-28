@@ -57,10 +57,17 @@ func (s *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// if not the first page return JSON
+	if page > 1 {
+		time.Sleep(time.Millisecond * 400)
+		w.Header().Set("Content-Type", "application/json")
+		if json.NewEncoder(w).Encode(posts) != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		return
+	}
+
 	s.data.Posts = posts
-
-	// TODO: Return JSON for page > 1
-
 	if err := s.tm.Render(w, "home", s.data); err != nil {
 		log.Println(err)
 		http.Error(w, "Something went wrong.", http.StatusInternalServerError)

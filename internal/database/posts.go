@@ -51,8 +51,10 @@ type Thumbnail struct {
 }
 
 type PPost struct {
-	VideoID, Title, Srcset string
-	Thumbnail              Thumbnail
+	VideoID   string    `json:"video_id"`
+	Title     string    `json:"title"`
+	Srcset    string    `json:"srcset"`
+	Thumbnail Thumbnail `json:"thumbnail"`
 }
 
 // Get posts where thumbnails are processed
