@@ -2,6 +2,7 @@ package templates
 
 import (
 	"bytes"
+	"encoding/json"
 	"factual-docs/web"
 	"fmt"
 	"html/template"
@@ -15,6 +16,8 @@ import (
 )
 
 type Service interface {
+	// Write JSON to response
+	WriteJSON(http.ResponseWriter, any) error
 	// Gets template from a map by name and executes it
 	Render(http.ResponseWriter, string, any) error
 }
@@ -38,6 +41,24 @@ func New() Service {
 	))
 
 	return tm
+}
+
+// Write JSOn to buffer first and then if succesfull to the response writer
+func (tm Templates) WriteJSON(w http.ResponseWriter, data any) error {
+	var buf bytes.Buffer
+	encoder := json.NewEncoder(&buf)
+	err := encoder.Encode(data)
+	if err != nil {
+		return err
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if _, err := buf.WriteTo(w); err != nil {
+		log.Printf("failed to write template to response: %v", err)
+		return err
+	}
+
+	return nil
 }
 
 // Check if template exists in the collection of templates (map)

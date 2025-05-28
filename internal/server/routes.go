@@ -27,6 +27,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	return mux
 }
 
+// Handle the Home page
 func (s *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
 
 	page := 1
@@ -60,9 +61,9 @@ func (s *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
 	// if not the first page return JSON
 	if page > 1 {
 		time.Sleep(time.Millisecond * 400)
-		w.Header().Set("Content-Type", "application/json")
-		if json.NewEncoder(w).Encode(posts) != nil {
-			w.WriteHeader(http.StatusInternalServerError)
+		if err := s.tm.WriteJSON(w, posts); err != nil {
+			log.Println(err)
+			http.Error(w, "Something went wrong.", http.StatusInternalServerError)
 		}
 		return
 	}
