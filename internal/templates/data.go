@@ -13,6 +13,7 @@ type TemplateData struct {
 	Config      *config.Config
 	Title       string
 	Posts       []database.Post
+	Categories  []database.Category
 }
 
 func (td *TemplateData) StaticUrl(path string) string {

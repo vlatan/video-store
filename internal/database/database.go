@@ -14,6 +14,8 @@ import (
 type Service interface {
 	// Get paginated posts from the DB
 	GetPosts(int) ([]Post, error)
+	// Get all categories
+	GetCategories() ([]Category, error)
 	// Health returns a map of health status information.
 	// The keys and values in the map are service-specific.
 	Health() map[string]string

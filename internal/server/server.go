@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"time"
@@ -45,8 +46,24 @@ func NewServer() *http.Server {
 }
 
 func (s *Server) NewData() *templates.TemplateData {
+
+	ctx := context.Background()
+	var categories []database.Category
+
+	redis.Cached(
+		ctx,
+		s.rdb,
+		"categories",
+		24*time.Hour,
+		&categories,
+		func() ([]database.Category, error) {
+			return s.db.GetCategories() // Call the actual underlying database method
+		},
+	)
+
 	return &templates.TemplateData{
 		StaticFiles: s.sf,
 		Config:      s.config,
+		Categories:  categories,
 	}
 }
