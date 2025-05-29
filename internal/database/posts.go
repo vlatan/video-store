@@ -2,6 +2,9 @@ package database
 
 import (
 	"encoding/json"
+	"fmt"
+	"sort"
+	"strings"
 )
 
 type Post struct {
@@ -78,10 +81,36 @@ func (s *service) GetProcessedPosts(page int) ([]PPost, error) {
 			return pPosts, err
 		}
 
+		pPost.Srcset = srcset(thumbnails, 480)
 		pPost.Thumbnail = thumbnails["medium"]
 		pPosts = append(pPosts, pPost)
+
 	}
 
 	return pPosts, nil
+}
 
+// Create a srcset string from a map of thumbnails
+func srcset(thumbnails map[string]Thumbnail, maxWidth int) string {
+
+	// Get the Thumbnail structs from the map
+	items := make([]Thumbnail, 0, len(thumbnails))
+	for _, item := range thumbnails {
+		items = append(items, item)
+	}
+
+	// Sort the thumbnails by width
+	sort.Slice(items, func(i, j int) bool {
+		return items[i].Width < items[j].Width
+	})
+
+	// Create the srcset string
+	var result string
+	for _, item := range items {
+		if item.Width <= maxWidth {
+			result += fmt.Sprintf("%s %dw, ", item.URL, item.Width)
+		}
+	}
+
+	return strings.TrimSuffix(result, ", ")
 }
