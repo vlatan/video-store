@@ -7,10 +7,23 @@ import (
 	"strings"
 )
 
-type Post struct {
+type DBPost struct {
 	VideoID    string `db:"video_id"`
 	Title      string `db:"title"`
 	Thumbnails []byte `db:"title"`
+}
+
+type Thumbnail struct {
+	URL    string `json:"url"`
+	Width  int    `json:"width"`
+	Height int    `json:"height"`
+}
+
+type Post struct {
+	VideoID   string    `json:"video_id"`
+	Title     string    `json:"title"`
+	Srcset    string    `json:"srcset"`
+	Thumbnail Thumbnail `json:"thumbnail"`
 }
 
 const getPostsQuery = `
@@ -33,61 +46,49 @@ func (s *service) GetPosts(page int) ([]Post, error) {
 
 	var posts []Post
 	for rows.Next() {
-		var post Post
-		if err := rows.Scan(&post.VideoID, &post.Title, &post.Thumbnails); err != nil {
-			return posts, err
+
+		// Get post from DB
+		var dbPost DBPost
+		if err := rows.Scan(&dbPost.VideoID, &dbPost.Title, &dbPost.Thumbnails); err != nil {
+			return []Post{}, err
 		}
+
+		// Process the post
+		post, err := processPost(dbPost)
+		if err != nil {
+			return []Post{}, err
+		}
+
+		// Include the processed post in the result
 		posts = append(posts, post)
 	}
 
 	if err := rows.Err(); err != nil {
-		return posts, err
+		return []Post{}, err
 	}
 
 	return posts, nil
 }
 
-type Thumbnail struct {
-	URL    string `json:"url"`
-	Width  int    `json:"width"`
-	Height int    `json:"height"`
-}
-
-type PPost struct {
-	VideoID   string    `json:"video_id"`
-	Title     string    `json:"title"`
-	Srcset    string    `json:"srcset"`
-	Thumbnail Thumbnail `json:"thumbnail"`
-}
-
-// Get posts where thumbnails are processed
-func (s *service) GetProcessedPosts(page int) ([]PPost, error) {
-
-	var pPosts []PPost
-	posts, err := s.GetPosts(page)
+// Convert DB post to e ready post for templates
+func processPost(dbPost DBPost) (Post, error) {
+	// Unmarshall the thumbnails into a map of structs
+	var thumbnails map[string]Thumbnail
+	err := json.Unmarshal(dbPost.Thumbnails, &thumbnails)
 	if err != nil {
-		return pPosts, err
+		return Post{}, err
 	}
 
-	for _, post := range posts {
-		pPost := PPost{
-			VideoID: post.VideoID,
-			Title:   post.Title,
-		}
-
-		var thumbnails map[string]Thumbnail
-		err := json.Unmarshal(post.Thumbnails, &thumbnails)
-		if err != nil {
-			return pPosts, err
-		}
-
-		pPost.Srcset = srcset(thumbnails, 480)
-		pPost.Thumbnail = thumbnails["medium"]
-		pPosts = append(pPosts, pPost)
-
+	// Construct the processed post
+	post := Post{
+		VideoID:   dbPost.VideoID,
+		Title:     dbPost.Title,
+		Srcset:    srcset(thumbnails, 480),
+		Thumbnail: thumbnails["medium"],
 	}
 
-	return pPosts, nil
+	return post, nil
+
 }
 
 // Create a srcset string from a map of thumbnails
