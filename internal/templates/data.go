@@ -2,6 +2,7 @@ package templates
 
 import (
 	"factual-docs/internal/config"
+	"factual-docs/internal/database"
 	"factual-docs/internal/files"
 	"strings"
 	"time"
@@ -11,7 +12,7 @@ type TemplateData struct {
 	StaticFiles files.StaticFiles
 	Config      *config.Config
 	Title       string
-	Posts       any
+	Posts       []database.Post
 }
 
 func (td *TemplateData) StaticUrl(path string) string {
@@ -27,11 +28,4 @@ func (td *TemplateData) Split(s, sep string) []string {
 
 func (td *TemplateData) Now() time.Time {
 	return time.Now()
-}
-
-func NewData(sf files.StaticFiles, cfg *config.Config) *TemplateData {
-	return &TemplateData{
-		StaticFiles: sf,
-		Config:      cfg,
-	}
 }

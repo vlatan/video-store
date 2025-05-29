@@ -18,7 +18,6 @@ type Server struct {
 	rdb    redis.Service
 	tm     templates.Service
 	sf     files.StaticFiles
-	data   *templates.TemplateData
 }
 
 func NewServer() *http.Server {
@@ -33,7 +32,6 @@ func NewServer() *http.Server {
 		rdb:    redis.New(cfg),
 		tm:     templates.New(),
 		sf:     sf,
-		data:   templates.NewData(sf, cfg),
 	}
 
 	// Declare Server config
@@ -43,5 +41,12 @@ func NewServer() *http.Server {
 		IdleTimeout:  time.Minute,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 30 * time.Second,
+	}
+}
+
+func (s *Server) NewData() *templates.TemplateData {
+	return &templates.TemplateData{
+		StaticFiles: s.sf,
+		Config:      s.config,
 	}
 }

@@ -68,8 +68,10 @@ func (s *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.data.Posts = posts
-	if err := s.tm.Render(w, "home", s.data); err != nil {
+	data := s.NewData()
+	data.Posts = posts
+
+	if err := s.tm.Render(w, "home", data); err != nil {
 		log.Println(err)
 		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
 	}
