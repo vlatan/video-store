@@ -14,8 +14,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/markbates/goth/gothic"
 )
 
 func (s *Server) RegisterRoutes() http.Handler {
@@ -27,7 +25,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	mux.HandleFunc("GET /static/", s.staticHandler)
 	mux.HandleFunc("GET /auth/{provider}", s.authHandler)
 	mux.HandleFunc("GET /auth/{provider}/callback", s.authCallbackHandler)
-	mux.HandleFunc("GET /logout/{provider}", s.logoutHandler)
+	mux.HandleFunc("GET /logout/{$}", s.logoutHandler)
 
 	return mux
 }
@@ -42,9 +40,10 @@ func (s *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
 		page = pageInt
 	}
 
-	session, _ := gothic.Store.Get(r, "session-name")
-
-	fmt.Println(session.Values)
+	// session, err := s.store.Get(r, s.config.SessionName)
+	// if err == nil {
+	// 	log.Println(session.Values["user_info"])
+	// }
 
 	var posts []database.Post
 	ctx := context.Background() // Or retrieve context from request
@@ -84,35 +83,6 @@ func (s *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
 	}
-}
-
-func (s *Server) authHandler(w http.ResponseWriter, r *http.Request) {
-	if user, err := gothic.CompleteUserAuth(w, r); err == nil {
-		fmt.Println(user)
-		http.Redirect(w, r, "/", http.StatusSeeOther)
-		return
-	}
-
-	gothic.BeginAuthHandler(w, r)
-}
-
-func (s *Server) authCallbackHandler(w http.ResponseWriter, r *http.Request) {
-	user, err := gothic.CompleteUserAuth(w, r)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	fmt.Println(user)
-	http.Redirect(w, r, "/", http.StatusSeeOther)
-}
-
-func (s *Server) logoutHandler(w http.ResponseWriter, r *http.Request) {
-	if err := gothic.Logout(w, r); err != nil {
-		log.Println(err)
-		return
-	}
-	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 // Handle minified static file from cache

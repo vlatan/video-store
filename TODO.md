@@ -1,11 +1,10 @@
 * Try to recreate the homepage
-    * Register Auth with goth and add providers routes
-      https://github.com/markbates/goth
-      https://github.com/markbates/goth/blob/master/examples/main.go
-    * Figure out how to store additional user data in session if necessary
-      and pass that data to the templates
-
-    * Pass FlashMessages to redirect
+* User login
+  * Make sure the user struct is saved in cookie for each user differently
+  * On login query the DB to add/edit user in DB
+  * Pass that struct to templates
+  * Pass the state (redirect url) to flow and retrieve at the end
+  * Pass FlashMessages to redirect
 
 * Templates are not minified?
 * Error pages
