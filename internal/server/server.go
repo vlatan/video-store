@@ -23,7 +23,13 @@ type Server struct {
 
 func NewServer() *http.Server {
 
+	// Create new config object
 	cfg := config.New()
+
+	// Register Authentication service
+	RegisterAuth(cfg)
+
+	// Minify css and js files
 	sf := files.New()
 
 	// Create new Server struct
@@ -45,6 +51,9 @@ func NewServer() *http.Server {
 	}
 }
 
+// Creates new default data struct to be passed to the templates
+// Instead of manualy envoking this function in each route it can be envoked in a middleware
+// and passed donwstream as value to the request context.
 func (s *Server) NewData() *templates.TemplateData {
 
 	ctx := context.Background()

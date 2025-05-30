@@ -1,10 +1,11 @@
 * Try to recreate the homepage
-    * Get categories
-    * Define current user
-      * Create middlware to set a current user struct based session
-        To be able to pass it to templates
-    * Google login flow
+    * Register Auth with goth and add providers routes
+      https://github.com/markbates/goth
+      https://github.com/markbates/goth/blob/master/examples/main.go
+    * Figure out how to store additional user data in session if necessary
+      and pass that data to the templates
 
-* Add models, execute simple queries
-* Learn how the golang db migrations work
+    * Pass FlashMessages to redirect
+
 * Templates are not minified?
+* Error pages

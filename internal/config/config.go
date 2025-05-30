@@ -8,12 +8,13 @@ import (
 
 type Config struct {
 	// Running locally or not
-	Debug bool `env:"DEBUG" envDefault:"false"`
+	Debug      bool   `env:"DEBUG" envDefault:"false"`
+	SessionKey string `env:"SESSION_KEY"`
 
 	// App settings
 	AppName         string `env:"APP_NAME"`
 	AppDescription  string `env:"APP_DESCRIPTION"`
-	Domain          string `env:"DOMAIN" envDefault:"localhost"`
+	Domain          string `env:"DOMAIN" envDefault:"localhost:5000"`
 	SecretKey       string `env:"SECRET_KEY"`
 	GtagID          string `env:"GTAG_ID"`
 	PostsPerPage    int    `env:"POSTS_PER_PAGE" envDefault:"24"`
@@ -24,7 +25,9 @@ type Config struct {
 	YouTubeAPIKey           string   `env:"YOUTUBE_API_KEY"`
 	GeminiAPIKey            string   `env:"GEMINI_API_KEY"`
 	GeminiModel             string   `env:"GEMINI_MODEL"`
-	GoogleOAuthScopes       []string `env:"GOOGLE_OAUTH_SCOPES"`
+	GoogleOAuthScopes       []string `env:"GOOGLE_OAUTH_SCOPES" envDefault:"openid"`
+	GoogleOAuthClientID     string   `env:"GOOGLE_OAUTH_CLIENT_ID"`
+	GoogleOAuthClientSecret string   `env:"GOOGLE_OAUTH_CLIENT_SECRET"`
 	GoogleOAuthClientBase64 string   `env:"GOOGLE_OAUTH_CLIENT"`
 
 	// AdSense
