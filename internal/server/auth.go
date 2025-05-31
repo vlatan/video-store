@@ -64,7 +64,7 @@ func (s *Server) loginUser(w http.ResponseWriter, r *http.Request, gothUser *got
 	session, _ := s.store.Get(r, s.config.SessionName)
 
 	// TODO: Add/update user in database
-	// TODO: Store avatar URL in redis
+	// TODO: Store avatar URL in redis, maybe?
 
 	// Store user values in session
 	session.Values["UserID"] = gothUser.UserID
@@ -83,19 +83,31 @@ func (s *Server) loginUser(w http.ResponseWriter, r *http.Request, gothUser *got
 
 // Provider Auth
 func (s *Server) authHandler(w http.ResponseWriter, r *http.Request) {
+	// The origin URL of the user
+	redirectTo := r.URL.Query().Get("redirect")
+	if redirectTo == "" {
+		redirectTo = "/"
+	}
+
 	// Try to get the user without re-authenticating
 	if gothUser, err := gothic.CompleteUserAuth(w, r); err == nil {
 		// Save user into our session
 		if err = s.loginUser(w, r, &gothUser); err != nil {
 			log.Printf("Error saving app session: %v", err)
+			http.Error(w, "Something went wrong.", http.StatusInternalServerError)
 			return
 		}
 
-		http.Redirect(w, r, "/", http.StatusSeeOther)
+		http.Redirect(w, r, redirectTo, http.StatusSeeOther)
 		return
 	}
 
-	// Begin
+	// Store this redirect URL in session
+	session, _ := s.store.Get(r, "redirect")
+	session.Values["redirect_after_auth"] = redirectTo
+	session.Save(r, w)
+
+	// Begin Provider auth
 	gothic.BeginAuthHandler(w, r)
 }
 
@@ -104,20 +116,36 @@ func (s *Server) authCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	gothUser, err := gothic.CompleteUserAuth(w, r)
 	if err != nil {
 		log.Println(err)
+		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
 		return
 	}
 
 	// Save user into our session
 	if err = s.loginUser(w, r, &gothUser); err != nil {
 		log.Printf("Error saving app session: %v", err)
+		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
 		return
 	}
 
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	// Retrieve the user final redirect value
+	session, _ := s.store.Get(r, "redirect")
+	redirectTo, ok := session.Values["redirect_after_auth"].(string)
+	if !ok {
+		redirectTo = "/"
+	}
+
+	// Clean up redirect session
+	delete(session.Values, "redirect_after_auth")
+	session.Save(r, w)
+
+	http.Redirect(w, r, redirectTo, http.StatusSeeOther)
 }
 
 // Logout user, delete sessions
 func (s *Server) logoutHandler(w http.ResponseWriter, r *http.Request) {
+
+	// TODO: Make this route protected, user needs to be logged in to access this
+
 	if err := gothic.Logout(w, r); err != nil {
 		log.Println(err)
 		return
