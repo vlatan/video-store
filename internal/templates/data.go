@@ -19,6 +19,10 @@ type User struct {
 	AnalyticsID string `json:"analytics_id"`
 }
 
+func (u *User) IsAuthenticated() bool {
+	return u != nil && u.UserID != ""
+}
+
 type TemplateData struct {
 	StaticFiles files.StaticFiles
 	Config      *config.Config

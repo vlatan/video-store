@@ -39,7 +39,7 @@
 		{{ end }}
 	</title>
 
-	<!-- {{ if not .Config.Debug }}
+	{{ if not .Config.Debug }}
 	<script async src="https://www.googletagmanager.com/gtag/js?id={{ .Config.GtagID }}"></script>
 	{{ if .CurrentUser.AnalyticsID }}
 	<script>
@@ -62,7 +62,7 @@
 	<script async
 		src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-{{.Config.AdsenseAccount}}"
 		crossorigin="anonymous"></script>
-	{{ end }} -->
+	{{ end }}
 
 </head>
 
