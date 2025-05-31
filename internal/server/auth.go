@@ -104,8 +104,8 @@ func (s *Server) authHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Store this redirect URL in session
-	session, _ := s.store.Get(r, "redirect")
-	session.Values["redirect_after_auth"] = redirectTo
+	session, _ := s.store.Get(r, "fd_redirect")
+	session.Values["final_redirect"] = redirectTo
 	session.Save(r, w)
 
 	// Begin Provider auth
@@ -129,15 +129,7 @@ func (s *Server) authCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Retrieve the user final redirect value
-	session, _ := s.store.Get(r, "redirect")
-	redirectTo, ok := session.Values["redirect_after_auth"].(string)
-	if !ok {
-		redirectTo = "/"
-	}
-
-	// Clean up redirect session
-	delete(session.Values, "redirect_after_auth")
-	session.Save(r, w)
+	redirectTo := s.getUserFinalRedirect(w, r)
 
 	http.Redirect(w, r, redirectTo, http.StatusSeeOther)
 }
@@ -145,16 +137,34 @@ func (s *Server) authCallbackHandler(w http.ResponseWriter, r *http.Request) {
 // Logout user, delete sessions
 func (s *Server) logoutHandler(w http.ResponseWriter, r *http.Request) {
 
-	// TODO: Make this route protected, user needs to be logged in to access this
+	// Exit if user is not logged in
+	if user := s.getUserFromSession(r); user == nil || user.UserID == "" {
+		http.Error(w, "Forbidden.", http.StatusForbidden)
+		return
+	}
 
+	// Remove gothic session if any
 	if err := gothic.Logout(w, r); err != nil {
 		log.Println(err)
 		return
 	}
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+
+	// Remove user's session
+	if err := s.logoutUser(w, r); err != nil {
+		log.Println(err)
+		return
+	}
+
+	// The origin URL of the user
+	redirectTo := r.URL.Query().Get("redirect")
+	if redirectTo == "" {
+		redirectTo = "/"
+	}
+
+	http.Redirect(w, r, redirectTo, http.StatusSeeOther)
 }
 
-// Retrieve in middleware
+// Retrieve use session, return User struct
 func (s *Server) getUserFromSession(r *http.Request) *templates.User {
 	session, err := s.store.Get(r, s.config.SessionName)
 	if session == nil || err != nil {
@@ -175,11 +185,27 @@ func (s *Server) getUserFromSession(r *http.Request) *templates.User {
 	}
 }
 
-// // Attach User to request context
-// func (s *Server) userMiddleware(next http.Handler) http.Handler {
-// 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-// 		user := s.getUserFromSession(r)
-// 		ctx := context.WithValue(r.Context(), s.config.UserContextKey, user)
-// 		next.ServeHTTP(w, r.WithContext(ctx))
-// 	})
-// }
+func (s *Server) logoutUser(w http.ResponseWriter, r *http.Request) error {
+	session, err := s.store.Get(r, s.config.SessionName)
+	if err != nil {
+		return err
+	}
+	session.Options.MaxAge = -1
+	session.Values = make(map[any]any)
+	return session.Save(r, w)
+}
+
+func (s *Server) getUserFinalRedirect(w http.ResponseWriter, r *http.Request) string {
+	// Retrieve the user final redirect value
+	session, _ := s.store.Get(r, "fd_redirect")
+	redirectTo, ok := session.Values["final_redirect"].(string)
+	if !ok {
+		redirectTo = "/"
+	}
+
+	// Clean up redirect session
+	delete(session.Values, "final_redirect")
+	session.Save(r, w)
+
+	return redirectTo
+}

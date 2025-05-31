@@ -25,7 +25,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	mux.HandleFunc("GET /static/", s.staticHandler)
 	mux.HandleFunc("GET /auth/{provider}", s.authHandler)
 	mux.HandleFunc("GET /auth/{provider}/callback", s.authCallbackHandler)
-	mux.HandleFunc("GET /logout/{$}", s.logoutHandler)
+	mux.HandleFunc("GET /logout/{provider}", s.logoutHandler)
 
 	return mux
 }

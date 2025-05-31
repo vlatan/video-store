@@ -23,6 +23,10 @@ func (u *User) IsAuthenticated() bool {
 	return u != nil && u.UserID != ""
 }
 
+func (u *User) IsAdmin(adminOpenID string) bool {
+	return u != nil && u.UserID != "" && u.UserID == adminOpenID
+}
+
 type TemplateData struct {
 	StaticFiles files.StaticFiles
 	Config      *config.Config

@@ -128,22 +128,22 @@
 					</ul>
 				</div>
 
-				<!-- {{ if .CurrentUser.IsAuthenticated }}
+				{{ if .CurrentUser.IsAuthenticated }}
 				<div class="dropdown">
 					<button aria-label="Drop User Menu" class="nav-item username">
-						<img src='{{ .StaticUrl "/static/.CurrentUser.Avatar" }}' class="username-image" width="20"
-							height="20" alt="">
+						<img src='{{ .StaticUrl .CurrentUser.AvatarURL }}' class="username-image" width="20" height="20"
+							alt="">
 						<span class="username-text">{{ .CurrentUser.Name }}</span>
 					</button>
 					<div class="dropdown-content">
-						{{ if .CurrentUser.IsAdmin }}
+						{{ if .CurrentUser.IsAdmin .Config.AdminOpenID }}
 						<a class="nav-item" href="/posts/new">New Video</a>
 						<a class="nav-item" href="/sources/new">New Source</a>
 						<a class="nav-item" href="/pages/new">New Page</a>
 						<a class="nav-item" href="/admin/dashboard">Dashboard</a>
 						{{ end }}
 						<a class="nav-item" href="/users/favorites">Watch Later</a>
-						<a class="nav-item" href="/auth/logout">Log out</a>
+						<a class="nav-item" href="/logout/{{ .CurrentUser.Provider }}">Log out</a>
 						<a data-modal="account" class="nav-item delete-account" href="javascript:void(0)">
 							Delete Account
 						</a>
@@ -206,7 +206,7 @@
 						</div>
 					</div>
 				</div>
-				{{end}} -->
+				{{end}}
 			</nav>
 		</header>
 	</div>
@@ -234,9 +234,9 @@
 
 	{{ block "scripts" . }}
 	<script defer src='{{ .StaticUrl "/static/js/shared.js" }}'></script>
-	<!-- {{ if not .CurrentUser.IsAuthenticated }}
+	{{ if not .CurrentUser.IsAuthenticated }}
 	<script defer src='{{ .StaticUrl "/static/js/pop.js" }}'></script>
-	{{end}} -->
+	{{end}}
 	{{end}}
 
 	{{ block "extra_scripts" . }}{{ end }}
