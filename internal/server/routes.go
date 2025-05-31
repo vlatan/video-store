@@ -40,11 +40,6 @@ func (s *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
 		page = pageInt
 	}
 
-	// session, err := s.store.Get(r, s.config.SessionName)
-	// if err == nil {
-	// 	log.Println(session.Values["user_info"])
-	// }
-
 	var posts []database.Post
 	ctx := context.Background() // Or retrieve context from request
 

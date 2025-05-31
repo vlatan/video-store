@@ -11,11 +11,12 @@ import (
 // User struct to store in the USER info in session
 // A simplified version of goth.User
 type User struct {
-	UserID    string `json:"id"`
-	Email     string `json:"email"`
-	Name      string `json:"name"`
-	Provider  string `json:"provider"`
-	AvatarURL string `json:"avatar_url"`
+	UserID      string `json:"id"`
+	Email       string `json:"email"`
+	Name        string `json:"name"`
+	Provider    string `json:"provider"`
+	AvatarURL   string `json:"avatar_url"`
+	AnalyticsID string `json:"analytics_id"`
 }
 
 type TemplateData struct {
