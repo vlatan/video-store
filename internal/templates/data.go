@@ -10,14 +10,12 @@ import (
 
 // User struct to store in the USER info in session
 // A simplified version of goth.User
-type AppUser struct {
-	ID         string    `json:"id"`
-	Email      string    `json:"email"`
-	Name       string    `json:"name"`
-	Provider   string    `json:"provider"`
-	AvatarURL  string    `json:"avatar_url"`
-	LoginCount int       `json:"login_count"`
-	LastLogin  time.Time `json:"last_login"`
+type User struct {
+	UserID    string `json:"id"`
+	Email     string `json:"email"`
+	Name      string `json:"name"`
+	Provider  string `json:"provider"`
+	AvatarURL string `json:"avatar_url"`
 }
 
 type TemplateData struct {
@@ -26,7 +24,7 @@ type TemplateData struct {
 	Title       string
 	Posts       []database.Post
 	Categories  []database.Category
-	CurrentUser AppUser
+	CurrentUser *User
 }
 
 func (td *TemplateData) StaticUrl(path string) string {

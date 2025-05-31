@@ -2,11 +2,9 @@ package server
 
 import (
 	"factual-docs/internal/config"
-	"factual-docs/internal/templates"
 	"fmt"
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/gorilla/sessions"
 	"github.com/markbates/goth"
@@ -59,32 +57,23 @@ func initGothStore(cfg *config.Config) {
 	)
 }
 
+// Store user info in pir own session
 func (s *Server) loginUser(w http.ResponseWriter, r *http.Request, gothUser *goth.User) error {
 	// Get a session. We're ignoring the error resulted from decoding an
-	// existing session: Get() always returns a session, even if empty.
+	// existing session: Get() always returns a session, even if empty map[]
 	session, _ := s.store.Get(r, s.config.SessionName)
 
-	// Check if this user (by ID and provider) has logged in before
-	var currentUser *templates.AppUser
-	if val, ok := session.Values["user_info"].(*templates.AppUser); ok && val.ID == gothUser.UserID && val.Provider == gothUser.Provider {
-		currentUser = val
-	} else {
-		// New user or a new login for an existing user (different provider perhaps)
-		currentUser = &templates.AppUser{
-			ID:         gothUser.UserID,
-			Email:      gothUser.Email,
-			Name:       gothUser.Name,
-			Provider:   gothUser.Provider,
-			AvatarURL:  gothUser.AvatarURL,
-			LoginCount: 0, // Initialize for new user
-		}
-	}
+	// TODO: Add/update user in database
+	// TODO: Store avatar URL in redis
 
-	// Update custom info for the current login
-	currentUser.LoginCount++
-	currentUser.LastLogin = time.Now()
+	// Store user values in session
+	session.Values["UserID"] = gothUser.UserID
+	session.Values["Email"] = gothUser.Email
+	session.Values["Name"] = gothUser.FirstName
+	session.Values["Provider"] = gothUser.Provider
+	session.Values["AvatarURL"] = gothUser.AvatarURL
 
-	session.Values["user_info"] = currentUser
+	// Save the session
 	if err := session.Save(r, w); err != nil {
 		return err
 	}
@@ -92,6 +81,7 @@ func (s *Server) loginUser(w http.ResponseWriter, r *http.Request, gothUser *got
 	return nil
 }
 
+// Provider Auth
 func (s *Server) authHandler(w http.ResponseWriter, r *http.Request) {
 	// Try to get the user without re-authenticating
 	if gothUser, err := gothic.CompleteUserAuth(w, r); err == nil {
@@ -109,6 +99,7 @@ func (s *Server) authHandler(w http.ResponseWriter, r *http.Request) {
 	gothic.BeginAuthHandler(w, r)
 }
 
+// Provider Auth callback
 func (s *Server) authCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	gothUser, err := gothic.CompleteUserAuth(w, r)
 	if err != nil {
@@ -125,6 +116,7 @@ func (s *Server) authCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
+// Logout user, delete sessions
 func (s *Server) logoutHandler(w http.ResponseWriter, r *http.Request) {
 	if err := gothic.Logout(w, r); err != nil {
 		log.Println(err)

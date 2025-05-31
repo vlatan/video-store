@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"encoding/gob"
 	"fmt"
 	"net/http"
 	"time"
@@ -32,10 +31,6 @@ func NewServer() *http.Server {
 
 	// Minify css and js files
 	sf := files.New()
-
-	// Need to register app user struct with gob
-	// to be able to save/serialize to session cookie
-	gob.Register(&templates.AppUser{})
 
 	// Create new Server struct
 	newServer := &Server{
