@@ -55,7 +55,7 @@ func NewServer() *http.Server {
 // Creates new default data struct to be passed to the templates
 // Instead of manualy envoking this function in each route it can be envoked in a middleware
 // and passed donwstream as value to the request context.
-func (s *Server) NewData() *templates.TemplateData {
+func (s *Server) NewData(r *http.Request) *templates.TemplateData {
 
 	ctx := context.Background()
 	var categories []database.Category
@@ -74,6 +74,7 @@ func (s *Server) NewData() *templates.TemplateData {
 	return &templates.TemplateData{
 		StaticFiles: s.sf,
 		Config:      s.config,
-		Categories:  categories,
+		Categories:  &categories,
+		CurrentUser: s.getUserFromSession(r),
 	}
 }

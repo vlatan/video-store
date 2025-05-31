@@ -2,6 +2,7 @@ package server
 
 import (
 	"factual-docs/internal/config"
+	"factual-docs/internal/templates"
 	"fmt"
 	"log"
 	"net/http"
@@ -152,3 +153,33 @@ func (s *Server) logoutHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
+
+// Retrieve in middleware
+func (s *Server) getUserFromSession(r *http.Request) *templates.User {
+	session, err := s.store.Get(r, s.config.SessionName)
+	if session == nil || err != nil {
+		return &templates.User{}
+	}
+
+	userID, ok := session.Values["UserID"].(string)
+	if !ok {
+		return &templates.User{}
+	}
+
+	return &templates.User{
+		UserID:    userID,
+		Email:     session.Values["Email"].(string),
+		Name:      session.Values["Name"].(string),
+		Provider:  session.Values["Provider"].(string),
+		AvatarURL: session.Values["AvatarURL"].(string),
+	}
+}
+
+// // Attach User to request context
+// func (s *Server) userMiddleware(next http.Handler) http.Handler {
+// 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+// 		user := s.getUserFromSession(r)
+// 		ctx := context.WithValue(r.Context(), s.config.UserContextKey, user)
+// 		next.ServeHTTP(w, r.WithContext(ctx))
+// 	})
+// }

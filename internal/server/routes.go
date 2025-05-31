@@ -76,8 +76,8 @@ func (s *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := s.NewData()
-	data.Posts = posts
+	data := s.NewData(r)
+	data.Posts = &posts
 
 	if err := s.tm.Render(w, "home", data); err != nil {
 		log.Println(err)

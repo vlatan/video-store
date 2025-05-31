@@ -22,8 +22,8 @@ type TemplateData struct {
 	StaticFiles files.StaticFiles
 	Config      *config.Config
 	Title       string
-	Posts       []database.Post
-	Categories  []database.Category
+	Posts       *[]database.Post
+	Categories  *[]database.Category
 	CurrentUser *User
 }
 
