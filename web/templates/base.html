@@ -58,9 +58,9 @@
 	{{ end }}
 	{{ end }}
 
-	{{ if and (not .CurrentUser.IsAuthenticated) .Config.AdsenseAccount }}
+	{{ if and (not .CurrentUser.IsAuthenticated) .Config.AdSenseAccount }}
 	<script async
-		src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-{{.Config.AdsenseAccount}}"
+		src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-{{.Config.AdSenseAccount}}"
 		crossorigin="anonymous"></script>
 	{{ end }}
 
