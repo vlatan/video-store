@@ -183,7 +183,8 @@
 						</p>
 						<div class="login-buttons">
 							<button aria-label="Login via Google" data-close="login"
-								class="brand-login-button google-login" onclick="popupWindow('/auth/google', 'Google')">
+								class="brand-login-button google-login"
+								onclick="popupWindow('/auth/google?redirect={{ .CurrentURI }}', 'Google')">
 								<div class="brand-logo google-logo">
 									<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 533.5 544.3"
 										class="google-svg">
