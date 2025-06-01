@@ -76,5 +76,6 @@ func (s *Server) NewData(r *http.Request) *templates.TemplateData {
 		Config:      s.config,
 		Categories:  &categories,
 		CurrentUser: s.getUserFromSession(r),
+		CurrentURI:  r.RequestURI,
 	}
 }
