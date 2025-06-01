@@ -13,13 +13,9 @@ import (
 	"github.com/markbates/goth/providers/google"
 )
 
+// Setup Goth library
 func NewCookieStore(cfg *config.Config) *sessions.CookieStore {
-	initGothStore(cfg)
-	return initAppStore(cfg)
-}
-
-// Setup application wide session store
-func initAppStore(cfg *config.Config) *sessions.CookieStore {
+	// Create new cookies store
 	store := sessions.NewCookieStore([]byte(cfg.SessionKey))
 	store.Options = &sessions.Options{
 		Path:     "/",
@@ -28,19 +24,7 @@ func initAppStore(cfg *config.Config) *sessions.CookieStore {
 		Secure:   !cfg.Debug,
 	}
 
-	return store
-}
-
-// Setup Goth library
-func initGothStore(cfg *config.Config) {
-	store := sessions.NewCookieStore([]byte(cfg.SessionKey))
-	store.Options = &sessions.Options{
-		Path:     "/",
-		MaxAge:   86400,
-		HttpOnly: true,
-		Secure:   !cfg.Debug,
-	}
-
+	// Add this store to gothic
 	gothic.Store = store
 
 	protocol := "https"
@@ -48,6 +32,7 @@ func initGothStore(cfg *config.Config) {
 		protocol = "http"
 	}
 
+	// Add providers to goth
 	goth.UseProviders(
 		google.New(
 			cfg.GoogleOAuthClientID,
@@ -56,9 +41,12 @@ func initGothStore(cfg *config.Config) {
 			cfg.GoogleOAuthScopes...,
 		),
 	)
+
+	// Return the store so we can use it too
+	return store
 }
 
-// Store user info in pir own session
+// Store user info in our own session
 func (s *Server) loginUser(w http.ResponseWriter, r *http.Request, gothUser *goth.User) error {
 	// Get a session. We're ignoring the error resulted from decoding an
 	// existing session: Get() always returns a session, even if empty map[]
@@ -203,8 +191,9 @@ func (s *Server) getUserFinalRedirect(w http.ResponseWriter, r *http.Request) st
 		redirectTo = "/"
 	}
 
-	// Clean up redirect session
-	delete(session.Values, "final_redirect")
+	// Delete the redirect session
+	session.Options.MaxAge = -1
+	session.Values = make(map[any]any)
 	session.Save(r, w)
 
 	return redirectTo
