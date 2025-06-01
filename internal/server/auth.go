@@ -67,14 +67,11 @@ func (s *Server) loginUser(w http.ResponseWriter, r *http.Request, gothUser *got
 		return err
 	}
 
-	// Store logged in flash message in separate session
-	session, _ = s.store.Get(r, s.config.FlashSessionName)
 	flashMsg := templates.FlashMessage{
 		Message:  "You've been logged in!",
 		Category: "info",
 	}
-	session.AddFlash(&flashMsg)
-	session.Save(r, w)
+	s.storeFlashMessage(w, r, &flashMsg)
 
 	return nil
 }
@@ -186,17 +183,13 @@ func (s *Server) logoutUser(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	// Store logged out flash message in separate session
-	session, _ = s.store.Get(r, s.config.FlashSessionName)
 	flashMsg := templates.FlashMessage{
 		Message:  "You've been logged out!",
 		Category: "info",
 	}
-	session.AddFlash(&flashMsg)
-	session.Save(r, w)
+	s.storeFlashMessage(w, r, &flashMsg)
 
 	return nil
-
 }
 
 // Retrieve the user final redirect value
@@ -205,9 +198,29 @@ func (s *Server) getUserFinalRedirect(w http.ResponseWriter, r *http.Request) st
 
 	redirectTo := "/"
 	if flashes := session.Flashes("redirect"); len(flashes) > 0 {
-		redirectTo = flashes[0].(string)
+		if url, ok := flashes[0].(string); ok {
+			redirectTo = url
+		}
 	}
 
 	session.Save(r, w)
 	return redirectTo
+}
+
+// Store flash message in a session
+// No need to return an error if flashing fails
+func (s *Server) storeFlashMessage(
+	w http.ResponseWriter,
+	r *http.Request,
+	m *templates.FlashMessage,
+) {
+	session, err := s.store.Get(r, s.config.FlashSessionName)
+	if err != nil {
+		log.Println("Unable to get the flash session", err)
+	}
+
+	session.AddFlash(m)
+	if err = session.Save(r, w); err != nil {
+		log.Println("Unable to save the flash session", err)
+	}
 }
