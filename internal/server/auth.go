@@ -115,7 +115,6 @@ func (s *Server) authCallbackHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Retrieve the user final redirect value
 	redirectTo := s.getUserFinalRedirect(w, r)
-
 	http.Redirect(w, r, redirectTo, http.StatusSeeOther)
 }
 

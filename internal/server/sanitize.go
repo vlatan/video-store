@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-// SanitizeRelativePath validates and sanitizes a relative path for redirect
+// Validates and sanitizes a relative path for redirect
 func sanitizeRelativePath(redirectPath string) (string, error) {
 	// Check length
 	if len(redirectPath) > 1024 {
