@@ -72,11 +72,8 @@ func (s *Server) loginUser(w http.ResponseWriter, r *http.Request, gothUser *got
 
 // Provider Auth
 func (s *Server) authHandler(w http.ResponseWriter, r *http.Request) {
-	// The origin URL of the user
-	redirectTo := r.URL.Query().Get("redirect")
-	if redirectTo == "" {
-		redirectTo = "/"
-	}
+	// Get the redirect uri
+	redirectTo := getSafeRedirectPath(r)
 
 	// Try to get the user without re-authenticating
 	if gothUser, err := gothic.CompleteUserAuth(w, r); err == nil {
