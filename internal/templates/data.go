@@ -24,7 +24,7 @@ func (u *User) IsAuthenticated() bool {
 }
 
 func (u *User) IsAdmin(adminOpenID string) bool {
-	return u != nil && u.UserID != "" && u.UserID == adminOpenID
+	return u.IsAuthenticated() && u.UserID == adminOpenID
 }
 
 type TemplateData struct {
@@ -34,6 +34,7 @@ type TemplateData struct {
 	Posts       *[]database.Post
 	Categories  *[]database.Category
 	CurrentUser *User
+	CurrentURI  string
 }
 
 func (td *TemplateData) StaticUrl(path string) string {
