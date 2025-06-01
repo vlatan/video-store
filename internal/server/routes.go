@@ -41,11 +41,10 @@ func (s *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var posts []database.Post
-	ctx := context.Background() // Or retrieve context from request
 
 	// Use the generic cache wrapper
 	err = redis.Cached(
-		ctx,
+		r.Context(),
 		s.rdb,
 		fmt.Sprintf("posts_page_%d", page),
 		24*time.Hour,
