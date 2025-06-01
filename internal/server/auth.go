@@ -122,9 +122,9 @@ func (s *Server) authCallbackHandler(w http.ResponseWriter, r *http.Request) {
 // Logout user, delete sessions
 func (s *Server) logoutHandler(w http.ResponseWriter, r *http.Request) {
 
-	// Exit if user is not logged in
+	// Redirect to home if user is not logged in
 	if user := s.getUserFromSession(r); user == nil || user.UserID == "" {
-		http.Error(w, "Forbidden.", http.StatusForbidden)
+		http.Redirect(w, r, "/", http.StatusFound)
 		return
 	}
 
@@ -141,15 +141,11 @@ func (s *Server) logoutHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// The origin URL of the user
-	redirectTo := r.URL.Query().Get("redirect")
-	if redirectTo == "" {
-		redirectTo = "/"
-	}
-
+	redirectTo := getSafeRedirectPath(r)
 	http.Redirect(w, r, redirectTo, http.StatusSeeOther)
 }
 
-// Retrieve use session, return User struct
+// Retrieve user session, return User struct
 func (s *Server) getUserFromSession(r *http.Request) *templates.User {
 	session, err := s.store.Get(r, s.config.SessionName)
 	if session == nil || err != nil {

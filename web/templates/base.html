@@ -143,7 +143,8 @@
 						<a class="nav-item" href="/admin/dashboard">Dashboard</a>
 						{{ end }}
 						<a class="nav-item" href="/users/favorites">Watch Later</a>
-						<a class="nav-item" href="/logout/{{ .CurrentUser.Provider }}">Log out</a>
+						<a class="nav-item" href="/logout/{{ .CurrentUser.Provider }}?redirect={{ .CurrentURI }}">Log
+							out</a>
 						<a data-modal="account" class="nav-item delete-account" href="javascript:void(0)">
 							Delete Account
 						</a>

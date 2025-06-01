@@ -58,9 +58,10 @@ func sanitizeRelativePath(redirectPath string) (string, error) {
 	return result.String(), nil
 }
 
-// GetSafeRedirectPath extracts and sanitizes the current request path
+// Extracts and sanitizes the value from the query param "redirect"
 func getSafeRedirectPath(r *http.Request) string {
-	safePath, err := sanitizeRelativePath(r.RequestURI)
+	redirectParam := r.URL.Query().Get("redirect")
+	safePath, err := sanitizeRelativePath(redirectParam)
 	if err != nil {
 		return "/"
 	}
