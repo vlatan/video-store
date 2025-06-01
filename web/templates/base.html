@@ -183,9 +183,8 @@
 							documentaries.
 						</p>
 						<div class="login-buttons">
-							<button aria-label="Login via Google" data-close="login"
-								class="brand-login-button google-login"
-								onclick="popupWindow('/auth/google?redirect={{ .CurrentURI }}', 'Google')">
+							<a aria-label="Login via Google" data-close="login" class="brand-login-button google-login"
+								href="/auth/google?redirect={{ .CurrentURI }}">
 								<div class="brand-logo google-logo">
 									<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 533.5 544.3"
 										class="google-svg">
@@ -204,7 +203,7 @@
 									</svg>
 								</div>
 								<div class="brand-text">Sign In with Google</div>
-							</button>
+							</a>
 						</div>
 					</div>
 				</div>
@@ -218,13 +217,13 @@
 	</main>
 
 	<div id="footer" class="site-footer-wrap">
-		<!-- {{ if .FlashMessages }}
+		{{ if .FlashMessages }}
 		{{ range .FlashMessages }}
 		<div class="alert alert-{{ .Category }}">
 			{{ .Message }}
 		</div>
 		{{ end }}
-		{{ end }} -->
+		{{ end }}
 
 		<footer class="site-footer">
 			<span class="site-copy">{{ .Config.AppName }} &copy; {{ .Now.Year }}</span>

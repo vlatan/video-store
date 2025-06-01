@@ -27,14 +27,20 @@ func (u *User) IsAdmin(adminOpenID string) bool {
 	return u.IsAuthenticated() && u.UserID == adminOpenID
 }
 
+type FlashMessage struct {
+	Message  string
+	Category string
+}
+
 type TemplateData struct {
-	StaticFiles files.StaticFiles
-	Config      *config.Config
-	Title       string
-	Posts       *[]database.Post
-	Categories  *[]database.Category
-	CurrentUser *User
-	CurrentURI  string
+	StaticFiles   files.StaticFiles
+	Config        *config.Config
+	Title         string
+	Posts         *[]database.Post
+	Categories    *[]database.Category
+	CurrentUser   *User
+	CurrentURI    string
+	FlashMessages *[]FlashMessage
 }
 
 func (td *TemplateData) StaticUrl(path string) string {
