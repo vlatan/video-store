@@ -91,9 +91,9 @@ func (s *Server) authHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Store this redirect URL in session
-	session, _ := s.store.Get(r, "fd_redirect")
-	session.Values["final_redirect"] = redirectTo
+	// Store this redirect URL in session flash message
+	session, _ := s.store.Get(r, s.config.SessionName)
+	session.AddFlash(redirectTo, "redirect")
 	session.Save(r, w)
 
 	// Begin Provider auth
@@ -183,18 +183,15 @@ func (s *Server) logoutUser(w http.ResponseWriter, r *http.Request) error {
 	return session.Save(r, w)
 }
 
+// Retrieve the user final redirect value
 func (s *Server) getUserFinalRedirect(w http.ResponseWriter, r *http.Request) string {
-	// Retrieve the user final redirect value
-	session, _ := s.store.Get(r, "fd_redirect")
-	redirectTo, ok := session.Values["final_redirect"].(string)
-	if !ok {
-		redirectTo = "/"
+	session, _ := s.store.Get(r, s.config.SessionName)
+
+	redirectTo := "/"
+	if flashes := session.Flashes("redirect"); len(flashes) > 0 {
+		redirectTo = flashes[0].(string)
 	}
 
-	// Delete the redirect session
-	session.Options.MaxAge = -1
-	session.Values = make(map[any]any)
 	session.Save(r, w)
-
 	return redirectTo
 }
