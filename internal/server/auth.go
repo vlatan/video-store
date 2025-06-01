@@ -182,7 +182,9 @@ func (s *Server) logoutUser(w http.ResponseWriter, r *http.Request) error {
 	}
 	session.Options.MaxAge = -1
 	session.Values = make(map[any]any)
-	err = session.Save(r, w)
+	if err = session.Save(r, w); err != nil {
+		return err
+	}
 
 	// Store logged out flash message in separate session
 	session, _ = s.store.Get(r, s.config.FlashSessionName)
@@ -193,7 +195,7 @@ func (s *Server) logoutUser(w http.ResponseWriter, r *http.Request) error {
 	session.AddFlash(&flashMsg)
 	session.Save(r, w)
 
-	return err
+	return nil
 
 }
 
