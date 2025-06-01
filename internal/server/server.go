@@ -79,7 +79,7 @@ func (s *Server) NewData(w http.ResponseWriter, r *http.Request) *templates.Temp
 	flashes := session.Flashes()
 	flashMessages := []*templates.FlashMessage{}
 	for _, v := range flashes {
-		if flash, ok := v.(*templates.FlashMessage); ok {
+		if flash, ok := v.(*templates.FlashMessage); ok && flash != nil {
 			flashMessages = append(flashMessages, flash)
 		}
 	}
