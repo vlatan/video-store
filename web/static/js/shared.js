@@ -106,19 +106,6 @@ document.addEventListener('click', event => {
     }
 });
 
-// save login state for parent window
-const loginState = localStorage.getItem('LoggedIn');
-if (loginState) {
-    if (loginState === 'true') {
-        setAlert("You've been logged in!");
-    } else if (loginState === 'false') {
-        setAlert("Sorry, something went wrong!");
-    }
-    // remove login state
-    localStorage.removeItem('LoggedIn');
-}
-
-
 // Cookies disclaimer
 const acceptCookies = localStorage.getItem('acceptCookies');
 const privacyPath = "/page/privacy/";
