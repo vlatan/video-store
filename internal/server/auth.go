@@ -175,13 +175,26 @@ func (s *Server) getUserFromSession(r *http.Request) *templates.User {
 }
 
 func (s *Server) logoutUser(w http.ResponseWriter, r *http.Request) error {
+	// Invalidate the user session
 	session, err := s.store.Get(r, s.config.SessionName)
 	if err != nil {
 		return err
 	}
 	session.Options.MaxAge = -1
 	session.Values = make(map[any]any)
-	return session.Save(r, w)
+	err = session.Save(r, w)
+
+	// Store logged out flash message in separate session
+	session, _ = s.store.Get(r, s.config.FlashSessionName)
+	flashMsg := templates.FlashMessage{
+		Message:  "You've been logged out!",
+		Category: "info",
+	}
+	session.AddFlash(&flashMsg)
+	session.Save(r, w)
+
+	return err
+
 }
 
 // Retrieve the user final redirect value
