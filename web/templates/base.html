@@ -235,9 +235,6 @@
 
 	{{ block "scripts" . }}
 	<script defer src='{{ .StaticUrl "/static/js/shared.js" }}'></script>
-	{{ if not .CurrentUser.IsAuthenticated }}
-	<script defer src='{{ .StaticUrl "/static/js/pop.js" }}'></script>
-	{{end}}
 	{{end}}
 
 	{{ block "extra_scripts" . }}{{ end }}

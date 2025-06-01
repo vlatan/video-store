@@ -1,7 +1,7 @@
 package server
 
 import (
-	"context"
+	"encoding/gob"
 	"fmt"
 	"net/http"
 	"time"
@@ -25,6 +25,10 @@ type Server struct {
 }
 
 func NewServer() *http.Server {
+
+	// Register Flash Message struct with gob,
+	// to be able to be serialize and save to gorilla session
+	gob.Register(&templates.FlashMessage{})
 
 	// Create new config object
 	cfg := config.New()
@@ -55,13 +59,12 @@ func NewServer() *http.Server {
 // Creates new default data struct to be passed to the templates
 // Instead of manualy envoking this function in each route it can be envoked in a middleware
 // and passed donwstream as value to the request context.
-func (s *Server) NewData(r *http.Request) *templates.TemplateData {
+func (s *Server) NewData(w http.ResponseWriter, r *http.Request) *templates.TemplateData {
 
-	ctx := context.Background()
 	var categories []database.Category
 
 	redis.Cached(
-		ctx,
+		r.Context(),
 		s.rdb,
 		"categories",
 		24*time.Hour,
@@ -71,11 +74,23 @@ func (s *Server) NewData(r *http.Request) *templates.TemplateData {
 		},
 	)
 
+	// Get any flash messages from session and put to data
+	session, _ := s.store.Get(r, s.config.FlashSessionName)
+	flashes := session.Flashes()
+	flashMessages := []*templates.FlashMessage{}
+	for _, v := range flashes {
+		if flash, ok := v.(*templates.FlashMessage); ok {
+			flashMessages = append(flashMessages, flash)
+		}
+	}
+	session.Save(r, w)
+
 	return &templates.TemplateData{
-		StaticFiles: s.sf,
-		Config:      s.config,
-		Categories:  &categories,
-		CurrentUser: s.getUserFromSession(r),
-		CurrentURI:  r.RequestURI,
+		StaticFiles:   s.sf,
+		Config:        s.config,
+		Categories:    &categories,
+		CurrentUser:   s.getUserFromSession(r),
+		CurrentURI:    r.RequestURI,
+		FlashMessages: flashMessages,
 	}
 }

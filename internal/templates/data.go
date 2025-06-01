@@ -40,7 +40,7 @@ type TemplateData struct {
 	Categories    *[]database.Category
 	CurrentUser   *User
 	CurrentURI    string
-	FlashMessages *[]FlashMessage
+	FlashMessages []*FlashMessage
 }
 
 func (td *TemplateData) StaticUrl(path string) string {

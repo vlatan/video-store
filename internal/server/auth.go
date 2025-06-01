@@ -67,6 +67,15 @@ func (s *Server) loginUser(w http.ResponseWriter, r *http.Request, gothUser *got
 		return err
 	}
 
+	// Store logged in flash message in separate session
+	session, _ = s.store.Get(r, s.config.FlashSessionName)
+	flashMsg := templates.FlashMessage{
+		Message:  "You've been logged in!",
+		Category: "info",
+	}
+	session.AddFlash(&flashMsg)
+	session.Save(r, w)
+
 	return nil
 }
 
@@ -88,8 +97,8 @@ func (s *Server) authHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Store this redirect URL in session flash message
-	session, _ := s.store.Get(r, s.config.SessionName)
+	// Store this redirect URL in another session flash message
+	session, _ := s.store.Get(r, s.config.FlashSessionName)
 	session.AddFlash(redirectTo, "redirect")
 	session.Save(r, w)
 
@@ -177,7 +186,7 @@ func (s *Server) logoutUser(w http.ResponseWriter, r *http.Request) error {
 
 // Retrieve the user final redirect value
 func (s *Server) getUserFinalRedirect(w http.ResponseWriter, r *http.Request) string {
-	session, _ := s.store.Get(r, s.config.SessionName)
+	session, _ := s.store.Get(r, s.config.FlashSessionName)
 
 	redirectTo := "/"
 	if flashes := session.Flashes("redirect"); len(flashes) > 0 {

@@ -8,9 +8,10 @@ import (
 
 type Config struct {
 	// Running locally or not
-	Debug       bool   `env:"DEBUG" envDefault:"false"`
-	SessionKey  string `env:"SESSION_KEY"`
-	SessionName string `env:"SESSION_NAME"`
+	Debug            bool   `env:"DEBUG" envDefault:"false"`
+	SessionKey       string `env:"SESSION_KEY"`
+	SessionName      string `env:"SESSION_NAME" envDefault:"_app_session"`
+	FlashSessionName string `env:"FLASH_SESSION_NAME" envDefault:"_flash_app_session"`
 
 	// App settings
 	AppName         string `env:"APP_NAME"`
