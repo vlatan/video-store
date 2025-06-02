@@ -14,6 +14,26 @@ import (
 	"github.com/markbates/goth/providers/google"
 )
 
+var successLogin = templates.FlashMessage{
+	Message:  "You've been logged in!",
+	Category: "info",
+}
+
+var failedLogin = templates.FlashMessage{
+	Message:  "Something went wrong. Login failed!",
+	Category: "info",
+}
+
+var successLogout = templates.FlashMessage{
+	Message:  "You've been logged out!",
+	Category: "info",
+}
+
+var failedLogout = templates.FlashMessage{
+	Message:  "Something went wrong. Logout failed",
+	Category: "info",
+}
+
 // Setup Goth library
 func NewCookieStore(cfg *config.Config) *sessions.CookieStore {
 	// Create new cookies store
@@ -45,26 +65,6 @@ func NewCookieStore(cfg *config.Config) *sessions.CookieStore {
 
 	// Return the store so we can use it too
 	return store
-}
-
-var successLogin = templates.FlashMessage{
-	Message:  "You've been logged in!",
-	Category: "info",
-}
-
-var failedLogin = templates.FlashMessage{
-	Message:  "Something went wrong. Login failed!",
-	Category: "info",
-}
-
-var successLogout = templates.FlashMessage{
-	Message:  "You've been logged out!",
-	Category: "info",
-}
-
-var failedLogout = templates.FlashMessage{
-	Message:  "Something went wrong. Logout failed",
-	Category: "info",
 }
 
 // Store user info in our own session
