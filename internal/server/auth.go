@@ -57,6 +57,16 @@ var failedLogin = templates.FlashMessage{
 	Category: "info",
 }
 
+var successLogout = templates.FlashMessage{
+	Message:  "You've been logged out!",
+	Category: "info",
+}
+
+var failedLogout = templates.FlashMessage{
+	Message:  "Something went wrong. Logout failed",
+	Category: "info",
+}
+
 // Store user info in our own session
 func (s *Server) loginUser(w http.ResponseWriter, r *http.Request, gothUser *goth.User) error {
 
@@ -93,7 +103,8 @@ func (s *Server) loginUser(w http.ResponseWriter, r *http.Request, gothUser *got
 
 // Provider Auth
 func (s *Server) authHandler(w http.ResponseWriter, r *http.Request) {
-	// Get the redirect uri
+
+	// The origin URL of the user
 	redirectTo := getSafeRedirectPath(r)
 
 	// Auth with gothic, try to get the user without re-authenticating
@@ -127,7 +138,7 @@ func (s *Server) authHandler(w http.ResponseWriter, r *http.Request) {
 // Provider Auth callback
 func (s *Server) authCallbackHandler(w http.ResponseWriter, r *http.Request) {
 
-	// Retrieve the user final redirect value from session
+	// The origin URL of the user
 	redirectTo := s.getUserFinalRedirect(w, r)
 
 	// Authenticate the user using gothic
@@ -154,26 +165,32 @@ func (s *Server) authCallbackHandler(w http.ResponseWriter, r *http.Request) {
 // Logout user, delete sessions
 func (s *Server) logoutHandler(w http.ResponseWriter, r *http.Request) {
 
+	// The origin URL of the user
+	redirectTo := getSafeRedirectPath(r)
+
 	// Redirect to home if user is not logged in
 	if user := s.getUserFromSession(r); user == nil || user.UserID == "" {
-		http.Redirect(w, r, "/", http.StatusFound)
+		http.Redirect(w, r, redirectTo, http.StatusFound)
 		return
 	}
 
 	// Remove gothic session if any
 	if err := gothic.Logout(w, r); err != nil {
-		log.Println(err)
+		log.Printf("Error loging out the user with gothic: %v", err)
+		s.storeFlashMessage(w, r, &failedLogout)
+		http.Redirect(w, r, redirectTo, http.StatusFound)
 		return
 	}
 
 	// Remove user's session
 	if err := s.logoutUser(w, r); err != nil {
-		log.Println(err)
+		log.Printf("Error loging out the user: %v", err)
+		s.storeFlashMessage(w, r, &failedLogout)
+		http.Redirect(w, r, redirectTo, http.StatusFound)
 		return
 	}
 
-	// The origin URL of the user
-	redirectTo := getSafeRedirectPath(r)
+	s.storeFlashMessage(w, r, &successLogout)
 	http.Redirect(w, r, redirectTo, http.StatusSeeOther)
 }
 
@@ -210,12 +227,6 @@ func (s *Server) logoutUser(w http.ResponseWriter, r *http.Request) error {
 	if err = session.Save(r, w); err != nil {
 		return err
 	}
-
-	flashMsg := templates.FlashMessage{
-		Message:  "You've been logged out!",
-		Category: "info",
-	}
-	s.storeFlashMessage(w, r, &flashMsg)
 
 	return nil
 }
