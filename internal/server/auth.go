@@ -47,6 +47,16 @@ func NewCookieStore(cfg *config.Config) *sessions.CookieStore {
 	return store
 }
 
+var successLogin = templates.FlashMessage{
+	Message:  "You've been logged in!",
+	Category: "info",
+}
+
+var failedLogin = templates.FlashMessage{
+	Message:  "Something went wrong. Login failed!",
+	Category: "info",
+}
+
 // Store user info in our own session
 func (s *Server) loginUser(w http.ResponseWriter, r *http.Request, gothUser *goth.User) error {
 
@@ -78,12 +88,6 @@ func (s *Server) loginUser(w http.ResponseWriter, r *http.Request, gothUser *got
 		return err
 	}
 
-	flashMsg := templates.FlashMessage{
-		Message:  "You've been logged in!",
-		Category: "info",
-	}
-	s.storeFlashMessage(w, r, &flashMsg)
-
 	return nil
 }
 
@@ -92,46 +96,58 @@ func (s *Server) authHandler(w http.ResponseWriter, r *http.Request) {
 	// Get the redirect uri
 	redirectTo := getSafeRedirectPath(r)
 
-	// Try to get the user without re-authenticating
-	if gothUser, err := gothic.CompleteUserAuth(w, r); err == nil {
-		// Save user into our session
-		if err = s.loginUser(w, r, &gothUser); err != nil {
-			log.Printf("Error creating user session: %v", err)
-			http.Error(w, "Something went wrong.", http.StatusInternalServerError)
-			return
-		}
+	// Auth with gothic, try to get the user without re-authenticating
+	gothUser, err := gothic.CompleteUserAuth(w, r)
 
-		http.Redirect(w, r, redirectTo, http.StatusSeeOther)
+	// If unable to re-auth start the auth from the beginning
+	if err != nil {
+		// Store this redirect URL in another session as flash message
+		session, _ := s.store.Get(r, s.config.FlashSessionName)
+		session.AddFlash(redirectTo, "redirect")
+		session.Save(r, w)
+
+		// Begin Provider auth
+		// This will redirect the client to the provider's authentication end-point
+		gothic.BeginAuthHandler(w, r)
 		return
 	}
 
-	// Store this redirect URL in another session flash message
-	session, _ := s.store.Get(r, s.config.FlashSessionName)
-	session.AddFlash(redirectTo, "redirect")
-	session.Save(r, w)
+	// Login user, save into our session
+	if err = s.loginUser(w, r, &gothUser); err != nil {
+		log.Printf("Error logging in the user: %v", err)
+		s.storeFlashMessage(w, r, &failedLogin)
+		http.Redirect(w, r, redirectTo, http.StatusFound)
+		return
+	}
 
-	// Begin Provider auth
-	gothic.BeginAuthHandler(w, r)
+	s.storeFlashMessage(w, r, &successLogin)
+	http.Redirect(w, r, redirectTo, http.StatusSeeOther)
 }
 
 // Provider Auth callback
 func (s *Server) authCallbackHandler(w http.ResponseWriter, r *http.Request) {
+
+	// Retrieve the user final redirect value from session
+	redirectTo := s.getUserFinalRedirect(w, r)
+
+	// Authenticate the user using gothic
 	gothUser, err := gothic.CompleteUserAuth(w, r)
 	if err != nil {
-		log.Println(err)
-		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
+		log.Printf("Error with gothic user auth: %v", err)
+		s.storeFlashMessage(w, r, &failedLogin)
+		http.Redirect(w, r, redirectTo, http.StatusFound)
 		return
 	}
 
 	// Save user into our session
 	if err = s.loginUser(w, r, &gothUser); err != nil {
-		log.Printf("Error saving app session: %v", err)
-		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
+		log.Printf("Error logging in the user: %v", err)
+		s.storeFlashMessage(w, r, &failedLogin)
+		http.Redirect(w, r, redirectTo, http.StatusFound)
 		return
 	}
 
-	// Retrieve the user final redirect value
-	redirectTo := s.getUserFinalRedirect(w, r)
+	s.storeFlashMessage(w, r, &successLogin)
 	http.Redirect(w, r, redirectTo, http.StatusSeeOther)
 }
 
@@ -188,6 +204,7 @@ func (s *Server) logoutUser(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return err
 	}
+
 	session.Options.MaxAge = -1
 	session.Values = make(map[any]any)
 	if err = session.Save(r, w); err != nil {
@@ -219,7 +236,7 @@ func (s *Server) getUserFinalRedirect(w http.ResponseWriter, r *http.Request) st
 }
 
 // Store flash message in a session
-// No need to return an error if flashing fails
+// No error if flashing fails
 func (s *Server) storeFlashMessage(
 	w http.ResponseWriter,
 	r *http.Request,
