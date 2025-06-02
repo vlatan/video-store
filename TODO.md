@@ -1,10 +1,10 @@
 * Try to recreate the homepage
 * User login
+  * Redirect back the user if user clicks cancel in google/fb login flow
   * Send failed login/logout flashes
-	* On login add/update user in database and store avatar URL on disk
+	* On login store avatar URL on disk
   * Implement last seen, think about it when to write to DB
-  * Figure out a way to periodically retry fetching avatar if user has default avatar
-  * Create analytics ID, base64
+  * Figure out a way to periodically retry downloading avatar if the user has default avatar
 
 * Serve Favicons from root
 * Error pages

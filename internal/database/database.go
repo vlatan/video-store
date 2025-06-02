@@ -8,10 +8,12 @@ import (
 	"sync"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/markbates/goth"
 )
 
 // Service represents a service that interacts with a database.
 type Service interface {
+	UpsertUser(*goth.User, string) (int64, error)
 	// Get paginated posts from the DB
 	GetPosts(int) ([]Post, error)
 	// Get all categories

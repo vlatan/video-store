@@ -1,6 +1,7 @@
 package server
 
 import (
+	"crypto/md5"
 	"factual-docs/internal/config"
 	"factual-docs/internal/templates"
 	"fmt"
@@ -48,12 +49,21 @@ func NewCookieStore(cfg *config.Config) *sessions.CookieStore {
 
 // Store user info in our own session
 func (s *Server) loginUser(w http.ResponseWriter, r *http.Request, gothUser *goth.User) error {
+
+	// Generate analytics ID
+	analyticsID := fmt.Sprintf("%x", md5.Sum([]byte(gothUser.UserID+gothUser.Email)))
+
+	// Update or insert user
+	_, err := s.db.UpsertUser(gothUser, analyticsID)
+	if err != nil {
+		return err
+	}
+
+	// TODO: Download avatar image
+
 	// Get a session. We're ignoring the error resulted from decoding an
 	// existing session: Get() always returns a session, even if empty map[]
 	session, _ := s.store.Get(r, s.config.SessionName)
-
-	// TODO: Add/update user in database
-	// TODO: Store avatar URL in redis, maybe?
 
 	// Store user values in session
 	session.Values["UserID"] = gothUser.UserID
@@ -61,6 +71,7 @@ func (s *Server) loginUser(w http.ResponseWriter, r *http.Request, gothUser *got
 	session.Values["Name"] = gothUser.FirstName
 	session.Values["Provider"] = gothUser.Provider
 	session.Values["AvatarURL"] = gothUser.AvatarURL
+	session.Values["AnalyticsID"] = analyticsID
 
 	// Save the session
 	if err := session.Save(r, w); err != nil {
@@ -85,7 +96,7 @@ func (s *Server) authHandler(w http.ResponseWriter, r *http.Request) {
 	if gothUser, err := gothic.CompleteUserAuth(w, r); err == nil {
 		// Save user into our session
 		if err = s.loginUser(w, r, &gothUser); err != nil {
-			log.Printf("Error saving app session: %v", err)
+			log.Printf("Error creating user session: %v", err)
 			http.Error(w, "Something went wrong.", http.StatusInternalServerError)
 			return
 		}
