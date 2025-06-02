@@ -6,7 +6,7 @@ import (
 	"github.com/markbates/goth"
 )
 
-const addUserQuery = `
+const upsertUserQuery = `
 WITH existing_user AS (
     SELECT id FROM "user" 
     WHERE (google_id = $1 AND $1 IS NOT NULL) 
@@ -52,7 +52,7 @@ func (s *service) UpsertUser(u *goth.User, analyticsID string) (int64, error) {
 		facebookID = u.UserID
 	}
 
-	result, err := s.db.Exec(addUserQuery,
+	result, err := s.db.Exec(upsertUserQuery,
 		NullString(&googleID),
 		NullString(&facebookID),
 		NullString(&analyticsID),
