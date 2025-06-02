@@ -1,5 +1,6 @@
 * Try to recreate the homepage
 * User login
+  * Send failed login/logout flashes
 	* On login add/update user in database and store avatar URL on disk
   * Implement last seen, think about it when to write to DB
   * Figure out a way to periodically retry fetching avatar if user has default avatar
