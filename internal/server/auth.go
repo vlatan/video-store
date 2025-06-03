@@ -71,7 +71,8 @@ func NewCookieStore(cfg *config.Config) *sessions.CookieStore {
 func (s *Server) loginUser(w http.ResponseWriter, r *http.Request, gothUser *goth.User) error {
 
 	// Generate analytics ID
-	analyticsID := fmt.Sprintf("%x", md5.Sum([]byte(gothUser.UserID+gothUser.Email)))
+	analyticsID := gothUser.UserID + gothUser.Provider + gothUser.Email
+	analyticsID = fmt.Sprintf("%x", md5.Sum([]byte(analyticsID)))
 
 	// Update or insert user
 	_, err := s.db.UpsertUser(gothUser, analyticsID)
@@ -213,11 +214,12 @@ func (s *Server) getUserFromSession(r *http.Request) *templates.User {
 	}
 
 	return &templates.User{
-		UserID:    userID,
-		Email:     session.Values["Email"].(string),
-		Name:      session.Values["Name"].(string),
-		Provider:  session.Values["Provider"].(string),
-		AvatarURL: session.Values["AvatarURL"].(string),
+		UserID:      userID,
+		Email:       session.Values["Email"].(string),
+		Name:        session.Values["Name"].(string),
+		Provider:    session.Values["Provider"].(string),
+		AvatarURL:   session.Values["AvatarURL"].(string),
+		AnalyticsID: session.Values["AnalyticsID"].(string),
 	}
 }
 
