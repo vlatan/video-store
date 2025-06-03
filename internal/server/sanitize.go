@@ -9,29 +9,24 @@ import (
 )
 
 // Validates and sanitizes a relative path for redirect
-func sanitizeRelativePath(redirectPath string) (string, error) {
-	// Check length
-	if len(redirectPath) > 1024 {
-		return "", fmt.Errorf("path too long")
-	}
-
+func sanitizeRelativePath(p string) (string, error) {
 	// Empty defaults to root
-	if redirectPath == "" {
-		return "/", nil
+	if p == "" {
+		return "", fmt.Errorf("no path supllied")
 	}
 
 	// Reject absolute URLs
-	if strings.Contains(redirectPath, "://") {
+	if strings.Contains(p, "://") {
 		return "", fmt.Errorf("absolute URLs not allowed")
 	}
 
 	// Reject protocol-relative URLs
-	if strings.HasPrefix(redirectPath, "//") {
+	if strings.HasPrefix(p, "//") {
 		return "", fmt.Errorf("protocol-relative URLs not allowed")
 	}
 
 	// Parse the path to validate structure
-	u, err := url.Parse(redirectPath)
+	u, err := url.Parse(p)
 	if err != nil {
 		return "", fmt.Errorf("invalid path format: %v", err)
 	}
@@ -53,6 +48,7 @@ func sanitizeRelativePath(redirectPath string) (string, error) {
 	result := &url.URL{
 		Path:     cleanPath,
 		RawQuery: u.RawQuery,
+		Fragment: u.Fragment,
 	}
 
 	return result.String(), nil

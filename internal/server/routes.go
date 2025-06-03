@@ -99,14 +99,18 @@ func (s *Server) staticHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Etag", fileInfo.Etag)
 	}
 
-	// If the file is not in the cache or there are no cached bytes, try to serve from FS
-	if !ok || len(fileInfo.Bytes) == 0 {
-		http.ServeFileFS(w, r, web.Files, name)
-		return
+	// Serve the file content if we have bytes stored
+	if ok && len(fileInfo.Bytes) > 0 {
+		http.ServeContent(w, r, r.URL.Path, time.Time{}, bytes.NewReader(fileInfo.Bytes))
 	}
 
-	// Server the file content
-	http.ServeContent(w, r, r.URL.Path, time.Time{}, bytes.NewReader(fileInfo.Bytes))
+	// If the file is not in the cache or there are no cached bytes, try to serve from FS
+	name, err := sanitizeRelativePath(r.URL.Path)
+	if err != nil {
+		notFound := http.StatusNotFound
+		http.Error(w, http.StatusText(notFound), notFound)
+	}
+	http.ServeFileFS(w, r, web.Files, name)
 }
 
 func (s *Server) healthHandler(w http.ResponseWriter, r *http.Request) {
