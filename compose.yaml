@@ -16,6 +16,8 @@ services:
       timeout: 5s
       retries: 3
     volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
       - redis_data:/data
 
   postgres:
@@ -34,8 +36,10 @@ services:
       timeout: 5s
       retries: 3
     volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
       - postgres_data:/var/lib/postgresql/data
-      - ./migrations/000001_schema.up.sql:/docker-entrypoint-initdb.d/schema.sql
+      - ./migrations:/docker-entrypoint-initdb.d
 
   app:
     image: cosmtrek/air
@@ -45,6 +49,8 @@ services:
       - $PORT:$PORT
     env_file: .env
     volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
       - ./bin:/src/bin
       - ./cmd:/src/cmd
       - ./internal:/src/internal
