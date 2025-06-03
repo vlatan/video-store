@@ -112,14 +112,14 @@ func (s *Server) staticHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Sanitize the path
-	p, err := utils.SanitizeRelativePath(r.URL.Path)
+	name, err := utils.SanitizeRelativePath(r.URL.Path)
 	if err != nil {
 		http.NotFound(w, r)
 		return
 	}
 
 	// Try to serve from FS
-	http.ServeFileFS(w, r, web.Files, p)
+	http.ServeFileFS(w, r, web.Files, name)
 }
 
 func (s *Server) healthHandler(w http.ResponseWriter, r *http.Request) {
