@@ -82,6 +82,12 @@ func (s *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
 // Handle minified static file from cache
 func (s *Server) staticHandler(w http.ResponseWriter, r *http.Request) {
 
+	// VERY IMPORTANT: Do not allowe directory browsing
+	if strings.HasSuffix(r.URL.Path, "/") {
+		http.NotFound(w, r)
+		return
+	}
+
 	// Set long max age cache conttrol
 	w.Header().Set("Cache-Control", "max-age=31536000")
 
@@ -102,13 +108,14 @@ func (s *Server) staticHandler(w http.ResponseWriter, r *http.Request) {
 	// Serve the file content if we have bytes stored
 	if ok && len(fileInfo.Bytes) > 0 {
 		http.ServeContent(w, r, r.URL.Path, time.Time{}, bytes.NewReader(fileInfo.Bytes))
+		return
 	}
 
 	// If the file is not in the cache or there are no cached bytes, try to serve from FS
 	name, err := sanitizeRelativePath(r.URL.Path)
 	if err != nil {
-		notFound := http.StatusNotFound
-		http.Error(w, http.StatusText(notFound), notFound)
+		http.NotFound(w, r)
+		return
 	}
 	http.ServeFileFS(w, r, web.Files, name)
 }
