@@ -176,7 +176,7 @@ func (s *Server) logoutHandler(w http.ResponseWriter, r *http.Request) {
 	redirectTo := getSafeRedirectPath(r)
 
 	// Redirect to home if user is not logged in
-	if user := s.getUserFromSession(r); user == nil || user.UserID == "" {
+	if user := s.getCurrentUser(r); user == nil || user.UserID == "" {
 		http.Redirect(w, r, redirectTo, http.StatusFound)
 		return
 	}
@@ -202,7 +202,7 @@ func (s *Server) logoutHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // Retrieve user session, return User struct
-func (s *Server) getUserFromSession(r *http.Request) *templates.User {
+func (s *Server) getCurrentUser(r *http.Request) *templates.User {
 	session, err := s.store.Get(r, s.config.SessionName)
 	if session == nil || err != nil {
 		return &templates.User{}
@@ -213,13 +213,17 @@ func (s *Server) getUserFromSession(r *http.Request) *templates.User {
 		return &templates.User{}
 	}
 
+	analyticsID := session.Values["AnalyticsID"].(string)
+	avatarURL := session.Values["AvatarURL"].(string)
+
 	return &templates.User{
-		UserID:      userID,
-		Email:       session.Values["Email"].(string),
-		Name:        session.Values["Name"].(string),
-		Provider:    session.Values["Provider"].(string),
-		AvatarURL:   session.Values["AvatarURL"].(string),
-		AnalyticsID: session.Values["AnalyticsID"].(string),
+		UserID:         userID,
+		Email:          session.Values["Email"].(string),
+		Name:           session.Values["Name"].(string),
+		Provider:       session.Values["Provider"].(string),
+		AvatarURL:      avatarURL,
+		AnalyticsID:    analyticsID,
+		LocalAvatarURL: s.getLocalAvatar(r, avatarURL, analyticsID),
 	}
 }
 

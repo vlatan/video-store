@@ -89,7 +89,7 @@ func (s *Server) NewData(w http.ResponseWriter, r *http.Request) *templates.Temp
 		StaticFiles:   s.sf,
 		Config:        s.config,
 		Categories:    &categories,
-		CurrentUser:   s.getUserFromSession(r),
+		CurrentUser:   s.getCurrentUser(r),
 		CurrentURI:    r.RequestURI,
 		FlashMessages: flashMessages,
 	}
