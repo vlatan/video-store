@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"factual-docs/internal/config"
 	"factual-docs/internal/templates"
+	"factual-docs/internal/utils"
 	"fmt"
 	"log"
 	"net/http"
@@ -262,4 +263,14 @@ func (s *Server) storeFlashMessage(
 	if err = session.Save(r, w); err != nil {
 		log.Println("Unable to save the flash session", err)
 	}
+}
+
+// Extracts and sanitizes the value from the query param "redirect"
+func getSafeRedirectPath(r *http.Request) string {
+	redirectParam := r.URL.Query().Get("redirect")
+	safePath, err := utils.SanitizeRelativePath(redirectParam)
+	if err != nil {
+		return "/"
+	}
+	return safePath
 }

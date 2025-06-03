@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"factual-docs/internal/database"
 	"factual-docs/internal/redis"
+	"factual-docs/internal/utils"
 	"factual-docs/web"
 	"fmt"
 	"log"
@@ -92,8 +93,7 @@ func (s *Server) staticHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "max-age=31536000")
 
 	// Get the file information
-	name := strings.TrimPrefix(r.URL.Path, "/")
-	fileInfo, ok := s.sf[name]
+	fileInfo, ok := s.sf[r.URL.Path]
 
 	// Set content type header if media type available
 	if ok && fileInfo.MediaType != "" {
@@ -112,7 +112,7 @@ func (s *Server) staticHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Sanitize the path
-	p, err := sanitizeRelativePath(r.URL.Path)
+	p, err := utils.SanitizeRelativePath(r.URL.Path)
 	if err != nil {
 		http.NotFound(w, r)
 		return
