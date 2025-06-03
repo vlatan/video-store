@@ -15,5 +15,4 @@
 
 
 # avatars
-app/static/images/avatars/*
-!app/static/images/avatars/default_avatar.jpg
+web/static/images/avatars/

@@ -118,7 +118,13 @@ func (s *Server) staticHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Try to serve from FS
+	// Serve user avatars from the FS
+	if strings.HasPrefix(name, "/static/images/avatars/") {
+		http.ServeFile(w, r, name)
+		return
+	}
+
+	// Try to serve from the embedded FS
 	http.ServeFileFS(w, r, web.Files, name)
 }
 

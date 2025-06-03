@@ -4,7 +4,6 @@ import (
 	"crypto/md5"
 	"factual-docs/internal/config"
 	"factual-docs/internal/templates"
-	"factual-docs/internal/utils"
 	"fmt"
 	"log"
 	"net/http"
@@ -80,7 +79,13 @@ func (s *Server) loginUser(w http.ResponseWriter, r *http.Request, gothUser *got
 		return err
 	}
 
-	// TODO: Download avatar image
+	// Download the avatar on disk
+	fpath, err := s.downloadAvatar(gothUser.AvatarURL, analyticsID)
+	if err != nil {
+		log.Println(err)
+	}
+
+	log.Println(fpath)
 
 	// Get a session. We're ignoring the error resulted from decoding an
 	// existing session: Get() always returns a session, even if empty map[]
@@ -263,14 +268,4 @@ func (s *Server) storeFlashMessage(
 	if err = session.Save(r, w); err != nil {
 		log.Println("Unable to save the flash session", err)
 	}
-}
-
-// Extracts and sanitizes the value from the query param "redirect"
-func getSafeRedirectPath(r *http.Request) string {
-	redirectParam := r.URL.Query().Get("redirect")
-	safePath, err := utils.SanitizeRelativePath(redirectParam)
-	if err != nil {
-		return "/"
-	}
-	return safePath
 }
