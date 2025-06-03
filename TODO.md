@@ -1,3 +1,5 @@
+* Static files have no query params
+
 * Try to recreate the homepage
 * User login
 	* On login store avatar URL on disk
