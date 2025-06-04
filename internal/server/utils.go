@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"time"
 )
 
 // Extracts and sanitizes the value from the query param "redirect"
@@ -44,26 +45,21 @@ func (s *Server) downloadAvatar(avatarURL, analyticsID string) (string, error) {
 }
 
 func (s *Server) getLocalAvatar(r *http.Request, avatarURL, analyticsID string) string {
+	// Get avatar URL from Redis
+	redisKey := fmt.Sprintf("user:%s", analyticsID)
+	avatar, err := s.rdb.Get(r.Context(), redisKey)
+	if err == nil {
+		return avatar
+	}
 
-	// cachedData, err := s.rdb.Get(r.Context(), analyticsID)
-	// if err != nil {
+	// Attempt to download the avatar, set default avatar on fail
+	_, err = s.downloadAvatar(avatarURL, analyticsID)
+	if err != nil {
+		avatar = "/static/images/default-avatar.jpg"
+	}
 
-	// }
-
-	// avatar, err := s.downloadAvatar(avatarURL, analyticsID)
-
-	/*
-		Check if redis key present
-		If it is, do not attempt redownload:
-			Check if there's avatar locally:
-			If it's attach return the path
-			If not return the default avatar path
-		If it's not:
-			Try to download the avatar
-			Return downloaded avatar path
-			If not return the default avatar path
-		Set redis key with expiry
-	*/
-
-	return ""
+	// Save avatar URL to Redis and return
+	avatar = "/static/images/avatars/" + analyticsID + ".jpg"
+	s.rdb.Set(r.Context(), redisKey, avatar, 24*7*time.Hour)
+	return avatar
 }

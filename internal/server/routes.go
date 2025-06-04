@@ -12,6 +12,8 @@ import (
 	"log"
 	"maps"
 	"net/http"
+	"net/url"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -118,8 +120,15 @@ func (s *Server) staticHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Serve user avatars from the FS
+	// Serve user avatars from the data volume
 	if strings.HasPrefix(name, "/static/images/avatars/") {
+		parsed, err := url.Parse(name)
+		if err != nil {
+			http.NotFound(w, r)
+			return
+		}
+
+		name = s.config.DataVolume + "/" + filepath.Base(parsed.Path)
 		http.ServeFile(w, r, name)
 		return
 	}
