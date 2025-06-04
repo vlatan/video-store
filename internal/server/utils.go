@@ -63,18 +63,16 @@ func (s *Server) downloadAvatar(avatarURL, analyticsID string) (string, error) {
 		}
 	}()
 
-	// Write to file
-	_, err = io.Copy(file, response.Body)
-	if err != nil {
-		return "", fmt.Errorf("couldn't write to file '%s': %v", destination, err)
-	}
-
 	// Init a hasher
 	hasher := md5.New()
-	// Stream the response body directly into the hasher
-	_, err = io.Copy(hasher, response.Body)
+
+	// Create a multiwriter to write to the hasher and to the file
+	multiWriter := io.MultiWriter(hasher, file)
+
+	// Stream the response body directly into the hasher and the file
+	_, err = io.Copy(multiWriter, response.Body)
 	if err != nil {
-		return "", fmt.Errorf("couldn't hash the file content '%s': %v", destination, err)
+		return "", fmt.Errorf("couldn't hash or write to file '%s': %v", destination, err)
 	}
 
 	// Get the final hash sum and convert to a hex string
