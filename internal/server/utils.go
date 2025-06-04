@@ -1,6 +1,8 @@
 package server
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"factual-docs/internal/utils"
 	"fmt"
 	"io"
@@ -67,26 +69,40 @@ func (s *Server) downloadAvatar(avatarURL, analyticsID string) (string, error) {
 		return "", fmt.Errorf("couldn't write to file '%s': %v", destination, err)
 	}
 
+	// Init a hasher
+	hasher := md5.New()
+	// Stream the response body directly into the hasher
+	_, err = io.Copy(hasher, response.Body)
+	if err != nil {
+		return "", fmt.Errorf("couldn't hash the file content '%s': %v", destination, err)
+	}
+
+	// Get the final hash sum and convert to a hex string
+	hashInBytes := hasher.Sum(nil)
+	hashString := hex.EncodeToString(hashInBytes)
+
 	valid = true
-	return destination, nil
+	return hashString, nil
 }
 
 func (s *Server) getLocalAvatar(r *http.Request, avatarURL, analyticsID string) string {
 	// Get avatar URL from Redis
-	redisKey := fmt.Sprintf("user:%s", analyticsID)
+	redisKey := fmt.Sprintf("avatar:%s", analyticsID)
 	avatar, err := s.rdb.Get(r.Context(), redisKey)
 	if err == nil {
 		return avatar
 	}
 
 	// Attempt to download the avatar, set default avatar on fail
-	_, err = s.downloadAvatar(avatarURL, analyticsID)
+	etag, err := s.downloadAvatar(avatarURL, analyticsID)
 	if err != nil {
 		avatar = "/static/images/default-avatar.jpg"
+		s.rdb.Set(r.Context(), redisKey, avatar, 24*7*time.Hour)
+		return avatar
 	}
 
 	// Save avatar URL to Redis and return
-	avatar = "/static/images/avatars/" + analyticsID + ".jpg"
+	avatar = "/static/images/avatars/" + analyticsID + ".jpg?v=" + etag
 	s.rdb.Set(r.Context(), redisKey, avatar, 24*7*time.Hour)
 	return avatar
 }
