@@ -4,8 +4,10 @@ import (
 	"factual-docs/internal/utils"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"time"
 )
 
@@ -28,20 +30,45 @@ func (s *Server) downloadAvatar(avatarURL, analyticsID string) (string, error) {
 	}
 	defer response.Body.Close()
 
-	// Create a file for writing
-	path := fmt.Sprintf("%s/%s.jpg", s.config.DataVolume, analyticsID)
-	file, err := os.Create(path)
-	if err != nil {
-		return "", fmt.Errorf("couldn't create file on disk: %v", err)
+	// Ensure the HTTP request was successful (status code 2xx)
+	if response.StatusCode < 200 || response.StatusCode >= 300 {
+		return "", fmt.Errorf(
+			"failed to download avatar from %s: received status code %d",
+			avatarURL,
+			response.StatusCode,
+		)
 	}
+
+	// Create a file for writing
+	destination := filepath.Join(s.config.DataVolume, analyticsID+".jpg")
+	file, err := os.Create(destination)
+	if err != nil {
+		return "", fmt.Errorf("couldn't create file '%s': %v", destination, err)
+	}
+
+	// Flag to track if the download was successful
+	valid := false
+
+	// Run this clean up function on exit
+	defer func() {
+		if err := file.Close(); err != nil { // Close the file
+			log.Printf("Warning: failed to close file '%s': %v\n", destination, err)
+		}
+		if !valid { // Remove the file if not successfuly created
+			if err := os.Remove(destination); err != nil {
+				log.Printf("Failed to remove partially created file '%s': %v\n", destination, err)
+			}
+		}
+	}()
 
 	// Write to file
 	_, err = io.Copy(file, response.Body)
 	if err != nil {
-		return "", fmt.Errorf("couldn't save the file on disk: %v", err)
+		return "", fmt.Errorf("couldn't write to file '%s': %v", destination, err)
 	}
 
-	return path, nil
+	valid = true
+	return destination, nil
 }
 
 func (s *Server) getLocalAvatar(r *http.Request, avatarURL, analyticsID string) string {
