@@ -2,11 +2,16 @@ package server
 
 import (
 	"crypto/md5"
+	"encoding/hex"
 	"factual-docs/internal/config"
 	"factual-docs/internal/templates"
+	"factual-docs/internal/utils"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/gorilla/sessions"
@@ -105,99 +110,6 @@ func (s *Server) loginUser(w http.ResponseWriter, r *http.Request, gothUser *got
 	return nil
 }
 
-// Provider Auth
-func (s *Server) authHandler(w http.ResponseWriter, r *http.Request) {
-
-	// The origin URL of the user
-	redirectTo := getSafeRedirectPath(r)
-
-	// Auth with gothic, try to get the user without re-authenticating
-	gothUser, err := gothic.CompleteUserAuth(w, r)
-
-	// If unable to re-auth start the auth from the beginning
-	if err != nil {
-		// Store this redirect URL in another session as flash message
-		session, _ := s.store.Get(r, s.config.FlashSessionName)
-		session.AddFlash(redirectTo, "redirect")
-		session.Save(r, w)
-
-		// Begin Provider auth
-		// This will redirect the client to the provider's authentication end-point
-		gothic.BeginAuthHandler(w, r)
-		return
-	}
-
-	// Login user, save into our session
-	if err = s.loginUser(w, r, &gothUser); err != nil {
-		log.Printf("Error logging in the user: %v", err)
-		s.storeFlashMessage(w, r, &failedLogin)
-		http.Redirect(w, r, redirectTo, http.StatusFound)
-		return
-	}
-
-	s.storeFlashMessage(w, r, &successLogin)
-	http.Redirect(w, r, redirectTo, http.StatusSeeOther)
-}
-
-// Provider Auth callback
-func (s *Server) authCallbackHandler(w http.ResponseWriter, r *http.Request) {
-
-	// The origin URL of the user
-	redirectTo := s.getUserFinalRedirect(w, r)
-
-	// Authenticate the user using gothic
-	gothUser, err := gothic.CompleteUserAuth(w, r)
-	if err != nil {
-		log.Printf("Error with gothic user auth: %v", err)
-		s.storeFlashMessage(w, r, &failedLogin)
-		http.Redirect(w, r, redirectTo, http.StatusFound)
-		return
-	}
-
-	// Save user into our session
-	if err = s.loginUser(w, r, &gothUser); err != nil {
-		log.Printf("Error logging in the user: %v", err)
-		s.storeFlashMessage(w, r, &failedLogin)
-		http.Redirect(w, r, redirectTo, http.StatusFound)
-		return
-	}
-
-	s.storeFlashMessage(w, r, &successLogin)
-	http.Redirect(w, r, redirectTo, http.StatusSeeOther)
-}
-
-// Logout user, delete sessions
-func (s *Server) logoutHandler(w http.ResponseWriter, r *http.Request) {
-
-	// The origin URL of the user
-	redirectTo := getSafeRedirectPath(r)
-
-	// Redirect to home if user is not logged in
-	if user := s.getCurrentUser(w, r); user == nil || user.UserID == "" {
-		http.Redirect(w, r, redirectTo, http.StatusFound)
-		return
-	}
-
-	// Remove gothic session if any
-	if err := gothic.Logout(w, r); err != nil {
-		log.Printf("Error loging out the user with gothic: %v", err)
-		s.storeFlashMessage(w, r, &failedLogout)
-		http.Redirect(w, r, redirectTo, http.StatusFound)
-		return
-	}
-
-	// Remove user's session
-	if err := s.logoutUser(w, r); err != nil {
-		log.Printf("Error loging out the user: %v", err)
-		s.storeFlashMessage(w, r, &failedLogout)
-		http.Redirect(w, r, redirectTo, http.StatusFound)
-		return
-	}
-
-	s.storeFlashMessage(w, r, &successLogout)
-	http.Redirect(w, r, redirectTo, http.StatusSeeOther)
-}
-
 // Retrieve user session, return User struct
 func (s *Server) getCurrentUser(w http.ResponseWriter, r *http.Request) *templates.User {
 	session, err := s.store.Get(r, s.config.SessionName)
@@ -290,4 +202,102 @@ func (s *Server) storeFlashMessage(
 	if err = session.Save(r, w); err != nil {
 		log.Println("Unable to save the flash session", err)
 	}
+}
+
+// Extracts and sanitizes the value from the query param "redirect"
+func getSafeRedirectPath(r *http.Request) string {
+	redirectParam := r.URL.Query().Get("redirect")
+	safePath, err := utils.SanitizeRelativePath(redirectParam)
+	if err != nil {
+		return "/"
+	}
+	return safePath
+}
+
+// Download remote image (user avatar)
+func (s *Server) downloadAvatar(avatarURL, analyticsID string) (string, error) {
+	// Get remote file
+	response, err := http.Get(avatarURL)
+	if err != nil {
+		return "", fmt.Errorf("can't read the remote file: %v", err)
+	}
+	defer response.Body.Close()
+
+	// Ensure the HTTP request was successful (status code 2xx)
+	if response.StatusCode < 200 || response.StatusCode >= 300 {
+		return "", fmt.Errorf(
+			"failed to download avatar from %s: received status code %d",
+			avatarURL,
+			response.StatusCode,
+		)
+	}
+
+	// Create a file for writing
+	destination := filepath.Join(s.config.DataVolume, analyticsID+".jpg")
+	file, err := os.Create(destination)
+	if err != nil {
+		return "", fmt.Errorf("couldn't create file '%s': %v", destination, err)
+	}
+
+	// Flag to track if the download was successful
+	valid := false
+
+	// Run this clean up function on exit
+	defer func() {
+		if err := file.Close(); err != nil { // Close the file
+			log.Printf("Warning: failed to close file '%s': %v\n", destination, err)
+		}
+		if !valid { // Remove the file if not successfuly created
+			if err := os.Remove(destination); err != nil {
+				log.Printf("Failed to remove partially created file '%s': %v\n", destination, err)
+			}
+		}
+	}()
+
+	// Init a hasher
+	hasher := md5.New()
+
+	// Create a multiwriter to write to the hasher and to the file
+	multiWriter := io.MultiWriter(hasher, file)
+
+	// Stream the response body directly into the hasher and the file
+	_, err = io.Copy(multiWriter, response.Body)
+	if err != nil {
+		return "", fmt.Errorf("couldn't hash or write to file '%s': %v", destination, err)
+	}
+
+	// Get the final hash sum and convert to a hex string
+	hashInBytes := hasher.Sum(nil)
+	hashString := hex.EncodeToString(hashInBytes)
+
+	valid = true
+	return hashString, nil
+}
+
+func (s *Server) getLocalAvatar(r *http.Request, avatarURL, analyticsID string) string {
+	// Get avatar URL from Redis
+	redisKey := fmt.Sprintf("avatar:%s", analyticsID)
+	avatar, err := s.rdb.Get(r.Context(), redisKey)
+	if err == nil {
+		return avatar
+	}
+
+	// Attempt to download the avatar, set default avatar on fail
+	etag, err := s.downloadAvatar(avatarURL, analyticsID)
+	if err != nil {
+		avatar = "/static/images/default-avatar.jpg"
+		s.rdb.Set(r.Context(), redisKey, avatar, 24*7*time.Hour)
+		return avatar
+	}
+
+	// Save avatar URL to Redis and return
+	avatar = "/static/images/avatars/" + analyticsID + ".jpg?v=" + etag
+	s.rdb.Set(r.Context(), redisKey, avatar, 24*7*time.Hour)
+	return avatar
+}
+
+func sameDate(t1, t2 time.Time) bool {
+	y1, m1, d1 := t1.Date()
+	y2, m2, d2 := t2.Date()
+	return y1 == y2 && m1 == m2 && d1 == d2
 }
