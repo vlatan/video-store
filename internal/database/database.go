@@ -13,7 +13,10 @@ import (
 
 // Service represents a service that interacts with a database.
 type Service interface {
-	UpsertUser(*goth.User, string) (int64, error)
+	// Update the last_seen date for a user
+	UpdateUserLastSeen(int) error
+	// Update or insert a new user
+	UpsertUser(*goth.User, string) (int, error)
 	// Get paginated posts from the DB
 	GetPosts(int) ([]Post, error)
 	// Get all categories

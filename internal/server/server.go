@@ -26,9 +26,9 @@ type Server struct {
 
 func NewServer() *http.Server {
 
-	// Register Flash Message struct with gob,
-	// to be able to be serialize and save to gorilla session
+	// Register types with gob to be able to use them in sessions
 	gob.Register(&templates.FlashMessage{})
+	gob.Register(time.Time{})
 
 	// Create new config object
 	cfg := config.New()

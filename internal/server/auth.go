@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/sessions"
 	"github.com/markbates/goth"
@@ -75,22 +76,26 @@ func (s *Server) loginUser(w http.ResponseWriter, r *http.Request, gothUser *got
 	analyticsID = fmt.Sprintf("%x", md5.Sum([]byte(analyticsID)))
 
 	// Update or insert user
-	_, err := s.db.UpsertUser(gothUser, analyticsID)
-	if err != nil {
+	id, err := s.db.UpsertUser(gothUser, analyticsID)
+	if id == 0 || err != nil {
 		return err
 	}
 
 	// Get a session. We're ignoring the error resulted from decoding an
 	// existing session: Get() always returns a session, even if empty map[]
 	session, _ := s.store.Get(r, s.config.SessionName)
+	now := time.Now()
 
 	// Store user values in session
+	session.Values["ID"] = id
 	session.Values["UserID"] = gothUser.UserID
 	session.Values["Email"] = gothUser.Email
 	session.Values["Name"] = gothUser.FirstName
 	session.Values["Provider"] = gothUser.Provider
 	session.Values["AvatarURL"] = gothUser.AvatarURL
 	session.Values["AnalyticsID"] = analyticsID
+	session.Values["LastSeen"] = now
+	session.Values["LastSeenDB"] = now
 
 	// Save the session
 	if err := session.Save(r, w); err != nil {
