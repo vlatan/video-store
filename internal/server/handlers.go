@@ -51,6 +51,11 @@ func (s *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if len(posts) == 0 {
+		http.NotFound(w, r)
+		return
+	}
+
 	// if not the first page return JSON
 	if page > 1 {
 		time.Sleep(time.Millisecond * 400)
@@ -79,7 +84,17 @@ func (s *Server) categoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 		page = pageInt
 	}
 
+	// Get category slug from URL
 	slug := r.PathValue("category")
+
+	// Generate template data
+	// This is probably wasteful for non-existing category
+	data := s.NewData(w, r)
+
+	if !isValidCategory(data.Categories, slug) {
+		http.NotFound(w, r)
+		return
+	}
 
 	var posts []database.Post
 
@@ -101,6 +116,11 @@ func (s *Server) categoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if len(posts) == 0 {
+		http.NotFound(w, r)
+		return
+	}
+
 	// if not the first page return JSON
 	if page > 1 {
 		time.Sleep(time.Millisecond * 400)
@@ -111,7 +131,6 @@ func (s *Server) categoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := s.NewData(w, r)
 	data.Posts = posts
 
 	if err := s.tm.Render(w, "category", data); err != nil {
@@ -289,4 +308,14 @@ func (s *Server) logoutHandler(w http.ResponseWriter, r *http.Request) {
 
 	s.storeFlashMessage(w, r, &successLogout)
 	http.Redirect(w, r, redirectTo, http.StatusSeeOther)
+}
+
+func isValidCategory(categories []database.Category, slug string) bool {
+	for _, category := range categories {
+		if category.Slug == slug {
+			log.Println(category.Slug)
+			return true
+		}
+	}
+	return false
 }
