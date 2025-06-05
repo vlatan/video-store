@@ -121,7 +121,6 @@ func (s *Server) categoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(posts) == 0 {
-		log.Println("BINGOOOOOOOOOOOOO")
 		http.NotFound(w, r)
 		return
 	}
