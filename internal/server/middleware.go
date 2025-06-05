@@ -34,7 +34,7 @@ func (s *Server) userLastSeen(next http.HandlerFunc) http.HandlerFunc {
 		// Check if the DB update is out of sync for an entire date
 		if !sameDate(lastSeenDB, now) {
 			if err := s.db.UpdateUserLastSeen(id, now); err != nil {
-				log.Println("Couldn't update the last seen in DB on user:", err)
+				log.Printf("Couldn't update the last seen in DB on user with id '%d': %v\n", id, err)
 			}
 			session.Values["LastSeenDB"] = now
 		}
