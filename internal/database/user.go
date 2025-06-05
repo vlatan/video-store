@@ -11,8 +11,8 @@ const upsertUserQuery = `
 WITH existing_user AS (
     SELECT id FROM "user" 
     WHERE (google_id = $1 AND $1 IS NOT NULL) 
-       OR (facebook_id = $2 AND $2 IS NOT NULL)
-       OR (email = $5 AND $5 IS NOT NULL)
+		OR (facebook_id = $2 AND $2 IS NOT NULL) 
+		OR (email = $5 AND $5 IS NOT NULL)
 ),
 inserted AS (
     INSERT INTO "user" (
@@ -35,7 +35,16 @@ updated AS (
 		name = $4,
 		email = $5,
 		picture = $6,
-		updated_at = NOW(),
+        updated_at = CASE 
+            WHEN COALESCE($1, google_id) IS DISTINCT FROM google_id 
+				OR COALESCE($2, facebook_id) IS DISTINCT FROM facebook_id 
+				OR COALESCE($3, analytics_id) IS DISTINCT FROM analytics_id 
+				OR $4 IS DISTINCT FROM name 
+				OR $5 IS DISTINCT FROM email 
+				OR $6 IS DISTINCT FROM picture 
+            THEN NOW() 
+            ELSE updated_at 
+        END,
 		last_seen = NOW()
 	FROM existing_user
 	WHERE "user".id = existing_user.id

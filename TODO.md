@@ -1,6 +1,4 @@
-* Try to recreate the homepage
-* User login
-  * On login distinguish if the user was updated or inserted so to write to updated_at
+* Delete user account
 
 * Serve Favicons from root
 * Error pages
