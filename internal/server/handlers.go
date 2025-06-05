@@ -91,10 +91,14 @@ func (s *Server) categoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 	// This is probably wasteful for non-existing category
 	data := s.NewData(w, r)
 
-	if !isValidCategory(data.Categories, slug) {
+	category, valid := isValidCategory(data.Categories, slug)
+	if !valid {
 		http.NotFound(w, r)
 		return
 	}
+
+	// Pass category name
+	data.Title = category.Name
 
 	var posts []database.Post
 
@@ -310,12 +314,12 @@ func (s *Server) logoutHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, redirectTo, http.StatusSeeOther)
 }
 
-func isValidCategory(categories []database.Category, slug string) bool {
+func isValidCategory(categories []database.Category, slug string) (database.Category, bool) {
 	for _, category := range categories {
 		if category.Slug == slug {
 			log.Println(category.Slug)
-			return true
+			return category, true
 		}
 	}
-	return false
+	return database.Category{}, false
 }
