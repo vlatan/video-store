@@ -62,9 +62,26 @@ func (s *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := s.NewData(w, r)
-	data.Posts = &posts
+	data.Posts = posts
 
 	if err := s.tm.Render(w, "home", data); err != nil {
+		log.Println(err)
+		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
+	}
+}
+
+func (s *Server) categoryPostsHandler(w http.ResponseWriter, r *http.Request) {
+
+	// page := 1
+	// pageStr := r.URL.Query().Get("page")
+	// pageInt, err := strconv.Atoi(pageStr)
+	// if err == nil || pageInt != 0 {
+	// 	page = pageInt
+	// }
+
+	data := s.NewData(w, r)
+
+	if err := s.tm.Render(w, "category", data); err != nil {
 		log.Println(err)
 		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
 	}

@@ -9,21 +9,21 @@
 	{{ $app_name_words := .Split .Config.AppName " " }}
 
 	{{ block "preload_css" . }}
-	<link rel="preload" href='{{ .StaticUrl "/static/css/shared.css" }}' as="style">
+	<link rel="preload" href='{{ .AddVersion "/static/css/shared.css" }}' as="style">
 	{{ end }}
 
 	{{ block "extra_preload_css" . }}{{ end }}
 
 	{{ block "css" . }}
-	<link rel="stylesheet" type="text/css" href='{{ .StaticUrl "/static/css/shared.css" }}'>
+	<link rel="stylesheet" type="text/css" href='{{ .AddVersion "/static/css/shared.css" }}'>
 	{{ end }}
 
 	{{ block "extra_css" . }}{{ end }}
 
-	<link rel="apple-touch-icon" sizes="180x180" href='{{ .StaticUrl "/static/favicons/apple-touch-icon.png" }}'>
-	<link rel="icon" type="image/png" sizes="32x32" href='{{ .StaticUrl "/static/favicons/favicon-32x32.png" }}'>
-	<link rel="icon" type="image/png" sizes="16x16" href='{{ .StaticUrl "/static/favicons/favicon-16x16.png" }}'>
-	<link rel="manifest" href='{{ .StaticUrl "/static/favicons/site.webmanifest" }}'>
+	<link rel="apple-touch-icon" sizes="180x180" href='{{ .AddVersion "/static/favicons/apple-touch-icon.png" }}'>
+	<link rel="icon" type="image/png" sizes="32x32" href='{{ .AddVersion "/static/favicons/favicon-32x32.png" }}'>
+	<link rel="icon" type="image/png" sizes="16x16" href='{{ .AddVersion "/static/favicons/favicon-16x16.png" }}'>
+	<link rel="manifest" href='{{ .AddVersion "/static/favicons/site.webmanifest" }}'>
 
 	{{ block "meta" . }}
 	<meta property='og:site_name' content='{{ .Config.AppName }}'>
@@ -131,7 +131,7 @@
 				{{ if .CurrentUser.IsAuthenticated }}
 				<div class="dropdown">
 					<button aria-label="Drop User Menu" class="nav-item username">
-						<img src='{{ .StaticUrl .CurrentUser.LocalAvatarURL }}' class="username-image" width="20"
+						<img src='{{ .AddVersion .CurrentUser.LocalAvatarURL }}' class="username-image" width="20"
 							height="20" alt="">
 						<span class="username-text">{{ .CurrentUser.Name }}</span>
 					</button>
@@ -234,7 +234,7 @@
 	</div>
 
 	{{ block "scripts" . }}
-	<script defer src='{{ .StaticUrl "/static/js/shared.js" }}'></script>
+	<script defer src='{{ .AddVersion "/static/js/shared.js" }}'></script>
 	{{end}}
 
 	{{ block "extra_scripts" . }}{{ end }}

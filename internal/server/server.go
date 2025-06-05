@@ -88,7 +88,7 @@ func (s *Server) NewData(w http.ResponseWriter, r *http.Request) *templates.Temp
 	return &templates.TemplateData{
 		StaticFiles:   s.sf,
 		Config:        s.config,
-		Categories:    &categories,
+		Categories:    categories,
 		CurrentUser:   s.getCurrentUser(w, r),
 		CurrentURI:    r.RequestURI,
 		FlashMessages: flashMessages,

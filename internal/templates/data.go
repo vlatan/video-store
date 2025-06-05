@@ -4,6 +4,7 @@ import (
 	"factual-docs/internal/config"
 	"factual-docs/internal/database"
 	"factual-docs/internal/files"
+	"net/url"
 	"strings"
 	"time"
 )
@@ -37,14 +38,14 @@ type TemplateData struct {
 	StaticFiles   files.StaticFiles
 	Config        *config.Config
 	Title         string
-	Posts         *[]database.Post
-	Categories    *[]database.Category
+	Posts         []database.Post
+	Categories    []database.Category
 	CurrentUser   *User
 	CurrentURI    string
 	FlashMessages []*FlashMessage
 }
 
-func (td *TemplateData) StaticUrl(path string) string {
+func (td *TemplateData) AddVersion(path string) string {
 	if fi, ok := td.StaticFiles[path]; ok {
 		return path + "?v=" + fi.Etag
 	}
@@ -57,4 +58,12 @@ func (td *TemplateData) Split(s, sep string) []string {
 
 func (td *TemplateData) Now() time.Time {
 	return time.Now()
+}
+
+func (td *TemplateData) CurrentURLPath() string {
+	u, err := url.Parse(td.CurrentURI)
+	if err != nil {
+		return td.CurrentURI
+	}
+	return u.Path
 }

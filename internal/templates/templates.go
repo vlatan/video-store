@@ -40,6 +40,12 @@ func New() Service {
 		partials+"/content.html",
 	))
 
+	tm["category"] = template.Must(parseFiles(
+		m, base,
+		partials+"/category.html",
+		partials+"/content.html",
+	))
+
 	return tm
 }
 
