@@ -7,7 +7,7 @@ type Category struct {
 
 const getCategoriesQuery = `
 SELECT name, slug FROM category
-WHERE id IN (SELECT category_id FROM post)
+WHERE id IN (SELECT DISTINCT category_id FROM post)
 `
 
 // Get a limited number of posts with offset

@@ -18,8 +18,10 @@ type Service interface {
 	UpdateUserLastSeen(int, time.Time) error
 	// Update or insert a new user
 	UpsertUser(*goth.User, string) (int, error)
-	// Get paginated posts from the DB
+	// Get paginated posts
 	GetPosts(int) ([]Post, error)
+	// Get paginated category posts
+	GetCategoryPosts(string, int) ([]Post, error)
 	// Get all categories
 	GetCategories() ([]Category, error)
 	// Health returns a map of health status information.

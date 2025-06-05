@@ -70,6 +70,51 @@ func (s *service) GetPosts(page int) ([]Post, error) {
 	return posts, nil
 }
 
+const getCategoryPostsQuery = `
+SELECT video_id, title, thumbnails FROM post 
+WHERE category_id = (SELECT id FROM category WHERE slug = $1 LIMIT 1)
+ORDER BY upload_date DESC
+LIMIT $2 OFFSET $3
+`
+
+// Get a limited number of posts from one category with offset
+func (s *service) GetCategoryPosts(slug string, page int) ([]Post, error) {
+
+	limit := s.config.PostsPerPage
+	offset := page * limit
+
+	rows, err := s.db.Query(getCategoryPostsQuery, slug, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var posts []Post
+	for rows.Next() {
+
+		// Get post from DB
+		var dbPost DBPost
+		if err := rows.Scan(&dbPost.VideoID, &dbPost.Title, &dbPost.Thumbnails); err != nil {
+			return []Post{}, err
+		}
+
+		// Process the post
+		post, err := processPost(dbPost)
+		if err != nil {
+			return []Post{}, err
+		}
+
+		// Include the processed post in the result
+		posts = append(posts, post)
+	}
+
+	if err := rows.Err(); err != nil {
+		return []Post{}, err
+	}
+
+	return posts, nil
+}
+
 // Convert DB post to e ready post for templates
 func processPost(dbPost DBPost) (Post, error) {
 	// Unmarshall the thumbnails into a map of structs
