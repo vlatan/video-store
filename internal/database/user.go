@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"time"
 
 	"github.com/markbates/goth"
 )
@@ -73,15 +74,18 @@ func (s *service) UpsertUser(u *goth.User, analyticsID string) (int, error) {
 	return id, err
 }
 
+const updateLastUserSeenQuery = `UPDATE "user" SET last_seen = $2 WHERE id = $1`
+
+// Update the last seen column on a user
+func (s *service) UpdateUserLastSeen(id int, t time.Time) error {
+	_, err := s.db.Exec(updateLastUserSeenQuery, id, t)
+	return err
+}
+
 // Helper function to convert string pointer or empty string to sql.NullString
 func NullString(s *string) sql.NullString {
 	if s == nil || *s == "" {
 		return sql.NullString{Valid: false}
 	}
 	return sql.NullString{String: *s, Valid: true}
-}
-
-func (s *service) UpdateUserLastSeen(id int) error {
-	_, err := s.db.Exec("UPDATE 'user' SET last_seen = NOW() WHERE id = $1", id)
-	return err
 }

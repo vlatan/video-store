@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"sync"
+	"time"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/markbates/goth"
@@ -14,7 +15,7 @@ import (
 // Service represents a service that interacts with a database.
 type Service interface {
 	// Update the last_seen date for a user
-	UpdateUserLastSeen(int) error
+	UpdateUserLastSeen(int, time.Time) error
 	// Update or insert a new user
 	UpsertUser(*goth.User, string) (int, error)
 	// Get paginated posts from the DB

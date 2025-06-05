@@ -1,6 +1,7 @@
 package server
 
 import (
+	"log"
 	"net/http"
 	"time"
 )
@@ -15,16 +16,9 @@ func (s *Server) userLastSeen(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		// Get userID from session
-		_, exists := session.Values["UserID"].(string)
-		if !exists {
-			next(w, r)
-			return
-		}
-
-		// Get lastSeenDB from session
-		lastSeenDB, exists := session.Values["LastSeen"].(time.Time)
-		if !exists {
+		// Get user row ID from session
+		id, ok := session.Values["ID"].(int)
+		if !ok {
 			next(w, r)
 			return
 		}
@@ -33,16 +27,19 @@ func (s *Server) userLastSeen(next http.HandlerFunc) http.HandlerFunc {
 		now := time.Now()
 		session.Values["LastSeen"] = now
 
-		// Check if the DB update is out of sync of a whole day
-		if lastSeenDB.IsZero() || !sameDate(lastSeenDB, now) {
-			// err := updateUserLastSeenInDB(userID)
-			session.Values["LastSeen"] = now
+		// Get lastSeenDB from session
+		// This will be a zero time value (January 1, year 1, 00:00:00 UTC) on fail
+		lastSeenDB := session.Values["LastSeenDB"].(time.Time)
+
+		// Check if the DB update is out of sync for an entire date
+		if !sameDate(lastSeenDB, now) {
+			if err := s.db.UpdateUserLastSeen(id, now); err != nil {
+				log.Println("Couldn't update the last seen in DB on user:", err)
+			}
+			session.Values["LastSeenDB"] = now
 		}
 
-		// if session.UserID > 0 { // user is logged in
-		// 	updateLastSeen(w, r, session)
-		// }
-
+		session.Save(r, w)
 		next(w, r)
 	}
 }
@@ -52,7 +49,3 @@ func sameDate(t1, t2 time.Time) bool {
 	y2, m2, d2 := t2.Date()
 	return y1 == y2 && m1 == m2 && d1 == d2
 }
-
-// func (s *Server) updateUserLastSeen(userID int) error {
-// 	// TODO
-// }
