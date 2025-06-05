@@ -1,6 +1,4 @@
 * Sort out category posts
-  Pass .Title
-  Do not cache erroneous categories
   Abstract portions of handler and db methods
 
 * Delete user account

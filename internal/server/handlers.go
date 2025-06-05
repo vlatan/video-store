@@ -97,7 +97,7 @@ func (s *Server) categoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Pass category name
+	// Pass category name as title of the page
 	data.Title = category.Name
 
 	var posts []database.Post
