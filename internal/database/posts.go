@@ -36,7 +36,7 @@ LIMIT $1 OFFSET $2
 func (s *service) GetPosts(page int) ([]Post, error) {
 
 	limit := s.config.PostsPerPage
-	offset := page * limit
+	offset := (page - 1) * limit
 
 	rows, err := s.db.Query(getPostsQuery, limit, offset)
 	if err != nil {
@@ -72,8 +72,8 @@ func (s *service) GetPosts(page int) ([]Post, error) {
 
 const getCategoryPostsQuery = `
 SELECT video_id, title, thumbnails FROM post 
-WHERE category_id = (SELECT id FROM category WHERE slug = $1 LIMIT 1)
-ORDER BY upload_date DESC
+WHERE category_id = (SELECT id FROM category WHERE slug = $1) 
+ORDER BY upload_date DESC 
 LIMIT $2 OFFSET $3
 `
 
@@ -81,7 +81,7 @@ LIMIT $2 OFFSET $3
 func (s *service) GetCategoryPosts(slug string, page int) ([]Post, error) {
 
 	limit := s.config.PostsPerPage
-	offset := page * limit
+	offset := (page - 1) * limit
 
 	rows, err := s.db.Query(getCategoryPostsQuery, slug, limit, offset)
 	if err != nil {

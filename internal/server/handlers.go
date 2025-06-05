@@ -121,6 +121,7 @@ func (s *Server) categoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(posts) == 0 {
+		log.Println("BINGOOOOOOOOOOOOO")
 		http.NotFound(w, r)
 		return
 	}
@@ -136,7 +137,6 @@ func (s *Server) categoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data.Posts = posts
-
 	if err := s.tm.Render(w, "category", data); err != nil {
 		log.Println(err)
 		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
@@ -317,7 +317,6 @@ func (s *Server) logoutHandler(w http.ResponseWriter, r *http.Request) {
 func isValidCategory(categories []database.Category, slug string) (database.Category, bool) {
 	for _, category := range categories {
 		if category.Slug == slug {
-			log.Println(category.Slug)
 			return category, true
 		}
 	}
