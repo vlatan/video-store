@@ -173,7 +173,7 @@ func (s *Server) logoutHandler(w http.ResponseWriter, r *http.Request) {
 	redirectTo := getSafeRedirectPath(r)
 
 	// Redirect to home if user is not logged in
-	if user := s.getCurrentUser(r); user == nil || user.UserID == "" {
+	if user := s.getCurrentUser(w, r); user == nil || user.UserID == "" {
 		http.Redirect(w, r, redirectTo, http.StatusFound)
 		return
 	}
@@ -199,22 +199,41 @@ func (s *Server) logoutHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // Retrieve user session, return User struct
-func (s *Server) getCurrentUser(r *http.Request) *templates.User {
+func (s *Server) getCurrentUser(w http.ResponseWriter, r *http.Request) *templates.User {
 	session, err := s.store.Get(r, s.config.SessionName)
 	if session == nil || err != nil {
 		return &templates.User{}
 	}
 
-	userID, ok := session.Values["UserID"].(string)
-	if !ok {
+	// Get user row ID from session
+	id, ok := session.Values["ID"].(int)
+	if id == 0 || !ok {
 		return &templates.User{}
 	}
+
+	// Update last seen
+	now := time.Now()
+	session.Values["LastSeen"] = now
+
+	// This will be a zero time value (January 1, year 1, 00:00:00 UTC) on fail
+	lastSeenDB := session.Values["LastSeenDB"].(time.Time)
+
+	// Check if the DB update is out of sync for an entire date
+	if !sameDate(lastSeenDB, now) {
+		if err := s.db.UpdateUserLastSeen(id, now); err != nil {
+			log.Printf("Couldn't update the last seen in DB on user '%d': %v\n", id, err)
+		}
+		session.Values["LastSeenDB"] = now
+	}
+
+	// Save the session
+	session.Save(r, w)
 
 	analyticsID := session.Values["AnalyticsID"].(string)
 	avatarURL := session.Values["AvatarURL"].(string)
 
 	return &templates.User{
-		UserID:         userID,
+		UserID:         session.Values["UserID"].(string),
 		Email:          session.Values["Email"].(string),
 		Name:           session.Values["Name"].(string),
 		Provider:       session.Values["Provider"].(string),
