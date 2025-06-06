@@ -1,7 +1,6 @@
 package database
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"sort"
@@ -39,13 +38,7 @@ func (s *service) GetPosts(page int) ([]Post, error) {
 	limit := s.config.PostsPerPage
 	offset := (page - 1) * limit
 
-	rows, err := s.db.Query(getPostsQuery, limit, offset)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	return queryPosts(rows)
+	return s.queryPosts(getPostsQuery, limit, offset)
 }
 
 const getCategoryPostsQuery = `
@@ -56,18 +49,12 @@ LIMIT $2 OFFSET $3
 `
 
 // Get a limited number of posts from one category with offset
-func (s *service) GetCategoryPosts(slug string, page int) ([]Post, error) {
+func (s *service) GetCategoryPosts(categorySlug string, page int) ([]Post, error) {
 
 	limit := s.config.PostsPerPage
 	offset := (page - 1) * limit
 
-	rows, err := s.db.Query(getCategoryPostsQuery, slug, limit, offset)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	return queryPosts(rows)
+	return s.queryPosts(getCategoryPostsQuery, categorySlug, limit, offset)
 }
 
 // Convert DB post to e ready post for templates
@@ -116,27 +103,39 @@ func srcset(thumbnails map[string]Thumbnail, maxWidth int) string {
 	return strings.TrimSuffix(result, ", ")
 }
 
-func queryPosts(rows *sql.Rows) (posts []Post, err error) {
+func (s *service) queryPosts(query string, args ...any) (posts []Post, err error) {
+	// Query the rows
+	rows, err := s.db.Query(query, args...)
+	if err != nil {
+		return posts, err
+	}
+
+	// Close rows on exit
+	defer rows.Close()
+
+	// Iterate over the rows
 	for rows.Next() {
-		// Get post from DB
 		var dbPost DBPost
+
+		// Paste post from row to struct
 		if err = rows.Scan(&dbPost.VideoID, &dbPost.Title, &dbPost.Thumbnails); err != nil {
-			return []Post{}, err
+			return posts, err
 		}
 
 		// Process the post
 		post, err := processPost(dbPost)
 		if err != nil {
-			return []Post{}, err
+			return posts, err
 		}
 
 		// Include the processed post in the result
 		posts = append(posts, post)
 	}
 
+	// If error during iteration
 	if err := rows.Err(); err != nil {
-		return []Post{}, err
+		return posts, err
 	}
 
-	return posts, nil
+	return posts, err
 }
