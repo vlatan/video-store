@@ -24,17 +24,12 @@ import (
 // Handle the Home page
 func (s *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
 
-	page := 1
-	pageStr := r.URL.Query().Get("page")
-	pageInt, err := strconv.Atoi(pageStr)
-	if err == nil || pageInt != 0 {
-		page = pageInt
-	}
-
+	// Get page number from a query param
+	page := getPageNum(r)
 	var posts []database.Post
 
 	// Use the generic cache wrapper
-	err = redis.Cached(
+	err := redis.Cached(
 		r.Context(),
 		s.rdb,
 		fmt.Sprintf("posts_page_%d", page),
@@ -77,33 +72,26 @@ func (s *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) categoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 
-	page := 1
-	pageStr := r.URL.Query().Get("page")
-	pageInt, err := strconv.Atoi(pageStr)
-	if err == nil || pageInt != 0 {
-		page = pageInt
-	}
-
 	// Get category slug from URL
 	slug := r.PathValue("category")
 
-	// Generate template data
+	// Generate template data (it get all the categories too)
 	// This is probably wasteful for non-existing category
 	data := s.NewData(w, r)
 
+	// Check if the category is valid
 	category, valid := isValidCategory(data.Categories, slug)
 	if !valid {
 		http.NotFound(w, r)
 		return
 	}
 
-	// Pass category name as title of the page
-	data.Title = category.Name
-
+	// Get page number from a query param
+	page := getPageNum(r)
 	var posts []database.Post
 
 	// Use the generic cache wrapper
-	err = redis.Cached(
+	err := redis.Cached(
 		r.Context(),
 		s.rdb,
 		fmt.Sprintf("%s_posts_page_%d", slug, page),
@@ -136,6 +124,7 @@ func (s *Server) categoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data.Posts = posts
+	data.Title = category.Name
 	if err := s.tm.Render(w, "category", data); err != nil {
 		log.Println(err)
 		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
@@ -320,4 +309,16 @@ func isValidCategory(categories []database.Category, slug string) (database.Cate
 		}
 	}
 	return database.Category{}, false
+}
+
+// Get page number from the request query param
+// Defaults to 1 if invalid param
+func getPageNum(r *http.Request) int {
+	page := 1
+	pageStr := r.URL.Query().Get("page")
+	pageInt, err := strconv.Atoi(pageStr)
+	if err == nil || pageInt != 0 {
+		page = pageInt
+	}
+	return page
 }
