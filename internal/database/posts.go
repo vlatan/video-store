@@ -1,6 +1,7 @@
 package database
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"sort"
@@ -44,30 +45,7 @@ func (s *service) GetPosts(page int) ([]Post, error) {
 	}
 	defer rows.Close()
 
-	var posts []Post
-	for rows.Next() {
-
-		// Get post from DB
-		var dbPost DBPost
-		if err := rows.Scan(&dbPost.VideoID, &dbPost.Title, &dbPost.Thumbnails); err != nil {
-			return []Post{}, err
-		}
-
-		// Process the post
-		post, err := processPost(dbPost)
-		if err != nil {
-			return []Post{}, err
-		}
-
-		// Include the processed post in the result
-		posts = append(posts, post)
-	}
-
-	if err := rows.Err(); err != nil {
-		return []Post{}, err
-	}
-
-	return posts, nil
+	return queryPosts(rows)
 }
 
 const getCategoryPostsQuery = `
@@ -89,30 +67,7 @@ func (s *service) GetCategoryPosts(slug string, page int) ([]Post, error) {
 	}
 	defer rows.Close()
 
-	var posts []Post
-	for rows.Next() {
-
-		// Get post from DB
-		var dbPost DBPost
-		if err := rows.Scan(&dbPost.VideoID, &dbPost.Title, &dbPost.Thumbnails); err != nil {
-			return []Post{}, err
-		}
-
-		// Process the post
-		post, err := processPost(dbPost)
-		if err != nil {
-			return []Post{}, err
-		}
-
-		// Include the processed post in the result
-		posts = append(posts, post)
-	}
-
-	if err := rows.Err(); err != nil {
-		return []Post{}, err
-	}
-
-	return posts, nil
+	return queryPosts(rows)
 }
 
 // Convert DB post to e ready post for templates
@@ -159,4 +114,29 @@ func srcset(thumbnails map[string]Thumbnail, maxWidth int) string {
 	}
 
 	return strings.TrimSuffix(result, ", ")
+}
+
+func queryPosts(rows *sql.Rows) (posts []Post, err error) {
+	for rows.Next() {
+		// Get post from DB
+		var dbPost DBPost
+		if err = rows.Scan(&dbPost.VideoID, &dbPost.Title, &dbPost.Thumbnails); err != nil {
+			return []Post{}, err
+		}
+
+		// Process the post
+		post, err := processPost(dbPost)
+		if err != nil {
+			return []Post{}, err
+		}
+
+		// Include the processed post in the result
+		posts = append(posts, post)
+	}
+
+	if err := rows.Err(); err != nil {
+		return []Post{}, err
+	}
+
+	return posts, nil
 }
