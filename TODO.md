@@ -1,6 +1,3 @@
-* Sort out category posts
-  Abstract portions of handler and db methods
-
 * Delete user account
 
 * Serve Favicons from root

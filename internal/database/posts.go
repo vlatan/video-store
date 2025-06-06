@@ -7,12 +7,6 @@ import (
 	"strings"
 )
 
-type DBPost struct {
-	VideoID    string `db:"video_id"`
-	Title      string `db:"title"`
-	Thumbnails []byte `db:"title"`
-}
-
 type Thumbnail struct {
 	URL    string `json:"url"`
 	Width  int    `json:"width"`
@@ -20,61 +14,77 @@ type Thumbnail struct {
 }
 
 type Post struct {
-	VideoID   string    `json:"video_id"`
-	Title     string    `json:"title"`
-	Srcset    string    `json:"srcset"`
-	Thumbnail Thumbnail `json:"thumbnail"`
+	VideoID      string    `json:"video_id"`
+	Title        string    `json:"title"`
+	Srcset       string    `json:"srcset"`
+	Thumbnail    Thumbnail `json:"thumbnail"`
+	CategorySlug string    `json:"category_slug"`
+	CategoryName string    `json:"category_name"`
+	Likes        int       `json:"likes"`
 }
 
 const getPostsQuery = `
-SELECT video_id, title, thumbnails FROM post 
-ORDER BY upload_date DESC
+SELECT video_id, title, thumbnails, (
+	SELECT COUNT(*) FROM post_like
+	WHERE post_like.post_id = post.id
+) AS likes FROM post
+ORDER BY %s
 LIMIT $1 OFFSET $2
 `
 
 // Get a limited number of posts with offset
-func (s *service) GetPosts(page int) ([]Post, error) {
+func (s *service) GetPosts(page int, orderBy string) ([]Post, error) {
 
 	limit := s.config.PostsPerPage
 	offset := (page - 1) * limit
 
-	return s.queryPosts(getPostsQuery, limit, offset)
+	order := "upload_date DESC"
+	if orderBy == "likes" {
+		order = "likes DESC, " + order
+	}
+
+	query := fmt.Sprintf(getPostsQuery, order)
+	return s.queryPosts(query, limit, offset)
 }
 
 const getCategoryPostsQuery = `
-SELECT video_id, title, thumbnails FROM post 
+SELECT video_id, title, thumbnails, (
+	SELECT COUNT(*) FROM post_like
+	WHERE post_like.post_id = post.id
+) AS likes FROM post 
 WHERE category_id = (SELECT id FROM category WHERE slug = $1) 
-ORDER BY upload_date DESC 
+ORDER BY %s
 LIMIT $2 OFFSET $3
 `
 
 // Get a limited number of posts from one category with offset
-func (s *service) GetCategoryPosts(categorySlug string, page int) ([]Post, error) {
+func (s *service) GetCategoryPosts(categorySlug, orderBy string, page int) ([]Post, error) {
 
 	limit := s.config.PostsPerPage
 	offset := (page - 1) * limit
 
-	return s.queryPosts(getCategoryPostsQuery, categorySlug, limit, offset)
+	order := "upload_date DESC"
+	if orderBy == "likes" {
+		order = "likes DESC, " + order
+	}
+
+	query := fmt.Sprintf(getCategoryPostsQuery, order)
+	return s.queryPosts(query, categorySlug, limit, offset)
 }
 
 // Convert DB post to e ready post for templates
-func processPost(dbPost DBPost) (Post, error) {
-	// Unmarshall the thumbnails into a map of structs
+func processPost(post *Post, thumbs []byte) error {
+	// Unmarshall the byte thumbnails into a map of structs
 	var thumbnails map[string]Thumbnail
-	err := json.Unmarshal(dbPost.Thumbnails, &thumbnails)
+	err := json.Unmarshal(thumbs, &thumbnails)
 	if err != nil {
-		return Post{}, err
+		return err
 	}
 
-	// Construct the processed post
-	post := Post{
-		VideoID:   dbPost.VideoID,
-		Title:     dbPost.Title,
-		Srcset:    srcset(thumbnails, 480),
-		Thumbnail: thumbnails["medium"],
-	}
+	post.Srcset = srcset(thumbnails, 480)
+	post.Thumbnail = thumbnails["medium"]
 
-	return post, nil
+	return nil
 
 }
 
@@ -115,15 +125,16 @@ func (s *service) queryPosts(query string, args ...any) (posts []Post, err error
 
 	// Iterate over the rows
 	for rows.Next() {
-		var dbPost DBPost
+		var post Post
+		var thumbnails []byte
 
-		// Paste post from row to struct
-		if err = rows.Scan(&dbPost.VideoID, &dbPost.Title, &dbPost.Thumbnails); err != nil {
+		// Paste post from row to struct, thumbnails in a separate var
+		if err = rows.Scan(&post.VideoID, &post.Title, &thumbnails, &post.Likes); err != nil {
 			return posts, err
 		}
 
 		// Process the post
-		post, err := processPost(dbPost)
+		err = processPost(&post, thumbnails)
 		if err != nil {
 			return posts, err
 		}

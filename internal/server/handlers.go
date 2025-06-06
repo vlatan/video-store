@@ -24,21 +24,37 @@ import (
 // Handle the Home page
 func (s *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
 
+	// Generate template data
+	data := s.NewData(w, r)
+
 	// Get page number from a query param
 	page := getPageNum(r)
-	var posts []database.Post
+	redisKey := fmt.Sprintf("posts:page:%d", page)
 
-	// Use the generic cache wrapper
-	err := redis.Cached(
-		r.Context(),
-		s.rdb,
-		fmt.Sprintf("posts_page_%d", page),
-		24*time.Hour,
-		&posts,
-		func() ([]database.Post, error) {
-			return s.db.GetPosts(page) // Call the actual underlying database method
-		},
-	)
+	// Get the order_by query param if any
+	orderBy := r.URL.Query().Get("order_by")
+	if orderBy == "likes" {
+		redisKey += ":likes"
+	}
+
+	var posts []database.Post
+	var err error = nil
+
+	switch data.CurrentUser.IsAdmin(s.config.AdminOpenID) {
+	case true:
+		posts, err = s.db.GetPosts(page, orderBy)
+	default:
+		err = redis.Cached(
+			r.Context(),
+			s.rdb,
+			redisKey,
+			24*time.Hour,
+			&posts,
+			func() ([]database.Post, error) {
+				return s.db.GetPosts(page, orderBy)
+			},
+		)
+	}
 
 	if err != nil {
 		log.Println(err)
@@ -61,9 +77,7 @@ func (s *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := s.NewData(w, r)
 	data.Posts = posts
-
 	if err := s.tm.Render(w, "home", data); err != nil {
 		log.Println(err)
 		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
@@ -75,7 +89,7 @@ func (s *Server) categoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 	// Get category slug from URL
 	slug := r.PathValue("category")
 
-	// Generate template data (it get all the categories too)
+	// Generate template data (it gets all the categories too)
 	// This is probably wasteful for non-existing category
 	data := s.NewData(w, r)
 
@@ -88,19 +102,32 @@ func (s *Server) categoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Get page number from a query param
 	page := getPageNum(r)
-	var posts []database.Post
+	redisKey := fmt.Sprintf("%s:posts:page:%d", slug, page)
 
-	// Use the generic cache wrapper
-	err := redis.Cached(
-		r.Context(),
-		s.rdb,
-		fmt.Sprintf("%s_posts_page_%d", slug, page),
-		24*time.Hour,
-		&posts,
-		func() ([]database.Post, error) {
-			return s.db.GetCategoryPosts(slug, page) // Call the actual underlying database method
-		},
-	)
+	// Get the order_by query param if any
+	orderBy := r.URL.Query().Get("order_by")
+	if orderBy == "likes" {
+		redisKey += ":likes"
+	}
+
+	var posts []database.Post
+	var err error = nil
+
+	switch data.CurrentUser.IsAdmin(s.config.AdminOpenID) {
+	case true:
+		posts, err = s.db.GetCategoryPosts(slug, orderBy, page)
+	default:
+		err = redis.Cached(
+			r.Context(),
+			s.rdb,
+			redisKey,
+			24*time.Hour,
+			&posts,
+			func() ([]database.Post, error) {
+				return s.db.GetCategoryPosts(slug, orderBy, page)
+			},
+		)
+	}
 
 	if err != nil {
 		log.Println(err)

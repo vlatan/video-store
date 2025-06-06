@@ -19,9 +19,9 @@ type Service interface {
 	// Update or insert a new user
 	UpsertUser(*goth.User, string) (int, error)
 	// Get paginated posts
-	GetPosts(int) ([]Post, error)
+	GetPosts(int, string) ([]Post, error)
 	// Get paginated category posts
-	GetCategoryPosts(string, int) ([]Post, error)
+	GetCategoryPosts(string, string, int) ([]Post, error)
 	// Get all categories
 	GetCategories() ([]Category, error)
 	// Health returns a map of health status information.
