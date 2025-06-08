@@ -29,22 +29,26 @@ func New() Service {
 	tm := make(Templates)
 
 	const base = "templates/base.html"
-	const partials = "templates/partials"
+	const content = "templates/partials/content.html"
+	partials := []string{
+		"templates/partials/home.html",
+		"templates/partials/category.html",
+	}
 
 	m := minify.New()
 	m.AddFunc("text/html", html.Minify)
+	baseTemplate := template.Must(parseFiles(m, nil, base))
 
-	tm["home"] = template.Must(parseFiles(
-		m, base,
-		partials+"/home.html",
-		partials+"/content.html",
-	))
+	for _, partial := range partials {
+		baseTmpl, err := baseTemplate.Clone()
+		if err != nil {
+			log.Fatalf("couldn't clone the base '%s' template", base)
+		}
 
-	tm["category"] = template.Must(parseFiles(
-		m, base,
-		partials+"/category.html",
-		partials+"/content.html",
-	))
+		name := filepath.Base(partial)
+		name = name[:len(name)-len(filepath.Ext(name))]
+		tm[name] = template.Must(parseFiles(m, baseTmpl, partial, content))
+	}
 
 	return tm
 }
@@ -91,9 +95,8 @@ func (tm Templates) Render(w http.ResponseWriter, name string, data any) error {
 }
 
 // Minify and parse the HTML templates as per the tdewolff/minify docs.
-func parseFiles(m *minify.M, filepaths ...string) (*template.Template, error) {
+func parseFiles(m *minify.M, tmpl *template.Template, filepaths ...string) (*template.Template, error) {
 
-	var tmpl *template.Template
 	for _, fp := range filepaths {
 
 		b, err := fs.ReadFile(web.Files, fp)
