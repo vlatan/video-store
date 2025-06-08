@@ -2,6 +2,7 @@ package database
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -91,13 +92,13 @@ WHERE video_id = $1
 
 func (s *service) GetSinglePost(videoID string) (post Post, err error) {
 
-	var thumbs []byte
+	var thumbnails []byte
 	var category Category
 
 	// Query the rows
 	err = s.db.QueryRow(getSinglePostQuery, videoID).Scan(
 		&post.Title,
-		&thumbs,
+		&thumbnails,
 		&post.Likes,
 		&post.ShortDesc,
 		&category.Slug,
@@ -107,23 +108,18 @@ func (s *service) GetSinglePost(videoID string) (post Post, err error) {
 		return post, err
 	}
 
+	// Assign category struct
 	post.Category = category
 
 	// Unserialize thumbnails
-	var thumbnails map[string]Thumbnail
-	err = json.Unmarshal(thumbs, &thumbnails)
+	thumbsMap, err := unmarshalThumbs(thumbnails)
 	if err != nil {
-		return post, err
-	}
-
-	// Check if no thumbnails at all
-	if len(thumbnails) == 0 {
-		return post, fmt.Errorf("no thumbnail found for the video %s", videoID)
+		return post, fmt.Errorf("video ID '%s': %v", videoID, err)
 	}
 
 	// Get the thumbnail with the maximum width
 	var maxThumb Thumbnail
-	for _, thumb := range thumbnails {
+	for _, thumb := range thumbsMap {
 		if thumb.Width > maxThumb.Width {
 			maxThumb = thumb
 		}
@@ -136,25 +132,9 @@ func (s *service) GetSinglePost(videoID string) (post Post, err error) {
 	post.MetaDesc = strings.Split(post.ShortDesc, ".")[0]
 
 	// Make srcset string
-	post.Srcset = srcset(thumbnails, maxThumb.Width)
+	post.Srcset = srcset(thumbsMap, maxThumb.Width)
 
 	return post, err
-}
-
-// Convert DB post to e ready post for templates
-func processPost(post *Post, thumbs []byte) error {
-	// Unmarshall the byte thumbnails into a map of structs
-	var thumbnails map[string]Thumbnail
-	err := json.Unmarshal(thumbs, &thumbnails)
-	if err != nil {
-		return err
-	}
-
-	post.Srcset = srcset(thumbnails, 480)
-	post.Thumbnail = thumbnails["medium"]
-
-	return nil
-
 }
 
 // Create a srcset string from a map of thumbnails
@@ -202,11 +182,14 @@ func (s *service) queryPosts(query string, args ...any) (posts []Post, err error
 			return posts, err
 		}
 
-		// Process the post
-		err = processPost(&post, thumbnails)
+		// Unserialize thumbnails
+		thumbsMap, err := unmarshalThumbs(thumbnails)
 		if err != nil {
-			return posts, err
+			return posts, fmt.Errorf("video ID '%s': %v", post.VideoID, err)
 		}
+
+		post.Srcset = srcset(thumbsMap, 480)
+		post.Thumbnail = thumbsMap["medium"]
 
 		// Include the processed post in the result
 		posts = append(posts, post)
@@ -218,4 +201,19 @@ func (s *service) queryPosts(query string, args ...any) (posts []Post, err error
 	}
 
 	return posts, err
+}
+
+// Unserialize thumbnails
+func unmarshalThumbs(thumbs []byte) (thumbnails map[string]Thumbnail, err error) {
+	err = json.Unmarshal(thumbs, &thumbnails)
+	if err != nil {
+		return thumbnails, err
+	}
+
+	// Check if no thumbnails at all
+	if len(thumbnails) == 0 {
+		return thumbnails, errors.New("no thumbnails found")
+	}
+
+	return thumbnails, err
 }
