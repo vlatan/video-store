@@ -1,7 +1,7 @@
 <div id="scroller" class="scroll-content">
 
     {{ range .Posts }}
-    <a class="video-link" href="/posts/{{ .VideoID }}/">
+    <a class="video-link" href="/video/{{ .VideoID }}/">
         <span class="video-img-wrap">
             <img class="video-img" alt="{{ .Title }}" src="{{ .Thumbnail.URL }}" srcset="{{ .Srcset }}">
         </span>

@@ -14,13 +14,15 @@ type Thumbnail struct {
 }
 
 type Post struct {
-	VideoID      string    `json:"video_id"`
-	Title        string    `json:"title"`
-	Srcset       string    `json:"srcset"`
-	Thumbnail    Thumbnail `json:"thumbnail"`
-	CategorySlug string    `json:"category_slug"`
-	CategoryName string    `json:"category_name"`
-	Likes        int       `json:"likes"`
+	VideoID   string    `json:"video_id"`
+	Title     string    `json:"title"`
+	Srcset    string    `json:"srcset"`
+	Thumbnail Thumbnail `json:"thumbnail"`
+	Category  Category  `json:"category"`
+	Likes     int       `json:"likes"`
+	ShortDesc string    `json:"short_description"`
+	MetaDesc  string    `json:"meta_description"`
+	Related   []Post    `json:"related"`
 }
 
 const getPostsQuery = `
@@ -72,6 +74,73 @@ func (s *service) GetCategoryPosts(categorySlug, orderBy string, page int) ([]Po
 	return s.queryPosts(query, categorySlug, limit, offset)
 }
 
+const getSinglePostQuery = `
+SELECT 
+	title, 
+	thumbnails, (
+		SELECT COUNT(*) FROM post_like
+	  	WHERE post_like.post_id = post.id
+	) AS likes, 
+ 	short_description,
+	slug AS category_slug,
+	name AS category_name
+FROM post 
+LEFT JOIN category ON post.category_id = category.id
+WHERE video_id = $1 
+`
+
+func (s *service) GetSinglePost(videoID string) (post Post, err error) {
+
+	var thumbs []byte
+	var category Category
+
+	// Query the rows
+	err = s.db.QueryRow(getSinglePostQuery, videoID).Scan(
+		&post.Title,
+		&thumbs,
+		&post.Likes,
+		&post.ShortDesc,
+		&category.Slug,
+		&category.Name,
+	)
+	if err != nil {
+		return post, err
+	}
+
+	post.Category = category
+
+	// Unserialize thumbnails
+	var thumbnails map[string]Thumbnail
+	err = json.Unmarshal(thumbs, &thumbnails)
+	if err != nil {
+		return post, err
+	}
+
+	// Check if no thumbnails at all
+	if len(thumbnails) == 0 {
+		return post, fmt.Errorf("no thumbnail found for the video %s", videoID)
+	}
+
+	// Get the thumbnail with the maximum width
+	var maxThumb Thumbnail
+	for _, thumb := range thumbnails {
+		if thumb.Width > maxThumb.Width {
+			maxThumb = thumb
+		}
+	}
+
+	// Assign the biggest thumbnail to post
+	post.Thumbnail = maxThumb
+
+	// Get the first sentence of the short description to be used as meta description
+	post.MetaDesc = strings.Split(post.ShortDesc, ".")[0]
+
+	// Make srcset string
+	post.Srcset = srcset(thumbnails, maxThumb.Width)
+
+	return post, err
+}
+
 // Convert DB post to e ready post for templates
 func processPost(post *Post, thumbs []byte) error {
 	// Unmarshall the byte thumbnails into a map of structs
@@ -114,7 +183,7 @@ func srcset(thumbnails map[string]Thumbnail, maxWidth int) string {
 }
 
 func (s *service) queryPosts(query string, args ...any) (posts []Post, err error) {
-	// Query the rows
+	// Get rows from DB
 	rows, err := s.db.Query(query, args...)
 	if err != nil {
 		return posts, err

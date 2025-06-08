@@ -158,6 +158,21 @@ func (s *Server) categoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (s *Server) singlePostHandler(w http.ResponseWriter, r *http.Request) {
+	// Get category slug from URL
+	videoID := r.PathValue("video")
+
+	// TODO: Validate the video ID
+
+	post, _ := s.db.GetSinglePost(videoID)
+
+	if err := s.tm.WriteJSON(w, post); err != nil {
+		log.Println(err)
+		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
+	}
+
+}
+
 // Handle minified static file from cache
 func (s *Server) staticHandler(w http.ResponseWriter, r *http.Request) {
 

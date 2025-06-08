@@ -20,6 +20,8 @@ type Service interface {
 	UpsertUser(*goth.User, string) (int, error)
 	// Get paginated posts
 	GetPosts(int, string) ([]Post, error)
+	// Get single posts given the video ID
+	GetSinglePost(string) (Post, error)
 	// Get paginated category posts
 	GetCategoryPosts(string, string, int) ([]Post, error)
 	// Get all categories
