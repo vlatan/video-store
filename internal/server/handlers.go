@@ -43,7 +43,7 @@ func (s *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
 	var posts []database.Post
 	var err error = nil
 
-	switch data.CurrentUser.IsAdmin(s.config.AdminOpenID) {
+	switch data.IsAdmin() {
 	case true:
 		posts, err = s.db.GetPosts(page, orderBy)
 	default:
@@ -116,7 +116,7 @@ func (s *Server) categoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 	var posts []database.Post
 	var err error = nil
 
-	switch data.CurrentUser.IsAdmin(s.config.AdminOpenID) {
+	switch data.IsAdmin() {
 	case true:
 		posts, err = s.db.GetCategoryPosts(slug, orderBy, page)
 	default:

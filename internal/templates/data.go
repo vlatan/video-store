@@ -26,10 +26,6 @@ func (u *User) IsAuthenticated() bool {
 	return u != nil && u.UserID != ""
 }
 
-func (u *User) IsAdmin(adminOpenID string) bool {
-	return u.IsAuthenticated() && u.UserID == adminOpenID
-}
-
 type FlashMessage struct {
 	Message  string
 	Category string
@@ -39,11 +35,17 @@ type TemplateData struct {
 	StaticFiles   files.StaticFiles
 	Config        *config.Config
 	Title         string
+	SinglePost    database.Post
 	Posts         []database.Post
 	Categories    []database.Category
 	CurrentUser   *User
 	CurrentURI    string
 	FlashMessages []*FlashMessage
+}
+
+func (td *TemplateData) IsAdmin() bool {
+	return td.CurrentUser.IsAuthenticated() &&
+		td.CurrentUser.UserID == td.Config.AdminOpenID
 }
 
 func (td *TemplateData) AddVersion(path string) string {
