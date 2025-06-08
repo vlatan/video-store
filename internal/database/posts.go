@@ -15,15 +15,16 @@ type Thumbnail struct {
 }
 
 type Post struct {
-	VideoID   string    `json:"video_id"`
-	Title     string    `json:"title"`
-	Srcset    string    `json:"srcset"`
-	Thumbnail Thumbnail `json:"thumbnail"`
-	Category  Category  `json:"category"`
-	Likes     int       `json:"likes"`
-	ShortDesc string    `json:"short_description"`
-	MetaDesc  string    `json:"meta_description"`
-	Related   []Post    `json:"related"`
+	VideoID     string    `json:"video_id"`
+	Title       string    `json:"title"`
+	Srcset      string    `json:"srcset"`
+	Thumbnail   Thumbnail `json:"thumbnail"`
+	Category    Category  `json:"category"`
+	Likes       int       `json:"likes"`
+	Description string    `json:"description"`
+	ShortDesc   string    `json:"short_description"`
+	MetaDesc    string    `json:"meta_description"`
+	Related     []Post    `json:"related"`
 }
 
 const getPostsQuery = `
@@ -82,6 +83,7 @@ SELECT
 		SELECT COUNT(*) FROM post_like
 	  	WHERE post_like.post_id = post.id
 	) AS likes, 
+	description,
  	short_description,
 	slug AS category_slug,
 	name AS category_name
@@ -100,6 +102,7 @@ func (s *service) GetSinglePost(videoID string) (post Post, err error) {
 		&post.Title,
 		&thumbnails,
 		&post.Likes,
+		&post.Description,
 		&post.ShortDesc,
 		&category.Slug,
 		&category.Name,

@@ -14,12 +14,15 @@ import (
 	"net/http"
 	"net/url"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/markbates/goth/gothic"
 )
+
+var validVideoID = regexp.MustCompile("^([-a-zA-Z0-9_]{11})$")
 
 // Handle the Home page
 func (s *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
@@ -162,7 +165,12 @@ func (s *Server) singlePostHandler(w http.ResponseWriter, r *http.Request) {
 	// Get category slug from URL
 	videoID := r.PathValue("video")
 
-	// TODO: Validate the video ID
+	// Validate the YT ID
+	if validVideoID.FindStringSubmatch(videoID) == nil {
+		log.Println("Not a valid video ID:", videoID)
+		http.NotFound(w, r)
+		return
+	}
 
 	post, _ := s.db.GetSinglePost(videoID)
 
