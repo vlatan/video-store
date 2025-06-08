@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"time"
 )
 
 type Thumbnail struct {
@@ -25,6 +26,7 @@ type Post struct {
 	ShortDesc   string    `json:"short_description"`
 	MetaDesc    string    `json:"meta_description"`
 	Related     []Post    `json:"related"`
+	UploadDate  time.Time `json:"upload_date"`
 }
 
 const getPostsQuery = `
@@ -86,7 +88,8 @@ SELECT
 	description,
  	short_description,
 	slug AS category_slug,
-	name AS category_name
+	name AS category_name,
+	upload_date
 FROM post 
 LEFT JOIN category ON post.category_id = category.id
 WHERE video_id = $1 
@@ -106,6 +109,7 @@ func (s *service) GetSinglePost(videoID string) (post Post, err error) {
 		&post.ShortDesc,
 		&category.Slug,
 		&category.Name,
+		&post.UploadDate,
 	)
 	if err != nil {
 		return post, err
