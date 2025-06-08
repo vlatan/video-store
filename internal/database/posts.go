@@ -95,7 +95,7 @@ func (s *service) GetSinglePost(videoID string) (post Post, err error) {
 	var thumbnails []byte
 	var category Category
 
-	// Query the rows
+	// Get single row from DB
 	err = s.db.QueryRow(getSinglePostQuery, videoID).Scan(
 		&post.Title,
 		&thumbnails,
