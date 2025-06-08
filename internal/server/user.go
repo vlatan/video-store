@@ -145,6 +145,7 @@ func (s *Server) getCurrentUser(w http.ResponseWriter, r *http.Request) *templat
 	avatarURL := session.Values["AvatarURL"].(string)
 
 	return &templates.User{
+		ID:             id,
 		UserID:         session.Values["UserID"].(string),
 		Email:          session.Values["Email"].(string),
 		Name:           session.Values["Name"].(string),

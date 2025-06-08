@@ -1,5 +1,5 @@
-* Validate video ID
 * Make ready the single post template
+  Figure out has_casted
 * Finish the single post handler
 
 * Delete user account
