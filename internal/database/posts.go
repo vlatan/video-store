@@ -87,6 +87,7 @@ func (s *service) GetCategoryPosts(categorySlug, orderBy string, page int) ([]Po
 
 const getSinglePostQuery = `
 SELECT 
+	post.id,	
 	title, 
 	thumbnails, (
 		SELECT COUNT(*) FROM post_like
@@ -109,6 +110,7 @@ func (s *service) GetSinglePost(videoID string) (post Post, err error) {
 
 	// Get single row from DB
 	err = s.db.QueryRow(getSinglePostQuery, videoID).Scan(
+		&post.ID,
 		&post.Title,
 		&thumbnails,
 		&post.Likes,
