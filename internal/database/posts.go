@@ -16,6 +16,7 @@ type Thumbnail struct {
 }
 
 type Post struct {
+	ID          int       `json:"id"`
 	VideoID     string    `json:"video_id"`
 	Title       string    `json:"title"`
 	Srcset      string    `json:"srcset"`
@@ -98,7 +99,6 @@ WHERE video_id = $1
 func (s *service) GetSinglePost(videoID string) (post Post, err error) {
 
 	var thumbnails []byte
-	var category Category
 
 	// Get single row from DB
 	err = s.db.QueryRow(getSinglePostQuery, videoID).Scan(
@@ -107,16 +107,13 @@ func (s *service) GetSinglePost(videoID string) (post Post, err error) {
 		&post.Likes,
 		&post.Description,
 		&post.ShortDesc,
-		&category.Slug,
-		&category.Name,
+		&post.Category.Slug,
+		&post.Category.Name,
 		&post.UploadDate,
 	)
 	if err != nil {
 		return post, err
 	}
-
-	// Assign category struct
-	post.Category = category
 
 	// Unserialize thumbnails
 	thumbsMap, err := unmarshalThumbs(thumbnails)
