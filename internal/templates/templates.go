@@ -33,6 +33,7 @@ func New() Service {
 	partials := []string{
 		"templates/partials/home.html",
 		"templates/partials/category.html",
+		"templates/partials/post.html",
 	}
 
 	m := minify.New()

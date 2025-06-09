@@ -43,13 +43,6 @@ type TemplateData struct {
 	FlashMessages []*FlashMessage
 }
 
-func (td *TemplateData) CurrentUserLiked() bool {
-	if !td.CurrentUser.IsAuthenticated() || td.CurrentPost == nil {
-		return false
-	}
-	return true
-}
-
 func (td *TemplateData) IsCurrentUserAdmin() bool {
 	return td.CurrentUser.IsAuthenticated() &&
 		td.CurrentUser.UserID == td.Config.AdminOpenID

@@ -18,6 +18,8 @@ type Service interface {
 	UpdateUserLastSeen(int, time.Time) error
 	// Update or insert a new user
 	UpsertUser(*goth.User, string) (int, error)
+	// Check if logged in user liked a post
+	UserLiked(userID, postID int) bool
 	// Get paginated posts
 	GetPosts(int, string) ([]Post, error)
 	// Get single posts given the video ID

@@ -21,19 +21,21 @@ type Duration struct {
 }
 
 type Post struct {
-	ID          int       `json:"id"`
-	VideoID     string    `json:"video_id"`
-	Title       string    `json:"title"`
-	Srcset      string    `json:"srcset"`
-	Thumbnail   Thumbnail `json:"thumbnail"`
-	Category    Category  `json:"category"`
-	Likes       int       `json:"likes"`
-	Description string    `json:"description"`
-	ShortDesc   string    `json:"short_description"`
-	MetaDesc    string    `json:"meta_description"`
-	Related     []Post    `json:"related"`
-	UploadDate  time.Time `json:"upload_date"`
-	Duration    Duration  `json:"duration"`
+	ID               int       `json:"id"`
+	VideoID          string    `json:"video_id"`
+	Title            string    `json:"title"`
+	Srcset           string    `json:"srcset"`
+	Thumbnail        Thumbnail `json:"thumbnail"`
+	Category         Category  `json:"category"`
+	Likes            int       `json:"likes"`
+	Description      string    `json:"description"`
+	ShortDesc        string    `json:"short_description"`
+	MetaDesc         string    `json:"meta_description"`
+	Related          []Post    `json:"related"`
+	UploadDate       time.Time `json:"upload_date"`
+	Duration         Duration  `json:"duration"`
+	CurrentUserLiked bool      `json:"current_user_liked"`
+	CurrentUserFaved bool      `json:"current_user_faved"`
 }
 
 const getPostsQuery = `
@@ -87,7 +89,8 @@ func (s *service) GetCategoryPosts(categorySlug, orderBy string, page int) ([]Po
 
 const getSinglePostQuery = `
 SELECT 
-	post.id,	
+	post.id,
+	video_id,
 	title, 
 	thumbnails, (
 		SELECT COUNT(*) FROM post_like
@@ -111,6 +114,7 @@ func (s *service) GetSinglePost(videoID string) (post Post, err error) {
 	// Get single row from DB
 	err = s.db.QueryRow(getSinglePostQuery, videoID).Scan(
 		&post.ID,
+		&post.VideoID,
 		&post.Title,
 		&thumbnails,
 		&post.Likes,

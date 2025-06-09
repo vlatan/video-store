@@ -172,17 +172,36 @@ func (s *Server) singlePostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	post, _ := s.db.GetSinglePost(videoID)
+	post, err := s.db.GetSinglePost(videoID)
+	if err != nil {
+		log.Printf("Error while getting the video '%s' from DB: %v\n", videoID, err)
+		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
+		return
+	}
+
 	if post.ID == 0 {
-		log.Println("Can't find video in DB with this video ID:", videoID)
+		log.Println("Can't find video in DB:", videoID)
 		http.NotFound(w, r)
 		return
 	}
 
-	if err := s.tm.WriteJSON(w, post); err != nil {
+	// Init the data for the template
+	data := s.NewData(w, r)
+	data.CurrentPost = &post
+	data.Title = post.Title
+
+	// Check whether the current user liked or faved the post
+	data.CurrentPost.CurrentUserLiked = s.db.UserLiked(data.CurrentUser.ID, data.CurrentPost.ID)
+
+	if err := s.tm.Render(w, "post", data); err != nil {
 		log.Println(err)
 		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
 	}
+
+	// if err := s.tm.WriteJSON(w, post); err != nil {
+	// 	log.Println(err)
+	// 	http.Error(w, "Something went wrong.", http.StatusInternalServerError)
+	// }
 
 }
 

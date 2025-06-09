@@ -91,6 +91,28 @@ func (s *service) UpdateUserLastSeen(id int, t time.Time) error {
 	return err
 }
 
+const userLikedQuery = `
+SELECT 1 FROM post_like
+WHERE post_like.user_id = $1 AND post_like.post_id = $2
+`
+
+// Check if the user liked a post
+func (s *service) UserLiked(userID, postID int) bool {
+
+	var result int
+
+	err := s.db.QueryRow(userLikedQuery, userID, postID).Scan(&result)
+	if err != nil {
+		return false
+	}
+
+	if result == 0 {
+		return false
+	}
+
+	return true
+}
+
 // Helper function to convert string pointer or empty string to sql.NullString
 func NullString(s *string) sql.NullString {
 	if s == nil || *s == "" {

@@ -11,17 +11,17 @@
 <meta property='og:title' content='{{ .Title }}'>
 <meta property='og:type' content='video.movie'>
 <meta property='og:url' content='{{ .CurrentURLPath }}'>
-<meta property='og:image' content='{{ .Thumbnail.URL }}'>
-<meta name='thumbnail' content='{{ .Thumbnail.URL }}'>
+<meta property='og:image' content='{{ .CurrentPost.Thumbnail.URL }}'>
+<meta name='thumbnail' content='{{ .CurrentPost.Thumbnail.URL }}'>
 
 <meta name="twitter:title" content="{{ .Title }}">
 <meta property="twitter:url" content="{{ .CurrentURLPath }}">
-<meta name="twitter:image" content="{{ .Thumbnail.URL }}">
+<meta name="twitter:image" content="{{ .CurrentPost.Thumbnail.URL }}">
 
-{{ if .MetaDesc }}
-<meta name='description' content='{{ .MetaDesc }}.'>
-<meta property='og:description' content='{{ .MetaDesc }}.'>
-<meta name="twitter:description" content="{{ .MetaDesc }}">
+{{ if .CurrentPost.MetaDesc }}
+<meta name='description' content='{{ .CurrentPost.MetaDesc }}.'>
+<meta property='og:description' content='{{ .CurrentPost.MetaDesc }}.'>
+<meta name="twitter:description" content="{{ .CurrentPost.MetaDesc }}">
 {{ end }}
 {{ end }}
 
@@ -31,45 +31,46 @@
 
 {{ define "content" }}
 <article class="media-content" itemscope itemtype="https://schema.org/Movie">
-	<meta itemprop="image" content="{{ .Thumbnail.URL }}">
+	<meta itemprop="image" content="{{ .CurrentPost.Thumbnail.URL }}">
 	<meta itemprop="genre" content="Documentary">
 	<div class="video-content">
 		<div class="player" itemprop="video" itemscope itemtype="https://schema.org/VideoObject">
-			<meta itemprop="name" content="{{ .Title }}">
-			<meta itemprop="thumbnailUrl" content="{{ .Thumbnail.URL }}">
-			<meta itemprop="embedUrl" content="https://www.youtube-nocookie.com/embed/{{ .VideoID }}">
-			{{ if .MetaDesc }}
-			<meta itemprop="description" content="{{.MetaDesc }}.">
+			<meta itemprop="name" content="{{ .CurrentPost.Title }}">
+			<meta itemprop="thumbnailUrl" content="{{ .CurrentPost.Thumbnail.URL }}">
+			<meta itemprop="embedUrl" content="https://www.youtube-nocookie.com/embed/{{ .CurrentPost.VideoID }}">
+			{{ if .CurrentPost.MetaDesc }}
+			<meta itemprop="description" content="{{ .CurrentPost.MetaDesc }}.">
 			{{ end }}
-			<meta itemprop="uploadDate" content='{{ .UploadDate.Format "2006-01-02T15:04:05Z07:00" }}'>
-			<div class="player-content" id="{{ .VideoID }}">
-				<img alt="{{ .Title }}" src="{{ .Thumbnail.URL }}" srcset="{{ .Srcset }}">
+			<meta itemprop="uploadDate" content='{{ .CurrentPost.UploadDate.Format "2006-01-02T15:04:05Z07:00" }}'>
+			<div class="player-content" id="{{ .CurrentPost.VideoID }}">
+				<img alt="{{ .CurrentPost.Title }}" src="{{ .CurrentPost.Thumbnail.URL }}"
+					srcset="{{ .CurrentPost.Srcset }}">
 				<div class="play"></div>
 			</div>
 		</div>
 
 		<header class="metadata">
 			<div class="metadata-block">
-				<h1 class="video-title" itemprop="name">{{ .Title }}</h1>
+				<h1 class="video-title" itemprop="name">{{ .CurrentPost.Title }}</h1>
 				<div class="social">
 					{{ if .IsCurrentUserAdmin }}
-					{{ if current_user.has_casted(post, 'like') }}
+					{{ if .CurrentPost.CurrentUserLiked }}
 					<button class="like like-yes">
 						<span data-liked>&#10003;</span>
-						<span data-likes>{{ likes }}</span>
+						<span data-likes>{{ .CurrentPost.Likes }}</span>
 					</button>
 					{{ else }}
 					<button class="like like-no">
-						<span data-likes>{{ likes }}</span>
+						<span data-likes>{{ .CurrentPost.Likes }}</span>
 					</button>
 					{{ end }}
 					{{ else }}
 					<button data-auth class="like like-no">
-						<span>{{ likes }}</span>
+						<span>{{ .CurrentPost.Likes }}</span>
 					</button>
 					{{ end }}
 
-					{{ if .CurrentUser.IsAuthenticated }}
+					<!-- {{ if .CurrentUser.IsAuthenticated }}
 					{{ if current_user.has_casted(post, 'fave') }}
 					<button data-status class="fave fave-yes">&#10003; Saved</button>
 					{{ else }}
@@ -77,20 +78,20 @@
 					{{ end }}
 					{{ else }}
 					<button data-auth class="fave fave-no">Save</button>
-					{{ end }}
+					{{ end }} -->
 				</div>
 			</div>
 			<div class="other-metadata">
 				<div class="metadata-block">
-					<div class="inner-metadata-block">
+					<!-- <div class="inner-metadata-block">
 						Duration: <time itemprop="duration" datetime="{{ post.duration }}">{{ human_duration }}</time>
 						{{ if post.category }}
 						| Category: <a class="nav-item"
 							href="{{ url_for('categories.category', slug=post.category.slug) }}">
 							{{ post.category.name }}</a>
 						{{ end }}
-					</div>
-					{{ if current_user.is_authenticated and current_user.is_admin }}
+					</div> -->
+					{{ if .IsCurrentUserAdmin }}
 					<button data-modal="video" class="modal-button">Delete</button>
 					<button class="modal-button edit-title">Edit Title</button>
 					{{ end }}
@@ -98,26 +99,26 @@
 			</div>
 		</header>
 
-		{{ if post.short_description }}
+		{{ if .CurrentPost.ShortDesc }}
 
 		<div class="short_desc_wrap">
 			<div class="video-description" itemprop="description">
-				{{ post.html_content(post.short_description) | safe }}
+				{{ .CurrentPost.ShortDesc }}
 			</div>
 			<!-- <span class="description_discliamer">
 					Disclaimer: This summary may have been generated by an AI.
 				</span> -->
 		</div>
 
-		{{ if current_user.is_authenticated and current_user.is_admin }}
+		{{ if .IsCurrentUserAdmin }}
 		<button class="modal-button edit-description">Edit Desc</button>
 		{{ end }}
 
-		{{ elif current_user.is_authenticated and current_user.is_admin }}
+		{{ else if .IsCurrentUserAdmin }}
 		<div class="unpublished">
 			<p>UNPUBLISHED DESCRIPTION:</p>
 			<div class="video-description">
-				{{ post.html_content(post.description) | safe }}
+				{{ .CurrentPost.Description }}
 			</div>
 		</div>
 		<button class="modal-button edit-description">Edit Desc</button>
@@ -127,7 +128,7 @@
 	</div>
 
 	<div class="sidebar_wrap">
-		<div class="related_videos">
+		<!-- <div class="related_videos">
 			{{ for related_post in related_posts }}
 			{{ set thumb = related_post.thumbnail }}
 			<a href="{{ url_for('posts.post', video_id=related_post.video_id) }}" class="related-video">
@@ -144,14 +145,13 @@
 		<ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-{{ config.ADSENSE_ACCOUNT }}"
 			data-ad-slot="{{ config.AD_SLOT_SIDEBAR }}" data-ad-format="auto" data-full-width-responsive="true"></ins>
 		<script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
-		{{ end }}
+		{{ end }} -->
 	</div>
 </article>
 
-{{ if current_user.is_authenticated and current_user.is_admin }}
+{{ if .IsCurrentUserAdmin }}
 <div data-body="video" class="modal">
-	<form class="modal-content" action="{{ url_for('posts.perform_action', video_id=post.video_id, action='delete') }}"
-		method="POST">
+	<form class="modal-content" action="/video/{{ .CurrentPost.VideoID }}/delete" method="POST">
 		<span data-close="video" class="close-modal" title="Close">&times;</span>
 		<h2>Delete Video</h2>
 		<p>Are you sure you want to delete this video?</p>
@@ -164,16 +164,15 @@
 {{ end }}
 {{ end }}
 
-{{ block scripts }}
-{{ super() }}
-{{ if current_user.is_authenticated }}
-<script defer src="{{ url_for('static', filename='js/likes.js') | autoversion }}"></script>
-{{ if current_user.is_admin }}
-<script defer src="{{ url_for('static', filename='js/title.js') | autoversion }}"></script>
-<script defer src="{{ url_for('static', filename='js/description.js') | autoversion }}"></script>
+{{ define "extra_scripts" }}
+{{ if .CurrentUser.IsAuthenticated }}
+<script defer src='{{ .AddVersion "/static/js/likes.js" }}'></script>
+{{ if .IsCurrentUserAdmin }}
+<script defer src='{{ .AddVersion "/static/js/title.js" }}'></script>
+<script defer src='{{ .AddVersion "/static/js/description.js" }}'></script>
 {{ end }}
 {{ else }}
-<script defer src="{{ url_for('static', filename='js/login.js') | autoversion }}"></script>
+<script defer src='{{ .AddVersion "/static/js/login.js" }}'></script>
 {{ end }}
-<script defer src="{{ url_for('static', filename='js/play.js') | autoversion }}"></script>
-{{ endblock scripts }}
+<script defer src='{{ .AddVersion "/static/js/play.js" }}'></script>
+{{ end }}
