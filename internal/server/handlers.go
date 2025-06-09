@@ -180,7 +180,7 @@ func (s *Server) singlePostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if post.ID == 0 {
-		log.Println("Can't find video in DB:", videoID)
+		log.Println("Can't find the video in DB:", videoID)
 		http.NotFound(w, r)
 		return
 	}
@@ -193,16 +193,19 @@ func (s *Server) singlePostHandler(w http.ResponseWriter, r *http.Request) {
 	// Check whether the current user liked or faved the post
 	data.CurrentPost.CurrentUserLiked = s.db.UserLiked(data.CurrentUser.ID, data.CurrentPost.ID)
 
+	// Prepare the text for the like button
+	data.CurrentPost.TextLikes = "Like"
+	if data.CurrentPost.Likes > 0 {
+		data.CurrentPost.TextLikes = "1 Like"
+		if data.CurrentPost.Likes > 1 {
+			data.CurrentPost.TextLikes = fmt.Sprintf("%d Likes", data.CurrentPost.Likes)
+		}
+	}
+
 	if err := s.tm.Render(w, "post", data); err != nil {
 		log.Println(err)
 		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
 	}
-
-	// if err := s.tm.WriteJSON(w, post); err != nil {
-	// 	log.Println(err)
-	// 	http.Error(w, "Something went wrong.", http.StatusInternalServerError)
-	// }
-
 }
 
 // Handle minified static file from cache

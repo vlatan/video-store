@@ -28,6 +28,7 @@ type Post struct {
 	Thumbnail        *Thumbnail `json:"thumbnail,omitempty"`
 	Category         *Category  `json:"category,omitempty"`
 	Likes            int        `json:"likes,omitempty"`
+	TextLikes        string     `json:"text_likes,omitempty"`
 	Description      string     `json:"description,omitempty"`
 	ShortDesc        string     `json:"short_description,omitempty"`
 	MetaDesc         string     `json:"meta_description,omitempty"`
