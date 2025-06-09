@@ -35,21 +35,20 @@ type TemplateData struct {
 	StaticFiles   files.StaticFiles
 	Config        *config.Config
 	Title         string
-	SinglePost    database.Post
-	Posts         []database.Post
-	Categories    []database.Category
+	CurrentPost   *database.Post
 	CurrentUser   *User
 	CurrentURI    string
+	Posts         []database.Post
+	Categories    []database.Category
 	FlashMessages []*FlashMessage
 }
 
-// func (td *TemplateData) CurrentUserLiked() bool {
-// 	if !td.CurrentUser.IsAuthenticated() {
-// 		return false
-// 	}
-
-// 	return true
-// }
+func (td *TemplateData) CurrentUserLiked() bool {
+	if !td.CurrentUser.IsAuthenticated() || td.CurrentPost == nil {
+		return false
+	}
+	return true
+}
 
 func (td *TemplateData) IsCurrentUserAdmin() bool {
 	return td.CurrentUser.IsAuthenticated() &&
