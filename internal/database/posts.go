@@ -15,6 +15,11 @@ type Thumbnail struct {
 	Height int    `json:"height"`
 }
 
+type Duration struct {
+	ISO   string `json:"iso"`
+	Human string `json:"human"`
+}
+
 type Post struct {
 	ID          int       `json:"id"`
 	VideoID     string    `json:"video_id"`
@@ -28,6 +33,7 @@ type Post struct {
 	MetaDesc    string    `json:"meta_description"`
 	Related     []Post    `json:"related"`
 	UploadDate  time.Time `json:"upload_date"`
+	Duration    Duration  `json:"duration"`
 }
 
 const getPostsQuery = `
@@ -90,7 +96,8 @@ SELECT
  	short_description,
 	slug AS category_slug,
 	name AS category_name,
-	upload_date
+	upload_date,
+	duration
 FROM post 
 LEFT JOIN category ON post.category_id = category.id
 WHERE video_id = $1 
@@ -110,6 +117,7 @@ func (s *service) GetSinglePost(videoID string) (post Post, err error) {
 		&post.Category.Slug,
 		&post.Category.Name,
 		&post.UploadDate,
+		&post.Duration.ISO,
 	)
 	if err != nil {
 		return post, err
