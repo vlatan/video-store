@@ -173,6 +173,11 @@ func (s *Server) singlePostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	post, _ := s.db.GetSinglePost(videoID)
+	if post.ID == 0 {
+		log.Println("Can't find video in DB with this video ID:", videoID)
+		http.NotFound(w, r)
+		return
+	}
 
 	if err := s.tm.WriteJSON(w, post); err != nil {
 		log.Println(err)
