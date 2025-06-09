@@ -16,12 +16,12 @@ import (
 type Service interface {
 	// Set a key-value pair in Redis with an expiration duration.
 	// The value will be marshaled to JSON if it's not a string or []byte.
-	Set(context.Context, string, any, time.Duration) error
+	Set(ctx context.Context, key string, value any, expiration time.Duration) error
 	// Get a value from Redis by key. Returns the value as a string.
 	// Returns redis.Nil error if the key does not exist.
-	Get(context.Context, string) (string, error)
+	Get(ctx context.Context, key string) (string, error)
 	// Ping the redis server
-	Health(context.Context) map[string]string
+	Health(ctx context.Context) map[string]string
 	// Close redis client
 	// It returns an error if the connection cannot be closed.
 	Close() error

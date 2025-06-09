@@ -15,17 +15,17 @@ import (
 // Service represents a service that interacts with a database.
 type Service interface {
 	// Update the last_seen date for a user
-	UpdateUserLastSeen(int, time.Time) error
+	UpdateUserLastSeen(id int, t time.Time) error
 	// Update or insert a new user
-	UpsertUser(*goth.User, string) (int, error)
+	UpsertUser(u *goth.User, analyticsID string) (int, error)
 	// Check if logged in user liked a post
 	UserLiked(userID, postID int) bool
 	// Get paginated posts
-	GetPosts(int, string) ([]Post, error)
+	GetPosts(page int, orderBy string) ([]Post, error)
 	// Get single posts given the video ID
-	GetSinglePost(string) (Post, error)
+	GetSinglePost(videoID string) (Post, error)
 	// Get paginated category posts
-	GetCategoryPosts(string, string, int) ([]Post, error)
+	GetCategoryPosts(categorySlug, orderBy string, page int) ([]Post, error)
 	// Get all categories
 	GetCategories() ([]Category, error)
 	// Health returns a map of health status information.

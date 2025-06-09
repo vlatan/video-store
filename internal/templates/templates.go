@@ -17,9 +17,9 @@ import (
 
 type Service interface {
 	// Write JSON to response
-	WriteJSON(http.ResponseWriter, any) error
+	WriteJSON(w http.ResponseWriter, data any) error
 	// Gets template from a map by name and executes it
-	Render(http.ResponseWriter, string, any) error
+	Render(w http.ResponseWriter, name string, data any) error
 }
 
 type Templates map[string]*template.Template
