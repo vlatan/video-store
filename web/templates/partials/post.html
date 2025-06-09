@@ -52,7 +52,7 @@
 			<div class="metadata-block">
 				<h1 class="video-title" itemprop="name">{{ .Title }}</h1>
 				<div class="social">
-					{{ if .IsAdmin }}
+					{{ if .IsCurrentUserAdmin }}
 					{{ if current_user.has_casted(post, 'like') }}
 					<button class="like like-yes">
 						<span data-liked>&#10003;</span>
