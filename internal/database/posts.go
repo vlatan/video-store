@@ -10,32 +10,32 @@ import (
 )
 
 type Thumbnail struct {
-	URL    string `json:"url"`
-	Width  int    `json:"width"`
-	Height int    `json:"height"`
+	URL    string `json:"url,omitempty"`
+	Width  int    `json:"width,omitempty"`
+	Height int    `json:"height,omitempty"`
 }
 
 type Duration struct {
-	ISO   string `json:"iso"`
-	Human string `json:"human"`
+	ISO   string `json:"iso,omitempty"`
+	Human string `json:"human,omitempty"`
 }
 
 type Post struct {
-	ID               int       `json:"id"`
-	VideoID          string    `json:"video_id"`
-	Title            string    `json:"title"`
-	Srcset           string    `json:"srcset"`
-	Thumbnail        Thumbnail `json:"thumbnail"`
-	Category         Category  `json:"category"`
-	Likes            int       `json:"likes"`
-	Description      string    `json:"description"`
-	ShortDesc        string    `json:"short_description"`
-	MetaDesc         string    `json:"meta_description"`
-	Related          []Post    `json:"related"`
-	UploadDate       time.Time `json:"upload_date"`
-	Duration         Duration  `json:"duration"`
-	CurrentUserLiked bool      `json:"current_user_liked"`
-	CurrentUserFaved bool      `json:"current_user_faved"`
+	ID               int        `json:"id,omitempty"`
+	VideoID          string     `json:"video_id,omitempty"`
+	Title            string     `json:"title,omitempty"`
+	Srcset           string     `json:"srcset,omitempty"`
+	Thumbnail        *Thumbnail `json:"thumbnail,omitempty"`
+	Category         *Category  `json:"category,omitempty"`
+	Likes            int        `json:"likes,omitempty"`
+	Description      string     `json:"description,omitempty"`
+	ShortDesc        string     `json:"short_description,omitempty"`
+	MetaDesc         string     `json:"meta_description,omitempty"`
+	Related          []Post     `json:"related,omitempty"`
+	UploadDate       time.Time  `json:"upload_date,omitempty"`
+	Duration         *Duration  `json:"duration,omitempty"`
+	CurrentUserLiked bool       `json:"current_user_liked,omitempty"`
+	CurrentUserFaved bool       `json:"current_user_faved,omitempty"`
 }
 
 const getPostsQuery = `
@@ -110,6 +110,8 @@ WHERE video_id = $1
 func (s *service) GetSinglePost(videoID string) (post Post, err error) {
 
 	var thumbnails []byte
+	var category Category
+	var duration Duration
 
 	// Get single row from DB
 	err = s.db.QueryRow(getSinglePostQuery, videoID).Scan(
@@ -120,14 +122,17 @@ func (s *service) GetSinglePost(videoID string) (post Post, err error) {
 		&post.Likes,
 		&post.Description,
 		&post.ShortDesc,
-		&post.Category.Slug,
-		&post.Category.Name,
+		&category.Slug,
+		&category.Name,
 		&post.UploadDate,
-		&post.Duration.ISO,
+		&duration.ISO,
 	)
 	if err != nil {
 		return post, err
 	}
+
+	post.Category = &category
+	post.Duration = &duration
 
 	// Unserialize thumbnails
 	thumbsMap, err := unmarshalThumbs(thumbnails)
@@ -144,7 +149,7 @@ func (s *service) GetSinglePost(videoID string) (post Post, err error) {
 	}
 
 	// Assign the biggest thumbnail to post
-	post.Thumbnail = maxThumb
+	post.Thumbnail = &maxThumb
 
 	// Get the first sentence of the short description to be used as meta description
 	post.MetaDesc = strings.Split(post.ShortDesc, ".")[0]
@@ -207,7 +212,8 @@ func (s *service) queryPosts(query string, args ...any) (posts []Post, err error
 		}
 
 		post.Srcset = srcset(thumbsMap, 480)
-		post.Thumbnail = thumbsMap["medium"]
+		thumb := thumbsMap["medium"]
+		post.Thumbnail = &thumb
 
 		// Include the processed post in the result
 		posts = append(posts, post)

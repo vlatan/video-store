@@ -1,6 +1,7 @@
-* Make ready the single post template
-  Figure out has_casted
-* Finish the single post handler
+* Single post
+  Finish the post template
+  Likes and faves need to be text
+  Do not parse the content.html for post template
 
 * Delete user account
 
