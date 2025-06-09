@@ -107,6 +107,7 @@ LEFT JOIN category ON post.category_id = category.id
 WHERE video_id = $1 
 `
 
+// Get single post from DB based on a video ID
 func (s *service) GetSinglePost(videoID string) (post Post, err error) {
 
 	var thumbnails []byte
@@ -185,6 +186,7 @@ func srcset(thumbnails map[string]Thumbnail, maxWidth int) string {
 	return strings.TrimSuffix(result, ", ")
 }
 
+// Query the DB for posts based on variadic arguments
 func (s *service) queryPosts(query string, args ...any) (posts []Post, err error) {
 	// Get rows from DB
 	rows, err := s.db.Query(query, args...)
