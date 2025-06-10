@@ -70,15 +70,15 @@
 					</button>
 					{{ end }}
 
-					<!-- {{ if .CurrentUser.IsAuthenticated }}
-					{{ if current_user.has_casted(post, 'fave') }}
+					{{ if .CurrentUser.IsAuthenticated }}
+					{{ if .CurrentPost.CurrentUserFaved }}
 					<button data-status class="fave fave-yes">&#10003; Saved</button>
 					{{ else }}
 					<button data-status class="fave fave-no">Save</button>
 					{{ end }}
 					{{ else }}
 					<button data-auth class="fave fave-no">Save</button>
-					{{ end }} -->
+					{{ end }}
 				</div>
 			</div>
 			<div class="other-metadata">

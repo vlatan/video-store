@@ -2,7 +2,6 @@ package database
 
 import (
 	"database/sql"
-	"fmt"
 	"time"
 
 	"github.com/markbates/goth"
@@ -95,26 +94,27 @@ func (s *service) UpdateUserLastSeen(id int, t time.Time) error {
 	return err
 }
 
-const userActionQuery = `
-SELECT 1 FROM %s
-WHERE user_id = $1 AND post_id = $2
+const userActionsQuery = `
+SELECT 
+	EXISTS (
+		SELECT 1 FROM post_like
+		WHERE user_id = $1 AND post_id = $2
+	) AS liked,
+	EXISTS (
+		SELECT 1 FROM post_fave
+		WHERE user_id = $1 AND post_id = $2
+	) AS faved
 `
 
+type Actions struct {
+	Liked bool
+	Faved bool
+}
+
 // Check if the user liked a post
-func (s *service) UserAction(userID, postID int, table string) bool {
-	var result int
-	query := fmt.Sprintf(userActionQuery, table)
-
-	err := s.db.QueryRow(query, userID, postID).Scan(&result)
-	if err != nil {
-		return false
-	}
-
-	if result == 0 {
-		return false
-	}
-
-	return true
+func (s *service) UserActions(userID, postID int) (actions Actions, err error) {
+	err = s.db.QueryRow(userActionsQuery, userID, postID).Scan(&actions)
+	return actions, err
 }
 
 // Helper function to convert string pointer or empty string to sql.NullString
