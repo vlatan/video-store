@@ -1,5 +1,4 @@
 * Single post
-  Finish the post template
   Do not parse the content.html for post template
   Get related posts
 
