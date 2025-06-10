@@ -129,24 +129,23 @@
 	</div>
 
 	<div class="sidebar_wrap">
-		<!-- <div class="related_videos">
-			{{ for related_post in related_posts }}
-			{{ set thumb = related_post.thumbnail }}
-			<a href="{{ url_for('posts.post', video_id=related_post.video_id) }}" class="related-video">
-				<img class="related-img" src="{{ thumb['url'] }}" width="{{ thumb['width'] }}"
-					height="{{ thumb['height'] }}" alt="{{ related_post.title }}">
+		<div class="related_videos">
+			{{ range .CurrentPost.Related }}
+			<a href="/video/{{ .VideoID }}/" class="related-video">
+				<img class="related-img" src="{{ .Thumbnail.URL }}" width="{{ .Thumbnail.Width }}"
+					height="{{ .Thumbnail.Height }}" alt="{{ .Title }}">
 				<h2 class="related-post-title">
-					{{ related_post.title }}
+					{{ .Title }}
 				</h2>
 			</a>
-			{{ endfor }}
+			{{ end }}
 		</div>
 
-		{{ if not current_user.is_authenticated and config.ADSENSE_ACCOUNT and config.AD_SLOT_SIDEBAR }}
-		<ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-{{ config.ADSENSE_ACCOUNT }}"
-			data-ad-slot="{{ config.AD_SLOT_SIDEBAR }}" data-ad-format="auto" data-full-width-responsive="true"></ins>
+		{{ if and (not .CurrentUser.IsAuthenticated) .Config.AdSenseAccount .Config.AdSlotSidebar }}
+		<ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-{{ .Config.AdSenseAccount }}"
+			data-ad-slot="{{ .Config.AdSlotSidebar }}" data-ad-format="auto" data-full-width-responsive="true"></ins>
 		<script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
-		{{ end }} -->
+		{{ end }}
 	</div>
 </article>
 
