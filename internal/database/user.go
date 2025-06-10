@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"fmt"
 	"time"
 
 	"github.com/markbates/goth"
@@ -83,7 +84,10 @@ func (s *service) UpsertUser(u *goth.User, analyticsID string) (int, error) {
 	return id, err
 }
 
-const updateLastUserSeenQuery = `UPDATE "user" SET last_seen = $2 WHERE id = $1`
+const updateLastUserSeenQuery = `
+UPDATE "user"
+SET last_seen = $2 WHERE id = $1
+`
 
 // Update the last seen column on a user
 func (s *service) UpdateUserLastSeen(id int, t time.Time) error {
@@ -91,17 +95,17 @@ func (s *service) UpdateUserLastSeen(id int, t time.Time) error {
 	return err
 }
 
-const userLikedQuery = `
-SELECT 1 FROM post_like
-WHERE post_like.user_id = $1 AND post_like.post_id = $2
+const userActionQuery = `
+SELECT 1 FROM %s
+WHERE user_id = $1 AND post_id = $2
 `
 
 // Check if the user liked a post
-func (s *service) UserLiked(userID, postID int) bool {
-
+func (s *service) UserAction(userID, postID int, table string) bool {
 	var result int
+	query := fmt.Sprintf(userActionQuery, table)
 
-	err := s.db.QueryRow(userLikedQuery, userID, postID).Scan(&result)
+	err := s.db.QueryRow(query, userID, postID).Scan(&result)
 	if err != nil {
 		return false
 	}
