@@ -83,14 +83,15 @@
 			</div>
 			<div class="other-metadata">
 				<div class="metadata-block">
-					<!-- <div class="inner-metadata-block">
-						Duration: <time itemprop="duration" datetime="{{ post.duration }}">{{ human_duration }}</time>
-						{{ if post.category }}
-						| Category: <a class="nav-item"
-							href="{{ url_for('categories.category', slug=post.category.slug) }}">
-							{{ post.category.name }}</a>
+					<div class="inner-metadata-block">
+						Duration: <time itemprop="duration" datetime="{{ .CurrentPost.Duration.ISO }}">
+							{{ .CurrentPost.Duration.Human }}
+						</time>
+						{{ if .CurrentPost.Category }}
+						| Category: <a class="nav-item" href="/category/{{ .CurrentPost.Category.Slug }}/">
+							{{ .CurrentPost.Category.Name }}</a>
 						{{ end }}
-					</div> -->
+					</div>
 					{{ if .IsCurrentUserAdmin }}
 					<button data-modal="video" class="modal-button">Delete</button>
 					<button class="modal-button edit-title">Edit Title</button>

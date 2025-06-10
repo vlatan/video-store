@@ -1,10 +1,7 @@
 * Single post
-  Cache post for non auth users
   Finish the post template
-  Check for faves
-  Make duration human readable
   Do not parse the content.html for post template
-  get related posts
+  Get related posts
 
 * Delete user account
 

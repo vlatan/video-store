@@ -23,9 +23,10 @@ type FileInfo struct {
 
 type StaticFiles map[string]FileInfo
 
+var validJS = regexp.MustCompile("^(application|text)/(x-)?(java|ecma)script$")
+
 func New() StaticFiles {
 	m := minify.New()
-	validJS := regexp.MustCompile("^(application|text)/(x-)?(java|ecma)script$")
 
 	m.AddFunc("text/css", css.Minify)
 	m.AddFuncRegexp(validJS, js.Minify)

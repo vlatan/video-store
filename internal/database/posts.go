@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -38,6 +40,8 @@ type Post struct {
 	CurrentUserLiked bool       `json:"current_user_liked,omitempty"`
 	CurrentUserFaved bool       `json:"current_user_faved,omitempty"`
 }
+
+var validISO8601 = regexp.MustCompile(`(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:\.\d+)?)S)?`)
 
 const getPostsQuery = `
 SELECT video_id, title, thumbnails, (
@@ -129,9 +133,13 @@ func (s *service) GetSinglePost(videoID string) (post Post, err error) {
 		&post.UploadDate,
 		&duration.ISO,
 	)
+
 	if err != nil {
 		return post, err
 	}
+
+	humanDuration, _ := parseISO8601Duration(duration.ISO)
+	duration.Human = humanDuration
 
 	post.Category = &category
 	post.Duration = &duration
@@ -251,4 +259,27 @@ func unmarshalThumbs(thumbs []byte) (thumbnails map[string]Thumbnail, err error)
 	}
 
 	return thumbnails, err
+}
+
+func parseISO8601Duration(duration string) (string, error) {
+	// Remove PT prefix
+	if !strings.HasPrefix(duration, "PT") {
+		return "", fmt.Errorf("invalid duration format: %s", duration)
+	}
+	duration = strings.TrimPrefix(duration, "PT")
+
+	// Find the substrings
+	matches := validISO8601.FindStringSubmatch(duration)
+	if len(matches) == 0 {
+		return "", fmt.Errorf("invalid duration format: %s", duration)
+	}
+
+	var hours, minutes, seconds int
+
+	hours, _ = strconv.Atoi(matches[1])
+	minutes, _ = strconv.Atoi(matches[2])
+	sec, _ := strconv.ParseFloat(matches[3], 64)
+	seconds = int(sec)
+
+	return fmt.Sprintf("%02d:%02d:%02d", hours, minutes, seconds), nil
 }
