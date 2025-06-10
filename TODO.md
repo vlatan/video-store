@@ -1,7 +1,10 @@
 * Single post
+  Cache post for non auth users
   Finish the post template
-  Likes and faves need to be text
+  Check for faves
+  Make duration human readable
   Do not parse the content.html for post template
+  get related posts
 
 * Delete user account
 

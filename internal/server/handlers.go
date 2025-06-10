@@ -172,7 +172,29 @@ func (s *Server) singlePostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	post, err := s.db.GetSinglePost(videoID)
+	// Generate the default data
+	data := s.NewData(w, r)
+
+	redisKey := fmt.Sprintf("post:%s", videoID)
+	var post database.Post
+	var err error = nil
+
+	switch data.CurrentUser.IsAuthenticated() {
+	case true:
+		post, err = s.db.GetSinglePost(videoID)
+	default:
+		err = redis.Cached(
+			r.Context(),
+			s.rdb,
+			redisKey,
+			24*time.Hour,
+			&post,
+			func() (database.Post, error) {
+				return s.db.GetSinglePost(videoID)
+			},
+		)
+	}
+
 	if err != nil {
 		log.Printf("Error while getting the video '%s' from DB: %v\n", videoID, err)
 		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
@@ -185,21 +207,16 @@ func (s *Server) singlePostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Init the data for the template
-	data := s.NewData(w, r)
+	// Assign the post to data
 	data.CurrentPost = &post
 	data.Title = post.Title
 
-	// Check whether the current user liked or faved the post
-	data.CurrentPost.CurrentUserLiked = s.db.UserLiked(data.CurrentUser.ID, data.CurrentPost.ID)
-
-	// Prepare the text for the like button
-	data.CurrentPost.TextLikes = "Like"
-	if data.CurrentPost.Likes > 0 {
-		data.CurrentPost.TextLikes = "1 Like"
-		if data.CurrentPost.Likes > 1 {
-			data.CurrentPost.TextLikes = fmt.Sprintf("%d Likes", data.CurrentPost.Likes)
-		}
+	// Check whether the current user liked the post
+	if data.CurrentUser.IsAuthenticated() {
+		data.CurrentPost.CurrentUserLiked = s.db.UserLiked(
+			data.CurrentUser.ID,
+			data.CurrentPost.ID,
+		)
 	}
 
 	if err := s.tm.Render(w, "post", data); err != nil {

@@ -28,7 +28,7 @@ type Post struct {
 	Thumbnail        *Thumbnail `json:"thumbnail,omitempty"`
 	Category         *Category  `json:"category,omitempty"`
 	Likes            int        `json:"likes,omitempty"`
-	TextLikes        string     `json:"text_likes,omitempty"`
+	LikeButtonText   string     `json:"like_button_text,omitempty"`
 	Description      string     `json:"description,omitempty"`
 	ShortDesc        string     `json:"short_description,omitempty"`
 	MetaDesc         string     `json:"meta_description,omitempty"`
@@ -135,6 +135,14 @@ func (s *service) GetSinglePost(videoID string) (post Post, err error) {
 
 	post.Category = &category
 	post.Duration = &duration
+
+	// Like button text
+	post.LikeButtonText = "Like"
+	if post.Likes == 1 {
+		post.LikeButtonText = "1 Like"
+	} else if post.Likes > 1 {
+		post.LikeButtonText = fmt.Sprintf("%d Likes", post.Likes)
+	}
 
 	// Unserialize thumbnails
 	thumbsMap, err := unmarshalThumbs(thumbnails)

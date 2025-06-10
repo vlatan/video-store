@@ -57,16 +57,16 @@
 					{{ if .CurrentPost.CurrentUserLiked }}
 					<button class="like like-yes">
 						<span data-liked>&#10003;</span>
-						<span data-likes>{{ .CurrentPost.TextLikes }}</span>
+						<span data-likes>{{ .CurrentPost.LikeButtonText }}</span>
 					</button>
 					{{ else }}
 					<button class="like like-no">
-						<span data-likes>{{ .CurrentPost.TextLikes }}</span>
+						<span data-likes>{{ .CurrentPost.LikeButtonText }}</span>
 					</button>
 					{{ end }}
 					{{ else }}
 					<button data-auth class="like like-no">
-						<span>{{ .CurrentPost.TextLikes }}</span>
+						<span>{{ .CurrentPost.LikeButtonText }}</span>
 					</button>
 					{{ end }}
 
