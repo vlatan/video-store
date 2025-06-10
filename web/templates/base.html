@@ -60,7 +60,7 @@
 
 	{{ if and (not .CurrentUser.IsAuthenticated) .Config.AdSenseAccount }}
 	<script async
-		src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-{{.Config.AdSenseAccount}}"
+		src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-{{ .Config.AdSenseAccount }}"
 		crossorigin="anonymous"></script>
 	{{ end }}
 
@@ -167,7 +167,7 @@
 					</form>
 				</div>
 
-				{{else}}
+				{{ else }}
 
 				<div class="login-wrap">
 					<a class="nav-item" data-modal="login" href="javascript:void(0)">Login</a>
@@ -207,7 +207,7 @@
 						</div>
 					</div>
 				</div>
-				{{end}}
+				{{ end }}
 			</nav>
 		</header>
 	</div>
@@ -235,7 +235,7 @@
 
 	{{ block "scripts" . }}
 	<script defer src='{{ .AddVersion "/static/js/shared.js" }}'></script>
-	{{end}}
+	{{ end }}
 
 	{{ block "extra_scripts" . }}{{ end }}
 </body>
