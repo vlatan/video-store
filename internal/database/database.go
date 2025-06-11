@@ -20,6 +20,8 @@ type Service interface {
 	UpsertUser(u *goth.User, analyticsID string) (int, error)
 	// Check if logged in user liked or faved a post
 	UserActions(userID, postID int) (actions Actions, err error)
+	// Update/insert a post
+	UpsertPost(columns ...string) (post Post, err error)
 	// Get paginated posts
 	GetPosts(page int, orderBy string) ([]Post, error)
 	// Get single posts given the video ID
