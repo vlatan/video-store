@@ -185,10 +185,11 @@ func (s *Server) searchHandler(w http.ResponseWriter, r *http.Request) {
 	case true:
 		posts, err = s.db.SearchPosts(searchQuery, page)
 	default:
+		encodedSearchQuery := database.EncodeRawSearchQuery(searchQuery, 100)
 		err = redis.Cached(
 			r.Context(),
 			s.rdb,
-			fmt.Sprintf("posts:search:page:%d:%s", page, searchQuery),
+			fmt.Sprintf("posts:search:page:%d:%s", page, encodedSearchQuery),
 			24*time.Hour,
 			&posts,
 			func() ([]database.Post, error) {
