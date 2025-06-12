@@ -34,7 +34,7 @@ type FlashMessage struct {
 type Posts struct {
 	Items    []database.Post
 	TotalNum int
-	TimeTook float64
+	TimeTook string
 }
 
 type TemplateData struct {

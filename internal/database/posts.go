@@ -108,13 +108,13 @@ SELECT
 	) AS likes
 FROM post 
 WHERE (
-	setweight(to_tsvector('english', COALESCE(title, '')), 'A') ||
-	setweight(to_tsvector('english', COALESCE(short_description, '')), 'B')
-) @@ to_tsquery('english', $1)
+	setweight(to_tsvector('english', coalesce(title, '')), 'A') ||
+	setweight(to_tsvector('english', coalesce(short_description, '')), 'B')
+) @@ websearch_to_tsquery('english', $1)
 ORDER BY ts_rank(
-	setweight(to_tsvector('english', COALESCE(title, '')), 'A') ||
-	setweight(to_tsvector('english', COALESCE(short_description, '')), 'B'),
-	to_tsquery('english', $1)
+	setweight(to_tsvector('english', coalesce(title, '')), 'A') ||
+	setweight(to_tsvector('english', coalesce(short_description, '')), 'B'),
+	websearch_to_tsquery('english', $1)
 ) DESC
 LIMIT $2 OFFSET $3
 `

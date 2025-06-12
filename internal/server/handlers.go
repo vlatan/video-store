@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"log"
 	"maps"
-	"math"
 	"net/http"
 	"net/url"
 	"path/filepath"
@@ -166,6 +165,10 @@ func (s *Server) categoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Server) searchHandler(w http.ResponseWriter, r *http.Request) {
 	// Get the search query
 	searchQuery := r.URL.Query().Get("q")
+	if searchQuery == "" {
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
+	}
 
 	// Get the page number from the request query param
 	page := getPageNum(r)
@@ -174,12 +177,26 @@ func (s *Server) searchHandler(w http.ResponseWriter, r *http.Request) {
 	data := s.NewData(w, r)
 	data.SearchQuery = searchQuery
 
-	start := time.Now()
-	posts, err := s.db.SearchPosts(searchQuery, page)
-	end := time.Since(start)
-	data.Posts.TimeTook = math.Round(end.Seconds()*100) / 100
+	var posts []database.Post
+	var err error = nil
 
-	data.Posts.TotalNum = 100 // Temporary, this needs to be computed
+	start := time.Now()
+	switch data.IsCurrentUserAdmin() {
+	case true:
+		posts, err = s.db.SearchPosts(searchQuery, page)
+	default:
+		err = redis.Cached(
+			r.Context(),
+			s.rdb,
+			fmt.Sprintf("posts:search:page:%d:%s", page, searchQuery),
+			24*time.Hour,
+			&posts,
+			func() ([]database.Post, error) {
+				return s.db.SearchPosts(searchQuery, page)
+			},
+		)
+	}
+	end := time.Since(start)
 
 	if err != nil {
 		log.Println(err)
@@ -202,6 +219,8 @@ func (s *Server) searchHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	data.Posts.TimeTook = fmt.Sprintf("%.2f", end.Seconds())
+	data.Posts.TotalNum = 100 // Temporary hardcoded, this needs to be computed
 	data.Posts.Items = posts
 	if err := s.tm.Render(w, "search", data); err != nil {
 		log.Println(err)
@@ -223,7 +242,6 @@ func (s *Server) singlePostHandler(w http.ResponseWriter, r *http.Request) {
 	// Generate the default data
 	data := s.NewData(w, r)
 
-	redisKey := fmt.Sprintf("post:%s", videoID)
 	var post database.Post
 	var err error = nil
 
@@ -234,7 +252,7 @@ func (s *Server) singlePostHandler(w http.ResponseWriter, r *http.Request) {
 		err = redis.Cached(
 			r.Context(),
 			s.rdb,
-			redisKey,
+			fmt.Sprintf("post:%s", videoID),
 			24*time.Hour,
 			&post,
 			func() (database.Post, error) {
