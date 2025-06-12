@@ -12,12 +12,12 @@ import (
 // Create new redis search index
 func (s *service) CreateSearchIndex(ctx context.Context) error {
 	schema := []*redis.FieldSchema{
-		{FieldName: "video_id", FieldType: redis.SearchFieldTypeText},
+		{FieldName: "video_id", FieldType: redis.SearchFieldTypeText, NoIndex: true},
 		{FieldName: "title", FieldType: redis.SearchFieldTypeText, Weight: 2.0},
 		{FieldName: "description", FieldType: redis.SearchFieldTypeText},
 		{FieldName: "tags", FieldType: redis.SearchFieldTypeText},
-		{FieldName: "thumbnail", FieldType: redis.SearchFieldTypeText},
-		{FieldName: "srcset", FieldType: redis.SearchFieldTypeText},
+		{FieldName: "thumbnail", FieldType: redis.SearchFieldTypeText, NoIndex: true},
+		{FieldName: "srcset", FieldType: redis.SearchFieldTypeText, NoIndex: true},
 	}
 	return s.rdb.FTCreate(ctx, "docs", &redis.FTCreateOptions{}, schema...).Err()
 }
@@ -66,6 +66,13 @@ func (s *service) SearchDocuments(ctx context.Context, query string) (posts []da
 }
 
 func (s *service) SyncExistingData(ctx context.Context) error {
-	// TODO: Clean way to sync the D and th index
+	// TODO: Clean way to sync the DB and th index.
+	// Two-Pass approach.
+	// First pass all the posts in DB and add/update to index.
+	// Save the posts ids
+	// Then pass the redis index keys by using
+	// FT.SEARCH with a wildcard query and cursor-based pagination
+	// And delete the orphaned documents
+
 	return nil
 }
