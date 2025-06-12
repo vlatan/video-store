@@ -24,10 +24,12 @@ type Service interface {
 	UpsertPost(columns ...string) (post Post, err error)
 	// Get paginated posts
 	GetPosts(page int, orderBy string) ([]Post, error)
-	// Get single posts given the video ID
-	GetSinglePost(videoID string) (Post, error)
 	// Get paginated category posts
 	GetCategoryPosts(categorySlug, orderBy string, page int) ([]Post, error)
+	// Get posts based on a search query
+	SearchPosts(searchQuery string, page int) ([]Post, error)
+	// Get single posts given the video ID
+	GetSinglePost(videoID string) (Post, error)
 	// Get all categories
 	GetCategories() ([]Category, error)
 	// Health returns a map of health status information.

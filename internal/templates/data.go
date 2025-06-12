@@ -31,6 +31,12 @@ type FlashMessage struct {
 	Category string
 }
 
+type Posts struct {
+	Items    []database.Post
+	TotalNum int
+	TimeTook float64
+}
+
 type TemplateData struct {
 	StaticFiles   files.StaticFiles
 	Config        *config.Config
@@ -38,9 +44,11 @@ type TemplateData struct {
 	CurrentPost   *database.Post
 	CurrentUser   *User
 	CurrentURI    string
-	Posts         []database.Post
+	Posts         Posts
+	TotalPosts    int
 	Categories    []database.Category
 	FlashMessages []*FlashMessage
+	SearchQuery   string
 }
 
 func (td *TemplateData) IsCurrentUserAdmin() bool {

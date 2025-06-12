@@ -97,6 +97,36 @@ func (s *service) GetCategoryPosts(categorySlug, orderBy string, page int) ([]Po
 	return s.queryPosts(query, categorySlug, limit, offset)
 }
 
+const getSearchPostsQuery = `
+SELECT 
+	video_id, 
+	title, 
+	thumbnails, (
+		SELECT COUNT(*) 
+		FROM post_like
+		WHERE post_like.post_id = post.id
+	) AS likes
+FROM post 
+WHERE (
+	setweight(to_tsvector('english', COALESCE(title, '')), 'A') ||
+	setweight(to_tsvector('english', COALESCE(short_description, '')), 'B')
+) @@ to_tsquery('english', $1)
+ORDER BY ts_rank(
+	setweight(to_tsvector('english', COALESCE(title, '')), 'A') ||
+	setweight(to_tsvector('english', COALESCE(short_description, '')), 'B'),
+	to_tsquery('english', $1)
+) DESC
+LIMIT $2 OFFSET $3
+`
+
+// Get posts based on a search query
+func (s *service) SearchPosts(searchQuery string, page int) ([]Post, error) {
+
+	limit := s.config.PostsPerPage
+	offset := (page - 1) * limit
+	return s.queryPosts(getSearchPostsQuery, searchQuery, limit, offset)
+}
+
 const getSinglePostQuery = `
 SELECT 
 	post.id,

@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"log"
 	"maps"
+	"math"
 	"net/http"
 	"net/url"
 	"path/filepath"
@@ -80,7 +81,7 @@ func (s *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data.Posts = posts
+	data.Posts.Items = posts
 	if err := s.tm.Render(w, "home", data); err != nil {
 		log.Println(err)
 		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
@@ -153,9 +154,56 @@ func (s *Server) categoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data.Posts = posts
+	data.Posts.Items = posts
 	data.Title = category.Name
 	if err := s.tm.Render(w, "category", data); err != nil {
+		log.Println(err)
+		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
+	}
+}
+
+// Handle the requests from the searchform
+func (s *Server) searchHandler(w http.ResponseWriter, r *http.Request) {
+	// Get the search query
+	searchQuery := r.URL.Query().Get("q")
+
+	// Get the page number from the request query param
+	page := getPageNum(r)
+
+	// Generate the default data
+	data := s.NewData(w, r)
+	data.SearchQuery = searchQuery
+
+	start := time.Now()
+	posts, err := s.db.SearchPosts(searchQuery, page)
+	end := time.Since(start)
+	data.Posts.TimeTook = math.Round(end.Seconds()*100) / 100
+
+	data.Posts.TotalNum = 100 // Temporary, this needs to be computed
+
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
+		return
+	}
+
+	if page > 1 && len(posts) == 0 {
+		http.NotFound(w, r)
+		return
+	}
+
+	// if not the first page return JSON
+	if page > 1 {
+		time.Sleep(time.Millisecond * 400)
+		if err := s.tm.WriteJSON(w, posts); err != nil {
+			log.Println(err)
+			http.Error(w, "Something went wrong.", http.StatusInternalServerError)
+		}
+		return
+	}
+
+	data.Posts.Items = posts
+	if err := s.tm.Render(w, "search", data); err != nil {
 		log.Println(err)
 		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
 	}

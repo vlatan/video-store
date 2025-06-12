@@ -19,8 +19,8 @@
 
 {{ define "content" }}
 <h1 class="content-title">
-    {{ if .TotalPosts }}
-    About <strong>{{ .TotalPosts }}</strong> results <small>({{ .TimeTook }} seconds)</small>
+    {{ if .Posts.TotalNum }}
+    About <strong>{{ .Posts.TotalNum }}</strong> results <small>({{ .Posts.TimeTook }} seconds)</small>
     {{ else }}
     Sorry, no matching results for this query.
     {{ end }}
@@ -29,7 +29,7 @@
 {{ end }}
 
 {{ define "extra_scripts" }}
-{{ if and .TotalPosts .TotalPosts > .Config.PostsPerPage }}
+{{ if and .Posts.TotalNum (gt .Posts.TotalNum .Config.PostsPerPage) }}
 <script defer src='{{ .AddVersion "/static/js/scroll.js" }}'></script>
 {{ end }}
 {{ end }}

@@ -32,6 +32,7 @@ func New() Service {
 	const content = "templates/partials/content.html"
 	partials := []string{
 		"templates/partials/home.html",
+		"templates/partials/search.html",
 		"templates/partials/category.html",
 		"templates/partials/post.html",
 	}
