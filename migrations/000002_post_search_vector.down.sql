@@ -3,7 +3,7 @@ DROP INDEX IF EXISTS idx_post_search_vector;
 
 
 -- Drop the index on title column
-DROP INDEX IF EXISTS idx_title_trgm;
+DROP INDEX IF EXISTS idx_post_title_trgm;
 
 
 -- Drop the function trigger

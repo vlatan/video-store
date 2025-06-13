@@ -31,7 +31,7 @@ CREATE INDEX IF NOT EXISTS idx_post_search_vector ON post USING GIN (search_vect
 
 
 -- Create GIN index on the title column for the pg_trgm
-CREATE INDEX IF NOT EXISTS  idx_title_trgm ON post USING GIN (title gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_post_title_trgm ON post USING GIN (title gin_trgm_ops);
 
 
 -- Populate the search_vector column for the existing data
