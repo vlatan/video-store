@@ -1,6 +1,7 @@
 * Do not parse the content.html for every template
 * Modify Cached function to accept a flag whether to return cached or uncached results
   Rename it accordingly
+* Maybe add similarity pg_trgm boost on the the short description
 
 * Delete user account
 
