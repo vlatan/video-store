@@ -182,10 +182,13 @@ func (s *Server) searchHandler(w http.ResponseWriter, r *http.Request) {
 	var posts database.Posts
 	var err error = nil
 
+	limit := s.config.PostsPerPage
+	offset := (page - 1) * limit
+
 	start := time.Now()
 	switch data.IsCurrentUserAdmin() {
 	case true:
-		posts, err = s.db.SearchPosts(searchQuery, page)
+		posts, err = s.db.SearchPosts(searchQuery, limit, offset)
 	default:
 		encodedSearchQuery := database.EncodeRawSearchQuery(searchQuery, 100)
 		err = redis.Cached(
@@ -195,7 +198,7 @@ func (s *Server) searchHandler(w http.ResponseWriter, r *http.Request) {
 			24*time.Hour,
 			&posts,
 			func() (database.Posts, error) {
-				return s.db.SearchPosts(searchQuery, page)
+				return s.db.SearchPosts(searchQuery, limit, offset)
 			},
 		)
 	}

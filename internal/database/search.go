@@ -40,10 +40,8 @@ LIMIT $3 OFFSET $4
 
 // Get posts based on a user search query
 // Transform the user query into two queries with words separated by '&' and '|'
-func (s *service) SearchPosts(searchQuery string, page int) (posts Posts, err error) {
+func (s *service) SearchPosts(searchQuery string, limit, offset int) (posts Posts, err error) {
 
-	limit := s.config.PostsPerPage
-	offset := (page - 1) * limit
 	andQuery, orQuery := normalizeSearchQuery(searchQuery)
 
 	// Get rows from DB
