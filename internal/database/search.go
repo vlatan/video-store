@@ -7,12 +7,10 @@ import (
 const searchPostsQuery = `
 WITH search_terms AS (
     SELECT
-        to_tsquery('english', array_to_string(lexeme, ' & ')) AS and_query,
-        to_tsquery('english', array_to_string(lexeme, ' | ')) AS or_query,
-		array_to_string(lexeme, ' ') AS raw_query
-	FROM regexp_split_to_array(
-		trim(regexp_replace($1, '(^|\s).(\s|$)', ' ', 'g')), '\s+'
-	) AS lexeme
+        lexeme AS and_query,
+        to_tsquery('english', replace(lexeme::text, ' & ', ' | ')) AS or_query,
+		replace(lexeme::text, ' & ', ' ')) AS raw_query
+	FROM plainto_tsquery('english', $1) AS lexeme
 )
 SELECT
     p.video_id,
