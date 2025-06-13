@@ -1,6 +1,9 @@
-* Single post
-  Do not parse the content.html for post template
-  Get related posts (cache them)
+* Fuzzy search
+  https://www.postgresql.org/docs/current/pgtrgm.html
+  
+* Do not parse the content.html for every template
+* Modify Cached function to accept a flag whether to return cached or uncached results
+  Rename it accordingly
 
 * Delete user account
 

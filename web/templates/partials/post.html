@@ -130,7 +130,7 @@
 
 	<div class="sidebar_wrap">
 		<div class="related_videos">
-			{{ range .CurrentPost.Related }}
+			{{ range .CurrentPost.RelatedPosts }}
 			<a href="/video/{{ .VideoID }}/" class="related-video">
 				<img class="related-img" src="{{ .Thumbnail.URL }}" width="{{ .Thumbnail.Width }}"
 					height="{{ .Thumbnail.Height }}" alt="{{ .Title }}">

@@ -291,6 +291,24 @@ func (s *Server) singlePostHandler(w http.ResponseWriter, r *http.Request) {
 		data.CurrentPost.CurrentUserFaved = userActions.Faved
 	}
 
+	var relatedPosts []database.Post
+	switch data.CurrentUser.IsAuthenticated() {
+	case true:
+		relatedPosts, _ = s.getRelatedPosts(post.Title)
+	default:
+		redis.Cached(
+			r.Context(),
+			s.rdb,
+			fmt.Sprintf("post:%s:related_posts", videoID),
+			24*time.Hour,
+			&relatedPosts,
+			func() ([]database.Post, error) {
+				return s.getRelatedPosts(post.Title)
+			},
+		)
+	}
+
+	data.CurrentPost.RelatedPosts = relatedPosts
 	if err := s.tm.Render(w, "post", data); err != nil {
 		log.Println(err)
 		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
@@ -487,4 +505,22 @@ func getPageNum(r *http.Request) int {
 		page = pageInt
 	}
 	return page
+}
+
+// Get post's related posts based on provided title as search query
+func (s *Server) getRelatedPosts(title string) (posts []database.Post, err error) {
+	// Search the DB for posts
+	searchedPosts, err := s.db.SearchPosts(title, s.config.NumRelatedPosts+1, 0)
+
+	if err != nil {
+		return posts, err
+	}
+
+	for _, sp := range searchedPosts.Items {
+		if sp.Title != title {
+			posts = append(posts, sp)
+		}
+	}
+
+	return posts, err
 }
