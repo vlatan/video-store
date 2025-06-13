@@ -2,8 +2,6 @@
   Do not parse the content.html for post template
   Get related posts (cache them)
 
-  Pass the the total results count to search template
-
 * Delete user account
 
 * Serve Favicons from root

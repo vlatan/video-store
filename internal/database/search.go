@@ -15,40 +15,29 @@ WITH search_terms AS (
     SELECT
         to_tsquery('english', $1) AS and_query,
         to_tsquery('english', $2) AS or_query
-),
-search_posts AS (
-    SELECT
-        p.id,
-        p.video_id,
-        p.title,
-        p.thumbnails, (
-			SELECT COUNT(*)
-			FROM post_like
-			WHERE post_like.post_id = p.id
-		) AS likes,
-		(ts_rank(p.search_vector, st.and_query) * 2) + ts_rank(p.search_vector, st.or_query) AS rank,
-        CASE 
-            WHEN $4 = 0 THEN COUNT(*) OVER()
-            ELSE 0
-        END AS total_results
-    FROM post AS p, search_terms AS st
-	WHERE p.search_vector @@ st.and_query OR p.search_vector @@ st.or_query
-	ORDER BY rank DESC
-	LIMIT $3 OFFSET $4
 )
 SELECT
-    video_id,
-    title,
-    thumbnails,
-	likes,
-	total_results
-FROM search_posts
+    p.video_id,
+    p.title,
+    p.thumbnails,
+    (
+        SELECT COUNT(*)
+        FROM post_like
+        WHERE post_like.post_id = p.id
+    ) AS likes,
+    CASE 
+        WHEN $4 = 0 THEN COUNT(*) OVER()
+        ELSE 0
+    END AS total_results
+FROM post AS p, search_terms AS st
+WHERE p.search_vector @@ st.and_query OR p.search_vector @@ st.or_query
+ORDER BY (ts_rank(p.search_vector, st.and_query) * 2) + ts_rank(p.search_vector, st.or_query) DESC
+LIMIT $3 OFFSET $4
 `
 
-// Get posts based on a search query
+// Get posts based on a user search query
+// Transform the user query into two queries with words separated by '&' and '|'
 func (s *service) SearchPosts(searchQuery string, page int) (posts Posts, err error) {
-
-	// return s.queryPosts(searchPostsQuery, andQuery, orQuery, limit, offset)
 
 	limit := s.config.PostsPerPage
 	offset := (page - 1) * limit
@@ -67,10 +56,10 @@ func (s *service) SearchPosts(searchQuery string, page int) (posts Posts, err er
 	for rows.Next() {
 		var post Post
 		var thumbnails []byte
-		var TotalNum int
+		var totalNum int
 
 		// Paste post from row to struct, thumbnails in a separate var
-		if err = rows.Scan(&post.VideoID, &post.Title, &thumbnails, &post.Likes, &TotalNum); err != nil {
+		if err = rows.Scan(&post.VideoID, &post.Title, &thumbnails, &post.Likes, &totalNum); err != nil {
 			return posts, err
 		}
 
@@ -86,8 +75,8 @@ func (s *service) SearchPosts(searchQuery string, page int) (posts Posts, err er
 
 		// Include the processed post in the result
 		posts.Items = append(posts.Items, post)
-		if TotalNum != 0 {
-			posts.TotalNum = TotalNum
+		if totalNum != 0 {
+			posts.TotalNum = totalNum
 		}
 	}
 
