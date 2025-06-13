@@ -1,3 +1,7 @@
+-- Used fo fuzzy search
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
+
 -- Create search_vector column
 ALTER TABLE post ADD COLUMN IF NOT EXISTS search_vector tsvector;
 
@@ -24,6 +28,10 @@ FOR EACH ROW EXECUTE FUNCTION update_post_search_vector();
 
 -- Create GIN index on the search_vector column
 CREATE INDEX IF NOT EXISTS idx_post_search_vector ON post USING GIN (search_vector);
+
+
+-- Create GIN index on the title column for the pg_trgm
+CREATE INDEX IF NOT EXISTS  idx_title_trgm ON post USING GIN (title gin_trgm_ops);
 
 
 -- Populate the search_vector column for the existing data
