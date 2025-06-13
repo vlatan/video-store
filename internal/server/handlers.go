@@ -190,7 +190,7 @@ func (s *Server) searchHandler(w http.ResponseWriter, r *http.Request) {
 	case true:
 		posts, err = s.db.SearchPosts(searchQuery, limit, offset)
 	default:
-		encodedSearchQuery := database.EncodeRawSearchQuery(searchQuery, 100)
+		encodedSearchQuery := utils.EscapeTrancateString(searchQuery, 100)
 		err = redis.Cached(
 			r.Context(),
 			s.rdb,

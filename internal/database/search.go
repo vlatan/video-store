@@ -2,7 +2,6 @@ package database
 
 import (
 	"fmt"
-	"net/url"
 )
 
 const searchPostsQuery = `
@@ -86,21 +85,4 @@ func (s *service) SearchPosts(searchTerm string, limit, offset int) (posts Posts
 	}
 
 	return posts, err
-}
-
-// Takes a raw search query and a max length,
-// then returns a URL-encoded and truncated string prefixed for Redis.
-func EncodeRawSearchQuery(rawQuery string, maxLength int) string {
-	// URL-encode the raw query
-	encodedQuery := url.QueryEscape(rawQuery)
-
-	// Truncate the URL-encoded query if it exceeds the maximum length
-	// Note: We're truncating bytes, which is fine for ASCII/URL-encoded strings.
-	// If you were truncating arbitrary UTF-8, you'd need to convert to runes first
-	// to avoid splitting multi-byte characters. For URL-encoded strings, this is generally safe.
-	if len(encodedQuery) > maxLength {
-		encodedQuery = encodedQuery[:maxLength]
-	}
-
-	return encodedQuery
 }
