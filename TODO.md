@@ -1,6 +1,3 @@
-* Remove "&", "|", "(", ")" from search query because it will fail
-  ERROR: no operand in tsquery:
-
 * Do not parse the content.html for every template
 * Modify Cached function to accept a flag whether to return cached or uncached results
   Rename it accordingly

@@ -6,10 +6,10 @@ import (
 
 const searchPostsQuery = `
 WITH search_terms AS (
-    SELECT
-        lexeme AS and_query,
-        to_tsquery('english', replace(lexeme::text, ' & ', ' | ')) AS or_query,
-		replace(lexeme::text, ' & ', ' ')) AS raw_query
+	SELECT
+		lexeme AS and_query,
+		to_tsquery('english', replace(lexeme::text, ' & ', ' | ')) AS or_query,
+		replace(lexeme::text, ' & ', ' ') AS raw_query
 	FROM plainto_tsquery('english', $1) AS lexeme
 )
 SELECT
