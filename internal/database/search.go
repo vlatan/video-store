@@ -28,8 +28,8 @@ SELECT
 FROM post AS p, search_terms AS st
 WHERE p.search_vector @@ st.and_query OR p.search_vector @@ st.or_query
 ORDER BY 
-	(ts_rank(p.search_vector, st.and_query) * 2) + 
-	ts_rank(p.search_vector, st.or_query) +
+	(ts_rank(p.search_vector, st.and_query, 32) * 2) + 
+	ts_rank(p.search_vector, st.or_query, 32) +
 	(similarity(p.title, st.raw_query) * 0.5) DESC,
 	likes DESC,
 	p.upload_date DESC
