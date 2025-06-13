@@ -1,4 +1,4 @@
--- Used fo fuzzy search
+-- Used for fuzzy search
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
 
