@@ -15,31 +15,32 @@ WITH search_terms AS (
         to_tsquery('english', $1) AS and_query,
         to_tsquery('english', $2) AS or_query
 ),
-post_with_search_vector AS (
+search_posts AS (
     SELECT
         p.id,
         p.video_id,
         p.title,
         p.thumbnails, (
-            setweight(to_tsvector('english', coalesce(p.title, '')), 'A') ||
-            setweight(to_tsvector('english', coalesce(p.short_description, '')), 'B')
-        ) AS dynamic_search_vector
-    FROM post AS p
+			SELECT COUNT(*)
+			FROM post_like
+			WHERE post_like.post_id = p.id
+		) AS likes,
+		(ts_rank(p.search_vector, st.and_query) * 2) + ts_rank(p.search_vector, st.or_query) AS rank,
+        CASE 
+            WHEN $4 = 0 THEN COUNT(*) OVER()
+            ELSE NULL
+        END AS total_results
+    FROM post AS p, search_terms AS st
+	WHERE p.search_vector @@ st.and_query OR p.search_vector @@ st.or_query
+	ORDER BY rank DESC
+	LIMIT $3 OFFSET $4
 )
 SELECT
-    psv.video_id,
-    psv.title,
-    psv.thumbnails, (
-        SELECT COUNT(*)
-        FROM post_like
-        WHERE post_like.post_id = psv.id
-    ) AS likes
-FROM
-    post_with_search_vector AS psv,
-    search_terms AS st
-WHERE psv.dynamic_search_vector @@ st.and_query OR psv.dynamic_search_vector @@ st.or_query
-ORDER BY (ts_rank(psv.dynamic_search_vector, st.and_query) * 2) + ts_rank(psv.dynamic_search_vector, st.or_query) DESC
-LIMIT $3 OFFSET $4
+    video_id,
+    title,
+    thumbnails,
+	likes
+FROM search_posts
 `
 
 // Get posts based on a search query

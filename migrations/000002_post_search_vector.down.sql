@@ -1,0 +1,14 @@
+-- Drop the index on the search_vector column
+DROP INDEX IF EXISTS idx_post_search_vector;
+
+
+-- Drop the function trigger
+DROP TRIGGER IF EXISTS tsvector_update ON post;
+
+
+-- Remove the update_post_search_vector function
+DROP FUNCTION IF EXISTS update_post_search_vector();
+
+
+-- Drop the column search_vector
+ALTER TABLE post DROP COLUMN IF EXISTS search_vector;

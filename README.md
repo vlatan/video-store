@@ -79,3 +79,43 @@ Confirm the data is there. This will land you at `psql` in the docker container 
 ```
 docker compose exec -it postgres psql -U xxx -d xxx
 ```
+
+
+## Migration commands
+
+Here's a little [PostgreSQL golang-migrate tutorial](https://github.com/golang-migrate/migrate/blob/master/database/postgres/TUTORIAL.md).
+
+Install the `golang-migrate` library.
+```
+go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+```
+
+Export the database URL in a variable. The empty space at the beginning is important so the command is not saved in the bash history. Change the values in the URL string accordingly.
+```
+ export DATABASE_URL='postgres://postgres:password@localhost:5432/example?sslmode=disable'
+```
+
+Check the current version.
+```
+migrate -path migrations -database $DATABASE_URL version
+```
+
+Create a specific migration file.
+```
+migrate create -ext sql -dir migrations -seq file_name
+```
+
+Migrate up/forward. Supply a version number you want to go to.
+```
+migrate -path migrations -database $DATABASE_URL up <version_number>
+```
+
+Migrate down/backward. Supply a version number you want to go to.
+```
+migrate -path migrations -database $DATABASE_URL down <version_number>
+```
+
+Force a version. Useful for rollback from a dirty version to the previous version and trying again, or if you want to force a current dirty version you are sure it went okay.
+```
+migrate -path migrations -database $DATABASE_URL force <version_number>
+```
