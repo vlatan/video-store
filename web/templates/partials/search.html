@@ -20,7 +20,7 @@
 {{ define "content" }}
 <h1 class="content-title">
     {{ if .Posts.TotalNum }}
-    About <strong>{{ .Posts.TotalNum }}</strong> results <small>({{ .Posts.TimeTook }} seconds)</small>
+    <strong>{{ .Posts.TotalNum }}</strong> results <small>({{ .Posts.TimeTook }} seconds)</small>
     {{ else }}
     Sorry, no matching results for this query.
     {{ end }}

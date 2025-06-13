@@ -31,12 +31,6 @@ type FlashMessage struct {
 	Category string
 }
 
-type Posts struct {
-	Items    []database.Post
-	TotalNum int
-	TimeTook string
-}
-
 type TemplateData struct {
 	StaticFiles   files.StaticFiles
 	Config        *config.Config
@@ -44,8 +38,7 @@ type TemplateData struct {
 	CurrentPost   *database.Post
 	CurrentUser   *User
 	CurrentURI    string
-	Posts         Posts
-	TotalPosts    int
+	Posts         database.Posts
 	Categories    []database.Category
 	FlashMessages []*FlashMessage
 	SearchQuery   string

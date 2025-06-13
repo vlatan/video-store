@@ -177,7 +177,9 @@ func (s *Server) searchHandler(w http.ResponseWriter, r *http.Request) {
 	data := s.NewData(w, r)
 	data.SearchQuery = searchQuery
 
-	var posts []database.Post
+	// For search posts we are using the posts struct,
+	// so we can add total results and time took
+	var posts database.Posts
 	var err error = nil
 
 	start := time.Now()
@@ -192,7 +194,7 @@ func (s *Server) searchHandler(w http.ResponseWriter, r *http.Request) {
 			fmt.Sprintf("posts:search:page:%d:%s", page, encodedSearchQuery),
 			24*time.Hour,
 			&posts,
-			func() ([]database.Post, error) {
+			func() (database.Posts, error) {
 				return s.db.SearchPosts(searchQuery, page)
 			},
 		)
@@ -205,7 +207,7 @@ func (s *Server) searchHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if page > 1 && len(posts) == 0 {
+	if page > 1 && len(posts.Items) == 0 {
 		http.NotFound(w, r)
 		return
 	}
@@ -213,16 +215,14 @@ func (s *Server) searchHandler(w http.ResponseWriter, r *http.Request) {
 	// if not the first page return JSON
 	if page > 1 {
 		time.Sleep(time.Millisecond * 400)
-		if err := s.tm.WriteJSON(w, posts); err != nil {
+		if err := s.tm.WriteJSON(w, posts.Items); err != nil {
 			log.Println(err)
 			http.Error(w, "Something went wrong.", http.StatusInternalServerError)
 		}
 		return
 	}
-
+	data.Posts = posts
 	data.Posts.TimeTook = fmt.Sprintf("%.2f", end.Seconds())
-	data.Posts.TotalNum = 100 // Temporary hardcoded, this needs to be computed
-	data.Posts.Items = posts
 	if err := s.tm.Render(w, "search", data); err != nil {
 		log.Println(err)
 		http.Error(w, "Something went wrong.", http.StatusInternalServerError)

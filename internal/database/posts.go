@@ -22,6 +22,12 @@ type Duration struct {
 	Human string `json:"human,omitempty"`
 }
 
+type Posts struct {
+	Items    []Post
+	TotalNum int
+	TimeTook string
+}
+
 type Post struct {
 	ID               int        `json:"id,omitempty"`
 	VideoID          string     `json:"video_id,omitempty"`

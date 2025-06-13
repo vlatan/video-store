@@ -1,6 +1,7 @@
 package database
 
 import (
+	"fmt"
 	"net/url"
 	"regexp"
 	"strings"
@@ -28,7 +29,7 @@ search_posts AS (
 		(ts_rank(p.search_vector, st.and_query) * 2) + ts_rank(p.search_vector, st.or_query) AS rank,
         CASE 
             WHEN $4 = 0 THEN COUNT(*) OVER()
-            ELSE NULL
+            ELSE 0
         END AS total_results
     FROM post AS p, search_terms AS st
 	WHERE p.search_vector @@ st.and_query OR p.search_vector @@ st.or_query
@@ -39,16 +40,63 @@ SELECT
     video_id,
     title,
     thumbnails,
-	likes
+	likes,
+	total_results
 FROM search_posts
 `
 
 // Get posts based on a search query
-func (s *service) SearchPosts(searchQuery string, page int) ([]Post, error) {
+func (s *service) SearchPosts(searchQuery string, page int) (posts Posts, err error) {
+
+	// return s.queryPosts(searchPostsQuery, andQuery, orQuery, limit, offset)
+
 	limit := s.config.PostsPerPage
 	offset := (page - 1) * limit
 	andQuery, orQuery := normalizeSearchQuery(searchQuery)
-	return s.queryPosts(searchPostsQuery, andQuery, orQuery, limit, offset)
+
+	// Get rows from DB
+	rows, err := s.db.Query(searchPostsQuery, andQuery, orQuery, limit, offset)
+	if err != nil {
+		return posts, err
+	}
+
+	// Close rows on exit
+	defer rows.Close()
+
+	// Iterate over the rows
+	for rows.Next() {
+		var post Post
+		var thumbnails []byte
+		var TotalNum int
+
+		// Paste post from row to struct, thumbnails in a separate var
+		if err = rows.Scan(&post.VideoID, &post.Title, &thumbnails, &post.Likes, &TotalNum); err != nil {
+			return posts, err
+		}
+
+		// Unserialize thumbnails
+		thumbsMap, err := unmarshalThumbs(thumbnails)
+		if err != nil {
+			return posts, fmt.Errorf("video ID '%s': %v", post.VideoID, err)
+		}
+
+		post.Srcset = srcset(thumbsMap, 480)
+		thumb := thumbsMap["medium"]
+		post.Thumbnail = &thumb
+
+		// Include the processed post in the result
+		posts.Items = append(posts.Items, post)
+		if TotalNum != 0 {
+			posts.TotalNum = TotalNum
+		}
+	}
+
+	// If error during iteration
+	if err := rows.Err(); err != nil {
+		return posts, err
+	}
+
+	return posts, err
 }
 
 // Remove punctuation and spaces.
