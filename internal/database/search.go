@@ -31,7 +31,10 @@ SELECT
     END AS total_results
 FROM post AS p, search_terms AS st
 WHERE p.search_vector @@ st.and_query OR p.search_vector @@ st.or_query
-ORDER BY (ts_rank(p.search_vector, st.and_query) * 2) + ts_rank(p.search_vector, st.or_query) DESC
+ORDER BY 
+	(ts_rank(p.search_vector, st.and_query) * 2) + ts_rank(p.search_vector, st.or_query) DESC,
+	likes DESC,
+	p.upload_date DESC
 LIMIT $3 OFFSET $4
 `
 
