@@ -10,6 +10,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	// Register routes
 	mux.HandleFunc("GET /{$}", s.homeHandler)
 	mux.HandleFunc("GET /video/{video}/{$}", s.singlePostHandler)
+	mux.HandleFunc("POST /video/{video}/{action}", s.postActionHandler)
 	mux.HandleFunc("GET /category/{category}/{$}", s.categoryPostsHandler)
 	mux.HandleFunc("GET /search/{$}", s.searchHandler)
 	mux.HandleFunc("GET /health/{$}", s.healthHandler)

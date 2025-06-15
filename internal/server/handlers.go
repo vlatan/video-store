@@ -15,6 +15,7 @@ import (
 	"net/url"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -313,6 +314,41 @@ func (s *Server) singlePostHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
 	}
+}
+
+// Perform an action on a video
+func (s *Server) postActionHandler(w http.ResponseWriter, r *http.Request) {
+
+	// Validate the YT ID
+	videoID := r.PathValue("video")
+	if validVideoID.FindStringSubmatch(videoID) == nil {
+		log.Println("Not a valid video ID:", videoID)
+		http.NotFound(w, r)
+		return
+	}
+
+	// Validate the action
+	action := r.PathValue("action")
+	allowedActions := []string{"like", "unlike", "fave", "unfave", "edit", "delete"}
+	if !slices.Contains(allowedActions, action) {
+		log.Printf("Not a valid action '%s' on video: %s\n", action, videoID)
+		http.NotFound(w, r)
+		return
+	}
+
+	// Check if the user is authenticated
+	currentUser := s.getCurrentUser(w, r)
+	if !currentUser.IsAuthenticated() {
+		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+		return
+	}
+
+	// Check if user is authorized to edit or delete
+	if (action == "edit" || action == "delete") && currentUser.UserID != s.config.AdminOpenID {
+		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+		return
+	}
+
 }
 
 // Handle minified static file from cache
