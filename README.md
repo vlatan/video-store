@@ -105,14 +105,14 @@ Create a specific migration file.
 migrate create -ext sql -dir migrations -seq file_name
 ```
 
-Migrate up/forward. Supply a version number you want to go to.
+Migrate up/forward. Supply how many steps you want to go up.
 ```
-migrate -path migrations -database $DATABASE_URL up <version_number>
+migrate -path migrations -database $DATABASE_URL up <steps>
 ```
 
-Migrate down/backward. Supply a version number you want to go to.
+Migrate down/backward. Supply how many steps you want to go down.
 ```
-migrate -path migrations -database $DATABASE_URL down <version_number>
+migrate -path migrations -database $DATABASE_URL down <steps>
 ```
 
 Force a version. Useful for rollback from a dirty version to the previous version and trying again, or if you want to force a current dirty version you are sure it went okay.
