@@ -3,11 +3,10 @@
 We need the production database data and the schema:
 1. Dump the production data with the schema.
 2. Bring down the docker compose.
-3. Comment out the `./migrations:/docker-entrypoint-initdb.d` volume in `compose.yaml`.
-4. Delete the postgress data volume.
-5. Run the docker compose.
+3. Delete the postgress data volume.
+4. Run the docker compose.
 5. Copy the database dump into the docker container.
-7. Import/restore the data with its original schema. If you see ONLY errors that complain that the role `postgres` does not exist you are good to go.
+6. Import/restore the data with its original schema. If you see ONLY errors that complain that the role `postgres` does not exist you are good to go.
 
 
 This is starting point, we have the exact same database from the production. The following are steps for manipulating and adapting the data to be able to fit into the new, improved databse schema.
@@ -42,8 +41,9 @@ ALTER TABLE post ADD COLUMN related_json JSONB;
 Change the `DB_HOST` in the `.env` file temporarely to `localhost`. Run the `convert.py` script which will extract the pickled content from each row, convert it to JSON and place it in these new columns.
 
 
-Switch the column names:
+Swap the columns:
 ``` sql
+-- Switch the column names
 ALTER TABLE playlist RENAME COLUMN thumbnails TO thumbnails_pickle;
 ALTER TABLE playlist RENAME COLUMN thumbnails_json TO thumbnails;
 ALTER TABLE playlist RENAME COLUMN channel_thumbnails TO channel_thumbnails_pickle;
@@ -52,17 +52,13 @@ ALTER TABLE post RENAME COLUMN thumbnails TO thumbnails_pickle;
 ALTER TABLE post RENAME COLUMN thumbnails_json TO thumbnails;
 ALTER TABLE post RENAME COLUMN "similar" TO related_pickle;
 ALTER TABLE post RENAME COLUMN related_json TO related;
-```
 
-Set NOT NULL constraint to the newly renamed columns:
-``` sql
+-- Set NOT NULL constraint to the newly renamed columns:
 ALTER TABLE playlist ALTER COLUMN thumbnails SET NOT NULL;
 ALTER TABLE playlist ALTER COLUMN channel_thumbnails SET NOT NULL;
 ALTER TABLE post ALTER COLUMN thumbnails SET NOT NULL;
-```
 
-If everything is OK, drop the pickled columns:
-```sql
+-- Drop the pickled columns
 ALTER TABLE playlist DROP COLUMN thumbnails_pickle;
 ALTER TABLE playlist DROP COLUMN channel_thumbnails_pickle;
 ALTER TABLE post DROP COLUMN thumbnails_pickle;
@@ -228,8 +224,8 @@ Now we need to:
 1. Dump JUST the data we manipulated.
 2. Bring down the docker compose.
 3. Delete the postgres data volume.
-4. Uncomment the `./migrations:/docker-entrypoint-initdb.d` volume.
-5. Run the docker compose.
+4. Run the docker compose.
+5. Run the first migration which will create the tables from scratch.
 6. Copy the database dump into the docker container.
 7. Import/restore JUST the data.
 
