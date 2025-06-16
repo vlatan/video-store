@@ -6,17 +6,6 @@ import psycopg
 from psycopg.conninfo import make_conninfo
 from dotenv import load_dotenv
 
-"""
--- Add these columns to playlist and post tables
-ALTER TABLE playlist ADD COLUMN thumbnails_json JSONB;
-ALTER TABLE playlist ADD COLUMN channel_thumbnails_json JSONB;
-ALTER TABLE post ADD COLUMN thumbnails_json JSONB;
-ALTER TABLE post ADD COLUMN related_json JSONB;
-
--- RUN THIS PYTHON SCRIPT TO COPY AND CONVERT DATA
--- FROM THE 'BYTEA' COLUMNS TO THE NEW JSONB COLUMNS
-"""
-
 
 def pickle_to_json():
     conninfo = make_conninfo(
@@ -95,33 +84,6 @@ def pickle_to_json():
         conn.commit()
 
         print("Script done in: ", time.perf_counter() - start)
-
-
-"""
--- Switch the columns names
-ALTER TABLE playlist RENAME COLUMN thumbnails TO thumbnails_pickle;
-ALTER TABLE playlist RENAME COLUMN thumbnails_json TO thumbnails;
-ALTER TABLE playlist RENAME COLUMN channel_thumbnails TO channel_thumbnails_pickle;
-ALTER TABLE playlist RENAME COLUMN channel_thumbnails_json TO channel_thumbnails;
-ALTER TABLE post RENAME COLUMN thumbnails TO thumbnails_pickle;
-ALTER TABLE post RENAME COLUMN thumbnails_json TO thumbnails;
-ALTER TABLE post RENAME COLUMN "similar" TO related_pickle;
-ALTER TABLE post RENAME COLUMN related_json TO related;
-
--- Set NOT NULL to the newly renamed columns
-ALTER TABLE playlist ALTER COLUMN thumbnails SET NOT NULL;
-ALTER TABLE playlist ALTER COLUMN channel_thumbnails SET NOT NULL;
-ALTER TABLE post ALTER COLUMN thumbnails SET NOT NULL;
-
---Drop the BYTEA columns if everything is OK
-ALTER TABLE playlist DROP COLUMN thumbnails_pickle;
-ALTER TABLE playlist DROP COLUMN channel_thumbnails_pickle;
-ALTER TABLE post DROP COLUMN thumbnails_pickle;
-ALTER TABLE post DROP COLUMN related_pickle;
-
--- FINALLY CHANGE FROM BYTEA TO JSONB IN THE SCHEMA
--- AND CHANGE COLUMN NAME "similar" TO related IN post
-"""
 
 
 if __name__ == "__main__":
