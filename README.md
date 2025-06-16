@@ -71,7 +71,7 @@ Copy the dump into the running local postgres container, which also has to match
 Execute the restore. Restory only the data (`-a`).
 
 ```
- docker compose exec -e PGPASSWORD="xxx \
+ docker compose exec -e PGPASSWORD=xxx \
 postgres pg_restore -U xxx -h localhost -p 5432 -d xxx -a -F t /tmp/db.dump
 ```
 
