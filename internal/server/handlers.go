@@ -46,7 +46,7 @@ func (s *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch data.IsCurrentUserAdmin() {
 	case true:
-		posts, err = s.db.GetPosts(page, orderBy)
+		posts, err = s.db.GetPosts(r.Context(), page, orderBy)
 	default:
 		err = redis.Cached(
 			r.Context(),
@@ -55,7 +55,7 @@ func (s *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
 			24*time.Hour,
 			&posts,
 			func() ([]database.Post, error) {
-				return s.db.GetPosts(page, orderBy)
+				return s.db.GetPosts(r.Context(), page, orderBy)
 			},
 		)
 	}
@@ -119,7 +119,7 @@ func (s *Server) categoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch data.IsCurrentUserAdmin() {
 	case true:
-		posts, err = s.db.GetCategoryPosts(slug, orderBy, page)
+		posts, err = s.db.GetCategoryPosts(r.Context(), slug, orderBy, page)
 	default:
 		err = redis.Cached(
 			r.Context(),
@@ -128,7 +128,7 @@ func (s *Server) categoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 			24*time.Hour,
 			&posts,
 			func() ([]database.Post, error) {
-				return s.db.GetCategoryPosts(slug, orderBy, page)
+				return s.db.GetCategoryPosts(r.Context(), slug, orderBy, page)
 			},
 		)
 	}
@@ -189,7 +189,7 @@ func (s *Server) searchHandler(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	switch data.IsCurrentUserAdmin() {
 	case true:
-		posts, err = s.db.SearchPosts(searchQuery, limit, offset)
+		posts, err = s.db.SearchPosts(r.Context(), searchQuery, limit, offset)
 	default:
 		encodedSearchQuery := utils.EscapeTrancateString(searchQuery, 100)
 		err = redis.Cached(
@@ -199,7 +199,7 @@ func (s *Server) searchHandler(w http.ResponseWriter, r *http.Request) {
 			24*time.Hour,
 			&posts,
 			func() (database.Posts, error) {
-				return s.db.SearchPosts(searchQuery, limit, offset)
+				return s.db.SearchPosts(r.Context(), searchQuery, limit, offset)
 			},
 		)
 	}
@@ -252,7 +252,7 @@ func (s *Server) singlePostHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch data.CurrentUser.IsAuthenticated() {
 	case true:
-		post, err = s.db.GetSinglePost(videoID)
+		post, err = s.db.GetSinglePost(r.Context(), videoID)
 	default:
 		err = redis.Cached(
 			r.Context(),
@@ -261,7 +261,7 @@ func (s *Server) singlePostHandler(w http.ResponseWriter, r *http.Request) {
 			24*time.Hour,
 			&post,
 			func() (database.Post, error) {
-				return s.db.GetSinglePost(videoID)
+				return s.db.GetSinglePost(r.Context(), videoID)
 			},
 		)
 	}
@@ -285,6 +285,7 @@ func (s *Server) singlePostHandler(w http.ResponseWriter, r *http.Request) {
 	// Check whether the current user liked and/or faved the post
 	if data.CurrentUser.IsAuthenticated() {
 		userActions, _ := s.db.GetUserActions(
+			r.Context(),
 			data.CurrentUser.ID,
 			data.CurrentPost.ID,
 		)
@@ -295,7 +296,7 @@ func (s *Server) singlePostHandler(w http.ResponseWriter, r *http.Request) {
 	var relatedPosts []database.Post
 	switch data.CurrentUser.IsAuthenticated() {
 	case true:
-		relatedPosts, _ = s.getRelatedPosts(post.Title)
+		relatedPosts, _ = s.getRelatedPosts(r.Context(), post.Title)
 	default:
 		redis.Cached(
 			r.Context(),
@@ -304,7 +305,7 @@ func (s *Server) singlePostHandler(w http.ResponseWriter, r *http.Request) {
 			24*time.Hour,
 			&relatedPosts,
 			func() ([]database.Post, error) {
-				return s.getRelatedPosts(post.Title)
+				return s.getRelatedPosts(r.Context(), post.Title)
 			},
 		)
 	}
@@ -351,7 +352,7 @@ func (s *Server) postActionHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Attempt to record a user like for this video
 	if action == "like" {
-		if err := s.db.Like(currentUser.ID, videoID); err != nil {
+		if err := s.db.Like(r.Context(), currentUser.ID, videoID); err != nil {
 			log.Printf("User %d could not like the video %s: %v\n", currentUser.ID, videoID, err)
 			http.Error(w, "Something went wrong.", http.StatusInternalServerError)
 			return
@@ -427,8 +428,8 @@ func (s *Server) staticHandler(w http.ResponseWriter, r *http.Request) {
 // DB and Redis health status
 func (s *Server) healthHandler(w http.ResponseWriter, r *http.Request) {
 
-	dbStatus := s.db.Health()
-	rdbStatus := s.rdb.Health(context.Background())
+	dbStatus := s.db.Health(r.Context())
+	rdbStatus := s.rdb.Health(r.Context())
 
 	maps.Copy(dbStatus, rdbStatus)
 
@@ -562,9 +563,9 @@ func getPageNum(r *http.Request) int {
 }
 
 // Get post's related posts based on provided title as search query
-func (s *Server) getRelatedPosts(title string) (posts []database.Post, err error) {
+func (s *Server) getRelatedPosts(ctx context.Context, title string) (posts []database.Post, err error) {
 	// Search the DB for posts
-	searchedPosts, err := s.db.SearchPosts(title, s.config.NumRelatedPosts+1, 0)
+	searchedPosts, err := s.db.SearchPosts(ctx, title, s.config.NumRelatedPosts+1, 0)
 
 	if err != nil {
 		return posts, err

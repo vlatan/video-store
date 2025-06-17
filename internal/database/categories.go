@@ -1,5 +1,7 @@
 package database
 
+import "context"
+
 type Category struct {
 	Name string `db:"name"`
 	Slug string `db:"slug"`
@@ -11,9 +13,9 @@ WHERE id IN (SELECT DISTINCT category_id FROM post)
 `
 
 // Get a limited number of posts with offset
-func (s *service) GetCategories() ([]Category, error) {
+func (s *service) GetCategories(ctx context.Context) ([]Category, error) {
 
-	rows, err := s.db.Query(getCategoriesQuery)
+	rows, err := s.db.Query(ctx, getCategoriesQuery)
 	if err != nil {
 		return nil, err
 	}

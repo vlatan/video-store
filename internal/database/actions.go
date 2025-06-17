@@ -1,5 +1,7 @@
 package database
 
+import "context"
+
 type Actions struct {
 	Liked bool
 	Faved bool
@@ -18,8 +20,8 @@ SELECT
 `
 
 // Check if the user liked and/or faved a post
-func (s *service) GetUserActions(userID, postID int) (actions Actions, err error) {
-	err = s.db.QueryRow(userActionsQuery, userID, postID).Scan(&actions)
+func (s *service) GetUserActions(ctx context.Context, userID, postID int) (actions Actions, err error) {
+	err = s.db.QueryRow(ctx, userActionsQuery, userID, postID).Scan(&actions)
 	return actions, err
 }
 
@@ -31,8 +33,8 @@ const likeQuery = `
 	RETURNING *
 `
 
-func (s *service) Like(userID int, videoID string) error {
-	_, err := s.db.Exec(likeQuery, userID, videoID)
+func (s *service) Like(ctx context.Context, userID int, videoID string) error {
+	_, err := s.db.Exec(ctx, likeQuery, userID, videoID)
 	return err
 }
 

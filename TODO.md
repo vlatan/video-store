@@ -1,5 +1,3 @@
-* Convert using PGX for better performance
-
 * User actions
 
 * Do not parse the content.html for every template

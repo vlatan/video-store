@@ -1,6 +1,7 @@
 package database
 
 import (
+	"context"
 	"fmt"
 )
 
@@ -38,12 +39,12 @@ LIMIT $2 OFFSET $3
 
 // Get posts based on a user search query
 // Transform the user query into two queries with words separated by '&' and '|'
-func (s *service) SearchPosts(searchTerm string, limit, offset int) (posts Posts, err error) {
+func (s *service) SearchPosts(ctx context.Context, searchTerm string, limit, offset int) (posts Posts, err error) {
 
 	// andQuery, orQuery := normalizeSearchQuery(searchQuery)
 
 	// Get rows from DB
-	rows, err := s.db.Query(searchPostsQuery, searchTerm, limit, offset)
+	rows, err := s.db.Query(ctx, searchPostsQuery, searchTerm, limit, offset)
 	if err != nil {
 		return posts, err
 	}

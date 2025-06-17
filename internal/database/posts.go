@@ -1,6 +1,7 @@
 package database
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -59,7 +60,7 @@ LIMIT $1 OFFSET $2
 `
 
 // Get a limited number of posts with offset
-func (s *service) GetPosts(page int, orderBy string) ([]Post, error) {
+func (s *service) GetPosts(ctx context.Context, page int, orderBy string) ([]Post, error) {
 
 	limit := s.config.PostsPerPage
 	offset := (page - 1) * limit
@@ -70,7 +71,7 @@ func (s *service) GetPosts(page int, orderBy string) ([]Post, error) {
 	}
 
 	query := fmt.Sprintf(getPostsQuery, order)
-	return s.queryPosts(query, limit, offset)
+	return s.queryPosts(ctx, query, limit, offset)
 }
 
 const getCategoryPostsQuery = `
@@ -84,7 +85,12 @@ LIMIT $2 OFFSET $3
 `
 
 // Get a limited number of posts from one category with offset
-func (s *service) GetCategoryPosts(categorySlug, orderBy string, page int) ([]Post, error) {
+func (s *service) GetCategoryPosts(
+	ctx context.Context,
+	categorySlug,
+	orderBy string,
+	page int,
+) ([]Post, error) {
 
 	limit := s.config.PostsPerPage
 	offset := (page - 1) * limit
@@ -95,7 +101,7 @@ func (s *service) GetCategoryPosts(categorySlug, orderBy string, page int) ([]Po
 	}
 
 	query := fmt.Sprintf(getCategoryPostsQuery, order)
-	return s.queryPosts(query, categorySlug, limit, offset)
+	return s.queryPosts(ctx, query, categorySlug, limit, offset)
 }
 
 const getSinglePostQuery = `
@@ -119,14 +125,14 @@ WHERE video_id = $1
 `
 
 // Get single post from DB based on a video ID
-func (s *service) GetSinglePost(videoID string) (post Post, err error) {
+func (s *service) GetSinglePost(ctx context.Context, videoID string) (post Post, err error) {
 
 	var thumbnails []byte
 	var category Category
 	var duration Duration
 
 	// Get single row from DB
-	err = s.db.QueryRow(getSinglePostQuery, videoID).Scan(
+	err = s.db.QueryRow(ctx, getSinglePostQuery, videoID).Scan(
 		&post.ID,
 		&post.VideoID,
 		&post.Title,
@@ -210,9 +216,13 @@ func srcset(thumbnails map[string]Thumbnail, maxWidth int) string {
 }
 
 // Query the DB for posts based on variadic arguments
-func (s *service) queryPosts(query string, args ...any) (posts []Post, err error) {
+func (s *service) queryPosts(
+	ctx context.Context,
+	query string,
+	args ...any,
+) (posts []Post, err error) {
 	// Get rows from DB
-	rows, err := s.db.Query(query, args...)
+	rows, err := s.db.Query(ctx, query, args...)
 	if err != nil {
 		return posts, err
 	}

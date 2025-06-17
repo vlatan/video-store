@@ -1,13 +1,14 @@
 package database
 
 import (
-	"database/sql"
+	"context"
 	"factual-docs/internal/config"
 	"fmt"
 	"log"
 	"sync"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/markbates/goth"
 )
@@ -15,33 +16,32 @@ import (
 // Service represents a service that interacts with a database.
 type Service interface {
 	// Update the last_seen date for a user
-	UpdateUserLastSeen(id int, t time.Time) error
+	UpdateUserLastSeen(ctx context.Context, id int, t time.Time) error
 	// Update or insert a new user
-	UpsertUser(u *goth.User, analyticsID string) (int, error)
+	UpsertUser(ctx context.Context, u *goth.User, analyticsID string) (int, error)
 	// Check if logged in user liked or faved a post
-	GetUserActions(userID, postID int) (actions Actions, err error)
+	GetUserActions(ctx context.Context, userID, postID int) (actions Actions, err error)
 	// Like a post
-	Like(userID int, videoID string) error
+	Like(ctx context.Context, userID int, videoID string) error
 	// Get paginated posts
-	GetPosts(page int, orderBy string) ([]Post, error)
+	GetPosts(ctx context.Context, page int, orderBy string) ([]Post, error)
 	// Get paginated category posts
-	GetCategoryPosts(categorySlug, orderBy string, page int) ([]Post, error)
+	GetCategoryPosts(ctx context.Context, categorySlug, orderBy string, page int) ([]Post, error)
 	// Get posts based on a search query
-	SearchPosts(searchQuery string, limit, offset int) (posts Posts, err error)
+	SearchPosts(ctx context.Context, searchTerm string, limit, offset int) (posts Posts, err error)
 	// Get single posts given the video ID
-	GetSinglePost(videoID string) (Post, error)
+	GetSinglePost(ctx context.Context, videoID string) (post Post, err error)
 	// Get all categories
-	GetCategories() ([]Category, error)
+	GetCategories(ctx context.Context) ([]Category, error)
 	// Health returns a map of health status information.
 	// The keys and values in the map are service-specific.
-	Health() map[string]string
-	// Close terminates the database connection.
-	// It returns an error if the connection cannot be closed.
-	Close() error
+	Health(ctx context.Context) map[string]string
+	// Closes the pool and terminates the database connection.
+	Close()
 }
 
 type service struct {
-	db     *sql.DB
+	db     *pgxpool.Pool
 	config *config.Config
 }
 
@@ -62,7 +62,7 @@ func New(cfg *config.Config) Service {
 			cfg.DBDatabase,
 		)
 
-		db, err := sql.Open("pgx", connStr)
+		db, err := pgxpool.New(context.Background(), connStr)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -80,7 +80,7 @@ func New(cfg *config.Config) Service {
 // It logs a message indicating the disconnection from the specific database.
 // If the connection is successfully closed, it returns nil.
 // If an error occurs while closing the connection, it returns the error.
-func (s *service) Close() error {
+func (s *service) Close() {
 	log.Printf("Disconnected from database: %s", s.config.DBDatabase)
-	return s.db.Close()
+	s.db.Close()
 }

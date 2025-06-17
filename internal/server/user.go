@@ -81,7 +81,7 @@ func (s *Server) loginUser(w http.ResponseWriter, r *http.Request, gothUser *got
 	analyticsID = fmt.Sprintf("%x", md5.Sum([]byte(analyticsID)))
 
 	// Update or insert user
-	id, err := s.db.UpsertUser(gothUser, analyticsID)
+	id, err := s.db.UpsertUser(r.Context(), gothUser, analyticsID)
 	if id == 0 || err != nil {
 		return err
 	}
@@ -132,7 +132,7 @@ func (s *Server) getCurrentUser(w http.ResponseWriter, r *http.Request) *templat
 
 	// Check if the DB update is out of sync for an entire date
 	if !sameDate(lastSeenDB, now) {
-		if err := s.db.UpdateUserLastSeen(id, now); err != nil {
+		if err := s.db.UpdateUserLastSeen(r.Context(), id, now); err != nil {
 			log.Printf("Couldn't update the last seen in DB on user '%d': %v\n", id, err)
 		}
 		session.Values["LastSeenDB"] = now

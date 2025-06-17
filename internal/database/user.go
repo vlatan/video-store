@@ -1,6 +1,7 @@
 package database
 
 import (
+	"context"
 	"database/sql"
 	"time"
 
@@ -56,7 +57,7 @@ SELECT id FROM updated
 `
 
 // Add or update a user
-func (s *service) UpsertUser(u *goth.User, analyticsID string) (int, error) {
+func (s *service) UpsertUser(ctx context.Context, u *goth.User, analyticsID string) (int, error) {
 
 	var (
 		googleID   string
@@ -71,7 +72,9 @@ func (s *service) UpsertUser(u *goth.User, analyticsID string) (int, error) {
 	}
 
 	var id int
-	err := s.db.QueryRow(upsertUserQuery,
+	err := s.db.QueryRow(
+		ctx,
+		upsertUserQuery,
 		NullString(&googleID),
 		NullString(&facebookID),
 		NullString(&analyticsID),
@@ -89,8 +92,8 @@ SET last_seen = $2 WHERE id = $1
 `
 
 // Update the last seen column on a user
-func (s *service) UpdateUserLastSeen(id int, t time.Time) error {
-	_, err := s.db.Exec(updateLastUserSeenQuery, id, t)
+func (s *service) UpdateUserLastSeen(ctx context.Context, id int, t time.Time) error {
+	_, err := s.db.Exec(ctx, updateLastUserSeenQuery, id, t)
 	return err
 }
 
