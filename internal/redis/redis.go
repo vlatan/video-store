@@ -21,16 +21,6 @@ type Service interface {
 	// Get a value from Redis by key. Returns the value as a string.
 	// Returns redis.Nil error if the key does not exist.
 	Get(ctx context.Context, key string) (string, error)
-	// Create a search index
-	CreateSearchIndex(ctx context.Context) error
-	// Update or insert a document into the search index
-	UpsertDocument(ctx context.Context, columns ...string) (int, error)
-	// Delete a document from the search index
-	DeleteDocument(ctx context.Context, id int) error
-	// Search documents based on a search query
-	SearchDocuments(ctx context.Context, query string) (posts []database.Post, err error)
-	// Synchronize the database with the search index
-	SyncExistingData(ctx context.Context) error
 	// Ping the redis server
 	Health(ctx context.Context) map[string]string
 	// Close redis client
