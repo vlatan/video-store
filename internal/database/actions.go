@@ -33,9 +33,12 @@ const likeQuery = `
 	RETURNING *
 `
 
-func (s *service) Like(ctx context.Context, userID int, videoID string) error {
-	_, err := s.db.Exec(ctx, likeQuery, userID, videoID)
-	return err
+func (s *service) Like(ctx context.Context, userID int, videoID string) (int64, error) {
+	result, err := s.db.Exec(ctx, likeQuery, userID, videoID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
 
 // func (s *service) Unlike(userID, postID string) error

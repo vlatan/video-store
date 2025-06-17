@@ -22,7 +22,7 @@ type Service interface {
 	// Check if logged in user liked or faved a post
 	GetUserActions(ctx context.Context, userID, postID int) (actions Actions, err error)
 	// Like a post
-	Like(ctx context.Context, userID int, videoID string) error
+	Like(ctx context.Context, userID int, videoID string) (int64, error)
 	// Get paginated posts
 	GetPosts(ctx context.Context, page int, orderBy string) ([]Post, error)
 	// Get paginated category posts

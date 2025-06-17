@@ -352,19 +352,20 @@ func (s *Server) postActionHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Attempt to record a user like for this video
 	if action == "like" {
-		if err := s.db.Like(r.Context(), currentUser.ID, videoID); err != nil {
+		rowsAffected, err := s.db.Like(r.Context(), currentUser.ID, videoID)
+		if err != nil {
 			log.Printf("User %d could not like the video %s: %v\n", currentUser.ID, videoID, err)
 			http.Error(w, "Something went wrong.", http.StatusInternalServerError)
 			return
 		}
 
-		// TODO: Account for returning zero rows, not inserting anything
-		// Like no post with this videoID
-
-		if err := s.tm.WriteJSON(w, "Sucess"); err != nil {
-			log.Println(err)
-			http.Error(w, "Something went wrong.", http.StatusInternalServerError)
+		if rowsAffected == 0 {
+			log.Printf("No such video with ID: %s\n", videoID)
+			http.NotFound(w, r)
+			return
 		}
+
+		w.WriteHeader(http.StatusOK)
 		return
 	}
 
