@@ -49,11 +49,6 @@ type Post struct {
 
 var validISO8601 = regexp.MustCompile(`(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:\.\d+)?)S)?`)
 
-// UPDATE or INSERT a post into the database
-func (s *service) UpsertPost(columns ...string) (post Post, err error) {
-	return post, err
-}
-
 const getPostsQuery = `
 SELECT video_id, title, thumbnails, (
 	SELECT COUNT(*) FROM post_like

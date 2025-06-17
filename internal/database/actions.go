@@ -23,9 +23,21 @@ func (s *service) GetUserActions(userID, postID int) (actions Actions, err error
 	return actions, err
 }
 
+const likeQuery = `
+	INSERT INTO post_like (user_id, post_id)
+	SELECT $1, p.id 
+	FROM post AS p 
+	WHERE p.video_id = $2
+	RETURNING *
+`
+
+func (s *service) Like(userID int, videoID string) error {
+	_, err := s.db.Exec(likeQuery, userID, videoID)
+	return err
+}
+
+// func (s *service) Unlike(userID, postID string) error
 // func (s *service) Fave(userID, postID string) error
 // func (s *service) Unfave(userID, postID string) error
-// func (s *service) Like(userID, postID string) error
-// func (s *service) Unlike(userID, postID string) error
 // func (s *service) Edit(postID, title, desc string) error
 // func (s *service) Delete(userID, postID string) error
