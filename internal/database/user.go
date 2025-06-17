@@ -94,29 +94,6 @@ func (s *service) UpdateUserLastSeen(id int, t time.Time) error {
 	return err
 }
 
-const userActionsQuery = `
-SELECT 
-	EXISTS (
-		SELECT 1 FROM post_like
-		WHERE user_id = $1 AND post_id = $2
-	) AS liked,
-	EXISTS (
-		SELECT 1 FROM post_fave
-		WHERE user_id = $1 AND post_id = $2
-	) AS faved
-`
-
-type Actions struct {
-	Liked bool
-	Faved bool
-}
-
-// Check if the user liked a post
-func (s *service) UserActions(userID, postID int) (actions Actions, err error) {
-	err = s.db.QueryRow(userActionsQuery, userID, postID).Scan(&actions)
-	return actions, err
-}
-
 // Helper function to convert string pointer or empty string to sql.NullString
 func NullString(s *string) sql.NullString {
 	if s == nil || *s == "" {
