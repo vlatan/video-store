@@ -25,6 +25,10 @@ type Service interface {
 	Like(ctx context.Context, userID int, videoID string) (int64, error)
 	// Unlike a post
 	Unlike(ctx context.Context, userID int, videoID string) (int64, error)
+	// Favorite a post
+	Fave(ctx context.Context, userID int, videoID string) (int64, error)
+	// Unfavorite a post
+	Unfave(ctx context.Context, userID int, videoID string) (int64, error)
 	// Get paginated posts
 	GetPosts(ctx context.Context, page int, orderBy string) ([]Post, error)
 	// Get paginated category posts
@@ -35,8 +39,7 @@ type Service interface {
 	GetSinglePost(ctx context.Context, videoID string) (post Post, err error)
 	// Get all categories
 	GetCategories(ctx context.Context) ([]Category, error)
-	// Health returns a map of health status information.
-	// The keys and values in the map are service-specific.
+	// A map of health status information.
 	Health(ctx context.Context) map[string]string
 	// Closes the pool and terminates the database connection.
 	Close()

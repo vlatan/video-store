@@ -355,6 +355,10 @@ func (s *Server) postActionHandler(w http.ResponseWriter, r *http.Request) {
 		s.handleLike(w, r, currentUser.ID, videoID)
 	case "unlike":
 		s.handleUnlike(w, r, currentUser.ID, videoID)
+	case "fave":
+		s.handleFave(w, r, currentUser.ID, videoID)
+	case "unfave":
+		s.handleUnfave(w, r, currentUser.ID, videoID)
 	default:
 		http.Error(w, "Invalid action", http.StatusBadRequest)
 	}
