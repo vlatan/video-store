@@ -350,25 +350,14 @@ func (s *Server) postActionHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Attempt to record a user like for this video
-	if action == "like" {
-		rowsAffected, err := s.db.Like(r.Context(), currentUser.ID, videoID)
-		if err != nil {
-			log.Printf("User %d could not like the video %s: %v\n", currentUser.ID, videoID, err)
-			http.Error(w, "Something went wrong.", http.StatusInternalServerError)
-			return
-		}
-
-		if rowsAffected == 0 {
-			log.Printf("No such video with ID: %s\n", videoID)
-			http.NotFound(w, r)
-			return
-		}
-
-		w.WriteHeader(http.StatusOK)
-		return
+	switch action {
+	case "like":
+		s.handleLike(w, r, currentUser.ID, videoID)
+	case "unlike":
+		s.handleUnlike(w, r, currentUser.ID, videoID)
+	default:
+		http.Error(w, "Invalid action", http.StatusBadRequest)
 	}
-
 }
 
 // Handle minified static file from cache

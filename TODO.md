@@ -1,5 +1,12 @@
 * User actions
 
+// edit: update content
+UPDATE posts SET title = $1, description = $2, updated_at = NOW() WHERE id = $3;
+
+// delete: remove everything
+DELETE FROM posts WHERE id = $1 AND user_id = $2;
+
+
 * Do not parse the content.html for every template
 * Modify Cached function to accept a flag whether to return cached or uncached results
   Rename it accordingly

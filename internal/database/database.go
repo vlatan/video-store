@@ -23,6 +23,8 @@ type Service interface {
 	GetUserActions(ctx context.Context, userID, postID int) (actions Actions, err error)
 	// Like a post
 	Like(ctx context.Context, userID int, videoID string) (int64, error)
+	// Unlike a post
+	Unlike(ctx context.Context, userID int, videoID string) (int64, error)
 	// Get paginated posts
 	GetPosts(ctx context.Context, page int, orderBy string) ([]Post, error)
 	// Get paginated category posts
