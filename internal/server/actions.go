@@ -1,6 +1,7 @@
 package server
 
 import (
+	"factual-docs/internal/templates"
 	"log"
 	"net/http"
 )
@@ -99,4 +100,28 @@ func (s *Server) handleUpdateDesc(w http.ResponseWriter, r *http.Request, userID
 		http.NotFound(w, r)
 		return
 	}
+}
+
+// Handle a post description update
+func (s *Server) handleDelete(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
+	rowsAffected, err := s.db.Delete(r.Context(), videoID)
+	if err != nil {
+		log.Printf("User %d could not delete the video %s: %v\n", userID, videoID, err)
+		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
+		return
+	}
+
+	if rowsAffected == 0 {
+		log.Printf("No such video %s to delete.\n", videoID)
+		http.NotFound(w, r)
+		return
+	}
+
+	successDelete := templates.FlashMessage{
+		Message:  "The video has been deleted!",
+		Category: "info",
+	}
+
+	s.storeFlashMessage(w, r, &successDelete)
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }

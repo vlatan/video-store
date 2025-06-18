@@ -73,7 +73,7 @@ func (s *Server) NewData(w http.ResponseWriter, r *http.Request) *templates.Temp
 		24*time.Hour,
 		&categories,
 		func() ([]database.Category, error) {
-			return s.db.GetCategories(r.Context()) // Call the actual underlying database method
+			return s.db.GetCategories(r.Context())
 		},
 	)
 

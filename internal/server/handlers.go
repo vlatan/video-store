@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"factual-docs/internal/database"
 	"factual-docs/internal/redis"
 	"factual-docs/internal/utils"
@@ -20,6 +21,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/markbates/goth/gothic"
 )
 
@@ -266,6 +268,12 @@ func (s *Server) singlePostHandler(w http.ResponseWriter, r *http.Request) {
 		)
 	}
 
+	if errors.Is(err, pgx.ErrNoRows) {
+		log.Println("Can't find the video in DB:", videoID)
+		http.NotFound(w, r)
+		return
+	}
+
 	if err != nil {
 		log.Printf("Error while getting the video '%s' from DB: %v\n", videoID, err)
 		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
@@ -390,7 +398,8 @@ func (s *Server) postActionHandler(w http.ResponseWriter, r *http.Request) {
 		if data.Description != "" {
 			s.handleUpdateDesc(w, r, currentUser.ID, videoID, data.Description)
 		}
-
+	case "delete":
+		s.handleDelete(w, r, currentUser.ID, videoID)
 	default:
 		http.Error(w, "Invalid action", http.StatusBadRequest)
 	}

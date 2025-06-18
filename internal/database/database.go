@@ -34,6 +34,8 @@ type Service interface {
 	UpdateTitle(ctx context.Context, videoID, title string) (int64, error)
 	// Update post description
 	UpdateDesc(ctx context.Context, videoID, description string) (int64, error)
+	// Delete a post
+	Delete(ctx context.Context, videoID string) (int64, error)
 
 	// Get paginated posts
 	GetPosts(ctx context.Context, page int, orderBy string) ([]Post, error)

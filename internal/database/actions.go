@@ -123,4 +123,21 @@ func (s *service) UpdateDesc(ctx context.Context, videoID, description string) (
 	return result.RowsAffected(), nil
 }
 
-// func (s *service) Delete(userID, postID string) error
+const deleteQuery = `
+	WITH dp AS (
+		DELETE FROM post
+		WHERE video_id = $1
+		RETURNING video_id
+	)
+	INSERT INTO deleted_post (video_id)
+	SELECT video_id FROM dp;
+`
+
+// User deletes a post
+func (s *service) Delete(ctx context.Context, videoID string) (int64, error) {
+	result, err := s.db.Exec(ctx, deleteQuery, videoID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
