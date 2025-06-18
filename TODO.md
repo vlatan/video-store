@@ -1,7 +1,5 @@
 * Do not parse the content.html for every template
-* Modify Cached function to accept a flag whether to return cached or uncached results
-  Rename it accordingly
-  
+ 
 * Setup updated_at triggers for the tables
 * Delete user account
 
