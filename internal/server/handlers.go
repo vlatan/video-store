@@ -7,6 +7,7 @@ import (
 	"errors"
 	"factual-docs/internal/database"
 	"factual-docs/internal/redis"
+	"factual-docs/internal/templates"
 	"factual-docs/internal/utils"
 	"factual-docs/web"
 	"fmt"
@@ -376,32 +377,39 @@ func (s *Server) postActionHandler(w http.ResponseWriter, r *http.Request) {
 	case "unfave":
 		s.handleUnfave(w, r, currentUser.ID, videoID)
 	case "edit":
-		var data bodyData
-
-		if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
-			log.Printf("Could not decode the JSON body on path: %s", r.URL.Path)
-			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-			return
-		}
-
-		if data.Title == "" && data.Description == "" {
-			log.Printf("No title and description in body on path: %s", r.URL.Path)
-			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-			return
-		}
-
-		if data.Title != "" {
-			s.handleUpdateTitle(w, r, currentUser.ID, videoID, data.Title)
-			return
-		}
-
-		if data.Description != "" {
-			s.handleUpdateDesc(w, r, currentUser.ID, videoID, data.Description)
-		}
+		s.handleEdit(w, r, videoID, currentUser)
 	case "delete":
 		s.handleDelete(w, r, currentUser.ID, videoID)
 	default:
 		http.Error(w, "Invalid action", http.StatusBadRequest)
+	}
+}
+
+// Handle the title or description update
+func (s *Server) handleEdit(w http.ResponseWriter, r *http.Request, videoID string, currentUser *templates.User) {
+	var data bodyData
+
+	// Deocode JSON
+	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
+		log.Printf("Could not decode the JSON body on path: %s", r.URL.Path)
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+
+	// Check for title or description
+	if data.Title == "" && data.Description == "" {
+		log.Printf("No title and description in body on path: %s", r.URL.Path)
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+
+	if data.Title != "" {
+		s.handleUpdateTitle(w, r, currentUser.ID, videoID, data.Title)
+		return
+	}
+
+	if data.Description != "" {
+		s.handleUpdateDesc(w, r, currentUser.ID, videoID, data.Description)
 	}
 }
 
