@@ -69,7 +69,7 @@ func (s *Server) handleUnfave(w http.ResponseWriter, r *http.Request, userID int
 	}
 }
 
-// Handle a post unfavorite from user
+// Handle a post title update
 func (s *Server) handleUpdateTitle(w http.ResponseWriter, r *http.Request, userID int, videoID, title string) {
 	rowsAffected, err := s.db.UpdateTitle(r.Context(), videoID, title)
 	if err != nil {
@@ -80,6 +80,22 @@ func (s *Server) handleUpdateTitle(w http.ResponseWriter, r *http.Request, userI
 
 	if rowsAffected == 0 {
 		log.Printf("No such video %s to update the title of.\n", videoID)
+		http.NotFound(w, r)
+		return
+	}
+}
+
+// Handle a post description update
+func (s *Server) handleUpdateDesc(w http.ResponseWriter, r *http.Request, userID int, videoID, description string) {
+	rowsAffected, err := s.db.UpdateDesc(r.Context(), videoID, description)
+	if err != nil {
+		log.Printf("User %d could not update the description of the video %s: %v\n", userID, videoID, err)
+		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
+		return
+	}
+
+	if rowsAffected == 0 {
+		log.Printf("No such video %s to update the description of.\n", videoID)
 		http.NotFound(w, r)
 		return
 	}

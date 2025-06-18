@@ -32,6 +32,8 @@ type Service interface {
 	Unfave(ctx context.Context, userID int, videoID string) (int64, error)
 	// Update post title
 	UpdateTitle(ctx context.Context, videoID, title string) (int64, error)
+	// Update post description
+	UpdateDesc(ctx context.Context, videoID, description string) (int64, error)
 
 	// Get paginated posts
 	GetPosts(ctx context.Context, page int, orderBy string) ([]Post, error)
@@ -41,10 +43,12 @@ type Service interface {
 	SearchPosts(ctx context.Context, searchTerm string, limit, offset int) (posts Posts, err error)
 	// Get single posts given the video ID
 	GetSinglePost(ctx context.Context, videoID string) (post Post, err error)
+
 	// Get all categories
 	GetCategories(ctx context.Context) ([]Category, error)
 	// A map of health status information.
 	Health(ctx context.Context) map[string]string
+
 	// Closes the pool and terminates the database connection.
 	Close()
 }

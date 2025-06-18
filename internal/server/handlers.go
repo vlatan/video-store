@@ -376,9 +376,19 @@ func (s *Server) postActionHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		if data.Title == "" && data.Description == "" {
+			log.Printf("No title and description in body on path: %s", r.URL.Path)
+			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+			return
+		}
+
 		if data.Title != "" {
 			s.handleUpdateTitle(w, r, currentUser.ID, videoID, data.Title)
 			return
+		}
+
+		if data.Description != "" {
+			s.handleUpdateDesc(w, r, currentUser.ID, videoID, data.Description)
 		}
 
 	default:
