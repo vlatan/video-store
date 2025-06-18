@@ -45,23 +45,17 @@ func (s *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var posts []database.Post
-	var err error = nil
-
-	switch data.IsCurrentUserAdmin() {
-	case true:
-		posts, err = s.db.GetPosts(r.Context(), page, orderBy)
-	default:
-		err = redis.Cached(
-			r.Context(),
-			s.rdb,
-			redisKey,
-			24*time.Hour,
-			&posts,
-			func() ([]database.Post, error) {
-				return s.db.GetPosts(r.Context(), page, orderBy)
-			},
-		)
-	}
+	err := redis.GetItems(
+		!data.IsCurrentUserAdmin(),
+		r.Context(),
+		s.rdb,
+		redisKey,
+		24*time.Hour,
+		&posts,
+		func() ([]database.Post, error) {
+			return s.db.GetPosts(r.Context(), page, orderBy)
+		},
+	)
 
 	if err != nil {
 		log.Println(err)
@@ -118,23 +112,17 @@ func (s *Server) categoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var posts []database.Post
-	var err error = nil
-
-	switch data.IsCurrentUserAdmin() {
-	case true:
-		posts, err = s.db.GetCategoryPosts(r.Context(), slug, orderBy, page)
-	default:
-		err = redis.Cached(
-			r.Context(),
-			s.rdb,
-			redisKey,
-			24*time.Hour,
-			&posts,
-			func() ([]database.Post, error) {
-				return s.db.GetCategoryPosts(r.Context(), slug, orderBy, page)
-			},
-		)
-	}
+	err := redis.GetItems(
+		!data.IsCurrentUserAdmin(),
+		r.Context(),
+		s.rdb,
+		redisKey,
+		24*time.Hour,
+		&posts,
+		func() ([]database.Post, error) {
+			return s.db.GetCategoryPosts(r.Context(), slug, orderBy, page)
+		},
+	)
 
 	if err != nil {
 		log.Println(err)
@@ -181,31 +169,27 @@ func (s *Server) searchHandler(w http.ResponseWriter, r *http.Request) {
 	data := s.NewData(w, r)
 	data.SearchQuery = searchQuery
 
-	// For search posts we are using the posts struct,
-	// so we can add total results and time took
-	var posts database.Posts
-	var err error = nil
-
 	limit := s.config.PostsPerPage
 	offset := (page - 1) * limit
 
 	start := time.Now()
-	switch data.IsCurrentUserAdmin() {
-	case true:
-		posts, err = s.db.SearchPosts(r.Context(), searchQuery, limit, offset)
-	default:
-		encodedSearchQuery := utils.EscapeTrancateString(searchQuery, 100)
-		err = redis.Cached(
-			r.Context(),
-			s.rdb,
-			fmt.Sprintf("posts:search:page:%d:%s", page, encodedSearchQuery),
-			24*time.Hour,
-			&posts,
-			func() (database.Posts, error) {
-				return s.db.SearchPosts(r.Context(), searchQuery, limit, offset)
-			},
-		)
-	}
+	encodedSearchQuery := utils.EscapeTrancateString(searchQuery, 100)
+
+	// For search posts we are using the database.Posts struct,
+	// so we can add total results and time took
+	var posts database.Posts
+	err := redis.GetItems(
+		!data.IsCurrentUserAdmin(),
+		r.Context(),
+		s.rdb,
+		fmt.Sprintf("posts:search:page:%d:%s", page, encodedSearchQuery),
+		24*time.Hour,
+		&posts,
+		func() (database.Posts, error) {
+			return s.db.SearchPosts(r.Context(), searchQuery, limit, offset)
+		},
+	)
+
 	end := time.Since(start)
 
 	if err != nil {
@@ -236,6 +220,7 @@ func (s *Server) searchHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Handle a single post
 func (s *Server) singlePostHandler(w http.ResponseWriter, r *http.Request) {
 	// Get category slug from URL
 	videoID := r.PathValue("video")
@@ -251,23 +236,17 @@ func (s *Server) singlePostHandler(w http.ResponseWriter, r *http.Request) {
 	data := s.NewData(w, r)
 
 	var post database.Post
-	var err error = nil
-
-	switch data.CurrentUser.IsAuthenticated() {
-	case true:
-		post, err = s.db.GetSinglePost(r.Context(), videoID)
-	default:
-		err = redis.Cached(
-			r.Context(),
-			s.rdb,
-			fmt.Sprintf("post:%s", videoID),
-			24*time.Hour,
-			&post,
-			func() (database.Post, error) {
-				return s.db.GetSinglePost(r.Context(), videoID)
-			},
-		)
-	}
+	err := redis.GetItems(
+		!data.CurrentUser.IsAuthenticated(),
+		r.Context(),
+		s.rdb,
+		fmt.Sprintf("post:%s", videoID),
+		24*time.Hour,
+		&post,
+		func() (database.Post, error) {
+			return s.db.GetSinglePost(r.Context(), videoID)
+		},
+	)
 
 	if errors.Is(err, pgx.ErrNoRows) {
 		log.Println("Can't find the video in DB:", videoID)
@@ -302,22 +281,19 @@ func (s *Server) singlePostHandler(w http.ResponseWriter, r *http.Request) {
 		data.CurrentPost.CurrentUserFaved = userActions.Faved
 	}
 
+	// Ignore the error on related posts, no posts will be shown
 	var relatedPosts []database.Post
-	switch data.CurrentUser.IsAuthenticated() {
-	case true:
-		relatedPosts, _ = s.getRelatedPosts(r.Context(), post.Title)
-	default:
-		redis.Cached(
-			r.Context(),
-			s.rdb,
-			fmt.Sprintf("post:%s:related_posts", videoID),
-			24*time.Hour,
-			&relatedPosts,
-			func() ([]database.Post, error) {
-				return s.getRelatedPosts(r.Context(), post.Title)
-			},
-		)
-	}
+	redis.GetItems(
+		!data.CurrentUser.IsAuthenticated(),
+		r.Context(),
+		s.rdb,
+		fmt.Sprintf("post:%s:related_posts", videoID),
+		24*time.Hour,
+		&relatedPosts,
+		func() ([]database.Post, error) {
+			return s.getRelatedPosts(r.Context(), post.Title)
+		},
+	)
 
 	data.CurrentPost.RelatedPosts = relatedPosts
 	if err := s.tm.Render(w, "post", data); err != nil {

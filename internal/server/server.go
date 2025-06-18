@@ -65,8 +65,8 @@ func NewServer() *http.Server {
 func (s *Server) NewData(w http.ResponseWriter, r *http.Request) *templates.TemplateData {
 
 	var categories []database.Category
-
-	redis.Cached(
+	redis.GetItems(
+		true,
 		r.Context(),
 		s.rdb,
 		"categories",

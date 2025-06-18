@@ -12,8 +12,10 @@ import (
 // Generic wrapper getting and setting from cache
 // with provided anonymous function which in implementation will
 // call an underlying database method
-// Returns an error or nil
-func Cached[T any](
+// Returns an error or nil.
+// It can bypass the call from redis altogether if the flag cached is false.
+func GetItems[T any](
+	cached bool,
 	ctx context.Context,
 	redisService Service,
 	cacheKey string,
@@ -21,6 +23,15 @@ func Cached[T any](
 	target *T, // Pointer to the variable where the result should go
 	dbFunc func() (T, error), // Function to get the data if cache miss
 ) error {
+	// Check if the caller needs a cached result at all
+	if !cached {
+		data, err := dbFunc()
+		if err != nil {
+			return err
+		}
+		*target = data // Assign the data to the target pointer
+		return nil
+	}
 
 	// Try to get from Redis cache, unmarshall to target
 	cachedData, err := redisService.Get(ctx, cacheKey)
@@ -40,8 +51,7 @@ func Cached[T any](
 		return err
 	}
 
-	// Assign the data to the target pointer
-	*target = data
+	*target = data // Assign the data to the target pointer
 
 	// Cache the data for later use
 	err = redisService.Set(ctx, cacheKey, data, cacheDuration)
