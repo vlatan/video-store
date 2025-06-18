@@ -2,6 +2,7 @@ package config
 
 import (
 	"log"
+	"time"
 
 	"github.com/caarlos0/env"
 )
@@ -38,10 +39,11 @@ type Config struct {
 	AdSlotSidebar  string `env:"AD_SLOT_SIDEBAR"`
 
 	// Redis
-	RedisHost     string `env:"REDIS_HOST" envDefault:"localhost"`
-	RedisPort     int    `env:"REDIS_PORT" envDefault:"6379"`
-	RedisUsername string `env:"REDIS_USERNAME"`
-	RedisPassword string `env:"REDIS_PASSWORD"`
+	RedisHost     string        `env:"REDIS_HOST" envDefault:"localhost"`
+	RedisPort     int           `env:"REDIS_PORT" envDefault:"6379"`
+	RedisUsername string        `env:"REDIS_USERNAME"`
+	RedisPassword string        `env:"REDIS_PASSWORD"`
+	CacheTimeout  time.Duration `env:"CACHE_TIMEOUT" envDefault:"86400s"`
 
 	// Postgres
 	DBHost     string `env:"DB_HOST" envDefault:"localhost"`

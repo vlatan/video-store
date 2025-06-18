@@ -70,7 +70,7 @@ func (s *Server) NewData(w http.ResponseWriter, r *http.Request) *templates.Temp
 		r.Context(),
 		s.rdb,
 		"categories",
-		24*time.Hour,
+		s.config.CacheTimeout,
 		&categories,
 		func() ([]database.Category, error) {
 			return s.db.GetCategories(r.Context())

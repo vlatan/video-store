@@ -19,7 +19,7 @@ func GetItems[T any](
 	ctx context.Context,
 	redisService Service,
 	cacheKey string,
-	cacheDuration time.Duration,
+	cacheTimeout time.Duration,
 	target *T, // Pointer to the variable where the result should go
 	dbFunc func() (T, error), // Function to get the data if cache miss
 ) error {
@@ -54,7 +54,7 @@ func GetItems[T any](
 	*target = data // Assign the data to the target pointer
 
 	// Cache the data for later use
-	err = redisService.Set(ctx, cacheKey, data, cacheDuration)
+	err = redisService.Set(ctx, cacheKey, data, cacheTimeout)
 	if err != nil {
 		// Don't return an error if unable to set redis cache
 		log.Printf("Error setting cache in Redis for key '%s': %v", cacheKey, err)

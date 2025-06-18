@@ -50,7 +50,7 @@ func (s *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
 		r.Context(),
 		s.rdb,
 		redisKey,
-		24*time.Hour,
+		s.config.CacheTimeout,
 		&posts,
 		func() ([]database.Post, error) {
 			return s.db.GetPosts(r.Context(), page, orderBy)
@@ -117,7 +117,7 @@ func (s *Server) categoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 		r.Context(),
 		s.rdb,
 		redisKey,
-		24*time.Hour,
+		s.config.CacheTimeout,
 		&posts,
 		func() ([]database.Post, error) {
 			return s.db.GetCategoryPosts(r.Context(), slug, orderBy, page)
@@ -183,7 +183,7 @@ func (s *Server) searchHandler(w http.ResponseWriter, r *http.Request) {
 		r.Context(),
 		s.rdb,
 		fmt.Sprintf("posts:search:page:%d:%s", page, encodedSearchQuery),
-		24*time.Hour,
+		s.config.CacheTimeout,
 		&posts,
 		func() (database.Posts, error) {
 			return s.db.SearchPosts(r.Context(), searchQuery, limit, offset)
@@ -241,7 +241,7 @@ func (s *Server) singlePostHandler(w http.ResponseWriter, r *http.Request) {
 		r.Context(),
 		s.rdb,
 		fmt.Sprintf("post:%s", videoID),
-		24*time.Hour,
+		s.config.CacheTimeout,
 		&post,
 		func() (database.Post, error) {
 			return s.db.GetSinglePost(r.Context(), videoID)
@@ -288,7 +288,7 @@ func (s *Server) singlePostHandler(w http.ResponseWriter, r *http.Request) {
 		r.Context(),
 		s.rdb,
 		fmt.Sprintf("post:%s:related_posts", videoID),
-		24*time.Hour,
+		s.config.CacheTimeout,
 		&relatedPosts,
 		func() ([]database.Post, error) {
 			return s.getRelatedPosts(r.Context(), post.Title)
