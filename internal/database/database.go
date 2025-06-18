@@ -19,6 +19,7 @@ type Service interface {
 	UpdateUserLastSeen(ctx context.Context, id int, t time.Time) error
 	// Update or insert a new user
 	UpsertUser(ctx context.Context, u *goth.User, analyticsID string) (int, error)
+
 	// Check if logged in user liked or faved a post
 	GetUserActions(ctx context.Context, userID, postID int) (actions Actions, err error)
 	// Like a post
@@ -29,6 +30,9 @@ type Service interface {
 	Fave(ctx context.Context, userID int, videoID string) (int64, error)
 	// Unfavorite a post
 	Unfave(ctx context.Context, userID int, videoID string) (int64, error)
+	// Update post title
+	UpdateTitle(ctx context.Context, videoID, title string) (int64, error)
+
 	// Get paginated posts
 	GetPosts(ctx context.Context, page int, orderBy string) ([]Post, error)
 	// Get paginated category posts

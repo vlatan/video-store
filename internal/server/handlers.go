@@ -317,8 +317,16 @@ func (s *Server) singlePostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+type bodyData struct {
+	Title       string `json:"title"`
+	Description string `json:"description"`
+}
+
 // Perform an action on a video
 func (s *Server) postActionHandler(w http.ResponseWriter, r *http.Request) {
+
+	// This is a post request, close the body on exit
+	defer r.Body.Close()
 
 	// Validate the YT ID
 	videoID := r.PathValue("video")
@@ -359,6 +367,20 @@ func (s *Server) postActionHandler(w http.ResponseWriter, r *http.Request) {
 		s.handleFave(w, r, currentUser.ID, videoID)
 	case "unfave":
 		s.handleUnfave(w, r, currentUser.ID, videoID)
+	case "edit":
+		var data bodyData
+
+		if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
+			log.Printf("Could not decode the JSON body on path: %s", r.URL.Path)
+			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+			return
+		}
+
+		if data.Title != "" {
+			s.handleUpdateTitle(w, r, currentUser.ID, videoID, data.Title)
+			return
+		}
+
 	default:
 		http.Error(w, "Invalid action", http.StatusBadRequest)
 	}

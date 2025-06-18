@@ -93,5 +93,20 @@ func (s *service) Unfave(ctx context.Context, userID int, videoID string) (int64
 	return result.RowsAffected(), nil
 }
 
+const editTitleQuery = `
+	UPDATE post
+	SET title = $2, updated_at = NOW()
+	WHERE video_id = $1
+`
+
+// User unfavorites a post
+func (s *service) UpdateTitle(ctx context.Context, videoID, title string) (int64, error) {
+	result, err := s.db.Exec(ctx, editTitleQuery, videoID, title)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
 // func (s *service) Edit(postID, title, desc string) error
 // func (s *service) Delete(userID, postID string) error
