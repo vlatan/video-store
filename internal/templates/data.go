@@ -20,7 +20,7 @@ type User struct {
 	AvatarURL      string `json:"avatar_url"`
 	AnalyticsID    string `json:"analytics_id"`
 	LocalAvatarURL string `json:"local_avatar_url"`
-	AccessToken    string `json:"access_token"`
+	AccessToken    string `json:"id_token"`
 }
 
 func (u *User) IsAuthenticated() bool {

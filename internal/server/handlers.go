@@ -576,14 +576,23 @@ func (s *Server) deleteAccountHandler(w http.ResponseWriter, r *http.Request) {
 	// The origin URL of the user
 	redirectTo := getSafeRedirectPath(r)
 
-	if currentUser.Provider == "google" {
-		// TODO: Send revoke request to google
+	// Remove gothic session if any
+	if err := gothic.Logout(w, r); err != nil {
+		log.Printf("Error loging out the user with gothic: %v", err)
+		s.storeFlashMessage(w, r, &failedDeleteAccount)
+		http.Redirect(w, r, redirectTo, http.StatusFound)
+		return
 	}
 
-	if currentUser.Provider == "facebook" {
-		// TODO: Send revoke request to facebook
+	// Remove user session
+	if err := s.logoutUser(w, r); err != nil {
+		log.Printf("Error loging out the user: %v", err)
+		s.storeFlashMessage(w, r, &failedDeleteAccount)
+		http.Redirect(w, r, redirectTo, http.StatusFound)
+		return
 	}
 
+	// Delete the user from DB
 	rowsAffected, err := s.db.DeleteUser(r.Context(), currentUser.ID)
 	if err != nil {
 		log.Printf("Could not delete user %d: %v", currentUser.ID, err)
@@ -599,23 +608,23 @@ func (s *Server) deleteAccountHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// attempt to remove the avatar from disk and redis
+	// Attempt to remove the avatar from disk and redis
 	s.deleteAvatar(r, currentUser.AnalyticsID)
 
-	// Remove gothic session if any
-	if err := gothic.Logout(w, r); err != nil {
-		log.Printf("Error loging out the user with gothic: %v", err)
-		s.storeFlashMessage(w, r, &failedDeleteAccount)
-		http.Redirect(w, r, redirectTo, http.StatusFound)
-		return
+	if currentUser.AccessToken != "" {
+		switch currentUser.Provider {
+		case "google":
+			url := "https://oauth2.googleapis.com/revoke"
+			contentType := "application/x-www-form-urlencoded"
+			body := []byte("token=" + currentUser.AccessToken)
+			response, _ := http.Post(url, contentType, bytes.NewBuffer(body))
+			defer response.Body.Close()
+		}
 	}
 
-	// Remove user's session
-	if err := s.logoutUser(w, r); err != nil {
-		log.Printf("Error loging out the user: %v", err)
-		s.storeFlashMessage(w, r, &failedDeleteAccount)
-		http.Redirect(w, r, redirectTo, http.StatusFound)
-		return
+	// Send revoke request to facebook
+	if currentUser.Provider == "facebook" {
+		// TODO: Send revoke request to facebook
 	}
 
 	s.storeFlashMessage(w, r, &successDeleteAccount)

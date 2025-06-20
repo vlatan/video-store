@@ -56,6 +56,9 @@ func NewCookieStore(cfg *config.Config) *sessions.CookieStore {
 // Store user info in our own session
 func (s *Server) loginUser(w http.ResponseWriter, r *http.Request, gothUser *goth.User) error {
 
+	// jsonData, _ := json.MarshalIndent(gothUser, "", " ")
+	// log.Println(string(jsonData))
+
 	// Generate analytics ID
 	analyticsID := gothUser.UserID + gothUser.Provider + gothUser.Email
 	analyticsID = fmt.Sprintf("%x", md5.Sum([]byte(analyticsID)))
@@ -111,7 +114,7 @@ func (s *Server) getCurrentUser(w http.ResponseWriter, r *http.Request) *templat
 	// This will be a zero time value (January 1, year 1, 00:00:00 UTC) on fail
 	lastSeenDB := session.Values["LastSeenDB"].(time.Time)
 
-	// Check if the DB update is out of sync for an entire date
+	// Check if the DB update is out of sync for an entire day
 	if !sameDate(lastSeenDB, now) {
 		if err := s.db.UpdateUserLastSeen(r.Context(), id, now); err != nil {
 			log.Printf("Couldn't update the last seen in DB on user '%d': %v\n", id, err)
