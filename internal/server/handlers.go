@@ -612,23 +612,41 @@ func (s *Server) deleteAccountHandler(w http.ResponseWriter, r *http.Request) {
 	s.deleteAvatar(r, currentUser.AnalyticsID)
 
 	// Attempt to send revoke request
-	// It will work if the access token is not expired
 	if currentUser.AccessToken != "" {
-		switch currentUser.Provider {
-		case "google":
-			url := "https://oauth2.googleapis.com/revoke"
-			contentType := "application/x-www-form-urlencoded"
-			body := []byte("token=" + currentUser.AccessToken)
-			response, _ := http.Post(url, contentType, bytes.NewBuffer(body))
-			defer response.Body.Close()
-		case "facebook":
-			// TODO: Send revoke request to facebook
-		}
+		revokeLogin(currentUser)
 	}
 
 	s.storeFlashMessage(w, r, &successDeleteAccount)
 	http.Redirect(w, r, redirectTo, http.StatusFound)
 
+}
+
+// Send revoke request. It will work if the access token is not expired.
+func revokeLogin(user *templates.User) (response *http.Response, err error) {
+
+	switch user.Provider {
+	case "google":
+		url := "https://oauth2.googleapis.com/revoke"
+		contentType := "application/x-www-form-urlencoded"
+		body := []byte("token=" + user.AccessToken)
+		response, err = http.Post(url, contentType, bytes.NewBuffer(body))
+	case "facebook":
+		url := fmt.Sprintf("https://graph.facebook.com/v23.0/%s/permissions", user.UserID)
+		body := []byte("access_token=" + user.AccessToken)
+		req, reqErr := http.NewRequest("DELETE", url, bytes.NewBuffer(body))
+		if reqErr != nil {
+			return response, reqErr
+		}
+		client := &http.Client{}
+		response, err = client.Do(req)
+	}
+
+	if err != nil {
+		return response, err
+	}
+
+	defer response.Body.Close()
+	return response, err
 }
 
 func isValidCategory(categories []database.Category, slug string) (database.Category, bool) {
