@@ -133,7 +133,7 @@ func (s *Server) getCurrentUser(w http.ResponseWriter, r *http.Request) *templat
 		Provider:       session.Values["Provider"].(string),
 		AvatarURL:      avatarURL,
 		AnalyticsID:    analyticsID,
-		LocalAvatarURL: s.getLocalAvatar(r, avatarURL, analyticsID),
+		LocalAvatarURL: s.getAvatar(r, avatarURL, analyticsID),
 		AccessToken:    session.Values["AccessToken"].(string),
 	}
 }
@@ -257,7 +257,7 @@ func (s *Server) downloadAvatar(avatarURL, analyticsID string) (string, error) {
 	return hashString, nil
 }
 
-func (s *Server) getLocalAvatar(r *http.Request, avatarURL, analyticsID string) string {
+func (s *Server) getAvatar(r *http.Request, avatarURL, analyticsID string) string {
 	// Get avatar URL from Redis
 	redisKey := fmt.Sprintf("avatar:%s", analyticsID)
 	avatar, err := s.rdb.Get(r.Context(), redisKey)
@@ -283,4 +283,17 @@ func sameDate(t1, t2 time.Time) bool {
 	y1, m1, d1 := t1.Date()
 	y2, m2, d2 := t2.Date()
 	return y1 == y2 && m1 == m2 && d1 == d2
+}
+
+// Delete local avatar if exists
+func (s *Server) deleteAvatar(r *http.Request, analyticsID string) {
+	avatarPath := filepath.Join(s.config.DataVolume, analyticsID+".jpg")
+	if err := os.Remove(avatarPath); err != nil && err != os.ErrNotExist {
+		log.Printf("Could not remove the local avatar %s: %v", avatarPath, err)
+	}
+
+	redisKey := fmt.Sprintf("avatar:%s", analyticsID)
+	if err := s.rdb.Delete(r.Context(), redisKey); err != nil {
+		log.Printf("Could not remove the avatar %s from Redis: %v", redisKey, err)
+	}
 }

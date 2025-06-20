@@ -21,6 +21,8 @@ type Service interface {
 	// Get a value from Redis by key. Returns the value as a string.
 	// Returns redis.Nil error if the key does not exist.
 	Get(ctx context.Context, key string) (string, error)
+	// Delete value in Redis
+	Delete(ctx context.Context, key string) error
 	// Ping the redis server
 	Health(ctx context.Context) map[string]string
 	// Close redis client
@@ -78,6 +80,11 @@ func (s *service) Set(ctx context.Context, key string, value any, expiration tim
 		}
 		return s.rdb.Set(ctx, key, jsonData, expiration).Err()
 	}
+}
+
+// Delete a value in Redis
+func (s *service) Delete(ctx context.Context, key string) error {
+	return s.rdb.Del(ctx, key).Err()
 }
 
 // Check if the redis client is healthy

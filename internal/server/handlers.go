@@ -599,7 +599,8 @@ func (s *Server) deleteAccountHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Println(currentUser.LocalAvatarURL)
+	// attempt to remove the avatar from disk and redis
+	s.deleteAvatar(r, currentUser.AnalyticsID)
 
 	// Remove gothic session if any
 	if err := gothic.Logout(w, r); err != nil {
