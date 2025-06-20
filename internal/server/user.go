@@ -134,7 +134,7 @@ func (s *Server) getCurrentUser(w http.ResponseWriter, r *http.Request) *templat
 		AvatarURL:      avatarURL,
 		AnalyticsID:    analyticsID,
 		LocalAvatarURL: s.getLocalAvatar(r, avatarURL, analyticsID),
-		// AccessToken:    session.Values["AccessToken"].(string),
+		AccessToken:    session.Values["AccessToken"].(string),
 	}
 }
 
