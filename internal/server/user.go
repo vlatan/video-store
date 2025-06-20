@@ -55,10 +55,6 @@ func NewCookieStore(cfg *config.Config) *sessions.CookieStore {
 
 // Store user info in our own session
 func (s *Server) loginUser(w http.ResponseWriter, r *http.Request, gothUser *goth.User) error {
-
-	// jsonData, _ := json.MarshalIndent(gothUser, "", " ")
-	// log.Println(string(jsonData))
-
 	// Generate analytics ID
 	analyticsID := gothUser.UserID + gothUser.Provider + gothUser.Email
 	analyticsID = fmt.Sprintf("%x", md5.Sum([]byte(analyticsID)))

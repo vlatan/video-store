@@ -611,6 +611,8 @@ func (s *Server) deleteAccountHandler(w http.ResponseWriter, r *http.Request) {
 	// Attempt to remove the avatar from disk and redis
 	s.deleteAvatar(r, currentUser.AnalyticsID)
 
+	// Attempt to send revoke request
+	// It will work if the access token is not expired
 	if currentUser.AccessToken != "" {
 		switch currentUser.Provider {
 		case "google":
@@ -619,12 +621,9 @@ func (s *Server) deleteAccountHandler(w http.ResponseWriter, r *http.Request) {
 			body := []byte("token=" + currentUser.AccessToken)
 			response, _ := http.Post(url, contentType, bytes.NewBuffer(body))
 			defer response.Body.Close()
+		case "facebook":
+			// TODO: Send revoke request to facebook
 		}
-	}
-
-	// Send revoke request to facebook
-	if currentUser.Provider == "facebook" {
-		// TODO: Send revoke request to facebook
 	}
 
 	s.storeFlashMessage(w, r, &successDeleteAccount)
