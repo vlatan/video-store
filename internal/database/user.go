@@ -86,11 +86,11 @@ func (s *service) UpsertUser(ctx context.Context, u *goth.User, analyticsID stri
 	return id, err
 }
 
-const deleteUserQuery = "DELETE FROM app_user WHERE id = $1"
+const DeleteUserQuery = "DELETE FROM app_user WHERE id = $1"
 
 // Remove user from DB
-func (s *service) DeleteUSer(ctx context.Context, userID int) (int64, error) {
-	result, err := s.db.Exec(ctx, deleteUserQuery, userID)
+func (s *service) DeleteUser(ctx context.Context, userID int) (int64, error) {
+	result, err := s.db.Exec(ctx, DeleteUserQuery, userID)
 	if err != nil {
 		return 0, err
 	}

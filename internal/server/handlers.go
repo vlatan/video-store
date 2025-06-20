@@ -584,7 +584,7 @@ func (s *Server) deleteAccountHandler(w http.ResponseWriter, r *http.Request) {
 		// TODO: Send revoke request to facebook
 	}
 
-	rowsAffected, err := s.db.DeleteUSer(r.Context(), currentUser.ID)
+	rowsAffected, err := s.db.DeleteUser(r.Context(), currentUser.ID)
 	if err != nil {
 		log.Printf("Could not delete user %d: %v", currentUser.ID, err)
 		s.storeFlashMessage(w, r, &failedDeleteAccount)
