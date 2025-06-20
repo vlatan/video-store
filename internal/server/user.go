@@ -197,6 +197,34 @@ func getSafeRedirectPath(r *http.Request) string {
 	return safePath
 }
 
+func (s *Server) getAvatar(r *http.Request, avatarURL, analyticsID string) string {
+	// Get avatar URL from Redis
+	redisKey := fmt.Sprintf("avatar:%s", analyticsID)
+	avatar, err := s.rdb.Get(r.Context(), redisKey)
+	if err == nil {
+		return avatar
+	}
+
+	// Attempt to download the avatar, set default avatar on fail
+	etag, err := s.downloadAvatar(avatarURL, analyticsID)
+	if err != nil {
+		avatar = "/static/images/default-avatar.jpg"
+		s.rdb.Set(r.Context(), redisKey, avatar, 24*7*time.Hour)
+		return avatar
+	}
+
+	// Save avatar URL to Redis and return
+	avatar = "/static/images/avatars/" + analyticsID + ".jpg?v=" + etag
+	s.rdb.Set(r.Context(), redisKey, avatar, 24*7*time.Hour)
+	return avatar
+}
+
+func sameDate(t1, t2 time.Time) bool {
+	y1, m1, d1 := t1.Date()
+	y2, m2, d2 := t2.Date()
+	return y1 == y2 && m1 == m2 && d1 == d2
+}
+
 // Download remote image (user avatar)
 func (s *Server) downloadAvatar(avatarURL, analyticsID string) (string, error) {
 	// Get remote file
@@ -255,34 +283,6 @@ func (s *Server) downloadAvatar(avatarURL, analyticsID string) (string, error) {
 
 	valid = true
 	return hashString, nil
-}
-
-func (s *Server) getAvatar(r *http.Request, avatarURL, analyticsID string) string {
-	// Get avatar URL from Redis
-	redisKey := fmt.Sprintf("avatar:%s", analyticsID)
-	avatar, err := s.rdb.Get(r.Context(), redisKey)
-	if err == nil {
-		return avatar
-	}
-
-	// Attempt to download the avatar, set default avatar on fail
-	etag, err := s.downloadAvatar(avatarURL, analyticsID)
-	if err != nil {
-		avatar = "/static/images/default-avatar.jpg"
-		s.rdb.Set(r.Context(), redisKey, avatar, 24*7*time.Hour)
-		return avatar
-	}
-
-	// Save avatar URL to Redis and return
-	avatar = "/static/images/avatars/" + analyticsID + ".jpg?v=" + etag
-	s.rdb.Set(r.Context(), redisKey, avatar, 24*7*time.Hour)
-	return avatar
-}
-
-func sameDate(t1, t2 time.Time) bool {
-	y1, m1, d1 := t1.Date()
-	y2, m2, d2 := t2.Date()
-	return y1 == y2 && m1 == m2 && d1 == d2
 }
 
 // Delete local avatar if exists
