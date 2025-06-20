@@ -53,7 +53,7 @@
 			<div class="metadata-block">
 				<h1 class="video-title" itemprop="name">{{ .CurrentPost.Title }}</h1>
 				<div class="social">
-					{{ if .IsCurrentUserAdmin }}
+					{{ if .CurrentUser.IsAuthenticated }}
 					{{ if .CurrentPost.CurrentUserLiked }}
 					<button class="like like-yes">
 						<span data-liked>&#10003;</span>

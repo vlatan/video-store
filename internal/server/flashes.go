@@ -18,7 +18,7 @@ var successLogout = templates.FlashMessage{
 }
 
 var failedLogout = templates.FlashMessage{
-	Message:  "Something went wrong. Logout failed",
+	Message:  "Something went wrong. Logout failed!",
 	Category: "info",
 }
 
@@ -28,6 +28,6 @@ var successDeleteAccount = templates.FlashMessage{
 }
 
 var failedDeleteAccount = templates.FlashMessage{
-	Message:  "Something went wrong. Account deletion failed",
+	Message:  "Something went wrong. Account deletion failed!",
 	Category: "info",
 }

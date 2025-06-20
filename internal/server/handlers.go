@@ -561,7 +561,10 @@ func (s *Server) logoutHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, redirectTo, http.StatusSeeOther)
 }
 
+// Delete the user account
 func (s *Server) deleteAccountHandler(w http.ResponseWriter, r *http.Request) {
+	// This is a post request, close the body
+	defer r.Body.Close()
 
 	// Check if the user is authenticated
 	currentUser := s.getCurrentUser(w, r)
