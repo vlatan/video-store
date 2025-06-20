@@ -19,6 +19,8 @@ type Service interface {
 	UpdateUserLastSeen(ctx context.Context, id int, t time.Time) error
 	// Update or insert a new user
 	UpsertUser(ctx context.Context, u *goth.User, analyticsID string) (int, error)
+	// Delete user
+	DeleteUSer(ctx context.Context, userID int) (int64, error)
 
 	// Check if logged in user liked or faved a post
 	GetUserActions(ctx context.Context, userID, postID int) (actions Actions, err error)

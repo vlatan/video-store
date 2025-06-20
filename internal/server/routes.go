@@ -18,6 +18,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	mux.HandleFunc("GET /auth/{provider}", s.authHandler)
 	mux.HandleFunc("GET /auth/{provider}/callback", s.authCallbackHandler)
 	mux.HandleFunc("GET /logout/{provider}", s.logoutHandler)
+	mux.HandleFunc("POST /account/delete", s.deleteAccountHandler)
 
 	return mux
 }

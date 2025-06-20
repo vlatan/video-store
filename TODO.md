@@ -1,3 +1,5 @@
+* Create Auth middlware
+* CSRF on forms
 * Do not parse the content.html for every template
  
 * Setup updated_at triggers for the tables

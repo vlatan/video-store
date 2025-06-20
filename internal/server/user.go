@@ -20,26 +20,6 @@ import (
 	"github.com/markbates/goth/providers/google"
 )
 
-var successLogin = templates.FlashMessage{
-	Message:  "You've been logged in!",
-	Category: "info",
-}
-
-var failedLogin = templates.FlashMessage{
-	Message:  "Something went wrong. Login failed!",
-	Category: "info",
-}
-
-var successLogout = templates.FlashMessage{
-	Message:  "You've been logged out!",
-	Category: "info",
-}
-
-var failedLogout = templates.FlashMessage{
-	Message:  "Something went wrong. Logout failed",
-	Category: "info",
-}
-
 // Setup Goth library
 func NewCookieStore(cfg *config.Config) *sessions.CookieStore {
 	// Create new cookies store
@@ -99,6 +79,7 @@ func (s *Server) loginUser(w http.ResponseWriter, r *http.Request, gothUser *got
 	session.Values["Provider"] = gothUser.Provider
 	session.Values["AvatarURL"] = gothUser.AvatarURL
 	session.Values["AnalyticsID"] = analyticsID
+	session.Values["AccessToken"] = gothUser.AccessToken
 	session.Values["LastSeen"] = now
 	session.Values["LastSeenDB"] = now
 
@@ -153,6 +134,7 @@ func (s *Server) getCurrentUser(w http.ResponseWriter, r *http.Request) *templat
 		AvatarURL:      avatarURL,
 		AnalyticsID:    analyticsID,
 		LocalAvatarURL: s.getLocalAvatar(r, avatarURL, analyticsID),
+		// AccessToken:    session.Values["AccessToken"].(string),
 	}
 }
 

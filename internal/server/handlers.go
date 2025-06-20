@@ -531,14 +531,15 @@ func (s *Server) authCallbackHandler(w http.ResponseWriter, r *http.Request) {
 // Logout user, delete sessions
 func (s *Server) logoutHandler(w http.ResponseWriter, r *http.Request) {
 
-	// The origin URL of the user
-	redirectTo := getSafeRedirectPath(r)
-
-	// Redirect to home if user is not logged in
-	if user := s.getCurrentUser(w, r); user == nil || user.UserID == "" {
-		http.Redirect(w, r, redirectTo, http.StatusFound)
+	// Check if the user is authenticated
+	currentUser := s.getCurrentUser(w, r)
+	if !currentUser.IsAuthenticated() {
+		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 		return
 	}
+
+	// The origin URL of the user
+	redirectTo := getSafeRedirectPath(r)
 
 	// Remove gothic session if any
 	if err := gothic.Logout(w, r); err != nil {
@@ -558,6 +559,64 @@ func (s *Server) logoutHandler(w http.ResponseWriter, r *http.Request) {
 
 	s.storeFlashMessage(w, r, &successLogout)
 	http.Redirect(w, r, redirectTo, http.StatusSeeOther)
+}
+
+func (s *Server) deleteAccountHandler(w http.ResponseWriter, r *http.Request) {
+
+	// Check if the user is authenticated
+	currentUser := s.getCurrentUser(w, r)
+	if !currentUser.IsAuthenticated() {
+		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+		return
+	}
+
+	// The origin URL of the user
+	redirectTo := getSafeRedirectPath(r)
+
+	if currentUser.Provider == "google" {
+		// TODO: Send revoke request to google
+	}
+
+	if currentUser.Provider == "facebook" {
+		// TODO: Send revoke request to facebook
+	}
+
+	rowsAffected, err := s.db.DeleteUSer(r.Context(), currentUser.ID)
+	if err != nil {
+		log.Printf("Could not delete user %d: %v", currentUser.ID, err)
+		s.storeFlashMessage(w, r, &failedDeleteAccount)
+		http.Redirect(w, r, redirectTo, http.StatusFound)
+		return
+	}
+
+	if rowsAffected == 0 {
+		log.Printf("No such user %d to delete", currentUser.ID)
+		s.storeFlashMessage(w, r, &failedDeleteAccount)
+		http.Redirect(w, r, redirectTo, http.StatusFound)
+		return
+	}
+
+	log.Println(currentUser.LocalAvatarURL)
+
+	// Remove gothic session if any
+	if err := gothic.Logout(w, r); err != nil {
+		log.Printf("Error loging out the user with gothic: %v", err)
+		s.storeFlashMessage(w, r, &failedDeleteAccount)
+		http.Redirect(w, r, redirectTo, http.StatusFound)
+		return
+	}
+
+	// Remove user's session
+	if err := s.logoutUser(w, r); err != nil {
+		log.Printf("Error loging out the user: %v", err)
+		s.storeFlashMessage(w, r, &failedDeleteAccount)
+		http.Redirect(w, r, redirectTo, http.StatusFound)
+		return
+	}
+
+	s.storeFlashMessage(w, r, &successDeleteAccount)
+	http.Redirect(w, r, redirectTo, http.StatusFound)
+
 }
 
 func isValidCategory(categories []database.Category, slug string) (database.Category, bool) {
