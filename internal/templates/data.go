@@ -32,6 +32,13 @@ type FlashMessage struct {
 	Category string
 }
 
+type HTMLErrorData struct {
+	Config  *config.Config
+	Title   string
+	Heading string
+	Text    string
+}
+
 type TemplateData struct {
 	StaticFiles   files.StaticFiles
 	Config        *config.Config
@@ -43,6 +50,7 @@ type TemplateData struct {
 	Categories    []database.Category
 	FlashMessages []*FlashMessage
 	SearchQuery   string
+	HTMLErrorData *HTMLErrorData
 }
 
 func (td *TemplateData) IsCurrentUserAdmin() bool {

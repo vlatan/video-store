@@ -35,6 +35,7 @@ func New() Service {
 		"templates/partials/search.html",
 		"templates/partials/category.html",
 		"templates/partials/post.html",
+		"templates/partials/error.html",
 	}
 
 	m := minify.New()

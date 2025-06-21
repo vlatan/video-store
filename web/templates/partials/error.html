@@ -1,0 +1,20 @@
+{{ define "extra_preload_css" }}
+<link rel="preload" href='{{ .AddVersion "/static/css/error.css" }}' as="style">
+{{ end }}
+
+{{ define "extra_css" }}
+<link rel="stylesheet" type="text/css" href='{{ .AddVersion "/static/css/error.css" }}'>
+{{ end }}
+
+{{ define "title_tag" }}
+{{ .Title }} - {{ .Config.AppName }}
+{{ end }}
+
+{{ define "content" }}
+<div class="error-wrap">
+    <div class="error-content">
+        <h1>{{ .HTMLErrorData.Heading }}</h1>
+        <p>{{ .HTMLErrorData.Text }}</p>
+    </div>
+</div>
+{{ end }}

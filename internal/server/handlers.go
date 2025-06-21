@@ -58,30 +58,39 @@ func (s *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if err != nil {
-		log.Println(err)
-		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
+		log.Printf("Was unabale to fetch posts on path '%s', page %d: %v.\n", r.URL.Path, page, err)
+		if page > 1 {
+			s.JSONError(w, r, http.StatusInternalServerError)
+			return
+		}
+		s.HTMLError(w, r, http.StatusInternalServerError)
 		return
 	}
 
 	if len(posts) == 0 {
-		http.NotFound(w, r)
+		log.Printf("Fetched zero posts on path '%s', page %d\n", r.URL.Path, page)
+		if page > 1 {
+			s.JSONError(w, r, http.StatusNotFound)
+			return
+		}
+		s.HTMLError(w, r, http.StatusNotFound)
 		return
 	}
 
-	// if not the first page return JSON
+	// If not the first page return JSON
 	if page > 1 {
 		time.Sleep(time.Millisecond * 400)
 		if err := s.tm.WriteJSON(w, posts); err != nil {
 			log.Println(err)
-			http.Error(w, "Something went wrong.", http.StatusInternalServerError)
+			s.JSONError(w, r, http.StatusInternalServerError)
 		}
 		return
 	}
 
 	data.Posts.Items = posts
 	if err := s.tm.Render(w, "home", data); err != nil {
-		log.Println(err)
-		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
+		log.Printf("Was unable to render template 'home: %v\n", err)
+		s.HTMLError(w, r, http.StatusInternalServerError)
 	}
 }
 
@@ -662,14 +671,18 @@ func isValidCategory(categories []database.Category, slug string) (database.Cate
 }
 
 // Get page number from the request query param
-// Defaults to 1 if invalid param
-func getPageNum(r *http.Request) int {
-	page := 1
+// Defaults to 1 if invalid page
+func getPageNum(r *http.Request) (page int) {
 	pageStr := r.URL.Query().Get("page")
-	pageInt, err := strconv.Atoi(pageStr)
-	if err == nil || pageInt != 0 {
+	if pageInt, err := strconv.Atoi(pageStr); err == nil {
 		page = pageInt
 	}
+
+	// Do not allow negative or zero pages
+	if page <= 0 {
+		page = 1
+	}
+
 	return page
 }
 
