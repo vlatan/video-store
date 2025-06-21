@@ -35,16 +35,13 @@ func NewServer() *http.Server {
 	// Create new config object
 	cfg := config.New()
 
-	// Create database service
-	db := database.New(cfg)
-
 	// Create new Server struct
 	newServer := &Server{
 		config: cfg,
-		db:     db,
 		sf:     files.New(),         // Create minified files map
-		store:  NewCookieStore(cfg), // Create new cookie store
-		rdb:    redis.New(cfg, db),  // Create new Redis service
+		rdb:    redis.New(cfg),      // Create Redis service
+		db:     database.New(cfg),   // Create database service
+		store:  NewCookieStore(cfg), // Create cookie store
 		tm:     templates.New(),     // Create parsed templates map
 	}
 

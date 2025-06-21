@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"factual-docs/internal/config"
-	"factual-docs/internal/database"
 	"fmt"
 	"log"
 	"sync"
@@ -33,7 +32,6 @@ type Service interface {
 type service struct {
 	rdb    *redis.Client
 	config *config.Config
-	db     database.Service
 }
 
 var (
@@ -42,7 +40,7 @@ var (
 )
 
 // Produce new singleton redis service
-func New(cfg *config.Config, db database.Service) Service {
+func New(cfg *config.Config) Service {
 	once.Do(func() {
 		// Instantiate redis client
 		rdb := redis.NewClient(&redis.Options{
@@ -54,7 +52,6 @@ func New(cfg *config.Config, db database.Service) Service {
 		rdbInstance = &service{
 			rdb:    rdb,
 			config: cfg,
-			db:     db,
 		}
 	})
 
