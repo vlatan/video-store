@@ -13,9 +13,13 @@ type JSONErrorData struct {
 }
 
 // Write HTML error to response
-func (s *Server) HTMLError(w http.ResponseWriter, r *http.Request, statusCode int) {
+func (s *Server) HTMLError(
+	w http.ResponseWriter,
+	r *http.Request,
+	statusCode int,
+	data *templates.TemplateData,
+) {
 	// Craft template data
-	data := s.NewData(w, r)
 	data.HTMLErrorData = &templates.HTMLErrorData{
 		Config: s.config,
 		Title:  strconv.Itoa(statusCode),
