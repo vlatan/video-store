@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"path/filepath"
+	"slices"
 
 	"github.com/tdewolff/minify"
 	"github.com/tdewolff/minify/html"
@@ -38,6 +39,8 @@ func New() Service {
 		"templates/partials/error.html",
 	}
 
+	needsContent := []string{"home", "search", "category"}
+
 	m := minify.New()
 	m.AddFunc("text/html", html.Minify)
 	baseTemplate := template.Must(parseFiles(m, nil, base))
@@ -50,7 +53,13 @@ func New() Service {
 
 		name := filepath.Base(partial)
 		name = name[:len(name)-len(filepath.Ext(name))]
-		tm[name] = template.Must(parseFiles(m, baseTmpl, partial, content))
+
+		part := []string{partial}
+		if slices.Contains(needsContent, name) {
+			part = append(part, content)
+		}
+
+		tm[name] = template.Must(parseFiles(m, baseTmpl, part...))
 	}
 
 	return tm

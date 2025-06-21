@@ -1,11 +1,6 @@
-* HTML Error pages
-  404 Not found
-  method not allowed
-  500 server error
-  400 forbidden
+* Finish handlers with HTML and JSON Error pages
 
 * CSRF on forms
-* Do not parse the content.html for every template
  
 * Setup updated_at triggers for the tables
 * Delete user account
