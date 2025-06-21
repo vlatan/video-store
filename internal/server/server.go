@@ -4,6 +4,7 @@ import (
 	"encoding/gob"
 	"fmt"
 	"net/http"
+	"runtime"
 	"time"
 
 	"factual-docs/internal/config"
@@ -95,5 +96,19 @@ func (s *Server) NewData(w http.ResponseWriter, r *http.Request) *templates.Temp
 		CurrentUser:   s.getCurrentUser(w, r),
 		CurrentURI:    r.RequestURI,
 		FlashMessages: flashMessages,
+	}
+}
+
+// Get basic server stats
+func getServerStats() map[string]any {
+	var m runtime.MemStats
+	runtime.ReadMemStats(&m)
+
+	return map[string]any{
+		"goroutines":   runtime.NumGoroutine(),
+		"memory_alloc": m.Alloc,
+		"memory_sys":   m.Sys,
+		"gc_runs":      m.NumGC,
+		"cpu_count":    runtime.NumCPU(),
 	}
 }

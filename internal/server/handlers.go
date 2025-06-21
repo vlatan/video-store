@@ -452,6 +452,7 @@ func (s *Server) healthHandler(w http.ResponseWriter, r *http.Request) {
 	result := map[string]any{
 		"redis_status":    s.rdb.Health(r.Context()),
 		"database_status": s.db.Health(r.Context()),
+		"server_status":   getServerStats(),
 	}
 
 	status, err := json.Marshal(result)
