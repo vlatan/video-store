@@ -32,6 +32,7 @@ func (s *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Generate template data
 	data := s.NewData(w, r)
+	data.CurrentUser = s.getCurrentUser(w, r)
 
 	// Get page number from a query param
 	page := getPageNum(r)
@@ -92,6 +93,7 @@ func (s *Server) categoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 	// Generate template data (it gets all the categories too)
 	// This is probably wasteful for non-existing category
 	data := s.NewData(w, r)
+	data.CurrentUser = s.getCurrentUser(w, r)
 
 	// Check if the category is valid
 	category, valid := isValidCategory(data.Categories, slug)
@@ -166,6 +168,7 @@ func (s *Server) searchHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Generate the default data
 	data := s.NewData(w, r)
+	data.CurrentUser = s.getCurrentUser(w, r)
 	data.SearchQuery = searchQuery
 
 	limit := s.config.PostsPerPage
@@ -233,6 +236,7 @@ func (s *Server) singlePostHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Generate the default data
 	data := s.NewData(w, r)
+	data.CurrentUser = s.getCurrentUser(w, r)
 
 	var post database.Post
 	err := redis.GetItems(
