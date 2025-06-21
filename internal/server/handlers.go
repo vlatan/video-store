@@ -12,7 +12,6 @@ import (
 	"factual-docs/web"
 	"fmt"
 	"log"
-	"maps"
 	"net/http"
 	"net/url"
 	"path/filepath"
@@ -449,12 +448,13 @@ func (s *Server) staticHandler(w http.ResponseWriter, r *http.Request) {
 // Wrap this with middlware that allows only admins
 func (s *Server) healthHandler(w http.ResponseWriter, r *http.Request) {
 
-	dbStatus := s.db.Health(r.Context())
-	rdbStatus := s.rdb.Health(r.Context())
+	// Construct joined map
+	result := map[string]any{
+		"redis_status":    s.rdb.Health(r.Context()),
+		"database_status": s.db.Health(r.Context()),
+	}
 
-	maps.Copy(dbStatus, rdbStatus)
-
-	status, err := json.Marshal(dbStatus)
+	status, err := json.Marshal(result)
 	if err != nil {
 		http.Error(w,
 			"Failed to marshal health check response",

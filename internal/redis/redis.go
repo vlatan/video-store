@@ -23,8 +23,8 @@ type Service interface {
 	Get(ctx context.Context, key string) (string, error)
 	// Delete value in Redis
 	Delete(ctx context.Context, key string) error
-	// Ping the redis server
-	Health(ctx context.Context) map[string]string
+	// Get simple stats from the redis server
+	Health(ctx context.Context) map[string]any
 	// Close redis client
 	// It returns an error if the connection cannot be closed.
 	Close() error
@@ -88,17 +88,32 @@ func (s *service) Delete(ctx context.Context, key string) error {
 }
 
 // Check if the redis client is healthy
-func (s *service) Health(ctx context.Context) map[string]string {
-	// Perform basic diagnostic to check if the connection is working
-	status, err := s.rdb.Ping(ctx).Result()
+func (s *service) Health(ctx context.Context) map[string]any {
+
+	start := time.Now()
+
+	// Test connectivity
+	ping, err := s.rdb.Ping(ctx).Result()
 	if err != nil {
-		log.Fatal(err)
+		return map[string]any{
+			"status": "unhealthy",
+			"error":  err.Error(),
+		}
 	}
 
-	result := make(map[string]string)
-	result["Redis status"] = status
+	// Get key count
+	keyCount, _ := s.rdb.DBSize(ctx).Result()
 
-	return result
+	// Get server time (useful for checking if server is responsive)
+	serverTime, _ := s.rdb.Time(ctx).Result()
+
+	return map[string]any{
+		"status":      "healthy",
+		"ping":        ping,
+		"response_ms": time.Since(start).Milliseconds(),
+		"total_keys":  keyCount,
+		"server_time": serverTime.Unix(),
+	}
 }
 
 // Close the redis client

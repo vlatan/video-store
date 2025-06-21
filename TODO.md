@@ -1,6 +1,3 @@
-* Create Auth middlware
-* Nicer health page
-
 * HTML Error pages
   404 Not found
   method not allowed
