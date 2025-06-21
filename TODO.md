@@ -1,4 +1,12 @@
 * Create Auth middlware
+* Nicer health page
+
+* HTML Error pages
+  404 Not found
+  method not allowed
+  500 server error
+  400 forbidden
+
 * CSRF on forms
 * Do not parse the content.html for every template
  
@@ -6,7 +14,6 @@
 * Delete user account
 
 * Serve Favicons from root
-* Error pages
 * Protected routes in middleware
 
 * Templates are not minified?

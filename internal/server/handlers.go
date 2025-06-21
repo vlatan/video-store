@@ -330,14 +330,15 @@ func (s *Server) postActionHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check if the user is authenticated
-	currentUser := s.getCurrentUser(w, r)
-	if !currentUser.IsAuthenticated() {
-		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+	// Get current user from the request context
+	currentUser, ok := r.Context().Value(userContextKey).(*templates.User)
+	if !ok {
+		log.Printf("Cannot get user from context on action '%s' on video: %s\n", action, videoID)
+		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
 		return
 	}
 
-	// Check if user is authorized to edit or delete
+	// Check if user is authorized to edit or delete (admin)
 	if (action == "edit" || action == "delete") && currentUser.UserID != s.config.AdminOpenID {
 		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 		return
@@ -445,6 +446,7 @@ func (s *Server) staticHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // DB and Redis health status
+// Wrap this with middlware that allows only admins
 func (s *Server) healthHandler(w http.ResponseWriter, r *http.Request) {
 
 	dbStatus := s.db.Health(r.Context())
@@ -529,14 +531,8 @@ func (s *Server) authCallbackHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // Logout user, delete sessions
+// Wrap this with middleware to allow only authnenticated users
 func (s *Server) logoutHandler(w http.ResponseWriter, r *http.Request) {
-
-	// Check if the user is authenticated
-	currentUser := s.getCurrentUser(w, r)
-	if !currentUser.IsAuthenticated() {
-		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
-		return
-	}
 
 	// The origin URL of the user
 	redirectTo := getSafeRedirectPath(r)
@@ -562,14 +558,16 @@ func (s *Server) logoutHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // Delete the user account
+// Wrap this with middleware to allow only authnenticated users
 func (s *Server) deleteAccountHandler(w http.ResponseWriter, r *http.Request) {
-	// This is a post request, close the body
+	// This is a POST request, close the body
 	defer r.Body.Close()
 
-	// Check if the user is authenticated
-	currentUser := s.getCurrentUser(w, r)
-	if !currentUser.IsAuthenticated() {
-		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+	// Get current user from the request context
+	currentUser, ok := r.Context().Value(userContextKey).(*templates.User)
+	if !ok {
+		log.Printf("User context not found on delete account route.")
+		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
 		return
 	}
 
