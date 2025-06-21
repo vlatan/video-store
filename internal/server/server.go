@@ -25,6 +25,7 @@ type Server struct {
 	sf     files.StaticFiles
 }
 
+// Create new HTTP server
 func NewServer() *http.Server {
 
 	// Register types with gob to be able to use them in sessions
@@ -34,20 +35,17 @@ func NewServer() *http.Server {
 	// Create new config object
 	cfg := config.New()
 
-	// Minify css and js files
-	sf := files.New()
-
 	// Create database service
 	db := database.New(cfg)
 
 	// Create new Server struct
 	newServer := &Server{
 		config: cfg,
-		store:  NewCookieStore(cfg),
 		db:     db,
-		rdb:    redis.New(cfg, db),
-		tm:     templates.New(),
-		sf:     sf,
+		sf:     files.New(),         // Create minified files map
+		store:  NewCookieStore(cfg), // Create new cookie store
+		rdb:    redis.New(cfg, db),  // Create new Redis service
+		tm:     templates.New(),     // Create parsed templates map
 	}
 
 	// Declare Server config

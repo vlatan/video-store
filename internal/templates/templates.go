@@ -16,6 +16,13 @@ import (
 	"github.com/tdewolff/minify/html"
 )
 
+// These are files/dirs within the embedded filesystem 'web'
+const base = "templates/base.html"
+const content = "templates/content.html"
+const partials = "templates/partials"
+
+var needsContent = []string{"home", "search", "category"}
+
 type Service interface {
 	// Write JSON to response
 	WriteJSON(w http.ResponseWriter, data any) error
@@ -25,41 +32,56 @@ type Service interface {
 
 type Templates map[string]*template.Template
 
+// Walk the partials directory and parse the templates.
+// Return a map of templates.
 func New() Service {
-
-	tm := make(Templates)
-
-	const base = "templates/base.html"
-	const content = "templates/partials/content.html"
-	partials := []string{
-		"templates/partials/home.html",
-		"templates/partials/search.html",
-		"templates/partials/category.html",
-		"templates/partials/post.html",
-		"templates/partials/error.html",
-	}
-
-	needsContent := []string{"home", "search", "category"}
 
 	m := minify.New()
 	m.AddFunc("text/html", html.Minify)
+
+	tm := make(Templates)
 	baseTemplate := template.Must(parseFiles(m, nil, base))
 
-	for _, partial := range partials {
+	// Function used to process each file/dir in the root, including the root
+	walkDirFunc := func(path string, info fs.DirEntry, err error) error {
+
+		// The err argument reports an error related to path,
+		// signaling that WalkDir will not walk into that directory.
+		// Returning back the error will cause WalkDir to stop walking the entire tree.
+		// https://pkg.go.dev/io/fs#WalkDirFunc
+		if err != nil {
+			return err
+		}
+
+		// Skip directories
+		if info.IsDir() {
+			return nil
+		}
+
+		// Clone the base
 		baseTmpl, err := baseTemplate.Clone()
 		if err != nil {
 			log.Fatalf("couldn't clone the base '%s' template", base)
 		}
 
-		name := filepath.Base(partial)
+		// Extract the template name
+		name := filepath.Base(path)
 		name = name[:len(name)-len(filepath.Ext(name))]
 
-		part := []string{partial}
+		// Include the "content" if needed
+		part := []string{path}
 		if slices.Contains(needsContent, name) {
 			part = append(part, content)
 		}
 
 		tm[name] = template.Must(parseFiles(m, baseTmpl, part...))
+
+		return nil
+	}
+
+	// Walk the directory and parse each template
+	if err := fs.WalkDir(web.Files, partials, walkDirFunc); err != nil {
+		log.Println(err)
 	}
 
 	return tm
