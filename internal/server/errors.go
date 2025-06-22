@@ -42,7 +42,7 @@ func (s *Server) HTMLError(
 
 	w.WriteHeader(statusCode)
 	if err := s.tm.Render(w, "error", data); err != nil {
-		log.Printf("Was not able to render HTML error on path %s: %v\n", r.URL.Path, err)
+		log.Printf("Was not able to render HTML error on URI '%s': %v", r.RequestURI, err)
 		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
 		return
 	}
@@ -58,7 +58,7 @@ func (s *Server) JSONError(w http.ResponseWriter, r *http.Request, statusCode in
 	}
 
 	if err := s.tm.WriteJSON(w, data); err != nil {
-		log.Printf("Was not able to write JSON error on path %s: %v\n", r.URL.Path, err)
+		log.Printf("Was not able to write JSON error on URI '%s': %v", r.RequestURI, err)
 		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
 	}
 }
