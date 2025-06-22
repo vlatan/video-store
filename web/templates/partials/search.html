@@ -7,10 +7,11 @@
 {{ end }}
 
 {{ define "extra_meta" }}
-<link rel="canonical" href="{{ .CurrentURLPath }}" />
+{{ $canonicalURL := .CurrentURLPath }}
+<link rel="canonical" href="{{ $canonicalURL }}" />
 <meta property='og:title' content='{{ .Title }}'>
 <meta property='og:type' content='article'>
-<meta property='og:url' content='{{ .CurrentURLPath }}'>
+<meta property='og:url' content='{{ $canonicalURL }}'>
 {{ end }}
 
 {{ define "title_tag" }}
