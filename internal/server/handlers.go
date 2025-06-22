@@ -325,7 +325,7 @@ func (s *Server) postActionHandler(w http.ResponseWriter, r *http.Request) {
 	videoID := r.PathValue("video")
 	if validVideoID.FindStringSubmatch(videoID) == nil {
 		log.Println("Not a valid video ID:", videoID)
-		http.NotFound(w, r)
+		s.tm.JSONError(w, r, http.StatusNotFound)
 		return
 	}
 
@@ -334,7 +334,7 @@ func (s *Server) postActionHandler(w http.ResponseWriter, r *http.Request) {
 	allowedActions := []string{"like", "unlike", "fave", "unfave", "edit", "delete"}
 	if !slices.Contains(allowedActions, action) {
 		log.Printf("Not a valid action '%s' on video: %s\n", action, videoID)
-		http.NotFound(w, r)
+		s.tm.JSONError(w, r, http.StatusNotFound)
 		return
 	}
 
@@ -342,13 +342,13 @@ func (s *Server) postActionHandler(w http.ResponseWriter, r *http.Request) {
 	currentUser, ok := r.Context().Value(userContextKey).(*templates.User)
 	if !ok {
 		log.Printf("Cannot get user from context on action '%s' on video: %s\n", action, videoID)
-		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
+		s.tm.JSONError(w, r, http.StatusInternalServerError)
 		return
 	}
 
 	// Check if user is authorized to edit or delete (admin)
 	if (action == "edit" || action == "delete") && currentUser.UserID != s.config.AdminOpenID {
-		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+		s.tm.JSONError(w, r, http.StatusForbidden)
 		return
 	}
 
@@ -366,7 +366,7 @@ func (s *Server) postActionHandler(w http.ResponseWriter, r *http.Request) {
 	case "delete":
 		s.handleDelete(w, r, currentUser.ID, videoID)
 	default:
-		http.Error(w, "Invalid action", http.StatusBadRequest)
+		s.tm.JSONError(w, r, http.StatusBadRequest)
 	}
 }
 
@@ -377,14 +377,14 @@ func (s *Server) handleEdit(w http.ResponseWriter, r *http.Request, videoID stri
 	// Deocode JSON
 	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
 		log.Printf("Could not decode the JSON body on path: %s", r.URL.Path)
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		s.tm.JSONError(w, r, http.StatusBadRequest)
 		return
 	}
 
 	// Check for title or description
 	if data.Title == "" && data.Description == "" {
 		log.Printf("No title and description in body on path: %s", r.URL.Path)
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		s.tm.JSONError(w, r, http.StatusBadRequest)
 		return
 	}
 
@@ -458,25 +458,13 @@ func (s *Server) staticHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Server) healthHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Construct joined map
-	result := map[string]any{
+	data := map[string]any{
 		"redis_status":    s.rdb.Health(r.Context()),
 		"database_status": s.db.Health(r.Context()),
 		"server_status":   getServerStats(),
 	}
 
-	status, err := json.Marshal(result)
-	if err != nil {
-		http.Error(w,
-			"Failed to marshal health check response",
-			http.StatusInternalServerError,
-		)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	if _, err := w.Write(status); err != nil {
-		log.Printf("Failed to write response: %v", err)
-	}
+	s.tm.WriteJSON(w, r, data)
 }
 
 // Provider Auth
@@ -573,16 +561,17 @@ func (s *Server) deleteAccountHandler(w http.ResponseWriter, r *http.Request) {
 	// This is a POST request, close the body
 	defer r.Body.Close()
 
+	// The origin URL of the user
+	redirectTo := getSafeRedirectPath(r)
+
 	// Get current user from the request context
 	currentUser, ok := r.Context().Value(userContextKey).(*templates.User)
 	if !ok {
 		log.Printf("User context not found on delete account route.")
-		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
+		s.storeFlashMessage(w, r, &failedDeleteAccount)
+		http.Redirect(w, r, redirectTo, http.StatusFound)
 		return
 	}
-
-	// The origin URL of the user
-	redirectTo := getSafeRedirectPath(r)
 
 	// Remove gothic session if any
 	if err := gothic.Logout(w, r); err != nil {

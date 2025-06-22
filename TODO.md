@@ -1,4 +1,3 @@
-* Finish handlers with HTML and JSON Error pages
 * CSRF on forms
 * Setup updated_at triggers for the tables
 * Serve Favicons from root

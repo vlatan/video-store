@@ -68,22 +68,21 @@ func (tm Templates) JSONError(w http.ResponseWriter, r *http.Request, statusCode
 	// Stream status code early
 	w.WriteHeader(statusCode)
 
-	// Craft JSON data
+	// Craft data
 	data := JSONErrorData{
 		Error: http.StatusText(statusCode),
 		Code:  statusCode,
 	}
 
-	var buf bytes.Buffer
-	encoder := json.NewEncoder(&buf)
-	err := encoder.Encode(data)
+	// Encode data to JSON
+	jsonData, err := json.Marshal(data)
 	if err != nil {
 		log.Printf("Failed to encode JSON 'error' response on URI '%s': %v", r.RequestURI, err)
 		http.Error(w, http.StatusText(statusCode), statusCode)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	if _, err := buf.WriteTo(w); err != nil {
+	if _, err := w.Write(jsonData); err != nil {
 		// Too late for recovery here, just log the error
 		log.Printf("Failed to write JSON 'error' to response on URI '%s': %v", r.RequestURI, err)
 	}

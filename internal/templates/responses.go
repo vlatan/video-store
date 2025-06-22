@@ -9,17 +9,17 @@ import (
 
 // Write JSON to buffer first and then if succesfull to the response writer
 func (tm Templates) WriteJSON(w http.ResponseWriter, r *http.Request, data any) {
-	var buf bytes.Buffer
-	encoder := json.NewEncoder(&buf)
-	err := encoder.Encode(data)
+	// Encode data to JSON
+	jsonData, err := json.Marshal(data)
 	if err != nil {
 		log.Printf("Failed to encode JSON response on URI '%s': %v", r.RequestURI, err)
 		tm.JSONError(w, r, http.StatusInternalServerError)
 		return
 	}
 
+	// Write to response
 	w.Header().Set("Content-Type", "application/json")
-	if _, err := buf.WriteTo(w); err != nil {
+	if _, err := w.Write(jsonData); err != nil {
 		// Too late for recovery here, just log the error
 		log.Printf("Failed to write JSON to response on URI '%s': %v", r.RequestURI, err)
 	}
