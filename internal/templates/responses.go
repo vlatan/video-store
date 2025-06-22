@@ -9,21 +9,21 @@ import (
 )
 
 // Write JSON to buffer first and then if succesfull to the response writer
-func (tm Templates) WriteJSON(w http.ResponseWriter, data any) error {
+func (tm Templates) WriteJSON(w http.ResponseWriter, r *http.Request, data any) {
 	var buf bytes.Buffer
 	encoder := json.NewEncoder(&buf)
 	err := encoder.Encode(data)
 	if err != nil {
-		return err
+		log.Printf("Failed to encode JSON response on URI '%s': %v", r.RequestURI, err)
+		tm.JSONError(w, r, http.StatusInternalServerError)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	if _, err := buf.WriteTo(w); err != nil {
 		// Too late for recovery here, just log the error
-		log.Printf("failed to write JSON to response: %v", err)
+		log.Printf("Failed to write JSON to response on URI '%s': %v", r.RequestURI, err)
 	}
-
-	return nil
 }
 
 // Check if template exists in the collection of templates (map)
@@ -41,7 +41,6 @@ func (tm Templates) RenderHTML(w http.ResponseWriter, name string, data *Templat
 		return err
 	}
 
-	w.Header().Set("Content-Type", "text/html")
 	if _, err := buf.WriteTo(w); err != nil {
 		// Too late for recovery here, just log the error
 		log.Printf("Failed to write template '%s' to response: %v", name, err)

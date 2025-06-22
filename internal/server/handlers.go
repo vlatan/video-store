@@ -80,10 +80,7 @@ func (s *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
 	// If not the first page return JSON
 	if page > 1 {
 		time.Sleep(time.Millisecond * 400)
-		if err := s.tm.WriteJSON(w, posts); err != nil {
-			log.Printf("Was unabale to write JSON on URI '%s': %v", r.RequestURI, err)
-			s.tm.JSONError(w, r, http.StatusInternalServerError)
-		}
+		s.tm.WriteJSON(w, r, posts)
 		return
 	}
 
@@ -159,10 +156,7 @@ func (s *Server) categoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 	// if not the first page return JSON
 	if page > 1 {
 		time.Sleep(time.Millisecond * 400)
-		if err := s.tm.WriteJSON(w, posts); err != nil {
-			log.Printf("Was unabale to write JSON on URI '%s': %v", r.RequestURI, err)
-			s.tm.JSONError(w, r, http.StatusInternalServerError)
-		}
+		s.tm.WriteJSON(w, r, posts)
 		return
 	}
 
@@ -233,10 +227,7 @@ func (s *Server) searchHandler(w http.ResponseWriter, r *http.Request) {
 	// If not the first page return JSON
 	if page > 1 {
 		time.Sleep(time.Millisecond * 400)
-		if err := s.tm.WriteJSON(w, posts); err != nil {
-			log.Printf("Was unabale to write JSON on URI '%s': %v", r.RequestURI, err)
-			s.tm.JSONError(w, r, http.StatusInternalServerError)
-		}
+		s.tm.WriteJSON(w, r, posts)
 		return
 	}
 	data.Posts = posts
