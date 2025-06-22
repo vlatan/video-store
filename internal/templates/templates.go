@@ -23,10 +23,10 @@ var needsContent = []string{"home", "search", "category"}
 type Service interface {
 	// Write JSON to response
 	WriteJSON(w http.ResponseWriter, r *http.Request, data any)
-	// Write JSON error to response
-	JSONError(w http.ResponseWriter, r *http.Request, statusCode int)
 	// Write HTML template to response
 	RenderHTML(w http.ResponseWriter, r *http.Request, templateName string, data *TemplateData)
+	// Write JSON error to response
+	JSONError(w http.ResponseWriter, r *http.Request, statusCode int)
 	// Write HTML error to response
 	HTMLError(w http.ResponseWriter, r *http.Request, statusCode int, data *TemplateData)
 }
