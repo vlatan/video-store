@@ -98,7 +98,7 @@ func (tm Templates) WriteJSON(w http.ResponseWriter, data any) error {
 
 	w.Header().Set("Content-Type", "application/json")
 	if _, err := buf.WriteTo(w); err != nil {
-		log.Printf("failed to write template to response: %v", err)
+		log.Printf("failed to write JSON to response: %v", err)
 		return err
 	}
 
