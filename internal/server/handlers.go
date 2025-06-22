@@ -58,7 +58,7 @@ func (s *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if err != nil {
-		log.Printf("Was unabale to fetch posts on path '%s', page %d: %v.\n", r.URL.Path, page, err)
+		log.Printf("Was unabale to fetch posts on URI '%s': %v", r.RequestURI, err)
 		if page > 1 {
 			s.JSONError(w, r, http.StatusInternalServerError)
 			return
@@ -68,7 +68,7 @@ func (s *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(posts) == 0 {
-		log.Printf("Fetched zero posts on path '%s', page %d\n", r.URL.Path, page)
+		log.Printf("Fetched zero posts on URI '%s'", r.RequestURI)
 		if page > 1 {
 			s.JSONError(w, r, http.StatusNotFound)
 			return
@@ -81,7 +81,7 @@ func (s *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
 	if page > 1 {
 		time.Sleep(time.Millisecond * 400)
 		if err := s.tm.WriteJSON(w, posts); err != nil {
-			log.Println(err)
+			log.Printf("Was unabale to write JSON on URI '%s': %v", r.RequestURI, err)
 			s.JSONError(w, r, http.StatusInternalServerError)
 		}
 		return
@@ -89,11 +89,12 @@ func (s *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
 
 	data.Posts.Items = posts
 	if err := s.tm.Render(w, "home", data); err != nil {
-		log.Printf("Was unable to render template 'home: %v\n", err)
+		log.Printf("Was unable to render template 'home': %v", err)
 		s.HTMLError(w, r, http.StatusInternalServerError, data)
 	}
 }
 
+// Handle posts in a certain category
 func (s *Server) categoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Get category slug from URL
@@ -107,7 +108,8 @@ func (s *Server) categoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 	// Check if the category is valid
 	category, valid := isValidCategory(data.Categories, slug)
 	if !valid {
-		http.NotFound(w, r)
+		log.Printf("Asked for invalid category '%s' on URI '%s'", slug, r.RequestURI)
+		s.HTMLError(w, r, http.StatusNotFound, data)
 		return
 	}
 
