@@ -88,7 +88,7 @@ func (s *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data.Posts.Items = posts
-	if err := s.tm.Render(w, "home", data); err != nil {
+	if err := s.tm.RenderHTML(w, "home", data); err != nil {
 		log.Printf("Was unable to render template on URI '%s': %v", r.RequestURI, err)
 		s.tm.HTMLError(w, r, http.StatusInternalServerError, data)
 	}
@@ -168,7 +168,7 @@ func (s *Server) categoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	data.Posts.Items = posts
 	data.Title = category.Name
-	if err := s.tm.Render(w, "category", data); err != nil {
+	if err := s.tm.RenderHTML(w, "category", data); err != nil {
 		log.Printf("Was unable to render template on URI '%s': %v", r.RequestURI, err)
 		s.tm.HTMLError(w, r, http.StatusInternalServerError, data)
 	}
@@ -241,7 +241,7 @@ func (s *Server) searchHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	data.Posts = posts
 	data.Posts.TimeTook = fmt.Sprintf("%.2f", end.Seconds())
-	if err := s.tm.Render(w, "search", data); err != nil {
+	if err := s.tm.RenderHTML(w, "search", data); err != nil {
 		log.Printf("Was unable to render template on URI '%s': %v", r.RequestURI, err)
 		s.tm.HTMLError(w, r, http.StatusInternalServerError, data)
 	}
@@ -324,7 +324,7 @@ func (s *Server) singlePostHandler(w http.ResponseWriter, r *http.Request) {
 	)
 
 	data.CurrentPost.RelatedPosts = relatedPosts
-	if err := s.tm.Render(w, "post", data); err != nil {
+	if err := s.tm.RenderHTML(w, "post", data); err != nil {
 		log.Printf("Was unable to render template on URI '%s': %v", r.RequestURI, err)
 		s.tm.HTMLError(w, r, http.StatusInternalServerError, data)
 	}

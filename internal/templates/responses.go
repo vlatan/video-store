@@ -29,7 +29,7 @@ func (tm Templates) WriteJSON(w http.ResponseWriter, data any) error {
 // Check if template exists in the collection of templates (map)
 // Write the template to buffer to check for errors
 // Finally write the template to http response writer
-func (tm Templates) Render(w http.ResponseWriter, name string, data *TemplateData) error {
+func (tm Templates) RenderHTML(w http.ResponseWriter, name string, data *TemplateData) error {
 	tmpl, exists := tm[name]
 
 	if !exists {

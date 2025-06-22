@@ -26,7 +26,7 @@ type Service interface {
 	// Write JSON error to response
 	JSONError(w http.ResponseWriter, r *http.Request, statusCode int)
 	// Write HTML template to response
-	Render(w http.ResponseWriter, name string, data *TemplateData) error
+	RenderHTML(w http.ResponseWriter, name string, data *TemplateData) error
 	// Write HTML error to response
 	HTMLError(w http.ResponseWriter, r *http.Request, statusCode int, data *TemplateData)
 }

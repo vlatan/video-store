@@ -1,6 +1,8 @@
 package templates
 
 import (
+	"bytes"
+	"encoding/json"
 	"log"
 	"net/http"
 	"strconv"
@@ -13,6 +15,9 @@ type JSONErrorData struct {
 
 // Write HTML error to response
 func (tm Templates) HTMLError(w http.ResponseWriter, r *http.Request, statusCode int, data *TemplateData) {
+	// Stream status code early
+	w.WriteHeader(statusCode)
+
 	// Craft template data
 	data.HTMLErrorData = &HTMLErrorData{
 		Title: strconv.Itoa(statusCode),
@@ -33,23 +38,49 @@ func (tm Templates) HTMLError(w http.ResponseWriter, r *http.Request, statusCode
 		data.HTMLErrorData.Text = "Sorry about that. We're working on fixing this."
 	}
 
-	w.WriteHeader(statusCode)
-	if err := tm.Render(w, "error", data); err != nil {
-		log.Printf("Was not able to render HTML error on URI '%s': %v", r.RequestURI, err)
+	tmpl, exists := tm["error"]
+
+	if !exists {
+		log.Printf("Could not find the 'error' template in the map on URI '%s'", r.RequestURI)
 		http.Error(w, http.StatusText(statusCode), statusCode)
+		return
+	}
+
+	var buf bytes.Buffer
+	if err := tmpl.ExecuteTemplate(&buf, "base.html", data); err != nil {
+		log.Printf("Was unable to execute 'error' template on URI '%s': %v", r.RequestURI, err)
+		http.Error(w, http.StatusText(statusCode), statusCode)
+		return
+	}
+
+	if _, err := buf.WriteTo(w); err != nil {
+		// Too late for recovery here, just log the error
+		log.Printf("Writing 'error' template to response failed on URI '%s': %v", r.RequestURI, err)
 	}
 }
 
 // Write JSON error to response
 func (tm Templates) JSONError(w http.ResponseWriter, r *http.Request, statusCode int) {
+	// Stream status code early
+	w.WriteHeader(statusCode)
+
+	// Craft JSON data
 	data := JSONErrorData{
 		Error: http.StatusText(statusCode),
 		Code:  statusCode,
 	}
 
-	w.WriteHeader(statusCode)
-	if err := tm.WriteJSON(w, data); err != nil {
-		log.Printf("Was not able to write JSON error on URI '%s': %v", r.RequestURI, err)
+	var buf bytes.Buffer
+	encoder := json.NewEncoder(&buf)
+	err := encoder.Encode(data)
+	if err != nil {
+		log.Printf("Failed to encode JSON 'error' response on URI '%s': %v", r.RequestURI, err)
 		http.Error(w, http.StatusText(statusCode), statusCode)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if _, err := buf.WriteTo(w); err != nil {
+		// Too late for recovery here, just log the error
+		log.Printf("Failed to write JSON 'error' response on URI '%s': %v", r.RequestURI, err)
 	}
 }
