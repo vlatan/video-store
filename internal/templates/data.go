@@ -33,7 +33,6 @@ type FlashMessage struct {
 }
 
 type HTMLErrorData struct {
-	Config  *config.Config
 	Title   string
 	Heading string
 	Text    string

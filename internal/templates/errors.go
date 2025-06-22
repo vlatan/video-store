@@ -1,7 +1,6 @@
-package server
+package templates
 
 import (
-	"factual-docs/internal/templates"
 	"log"
 	"net/http"
 	"strconv"
@@ -13,16 +12,10 @@ type JSONErrorData struct {
 }
 
 // Write HTML error to response
-func (s *Server) HTMLError(
-	w http.ResponseWriter,
-	r *http.Request,
-	statusCode int,
-	data *templates.TemplateData,
-) {
+func (tm Templates) HTMLError(w http.ResponseWriter, r *http.Request, statusCode int, data *TemplateData) {
 	// Craft template data
-	data.HTMLErrorData = &templates.HTMLErrorData{
-		Config: s.config,
-		Title:  strconv.Itoa(statusCode),
+	data.HTMLErrorData = &HTMLErrorData{
+		Title: strconv.Itoa(statusCode),
 	}
 
 	switch statusCode {
@@ -41,21 +34,21 @@ func (s *Server) HTMLError(
 	}
 
 	w.WriteHeader(statusCode)
-	if err := s.tm.Render(w, "error", data); err != nil {
+	if err := tm.Render(w, "error", data); err != nil {
 		log.Printf("Was not able to render HTML error on URI '%s': %v", r.RequestURI, err)
 		http.Error(w, http.StatusText(statusCode), statusCode)
 	}
 }
 
 // Write JSON error to response
-func (s *Server) JSONError(w http.ResponseWriter, r *http.Request, statusCode int) {
+func (tm Templates) JSONError(w http.ResponseWriter, r *http.Request, statusCode int) {
 	data := JSONErrorData{
 		Error: http.StatusText(statusCode),
 		Code:  statusCode,
 	}
 
 	w.WriteHeader(statusCode)
-	if err := s.tm.WriteJSON(w, data); err != nil {
+	if err := tm.WriteJSON(w, data); err != nil {
 		log.Printf("Was not able to write JSON error on URI '%s': %v", r.RequestURI, err)
 		http.Error(w, http.StatusText(statusCode), statusCode)
 	}

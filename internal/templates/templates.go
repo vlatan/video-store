@@ -1,10 +1,7 @@
 package templates
 
 import (
-	"bytes"
-	"encoding/json"
 	"factual-docs/web"
-	"fmt"
 	"html/template"
 	"io/fs"
 	"log"
@@ -26,8 +23,12 @@ var needsContent = []string{"home", "search", "category"}
 type Service interface {
 	// Write JSON to response
 	WriteJSON(w http.ResponseWriter, data any) error
-	// Gets template from a map by name and executes it
-	Render(w http.ResponseWriter, name string, data any) error
+	// Write JSON error to response
+	JSONError(w http.ResponseWriter, r *http.Request, statusCode int)
+	// Write HTML template to response
+	Render(w http.ResponseWriter, name string, data *TemplateData) error
+	// Write HTML error to response
+	HTMLError(w http.ResponseWriter, r *http.Request, statusCode int, data *TemplateData)
 }
 
 type Templates map[string]*template.Template
@@ -85,48 +86,6 @@ func New() Service {
 	}
 
 	return tm
-}
-
-// Write JSON to buffer first and then if succesfull to the response writer
-func (tm Templates) WriteJSON(w http.ResponseWriter, data any) error {
-	var buf bytes.Buffer
-	encoder := json.NewEncoder(&buf)
-	err := encoder.Encode(data)
-	if err != nil {
-		return err
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	if _, err := buf.WriteTo(w); err != nil {
-		// Too late for recovery here, just log the error
-		log.Printf("failed to write JSON to response: %v", err)
-	}
-
-	return nil
-}
-
-// Check if template exists in the collection of templates (map)
-// Write the template to buffer to check for errors
-// Finally write the template to http response writer
-func (tm Templates) Render(w http.ResponseWriter, name string, data any) error {
-	tmpl, exists := tm[name]
-
-	if !exists {
-		return fmt.Errorf("template %s not found", name)
-	}
-
-	var buf bytes.Buffer
-	if err := tmpl.ExecuteTemplate(&buf, "base.html", data); err != nil {
-		return err
-	}
-
-	w.Header().Set("Content-Type", "text/html")
-	if _, err := buf.WriteTo(w); err != nil {
-		// Too late for recovery here, just log the error
-		log.Printf("Failed to write template '%s' to response: %v", name, err)
-	}
-
-	return nil
 }
 
 // Minify and parse the HTML templates as per the tdewolff/minify docs.

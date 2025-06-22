@@ -60,20 +60,20 @@ func (s *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("Was unabale to fetch posts on URI '%s': %v", r.RequestURI, err)
 		if page > 1 {
-			s.JSONError(w, r, http.StatusInternalServerError)
+			s.tm.JSONError(w, r, http.StatusInternalServerError)
 			return
 		}
-		s.HTMLError(w, r, http.StatusInternalServerError, data)
+		s.tm.HTMLError(w, r, http.StatusInternalServerError, data)
 		return
 	}
 
 	if len(posts) == 0 {
 		log.Printf("Fetched zero posts on URI '%s'", r.RequestURI)
 		if page > 1 {
-			s.JSONError(w, r, http.StatusNotFound)
+			s.tm.JSONError(w, r, http.StatusNotFound)
 			return
 		}
-		s.HTMLError(w, r, http.StatusNotFound, data)
+		s.tm.HTMLError(w, r, http.StatusNotFound, data)
 		return
 	}
 
@@ -82,7 +82,7 @@ func (s *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
 		time.Sleep(time.Millisecond * 400)
 		if err := s.tm.WriteJSON(w, posts); err != nil {
 			log.Printf("Was unabale to write JSON on URI '%s': %v", r.RequestURI, err)
-			s.JSONError(w, r, http.StatusInternalServerError)
+			s.tm.JSONError(w, r, http.StatusInternalServerError)
 		}
 		return
 	}
@@ -90,7 +90,7 @@ func (s *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
 	data.Posts.Items = posts
 	if err := s.tm.Render(w, "home", data); err != nil {
 		log.Printf("Was unable to render template on URI '%s': %v", r.RequestURI, err)
-		s.HTMLError(w, r, http.StatusInternalServerError, data)
+		s.tm.HTMLError(w, r, http.StatusInternalServerError, data)
 	}
 }
 
@@ -109,7 +109,7 @@ func (s *Server) categoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 	category, valid := isValidCategory(data.Categories, slug)
 	if !valid {
 		log.Printf("Asked for invalid category '%s' on URI '%s'", slug, r.RequestURI)
-		s.HTMLError(w, r, http.StatusNotFound, data)
+		s.tm.HTMLError(w, r, http.StatusNotFound, data)
 		return
 	}
 
@@ -139,20 +139,20 @@ func (s *Server) categoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("Was unabale to fetch posts on URI '%s': %v", r.RequestURI, err)
 		if page > 1 {
-			s.JSONError(w, r, http.StatusInternalServerError)
+			s.tm.JSONError(w, r, http.StatusInternalServerError)
 			return
 		}
-		s.HTMLError(w, r, http.StatusInternalServerError, data)
+		s.tm.HTMLError(w, r, http.StatusInternalServerError, data)
 		return
 	}
 
 	if len(posts) == 0 {
 		log.Printf("Fetched zero posts on URI '%s'", r.RequestURI)
 		if page > 1 {
-			s.JSONError(w, r, http.StatusNotFound)
+			s.tm.JSONError(w, r, http.StatusNotFound)
 			return
 		}
-		s.HTMLError(w, r, http.StatusNotFound, data)
+		s.tm.HTMLError(w, r, http.StatusNotFound, data)
 		return
 	}
 
@@ -161,7 +161,7 @@ func (s *Server) categoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 		time.Sleep(time.Millisecond * 400)
 		if err := s.tm.WriteJSON(w, posts); err != nil {
 			log.Printf("Was unabale to write JSON on URI '%s': %v", r.RequestURI, err)
-			s.JSONError(w, r, http.StatusInternalServerError)
+			s.tm.JSONError(w, r, http.StatusInternalServerError)
 		}
 		return
 	}
@@ -170,7 +170,7 @@ func (s *Server) categoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 	data.Title = category.Name
 	if err := s.tm.Render(w, "category", data); err != nil {
 		log.Printf("Was unable to render template on URI '%s': %v", r.RequestURI, err)
-		s.HTMLError(w, r, http.StatusInternalServerError, data)
+		s.tm.HTMLError(w, r, http.StatusInternalServerError, data)
 	}
 }
 
@@ -217,16 +217,16 @@ func (s *Server) searchHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("Was unabale to fetch posts on URI '%s': %v", r.RequestURI, err)
 		if page > 1 {
-			s.JSONError(w, r, http.StatusInternalServerError)
+			s.tm.JSONError(w, r, http.StatusInternalServerError)
 			return
 		}
-		s.HTMLError(w, r, http.StatusInternalServerError, data)
+		s.tm.HTMLError(w, r, http.StatusInternalServerError, data)
 		return
 	}
 
 	if page > 1 && len(posts.Items) == 0 {
 		log.Printf("Fetched zero posts on URI '%s'", r.RequestURI)
-		s.JSONError(w, r, http.StatusNotFound)
+		s.tm.JSONError(w, r, http.StatusNotFound)
 		return
 	}
 
@@ -235,7 +235,7 @@ func (s *Server) searchHandler(w http.ResponseWriter, r *http.Request) {
 		time.Sleep(time.Millisecond * 400)
 		if err := s.tm.WriteJSON(w, posts); err != nil {
 			log.Printf("Was unabale to write JSON on URI '%s': %v", r.RequestURI, err)
-			s.JSONError(w, r, http.StatusInternalServerError)
+			s.tm.JSONError(w, r, http.StatusInternalServerError)
 		}
 		return
 	}
@@ -243,7 +243,7 @@ func (s *Server) searchHandler(w http.ResponseWriter, r *http.Request) {
 	data.Posts.TimeTook = fmt.Sprintf("%.2f", end.Seconds())
 	if err := s.tm.Render(w, "search", data); err != nil {
 		log.Printf("Was unable to render template on URI '%s': %v", r.RequestURI, err)
-		s.HTMLError(w, r, http.StatusInternalServerError, data)
+		s.tm.HTMLError(w, r, http.StatusInternalServerError, data)
 	}
 }
 
@@ -259,7 +259,7 @@ func (s *Server) singlePostHandler(w http.ResponseWriter, r *http.Request) {
 	// Validate the YT ID
 	if validVideoID.FindStringSubmatch(videoID) == nil {
 		log.Println("Not a valid video ID:", videoID)
-		s.HTMLError(w, r, http.StatusNotFound, data)
+		s.tm.HTMLError(w, r, http.StatusNotFound, data)
 		return
 	}
 
@@ -278,19 +278,19 @@ func (s *Server) singlePostHandler(w http.ResponseWriter, r *http.Request) {
 
 	if errors.Is(err, pgx.ErrNoRows) {
 		log.Println("Can't find the video in DB:", videoID)
-		s.HTMLError(w, r, http.StatusNotFound, data)
+		s.tm.HTMLError(w, r, http.StatusNotFound, data)
 		return
 	}
 
 	if err != nil {
 		log.Printf("Error while getting the video '%s' from DB: %v", videoID, err)
-		s.HTMLError(w, r, http.StatusInternalServerError, data)
+		s.tm.HTMLError(w, r, http.StatusInternalServerError, data)
 		return
 	}
 
 	if post.ID == 0 {
 		log.Println("Can't find the video in DB:", videoID)
-		s.HTMLError(w, r, http.StatusNotFound, data)
+		s.tm.HTMLError(w, r, http.StatusNotFound, data)
 		return
 	}
 
@@ -326,7 +326,7 @@ func (s *Server) singlePostHandler(w http.ResponseWriter, r *http.Request) {
 	data.CurrentPost.RelatedPosts = relatedPosts
 	if err := s.tm.Render(w, "post", data); err != nil {
 		log.Printf("Was unable to render template on URI '%s': %v", r.RequestURI, err)
-		s.HTMLError(w, r, http.StatusInternalServerError, data)
+		s.tm.HTMLError(w, r, http.StatusInternalServerError, data)
 	}
 }
 
