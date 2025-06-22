@@ -252,16 +252,16 @@ func (s *Server) singlePostHandler(w http.ResponseWriter, r *http.Request) {
 	// Get category slug from URL
 	videoID := r.PathValue("video")
 
-	// Validate the YT ID
-	if validVideoID.FindStringSubmatch(videoID) == nil {
-		log.Println("Not a valid video ID:", videoID)
-		http.NotFound(w, r)
-		return
-	}
-
 	// Generate the default data
 	data := s.NewData(w, r)
 	data.CurrentUser = s.getCurrentUser(w, r)
+
+	// Validate the YT ID
+	if validVideoID.FindStringSubmatch(videoID) == nil {
+		log.Println("Not a valid video ID:", videoID)
+		s.HTMLError(w, r, http.StatusNotFound, data)
+		return
+	}
 
 	var post database.Post
 	err := redis.GetItems(
@@ -278,19 +278,19 @@ func (s *Server) singlePostHandler(w http.ResponseWriter, r *http.Request) {
 
 	if errors.Is(err, pgx.ErrNoRows) {
 		log.Println("Can't find the video in DB:", videoID)
-		http.NotFound(w, r)
+		s.HTMLError(w, r, http.StatusNotFound, data)
 		return
 	}
 
 	if err != nil {
-		log.Printf("Error while getting the video '%s' from DB: %v\n", videoID, err)
-		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
+		log.Printf("Error while getting the video '%s' from DB: %v", videoID, err)
+		s.HTMLError(w, r, http.StatusInternalServerError, data)
 		return
 	}
 
 	if post.ID == 0 {
 		log.Println("Can't find the video in DB:", videoID)
-		http.NotFound(w, r)
+		s.HTMLError(w, r, http.StatusNotFound, data)
 		return
 	}
 
@@ -325,8 +325,8 @@ func (s *Server) singlePostHandler(w http.ResponseWriter, r *http.Request) {
 
 	data.CurrentPost.RelatedPosts = relatedPosts
 	if err := s.tm.Render(w, "post", data); err != nil {
-		log.Println(err)
-		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
+		log.Printf("Was unable to render template on URI '%s': %v", r.RequestURI, err)
+		s.HTMLError(w, r, http.StatusInternalServerError, data)
 	}
 }
 
