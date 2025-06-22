@@ -87,7 +87,7 @@ func New() Service {
 	return tm
 }
 
-// Write JSOn to buffer first and then if succesfull to the response writer
+// Write JSON to buffer first and then if succesfull to the response writer
 func (tm Templates) WriteJSON(w http.ResponseWriter, data any) error {
 	var buf bytes.Buffer
 	encoder := json.NewEncoder(&buf)
