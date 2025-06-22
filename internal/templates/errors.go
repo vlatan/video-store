@@ -48,14 +48,18 @@ func (tm Templates) HTMLError(w http.ResponseWriter, r *http.Request, statusCode
 
 	var buf bytes.Buffer
 	if err := tmpl.ExecuteTemplate(&buf, "base.html", data); err != nil {
-		log.Printf("Failed to execute the HTML 'error' template on URI '%s': %v", r.RequestURI, err)
+		log.Printf("Failed to execute the HTML template 'error' on URI '%s': %v", r.RequestURI, err)
 		http.Error(w, http.StatusText(statusCode), statusCode)
 		return
 	}
 
 	if _, err := buf.WriteTo(w); err != nil {
 		// Too late for recovery here, just log the error
-		log.Printf("Failed to write the HTML 'error' template to response on URI '%s': %v", r.RequestURI, err)
+		log.Printf(
+			"Failed to write the HTML template 'error' to response on URI '%s': %v",
+			r.RequestURI,
+			err,
+		)
 	}
 }
 

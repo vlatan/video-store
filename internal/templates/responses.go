@@ -28,24 +28,34 @@ func (tm Templates) WriteJSON(w http.ResponseWriter, r *http.Request, data any) 
 // Check if template exists in the collection of templates (map)
 // Write the template to buffer to check for errors
 // Finally write the template to http response writer
-func (tm Templates) RenderHTML(w http.ResponseWriter, r *http.Request, name string, data *TemplateData) {
-	tmpl, exists := tm[name]
+func (tm Templates) RenderHTML(w http.ResponseWriter, r *http.Request, templateName string, data *TemplateData) {
+	tmpl, exists := tm[templateName]
 
 	if !exists {
-		log.Printf("Could not find the '%s' template on URI '%s'", name, r.RequestURI)
+		log.Printf("Could not find the '%s' template on URI '%s'", templateName, r.RequestURI)
 		tm.HTMLError(w, r, http.StatusInternalServerError, data)
 		return
 	}
 
 	var buf bytes.Buffer
 	if err := tmpl.ExecuteTemplate(&buf, "base.html", data); err != nil {
-		log.Printf("Failed to execute the HTML '%s' template on URI '%s': %v", name, r.RequestURI, err)
+		log.Printf(
+			"Failed to execute the HTML template '%s' on URI '%s': %v",
+			templateName,
+			r.RequestURI,
+			err,
+		)
 		tm.HTMLError(w, r, http.StatusInternalServerError, data)
 		return
 	}
 
 	if _, err := buf.WriteTo(w); err != nil {
 		// Too late for recovery here, just log the error
-		log.Printf("Failed to write the HTML '%s' template to response on URI '%s': %v", name, r.RequestURI, err)
+		log.Printf(
+			"Failed to write the HTML template '%s' to response on URI '%s': %v",
+			templateName,
+			r.RequestURI,
+			err,
+		)
 	}
 }

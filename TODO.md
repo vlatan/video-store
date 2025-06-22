@@ -1,4 +1,3 @@
-* Call error methods in render and simplify error handling in handlers
 * Finish handlers with HTML and JSON Error pages
 * CSRF on forms
 * Setup updated_at triggers for the tables
