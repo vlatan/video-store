@@ -41,21 +41,21 @@ func (tm Templates) HTMLError(w http.ResponseWriter, r *http.Request, statusCode
 	tmpl, exists := tm["error"]
 
 	if !exists {
-		log.Printf("Could not find the 'error' template in the map on URI '%s'", r.RequestURI)
+		log.Printf("Could not find the 'error' template on URI '%s'", r.RequestURI)
 		http.Error(w, http.StatusText(statusCode), statusCode)
 		return
 	}
 
 	var buf bytes.Buffer
 	if err := tmpl.ExecuteTemplate(&buf, "base.html", data); err != nil {
-		log.Printf("Was unable to execute 'error' template on URI '%s': %v", r.RequestURI, err)
+		log.Printf("Failed to execute the HTML 'error' template on URI '%s': %v", r.RequestURI, err)
 		http.Error(w, http.StatusText(statusCode), statusCode)
 		return
 	}
 
 	if _, err := buf.WriteTo(w); err != nil {
 		// Too late for recovery here, just log the error
-		log.Printf("Writing 'error' template to response failed on URI '%s': %v", r.RequestURI, err)
+		log.Printf("Failed to write the HTML 'error' template to response on URI '%s': %v", r.RequestURI, err)
 	}
 }
 
@@ -81,6 +81,6 @@ func (tm Templates) JSONError(w http.ResponseWriter, r *http.Request, statusCode
 	w.Header().Set("Content-Type", "application/json")
 	if _, err := buf.WriteTo(w); err != nil {
 		// Too late for recovery here, just log the error
-		log.Printf("Failed to write JSON 'error' response on URI '%s': %v", r.RequestURI, err)
+		log.Printf("Failed to write JSON 'error' to response on URI '%s': %v", r.RequestURI, err)
 	}
 }
