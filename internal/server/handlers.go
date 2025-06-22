@@ -89,7 +89,7 @@ func (s *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
 
 	data.Posts.Items = posts
 	if err := s.tm.Render(w, "home", data); err != nil {
-		log.Printf("Was unable to render template 'home': %v", err)
+		log.Printf("Was unable to render template on URI '%s': %v", r.RequestURI, err)
 		s.HTMLError(w, r, http.StatusInternalServerError, data)
 	}
 }
@@ -137,13 +137,22 @@ func (s *Server) categoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if err != nil {
-		log.Println(err)
-		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
+		log.Printf("Was unabale to fetch posts on URI '%s': %v", r.RequestURI, err)
+		if page > 1 {
+			s.JSONError(w, r, http.StatusInternalServerError)
+			return
+		}
+		s.HTMLError(w, r, http.StatusInternalServerError, data)
 		return
 	}
 
 	if len(posts) == 0 {
-		http.NotFound(w, r)
+		log.Printf("Fetched zero posts on URI '%s'", r.RequestURI)
+		if page > 1 {
+			s.JSONError(w, r, http.StatusNotFound)
+			return
+		}
+		s.HTMLError(w, r, http.StatusNotFound, data)
 		return
 	}
 
@@ -151,8 +160,8 @@ func (s *Server) categoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 	if page > 1 {
 		time.Sleep(time.Millisecond * 400)
 		if err := s.tm.WriteJSON(w, posts); err != nil {
-			log.Println(err)
-			http.Error(w, "Something went wrong.", http.StatusInternalServerError)
+			log.Printf("Was unabale to write JSON on URI '%s': %v", r.RequestURI, err)
+			s.JSONError(w, r, http.StatusInternalServerError)
 		}
 		return
 	}
@@ -160,8 +169,8 @@ func (s *Server) categoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 	data.Posts.Items = posts
 	data.Title = category.Name
 	if err := s.tm.Render(w, "category", data); err != nil {
-		log.Println(err)
-		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
+		log.Printf("Was unable to render template on URI '%s': %v", r.RequestURI, err)
+		s.HTMLError(w, r, http.StatusInternalServerError, data)
 	}
 }
 
@@ -206,30 +215,35 @@ func (s *Server) searchHandler(w http.ResponseWriter, r *http.Request) {
 	end := time.Since(start)
 
 	if err != nil {
-		log.Println(err)
-		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
+		log.Printf("Was unabale to fetch posts on URI '%s': %v", r.RequestURI, err)
+		if page > 1 {
+			s.JSONError(w, r, http.StatusInternalServerError)
+			return
+		}
+		s.HTMLError(w, r, http.StatusInternalServerError, data)
 		return
 	}
 
 	if page > 1 && len(posts.Items) == 0 {
-		http.NotFound(w, r)
+		log.Printf("Fetched zero posts on URI '%s'", r.RequestURI)
+		s.JSONError(w, r, http.StatusNotFound)
 		return
 	}
 
-	// if not the first page return JSON
+	// If not the first page return JSON
 	if page > 1 {
 		time.Sleep(time.Millisecond * 400)
-		if err := s.tm.WriteJSON(w, posts.Items); err != nil {
-			log.Println(err)
-			http.Error(w, "Something went wrong.", http.StatusInternalServerError)
+		if err := s.tm.WriteJSON(w, posts); err != nil {
+			log.Printf("Was unabale to write JSON on URI '%s': %v", r.RequestURI, err)
+			s.JSONError(w, r, http.StatusInternalServerError)
 		}
 		return
 	}
 	data.Posts = posts
 	data.Posts.TimeTook = fmt.Sprintf("%.2f", end.Seconds())
 	if err := s.tm.Render(w, "search", data); err != nil {
-		log.Println(err)
-		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
+		log.Printf("Was unable to render template on URI '%s': %v", r.RequestURI, err)
+		s.HTMLError(w, r, http.StatusInternalServerError, data)
 	}
 }
 
