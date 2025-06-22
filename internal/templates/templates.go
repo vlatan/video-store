@@ -120,6 +120,7 @@ func (tm Templates) Render(w http.ResponseWriter, name string, data any) error {
 		return err
 	}
 
+	w.Header().Set("Content-Type", "text/html")
 	if _, err := buf.WriteTo(w); err != nil {
 		log.Printf("failed to write template to response: %v", err)
 		return err

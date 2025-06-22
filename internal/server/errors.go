@@ -50,13 +50,12 @@ func (s *Server) HTMLError(
 
 // Write JSON error to response
 func (s *Server) JSONError(w http.ResponseWriter, r *http.Request, statusCode int) {
-	w.WriteHeader(statusCode)
-
 	data := JSONErrorData{
 		Error: http.StatusText(statusCode),
 		Code:  statusCode,
 	}
 
+	w.WriteHeader(statusCode)
 	if err := s.tm.WriteJSON(w, data); err != nil {
 		log.Printf("Was not able to write JSON error on URI '%s': %v", r.RequestURI, err)
 		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
