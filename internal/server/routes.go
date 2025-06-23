@@ -20,5 +20,8 @@ func (s *Server) RegisterRoutes() http.Handler {
 	mux.HandleFunc("GET /logout/{provider}", s.IsAuthenticated(s.logoutHandler))
 	mux.HandleFunc("POST /account/delete", s.IsAuthenticated(s.deleteAccountHandler))
 
-	return mux
+	// Chain middlwares that apply to all requests
+	handler := s.muxMiddlewares(s.recoverPanic, s.securityHeaders)(mux)
+
+	return handler
 }

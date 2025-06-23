@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"log"
 	"net/http"
 )
 
@@ -51,5 +52,56 @@ func (s *Server) IsAdmin(next http.HandlerFunc) http.HandlerFunc {
 
 		// Serve forbidden error
 		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+	}
+}
+
+// Do not crash the app on panic, serve 500 error to the client
+func (s *Server) recoverPanic(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if err := recover(); err != nil {
+				// Log the panic with stack trace
+				log.Printf("Panic in %s %s: %#v", r.Method, r.URL.Path, err)
+
+				// Return 500 to client
+				http.Error(w, "Something went wrong", http.StatusInternalServerError)
+			}
+		}()
+		next.ServeHTTP(w, r)
+	})
+}
+
+// Add security headers to request
+func (s *Server) securityHeaders(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Prevent MIME type sniffing
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+
+		// XSS Protection
+		w.Header().Set("X-XSS-Protection", "1; mode=block")
+
+		// Prevent clickjacking
+		w.Header().Set("X-Frame-Options", "SAMEORIGIN")
+
+		// HSTS (HTTPS only)
+		w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+
+		// Referrer Policy
+		w.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
+
+		// Permissions Policy
+		w.Header().Set("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+func (s *Server) muxMiddlewares(middlewares ...func(http.Handler) http.Handler) func(http.Handler) http.Handler {
+	return func(final http.Handler) http.Handler {
+		// Apply middlewares in reverse order
+		for i := len(middlewares) - 1; i >= 0; i-- {
+			final = middlewares[i](final)
+		}
+		return final
 	}
 }
