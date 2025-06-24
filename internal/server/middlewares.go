@@ -99,7 +99,7 @@ func (s *Server) createCSRFMiddleware() func(http.Handler) http.Handler {
 	// Create the csrf middleware as per the gorilla/csrf documentation
 	csrfMiddleware := csrf.Protect(
 		[]byte(s.config.SecretKey),
-		csrf.Secure(false),
+		csrf.Secure(!s.config.Debug),
 		csrf.Path("/"),
 	)
 
