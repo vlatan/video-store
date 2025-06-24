@@ -13,6 +13,7 @@ import (
 	"factual-docs/internal/redis"
 	"factual-docs/internal/templates"
 
+	"github.com/gorilla/csrf"
 	"github.com/gorilla/sessions"
 )
 
@@ -90,6 +91,7 @@ func (s *Server) NewData(w http.ResponseWriter, r *http.Request) *templates.Temp
 		Categories:    categories,
 		CurrentURI:    r.RequestURI,
 		FlashMessages: flashMessages,
+		CSRFField:     csrf.TemplateField(r),
 	}
 }
 

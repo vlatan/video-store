@@ -4,6 +4,7 @@ import (
 	"factual-docs/internal/config"
 	"factual-docs/internal/database"
 	"factual-docs/internal/files"
+	"html/template"
 	"net/url"
 	"strings"
 	"time"
@@ -50,6 +51,7 @@ type TemplateData struct {
 	FlashMessages []*FlashMessage
 	SearchQuery   string
 	HTMLErrorData *HTMLErrorData
+	CSRFField     template.HTML
 }
 
 func (td *TemplateData) IsCurrentUserAdmin() bool {

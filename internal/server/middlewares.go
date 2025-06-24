@@ -4,6 +4,8 @@ import (
 	"context"
 	"log"
 	"net/http"
+
+	"github.com/gorilla/csrf"
 )
 
 type contextKey struct {
@@ -14,7 +16,7 @@ var userContextKey = contextKey{name: "user"}
 var adminContextKey = contextKey{name: "admin"}
 
 // Check if the user is authenticated
-func (s *Server) IsAuthenticated(next http.HandlerFunc) http.HandlerFunc {
+func (s *Server) isAuthenticated(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// If the user is authenticated move onto the next handler
 		if currentUser := s.getCurrentUser(w, r); currentUser.IsAuthenticated() {
@@ -35,7 +37,7 @@ func (s *Server) IsAuthenticated(next http.HandlerFunc) http.HandlerFunc {
 }
 
 // Check if the user is admin
-func (s *Server) IsAdmin(next http.HandlerFunc) http.HandlerFunc {
+func (s *Server) isAdmin(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// If the user is admin move onto the next handler
 		if currentUser := s.getCurrentUser(w, r); currentUser.UserID == s.config.AdminOpenID {
@@ -76,27 +78,43 @@ func (s *Server) securityHeaders(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Prevent MIME type sniffing
 		w.Header().Set("X-Content-Type-Options", "nosniff")
-
 		// XSS Protection
 		w.Header().Set("X-XSS-Protection", "1; mode=block")
-
 		// Prevent clickjacking
 		w.Header().Set("X-Frame-Options", "SAMEORIGIN")
-
 		// HSTS (HTTPS only)
 		w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
-
 		// Referrer Policy
 		w.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
-
 		// Permissions Policy
 		w.Header().Set("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
-
 		next.ServeHTTP(w, r)
 	})
 }
 
-func (s *Server) muxMiddlewares(middlewares ...func(http.Handler) http.Handler) func(http.Handler) http.Handler {
+// Create CSRF middlware with added plain text option for local development
+func (s *Server) createCSRFMiddleware() func(http.Handler) http.Handler {
+	// Create the csrf middleware as per the documentation
+	csrfMiddleware := csrf.Protect(
+		[]byte(s.config.SecretKey),
+		csrf.Secure(false),
+		csrf.Path("/"),
+	)
+
+	// Return the wrapper that sets context before calling CSRF
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if s.config.Debug {
+				ctx := context.WithValue(r.Context(), csrf.PlaintextHTTPContextKey, true)
+				r = r.WithContext(ctx)
+			}
+			// Call the pre-created CSRF middleware
+			csrfMiddleware(next).ServeHTTP(w, r)
+		})
+	}
+}
+
+func (s *Server) applyToAll(middlewares ...func(http.Handler) http.Handler) func(http.Handler) http.Handler {
 	return func(final http.Handler) http.Handler {
 		// Apply middlewares in reverse order
 		for i := len(middlewares) - 1; i >= 0; i-- {

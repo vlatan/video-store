@@ -153,6 +153,7 @@
 
 				<div data-body="account" class="modal">
 					<form class="modal-content" action="/account/delete" method="POST">
+						{{ .CSRFField }}
 						<span data-close="account" class="close-modal" title="Close">&times;</span>
 						<h2 class="modal-title">Delete Account</h2>
 						<p>Are you sure you want to delete your account?<br>
