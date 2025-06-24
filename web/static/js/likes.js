@@ -50,6 +50,8 @@ const listenForAction = (event, action) => {
                     } else {
                         setFaveStatus(currentAction);
                     }
+                } else {
+                    setAlert("Sorry, could not record that action!")
                 }
             });
     }

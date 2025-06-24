@@ -16,9 +16,11 @@ editDescriptionButton.addEventListener('click', () => {
         postData(url, { description: videoDescription.innerText })
             .then(response => {
                 if (response.ok) {
-                    setAlert("Description succesfully published!");
                     originalDescription = videoDescription.innerText;
-                    unpublishedWrap.replaceWith(videoDescription);
+                    if (unpublishedWrap) {
+                        unpublishedWrap.replaceWith(videoDescription);
+                    }
+                    setAlert("Description succesfully updated!");
                 } else {
                     videoDescription.innerText = originalDescription;
                     setAlert("Sorry, something went wrong!");

@@ -15,8 +15,8 @@ editTitleButton.addEventListener('click', () => {
         postData(url, { title: videoTitle.innerText })
             .then(response => {
                 if (response.ok) {
-                    setAlert("Title succesfully edited!");
                     originalTitle = videoTitle.innerText;
+                    setAlert("Title succesfully updated!");
                 } else {
                     videoTitle.innerText = originalTitle;
                     setAlert("Sorry, something went wrong!");
