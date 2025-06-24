@@ -1,3 +1,6 @@
+* Should CSRF middleware run on static and other unnecessary urls
+* Fix JS concole error on desc edit
+* On like filure set alert
 * CSRF on forms
 * Setup updated_at triggers for the tables
 * Serve Favicons from root

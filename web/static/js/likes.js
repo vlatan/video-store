@@ -33,11 +33,6 @@ const setLikeCounter = action => {
     document.querySelector('[data-likes]').textContent = text;
 };
 
-const performAction = async action => {
-    const url = `${window.location.pathname}${action}`;
-    return await fetch(url, { method: 'POST' });
-};
-
 const listenForAction = (event, action) => {
     const actionElement = event.target.closest(`.${action}`);
     if (actionElement) {
@@ -47,7 +42,7 @@ const listenForAction = (event, action) => {
         if (actionElement.classList.contains(`${action}-no`)) {
             currentAction = `un${action}`;
         }
-        performAction(currentAction)
+        postData(`${window.location.pathname}${currentAction}`)
             .then(response => {
                 if (response.ok) {
                     if (currentAction.includes('like')) {
