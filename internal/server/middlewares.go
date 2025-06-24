@@ -105,8 +105,7 @@ func (s *Server) createCSRFMiddleware() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if s.config.Debug {
-				ctx := context.WithValue(r.Context(), csrf.PlaintextHTTPContextKey, true)
-				r = r.WithContext(ctx)
+				r = csrf.PlaintextHTTPRequest(r)
 			}
 			// Call the pre-created CSRF middleware
 			csrfMiddleware(next).ServeHTTP(w, r)
