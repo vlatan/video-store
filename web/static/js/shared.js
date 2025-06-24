@@ -5,11 +5,22 @@ const sleep = time => {
 
 // Send POST request to backend
 const postData = async (url = '', data = {}) => {
+    // Create headers object
+    const headers = new Headers();
+    headers.append("Content-Type", "application/json");
+
+    // If CSRF Token send with the POST request
+    let csrfToken = document.getElementsByName("gorilla.csrf.Token");
+    if (csrfToken) {
+        headers.append("X-CSRF-Token", csrfToken[0].value);
+    }
+
     const response = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: headers,
         body: JSON.stringify(data)
     });
+
     return response;
 };
 

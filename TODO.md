@@ -1,6 +1,4 @@
 * CSRF on forms
-  Gorilla CSRF
-
 * Setup updated_at triggers for the tables
 * Serve Favicons from root
 * Minify CSS and JS files before deployment and save them before embedding
