@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/gorilla/csrf"
 )
@@ -94,19 +95,35 @@ func (s *Server) securityHeaders(next http.Handler) http.Handler {
 
 // Create CSRF middlware with added plain text option for local development
 func (s *Server) createCSRFMiddleware() func(http.Handler) http.Handler {
-	// Create the csrf middleware as per the documentation
+
+	// Create the csrf middleware as per the gorilla/csrf documentation
 	csrfMiddleware := csrf.Protect(
 		[]byte(s.config.SecretKey),
 		csrf.Secure(false),
 		csrf.Path("/"),
 	)
 
-	// Return the wrapper that sets context before calling CSRF
+	// Return the wrapper that sets plain text context before calling CSRF
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+			// Skip CSRF for static files (prefix match)
+			if strings.HasPrefix(r.URL.Path, "/static/") {
+				next.ServeHTTP(w, r)
+				return
+			}
+
+			// Skip CSRF for health endpoint (exact match)
+			if r.URL.Path == "/health/" {
+				next.ServeHTTP(w, r)
+				return
+			}
+
+			// If debug set plain text (HTTP) schema
 			if s.config.Debug {
 				r = csrf.PlaintextHTTPRequest(r)
 			}
+
 			// Call the pre-created CSRF middleware
 			csrfMiddleware(next).ServeHTTP(w, r)
 		})
