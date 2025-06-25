@@ -246,6 +246,7 @@ func (s *service) queryPosts(
 			return posts, fmt.Errorf("video ID '%s': %v", post.VideoID, err)
 		}
 
+		// Craft srcset string
 		post.Srcset = srcset(thumbsMap, 480)
 		thumb := thumbsMap["medium"]
 		post.Thumbnail = &thumb
