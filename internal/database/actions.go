@@ -10,15 +10,15 @@ type Actions struct {
 }
 
 const userActionsQuery = `
-SELECT 
-	EXISTS (
-		SELECT 1 FROM post_like
-		WHERE user_id = $1 AND post_id = $2
-	) AS liked,
-	EXISTS (
-		SELECT 1 FROM post_fave
-		WHERE user_id = $1 AND post_id = $2
-	) AS faved
+	SELECT 
+		EXISTS (
+			SELECT 1 FROM post_like
+			WHERE user_id = $1 AND post_id = $2
+		) AS liked,
+		EXISTS (
+			SELECT 1 FROM post_fave
+			WHERE user_id = $1 AND post_id = $2
+		) AS faved
 `
 
 // Check if the user liked and/or faved a post
@@ -37,10 +37,7 @@ const likeQuery = `
 // User likes a post
 func (s *service) Like(ctx context.Context, userID int, videoID string) (int64, error) {
 	result, err := s.db.Exec(ctx, likeQuery, userID, videoID)
-	if err != nil {
-		return 0, err
-	}
-	return result.RowsAffected(), nil
+	return result.RowsAffected(), err
 }
 
 const unlikeQuery = `
@@ -54,10 +51,7 @@ const unlikeQuery = `
 // User unlikes a post
 func (s *service) Unlike(ctx context.Context, userID int, videoID string) (int64, error) {
 	result, err := s.db.Exec(ctx, unlikeQuery, userID, videoID)
-	if err != nil {
-		return 0, err
-	}
-	return result.RowsAffected(), nil
+	return result.RowsAffected(), err
 }
 
 const faveQuery = `
@@ -70,10 +64,7 @@ const faveQuery = `
 // User favorites a post
 func (s *service) Fave(ctx context.Context, userID int, videoID string) (int64, error) {
 	result, err := s.db.Exec(ctx, faveQuery, userID, videoID)
-	if err != nil {
-		return 0, err
-	}
-	return result.RowsAffected(), nil
+	return result.RowsAffected(), err
 }
 
 const unfaveQuery = `
@@ -87,10 +78,7 @@ const unfaveQuery = `
 // User unfavorites a post
 func (s *service) Unfave(ctx context.Context, userID int, videoID string) (int64, error) {
 	result, err := s.db.Exec(ctx, unfaveQuery, userID, videoID)
-	if err != nil {
-		return 0, err
-	}
-	return result.RowsAffected(), nil
+	return result.RowsAffected(), err
 }
 
 const updateTitleQuery = `
@@ -102,10 +90,7 @@ const updateTitleQuery = `
 // User unfavorites a post
 func (s *service) UpdateTitle(ctx context.Context, videoID, title string) (int64, error) {
 	result, err := s.db.Exec(ctx, updateTitleQuery, videoID, title)
-	if err != nil {
-		return 0, err
-	}
-	return result.RowsAffected(), nil
+	return result.RowsAffected(), err
 }
 
 const updateDescQuery = `
@@ -117,10 +102,7 @@ const updateDescQuery = `
 // User unfavorites a post
 func (s *service) UpdateDesc(ctx context.Context, videoID, description string) (int64, error) {
 	result, err := s.db.Exec(ctx, updateDescQuery, videoID, description)
-	if err != nil {
-		return 0, err
-	}
-	return result.RowsAffected(), nil
+	return result.RowsAffected(), err
 }
 
 const deleteQuery = `
@@ -136,8 +118,5 @@ const deleteQuery = `
 // User deletes a post
 func (s *service) Delete(ctx context.Context, videoID string) (int64, error) {
 	result, err := s.db.Exec(ctx, deleteQuery, videoID)
-	if err != nil {
-		return 0, err
-	}
-	return result.RowsAffected(), nil
+	return result.RowsAffected(), err
 }
