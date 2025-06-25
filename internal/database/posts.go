@@ -51,12 +51,12 @@ type Post struct {
 var validISO8601 = regexp.MustCompile(`(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:\.\d+)?)S)?`)
 
 const getPostsQuery = `
-SELECT video_id, title, thumbnails, (
-	SELECT COUNT(*) FROM post_like
-	WHERE post_like.post_id = post.id
-) AS likes FROM post
-ORDER BY %s
-LIMIT $1 OFFSET $2
+	SELECT video_id, title, thumbnails, (
+		SELECT COUNT(*) FROM post_like
+		WHERE post_like.post_id = post.id
+	) AS likes FROM post
+	ORDER BY %s
+	LIMIT $1 OFFSET $2
 `
 
 // Get a limited number of posts with offset
@@ -75,13 +75,13 @@ func (s *service) GetPosts(ctx context.Context, page int, orderBy string) ([]Pos
 }
 
 const getCategoryPostsQuery = `
-SELECT video_id, title, thumbnails, (
-	SELECT COUNT(*) FROM post_like
-	WHERE post_like.post_id = post.id
-) AS likes FROM post 
-WHERE category_id = (SELECT id FROM category WHERE slug = $1) 
-ORDER BY %s
-LIMIT $2 OFFSET $3
+	SELECT video_id, title, thumbnails, (
+		SELECT COUNT(*) FROM post_like
+		WHERE post_like.post_id = post.id
+	) AS likes FROM post 
+	WHERE category_id = (SELECT id FROM category WHERE slug = $1) 
+	ORDER BY %s
+	LIMIT $2 OFFSET $3
 `
 
 // Get a limited number of posts from one category with offset
@@ -105,23 +105,23 @@ func (s *service) GetCategoryPosts(
 }
 
 const getSinglePostQuery = `
-SELECT 
-	post.id,
-	video_id,
-	title, 
-	thumbnails, (
-		SELECT COUNT(*) FROM post_like
-	  	WHERE post_like.post_id = post.id
-	) AS likes, 
-	description,
- 	short_description,
-	slug AS category_slug,
-	name AS category_name,
-	upload_date,
-	duration
-FROM post 
-LEFT JOIN category ON post.category_id = category.id
-WHERE video_id = $1 
+	SELECT 
+		post.id,
+		video_id,
+		title, 
+		thumbnails, (
+			SELECT COUNT(*) FROM post_like
+			WHERE post_like.post_id = post.id
+		) AS likes, 
+		description,
+		short_description,
+		slug AS category_slug,
+		name AS category_name,
+		upload_date,
+		duration
+	FROM post 
+	LEFT JOIN category ON post.category_id = category.id
+	WHERE video_id = $1 
 `
 
 // Get single post from DB based on a video ID

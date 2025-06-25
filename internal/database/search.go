@@ -6,35 +6,35 @@ import (
 )
 
 const searchPostsQuery = `
-WITH search_terms AS (
+	WITH search_terms AS (
+		SELECT
+			lexeme AS and_query,
+			to_tsquery('english', replace(lexeme::text, ' & ', ' | ')) AS or_query,
+			replace(lexeme::text, ' & ', ' ') AS raw_query
+		FROM plainto_tsquery('english', $1) AS lexeme
+	)
 	SELECT
-		lexeme AS and_query,
-		to_tsquery('english', replace(lexeme::text, ' & ', ' | ')) AS or_query,
-		replace(lexeme::text, ' & ', ' ') AS raw_query
-	FROM plainto_tsquery('english', $1) AS lexeme
-)
-SELECT
-    p.video_id,
-    p.title,
-    p.thumbnails,
-    (
-        SELECT COUNT(*)
-        FROM post_like
-        WHERE post_like.post_id = p.id
-    ) AS likes,
-    CASE 
-        WHEN $3 = 0 THEN COUNT(*) OVER()
-        ELSE 0
-    END AS total_results
-FROM post AS p, search_terms AS st
-WHERE p.search_vector @@ st.and_query OR p.search_vector @@ st.or_query
-ORDER BY 
-	(ts_rank(p.search_vector, st.and_query, 32) * 2) + 
-	ts_rank(p.search_vector, st.or_query, 32) +
-	(similarity(p.title, st.raw_query) * 0.5) DESC,
-	likes DESC,
-	p.upload_date DESC
-LIMIT $2 OFFSET $3
+		p.video_id,
+		p.title,
+		p.thumbnails,
+		(
+			SELECT COUNT(*)
+			FROM post_like
+			WHERE post_like.post_id = p.id
+		) AS likes,
+		CASE 
+			WHEN $3 = 0 THEN COUNT(*) OVER()
+			ELSE 0
+		END AS total_results
+	FROM post AS p, search_terms AS st
+	WHERE p.search_vector @@ st.and_query OR p.search_vector @@ st.or_query
+	ORDER BY 
+		(ts_rank(p.search_vector, st.and_query, 32) * 2) + 
+		ts_rank(p.search_vector, st.or_query, 32) +
+		(similarity(p.title, st.raw_query) * 0.5) DESC,
+		likes DESC,
+		p.upload_date DESC
+	LIMIT $2 OFFSET $3
 `
 
 // Get posts based on a user search query
