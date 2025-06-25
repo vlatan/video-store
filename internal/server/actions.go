@@ -18,7 +18,6 @@ func (s *Server) handleLike(w http.ResponseWriter, r *http.Request, userID int, 
 	if rowsAffected == 0 {
 		log.Printf("No such video %s to like.\n", videoID)
 		http.NotFound(w, r)
-		return
 	}
 }
 
@@ -34,7 +33,6 @@ func (s *Server) handleUnlike(w http.ResponseWriter, r *http.Request, userID int
 	if rowsAffected == 0 {
 		log.Printf("No such video %s to unlike.\n", videoID)
 		http.NotFound(w, r)
-		return
 	}
 }
 
@@ -50,7 +48,6 @@ func (s *Server) handleFave(w http.ResponseWriter, r *http.Request, userID int, 
 	if rowsAffected == 0 {
 		log.Printf("No such video %s to fave.\n", videoID)
 		http.NotFound(w, r)
-		return
 	}
 }
 
@@ -66,7 +63,6 @@ func (s *Server) handleUnfave(w http.ResponseWriter, r *http.Request, userID int
 	if rowsAffected == 0 {
 		log.Printf("No such video %s to unfave.\n", videoID)
 		http.NotFound(w, r)
-		return
 	}
 }
 
@@ -82,7 +78,6 @@ func (s *Server) handleUpdateTitle(w http.ResponseWriter, r *http.Request, userI
 	if rowsAffected == 0 {
 		log.Printf("No such video %s to update the title of.\n", videoID)
 		http.NotFound(w, r)
-		return
 	}
 }
 
@@ -98,7 +93,6 @@ func (s *Server) handleUpdateDesc(w http.ResponseWriter, r *http.Request, userID
 	if rowsAffected == 0 {
 		log.Printf("No such video %s to update the description of.\n", videoID)
 		http.NotFound(w, r)
-		return
 	}
 }
 
