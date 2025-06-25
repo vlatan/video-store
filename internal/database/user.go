@@ -3,7 +3,6 @@ package database
 import (
 	"context"
 	"database/sql"
-	"time"
 
 	"github.com/markbates/goth"
 )
@@ -87,23 +86,7 @@ func (s *service) UpsertUser(ctx context.Context, u *goth.User, analyticsID stri
 }
 
 const DeleteUserQuery = "DELETE FROM app_user WHERE id = $1"
-
-// Remove user from DB
-func (s *service) DeleteUser(ctx context.Context, userID int) (int64, error) {
-	result, err := s.db.Exec(ctx, DeleteUserQuery, userID)
-	return result.RowsAffected(), err
-}
-
-const updateLastUserSeenQuery = `
-	UPDATE app_user
-	SET last_seen = $2 WHERE id = $1
-`
-
-// Update the last seen column on a user
-func (s *service) UpdateUserLastSeen(ctx context.Context, id int, t time.Time) error {
-	_, err := s.db.Exec(ctx, updateLastUserSeenQuery, id, t)
-	return err
-}
+const UpdateLastUserSeenQuery = "UPDATE app_user SET last_seen = $2 WHERE id = $1"
 
 // Helper function to convert string pointer or empty string to sql.NullString
 func NullString(s *string) sql.NullString {

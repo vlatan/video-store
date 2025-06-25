@@ -364,7 +364,7 @@ func (s *Server) postActionHandler(w http.ResponseWriter, r *http.Request) {
 	case "edit":
 		s.handleEdit(w, r, videoID, currentUser)
 	case "delete":
-		s.handleDelete(w, r, currentUser.ID, videoID)
+		s.handleDeletePost(w, r, currentUser.ID, videoID)
 	default:
 		s.tm.JSONError(w, r, http.StatusBadRequest)
 	}
@@ -590,7 +590,7 @@ func (s *Server) deleteAccountHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Delete the user from DB
-	rowsAffected, err := s.db.DeleteUser(r.Context(), currentUser.ID)
+	rowsAffected, err := s.db.Exec(r.Context(), database.DeleteUserQuery, currentUser.ID)
 	if err != nil {
 		log.Printf("Could not delete user %d: %v", currentUser.ID, err)
 		s.storeFlashMessage(w, r, &failedDeleteAccount)

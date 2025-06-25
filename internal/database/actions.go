@@ -27,20 +27,14 @@ func (s *service) GetUserActions(ctx context.Context, userID, postID int) (actio
 	return actions, err
 }
 
-const likeQuery = `
+const LikeQuery = `
 	INSERT INTO post_like (user_id, post_id)
 	SELECT $1, p.id 
 	FROM post AS p 
 	WHERE p.video_id = $2
 `
 
-// User likes a post
-func (s *service) Like(ctx context.Context, userID int, videoID string) (int64, error) {
-	result, err := s.db.Exec(ctx, likeQuery, userID, videoID)
-	return result.RowsAffected(), err
-}
-
-const unlikeQuery = `
+const UnlikeQuery = `
 	DELETE FROM post_like 
 	USING post AS p 
 	WHERE post_like.post_id = p.id 
@@ -48,26 +42,14 @@ const unlikeQuery = `
 	AND p.video_id = $2
 `
 
-// User unlikes a post
-func (s *service) Unlike(ctx context.Context, userID int, videoID string) (int64, error) {
-	result, err := s.db.Exec(ctx, unlikeQuery, userID, videoID)
-	return result.RowsAffected(), err
-}
-
-const faveQuery = `
+const FaveQuery = `
 	INSERT INTO post_fave (user_id, post_id)
 	SELECT $1, p.id 
 	FROM post AS p 
 	WHERE p.video_id = $2
 `
 
-// User favorites a post
-func (s *service) Fave(ctx context.Context, userID int, videoID string) (int64, error) {
-	result, err := s.db.Exec(ctx, faveQuery, userID, videoID)
-	return result.RowsAffected(), err
-}
-
-const unfaveQuery = `
+const UnfaveQuery = `
 	DELETE FROM post_fave 
 	USING post AS p 
 	WHERE post_fave.post_id = p.id 
@@ -75,37 +57,19 @@ const unfaveQuery = `
 	AND p.video_id = $2
 `
 
-// User unfavorites a post
-func (s *service) Unfave(ctx context.Context, userID int, videoID string) (int64, error) {
-	result, err := s.db.Exec(ctx, unfaveQuery, userID, videoID)
-	return result.RowsAffected(), err
-}
-
-const updateTitleQuery = `
+const UpdateTitleQuery = `
 	UPDATE post
 	SET title = $2, updated_at = NOW()
 	WHERE video_id = $1
 `
 
-// User unfavorites a post
-func (s *service) UpdateTitle(ctx context.Context, videoID, title string) (int64, error) {
-	result, err := s.db.Exec(ctx, updateTitleQuery, videoID, title)
-	return result.RowsAffected(), err
-}
-
-const updateDescQuery = `
+const UpdateDescQuery = `
 	UPDATE post
 	SET short_description = $2, updated_at = NOW()
 	WHERE video_id = $1
 `
 
-// User unfavorites a post
-func (s *service) UpdateDesc(ctx context.Context, videoID, description string) (int64, error) {
-	result, err := s.db.Exec(ctx, updateDescQuery, videoID, description)
-	return result.RowsAffected(), err
-}
-
-const deleteQuery = `
+const DeletePostQuery = `
 	WITH dp AS (
 		DELETE FROM post
 		WHERE video_id = $1
@@ -114,9 +78,3 @@ const deleteQuery = `
 	INSERT INTO deleted_post (video_id)
 	SELECT video_id FROM dp;
 `
-
-// User deletes a post
-func (s *service) Delete(ctx context.Context, videoID string) (int64, error) {
-	result, err := s.db.Exec(ctx, deleteQuery, videoID)
-	return result.RowsAffected(), err
-}

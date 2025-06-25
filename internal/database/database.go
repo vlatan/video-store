@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"sync"
-	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -15,29 +14,11 @@ import (
 
 // Service represents a service that interacts with a database.
 type Service interface {
-	// Update the last_seen date for a user
-	UpdateUserLastSeen(ctx context.Context, id int, t time.Time) error
 	// Update or insert a new user
 	UpsertUser(ctx context.Context, u *goth.User, analyticsID string) (int, error)
-	// Delete user
-	DeleteUser(ctx context.Context, userID int) (int64, error)
 
 	// Check if logged in user liked or faved a post
 	GetUserActions(ctx context.Context, userID, postID int) (actions Actions, err error)
-	// Like a post
-	Like(ctx context.Context, userID int, videoID string) (int64, error)
-	// Unlike a post
-	Unlike(ctx context.Context, userID int, videoID string) (int64, error)
-	// Favorite a post
-	Fave(ctx context.Context, userID int, videoID string) (int64, error)
-	// Unfavorite a post
-	Unfave(ctx context.Context, userID int, videoID string) (int64, error)
-	// Update post title
-	UpdateTitle(ctx context.Context, videoID, title string) (int64, error)
-	// Update post description
-	UpdateDesc(ctx context.Context, videoID, description string) (int64, error)
-	// Delete a post
-	Delete(ctx context.Context, videoID string) (int64, error)
 
 	// Get paginated posts
 	GetPosts(ctx context.Context, page int, orderBy string) ([]Post, error)
@@ -45,14 +26,17 @@ type Service interface {
 	GetCategoryPosts(ctx context.Context, categorySlug, orderBy string, page int) ([]Post, error)
 	// Get posts based on a search query
 	SearchPosts(ctx context.Context, searchTerm string, limit, offset int) (posts Posts, err error)
-	// Get single posts given the video ID
+	// Get single post given the video ID
 	GetSinglePost(ctx context.Context, videoID string) (post Post, err error)
 
 	// Get all categories
 	GetCategories(ctx context.Context) ([]Category, error)
+
 	// A map of health status information.
 	Health(ctx context.Context) map[string]string
 
+	// Execute a query (update, insert, delete)
+	Exec(ctx context.Context, query string, args ...any) (int64, error)
 	// Closes the pool and terminates the database connection.
 	Close()
 }
@@ -93,10 +77,14 @@ func New(cfg *config.Config) Service {
 	return dbInstance
 }
 
+// Execute a query (update, insert, delete)
+func (s *service) Exec(ctx context.Context, query string, args ...any) (int64, error) {
+	result, err := s.db.Exec(ctx, query, args...)
+	return result.RowsAffected(), err
+}
+
 // Close closes the database connection.
 // It logs a message indicating the disconnection from the specific database.
-// If the connection is successfully closed, it returns nil.
-// If an error occurs while closing the connection, it returns the error.
 func (s *service) Close() {
 	log.Printf("Disconnected from database: %s", s.config.DBDatabase)
 	s.db.Close()

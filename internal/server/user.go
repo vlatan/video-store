@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"factual-docs/internal/config"
+	"factual-docs/internal/database"
 	"factual-docs/internal/templates"
 	"factual-docs/internal/utils"
 	"fmt"
@@ -112,7 +113,7 @@ func (s *Server) getCurrentUser(w http.ResponseWriter, r *http.Request) *templat
 
 	// Check if the DB update is out of sync for an entire day
 	if !sameDate(lastSeenDB, now) {
-		if err := s.db.UpdateUserLastSeen(r.Context(), id, now); err != nil {
+		if _, err := s.db.Exec(r.Context(), database.UpdateLastUserSeenQuery, id, now); err != nil {
 			log.Printf("Couldn't update the last seen in DB on user '%d': %v\n", id, err)
 		}
 		session.Values["LastSeenDB"] = now

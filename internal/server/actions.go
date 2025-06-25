@@ -1,6 +1,7 @@
 package server
 
 import (
+	"factual-docs/internal/database"
 	"factual-docs/internal/templates"
 	"log"
 	"net/http"
@@ -8,7 +9,7 @@ import (
 
 // Handle a post like from user
 func (s *Server) handleLike(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
-	rowsAffected, err := s.db.Like(r.Context(), userID, videoID)
+	rowsAffected, err := s.db.Exec(r.Context(), database.LikeQuery, userID, videoID)
 	if err != nil {
 		log.Printf("User %d could not like the video %s: %v\n", userID, videoID, err)
 		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
@@ -23,7 +24,7 @@ func (s *Server) handleLike(w http.ResponseWriter, r *http.Request, userID int, 
 
 // Handle a post unlike from user
 func (s *Server) handleUnlike(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
-	rowsAffected, err := s.db.Unlike(r.Context(), userID, videoID)
+	rowsAffected, err := s.db.Exec(r.Context(), database.UnlikeQuery, userID, videoID)
 	if err != nil {
 		log.Printf("User %d could not unlike the video %s: %v\n", userID, videoID, err)
 		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
@@ -38,7 +39,7 @@ func (s *Server) handleUnlike(w http.ResponseWriter, r *http.Request, userID int
 
 // Handle a post favorite from user
 func (s *Server) handleFave(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
-	rowsAffected, err := s.db.Fave(r.Context(), userID, videoID)
+	rowsAffected, err := s.db.Exec(r.Context(), database.FaveQuery, userID, videoID)
 	if err != nil {
 		log.Printf("User %d could not fave the video %s: %v\n", userID, videoID, err)
 		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
@@ -53,7 +54,7 @@ func (s *Server) handleFave(w http.ResponseWriter, r *http.Request, userID int, 
 
 // Handle a post unfavorite from user
 func (s *Server) handleUnfave(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
-	rowsAffected, err := s.db.Unfave(r.Context(), userID, videoID)
+	rowsAffected, err := s.db.Exec(r.Context(), database.UnfaveQuery, userID, videoID)
 	if err != nil {
 		log.Printf("User %d could not unfave the video %s: %v\n", userID, videoID, err)
 		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
@@ -68,7 +69,7 @@ func (s *Server) handleUnfave(w http.ResponseWriter, r *http.Request, userID int
 
 // Handle a post title update
 func (s *Server) handleUpdateTitle(w http.ResponseWriter, r *http.Request, userID int, videoID, title string) {
-	rowsAffected, err := s.db.UpdateTitle(r.Context(), videoID, title)
+	rowsAffected, err := s.db.Exec(r.Context(), database.UpdateTitleQuery, videoID, title)
 	if err != nil {
 		log.Printf("User %d could not update the title of the video %s: %v\n", userID, videoID, err)
 		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
@@ -83,7 +84,7 @@ func (s *Server) handleUpdateTitle(w http.ResponseWriter, r *http.Request, userI
 
 // Handle a post description update
 func (s *Server) handleUpdateDesc(w http.ResponseWriter, r *http.Request, userID int, videoID, description string) {
-	rowsAffected, err := s.db.UpdateDesc(r.Context(), videoID, description)
+	rowsAffected, err := s.db.Exec(r.Context(), database.UpdateDescQuery, videoID, description)
 	if err != nil {
 		log.Printf("User %d could not update the description of the video %s: %v\n", userID, videoID, err)
 		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
@@ -97,8 +98,8 @@ func (s *Server) handleUpdateDesc(w http.ResponseWriter, r *http.Request, userID
 }
 
 // Handle a post description update
-func (s *Server) handleDelete(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
-	rowsAffected, err := s.db.Delete(r.Context(), videoID)
+func (s *Server) handleDeletePost(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
+	rowsAffected, err := s.db.Exec(r.Context(), database.DeletePostQuery, videoID)
 	if err != nil {
 		log.Printf("User %d could not delete the video %s: %v\n", userID, videoID, err)
 		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
