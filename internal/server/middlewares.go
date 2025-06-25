@@ -41,9 +41,9 @@ func (s *Server) isAuthenticated(next http.HandlerFunc) http.HandlerFunc {
 func (s *Server) isAdmin(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// If the user is admin move onto the next handler
-		if currentUser := s.getCurrentUser(w, r); currentUser.UserID == s.config.AdminOpenID {
+		if cu := s.getCurrentUser(w, r); cu.IsAuthenticated() && cu.UserID == s.config.AdminOpenID {
 			// Pass the user in the context
-			ctx := context.WithValue(r.Context(), adminContextKey, currentUser)
+			ctx := context.WithValue(r.Context(), adminContextKey, cu)
 			next(w, r.WithContext(ctx))
 			return
 		}

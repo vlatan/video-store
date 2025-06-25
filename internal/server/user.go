@@ -91,8 +91,15 @@ func (s *Server) loginUser(w http.ResponseWriter, r *http.Request, gothUser *got
 	return nil
 }
 
-// Retrieve user session, return User struct
+// Retrieve the user from context or session, return User struct
 func (s *Server) getCurrentUser(w http.ResponseWriter, r *http.Request) *templates.User {
+
+	// Try to get the current user from context first,
+	// in case an upstream middleware already got the user from session
+	if currentUser, ok := r.Context().Value(userContextKey).(*templates.User); ok {
+		return currentUser
+	}
+
 	session, err := s.store.Get(r, s.config.SessionName)
 	if session == nil || err != nil {
 		return &templates.User{}

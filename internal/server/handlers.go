@@ -338,16 +338,12 @@ func (s *Server) postActionHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get current user from the request context
-	currentUser, ok := r.Context().Value(userContextKey).(*templates.User)
-	if !ok {
-		log.Printf("Cannot get user from context on action '%s' on video: %s\n", action, videoID)
-		s.tm.JSONError(w, r, http.StatusInternalServerError)
-		return
-	}
+	// Get the current user
+	currentUser := s.getCurrentUser(w, r)
 
 	// Check if user is authorized to edit or delete (admin)
-	if (action == "edit" || action == "delete") && currentUser.UserID != s.config.AdminOpenID {
+	if (action == "edit" || action == "delete") &&
+		currentUser.UserID != s.config.AdminOpenID {
 		s.tm.JSONError(w, r, http.StatusForbidden)
 		return
 	}
@@ -564,14 +560,8 @@ func (s *Server) deleteAccountHandler(w http.ResponseWriter, r *http.Request) {
 	// The origin URL of the user
 	redirectTo := getSafeRedirectPath(r)
 
-	// Get current user from the request context
-	currentUser, ok := r.Context().Value(userContextKey).(*templates.User)
-	if !ok {
-		log.Printf("User context not found on delete account route.")
-		s.storeFlashMessage(w, r, &failedDeleteAccount)
-		http.Redirect(w, r, redirectTo, http.StatusFound)
-		return
-	}
+	// Get the current user
+	currentUser := s.getCurrentUser(w, r)
 
 	// Remove gothic session if any
 	if err := gothic.Logout(w, r); err != nil {
