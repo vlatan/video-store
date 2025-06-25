@@ -1,9 +1,9 @@
-* Construct more middlewares:
-  Cloudflare HTML cache for non-logged users
-  WWW to non-WWW redirect
+* User avatar saved to redis not locally
+  Should check if avatar already exists before download
+
+* Construct WWW to non-WWW redirect middleware
 
 * ads.txt route
-
 
 * Serve Favicons from root
 
