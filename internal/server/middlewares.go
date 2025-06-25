@@ -130,6 +130,7 @@ func (s *Server) createCSRFMiddleware() func(http.Handler) http.Handler {
 	}
 }
 
+// Chain middlewares that apply to all handlers
 func (s *Server) applyToAll(middlewares ...func(http.Handler) http.Handler) func(http.Handler) http.Handler {
 	return func(final http.Handler) http.Handler {
 		// Apply middlewares in reverse order
