@@ -6,7 +6,6 @@ import (
 	"factual-docs/internal/config"
 	"factual-docs/internal/database"
 	"factual-docs/internal/templates"
-	"factual-docs/internal/utils"
 	"fmt"
 	"io"
 	"log"
@@ -194,14 +193,13 @@ func (s *Server) storeFlashMessage(
 	}
 }
 
-// Extracts and sanitizes the value from the query param "redirect"
-func getSafeRedirectPath(r *http.Request) string {
+// Extracts the value from the query param "redirect"
+func getRedirectPath(r *http.Request) string {
 	redirectParam := r.URL.Query().Get("redirect")
-	safePath, err := utils.SanitizeRelativePath(redirectParam)
-	if err != nil {
+	if redirectParam == "" {
 		return "/"
 	}
-	return safePath
+	return redirectParam
 }
 
 func (s *Server) getAvatar(r *http.Request, avatarURL, analyticsID string) string {

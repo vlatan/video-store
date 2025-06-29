@@ -467,7 +467,7 @@ func (s *Server) healthHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Server) authHandler(w http.ResponseWriter, r *http.Request) {
 
 	// The origin URL of the user
-	redirectTo := getSafeRedirectPath(r)
+	redirectTo := getRedirectPath(r)
 
 	// Auth with gothic, try to get the user without re-authenticating
 	gothUser, err := gothic.CompleteUserAuth(w, r)
@@ -529,7 +529,7 @@ func (s *Server) authCallbackHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Server) logoutHandler(w http.ResponseWriter, r *http.Request) {
 
 	// The origin URL of the user
-	redirectTo := getSafeRedirectPath(r)
+	redirectTo := getRedirectPath(r)
 
 	// Remove gothic session if any
 	if err := gothic.Logout(w, r); err != nil {
@@ -558,7 +558,7 @@ func (s *Server) deleteAccountHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	// The origin URL of the user
-	redirectTo := getSafeRedirectPath(r)
+	redirectTo := getRedirectPath(r)
 
 	// Get the current user
 	currentUser := s.getCurrentUser(w, r)
