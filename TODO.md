@@ -1,7 +1,14 @@
 * User avatar saved to redis not locally
-  Should check if avatar already exists before download
+  Need to solve this discrepancy
+
+* Trailing slash 301 redirect on login/logout
+  SanitizeRelativePath "cleans" the path removing the trailing slash.
+  Which is good for sanitizing paths on the static handler,
+  but not good for getting user redirect.
 
 * Construct WWW to non-WWW redirect middleware
+
+* Construct absolute canonical URL, not relative
 
 * ads.txt route
 

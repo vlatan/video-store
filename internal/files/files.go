@@ -2,7 +2,6 @@ package files
 
 import (
 	"crypto/md5"
-	"factual-docs/internal/utils"
 	"factual-docs/web"
 	"fmt"
 	"io/fs"
@@ -55,11 +54,6 @@ func (sf StaticFiles) ParseStaticFiles(m *minify.M, dir string) {
 			return nil
 		}
 
-		name, err := utils.SanitizeRelativePath(path)
-		if err != nil {
-			return err
-		}
-
 		// Read the file
 		b, err := fs.ReadFile(web.Files, path)
 		if err != nil {
@@ -92,6 +86,12 @@ func (sf StaticFiles) ParseStaticFiles(m *minify.M, dir string) {
 		// Store empty bytes array if this is not CSS or JS
 		if mediaType == "" {
 			b = make([]byte, 0)
+		}
+
+		// Ensure the name starts with "/"
+		name := path
+		if !strings.HasPrefix(name, "/") {
+			name = "/" + name
 		}
 
 		// Save all the data in the struct
