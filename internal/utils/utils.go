@@ -7,7 +7,7 @@ import (
 )
 
 // Validates a path
-func ValidatePath(p string) error {
+func ValidateFilePath(p string) error {
 	if p == "" {
 		return fmt.Errorf("no path supplied")
 	}

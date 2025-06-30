@@ -398,7 +398,7 @@ func (s *Server) handleEdit(w http.ResponseWriter, r *http.Request, videoID stri
 func (s *Server) staticHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Validate the path
-	if err := utils.ValidatePath(r.URL.Path); err != nil {
+	if err := utils.ValidateFilePath(r.URL.Path); err != nil {
 		http.NotFound(w, r)
 		return
 	}
