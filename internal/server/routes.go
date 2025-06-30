@@ -21,7 +21,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	mux.HandleFunc("POST /account/delete", s.isAuthenticated(s.deleteAccountHandler))
 	mux.HandleFunc("GET /ads.txt", s.adsTextHandler)
 
-	// Register favicon serving from root
+	// Register favicons serving from root
 	for _, favicon := range favicons {
 		mux.HandleFunc("GET "+favicon, s.staticHandler)
 	}
