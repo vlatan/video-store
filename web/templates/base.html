@@ -20,10 +20,10 @@
 
 	{{ block "extra_css" . }}{{ end }}
 
-	<link rel="apple-touch-icon" sizes="180x180" href='{{ .AddVersion "/apple-touch-icon.png" }}'>
-	<link rel="icon" type="image/png" sizes="32x32" href='{{ .AddVersion "/favicon-32x32.png" }}'>
-	<link rel="icon" type="image/png" sizes="16x16" href='{{ .AddVersion "/favicon-16x16.png" }}'>
-	<link rel="manifest" href='{{ .AddVersion "/site.webmanifest" }}'>
+	<link rel="apple-touch-icon" sizes="180x180" href='{{ .AddVersion "/static/favicons/apple-touch-icon.png" }}'>
+	<link rel="icon" type="image/png" sizes="32x32" href='{{ .AddVersion "/static/favicons/favicon-32x32.png" }}'>
+	<link rel="icon" type="image/png" sizes="16x16" href='{{ .AddVersion "/static/favicons/favicon-16x16.png" }}'>
+	<link rel="manifest" href='{{ .AddVersion "/static/favicons/site.webmanifest" }}'>
 
 	{{ block "meta" . }}
 	<link rel="canonical" href="{{ .CanonicalURL }}" />
