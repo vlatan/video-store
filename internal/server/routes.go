@@ -19,6 +19,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	mux.HandleFunc("GET /auth/{provider}/callback", s.authCallbackHandler)
 	mux.HandleFunc("GET /logout/{provider}", s.isAuthenticated(s.logoutHandler))
 	mux.HandleFunc("POST /account/delete", s.isAuthenticated(s.deleteAccountHandler))
+	mux.HandleFunc("GET /ads.txt", s.adsTextHandler)
 
 	// Register favicon serving from root
 	for _, favicon := range favicons {
