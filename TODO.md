@@ -1,5 +1,4 @@
 * ads.txt route
-* Serve Favicons from root
 
 * User avatar saved to redis not locally
   Need to solve this discrepancy

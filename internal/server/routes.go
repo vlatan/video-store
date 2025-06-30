@@ -20,6 +20,11 @@ func (s *Server) RegisterRoutes() http.Handler {
 	mux.HandleFunc("GET /logout/{provider}", s.isAuthenticated(s.logoutHandler))
 	mux.HandleFunc("POST /account/delete", s.isAuthenticated(s.deleteAccountHandler))
 
+	// Register favicon serving from root
+	for _, favicon := range favicons {
+		mux.HandleFunc("GET "+favicon, s.staticHandler)
+	}
+
 	// Create Cross-Site Request Forgery middleware
 	CSRF := s.createCSRFMiddleware()
 
