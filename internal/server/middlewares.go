@@ -120,7 +120,7 @@ func (s *Server) wwwRedirect(next http.Handler) http.Handler {
 		}
 
 		// Redirect
-		http.Redirect(w, r, u.String(), http.StatusFound)
+		http.Redirect(w, r, u.String(), http.StatusMovedPermanently)
 	})
 }
 
