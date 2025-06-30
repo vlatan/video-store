@@ -397,8 +397,8 @@ func (s *Server) handleEdit(w http.ResponseWriter, r *http.Request, videoID stri
 // Handle minified static file from cache
 func (s *Server) staticHandler(w http.ResponseWriter, r *http.Request) {
 
-	// VERY IMPORTANT: Do not allow directory browsing
-	if strings.HasSuffix(r.URL.Path, "/") {
+	// Validate the path
+	if err := utils.ValidatePath(r.URL.Path); err != nil {
 		http.NotFound(w, r)
 		return
 	}
@@ -425,28 +425,21 @@ func (s *Server) staticHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Sanitize the path
-	name, err := utils.SanitizeRelativePath(r.URL.Path)
-	if err != nil {
-		http.NotFound(w, r)
-		return
-	}
-
 	// Serve user avatars from the data volume
-	if strings.HasPrefix(name, "/static/images/avatars/") {
-		parsed, err := url.Parse(name)
+	if strings.HasPrefix(r.URL.Path, "/static/images/avatars/") {
+		parsed, err := url.Parse(r.URL.Path)
 		if err != nil {
 			http.NotFound(w, r)
 			return
 		}
 
-		name = s.config.DataVolume + "/" + filepath.Base(parsed.Path)
-		http.ServeFile(w, r, name)
+		avatarPath := s.config.DataVolume + "/" + filepath.Base(parsed.Path)
+		http.ServeFile(w, r, avatarPath)
 		return
 	}
 
 	// Try to serve from the embedded FS
-	http.ServeFileFS(w, r, web.Files, name)
+	http.ServeFileFS(w, r, web.Files, r.URL.Path)
 }
 
 // DB and Redis health status
