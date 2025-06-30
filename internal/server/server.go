@@ -4,6 +4,7 @@ import (
 	"encoding/gob"
 	"fmt"
 	"net/http"
+	"net/url"
 	"runtime"
 	"time"
 
@@ -90,6 +91,7 @@ func (s *Server) NewData(w http.ResponseWriter, r *http.Request) *templates.Temp
 		Config:        s.config,
 		Categories:    categories,
 		CurrentURI:    r.RequestURI,
+		CanonicalURL:  getCanonicalURL(r),
 		FlashMessages: flashMessages,
 		CSRFField:     csrf.TemplateField(r),
 	}
@@ -107,4 +109,14 @@ func getServerStats() map[string]any {
 		"gc_runs":      m.NumGC,
 		"cpu_count":    runtime.NumCPU(),
 	}
+}
+
+func getCanonicalURL(r *http.Request) string {
+	canonical := &url.URL{
+		Scheme: r.URL.Scheme,
+		Host:   r.Host,
+		Path:   r.URL.Path,
+	}
+
+	return canonical.String()
 }

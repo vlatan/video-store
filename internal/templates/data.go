@@ -5,7 +5,6 @@ import (
 	"factual-docs/internal/database"
 	"factual-docs/internal/files"
 	"html/template"
-	"net/url"
 	"strings"
 	"time"
 )
@@ -46,6 +45,7 @@ type TemplateData struct {
 	CurrentPost   *database.Post
 	CurrentUser   *User
 	CurrentURI    string
+	CanonicalURL  string
 	Posts         database.Posts
 	Categories    []database.Category
 	FlashMessages []*FlashMessage
@@ -72,12 +72,4 @@ func (td *TemplateData) Split(s, sep string) []string {
 
 func (td *TemplateData) Now() time.Time {
 	return time.Now()
-}
-
-func (td *TemplateData) CurrentURLPath() string {
-	u, err := url.Parse(td.CurrentURI)
-	if err != nil {
-		return td.CurrentURI
-	}
-	return u.Path
 }

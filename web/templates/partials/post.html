@@ -7,16 +7,15 @@
 {{ end }}
 
 {{ define "extra_meta" }}
-{{ $canonicalURL := .CurrentURLPath }}
-<link rel="canonical" href="{{ $canonicalURL }}" />
+<link rel="canonical" href="{{ .CanonicalURL }}" />
 <meta property='og:title' content='{{ .Title }}'>
 <meta property='og:type' content='video.movie'>
-<meta property='og:url' content='{{ $canonicalURL }}'>
+<meta property='og:url' content='{{ .CanonicalURL }}'>
 <meta property='og:image' content='{{ .CurrentPost.Thumbnail.URL }}'>
 <meta name='thumbnail' content='{{ .CurrentPost.Thumbnail.URL }}'>
 
 <meta name="twitter:title" content="{{ .Title }}">
-<meta property="twitter:url" content="{{ $canonicalURL }}">
+<meta property="twitter:url" content="{{ .CanonicalURL }}">
 <meta name="twitter:image" content="{{ .CurrentPost.Thumbnail.URL }}">
 
 {{ if .CurrentPost.MetaDesc }}

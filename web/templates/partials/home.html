@@ -7,17 +7,16 @@
 {{ end }}
 
 {{ define "extra_meta" }}
-{{ $canonicalURL := .CurrentURLPath }}
 {{ $large_favicon := .AddVersion "/android-chrome-512x512.png" }}
-<link rel="canonical" href="{{ $canonicalURL }}">
+<link rel="canonical" href="{{ .CanonicalURL }}">
 <meta name="description" content="{{ .Config.AppDescription }}">
 <meta property="og:title" content="{{ .Config.AppName }}">
 <meta property="og:type" content="website">
-<meta property="og:url" content="{{ $canonicalURL }}">
+<meta property="og:url" content="{{ .CanonicalURL }}">
 <meta property="og:image" content="{{ $large_favicon }}">
 <meta property="og:description" content="{{ .Config.AppDescription }}">
 <meta name="twitter:title" content="{{ .Config.AppName }}">
-<meta property="twitter:url" content="{{ $canonicalURL }}">
+<meta property="twitter:url" content="{{ .CanonicalURL }}">
 <meta name="twitter:image" content="{{ $large_favicon }}">
 <meta name="twitter:description" content="{{ .Config.AppDescription }}">
 
