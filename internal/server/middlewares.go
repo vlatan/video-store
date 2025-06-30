@@ -105,6 +105,7 @@ func (s *Server) wwwRedirect(next http.Handler) http.Handler {
 		// Check for 'www.' prefix
 		if !strings.HasPrefix(r.Host, "www.") {
 			next.ServeHTTP(w, r)
+			return
 		}
 
 		// Clone the URL

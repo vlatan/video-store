@@ -111,9 +111,16 @@ func getServerStats() map[string]any {
 	}
 }
 
+// Get canonilca absolute URL
 func getCanonicalURL(r *http.Request) string {
+	// Determine scheme
+	scheme := "http"
+	if r.TLS != nil {
+		scheme = "https"
+	}
+
 	canonical := &url.URL{
-		Scheme: r.URL.Scheme,
+		Scheme: scheme,
 		Host:   r.Host,
 		Path:   r.URL.Path,
 	}
