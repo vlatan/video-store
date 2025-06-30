@@ -99,6 +99,30 @@ func (s *Server) addHeaders(next http.Handler) http.Handler {
 	})
 }
 
+// Redirect WWW to non-WWW
+func (s *Server) wwwRedirect(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Check for 'www.' prefix
+		if !strings.HasPrefix(r.Host, "www.") {
+			next.ServeHTTP(w, r)
+		}
+
+		// Clone the URL
+		u := *r.URL
+
+		// Modify the host
+		u.Host = strings.TrimPrefix(r.Host, "www.")
+
+		// Modify the scheme
+		if !s.config.Debug {
+			u.Scheme = "https"
+		}
+
+		// Redirect
+		http.Redirect(w, r, u.String(), http.StatusFound)
+	})
+}
+
 // Create CSRF middlware with added plain text option for local development
 func (s *Server) createCSRFMiddleware() func(http.Handler) http.Handler {
 

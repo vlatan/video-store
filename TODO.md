@@ -1,4 +1,3 @@
-* Construct WWW to non-WWW redirect middleware
 * Construct absolute canonical URL, not relative
 * ads.txt route
 * Serve Favicons from root

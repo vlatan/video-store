@@ -24,5 +24,5 @@ func (s *Server) RegisterRoutes() http.Handler {
 	CSRF := s.createCSRFMiddleware()
 
 	// Chain middlwares that apply to all requests
-	return s.applyToAll(s.recoverPanic, CSRF, s.addHeaders)(mux)
+	return s.applyToAll(s.recoverPanic, s.wwwRedirect, CSRF, s.addHeaders)(mux)
 }
