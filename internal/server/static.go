@@ -61,7 +61,7 @@ func (s *Server) staticHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		avatarPath := s.config.DataVolume + "/" + filepath.Base(parsed.Path)
+		avatarPath := filepath.Join(s.config.DataVolume, filepath.Base(parsed.Path))
 		http.ServeFile(w, r, avatarPath)
 		return
 	}
