@@ -29,15 +29,14 @@ type Service interface {
 	// Get all categories
 	GetCategories(ctx context.Context) ([]Category, error)
 
-	// A map of health status information.
-	Health(ctx context.Context) map[string]string
-
 	// Query many rows
 	Query(ctx context.Context, query string, args ...any) (pgx.Rows, error)
 	// Query single row
 	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
 	// Execute a query (update, insert, delete)
 	Exec(ctx context.Context, query string, args ...any) (int64, error)
+	// A map of health status information.
+	Health(ctx context.Context) map[string]string
 	// Closes the pool and terminates the database connection.
 	Close()
 }

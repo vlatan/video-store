@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"path/filepath"
 	"slices"
+	"sync"
 
 	"github.com/gorilla/sessions"
 	"github.com/tdewolff/minify"
@@ -47,8 +48,12 @@ type service struct {
 	sf        files.StaticFiles
 }
 
+var (
+	tmInstance *service
+	once       sync.Once
+)
+
 // Walk the partials directory and parse the templates.
-// Return a map of templates.
 func New(
 	db database.Service,
 	rdb redis.Service,
@@ -56,63 +61,67 @@ func New(
 	store *sessions.CookieStore,
 	sf files.StaticFiles,
 ) Service {
+	once.Do(func() {
+		m := minify.New()
+		m.AddFunc("text/html", html.Minify)
 
-	m := minify.New()
-	m.AddFunc("text/html", html.Minify)
+		tm := make(map[string]*template.Template)
+		baseTemplate := template.Must(parseFiles(m, nil, base))
 
-	tm := make(map[string]*template.Template)
-	baseTemplate := template.Must(parseFiles(m, nil, base))
+		// Function used to process each file/dir in the root, including the root
+		walkDirFunc := func(path string, info fs.DirEntry, err error) error {
 
-	// Function used to process each file/dir in the root, including the root
-	walkDirFunc := func(path string, info fs.DirEntry, err error) error {
+			// The err argument reports an error related to path,
+			// signaling that WalkDir will not walk into that directory.
+			// Returning back the error will cause WalkDir to stop walking the entire tree.
+			// https://pkg.go.dev/io/fs#WalkDirFunc
+			if err != nil {
+				return err
+			}
 
-		// The err argument reports an error related to path,
-		// signaling that WalkDir will not walk into that directory.
-		// Returning back the error will cause WalkDir to stop walking the entire tree.
-		// https://pkg.go.dev/io/fs#WalkDirFunc
-		if err != nil {
-			return err
-		}
+			// Skip directories
+			if info.IsDir() {
+				return nil
+			}
 
-		// Skip directories
-		if info.IsDir() {
+			// Clone the base
+			baseTmpl, err := baseTemplate.Clone()
+			if err != nil {
+				log.Fatalf("couldn't clone the base '%s' template", base)
+			}
+
+			// Extract the template name
+			name := filepath.Base(path)
+			name = name[:len(name)-len(filepath.Ext(name))]
+
+			// Include the "content" if needed
+			part := []string{path}
+			if slices.Contains(needsContent, name) {
+				part = append(part, content)
+			}
+
+			tm[name] = template.Must(parseFiles(m, baseTmpl, part...))
+
 			return nil
 		}
 
-		// Clone the base
-		baseTmpl, err := baseTemplate.Clone()
-		if err != nil {
-			log.Fatalf("couldn't clone the base '%s' template", base)
+		// Walk the directory and parse each template
+		if err := fs.WalkDir(web.Files, partials, walkDirFunc); err != nil {
+			log.Println(err)
 		}
 
-		// Extract the template name
-		name := filepath.Base(path)
-		name = name[:len(name)-len(filepath.Ext(name))]
-
-		// Include the "content" if needed
-		part := []string{path}
-		if slices.Contains(needsContent, name) {
-			part = append(part, content)
+		tmInstance = &service{
+			templates: tm,
+			db:        db,
+			rdb:       rdb,
+			config:    config,
+			store:     store,
+			sf:        sf,
 		}
 
-		tm[name] = template.Must(parseFiles(m, baseTmpl, part...))
+	})
 
-		return nil
-	}
-
-	// Walk the directory and parse each template
-	if err := fs.WalkDir(web.Files, partials, walkDirFunc); err != nil {
-		log.Println(err)
-	}
-
-	return &service{
-		templates: tm,
-		db:        db,
-		rdb:       rdb,
-		config:    config,
-		store:     store,
-		sf:        sf,
-	}
+	return tmInstance
 }
 
 // Minify and parse the HTML templates as per the tdewolff/minify docs.
