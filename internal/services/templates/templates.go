@@ -45,7 +45,7 @@ type service struct {
 	rdb       redis.Service
 	config    *config.Config
 	store     *sessions.CookieStore
-	sf        files.StaticFiles
+	sf        *files.Service
 }
 
 var (
@@ -59,7 +59,7 @@ func New(
 	rdb redis.Service,
 	config *config.Config,
 	store *sessions.CookieStore,
-	sf files.StaticFiles,
+	sf *files.Service,
 ) Service {
 	once.Do(func() {
 		m := minify.New()

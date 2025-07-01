@@ -109,7 +109,7 @@ func (s *service) NewData(w http.ResponseWriter, r *http.Request) *TemplateData 
 	session.Save(r, w)
 
 	return &TemplateData{
-		StaticFiles:   s.sf,
+		StaticFiles:   s.sf.GetStaticFiles(),
 		Config:        s.config,
 		Categories:    categories,
 		CurrentURI:    r.RequestURI,

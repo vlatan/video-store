@@ -1,4 +1,4 @@
-package server
+package files
 
 import (
 	"bytes"
@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-var favicons = []string{
+var Favicons = []string{
 	"/android-chrome-192x192.png",
 	"/android-chrome-512x512.png",
 	"/apple-touch-icon.png",
@@ -22,8 +22,8 @@ var favicons = []string{
 	"/site.webmanifest",
 }
 
-// Handle minified static file from cache
-func (s *Server) staticHandler(w http.ResponseWriter, r *http.Request) {
+// Handle static files
+func (s *Service) StaticHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Validate the path
 	if err := utils.ValidateFilePath(r.URL.Path); err != nil {
@@ -67,7 +67,7 @@ func (s *Server) staticHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Serve favicon from the embedded FS if accessed in the root, i.e. /favicon.ico
-	if slices.Contains(favicons, r.URL.Path) {
+	if slices.Contains(Favicons, r.URL.Path) {
 		filePath := filepath.Join("/static/favicons", r.URL.Path)
 		http.ServeFileFS(w, r, web.Files, filePath)
 		return

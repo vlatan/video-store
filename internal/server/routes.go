@@ -1,6 +1,7 @@
 package server
 
 import (
+	"factual-docs/internal/services/files"
 	"net/http"
 )
 
@@ -14,7 +15,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	mux.HandleFunc("GET /category/{category}/{$}", s.categoryPostsHandler)
 	mux.HandleFunc("GET /search/{$}", s.searchHandler)
 	mux.HandleFunc("GET /health/{$}", s.isAdmin(s.healthHandler))
-	mux.HandleFunc("GET /static/", s.staticHandler)
+	mux.HandleFunc("GET /static/", s.sf.StaticHandler)
 	mux.HandleFunc("GET /auth/{provider}", s.auth.AuthHandler)
 	mux.HandleFunc("GET /auth/{provider}/callback", s.auth.AuthCallbackHandler)
 	mux.HandleFunc("GET /logout/{provider}", s.isAuthenticated(s.auth.LogoutHandler))
@@ -22,8 +23,8 @@ func (s *Server) RegisterRoutes() http.Handler {
 	mux.HandleFunc("GET /ads.txt", s.adsTextHandler)
 
 	// Register favicons serving from root
-	for _, favicon := range favicons {
-		mux.HandleFunc("GET "+favicon, s.staticHandler)
+	for _, favicon := range files.Favicons {
+		mux.HandleFunc("GET "+favicon, s.sf.StaticHandler)
 	}
 
 	// Create Cross-Site Request Forgery middleware
