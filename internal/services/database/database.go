@@ -7,6 +7,7 @@ import (
 	"log"
 	"sync"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/markbates/goth"
@@ -35,6 +36,10 @@ type Service interface {
 	// A map of health status information.
 	Health(ctx context.Context) map[string]string
 
+	// Query many rows
+	Query(ctx context.Context, query string, args ...any) (pgx.Rows, error)
+	// Query single row
+	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
 	// Execute a query (update, insert, delete)
 	Exec(ctx context.Context, query string, args ...any) (int64, error)
 	// Closes the pool and terminates the database connection.
@@ -75,6 +80,16 @@ func New(cfg *config.Config) Service {
 	})
 
 	return dbInstance
+}
+
+// Query many rows
+func (s *service) Query(ctx context.Context, query string, args ...any) (pgx.Rows, error) {
+	return s.db.Query(ctx, query, args...)
+}
+
+// Query single row
+func (s *service) QueryRow(ctx context.Context, query string, args ...any) pgx.Row {
+	return s.db.QueryRow(ctx, query, args...)
 }
 
 // Execute a query (update, insert, delete)

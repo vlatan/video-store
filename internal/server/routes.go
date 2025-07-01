@@ -15,7 +15,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	mux.HandleFunc("GET /search/{$}", s.searchHandler)
 	mux.HandleFunc("GET /health/{$}", s.isAdmin(s.healthHandler))
 	mux.HandleFunc("GET /static/", s.staticHandler)
-	mux.HandleFunc("GET /auth/{provider}", s.authHandler)
+	mux.HandleFunc("GET /auth/{provider}", s.auth.AuthHandler)
 	mux.HandleFunc("GET /auth/{provider}/callback", s.authCallbackHandler)
 	mux.HandleFunc("GET /logout/{provider}", s.isAuthenticated(s.logoutHandler))
 	mux.HandleFunc("POST /account/delete", s.isAuthenticated(s.deleteAccountHandler))
