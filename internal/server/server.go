@@ -41,17 +41,17 @@ func NewServer() *http.Server {
 	// Create new config object
 	cfg := config.New()
 	db := database.New(cfg) // Create database service
-	redis := redis.New(cfg) // Create Redis service
+	rdb := redis.New(cfg)   // Create Redis service
 
-	users := users.New(db, redis)
+	users := users.New(db, rdb)
 	store := NewCookieStore(cfg) // Create cookie store
-	auth := auth.New(users, store, cfg)
+	auth := auth.New(users, store, rdb, cfg)
 
 	// Create new Server struct
 	newServer := &Server{
 		config: cfg,
 		sf:     files.New(), // Create minified files map
-		rdb:    redis,
+		rdb:    rdb,
 		db:     db,
 		store:  store,
 		tm:     templates.New(), // Create parsed templates map

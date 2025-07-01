@@ -1,7 +1,6 @@
 package server
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -18,7 +17,6 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/markbates/goth/gothic"
 )
 
 var validVideoID = regexp.MustCompile("^([-a-zA-Z0-9_]{11})$")
@@ -28,7 +26,7 @@ func (s *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Generate template data
 	data := s.NewData(w, r)
-	data.CurrentUser = s.getCurrentUser(w, r)
+	data.CurrentUser = s.auth.GetCurrentUser(w, r)
 
 	// Get page number from a query param
 	page := getPageNum(r)
@@ -93,7 +91,7 @@ func (s *Server) categoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 	// Generate template data (it gets all the categories too)
 	// This is probably wasteful for non-existing category
 	data := s.NewData(w, r)
-	data.CurrentUser = s.getCurrentUser(w, r)
+	data.CurrentUser = s.auth.GetCurrentUser(w, r)
 
 	// Check if the category is valid
 	category, valid := isValidCategory(data.Categories, slug)
@@ -172,7 +170,7 @@ func (s *Server) searchHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Generate the default data
 	data := s.NewData(w, r)
-	data.CurrentUser = s.getCurrentUser(w, r)
+	data.CurrentUser = s.auth.GetCurrentUser(w, r)
 	data.SearchQuery = searchQuery
 
 	limit := s.config.PostsPerPage
@@ -233,7 +231,7 @@ func (s *Server) singlePostHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Generate the default data
 	data := s.NewData(w, r)
-	data.CurrentUser = s.getCurrentUser(w, r)
+	data.CurrentUser = s.auth.GetCurrentUser(w, r)
 
 	// Validate the YT ID
 	if validVideoID.FindStringSubmatch(videoID) == nil {
@@ -335,7 +333,7 @@ func (s *Server) postActionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get the current user
-	currentUser := s.getCurrentUser(w, r)
+	currentUser := s.auth.GetCurrentUser(w, r)
 
 	// Check if user is authorized to edit or delete (admin)
 	if (action == "edit" || action == "delete") &&
@@ -416,179 +414,6 @@ func (s *Server) healthHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s.tm.WriteJSON(w, r, data)
-}
-
-// Provider Auth
-func (s *Server) authHandler(w http.ResponseWriter, r *http.Request) {
-
-	// The origin URL of the user
-	redirectTo := getRedirectPath(r)
-
-	// Auth with gothic, try to get the user without re-authenticating
-	gothUser, err := gothic.CompleteUserAuth(w, r)
-
-	// If unable to re-auth start the auth from the beginning
-	if err != nil {
-		// Store this redirect URL in another session as flash message
-		session, _ := s.store.Get(r, s.config.FlashSessionName)
-		session.AddFlash(redirectTo, "redirect")
-		session.Save(r, w)
-
-		// Begin Provider auth
-		// This will redirect the client to the provider's authentication end-point
-		gothic.BeginAuthHandler(w, r)
-		return
-	}
-
-	// Login user, save into our session
-	if err = s.loginUser(w, r, &gothUser); err != nil {
-		log.Printf("Error logging in the user: %v", err)
-		s.storeFlashMessage(w, r, &failedLogin)
-		http.Redirect(w, r, redirectTo, http.StatusFound)
-		return
-	}
-
-	s.storeFlashMessage(w, r, &successLogin)
-	http.Redirect(w, r, redirectTo, http.StatusSeeOther)
-}
-
-// Provider Auth callback
-func (s *Server) authCallbackHandler(w http.ResponseWriter, r *http.Request) {
-
-	// The origin URL of the user
-	redirectTo := s.getUserFinalRedirect(w, r)
-
-	// Authenticate the user using gothic
-	gothUser, err := gothic.CompleteUserAuth(w, r)
-	if err != nil {
-		log.Printf("Error with gothic user auth: %v", err)
-		s.storeFlashMessage(w, r, &failedLogin)
-		http.Redirect(w, r, redirectTo, http.StatusFound)
-		return
-	}
-
-	// Save user into our session
-	if err = s.loginUser(w, r, &gothUser); err != nil {
-		log.Printf("Error logging in the user: %v", err)
-		s.storeFlashMessage(w, r, &failedLogin)
-		http.Redirect(w, r, redirectTo, http.StatusFound)
-		return
-	}
-
-	s.storeFlashMessage(w, r, &successLogin)
-	http.Redirect(w, r, redirectTo, http.StatusSeeOther)
-}
-
-// Logout user, delete sessions
-// Wrap this with middleware to allow only authnenticated users
-func (s *Server) logoutHandler(w http.ResponseWriter, r *http.Request) {
-
-	// The origin URL of the user
-	redirectTo := getRedirectPath(r)
-
-	// Remove gothic session if any
-	if err := gothic.Logout(w, r); err != nil {
-		log.Printf("Error loging out the user with gothic: %v", err)
-		s.storeFlashMessage(w, r, &failedLogout)
-		http.Redirect(w, r, redirectTo, http.StatusFound)
-		return
-	}
-
-	// Remove user's session
-	if err := s.logoutUser(w, r); err != nil {
-		log.Printf("Error loging out the user: %v", err)
-		s.storeFlashMessage(w, r, &failedLogout)
-		http.Redirect(w, r, redirectTo, http.StatusFound)
-		return
-	}
-
-	s.storeFlashMessage(w, r, &successLogout)
-	http.Redirect(w, r, redirectTo, http.StatusSeeOther)
-}
-
-// Delete the user account
-// Wrap this with middleware to allow only authnenticated users
-func (s *Server) deleteAccountHandler(w http.ResponseWriter, r *http.Request) {
-	// This is a POST request, close the body
-	defer r.Body.Close()
-
-	// The origin URL of the user
-	redirectTo := getRedirectPath(r)
-
-	// Get the current user
-	currentUser := s.getCurrentUser(w, r)
-
-	// Remove gothic session if any
-	if err := gothic.Logout(w, r); err != nil {
-		log.Printf("Error loging out the user with gothic: %v", err)
-		s.storeFlashMessage(w, r, &failedDeleteAccount)
-		http.Redirect(w, r, redirectTo, http.StatusFound)
-		return
-	}
-
-	// Remove user session
-	if err := s.logoutUser(w, r); err != nil {
-		log.Printf("Error loging out the user: %v", err)
-		s.storeFlashMessage(w, r, &failedDeleteAccount)
-		http.Redirect(w, r, redirectTo, http.StatusFound)
-		return
-	}
-
-	// Delete the user from DB
-	rowsAffected, err := s.db.Exec(r.Context(), database.DeleteUserQuery, currentUser.ID)
-	if err != nil {
-		log.Printf("Could not delete user %d: %v", currentUser.ID, err)
-		s.storeFlashMessage(w, r, &failedDeleteAccount)
-		http.Redirect(w, r, redirectTo, http.StatusFound)
-		return
-	}
-
-	if rowsAffected == 0 {
-		log.Printf("No such user %d to delete", currentUser.ID)
-		s.storeFlashMessage(w, r, &failedDeleteAccount)
-		http.Redirect(w, r, redirectTo, http.StatusFound)
-		return
-	}
-
-	// Attempt to remove the avatar from disk and redis
-	s.deleteAvatar(r, currentUser.AnalyticsID)
-
-	// Attempt to send revoke request
-	if currentUser.AccessToken != "" {
-		revokeLogin(currentUser)
-	}
-
-	s.storeFlashMessage(w, r, &successDeleteAccount)
-	http.Redirect(w, r, redirectTo, http.StatusFound)
-
-}
-
-// Send revoke request. It will work if the access token is not expired.
-func revokeLogin(user *templates.User) (response *http.Response, err error) {
-
-	switch user.Provider {
-	case "google":
-		url := "https://oauth2.googleapis.com/revoke"
-		contentType := "application/x-www-form-urlencoded"
-		body := []byte("token=" + user.AccessToken)
-		response, err = http.Post(url, contentType, bytes.NewBuffer(body))
-	case "facebook":
-		url := fmt.Sprintf("https://graph.facebook.com/v23.0/%s/permissions", user.UserID)
-		body := []byte("access_token=" + user.AccessToken)
-		req, reqErr := http.NewRequest("DELETE", url, bytes.NewBuffer(body))
-		if reqErr != nil {
-			return response, reqErr
-		}
-		client := &http.Client{}
-		response, err = client.Do(req)
-	}
-
-	if err != nil {
-		return response, err
-	}
-
-	defer response.Body.Close()
-	return response, err
 }
 
 func isValidCategory(categories []database.Category, slug string) (database.Category, bool) {

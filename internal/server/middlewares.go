@@ -19,7 +19,7 @@ var userContextKey = contextKey{name: "user"}
 func (s *Server) isAuthenticated(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// If the user is authenticated move onto the next handler
-		if currentUser := s.getCurrentUser(w, r); currentUser.IsAuthenticated() {
+		if currentUser := s.auth.GetCurrentUser(w, r); currentUser.IsAuthenticated() {
 			// Pass the user in the context
 			ctx := context.WithValue(r.Context(), userContextKey, currentUser)
 			next(w, r.WithContext(ctx))
@@ -40,7 +40,7 @@ func (s *Server) isAuthenticated(next http.HandlerFunc) http.HandlerFunc {
 func (s *Server) isAdmin(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// If the user is admin move onto the next handler
-		if cu := s.getCurrentUser(w, r); cu.IsAuthenticated() && cu.UserID == s.config.AdminOpenID {
+		if cu := s.auth.GetCurrentUser(w, r); cu.IsAuthenticated() && cu.UserID == s.config.AdminOpenID {
 			// Pass the user in the context
 			ctx := context.WithValue(r.Context(), userContextKey, cu)
 			next(w, r.WithContext(ctx))
@@ -78,7 +78,7 @@ func (s *Server) addHeaders(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		// Add CF cache control header if user not logged in or not static file
-		cu := s.getCurrentUser(w, r)
+		cu := s.auth.GetCurrentUser(w, r)
 		if !cu.IsAuthenticated() && !strings.HasPrefix(r.URL.Path, "/static/") {
 			w.Header().Set("CDN-Cache-Control", "14400")
 		}

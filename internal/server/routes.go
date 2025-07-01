@@ -16,9 +16,9 @@ func (s *Server) RegisterRoutes() http.Handler {
 	mux.HandleFunc("GET /health/{$}", s.isAdmin(s.healthHandler))
 	mux.HandleFunc("GET /static/", s.staticHandler)
 	mux.HandleFunc("GET /auth/{provider}", s.auth.AuthHandler)
-	mux.HandleFunc("GET /auth/{provider}/callback", s.authCallbackHandler)
-	mux.HandleFunc("GET /logout/{provider}", s.isAuthenticated(s.logoutHandler))
-	mux.HandleFunc("POST /account/delete", s.isAuthenticated(s.deleteAccountHandler))
+	mux.HandleFunc("GET /auth/{provider}/callback", s.auth.AuthCallbackHandler)
+	mux.HandleFunc("GET /logout/{provider}", s.isAuthenticated(s.auth.LogoutHandler))
+	mux.HandleFunc("POST /account/delete", s.isAuthenticated(s.auth.DeleteAccountHandler))
 	mux.HandleFunc("GET /ads.txt", s.adsTextHandler)
 
 	// Register favicons serving from root

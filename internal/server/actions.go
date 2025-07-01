@@ -117,6 +117,6 @@ func (s *Server) handleDeletePost(w http.ResponseWriter, r *http.Request, userID
 		Category: "info",
 	}
 
-	s.storeFlashMessage(w, r, &successDelete)
+	s.auth.StoreFlashMessage(w, r, &successDelete)
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
