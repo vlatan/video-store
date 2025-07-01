@@ -1,4 +1,4 @@
-package templates
+package tmpls
 
 import (
 	"bytes"
@@ -14,7 +14,7 @@ type JSONErrorData struct {
 }
 
 // Write HTML error to response
-func (tm Templates) HTMLError(w http.ResponseWriter, r *http.Request, statusCode int, data *TemplateData) {
+func (s *service) HTMLError(w http.ResponseWriter, r *http.Request, statusCode int, data *TemplateData) {
 	// Stream status code early
 	w.WriteHeader(statusCode)
 
@@ -38,7 +38,7 @@ func (tm Templates) HTMLError(w http.ResponseWriter, r *http.Request, statusCode
 		data.HTMLErrorData.Text = "Sorry about that. We're working on fixing this."
 	}
 
-	tmpl, exists := tm["error"]
+	tmpl, exists := s.templates["error"]
 
 	if !exists {
 		log.Printf("Could not find the 'error' template on URI '%s'", r.RequestURI)
@@ -64,7 +64,7 @@ func (tm Templates) HTMLError(w http.ResponseWriter, r *http.Request, statusCode
 }
 
 // Write JSON error to response
-func (tm Templates) JSONError(w http.ResponseWriter, r *http.Request, statusCode int) {
+func (s *service) JSONError(w http.ResponseWriter, r *http.Request, statusCode int) {
 	// Stream status code early
 	w.WriteHeader(statusCode)
 

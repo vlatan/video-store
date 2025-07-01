@@ -1,4 +1,4 @@
-package templates
+package tmpls
 
 import (
 	"bytes"
@@ -8,12 +8,12 @@ import (
 )
 
 // Write JSON to buffer first and then if succesfull to the response writer
-func (tm Templates) WriteJSON(w http.ResponseWriter, r *http.Request, data any) {
+func (s *service) WriteJSON(w http.ResponseWriter, r *http.Request, data any) {
 	// Encode data to JSON
 	jsonData, err := json.Marshal(data)
 	if err != nil {
 		log.Printf("Failed to encode JSON response on URI '%s': %v", r.RequestURI, err)
-		tm.JSONError(w, r, http.StatusInternalServerError)
+		s.JSONError(w, r, http.StatusInternalServerError)
 		return
 	}
 
@@ -28,12 +28,12 @@ func (tm Templates) WriteJSON(w http.ResponseWriter, r *http.Request, data any) 
 // Check if template exists in the collection of templates (map)
 // Write the template to buffer to check for errors
 // Finally write the template to http response writer
-func (tm Templates) RenderHTML(w http.ResponseWriter, r *http.Request, templateName string, data *TemplateData) {
-	tmpl, exists := tm[templateName]
+func (s *service) RenderHTML(w http.ResponseWriter, r *http.Request, templateName string, data *TemplateData) {
+	tmpl, exists := s.templates[templateName]
 
 	if !exists {
 		log.Printf("Could not find the '%s' template on URI '%s'", templateName, r.RequestURI)
-		tm.HTMLError(w, r, http.StatusInternalServerError, data)
+		s.HTMLError(w, r, http.StatusInternalServerError, data)
 		return
 	}
 
@@ -45,7 +45,7 @@ func (tm Templates) RenderHTML(w http.ResponseWriter, r *http.Request, templateN
 			r.RequestURI,
 			err,
 		)
-		tm.HTMLError(w, r, http.StatusInternalServerError, data)
+		s.HTMLError(w, r, http.StatusInternalServerError, data)
 		return
 	}
 

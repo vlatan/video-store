@@ -1,33 +1,33 @@
 package auth
 
-import "factual-docs/internal/services/templates"
+import tmpls "factual-docs/internal/services/templates"
 
-var successLogin = templates.FlashMessage{
+var successLogin = tmpls.FlashMessage{
 	Message:  "You've been logged in!",
 	Category: "info",
 }
 
-var failedLogin = templates.FlashMessage{
+var failedLogin = tmpls.FlashMessage{
 	Message:  "Something went wrong. Login failed!",
 	Category: "info",
 }
 
-var successLogout = templates.FlashMessage{
+var successLogout = tmpls.FlashMessage{
 	Message:  "You've been logged out!",
 	Category: "info",
 }
 
-var failedLogout = templates.FlashMessage{
+var failedLogout = tmpls.FlashMessage{
 	Message:  "Something went wrong. Logout failed!",
 	Category: "info",
 }
 
-var successDeleteAccount = templates.FlashMessage{
+var successDeleteAccount = tmpls.FlashMessage{
 	Message:  "You accound was deleted!",
 	Category: "info",
 }
 
-var failedDeleteAccount = templates.FlashMessage{
+var failedDeleteAccount = tmpls.FlashMessage{
 	Message:  "Something went wrong. Account deletion failed!",
 	Category: "info",
 }

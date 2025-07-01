@@ -6,81 +6,19 @@ import (
 	"errors"
 	"factual-docs/internal/services/database"
 	"factual-docs/internal/services/redis"
-	"factual-docs/internal/services/templates"
+	tmpls "factual-docs/internal/services/templates"
 	"factual-docs/internal/utils"
 	"fmt"
 	"log"
 	"net/http"
 	"regexp"
 	"slices"
-	"strconv"
 	"time"
 
 	"github.com/jackc/pgx/v5"
 )
 
 var validVideoID = regexp.MustCompile("^([-a-zA-Z0-9_]{11})$")
-
-// Handle the Home page
-func (s *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
-
-	// Generate template data
-	data := s.NewData(w, r)
-	data.CurrentUser = s.auth.GetCurrentUser(w, r)
-
-	// Get page number from a query param
-	page := getPageNum(r)
-	redisKey := fmt.Sprintf("posts:page:%d", page)
-
-	// Get the order_by query param if any
-	orderBy := r.URL.Query().Get("order_by")
-	if orderBy == "likes" {
-		redisKey += ":likes"
-	}
-
-	var posts []database.Post
-	err := redis.GetItems(
-		!data.IsCurrentUserAdmin(),
-		r.Context(),
-		s.rdb,
-		redisKey,
-		s.config.CacheTimeout,
-		&posts,
-		func() ([]database.Post, error) {
-			return s.db.GetPosts(r.Context(), page, orderBy)
-		},
-	)
-
-	if err != nil {
-		log.Printf("Was unabale to fetch posts on URI '%s': %v", r.RequestURI, err)
-		if page > 1 {
-			s.tm.JSONError(w, r, http.StatusInternalServerError)
-			return
-		}
-		s.tm.HTMLError(w, r, http.StatusInternalServerError, data)
-		return
-	}
-
-	if len(posts) == 0 {
-		log.Printf("Fetched zero posts on URI '%s'", r.RequestURI)
-		if page > 1 {
-			s.tm.JSONError(w, r, http.StatusNotFound)
-			return
-		}
-		s.tm.HTMLError(w, r, http.StatusNotFound, data)
-		return
-	}
-
-	// If not the first page return JSON
-	if page > 1 {
-		time.Sleep(time.Millisecond * 400)
-		s.tm.WriteJSON(w, r, posts)
-		return
-	}
-
-	data.Posts.Items = posts
-	s.tm.RenderHTML(w, r, "home", data)
-}
 
 // Handle posts in a certain category
 func (s *Server) categoryPostsHandler(w http.ResponseWriter, r *http.Request) {
@@ -90,7 +28,7 @@ func (s *Server) categoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Generate template data (it gets all the categories too)
 	// This is probably wasteful for non-existing category
-	data := s.NewData(w, r)
+	data := s.tm.NewData(w, r)
 	data.CurrentUser = s.auth.GetCurrentUser(w, r)
 
 	// Check if the category is valid
@@ -102,7 +40,7 @@ func (s *Server) categoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get page number from a query param
-	page := getPageNum(r)
+	page := utils.GetPageNum(r)
 	redisKey := fmt.Sprintf("%s:posts:page:%d", slug, page)
 
 	// Get the order_by query param if any
@@ -166,10 +104,10 @@ func (s *Server) searchHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get the page number from the request query param
-	page := getPageNum(r)
+	page := utils.GetPageNum(r)
 
 	// Generate the default data
-	data := s.NewData(w, r)
+	data := s.tm.NewData(w, r)
 	data.CurrentUser = s.auth.GetCurrentUser(w, r)
 	data.SearchQuery = searchQuery
 
@@ -230,7 +168,7 @@ func (s *Server) singlePostHandler(w http.ResponseWriter, r *http.Request) {
 	videoID := r.PathValue("video")
 
 	// Generate the default data
-	data := s.NewData(w, r)
+	data := s.tm.NewData(w, r)
 	data.CurrentUser = s.auth.GetCurrentUser(w, r)
 
 	// Validate the YT ID
@@ -361,7 +299,7 @@ func (s *Server) postActionHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // Handle the title or description update
-func (s *Server) handleEdit(w http.ResponseWriter, r *http.Request, videoID string, currentUser *templates.User) {
+func (s *Server) handleEdit(w http.ResponseWriter, r *http.Request, videoID string, currentUser *tmpls.User) {
 	var data bodyData
 
 	// Deocode JSON
@@ -423,22 +361,6 @@ func isValidCategory(categories []database.Category, slug string) (database.Cate
 		}
 	}
 	return database.Category{}, false
-}
-
-// Get page number from the request query param
-// Defaults to 1 if invalid page
-func getPageNum(r *http.Request) (page int) {
-	pageStr := r.URL.Query().Get("page")
-	if pageInt, err := strconv.Atoi(pageStr); err == nil {
-		page = pageInt
-	}
-
-	// Do not allow negative or zero pages
-	if page <= 0 {
-		page = 1
-	}
-
-	return page
 }
 
 // Get post's related posts based on provided title as search query

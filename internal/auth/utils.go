@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"crypto/md5"
 	"encoding/hex"
-	"factual-docs/internal/services/templates"
+	tmpls "factual-docs/internal/services/templates"
 	"factual-docs/internal/utils"
 	"fmt"
 	"io"
@@ -31,7 +31,7 @@ func getRedirectPath(r *http.Request) string {
 func (s *Service) StoreFlashMessage(
 	w http.ResponseWriter,
 	r *http.Request,
-	m *templates.FlashMessage,
+	m *tmpls.FlashMessage,
 ) {
 	session, err := s.store.Get(r, s.config.FlashSessionName)
 	if err != nil {
@@ -114,23 +114,23 @@ func (s *Service) logoutUser(w http.ResponseWriter, r *http.Request) error {
 }
 
 // Retrieve the user from context or session, return User struct
-func (s *Service) GetCurrentUser(w http.ResponseWriter, r *http.Request) *templates.User {
+func (s *Service) GetCurrentUser(w http.ResponseWriter, r *http.Request) *tmpls.User {
 
 	// Try to get the current user from context first,
 	// in case an upstream middleware already got the user from session
-	if currentUser, ok := r.Context().Value(utils.UserContextKey).(*templates.User); ok {
+	if currentUser, ok := r.Context().Value(utils.UserContextKey).(*tmpls.User); ok {
 		return currentUser
 	}
 
 	session, err := s.store.Get(r, s.config.SessionName)
 	if session == nil || err != nil {
-		return &templates.User{}
+		return &tmpls.User{}
 	}
 
 	// Get user row ID from session
 	id, ok := session.Values["ID"].(int)
 	if id == 0 || !ok {
-		return &templates.User{}
+		return &tmpls.User{}
 	}
 
 	// Update last seen
@@ -154,7 +154,7 @@ func (s *Service) GetCurrentUser(w http.ResponseWriter, r *http.Request) *templa
 	analyticsID := session.Values["AnalyticsID"].(string)
 	avatarURL := session.Values["AvatarURL"].(string)
 
-	return &templates.User{
+	return &tmpls.User{
 		ID:             id,
 		UserID:         session.Values["UserID"].(string),
 		Email:          session.Values["Email"].(string),
@@ -271,7 +271,7 @@ func (s *Service) deleteAvatar(r *http.Request, analyticsID string) {
 }
 
 // Send revoke request. It will work if the access token is not expired.
-func revokeLogin(user *templates.User) (response *http.Response, err error) {
+func revokeLogin(user *tmpls.User) (response *http.Response, err error) {
 
 	switch user.Provider {
 	case "google":

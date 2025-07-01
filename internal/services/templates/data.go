@@ -1,12 +1,17 @@
-package templates
+package tmpls
 
 import (
 	"factual-docs/internal/services/config"
 	"factual-docs/internal/services/database"
 	"factual-docs/internal/services/files"
+	"factual-docs/internal/services/redis"
 	"html/template"
+	"net/http"
+	"net/url"
 	"strings"
 	"time"
+
+	"github.com/gorilla/csrf"
 )
 
 // User struct to store in the USER info in session
@@ -72,4 +77,61 @@ func (td *TemplateData) Split(s, sep string) []string {
 
 func (td *TemplateData) Now() time.Time {
 	return time.Now()
+}
+
+// Creates new default data struct to be passed to the templates
+// Instead of manualy envoking this function in each route it can be envoked in a middleware
+// and passed donwstream as value to the request context.
+func (s *service) NewData(w http.ResponseWriter, r *http.Request) *TemplateData {
+
+	var categories []database.Category
+	redis.GetItems(
+		true,
+		r.Context(),
+		s.rdb,
+		"categories",
+		s.config.CacheTimeout,
+		&categories,
+		func() ([]database.Category, error) {
+			return s.db.GetCategories(r.Context())
+		},
+	)
+
+	// Get any flash messages from session and put to data
+	session, _ := s.store.Get(r, s.config.FlashSessionName)
+	flashes := session.Flashes()
+	flashMessages := []*FlashMessage{}
+	for _, v := range flashes {
+		if flash, ok := v.(*FlashMessage); ok && flash != nil {
+			flashMessages = append(flashMessages, flash)
+		}
+	}
+	session.Save(r, w)
+
+	return &TemplateData{
+		StaticFiles:   s.sf,
+		Config:        s.config,
+		Categories:    categories,
+		CurrentURI:    r.RequestURI,
+		CanonicalURL:  getCanonicalURL(r),
+		FlashMessages: flashMessages,
+		CSRFField:     csrf.TemplateField(r),
+	}
+}
+
+// Get canonilca absolute URL
+func getCanonicalURL(r *http.Request) string {
+	// Determine scheme
+	scheme := "http"
+	if r.TLS != nil {
+		scheme = "https"
+	}
+
+	canonical := &url.URL{
+		Scheme: scheme,
+		Host:   r.Host,
+		Path:   r.URL.Path,
+	}
+
+	return canonical.String()
 }

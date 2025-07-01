@@ -2,7 +2,7 @@ package server
 
 import (
 	"factual-docs/internal/services/database"
-	"factual-docs/internal/services/templates"
+	tmpls "factual-docs/internal/services/templates"
 	"log"
 	"net/http"
 )
@@ -112,7 +112,7 @@ func (s *Server) handleDeletePost(w http.ResponseWriter, r *http.Request, userID
 		return
 	}
 
-	successDelete := templates.FlashMessage{
+	successDelete := tmpls.FlashMessage{
 		Message:  "The video has been deleted!",
 		Category: "info",
 	}

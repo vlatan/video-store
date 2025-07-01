@@ -8,7 +8,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	mux := http.NewServeMux()
 
 	// Register routes
-	mux.HandleFunc("GET /{$}", s.homeHandler)
+	mux.HandleFunc("GET /{$}", s.posts.HomeHandler)
 	mux.HandleFunc("GET /video/{video}/{$}", s.singlePostHandler)
 	mux.HandleFunc("POST /video/{video}/{action}", s.isAuthenticated(s.postActionHandler))
 	mux.HandleFunc("GET /category/{category}/{$}", s.categoryPostsHandler)

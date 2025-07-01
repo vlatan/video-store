@@ -2,8 +2,10 @@ package utils
 
 import (
 	"fmt"
+	"net/http"
 	"net/url"
 	"path"
+	"strconv"
 )
 
 type contextKey struct {
@@ -47,4 +49,20 @@ func EscapeTrancateString(query string, maxLength int) string {
 	}
 
 	return escapedQuery
+}
+
+// Get page number from the request query param
+// Defaults to 1 if invalid page
+func GetPageNum(r *http.Request) (page int) {
+	pageStr := r.URL.Query().Get("page")
+	if pageInt, err := strconv.Atoi(pageStr); err == nil {
+		page = pageInt
+	}
+
+	// Do not allow negative or zero pages
+	if page <= 0 {
+		page = 1
+	}
+
+	return page
 }
