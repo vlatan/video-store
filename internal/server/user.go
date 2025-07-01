@@ -3,9 +3,9 @@ package server
 import (
 	"crypto/md5"
 	"encoding/hex"
-	"factual-docs/internal/config"
-	"factual-docs/internal/database"
-	"factual-docs/internal/templates"
+	"factual-docs/internal/services/config"
+	"factual-docs/internal/services/database"
+	"factual-docs/internal/services/templates"
 	"fmt"
 	"io"
 	"log"

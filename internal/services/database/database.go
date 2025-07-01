@@ -2,7 +2,7 @@ package database
 
 import (
 	"context"
-	"factual-docs/internal/config"
+	"factual-docs/internal/services/config"
 	"fmt"
 	"log"
 	"sync"

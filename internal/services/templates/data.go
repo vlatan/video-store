@@ -1,9 +1,9 @@
 package templates
 
 import (
-	"factual-docs/internal/config"
-	"factual-docs/internal/database"
-	"factual-docs/internal/files"
+	"factual-docs/internal/services/config"
+	"factual-docs/internal/services/database"
+	"factual-docs/internal/services/files"
 	"html/template"
 	"strings"
 	"time"

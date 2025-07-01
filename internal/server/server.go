@@ -8,11 +8,11 @@ import (
 	"runtime"
 	"time"
 
-	"factual-docs/internal/config"
-	"factual-docs/internal/database"
-	"factual-docs/internal/files"
-	"factual-docs/internal/redis"
-	"factual-docs/internal/templates"
+	"factual-docs/internal/services/config"
+	"factual-docs/internal/services/database"
+	"factual-docs/internal/services/files"
+	"factual-docs/internal/services/redis"
+	"factual-docs/internal/services/templates"
 
 	"github.com/gorilla/csrf"
 	"github.com/gorilla/sessions"

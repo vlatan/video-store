@@ -1,6 +1,6 @@
 package server
 
-import "factual-docs/internal/templates"
+import "factual-docs/internal/services/templates"
 
 var successLogin = templates.FlashMessage{
 	Message:  "You've been logged in!",
