@@ -25,7 +25,7 @@ type Server struct {
 	db     database.Service
 	rdb    redis.Service
 	tm     tmpls.Service
-	sf     *files.Service
+	files  *files.Service
 	users  *users.Service
 	auth   *auth.Service
 	posts  *posts.Service
@@ -46,13 +46,13 @@ func NewServer() *http.Server {
 	store := NewCookieStore(cfg)             // Create cookie store
 	auth := auth.New(users, store, rdb, cfg) // Create auth service
 
-	sf := files.New(cfg)                     // Create minified files map
-	tm := tmpls.New(db, rdb, cfg, store, sf) // Create parsed templates map
+	files := files.New(cfg)                     // Create minified files map
+	tm := tmpls.New(db, rdb, cfg, store, files) // Create parsed templates map
 
 	// Create new Server struct
 	newServer := &Server{
 		config: cfg,
-		sf:     sf,
+		files:  files,
 		rdb:    rdb,
 		db:     db,
 		store:  store,

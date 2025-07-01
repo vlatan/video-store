@@ -12,16 +12,6 @@ import (
 	"time"
 )
 
-var Favicons = []string{
-	"/android-chrome-192x192.png",
-	"/android-chrome-512x512.png",
-	"/apple-touch-icon.png",
-	"/favicon-16x16.png",
-	"/favicon-32x32.png",
-	"/favicon.ico",
-	"/site.webmanifest",
-}
-
 // Handle static files
 func (s *Service) StaticHandler(w http.ResponseWriter, r *http.Request) {
 
@@ -67,7 +57,7 @@ func (s *Service) StaticHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Serve favicon from the embedded FS if accessed in the root, i.e. /favicon.ico
-	if slices.Contains(Favicons, r.URL.Path) {
+	if slices.Contains(utils.Favicons, r.URL.Path) {
 		filePath := filepath.Join("/static/favicons", r.URL.Path)
 		http.ServeFileFS(w, r, web.Files, filePath)
 		return

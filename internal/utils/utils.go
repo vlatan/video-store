@@ -14,6 +14,16 @@ type contextKey struct {
 
 var UserContextKey = contextKey{name: "user"}
 
+var Favicons = []string{
+	"/android-chrome-192x192.png",
+	"/android-chrome-512x512.png",
+	"/apple-touch-icon.png",
+	"/favicon-16x16.png",
+	"/favicon-32x32.png",
+	"/favicon.ico",
+	"/site.webmanifest",
+}
+
 // Validates a path
 func ValidateFilePath(p string) error {
 	if p == "" {
