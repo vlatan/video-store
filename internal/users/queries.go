@@ -1,6 +1,6 @@
 package users
 
-const UpsertUserQuery = `
+const upsertUserQuery = `
 	WITH existing_user AS (
 		SELECT id FROM app_user 
 		WHERE (google_id = $1 AND $1 IS NOT NULL) 
@@ -48,6 +48,6 @@ const UpsertUserQuery = `
 	SELECT id FROM updated
 `
 
-const DeleteUserQuery = "DELETE FROM app_user WHERE id = $1"
+const deleteUserQuery = "DELETE FROM app_user WHERE id = $1"
 
-const UpdateLastUserSeenQuery = "UPDATE app_user SET last_seen = $2 WHERE id = $1"
+const updateLastUserSeenQuery = "UPDATE app_user SET last_seen = $2 WHERE id = $1"

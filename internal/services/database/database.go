@@ -10,14 +10,10 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
-	"github.com/markbates/goth"
 )
 
 // Service represents a service that interacts with a database.
 type Service interface {
-	// Update or insert a new user
-	UpsertUser(ctx context.Context, u *goth.User, analyticsID string) (int, error)
-
 	// Check if logged in user liked or faved a post
 	GetUserActions(ctx context.Context, userID, postID int) (actions Actions, err error)
 

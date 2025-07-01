@@ -5,7 +5,6 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"factual-docs/internal/services/templates"
-	"factual-docs/internal/users"
 	"fmt"
 	"io"
 	"log"
@@ -51,7 +50,7 @@ func (s *Service) loginUser(w http.ResponseWriter, r *http.Request, gothUser *go
 	analyticsID = fmt.Sprintf("%x", md5.Sum([]byte(analyticsID)))
 
 	// Update or insert user
-	id, err := s.users.Repo.DB.UpsertUser(r.Context(), gothUser, analyticsID)
+	id, err := s.users.UpsertUser(r.Context(), gothUser, analyticsID)
 	if id == 0 || err != nil {
 		return err
 	}
@@ -142,7 +141,7 @@ func (s *Service) GetCurrentUser(w http.ResponseWriter, r *http.Request) *templa
 
 	// Check if the DB update is out of sync for an entire day
 	if !sameDate(lastSeenDB, now) {
-		if _, err := s.users.Repo.DB.Exec(r.Context(), users.UpdateLastUserSeenQuery, id, now); err != nil {
+		if _, err := s.users.UpdateLastUserSeen(r.Context(), id, now); err != nil {
 			log.Printf("Couldn't update the last seen in DB on user '%d': %v\n", id, err)
 		}
 		session.Values["LastSeenDB"] = now

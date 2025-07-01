@@ -38,14 +38,13 @@ func NewServer() *http.Server {
 	gob.Register(&templates.FlashMessage{})
 	gob.Register(time.Time{})
 
-	// Create new config object
-	cfg := config.New()
+	cfg := config.New()     // Create new config service
 	db := database.New(cfg) // Create database service
 	rdb := redis.New(cfg)   // Create Redis service
 
-	users := users.New(db, rdb)
-	store := NewCookieStore(cfg) // Create cookie store
-	auth := auth.New(users, store, rdb, cfg)
+	users := users.New(db)                   // Create users service
+	store := NewCookieStore(cfg)             // Create cookie store
+	auth := auth.New(users, store, rdb, cfg) // Create auth service
 
 	// Create new Server struct
 	newServer := &Server{
