@@ -10,7 +10,7 @@ import (
 	"github.com/markbates/goth/providers/google"
 )
 
-// Setup Goth library
+// Setup Goth library and our own session
 func NewCookieStore(cfg *config.Config) *sessions.CookieStore {
 	// Create new cookies store
 	store := sessions.NewCookieStore([]byte(cfg.SessionKey))
