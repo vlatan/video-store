@@ -6,6 +6,12 @@ import (
 	"path"
 )
 
+type contextKey struct {
+	name string
+}
+
+var UserContextKey = contextKey{name: "user"}
+
 // Validates a path
 func ValidateFilePath(p string) error {
 	if p == "" {

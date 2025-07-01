@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"factual-docs/internal/utils"
 	"log"
 	"net/http"
 	"strings"
@@ -9,19 +10,13 @@ import (
 	"github.com/gorilla/csrf"
 )
 
-type contextKey struct {
-	name string
-}
-
-var userContextKey = contextKey{name: "user"}
-
 // Check if the user is authenticated
 func (s *Server) isAuthenticated(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// If the user is authenticated move onto the next handler
 		if currentUser := s.auth.GetCurrentUser(w, r); currentUser.IsAuthenticated() {
 			// Pass the user in the context
-			ctx := context.WithValue(r.Context(), userContextKey, currentUser)
+			ctx := context.WithValue(r.Context(), utils.UserContextKey, currentUser)
 			next(w, r.WithContext(ctx))
 			return
 		}
@@ -42,7 +37,7 @@ func (s *Server) isAdmin(next http.HandlerFunc) http.HandlerFunc {
 		// If the user is admin move onto the next handler
 		if cu := s.auth.GetCurrentUser(w, r); cu.IsAuthenticated() && cu.UserID == s.config.AdminOpenID {
 			// Pass the user in the context
-			ctx := context.WithValue(r.Context(), userContextKey, cu)
+			ctx := context.WithValue(r.Context(), utils.UserContextKey, cu)
 			next(w, r.WithContext(ctx))
 			return
 		}

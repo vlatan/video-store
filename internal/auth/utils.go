@@ -5,6 +5,7 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"factual-docs/internal/services/templates"
+	"factual-docs/internal/utils"
 	"fmt"
 	"io"
 	"log"
@@ -117,7 +118,7 @@ func (s *Service) GetCurrentUser(w http.ResponseWriter, r *http.Request) *templa
 
 	// Try to get the current user from context first,
 	// in case an upstream middleware already got the user from session
-	if currentUser, ok := r.Context().Value(UserContextKey).(*templates.User); ok {
+	if currentUser, ok := r.Context().Value(utils.UserContextKey).(*templates.User); ok {
 		return currentUser
 	}
 
