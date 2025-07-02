@@ -44,16 +44,16 @@ func NewServer() *http.Server {
 	gob.Register(&models.FlashMessage{})
 	gob.Register(time.Time{})
 
-	cfg := config.New()     // Create new config service
-	db := database.New(cfg) // Create database service
-	rdb := redis.New(cfg)   // Create Redis service
+	cfg := config.New()          // Create new config service
+	db := database.New(cfg)      // Create database service
+	rdb := redis.New(cfg)        // Create Redis service
+	store := newCookieStore(cfg) // Create cookie store
+	files := files.New(cfg)      // Create minified files map
 
 	users := users.New(db)                   // Create users service
-	store := newCookieStore(cfg)             // Create cookie store
 	auth := auth.New(users, store, rdb, cfg) // Create auth service
 
-	files := files.New(cfg) // Create minified files map
-	categories := categories.New(db)
+	categories := categories.New(db)                    // Create categories service
 	tm := tmpls.New(rdb, cfg, store, files, categories) // Create parsed templates map
 
 	// Create new Server struct
