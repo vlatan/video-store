@@ -4,7 +4,6 @@ import (
 	"encoding/gob"
 	"fmt"
 	"net/http"
-	"runtime"
 	"time"
 
 	"factual-docs/internal/auth"
@@ -43,7 +42,7 @@ func NewServer() *http.Server {
 	rdb := redis.New(cfg)   // Create Redis service
 
 	users := users.New(db)                   // Create users service
-	store := NewCookieStore(cfg)             // Create cookie store
+	store := newCookieStore(cfg)             // Create cookie store
 	auth := auth.New(users, store, rdb, cfg) // Create auth service
 
 	files := files.New(cfg)                     // Create minified files map
@@ -69,19 +68,5 @@ func NewServer() *http.Server {
 		IdleTimeout:  time.Minute,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 30 * time.Second,
-	}
-}
-
-// Get basic server stats
-func getServerStats() map[string]any {
-	var m runtime.MemStats
-	runtime.ReadMemStats(&m)
-
-	return map[string]any{
-		"goroutines":   runtime.NumGoroutine(),
-		"memory_alloc": m.Alloc,
-		"memory_sys":   m.Sys,
-		"gc_runs":      m.NumGC,
-		"cpu_count":    runtime.NumCPU(),
 	}
 }

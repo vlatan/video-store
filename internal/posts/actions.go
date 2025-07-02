@@ -1,14 +1,20 @@
-package server
+package posts
 
 import (
+	"encoding/json"
 	"factual-docs/internal/shared/database"
 	tmpls "factual-docs/internal/shared/templates"
 	"log"
 	"net/http"
 )
 
+type bodyData struct {
+	Title       string `json:"title"`
+	Description string `json:"description"`
+}
+
 // Handle a post like from user
-func (s *Server) handleLike(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
+func (s *Service) handleLike(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
 	rowsAffected, err := s.db.Exec(r.Context(), database.LikeQuery, userID, videoID)
 	if err != nil {
 		log.Printf("User %d could not like the video %s: %v\n", userID, videoID, err)
@@ -23,7 +29,7 @@ func (s *Server) handleLike(w http.ResponseWriter, r *http.Request, userID int, 
 }
 
 // Handle a post unlike from user
-func (s *Server) handleUnlike(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
+func (s *Service) handleUnlike(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
 	rowsAffected, err := s.db.Exec(r.Context(), database.UnlikeQuery, userID, videoID)
 	if err != nil {
 		log.Printf("User %d could not unlike the video %s: %v\n", userID, videoID, err)
@@ -38,7 +44,7 @@ func (s *Server) handleUnlike(w http.ResponseWriter, r *http.Request, userID int
 }
 
 // Handle a post favorite from user
-func (s *Server) handleFave(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
+func (s *Service) handleFave(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
 	rowsAffected, err := s.db.Exec(r.Context(), database.FaveQuery, userID, videoID)
 	if err != nil {
 		log.Printf("User %d could not fave the video %s: %v\n", userID, videoID, err)
@@ -53,7 +59,7 @@ func (s *Server) handleFave(w http.ResponseWriter, r *http.Request, userID int, 
 }
 
 // Handle a post unfavorite from user
-func (s *Server) handleUnfave(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
+func (s *Service) handleUnfave(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
 	rowsAffected, err := s.db.Exec(r.Context(), database.UnfaveQuery, userID, videoID)
 	if err != nil {
 		log.Printf("User %d could not unfave the video %s: %v\n", userID, videoID, err)
@@ -68,7 +74,7 @@ func (s *Server) handleUnfave(w http.ResponseWriter, r *http.Request, userID int
 }
 
 // Handle a post title update
-func (s *Server) handleUpdateTitle(w http.ResponseWriter, r *http.Request, userID int, videoID, title string) {
+func (s *Service) handleUpdateTitle(w http.ResponseWriter, r *http.Request, userID int, videoID, title string) {
 	rowsAffected, err := s.db.Exec(r.Context(), database.UpdateTitleQuery, videoID, title)
 	if err != nil {
 		log.Printf("User %d could not update the title of the video %s: %v\n", userID, videoID, err)
@@ -83,7 +89,7 @@ func (s *Server) handleUpdateTitle(w http.ResponseWriter, r *http.Request, userI
 }
 
 // Handle a post description update
-func (s *Server) handleUpdateDesc(w http.ResponseWriter, r *http.Request, userID int, videoID, description string) {
+func (s *Service) handleUpdateDesc(w http.ResponseWriter, r *http.Request, userID int, videoID, description string) {
 	rowsAffected, err := s.db.Exec(r.Context(), database.UpdateDescQuery, videoID, description)
 	if err != nil {
 		log.Printf("User %d could not update the description of the video %s: %v\n", userID, videoID, err)
@@ -98,7 +104,7 @@ func (s *Server) handleUpdateDesc(w http.ResponseWriter, r *http.Request, userID
 }
 
 // Handle a post description update
-func (s *Server) handleDeletePost(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
+func (s *Service) handleDeletePost(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
 	rowsAffected, err := s.db.Exec(r.Context(), database.DeletePostQuery, videoID)
 	if err != nil {
 		log.Printf("User %d could not delete the video %s: %v\n", userID, videoID, err)
@@ -119,4 +125,32 @@ func (s *Server) handleDeletePost(w http.ResponseWriter, r *http.Request, userID
 
 	s.auth.StoreFlashMessage(w, r, &successDelete)
 	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+// Handle the title or description update
+func (s *Service) handleEdit(w http.ResponseWriter, r *http.Request, videoID string, currentUser *tmpls.User) {
+	var data bodyData
+
+	// Deocode JSON
+	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
+		log.Printf("Could not decode the JSON body on path: %s", r.URL.Path)
+		s.tm.JSONError(w, r, http.StatusBadRequest)
+		return
+	}
+
+	// Check for title or description
+	if data.Title == "" && data.Description == "" {
+		log.Printf("No title and description in body on path: %s", r.URL.Path)
+		s.tm.JSONError(w, r, http.StatusBadRequest)
+		return
+	}
+
+	if data.Title != "" {
+		s.handleUpdateTitle(w, r, currentUser.ID, videoID, data.Title)
+		return
+	}
+
+	if data.Description != "" {
+		s.handleUpdateDesc(w, r, currentUser.ID, videoID, data.Description)
+	}
 }

@@ -1,13 +1,17 @@
 package posts
 
 import (
+	"errors"
 	"factual-docs/internal/shared/database"
 	"factual-docs/internal/shared/redis"
 	"factual-docs/internal/utils"
 	"fmt"
 	"log"
 	"net/http"
+	"slices"
 	"time"
+
+	"github.com/jackc/pgx/v5"
 )
 
 // Handle the Home page
@@ -211,4 +215,135 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 	data.Posts = posts
 	data.Posts.TimeTook = fmt.Sprintf("%.2f", end.Seconds())
 	s.tm.RenderHTML(w, r, "search", data)
+}
+
+// Handle a single post
+func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
+	// Get category slug from URL
+	videoID := r.PathValue("video")
+
+	// Generate the default data
+	data := s.tm.NewData(w, r)
+	data.CurrentUser = s.auth.GetCurrentUser(w, r)
+
+	// Validate the YT ID
+	if validVideoID.FindStringSubmatch(videoID) == nil {
+		log.Println("Not a valid video ID:", videoID)
+		s.tm.HTMLError(w, r, http.StatusNotFound, data)
+		return
+	}
+
+	var post database.Post
+	err := redis.GetItems(
+		!data.CurrentUser.IsAuthenticated(),
+		r.Context(),
+		s.rdb,
+		fmt.Sprintf("post:%s", videoID),
+		s.config.CacheTimeout,
+		&post,
+		func() (database.Post, error) {
+			return s.db.GetSinglePost(r.Context(), videoID)
+		},
+	)
+
+	if errors.Is(err, pgx.ErrNoRows) {
+		log.Println("Can't find the video in DB:", videoID)
+		s.tm.HTMLError(w, r, http.StatusNotFound, data)
+		return
+	}
+
+	if err != nil {
+		log.Printf("Error while getting the video '%s' from DB: %v", videoID, err)
+		s.tm.HTMLError(w, r, http.StatusInternalServerError, data)
+		return
+	}
+
+	if post.ID == 0 {
+		log.Println("Can't find the video in DB:", videoID)
+		s.tm.HTMLError(w, r, http.StatusNotFound, data)
+		return
+	}
+
+	// Assign the post to data
+	data.CurrentPost = &post
+	data.Title = post.Title
+
+	// Check whether the current user liked and/or faved the post
+	if data.CurrentUser.IsAuthenticated() {
+		userActions, _ := s.db.GetUserActions(
+			r.Context(),
+			data.CurrentUser.ID,
+			data.CurrentPost.ID,
+		)
+		data.CurrentPost.CurrentUserLiked = userActions.Liked
+		data.CurrentPost.CurrentUserFaved = userActions.Faved
+	}
+
+	// Ignore the error on related posts, no posts will be shown
+	var relatedPosts []database.Post
+	redis.GetItems(
+		!data.CurrentUser.IsAuthenticated(),
+		r.Context(),
+		s.rdb,
+		fmt.Sprintf("post:%s:related_posts", videoID),
+		s.config.CacheTimeout,
+		&relatedPosts,
+		func() ([]database.Post, error) {
+			return s.getRelatedPosts(r.Context(), post.Title)
+		},
+	)
+
+	data.CurrentPost.RelatedPosts = relatedPosts
+	s.tm.RenderHTML(w, r, "post", data)
+}
+
+// Perform an action on a video
+func (s *Service) PostActionHandler(w http.ResponseWriter, r *http.Request) {
+
+	// This is a post request, close the body on exit
+	defer r.Body.Close()
+
+	// Validate the YT ID
+	videoID := r.PathValue("video")
+	if validVideoID.FindStringSubmatch(videoID) == nil {
+		log.Println("Not a valid video ID:", videoID)
+		s.tm.JSONError(w, r, http.StatusNotFound)
+		return
+	}
+
+	// Validate the action
+	action := r.PathValue("action")
+	allowedActions := []string{"like", "unlike", "fave", "unfave", "edit", "delete"}
+	if !slices.Contains(allowedActions, action) {
+		log.Printf("Not a valid action '%s' on video: %s\n", action, videoID)
+		s.tm.JSONError(w, r, http.StatusNotFound)
+		return
+	}
+
+	// Get the current user
+	currentUser := s.auth.GetCurrentUser(w, r)
+
+	// Check if user is authorized to edit or delete (admin)
+	if (action == "edit" || action == "delete") &&
+		currentUser.UserID != s.config.AdminOpenID {
+		s.tm.JSONError(w, r, http.StatusForbidden)
+		return
+	}
+
+	switch action {
+	case "like":
+		s.handleLike(w, r, currentUser.ID, videoID)
+	case "unlike":
+		s.handleUnlike(w, r, currentUser.ID, videoID)
+	case "fave":
+		s.handleFave(w, r, currentUser.ID, videoID)
+	case "unfave":
+		s.handleUnfave(w, r, currentUser.ID, videoID)
+	case "edit":
+		s.handleEdit(w, r, videoID, currentUser)
+	case "delete":
+		s.handleDeletePost(w, r, currentUser.ID, videoID)
+	default:
+		s.tm.JSONError(w, r, http.StatusBadRequest)
+	}
 }
