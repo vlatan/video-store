@@ -7,86 +7,16 @@ import (
 	"factual-docs/internal/shared/database"
 	"factual-docs/internal/shared/redis"
 	tmpls "factual-docs/internal/shared/templates"
-	"factual-docs/internal/utils"
 	"fmt"
 	"log"
 	"net/http"
 	"regexp"
 	"slices"
-	"time"
 
 	"github.com/jackc/pgx/v5"
 )
 
 var validVideoID = regexp.MustCompile("^([-a-zA-Z0-9_]{11})$")
-
-// Handle the requests from the searchform
-func (s *Server) searchHandler(w http.ResponseWriter, r *http.Request) {
-	// Get the search query
-	searchQuery := r.URL.Query().Get("q")
-	if searchQuery == "" {
-		http.Redirect(w, r, "/", http.StatusSeeOther)
-		return
-	}
-
-	// Get the page number from the request query param
-	page := utils.GetPageNum(r)
-
-	// Generate the default data
-	data := s.tm.NewData(w, r)
-	data.CurrentUser = s.auth.GetCurrentUser(w, r)
-	data.SearchQuery = searchQuery
-
-	limit := s.config.PostsPerPage
-	offset := (page - 1) * limit
-
-	start := time.Now()
-	encodedSearchQuery := utils.EscapeTrancateString(searchQuery, 100)
-
-	// For search posts we are using the database.Posts struct,
-	// so we can add total results and time took
-	var posts database.Posts
-	err := redis.GetItems(
-		!data.IsCurrentUserAdmin(),
-		r.Context(),
-		s.rdb,
-		fmt.Sprintf("posts:search:page:%d:%s", page, encodedSearchQuery),
-		s.config.CacheTimeout,
-		&posts,
-		func() (database.Posts, error) {
-			return s.db.SearchPosts(r.Context(), searchQuery, limit, offset)
-		},
-	)
-
-	end := time.Since(start)
-
-	if err != nil {
-		log.Printf("Was unabale to fetch posts on URI '%s': %v", r.RequestURI, err)
-		if page > 1 {
-			s.tm.JSONError(w, r, http.StatusInternalServerError)
-			return
-		}
-		s.tm.HTMLError(w, r, http.StatusInternalServerError, data)
-		return
-	}
-
-	if page > 1 && len(posts.Items) == 0 {
-		log.Printf("Fetched zero posts on URI '%s'", r.RequestURI)
-		s.tm.JSONError(w, r, http.StatusNotFound)
-		return
-	}
-
-	// If not the first page return JSON
-	if page > 1 {
-		time.Sleep(time.Millisecond * 400)
-		s.tm.WriteJSON(w, r, posts)
-		return
-	}
-
-	data.Posts = posts
-	data.Posts.TimeTook = fmt.Sprintf("%.2f", end.Seconds())
-	s.tm.RenderHTML(w, r, "search", data)
-}
 
 // Handle a single post
 func (s *Server) singlePostHandler(w http.ResponseWriter, r *http.Request) {

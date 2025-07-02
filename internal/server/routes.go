@@ -13,7 +13,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	mux.HandleFunc("GET /video/{video}/{$}", s.singlePostHandler)
 	mux.HandleFunc("POST /video/{video}/{action}", s.isAuthenticated(s.postActionHandler))
 	mux.HandleFunc("GET /category/{category}/{$}", s.posts.CategoryPostsHandler)
-	mux.HandleFunc("GET /search/{$}", s.searchHandler)
+	mux.HandleFunc("GET /search/{$}", s.posts.SearchPostsHandler)
 	mux.HandleFunc("GET /health/{$}", s.isAdmin(s.healthHandler))
 	mux.HandleFunc("GET /static/", s.files.StaticHandler)
 	mux.HandleFunc("GET /auth/{provider}", s.auth.AuthHandler)
