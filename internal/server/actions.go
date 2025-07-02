@@ -1,8 +1,8 @@
 package server
 
 import (
-	"factual-docs/internal/services/database"
-	tmpls "factual-docs/internal/services/templates"
+	"factual-docs/internal/shared/database"
+	tmpls "factual-docs/internal/shared/templates"
 	"log"
 	"net/http"
 )

@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"crypto/md5"
 	"encoding/hex"
-	tmpls "factual-docs/internal/services/templates"
+	tmpls "factual-docs/internal/shared/templates"
 	"factual-docs/internal/utils"
 	"fmt"
 	"io"

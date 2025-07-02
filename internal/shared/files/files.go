@@ -1,7 +1,7 @@
 package files
 
 import (
-	"factual-docs/internal/services/config"
+	"factual-docs/internal/shared/config"
 	"regexp"
 	"sync"
 

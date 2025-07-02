@@ -3,7 +3,7 @@ package redis
 import (
 	"context"
 	"encoding/json"
-	"factual-docs/internal/services/config"
+	"factual-docs/internal/shared/config"
 	"fmt"
 	"log"
 	"sync"

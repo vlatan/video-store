@@ -1,6 +1,6 @@
 package auth
 
-import tmpls "factual-docs/internal/services/templates"
+import tmpls "factual-docs/internal/shared/templates"
 
 var successLogin = tmpls.FlashMessage{
 	Message:  "You've been logged in!",

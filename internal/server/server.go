@@ -9,11 +9,11 @@ import (
 
 	"factual-docs/internal/auth"
 	"factual-docs/internal/posts"
-	"factual-docs/internal/services/config"
-	"factual-docs/internal/services/database"
-	"factual-docs/internal/services/files"
-	"factual-docs/internal/services/redis"
-	tmpls "factual-docs/internal/services/templates"
+	"factual-docs/internal/shared/config"
+	"factual-docs/internal/shared/database"
+	"factual-docs/internal/shared/files"
+	"factual-docs/internal/shared/redis"
+	tmpls "factual-docs/internal/shared/templates"
 	"factual-docs/internal/users"
 
 	"github.com/gorilla/sessions"

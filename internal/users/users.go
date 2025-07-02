@@ -2,7 +2,7 @@ package users
 
 import (
 	"context"
-	"factual-docs/internal/services/database"
+	"factual-docs/internal/shared/database"
 	"time"
 
 	"github.com/markbates/goth"

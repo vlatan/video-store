@@ -1,8 +1,8 @@
 package posts
 
 import (
-	"factual-docs/internal/services/database"
-	"factual-docs/internal/services/redis"
+	"factual-docs/internal/shared/database"
+	"factual-docs/internal/shared/redis"
 	"factual-docs/internal/utils"
 	"fmt"
 	"log"

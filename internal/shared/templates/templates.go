@@ -1,10 +1,10 @@
 package tmpls
 
 import (
-	"factual-docs/internal/services/config"
-	"factual-docs/internal/services/database"
-	"factual-docs/internal/services/files"
-	"factual-docs/internal/services/redis"
+	"factual-docs/internal/shared/config"
+	"factual-docs/internal/shared/database"
+	"factual-docs/internal/shared/files"
+	"factual-docs/internal/shared/redis"
 	"factual-docs/web"
 	"html/template"
 	"io/fs"
