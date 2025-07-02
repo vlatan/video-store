@@ -1,6 +1,7 @@
 package tmpls
 
 import (
+	"factual-docs/internal/models"
 	"factual-docs/internal/shared/config"
 	"factual-docs/internal/shared/database"
 	"factual-docs/internal/shared/files"
@@ -47,11 +48,11 @@ type TemplateData struct {
 	StaticFiles   files.StaticFiles
 	Config        *config.Config
 	Title         string
-	CurrentPost   *database.Post
+	CurrentPost   *models.Post
 	CurrentUser   *User
 	CurrentURI    string
 	CanonicalURL  string
-	Posts         database.Posts
+	Posts         models.Posts
 	Categories    []database.Category
 	FlashMessages []*FlashMessage
 	SearchQuery   string

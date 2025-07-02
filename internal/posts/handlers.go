@@ -2,7 +2,7 @@ package posts
 
 import (
 	"errors"
-	"factual-docs/internal/shared/database"
+	"factual-docs/internal/models"
 	"factual-docs/internal/shared/redis"
 	"factual-docs/internal/utils"
 	"fmt"
@@ -31,7 +31,7 @@ func (s *Service) HomeHandler(w http.ResponseWriter, r *http.Request) {
 		redisKey += ":likes"
 	}
 
-	var posts []database.Post
+	var posts []models.Post
 	err := redis.GetItems(
 		!data.IsCurrentUserAdmin(),
 		r.Context(),
@@ -39,8 +39,8 @@ func (s *Service) HomeHandler(w http.ResponseWriter, r *http.Request) {
 		redisKey,
 		s.config.CacheTimeout,
 		&posts,
-		func() ([]database.Post, error) {
-			return s.db.GetPosts(r.Context(), page, orderBy)
+		func() ([]models.Post, error) {
+			return s.GetPosts(r.Context(), page, orderBy)
 		},
 	)
 
@@ -104,7 +104,7 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 		redisKey += ":likes"
 	}
 
-	var posts []database.Post
+	var posts []models.Post
 	err := redis.GetItems(
 		!data.IsCurrentUserAdmin(),
 		r.Context(),
@@ -112,8 +112,8 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 		redisKey,
 		s.config.CacheTimeout,
 		&posts,
-		func() ([]database.Post, error) {
-			return s.db.GetCategoryPosts(r.Context(), slug, orderBy, page)
+		func() ([]models.Post, error) {
+			return s.GetCategoryPosts(r.Context(), slug, orderBy, page)
 		},
 	)
 
@@ -174,7 +174,7 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	// For search posts we are using the database.Posts struct,
 	// so we can add total results and time took
-	var posts database.Posts
+	var posts models.Posts
 	err := redis.GetItems(
 		!data.IsCurrentUserAdmin(),
 		r.Context(),
@@ -182,8 +182,8 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Sprintf("posts:search:page:%d:%s", page, encodedSearchQuery),
 		s.config.CacheTimeout,
 		&posts,
-		func() (database.Posts, error) {
-			return s.db.SearchPosts(r.Context(), searchQuery, limit, offset)
+		func() (models.Posts, error) {
+			return s.SearchPosts(r.Context(), searchQuery, limit, offset)
 		},
 	)
 
@@ -233,7 +233,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var post database.Post
+	var post models.Post
 	err := redis.GetItems(
 		!data.CurrentUser.IsAuthenticated(),
 		r.Context(),
@@ -241,8 +241,8 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Sprintf("post:%s", videoID),
 		s.config.CacheTimeout,
 		&post,
-		func() (database.Post, error) {
-			return s.db.GetSinglePost(r.Context(), videoID)
+		func() (models.Post, error) {
+			return s.GetSinglePost(r.Context(), videoID)
 		},
 	)
 
@@ -280,7 +280,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Ignore the error on related posts, no posts will be shown
-	var relatedPosts []database.Post
+	var relatedPosts []models.Post
 	redis.GetItems(
 		!data.CurrentUser.IsAuthenticated(),
 		r.Context(),
@@ -288,7 +288,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Sprintf("post:%s:related_posts", videoID),
 		s.config.CacheTimeout,
 		&relatedPosts,
-		func() ([]database.Post, error) {
+		func() ([]models.Post, error) {
 			return s.getRelatedPosts(r.Context(), post.Title)
 		},
 	)

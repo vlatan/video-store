@@ -17,15 +17,6 @@ type Service interface {
 	// Check if logged in user liked or faved a post
 	GetUserActions(ctx context.Context, userID, postID int) (actions Actions, err error)
 
-	// Get paginated posts
-	GetPosts(ctx context.Context, page int, orderBy string) ([]Post, error)
-	// Get paginated category posts
-	GetCategoryPosts(ctx context.Context, categorySlug, orderBy string, page int) ([]Post, error)
-	// Get posts based on a search query
-	SearchPosts(ctx context.Context, searchTerm string, limit, offset int) (posts Posts, err error)
-	// Get single post given the video ID
-	GetSinglePost(ctx context.Context, videoID string) (post Post, err error)
-
 	// Get all categories
 	GetCategories(ctx context.Context) ([]Category, error)
 
