@@ -14,9 +14,6 @@ import (
 
 // Service represents a service that interacts with a database.
 type Service interface {
-	// Check if logged in user liked or faved a post
-	GetUserActions(ctx context.Context, userID, postID int) (actions Actions, err error)
-
 	// Get all categories
 	GetCategories(ctx context.Context) ([]Category, error)
 

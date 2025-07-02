@@ -270,7 +270,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Check whether the current user liked and/or faved the post
 	if data.CurrentUser.IsAuthenticated() {
-		userActions, _ := s.db.GetUserActions(
+		userActions, _ := s.getUserActions(
 			r.Context(),
 			data.CurrentUser.ID,
 			data.CurrentPost.ID,

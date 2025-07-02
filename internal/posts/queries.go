@@ -82,3 +82,55 @@ const userActionsQuery = `
 			WHERE user_id = $1 AND post_id = $2
 		) AS faved
 `
+
+const likeQuery = `
+	INSERT INTO post_like (user_id, post_id)
+	SELECT $1, p.id 
+	FROM post AS p 
+	WHERE p.video_id = $2
+`
+
+const unlikeQuery = `
+	DELETE FROM post_like 
+	USING post AS p 
+	WHERE post_like.post_id = p.id 
+	AND post_like.user_id = $1 
+	AND p.video_id = $2
+`
+
+const faveQuery = `
+	INSERT INTO post_fave (user_id, post_id)
+	SELECT $1, p.id 
+	FROM post AS p 
+	WHERE p.video_id = $2
+`
+
+const unfaveQuery = `
+	DELETE FROM post_fave 
+	USING post AS p 
+	WHERE post_fave.post_id = p.id 
+	AND post_fave.user_id = $1 
+	AND p.video_id = $2
+`
+
+const updateTitleQuery = `
+	UPDATE post
+	SET title = $2, updated_at = NOW()
+	WHERE video_id = $1
+`
+
+const updateDescQuery = `
+	UPDATE post
+	SET short_description = $2, updated_at = NOW()
+	WHERE video_id = $1
+`
+
+const deletePostQuery = `
+	WITH dp AS (
+		DELETE FROM post
+		WHERE video_id = $1
+		RETURNING video_id
+	)
+	INSERT INTO deleted_post (video_id)
+	SELECT video_id FROM dp;
+`
