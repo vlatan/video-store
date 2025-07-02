@@ -1,9 +1,9 @@
 * Admin (get users with pagination)
 * Pages
-* Post new video
 * Sitemap
 * Sources
 * Cron
+* Post new video
 
 * User avatar saved to redis not locally
   Need to solve this discrepancy
