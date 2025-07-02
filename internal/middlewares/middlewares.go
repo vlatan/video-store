@@ -1,7 +1,10 @@
-package server
+package middlewares
 
 import (
 	"context"
+	"factual-docs/internal/auth"
+	"factual-docs/internal/shared/config"
+	"factual-docs/internal/utils"
 	"log"
 	"net/http"
 	"strings"
@@ -9,19 +12,25 @@ import (
 	"github.com/gorilla/csrf"
 )
 
-type contextKey struct {
-	name string
+type Service struct {
+	auth   *auth.Service
+	config *config.Config
 }
 
-var userContextKey = contextKey{name: "user"}
+func New(auth *auth.Service, config *config.Config) *Service {
+	return &Service{
+		auth:   auth,
+		config: config,
+	}
+}
 
 // Check if the user is authenticated
-func (s *Server) isAuthenticated(next http.HandlerFunc) http.HandlerFunc {
+func (s *Service) IsAuthenticated(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// If the user is authenticated move onto the next handler
-		if currentUser := s.getCurrentUser(w, r); currentUser.IsAuthenticated() {
+		if currentUser := s.auth.GetCurrentUser(w, r); currentUser.IsAuthenticated() {
 			// Pass the user in the context
-			ctx := context.WithValue(r.Context(), userContextKey, currentUser)
+			ctx := context.WithValue(r.Context(), utils.UserContextKey, currentUser)
 			next(w, r.WithContext(ctx))
 			return
 		}
@@ -37,12 +46,12 @@ func (s *Server) isAuthenticated(next http.HandlerFunc) http.HandlerFunc {
 }
 
 // Check if the user is admin
-func (s *Server) isAdmin(next http.HandlerFunc) http.HandlerFunc {
+func (s *Service) IsAdmin(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// If the user is admin move onto the next handler
-		if cu := s.getCurrentUser(w, r); cu.IsAuthenticated() && cu.UserID == s.config.AdminOpenID {
+		if cu := s.auth.GetCurrentUser(w, r); cu.IsAuthenticated() && cu.UserID == s.config.AdminOpenID {
 			// Pass the user in the context
-			ctx := context.WithValue(r.Context(), userContextKey, cu)
+			ctx := context.WithValue(r.Context(), utils.UserContextKey, cu)
 			next(w, r.WithContext(ctx))
 			return
 		}
@@ -58,7 +67,7 @@ func (s *Server) isAdmin(next http.HandlerFunc) http.HandlerFunc {
 }
 
 // Do not crash the app on panic, serve 500 error to the client
-func (s *Server) recoverPanic(next http.Handler) http.Handler {
+func (s *Service) RecoverPanic(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
@@ -74,11 +83,11 @@ func (s *Server) recoverPanic(next http.Handler) http.Handler {
 }
 
 // Add security headers to request
-func (s *Server) addHeaders(next http.Handler) http.Handler {
+func (s *Service) AddHeaders(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		// Add CF cache control header if user not logged in or not static file
-		cu := s.getCurrentUser(w, r)
+		cu := s.auth.GetCurrentUser(w, r)
 		if !cu.IsAuthenticated() && !strings.HasPrefix(r.URL.Path, "/static/") {
 			w.Header().Set("CDN-Cache-Control", "14400")
 		}
@@ -100,7 +109,7 @@ func (s *Server) addHeaders(next http.Handler) http.Handler {
 }
 
 // Redirect WWW to non-WWW
-func (s *Server) wwwRedirect(next http.Handler) http.Handler {
+func (s *Service) WWWRedirect(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Check for 'www.' prefix
 		if !strings.HasPrefix(r.Host, "www.") {
@@ -125,7 +134,7 @@ func (s *Server) wwwRedirect(next http.Handler) http.Handler {
 }
 
 // Create CSRF middlware with added plain text option for local development
-func (s *Server) createCSRFMiddleware() func(http.Handler) http.Handler {
+func (s *Service) CreateCSRFMiddleware() func(http.Handler) http.Handler {
 
 	// Create the csrf middleware as per the gorilla/csrf documentation
 	csrfMiddleware := csrf.Protect(
@@ -162,7 +171,7 @@ func (s *Server) createCSRFMiddleware() func(http.Handler) http.Handler {
 }
 
 // Chain middlewares that apply to all handlers
-func (s *Server) applyToAll(middlewares ...func(http.Handler) http.Handler) func(http.Handler) http.Handler {
+func (s *Service) ApplyToAll(middlewares ...func(http.Handler) http.Handler) func(http.Handler) http.Handler {
 	return func(final http.Handler) http.Handler {
 		// Apply middlewares in reverse order
 		for i := len(middlewares) - 1; i >= 0; i-- {

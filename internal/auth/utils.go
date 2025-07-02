@@ -1,11 +1,11 @@
-package server
+package auth
 
 import (
+	"bytes"
 	"crypto/md5"
 	"encoding/hex"
-	"factual-docs/internal/config"
-	"factual-docs/internal/database"
-	"factual-docs/internal/templates"
+	"factual-docs/internal/models"
+	"factual-docs/internal/utils"
 	"fmt"
 	"io"
 	"log"
@@ -14,53 +14,44 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/gorilla/sessions"
 	"github.com/markbates/goth"
-	"github.com/markbates/goth/gothic"
-	"github.com/markbates/goth/providers/google"
 )
 
-// Setup Goth library
-func NewCookieStore(cfg *config.Config) *sessions.CookieStore {
-	// Create new cookies store
-	store := sessions.NewCookieStore([]byte(cfg.SessionKey))
-	store.Options = &sessions.Options{
-		Path:     "/",
-		MaxAge:   86400 * 30,
-		HttpOnly: true,
-		Secure:   !cfg.Debug,
+// Extracts the value from the query param "redirect"
+func getRedirectPath(r *http.Request) string {
+	redirectParam := r.URL.Query().Get("redirect")
+	if redirectParam == "" {
+		return "/"
+	}
+	return redirectParam
+}
+
+// Store flash message in a session
+// No error if flashing fails
+func (s *Service) StoreFlashMessage(
+	w http.ResponseWriter,
+	r *http.Request,
+	m *models.FlashMessage,
+) {
+	session, err := s.store.Get(r, s.config.FlashSessionName)
+	if err != nil {
+		log.Println("Unable to get the flash session", err)
 	}
 
-	// Add this store to gothic
-	gothic.Store = store
-
-	protocol := "https"
-	if cfg.Debug {
-		protocol = "http"
+	session.AddFlash(m)
+	if err = session.Save(r, w); err != nil {
+		log.Println("Unable to save the flash session", err)
 	}
-
-	// Add providers to goth
-	goth.UseProviders(
-		google.New(
-			cfg.GoogleOAuthClientID,
-			cfg.GoogleOAuthClientSecret,
-			fmt.Sprintf("%s://%s/auth/google/callback", protocol, cfg.Domain),
-			cfg.GoogleOAuthScopes...,
-		),
-	)
-
-	// Return the store so we can use it too
-	return store
 }
 
 // Store user info in our own session
-func (s *Server) loginUser(w http.ResponseWriter, r *http.Request, gothUser *goth.User) error {
+func (s *Service) loginUser(w http.ResponseWriter, r *http.Request, gothUser *goth.User) error {
 	// Generate analytics ID
 	analyticsID := gothUser.UserID + gothUser.Provider + gothUser.Email
 	analyticsID = fmt.Sprintf("%x", md5.Sum([]byte(analyticsID)))
 
 	// Update or insert user
-	id, err := s.db.UpsertUser(r.Context(), gothUser, analyticsID)
+	id, err := s.users.UpsertUser(r.Context(), gothUser, analyticsID)
 	if id == 0 || err != nil {
 		return err
 	}
@@ -90,61 +81,23 @@ func (s *Server) loginUser(w http.ResponseWriter, r *http.Request, gothUser *got
 	return nil
 }
 
-// Retrieve the user from context or session, return User struct
-func (s *Server) getCurrentUser(w http.ResponseWriter, r *http.Request) *templates.User {
+// Retrieve the user final redirect value
+func (s *Service) getUserFinalRedirect(w http.ResponseWriter, r *http.Request) string {
+	session, _ := s.store.Get(r, s.config.FlashSessionName)
 
-	// Try to get the current user from context first,
-	// in case an upstream middleware already got the user from session
-	if currentUser, ok := r.Context().Value(userContextKey).(*templates.User); ok {
-		return currentUser
-	}
-
-	session, err := s.store.Get(r, s.config.SessionName)
-	if session == nil || err != nil {
-		return &templates.User{}
-	}
-
-	// Get user row ID from session
-	id, ok := session.Values["ID"].(int)
-	if id == 0 || !ok {
-		return &templates.User{}
-	}
-
-	// Update last seen
-	now := time.Now()
-	session.Values["LastSeen"] = now
-
-	// This will be a zero time value (January 1, year 1, 00:00:00 UTC) on fail
-	lastSeenDB := session.Values["LastSeenDB"].(time.Time)
-
-	// Check if the DB update is out of sync for an entire day
-	if !sameDate(lastSeenDB, now) {
-		if _, err := s.db.Exec(r.Context(), database.UpdateLastUserSeenQuery, id, now); err != nil {
-			log.Printf("Couldn't update the last seen in DB on user '%d': %v\n", id, err)
+	redirectTo := "/"
+	if flashes := session.Flashes("redirect"); len(flashes) > 0 {
+		if url, ok := flashes[0].(string); ok {
+			redirectTo = url
 		}
-		session.Values["LastSeenDB"] = now
 	}
 
-	// Save the session
 	session.Save(r, w)
-
-	analyticsID := session.Values["AnalyticsID"].(string)
-	avatarURL := session.Values["AvatarURL"].(string)
-
-	return &templates.User{
-		ID:             id,
-		UserID:         session.Values["UserID"].(string),
-		Email:          session.Values["Email"].(string),
-		Name:           session.Values["Name"].(string),
-		Provider:       session.Values["Provider"].(string),
-		AvatarURL:      avatarURL,
-		AnalyticsID:    analyticsID,
-		LocalAvatarURL: s.getAvatar(r, avatarURL, analyticsID),
-		AccessToken:    session.Values["AccessToken"].(string),
-	}
+	return redirectTo
 }
 
-func (s *Server) logoutUser(w http.ResponseWriter, r *http.Request) error {
+// Logout the user, delete the session
+func (s *Service) logoutUser(w http.ResponseWriter, r *http.Request) error {
 	// Invalidate the user session
 	session, err := s.store.Get(r, s.config.SessionName)
 	if err != nil {
@@ -160,49 +113,62 @@ func (s *Server) logoutUser(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-// Retrieve the user final redirect value
-func (s *Server) getUserFinalRedirect(w http.ResponseWriter, r *http.Request) string {
-	session, _ := s.store.Get(r, s.config.FlashSessionName)
+// Retrieve the user from context or session, return User struct
+func (s *Service) GetCurrentUser(w http.ResponseWriter, r *http.Request) *models.User {
 
-	redirectTo := "/"
-	if flashes := session.Flashes("redirect"); len(flashes) > 0 {
-		if url, ok := flashes[0].(string); ok {
-			redirectTo = url
+	// Try to get the current user from context first,
+	// in case an upstream middleware already got the user from session
+	if currentUser, ok := r.Context().Value(utils.UserContextKey).(*models.User); ok {
+		return currentUser
+	}
+
+	session, err := s.store.Get(r, s.config.SessionName)
+	if session == nil || err != nil {
+		return &models.User{}
+	}
+
+	// Get user row ID from session
+	id, ok := session.Values["ID"].(int)
+	if id == 0 || !ok {
+		return &models.User{}
+	}
+
+	// Update last seen
+	now := time.Now()
+	session.Values["LastSeen"] = now
+
+	// This will be a zero time value (January 1, year 1, 00:00:00 UTC) on fail
+	lastSeenDB := session.Values["LastSeenDB"].(time.Time)
+
+	// Check if the DB update is out of sync for an entire day
+	if !sameDate(lastSeenDB, now) {
+		if _, err := s.users.UpdateLastUserSeen(r.Context(), id, now); err != nil {
+			log.Printf("Couldn't update the last seen in DB on user '%d': %v\n", id, err)
 		}
+		session.Values["LastSeenDB"] = now
 	}
 
+	// Save the session
 	session.Save(r, w)
-	return redirectTo
-}
 
-// Store flash message in a session
-// No error if flashing fails
-func (s *Server) storeFlashMessage(
-	w http.ResponseWriter,
-	r *http.Request,
-	m *templates.FlashMessage,
-) {
-	session, err := s.store.Get(r, s.config.FlashSessionName)
-	if err != nil {
-		log.Println("Unable to get the flash session", err)
-	}
+	analyticsID := session.Values["AnalyticsID"].(string)
+	avatarURL := session.Values["AvatarURL"].(string)
 
-	session.AddFlash(m)
-	if err = session.Save(r, w); err != nil {
-		log.Println("Unable to save the flash session", err)
+	return &models.User{
+		ID:             id,
+		UserID:         session.Values["UserID"].(string),
+		Email:          session.Values["Email"].(string),
+		Name:           session.Values["Name"].(string),
+		Provider:       session.Values["Provider"].(string),
+		AvatarURL:      avatarURL,
+		AnalyticsID:    analyticsID,
+		LocalAvatarURL: s.getAvatar(r, avatarURL, analyticsID),
+		AccessToken:    session.Values["AccessToken"].(string),
 	}
 }
 
-// Extracts the value from the query param "redirect"
-func getRedirectPath(r *http.Request) string {
-	redirectParam := r.URL.Query().Get("redirect")
-	if redirectParam == "" {
-		return "/"
-	}
-	return redirectParam
-}
-
-func (s *Server) getAvatar(r *http.Request, avatarURL, analyticsID string) string {
+// Get user avatar path, either from redis, or download and store avatar path to redis
+func (s *Service) getAvatar(r *http.Request, avatarURL, analyticsID string) string {
 	// Get avatar URL from Redis
 	redisKey := fmt.Sprintf("avatar:%s", analyticsID)
 	avatar, err := s.rdb.Get(r.Context(), redisKey)
@@ -224,6 +190,7 @@ func (s *Server) getAvatar(r *http.Request, avatarURL, analyticsID string) strin
 	return avatar
 }
 
+// Check if same dates
 func sameDate(t1, t2 time.Time) bool {
 	y1, m1, d1 := t1.Date()
 	y2, m2, d2 := t2.Date()
@@ -231,7 +198,7 @@ func sameDate(t1, t2 time.Time) bool {
 }
 
 // Download remote image (user avatar)
-func (s *Server) downloadAvatar(avatarURL, analyticsID string) (string, error) {
+func (s *Service) downloadAvatar(avatarURL, analyticsID string) (string, error) {
 	// Get remote file
 	response, err := http.Get(avatarURL)
 	if err != nil {
@@ -291,7 +258,7 @@ func (s *Server) downloadAvatar(avatarURL, analyticsID string) (string, error) {
 }
 
 // Delete local avatar if exists
-func (s *Server) deleteAvatar(r *http.Request, analyticsID string) {
+func (s *Service) deleteAvatar(r *http.Request, analyticsID string) {
 	avatarPath := filepath.Join(s.config.DataVolume, analyticsID+".jpg")
 	if err := os.Remove(avatarPath); err != nil && err != os.ErrNotExist {
 		log.Printf("Could not remove the local avatar %s: %v", avatarPath, err)
@@ -301,4 +268,32 @@ func (s *Server) deleteAvatar(r *http.Request, analyticsID string) {
 	if err := s.rdb.Delete(r.Context(), redisKey); err != nil {
 		log.Printf("Could not remove the avatar %s from Redis: %v", redisKey, err)
 	}
+}
+
+// Send revoke request. It will work if the access token is not expired.
+func revokeLogin(user *models.User) (response *http.Response, err error) {
+
+	switch user.Provider {
+	case "google":
+		url := "https://oauth2.googleapis.com/revoke"
+		contentType := "application/x-www-form-urlencoded"
+		body := []byte("token=" + user.AccessToken)
+		response, err = http.Post(url, contentType, bytes.NewBuffer(body))
+	case "facebook":
+		url := fmt.Sprintf("https://graph.facebook.com/v23.0/%s/permissions", user.UserID)
+		body := []byte("access_token=" + user.AccessToken)
+		req, reqErr := http.NewRequest("DELETE", url, bytes.NewBuffer(body))
+		if reqErr != nil {
+			return response, reqErr
+		}
+		client := &http.Client{}
+		response, err = client.Do(req)
+	}
+
+	if err != nil {
+		return response, err
+	}
+
+	defer response.Body.Close()
+	return response, err
 }

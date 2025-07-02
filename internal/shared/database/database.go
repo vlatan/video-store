@@ -2,41 +2,26 @@ package database
 
 import (
 	"context"
-	"factual-docs/internal/config"
+	"factual-docs/internal/shared/config"
 	"fmt"
 	"log"
 	"sync"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
-	"github.com/markbates/goth"
 )
 
 // Service represents a service that interacts with a database.
 type Service interface {
-	// Update or insert a new user
-	UpsertUser(ctx context.Context, u *goth.User, analyticsID string) (int, error)
-
-	// Check if logged in user liked or faved a post
-	GetUserActions(ctx context.Context, userID, postID int) (actions Actions, err error)
-
-	// Get paginated posts
-	GetPosts(ctx context.Context, page int, orderBy string) ([]Post, error)
-	// Get paginated category posts
-	GetCategoryPosts(ctx context.Context, categorySlug, orderBy string, page int) ([]Post, error)
-	// Get posts based on a search query
-	SearchPosts(ctx context.Context, searchTerm string, limit, offset int) (posts Posts, err error)
-	// Get single post given the video ID
-	GetSinglePost(ctx context.Context, videoID string) (post Post, err error)
-
-	// Get all categories
-	GetCategories(ctx context.Context) ([]Category, error)
-
-	// A map of health status information.
-	Health(ctx context.Context) map[string]string
-
+	// Query many rows
+	Query(ctx context.Context, query string, args ...any) (pgx.Rows, error)
+	// Query single row
+	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
 	// Execute a query (update, insert, delete)
 	Exec(ctx context.Context, query string, args ...any) (int64, error)
+	// A map of health status information.
+	Health(ctx context.Context) map[string]string
 	// Closes the pool and terminates the database connection.
 	Close()
 }
@@ -75,6 +60,16 @@ func New(cfg *config.Config) Service {
 	})
 
 	return dbInstance
+}
+
+// Query many rows
+func (s *service) Query(ctx context.Context, query string, args ...any) (pgx.Rows, error) {
+	return s.db.Query(ctx, query, args...)
+}
+
+// Query single row
+func (s *service) QueryRow(ctx context.Context, query string, args ...any) pgx.Row {
+	return s.db.QueryRow(ctx, query, args...)
 }
 
 // Execute a query (update, insert, delete)

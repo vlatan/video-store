@@ -2,9 +2,27 @@ package utils
 
 import (
 	"fmt"
+	"net/http"
 	"net/url"
 	"path"
+	"strconv"
 )
+
+type contextKey struct {
+	name string
+}
+
+var UserContextKey = contextKey{name: "user"}
+
+var Favicons = []string{
+	"/android-chrome-192x192.png",
+	"/android-chrome-512x512.png",
+	"/apple-touch-icon.png",
+	"/favicon-16x16.png",
+	"/favicon-32x32.png",
+	"/favicon.ico",
+	"/site.webmanifest",
+}
 
 // Validates a path
 func ValidateFilePath(p string) error {
@@ -41,4 +59,20 @@ func EscapeTrancateString(query string, maxLength int) string {
 	}
 
 	return escapedQuery
+}
+
+// Get page number from the request query param
+// Defaults to 1 if invalid page
+func GetPageNum(r *http.Request) (page int) {
+	pageStr := r.URL.Query().Get("page")
+	if pageInt, err := strconv.Atoi(pageStr); err == nil {
+		page = pageInt
+	}
+
+	// Do not allow negative or zero pages
+	if page <= 0 {
+		page = 1
+	}
+
+	return page
 }

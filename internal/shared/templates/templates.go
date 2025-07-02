@@ -1,6 +1,11 @@
-package templates
+package tmpls
 
 import (
+	"factual-docs/internal/categories"
+	"factual-docs/internal/files"
+	"factual-docs/internal/models"
+	"factual-docs/internal/shared/config"
+	"factual-docs/internal/shared/redis"
 	"factual-docs/web"
 	"html/template"
 	"io/fs"
@@ -8,7 +13,9 @@ import (
 	"net/http"
 	"path/filepath"
 	"slices"
+	"sync"
 
+	"github.com/gorilla/sessions"
 	"github.com/tdewolff/minify"
 	"github.com/tdewolff/minify/html"
 )
@@ -21,26 +28,64 @@ const partials = "templates/partials"
 var needsContent = []string{"home", "search", "category"}
 
 type Service interface {
+	// Create new template data
+	NewData(w http.ResponseWriter, r *http.Request) *models.TemplateData
 	// Write JSON to response
 	WriteJSON(w http.ResponseWriter, r *http.Request, data any)
 	// Write HTML template to response
-	RenderHTML(w http.ResponseWriter, r *http.Request, templateName string, data *TemplateData)
+	RenderHTML(w http.ResponseWriter, r *http.Request, templateName string, data *models.TemplateData)
 	// Write JSON error to response
 	JSONError(w http.ResponseWriter, r *http.Request, statusCode int)
 	// Write HTML error to response
-	HTMLError(w http.ResponseWriter, r *http.Request, statusCode int, data *TemplateData)
+	HTMLError(w http.ResponseWriter, r *http.Request, statusCode int, data *models.TemplateData)
 }
 
-type Templates map[string]*template.Template
+type templateMap map[string]*template.Template
+
+type service struct {
+	templates  templateMap
+	rdb        redis.Service
+	config     *config.Config
+	store      *sessions.CookieStore
+	sf         *files.Service
+	categories *categories.Service
+}
+
+var (
+	tmInstance *service
+	once       sync.Once
+)
 
 // Walk the partials directory and parse the templates.
-// Return a map of templates.
-func New() Service {
+func New(
+	rdb redis.Service,
+	config *config.Config,
+	store *sessions.CookieStore,
+	sf *files.Service,
+	categories *categories.Service,
+) Service {
+	once.Do(func() {
+		m := minify.New()
+		m.AddFunc("text/html", html.Minify)
 
-	m := minify.New()
-	m.AddFunc("text/html", html.Minify)
+		tmInstance = &service{
+			templates:  parseTemplates(m),
+			rdb:        rdb,
+			config:     config,
+			store:      store,
+			sf:         sf,
+			categories: categories,
+		}
 
-	tm := make(Templates)
+	})
+
+	return tmInstance
+}
+
+// Parse the templates and create a template map
+func parseTemplates(m *minify.M) templateMap {
+
+	tm := make(templateMap)
 	baseTemplate := template.Must(parseFiles(m, nil, base))
 
 	// Function used to process each file/dir in the root, including the root

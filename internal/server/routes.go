@@ -1,6 +1,7 @@
 package server
 
 import (
+	"factual-docs/internal/utils"
 	"net/http"
 )
 
@@ -8,27 +9,27 @@ func (s *Server) RegisterRoutes() http.Handler {
 	mux := http.NewServeMux()
 
 	// Register routes
-	mux.HandleFunc("GET /{$}", s.homeHandler)
-	mux.HandleFunc("GET /video/{video}/{$}", s.singlePostHandler)
-	mux.HandleFunc("POST /video/{video}/{action}", s.isAuthenticated(s.postActionHandler))
-	mux.HandleFunc("GET /category/{category}/{$}", s.categoryPostsHandler)
-	mux.HandleFunc("GET /search/{$}", s.searchHandler)
-	mux.HandleFunc("GET /health/{$}", s.isAdmin(s.healthHandler))
-	mux.HandleFunc("GET /static/", s.staticHandler)
-	mux.HandleFunc("GET /auth/{provider}", s.authHandler)
-	mux.HandleFunc("GET /auth/{provider}/callback", s.authCallbackHandler)
-	mux.HandleFunc("GET /logout/{provider}", s.isAuthenticated(s.logoutHandler))
-	mux.HandleFunc("POST /account/delete", s.isAuthenticated(s.deleteAccountHandler))
-	mux.HandleFunc("GET /ads.txt", s.adsTextHandler)
+	mux.HandleFunc("GET /{$}", s.posts.HomeHandler)
+	mux.HandleFunc("GET /video/{video}/{$}", s.posts.SinglePostHandler)
+	mux.HandleFunc("POST /video/{video}/{action}", s.mw.IsAuthenticated(s.posts.PostActionHandler))
+	mux.HandleFunc("GET /category/{category}/{$}", s.posts.CategoryPostsHandler)
+	mux.HandleFunc("GET /search/{$}", s.posts.SearchPostsHandler)
+	mux.HandleFunc("GET /health/{$}", s.mw.IsAdmin(s.misc.HealthHandler))
+	mux.HandleFunc("GET /static/", s.files.StaticHandler)
+	mux.HandleFunc("GET /auth/{provider}", s.auth.AuthHandler)
+	mux.HandleFunc("GET /auth/{provider}/callback", s.auth.AuthCallbackHandler)
+	mux.HandleFunc("GET /logout/{provider}", s.mw.IsAuthenticated(s.auth.LogoutHandler))
+	mux.HandleFunc("POST /account/delete", s.mw.IsAuthenticated(s.auth.DeleteAccountHandler))
+	mux.HandleFunc("GET /ads.txt", s.misc.AdsTextHandler)
 
 	// Register favicons serving from root
-	for _, favicon := range favicons {
-		mux.HandleFunc("GET "+favicon, s.staticHandler)
+	for _, favicon := range utils.Favicons {
+		mux.HandleFunc("GET "+favicon, s.files.StaticHandler)
 	}
 
 	// Create Cross-Site Request Forgery middleware
-	CSRF := s.createCSRFMiddleware()
+	CSRF := s.mw.CreateCSRFMiddleware()
 
 	// Chain middlwares that apply to all requests
-	return s.applyToAll(s.recoverPanic, s.wwwRedirect, CSRF, s.addHeaders)(mux)
+	return s.mw.ApplyToAll(s.mw.RecoverPanic, s.mw.WWWRedirect, CSRF, s.mw.AddHeaders)(mux)
 }

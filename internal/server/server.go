@@ -4,47 +4,73 @@ import (
 	"encoding/gob"
 	"fmt"
 	"net/http"
-	"net/url"
-	"runtime"
 	"time"
 
-	"factual-docs/internal/config"
-	"factual-docs/internal/database"
+	"factual-docs/internal/auth"
+	"factual-docs/internal/categories"
 	"factual-docs/internal/files"
-	"factual-docs/internal/redis"
-	"factual-docs/internal/templates"
+	"factual-docs/internal/middlewares"
+	"factual-docs/internal/misc"
+	"factual-docs/internal/models"
+	"factual-docs/internal/posts"
+	"factual-docs/internal/shared/config"
+	"factual-docs/internal/shared/database"
+	"factual-docs/internal/shared/redis"
+	tmpls "factual-docs/internal/shared/templates"
+	"factual-docs/internal/users"
 
-	"github.com/gorilla/csrf"
 	"github.com/gorilla/sessions"
 )
 
 type Server struct {
+	// Interfaces
+	db  database.Service
+	rdb redis.Service
+	tm  tmpls.Service
+
+	// Ordinary structs
 	config *config.Config
 	store  *sessions.CookieStore
-	db     database.Service
-	rdb    redis.Service
-	tm     templates.Service
-	sf     files.StaticFiles
+	files  *files.Service
+	users  *users.Service
+	auth   *auth.Service
+	posts  *posts.Service
+	mw     *middlewares.Service
+	misc   *misc.Service
 }
 
 // Create new HTTP server
 func NewServer() *http.Server {
 
 	// Register types with gob to be able to use them in sessions
-	gob.Register(&templates.FlashMessage{})
+	gob.Register(&models.FlashMessage{})
 	gob.Register(time.Time{})
 
-	// Create new config object
-	cfg := config.New()
+	cfg := config.New()          // Create new config service
+	db := database.New(cfg)      // Create database service
+	rdb := redis.New(cfg)        // Create Redis service
+	store := newCookieStore(cfg) // Create cookie store
+	files := files.New(cfg)      // Create minified files map
+
+	users := users.New(db)                   // Create users service
+	auth := auth.New(users, store, rdb, cfg) // Create auth service
+
+	categories := categories.New(db)                    // Create categories service
+	tm := tmpls.New(rdb, cfg, store, files, categories) // Create parsed templates map
 
 	// Create new Server struct
 	newServer := &Server{
 		config: cfg,
-		sf:     files.New(),         // Create minified files map
-		rdb:    redis.New(cfg),      // Create Redis service
-		db:     database.New(cfg),   // Create database service
-		store:  NewCookieStore(cfg), // Create cookie store
-		tm:     templates.New(),     // Create parsed templates map
+		files:  files,
+		rdb:    rdb,
+		db:     db,
+		store:  store,
+		tm:     tm,
+		users:  users,
+		auth:   auth,
+		posts:  posts.New(db, rdb, tm, cfg, auth),
+		mw:     middlewares.New(auth, cfg),
+		misc:   misc.New(cfg, db, rdb, tm),
 	}
 
 	// Declare Server config
@@ -55,75 +81,4 @@ func NewServer() *http.Server {
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 30 * time.Second,
 	}
-}
-
-// Creates new default data struct to be passed to the templates
-// Instead of manualy envoking this function in each route it can be envoked in a middleware
-// and passed donwstream as value to the request context.
-func (s *Server) NewData(w http.ResponseWriter, r *http.Request) *templates.TemplateData {
-
-	var categories []database.Category
-	redis.GetItems(
-		true,
-		r.Context(),
-		s.rdb,
-		"categories",
-		s.config.CacheTimeout,
-		&categories,
-		func() ([]database.Category, error) {
-			return s.db.GetCategories(r.Context())
-		},
-	)
-
-	// Get any flash messages from session and put to data
-	session, _ := s.store.Get(r, s.config.FlashSessionName)
-	flashes := session.Flashes()
-	flashMessages := []*templates.FlashMessage{}
-	for _, v := range flashes {
-		if flash, ok := v.(*templates.FlashMessage); ok && flash != nil {
-			flashMessages = append(flashMessages, flash)
-		}
-	}
-	session.Save(r, w)
-
-	return &templates.TemplateData{
-		StaticFiles:   s.sf,
-		Config:        s.config,
-		Categories:    categories,
-		CurrentURI:    r.RequestURI,
-		CanonicalURL:  getCanonicalURL(r),
-		FlashMessages: flashMessages,
-		CSRFField:     csrf.TemplateField(r),
-	}
-}
-
-// Get basic server stats
-func getServerStats() map[string]any {
-	var m runtime.MemStats
-	runtime.ReadMemStats(&m)
-
-	return map[string]any{
-		"goroutines":   runtime.NumGoroutine(),
-		"memory_alloc": m.Alloc,
-		"memory_sys":   m.Sys,
-		"gc_runs":      m.NumGC,
-		"cpu_count":    runtime.NumCPU(),
-	}
-}
-
-// Get canonilca absolute URL
-func getCanonicalURL(r *http.Request) string {
-	// Determine scheme
-	scheme := "http"
-	if r.TLS != nil {
-		scheme = "https"
-	}
-
-	canonical := &url.URL{
-		Scheme: scheme,
-		Host:   r.Host,
-		Path:   r.URL.Path,
-	}
-
-	return canonical.String()
 }

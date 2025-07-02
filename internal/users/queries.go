@@ -1,11 +1,4 @@
-package database
-
-import (
-	"context"
-	"database/sql"
-
-	"github.com/markbates/goth"
-)
+package users
 
 const upsertUserQuery = `
 	WITH existing_user AS (
@@ -55,43 +48,6 @@ const upsertUserQuery = `
 	SELECT id FROM updated
 `
 
-// Add or update a user
-func (s *service) UpsertUser(ctx context.Context, u *goth.User, analyticsID string) (int, error) {
+const deleteUserQuery = "DELETE FROM app_user WHERE id = $1"
 
-	var (
-		googleID   string
-		facebookID string
-	)
-
-	switch u.Provider {
-	case "google":
-		googleID = u.UserID
-	case "facebook":
-		facebookID = u.UserID
-	}
-
-	var id int
-	err := s.db.QueryRow(
-		ctx,
-		upsertUserQuery,
-		NullString(&googleID),
-		NullString(&facebookID),
-		NullString(&analyticsID),
-		NullString(&u.FirstName),
-		NullString(&u.Email),
-		NullString(&u.AvatarURL),
-	).Scan(&id)
-
-	return id, err
-}
-
-const DeleteUserQuery = "DELETE FROM app_user WHERE id = $1"
-const UpdateLastUserSeenQuery = "UPDATE app_user SET last_seen = $2 WHERE id = $1"
-
-// Helper function to convert string pointer or empty string to sql.NullString
-func NullString(s *string) sql.NullString {
-	if s == nil || *s == "" {
-		return sql.NullString{Valid: false}
-	}
-	return sql.NullString{String: *s, Valid: true}
-}
+const updateLastUserSeenQuery = "UPDATE app_user SET last_seen = $2 WHERE id = $1"
