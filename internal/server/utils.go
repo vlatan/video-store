@@ -3,7 +3,6 @@ package server
 import (
 	"factual-docs/internal/shared/config"
 	"fmt"
-	"runtime"
 
 	"github.com/gorilla/sessions"
 	"github.com/markbates/goth"
@@ -42,18 +41,4 @@ func newCookieStore(cfg *config.Config) *sessions.CookieStore {
 
 	// Return the store so we can use it too
 	return store
-}
-
-// Get basic server stats
-func getServerStats() map[string]any {
-	var m runtime.MemStats
-	runtime.ReadMemStats(&m)
-
-	return map[string]any{
-		"goroutines":   runtime.NumGoroutine(),
-		"memory_alloc": m.Alloc,
-		"memory_sys":   m.Sys,
-		"gc_runs":      m.NumGC,
-		"cpu_count":    runtime.NumCPU(),
-	}
 }

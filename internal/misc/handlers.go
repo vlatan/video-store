@@ -1,4 +1,4 @@
-package server
+package misc
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 )
 
 // Handle ads.txt
-func (s *Server) adsTextHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Service) AdsTextHandler(w http.ResponseWriter, r *http.Request) {
 	if s.config.AdSenseAccount == "" {
 		http.NotFound(w, r)
 		return
@@ -22,7 +22,7 @@ func (s *Server) adsTextHandler(w http.ResponseWriter, r *http.Request) {
 
 // DB and Redis health status
 // Wrap this with middlware that allows only admins
-func (s *Server) healthHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Service) HealthHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Construct joined map
 	data := map[string]any{

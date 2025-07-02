@@ -14,13 +14,13 @@ func (s *Server) RegisterRoutes() http.Handler {
 	mux.HandleFunc("POST /video/{video}/{action}", s.mw.IsAuthenticated(s.posts.PostActionHandler))
 	mux.HandleFunc("GET /category/{category}/{$}", s.posts.CategoryPostsHandler)
 	mux.HandleFunc("GET /search/{$}", s.posts.SearchPostsHandler)
-	mux.HandleFunc("GET /health/{$}", s.mw.IsAdmin(s.healthHandler))
+	mux.HandleFunc("GET /health/{$}", s.mw.IsAdmin(s.misc.HealthHandler))
 	mux.HandleFunc("GET /static/", s.files.StaticHandler)
 	mux.HandleFunc("GET /auth/{provider}", s.auth.AuthHandler)
 	mux.HandleFunc("GET /auth/{provider}/callback", s.auth.AuthCallbackHandler)
 	mux.HandleFunc("GET /logout/{provider}", s.mw.IsAuthenticated(s.auth.LogoutHandler))
 	mux.HandleFunc("POST /account/delete", s.mw.IsAuthenticated(s.auth.DeleteAccountHandler))
-	mux.HandleFunc("GET /ads.txt", s.adsTextHandler)
+	mux.HandleFunc("GET /ads.txt", s.misc.AdsTextHandler)
 
 	// Register favicons serving from root
 	for _, favicon := range utils.Favicons {
