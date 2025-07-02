@@ -11,15 +11,15 @@ func (s *Server) RegisterRoutes() http.Handler {
 	// Register routes
 	mux.HandleFunc("GET /{$}", s.posts.HomeHandler)
 	mux.HandleFunc("GET /video/{video}/{$}", s.posts.SinglePostHandler)
-	mux.HandleFunc("POST /video/{video}/{action}", s.isAuthenticated(s.posts.PostActionHandler))
+	mux.HandleFunc("POST /video/{video}/{action}", s.mw.IsAuthenticated(s.posts.PostActionHandler))
 	mux.HandleFunc("GET /category/{category}/{$}", s.posts.CategoryPostsHandler)
 	mux.HandleFunc("GET /search/{$}", s.posts.SearchPostsHandler)
-	mux.HandleFunc("GET /health/{$}", s.isAdmin(s.healthHandler))
+	mux.HandleFunc("GET /health/{$}", s.mw.IsAdmin(s.healthHandler))
 	mux.HandleFunc("GET /static/", s.files.StaticHandler)
 	mux.HandleFunc("GET /auth/{provider}", s.auth.AuthHandler)
 	mux.HandleFunc("GET /auth/{provider}/callback", s.auth.AuthCallbackHandler)
-	mux.HandleFunc("GET /logout/{provider}", s.isAuthenticated(s.auth.LogoutHandler))
-	mux.HandleFunc("POST /account/delete", s.isAuthenticated(s.auth.DeleteAccountHandler))
+	mux.HandleFunc("GET /logout/{provider}", s.mw.IsAuthenticated(s.auth.LogoutHandler))
+	mux.HandleFunc("POST /account/delete", s.mw.IsAuthenticated(s.auth.DeleteAccountHandler))
 	mux.HandleFunc("GET /ads.txt", s.adsTextHandler)
 
 	// Register favicons serving from root
@@ -28,8 +28,8 @@ func (s *Server) RegisterRoutes() http.Handler {
 	}
 
 	// Create Cross-Site Request Forgery middleware
-	CSRF := s.createCSRFMiddleware()
+	CSRF := s.mw.CreateCSRFMiddleware()
 
 	// Chain middlwares that apply to all requests
-	return s.applyToAll(s.recoverPanic, s.wwwRedirect, CSRF, s.addHeaders)(mux)
+	return s.mw.ApplyToAll(s.mw.RecoverPanic, s.mw.WWWRedirect, CSRF, s.mw.AddHeaders)(mux)
 }

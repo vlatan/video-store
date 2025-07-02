@@ -8,6 +8,7 @@ import (
 
 	"factual-docs/internal/auth"
 	"factual-docs/internal/categories"
+	"factual-docs/internal/middlewares"
 	"factual-docs/internal/models"
 	"factual-docs/internal/posts"
 	"factual-docs/internal/shared/config"
@@ -21,15 +22,19 @@ import (
 )
 
 type Server struct {
+	// Interfaces
+	db  database.Service
+	rdb redis.Service
+	tm  tmpls.Service
+
+	// Ordinary structs
 	config *config.Config
 	store  *sessions.CookieStore
-	db     database.Service
-	rdb    redis.Service
-	tm     tmpls.Service
 	files  *files.Service
 	users  *users.Service
 	auth   *auth.Service
 	posts  *posts.Service
+	mw     *middlewares.Service
 }
 
 // Create new HTTP server
@@ -62,6 +67,7 @@ func NewServer() *http.Server {
 		users:  users,
 		auth:   auth,
 		posts:  posts.New(db, rdb, tm, cfg, auth),
+		mw:     middlewares.New(auth, cfg),
 	}
 
 	// Declare Server config
