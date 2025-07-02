@@ -30,13 +30,14 @@ var (
 	once       sync.Once
 )
 
+// Create new files service
 func New(config *config.Config) *Service {
 	once.Do(func() {
 		m := minify.New()
 		m.AddFunc("text/css", css.Minify)
 		m.AddFuncRegexp(validJS, js.Minify)
 
-		sf := ParseStaticFiles(m, "static")
+		sf := parseStaticFiles(m, "static")
 
 		sfInstance = &Service{
 			sf:     sf,
@@ -47,6 +48,7 @@ func New(config *config.Config) *Service {
 	return sfInstance
 }
 
+// Returns the static files map
 func (s *Service) GetStaticFiles() StaticFiles {
 	return s.sf
 }

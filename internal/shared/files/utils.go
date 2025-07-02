@@ -12,7 +12,7 @@ import (
 )
 
 // Create minified versions of the static files and cache them in memory.
-func ParseStaticFiles(m *minify.M, dir string) StaticFiles {
+func parseStaticFiles(m *minify.M, dir string) StaticFiles {
 
 	sf := make(StaticFiles)
 
