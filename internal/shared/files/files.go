@@ -37,10 +37,8 @@ func New(config *config.Config) *Service {
 		m.AddFunc("text/css", css.Minify)
 		m.AddFuncRegexp(validJS, js.Minify)
 
-		sf := parseStaticFiles(m, "static")
-
 		sfInstance = &Service{
-			sf:     sf,
+			sf:     parseStaticFiles(m, "static"),
 			config: config,
 		}
 	})

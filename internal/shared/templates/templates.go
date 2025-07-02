@@ -40,8 +40,10 @@ type Service interface {
 	HTMLError(w http.ResponseWriter, r *http.Request, statusCode int, data *models.TemplateData)
 }
 
+type templateMap map[string]*template.Template
+
 type service struct {
-	templates  map[string]*template.Template
+	templates  templateMap
 	rdb        redis.Service
 	config     *config.Config
 	store      *sessions.CookieStore
@@ -66,53 +68,8 @@ func New(
 		m := minify.New()
 		m.AddFunc("text/html", html.Minify)
 
-		tm := make(map[string]*template.Template)
-		baseTemplate := template.Must(parseFiles(m, nil, base))
-
-		// Function used to process each file/dir in the root, including the root
-		walkDirFunc := func(path string, info fs.DirEntry, err error) error {
-
-			// The err argument reports an error related to path,
-			// signaling that WalkDir will not walk into that directory.
-			// Returning back the error will cause WalkDir to stop walking the entire tree.
-			// https://pkg.go.dev/io/fs#WalkDirFunc
-			if err != nil {
-				return err
-			}
-
-			// Skip directories
-			if info.IsDir() {
-				return nil
-			}
-
-			// Clone the base
-			baseTmpl, err := baseTemplate.Clone()
-			if err != nil {
-				log.Fatalf("couldn't clone the base '%s' template", base)
-			}
-
-			// Extract the template name
-			name := filepath.Base(path)
-			name = name[:len(name)-len(filepath.Ext(name))]
-
-			// Include the "content" if needed
-			part := []string{path}
-			if slices.Contains(needsContent, name) {
-				part = append(part, content)
-			}
-
-			tm[name] = template.Must(parseFiles(m, baseTmpl, part...))
-
-			return nil
-		}
-
-		// Walk the directory and parse each template
-		if err := fs.WalkDir(web.Files, partials, walkDirFunc); err != nil {
-			log.Println(err)
-		}
-
 		tmInstance = &service{
-			templates:  tm,
+			templates:  parseTemplates(m),
 			rdb:        rdb,
 			config:     config,
 			store:      store,
@@ -123,6 +80,57 @@ func New(
 	})
 
 	return tmInstance
+}
+
+// Parse the templates and create a template map
+func parseTemplates(m *minify.M) templateMap {
+
+	tm := make(templateMap)
+	baseTemplate := template.Must(parseFiles(m, nil, base))
+
+	// Function used to process each file/dir in the root, including the root
+	walkDirFunc := func(path string, info fs.DirEntry, err error) error {
+
+		// The err argument reports an error related to path,
+		// signaling that WalkDir will not walk into that directory.
+		// Returning back the error will cause WalkDir to stop walking the entire tree.
+		// https://pkg.go.dev/io/fs#WalkDirFunc
+		if err != nil {
+			return err
+		}
+
+		// Skip directories
+		if info.IsDir() {
+			return nil
+		}
+
+		// Clone the base
+		baseTmpl, err := baseTemplate.Clone()
+		if err != nil {
+			log.Fatalf("couldn't clone the base '%s' template", base)
+		}
+
+		// Extract the template name
+		name := filepath.Base(path)
+		name = name[:len(name)-len(filepath.Ext(name))]
+
+		// Include the "content" if needed
+		part := []string{path}
+		if slices.Contains(needsContent, name) {
+			part = append(part, content)
+		}
+
+		tm[name] = template.Must(parseFiles(m, baseTmpl, part...))
+
+		return nil
+	}
+
+	// Walk the directory and parse each template
+	if err := fs.WalkDir(web.Files, partials, walkDirFunc); err != nil {
+		log.Println(err)
+	}
+
+	return tm
 }
 
 // Minify and parse the HTML templates as per the tdewolff/minify docs.
