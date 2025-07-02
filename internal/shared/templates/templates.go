@@ -1,9 +1,9 @@
 package tmpls
 
 import (
+	"factual-docs/internal/categories"
 	"factual-docs/internal/models"
 	"factual-docs/internal/shared/config"
-	"factual-docs/internal/shared/database"
 	"factual-docs/internal/shared/files"
 	"factual-docs/internal/shared/redis"
 	"factual-docs/web"
@@ -41,12 +41,12 @@ type Service interface {
 }
 
 type service struct {
-	templates map[string]*template.Template
-	db        database.Service
-	rdb       redis.Service
-	config    *config.Config
-	store     *sessions.CookieStore
-	sf        *files.Service
+	templates  map[string]*template.Template
+	rdb        redis.Service
+	config     *config.Config
+	store      *sessions.CookieStore
+	sf         *files.Service
+	categories *categories.Service
 }
 
 var (
@@ -56,11 +56,11 @@ var (
 
 // Walk the partials directory and parse the templates.
 func New(
-	db database.Service,
 	rdb redis.Service,
 	config *config.Config,
 	store *sessions.CookieStore,
 	sf *files.Service,
+	categories *categories.Service,
 ) Service {
 	once.Do(func() {
 		m := minify.New()
@@ -112,12 +112,12 @@ func New(
 		}
 
 		tmInstance = &service{
-			templates: tm,
-			db:        db,
-			rdb:       rdb,
-			config:    config,
-			store:     store,
-			sf:        sf,
+			templates:  tm,
+			rdb:        rdb,
+			config:     config,
+			store:      store,
+			sf:         sf,
+			categories: categories,
 		}
 
 	})

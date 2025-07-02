@@ -2,7 +2,6 @@ package tmpls
 
 import (
 	"factual-docs/internal/models"
-	"factual-docs/internal/shared/database"
 	"factual-docs/internal/shared/redis"
 	"net/http"
 	"net/url"
@@ -15,7 +14,7 @@ import (
 // and passed donwstream as value to the request context.
 func (s *service) NewData(w http.ResponseWriter, r *http.Request) *models.TemplateData {
 
-	var categories []database.Category
+	var categories []models.Category
 	redis.GetItems(
 		true,
 		r.Context(),
@@ -23,8 +22,8 @@ func (s *service) NewData(w http.ResponseWriter, r *http.Request) *models.Templa
 		"categories",
 		s.config.CacheTimeout,
 		&categories,
-		func() ([]database.Category, error) {
-			return s.db.GetCategories(r.Context())
+		func() ([]models.Category, error) {
+			return s.categories.GetCategories(r.Context())
 		},
 	)
 

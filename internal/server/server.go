@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"factual-docs/internal/auth"
+	"factual-docs/internal/categories"
 	"factual-docs/internal/models"
 	"factual-docs/internal/posts"
 	"factual-docs/internal/shared/config"
@@ -46,8 +47,9 @@ func NewServer() *http.Server {
 	store := newCookieStore(cfg)             // Create cookie store
 	auth := auth.New(users, store, rdb, cfg) // Create auth service
 
-	files := files.New(cfg)                     // Create minified files map
-	tm := tmpls.New(db, rdb, cfg, store, files) // Create parsed templates map
+	files := files.New(cfg) // Create minified files map
+	categories := categories.New(db)
+	tm := tmpls.New(rdb, cfg, store, files, categories) // Create parsed templates map
 
 	// Create new Server struct
 	newServer := &Server{

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"factual-docs/internal/models"
-	"factual-docs/internal/shared/database"
 	"fmt"
 	"regexp"
 	"sort"
@@ -57,13 +56,13 @@ func parseISO8601Duration(duration string) (string, error) {
 }
 
 // Check if category is valid
-func isValidCategory(categories []database.Category, slug string) (database.Category, bool) {
+func isValidCategory(categories []models.Category, slug string) (models.Category, bool) {
 	for _, category := range categories {
 		if category.Slug == slug {
 			return category, true
 		}
 	}
-	return database.Category{}, false
+	return models.Category{}, false
 }
 
 // Get post's related posts based on provided title as search query

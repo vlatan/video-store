@@ -69,7 +69,7 @@ func (s *Service) GetCategoryPosts(
 func (s *Service) GetSinglePost(ctx context.Context, videoID string) (post models.Post, err error) {
 
 	var thumbnails []byte
-	var category database.Category
+	var category models.Category
 	var duration models.Duration
 
 	// Get single row from DB

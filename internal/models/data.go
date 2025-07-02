@@ -2,7 +2,6 @@ package models
 
 import (
 	"factual-docs/internal/shared/config"
-	"factual-docs/internal/shared/database"
 	"factual-docs/internal/shared/files"
 	"html/template"
 	"strings"
@@ -32,7 +31,7 @@ type TemplateData struct {
 	CurrentURI    string
 	CanonicalURL  string
 	Posts         Posts
-	Categories    []database.Category
+	Categories    []Category
 	FlashMessages []*FlashMessage
 	SearchQuery   string
 	HTMLErrorData *HTMLErrorData

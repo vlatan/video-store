@@ -14,9 +14,6 @@ import (
 
 // Service represents a service that interacts with a database.
 type Service interface {
-	// Get all categories
-	GetCategories(ctx context.Context) ([]Category, error)
-
 	// Query many rows
 	Query(ctx context.Context, query string, args ...any) (pgx.Rows, error)
 	// Query single row
