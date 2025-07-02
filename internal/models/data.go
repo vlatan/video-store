@@ -1,8 +1,8 @@
 package models
 
 import (
+	"factual-docs/internal/files"
 	"factual-docs/internal/shared/config"
-	"factual-docs/internal/shared/files"
 	"html/template"
 	"strings"
 	"time"

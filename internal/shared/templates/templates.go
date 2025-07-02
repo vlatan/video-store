@@ -2,9 +2,9 @@ package tmpls
 
 import (
 	"factual-docs/internal/categories"
+	"factual-docs/internal/files"
 	"factual-docs/internal/models"
 	"factual-docs/internal/shared/config"
-	"factual-docs/internal/shared/files"
 	"factual-docs/internal/shared/redis"
 	"factual-docs/web"
 	"html/template"
