@@ -16,12 +16,6 @@ type Duration struct {
 	Human string `json:"human,omitempty"`
 }
 
-type Posts struct {
-	Items    []Post
-	TotalNum int
-	TimeTook string
-}
-
 type Post struct {
 	ID               int                `json:"id,omitempty"`
 	VideoID          string             `json:"video_id,omitempty"`
@@ -39,4 +33,10 @@ type Post struct {
 	Duration         *Duration          `json:"duration,omitempty"`
 	CurrentUserLiked bool               `json:"current_user_liked,omitempty"`
 	CurrentUserFaved bool               `json:"current_user_faved,omitempty"`
+}
+
+type Posts struct {
+	Items    []Post
+	TotalNum int
+	TimeTook string
 }

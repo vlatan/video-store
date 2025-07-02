@@ -2,8 +2,8 @@ package posts
 
 import (
 	"encoding/json"
+	"factual-docs/internal/models"
 	"factual-docs/internal/shared/database"
-	tmpls "factual-docs/internal/shared/templates"
 	"log"
 	"net/http"
 )
@@ -118,7 +118,7 @@ func (s *Service) handleDeletePost(w http.ResponseWriter, r *http.Request, userI
 		return
 	}
 
-	successDelete := tmpls.FlashMessage{
+	successDelete := models.FlashMessage{
 		Message:  "The video has been deleted!",
 		Category: "info",
 	}
@@ -128,7 +128,7 @@ func (s *Service) handleDeletePost(w http.ResponseWriter, r *http.Request, userI
 }
 
 // Handle the title or description update
-func (s *Service) handleEdit(w http.ResponseWriter, r *http.Request, videoID string, currentUser *tmpls.User) {
+func (s *Service) handleEdit(w http.ResponseWriter, r *http.Request, videoID string, currentUser *models.User) {
 	var data bodyData
 
 	// Deocode JSON

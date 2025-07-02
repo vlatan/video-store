@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"crypto/md5"
 	"encoding/hex"
-	tmpls "factual-docs/internal/shared/templates"
+	"factual-docs/internal/models"
 	"factual-docs/internal/utils"
 	"fmt"
 	"io"
@@ -31,7 +31,7 @@ func getRedirectPath(r *http.Request) string {
 func (s *Service) StoreFlashMessage(
 	w http.ResponseWriter,
 	r *http.Request,
-	m *tmpls.FlashMessage,
+	m *models.FlashMessage,
 ) {
 	session, err := s.store.Get(r, s.config.FlashSessionName)
 	if err != nil {
@@ -114,23 +114,23 @@ func (s *Service) logoutUser(w http.ResponseWriter, r *http.Request) error {
 }
 
 // Retrieve the user from context or session, return User struct
-func (s *Service) GetCurrentUser(w http.ResponseWriter, r *http.Request) *tmpls.User {
+func (s *Service) GetCurrentUser(w http.ResponseWriter, r *http.Request) *models.User {
 
 	// Try to get the current user from context first,
 	// in case an upstream middleware already got the user from session
-	if currentUser, ok := r.Context().Value(utils.UserContextKey).(*tmpls.User); ok {
+	if currentUser, ok := r.Context().Value(utils.UserContextKey).(*models.User); ok {
 		return currentUser
 	}
 
 	session, err := s.store.Get(r, s.config.SessionName)
 	if session == nil || err != nil {
-		return &tmpls.User{}
+		return &models.User{}
 	}
 
 	// Get user row ID from session
 	id, ok := session.Values["ID"].(int)
 	if id == 0 || !ok {
-		return &tmpls.User{}
+		return &models.User{}
 	}
 
 	// Update last seen
@@ -154,7 +154,7 @@ func (s *Service) GetCurrentUser(w http.ResponseWriter, r *http.Request) *tmpls.
 	analyticsID := session.Values["AnalyticsID"].(string)
 	avatarURL := session.Values["AvatarURL"].(string)
 
-	return &tmpls.User{
+	return &models.User{
 		ID:             id,
 		UserID:         session.Values["UserID"].(string),
 		Email:          session.Values["Email"].(string),
@@ -271,7 +271,7 @@ func (s *Service) deleteAvatar(r *http.Request, analyticsID string) {
 }
 
 // Send revoke request. It will work if the access token is not expired.
-func revokeLogin(user *tmpls.User) (response *http.Response, err error) {
+func revokeLogin(user *models.User) (response *http.Response, err error) {
 
 	switch user.Provider {
 	case "google":

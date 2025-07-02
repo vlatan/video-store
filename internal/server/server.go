@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"factual-docs/internal/auth"
+	"factual-docs/internal/models"
 	"factual-docs/internal/posts"
 	"factual-docs/internal/shared/config"
 	"factual-docs/internal/shared/database"
@@ -34,7 +35,7 @@ type Server struct {
 func NewServer() *http.Server {
 
 	// Register types with gob to be able to use them in sessions
-	gob.Register(&tmpls.FlashMessage{})
+	gob.Register(&models.FlashMessage{})
 	gob.Register(time.Time{})
 
 	cfg := config.New()     // Create new config service

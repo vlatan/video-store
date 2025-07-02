@@ -3,6 +3,7 @@ package tmpls
 import (
 	"bytes"
 	"encoding/json"
+	"factual-docs/internal/models"
 	"log"
 	"net/http"
 	"strconv"
@@ -14,12 +15,12 @@ type JSONErrorData struct {
 }
 
 // Write HTML error to response
-func (s *service) HTMLError(w http.ResponseWriter, r *http.Request, statusCode int, data *TemplateData) {
+func (s *service) HTMLError(w http.ResponseWriter, r *http.Request, statusCode int, data *models.TemplateData) {
 	// Stream status code early
 	w.WriteHeader(statusCode)
 
 	// Craft template data
-	data.HTMLErrorData = &HTMLErrorData{
+	data.HTMLErrorData = &models.HTMLErrorData{
 		Title: strconv.Itoa(statusCode),
 	}
 

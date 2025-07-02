@@ -1,6 +1,7 @@
 package tmpls
 
 import (
+	"factual-docs/internal/models"
 	"factual-docs/internal/shared/config"
 	"factual-docs/internal/shared/database"
 	"factual-docs/internal/shared/files"
@@ -28,15 +29,15 @@ var needsContent = []string{"home", "search", "category"}
 
 type Service interface {
 	// Create new template data
-	NewData(w http.ResponseWriter, r *http.Request) *TemplateData
+	NewData(w http.ResponseWriter, r *http.Request) *models.TemplateData
 	// Write JSON to response
 	WriteJSON(w http.ResponseWriter, r *http.Request, data any)
 	// Write HTML template to response
-	RenderHTML(w http.ResponseWriter, r *http.Request, templateName string, data *TemplateData)
+	RenderHTML(w http.ResponseWriter, r *http.Request, templateName string, data *models.TemplateData)
 	// Write JSON error to response
 	JSONError(w http.ResponseWriter, r *http.Request, statusCode int)
 	// Write HTML error to response
-	HTMLError(w http.ResponseWriter, r *http.Request, statusCode int, data *TemplateData)
+	HTMLError(w http.ResponseWriter, r *http.Request, statusCode int, data *models.TemplateData)
 }
 
 type service struct {

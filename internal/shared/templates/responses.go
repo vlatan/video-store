@@ -3,6 +3,7 @@ package tmpls
 import (
 	"bytes"
 	"encoding/json"
+	"factual-docs/internal/models"
 	"log"
 	"net/http"
 )
@@ -28,7 +29,7 @@ func (s *service) WriteJSON(w http.ResponseWriter, r *http.Request, data any) {
 // Check if template exists in the collection of templates (map)
 // Write the template to buffer to check for errors
 // Finally write the template to http response writer
-func (s *service) RenderHTML(w http.ResponseWriter, r *http.Request, templateName string, data *TemplateData) {
+func (s *service) RenderHTML(w http.ResponseWriter, r *http.Request, templateName string, data *models.TemplateData) {
 	tmpl, exists := s.templates[templateName]
 
 	if !exists {
