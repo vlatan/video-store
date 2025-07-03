@@ -7,12 +7,12 @@ import (
 	"time"
 
 	"factual-docs/internal/auth"
-	"factual-docs/internal/categories"
 	"factual-docs/internal/files"
 	"factual-docs/internal/middlewares"
 	"factual-docs/internal/misc"
 	"factual-docs/internal/models"
 	"factual-docs/internal/posts"
+	catRepo "factual-docs/internal/repositories/categories"
 	postsRepo "factual-docs/internal/repositories/posts"
 	usersRepo "factual-docs/internal/repositories/users"
 	"factual-docs/internal/shared/config"
@@ -41,17 +41,19 @@ func NewServer() *http.Server {
 	db := database.New(cfg)      // Create database service
 	rdb := redis.New(cfg)        // Create Redis service
 	store := newCookieStore(cfg) // Create Cookie store
-	files := files.New(cfg)      // Minify and store in memory some static files
+	files := files.New(cfg)      // Minify and store static files
 
 	// Create DB repositories
 	usersRepo := usersRepo.New(db)      // Create users repo
 	postsRepo := postsRepo.New(db, cfg) // Create posts repo
+	catRepo := catRepo.New(db)          // Create categories repo
+
+	// Create parsed templates map
+	tm := tmpls.New(rdb, cfg, store, files, catRepo)
 
 	// Create domain services
-	categories := categories.New(db)                    // Create categories service
-	tm := tmpls.New(rdb, cfg, store, files, categories) // Create parsed templates map
-	auth := auth.New(usersRepo, store, rdb, cfg)        // Create auth service
-	posts := posts.New(postsRepo, rdb, tm, cfg, auth)
+	auth := auth.New(usersRepo, store, rdb, cfg)      // Create auth service
+	posts := posts.New(postsRepo, rdb, tm, cfg, auth) // Create posts service
 
 	// Create new Server struct
 	newServer := &Server{

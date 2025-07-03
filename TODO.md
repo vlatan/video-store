@@ -1,4 +1,3 @@
-* Move GetCurrentUser to utils
 * Continue with repos formation
 
 * Admin (get users with pagination)
