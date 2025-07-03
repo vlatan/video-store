@@ -12,11 +12,6 @@ type bodyData struct {
 	Description string `json:"description"`
 }
 
-type actions struct {
-	Liked bool
-	Faved bool
-}
-
 // Handle a post like from user
 func (s *Service) handleLike(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
 	rowsAffected, err := s.postsRepo.Like(r.Context(), userID, videoID)
