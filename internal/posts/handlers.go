@@ -4,7 +4,7 @@ import (
 	"errors"
 	"factual-docs/internal/models"
 	"factual-docs/internal/shared/redis"
-	"factual-docs/internal/utils"
+	"factual-docs/internal/shared/utils"
 	"fmt"
 	"log"
 	"net/http"

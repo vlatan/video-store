@@ -5,7 +5,7 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"factual-docs/internal/models"
-	"factual-docs/internal/utils"
+	"factual-docs/internal/shared/utils"
 	"fmt"
 	"io"
 	"log"
