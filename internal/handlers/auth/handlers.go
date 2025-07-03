@@ -124,7 +124,7 @@ func (s *Service) DeleteAccountHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Delete the user from DB
-	rowsAffected, err := s.users.DeleteUser(r.Context(), currentUser.ID)
+	rowsAffected, err := s.usersRepo.DeleteUser(r.Context(), currentUser.ID)
 	if err != nil {
 		log.Printf("Could not delete user %d: %v", currentUser.ID, err)
 		s.StoreFlashMessage(w, r, &failedDeleteAccount)

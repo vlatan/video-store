@@ -1,7 +1,6 @@
 package posts
 
 import (
-	"context"
 	"encoding/json"
 	"factual-docs/internal/models"
 	"log"
@@ -13,20 +12,9 @@ type bodyData struct {
 	Description string `json:"description"`
 }
 
-type actions struct {
-	Liked bool
-	Faved bool
-}
-
-// Check if the user liked and/or faved a post
-func (s *Service) getUserActions(ctx context.Context, userID, postID int) (actions actions, err error) {
-	err = s.db.QueryRow(ctx, userActionsQuery, userID, postID).Scan(&actions.Liked, &actions.Faved)
-	return actions, err
-}
-
 // Handle a post like from user
 func (s *Service) handleLike(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
-	rowsAffected, err := s.db.Exec(r.Context(), likeQuery, userID, videoID)
+	rowsAffected, err := s.postsRepo.Like(r.Context(), userID, videoID)
 	if err != nil {
 		log.Printf("User %d could not like the video %s: %v\n", userID, videoID, err)
 		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
@@ -41,7 +29,7 @@ func (s *Service) handleLike(w http.ResponseWriter, r *http.Request, userID int,
 
 // Handle a post unlike from user
 func (s *Service) handleUnlike(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
-	rowsAffected, err := s.db.Exec(r.Context(), unlikeQuery, userID, videoID)
+	rowsAffected, err := s.postsRepo.Unlike(r.Context(), userID, videoID)
 	if err != nil {
 		log.Printf("User %d could not unlike the video %s: %v\n", userID, videoID, err)
 		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
@@ -56,7 +44,7 @@ func (s *Service) handleUnlike(w http.ResponseWriter, r *http.Request, userID in
 
 // Handle a post favorite from user
 func (s *Service) handleFave(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
-	rowsAffected, err := s.db.Exec(r.Context(), faveQuery, userID, videoID)
+	rowsAffected, err := s.postsRepo.Fave(r.Context(), userID, videoID)
 	if err != nil {
 		log.Printf("User %d could not fave the video %s: %v\n", userID, videoID, err)
 		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
@@ -71,7 +59,7 @@ func (s *Service) handleFave(w http.ResponseWriter, r *http.Request, userID int,
 
 // Handle a post unfavorite from user
 func (s *Service) handleUnfave(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
-	rowsAffected, err := s.db.Exec(r.Context(), unfaveQuery, userID, videoID)
+	rowsAffected, err := s.postsRepo.Unfave(r.Context(), userID, videoID)
 	if err != nil {
 		log.Printf("User %d could not unfave the video %s: %v\n", userID, videoID, err)
 		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
@@ -86,7 +74,7 @@ func (s *Service) handleUnfave(w http.ResponseWriter, r *http.Request, userID in
 
 // Handle a post title update
 func (s *Service) handleUpdateTitle(w http.ResponseWriter, r *http.Request, userID int, videoID, title string) {
-	rowsAffected, err := s.db.Exec(r.Context(), updateTitleQuery, videoID, title)
+	rowsAffected, err := s.postsRepo.UpdateTitle(r.Context(), videoID, title)
 	if err != nil {
 		log.Printf("User %d could not update the title of the video %s: %v\n", userID, videoID, err)
 		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
@@ -101,7 +89,7 @@ func (s *Service) handleUpdateTitle(w http.ResponseWriter, r *http.Request, user
 
 // Handle a post description update
 func (s *Service) handleUpdateDesc(w http.ResponseWriter, r *http.Request, userID int, videoID, description string) {
-	rowsAffected, err := s.db.Exec(r.Context(), updateDescQuery, videoID, description)
+	rowsAffected, err := s.postsRepo.UpdateDesc(r.Context(), videoID, description)
 	if err != nil {
 		log.Printf("User %d could not update the description of the video %s: %v\n", userID, videoID, err)
 		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
@@ -116,7 +104,7 @@ func (s *Service) handleUpdateDesc(w http.ResponseWriter, r *http.Request, userI
 
 // Handle a post description update
 func (s *Service) handleDeletePost(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
-	rowsAffected, err := s.db.Exec(r.Context(), deletePostQuery, videoID)
+	rowsAffected, err := s.postsRepo.DeletePost(r.Context(), videoID)
 	if err != nil {
 		log.Printf("User %d could not delete the video %s: %v\n", userID, videoID, err)
 		http.Error(w, "Something went wrong.", http.StatusInternalServerError)

@@ -23,7 +23,7 @@ func (s *service) NewData(w http.ResponseWriter, r *http.Request) *models.Templa
 		s.config.CacheTimeout,
 		&categories,
 		func() ([]models.Category, error) {
-			return s.categories.GetCategories(r.Context())
+			return s.catRepo.GetCategories(r.Context())
 		},
 	)
 

@@ -1,7 +1,7 @@
-* Admin (get users with pagination)
-* Pages
-* Sitemap
 * Sources
+* Pages
+* Admin (get users with pagination)
+* Sitemap
 * Cron
 * Post new video
 

@@ -1,4 +1,4 @@
-package files
+package static
 
 import (
 	"crypto/md5"

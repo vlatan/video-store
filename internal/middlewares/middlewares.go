@@ -2,9 +2,9 @@ package middlewares
 
 import (
 	"context"
-	"factual-docs/internal/auth"
+	"factual-docs/internal/handlers/auth"
 	"factual-docs/internal/shared/config"
-	"factual-docs/internal/utils"
+	"factual-docs/internal/shared/utils"
 	"log"
 	"net/http"
 	"strings"

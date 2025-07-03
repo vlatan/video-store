@@ -6,18 +6,18 @@ import (
 	"factual-docs/internal/shared/database"
 )
 
-type Service struct {
+type Repository struct {
 	db database.Service
 }
 
-func New(db database.Service) *Service {
-	return &Service{db: db}
+func New(db database.Service) *Repository {
+	return &Repository{db: db}
 }
 
 // Get a limited number of posts with offset
-func (s *Service) GetCategories(ctx context.Context) ([]models.Category, error) {
+func (r *Repository) GetCategories(ctx context.Context) ([]models.Category, error) {
 
-	rows, err := s.db.Query(ctx, getCategoriesQuery)
+	rows, err := r.db.Query(ctx, getCategoriesQuery)
 	if err != nil {
 		return nil, err
 	}

@@ -1,4 +1,4 @@
-package files
+package static
 
 import (
 	"factual-docs/internal/shared/config"

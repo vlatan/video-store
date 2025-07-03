@@ -4,7 +4,7 @@ import (
 	"errors"
 	"factual-docs/internal/models"
 	"factual-docs/internal/shared/redis"
-	"factual-docs/internal/utils"
+	"factual-docs/internal/shared/utils"
 	"fmt"
 	"log"
 	"net/http"
@@ -40,7 +40,7 @@ func (s *Service) HomeHandler(w http.ResponseWriter, r *http.Request) {
 		s.config.CacheTimeout,
 		&posts,
 		func() ([]models.Post, error) {
-			return s.GetPosts(r.Context(), page, orderBy)
+			return s.postsRepo.GetPosts(r.Context(), page, orderBy)
 		},
 	)
 
@@ -113,7 +113,7 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 		s.config.CacheTimeout,
 		&posts,
 		func() ([]models.Post, error) {
-			return s.GetCategoryPosts(r.Context(), slug, orderBy, page)
+			return s.postsRepo.GetCategoryPosts(r.Context(), slug, orderBy, page)
 		},
 	)
 
@@ -183,7 +183,7 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 		s.config.CacheTimeout,
 		&posts,
 		func() (models.Posts, error) {
-			return s.SearchPosts(r.Context(), searchQuery, limit, offset)
+			return s.postsRepo.SearchPosts(r.Context(), searchQuery, limit, offset)
 		},
 	)
 
@@ -242,7 +242,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 		s.config.CacheTimeout,
 		&post,
 		func() (models.Post, error) {
-			return s.GetSinglePost(r.Context(), videoID)
+			return s.postsRepo.GetSinglePost(r.Context(), videoID)
 		},
 	)
 
@@ -270,7 +270,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Check whether the current user liked and/or faved the post
 	if data.CurrentUser.IsAuthenticated() {
-		userActions, _ := s.getUserActions(
+		userActions, _ := s.postsRepo.GetUserActions(
 			r.Context(),
 			data.CurrentUser.ID,
 			data.CurrentPost.ID,
@@ -289,7 +289,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 		s.config.CacheTimeout,
 		&relatedPosts,
 		func() ([]models.Post, error) {
-			return s.getRelatedPosts(r.Context(), post.Title)
+			return s.postsRepo.GetRelatedPosts(r.Context(), post.Title)
 		},
 	)
 

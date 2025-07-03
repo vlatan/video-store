@@ -6,37 +6,27 @@ import (
 	"net/http"
 	"time"
 
-	"factual-docs/internal/auth"
-	"factual-docs/internal/categories"
-	"factual-docs/internal/files"
+	"factual-docs/internal/handlers/auth"
+	"factual-docs/internal/handlers/misc"
+	"factual-docs/internal/handlers/posts"
+	"factual-docs/internal/handlers/static"
 	"factual-docs/internal/middlewares"
-	"factual-docs/internal/misc"
 	"factual-docs/internal/models"
-	"factual-docs/internal/posts"
+	catRepo "factual-docs/internal/repositories/categories"
+	postsRepo "factual-docs/internal/repositories/posts"
+	usersRepo "factual-docs/internal/repositories/users"
 	"factual-docs/internal/shared/config"
 	"factual-docs/internal/shared/database"
 	"factual-docs/internal/shared/redis"
 	tmpls "factual-docs/internal/shared/templates"
-	"factual-docs/internal/users"
-
-	"github.com/gorilla/sessions"
 )
 
 type Server struct {
-	// Interfaces
-	db  database.Service
-	rdb redis.Service
-	tm  tmpls.Service
-
-	// Ordinary structs
-	config *config.Config
-	store  *sessions.CookieStore
-	files  *files.Service
-	users  *users.Service
-	auth   *auth.Service
-	posts  *posts.Service
-	mw     *middlewares.Service
-	misc   *misc.Service
+	files *static.Service
+	auth  *auth.Service
+	posts *posts.Service
+	mw    *middlewares.Service
+	misc  *misc.Service
 }
 
 // Create new HTTP server
@@ -46,31 +36,35 @@ func NewServer() *http.Server {
 	gob.Register(&models.FlashMessage{})
 	gob.Register(time.Time{})
 
+	// Create esential services
 	cfg := config.New()          // Create new config service
 	db := database.New(cfg)      // Create database service
 	rdb := redis.New(cfg)        // Create Redis service
-	store := newCookieStore(cfg) // Create cookie store
-	files := files.New(cfg)      // Create minified files map
+	store := newCookieStore(cfg) // Create Cookie store
+	static := static.New(cfg)    // Minify and store static files
 
-	users := users.New(db)                   // Create users service
-	auth := auth.New(users, store, rdb, cfg) // Create auth service
+	// Create DB repositories
+	usersRepo := usersRepo.New(db)      // Create users repo
+	postsRepo := postsRepo.New(db, cfg) // Create posts repo
+	catRepo := catRepo.New(db)          // Create categories repo
 
-	categories := categories.New(db)                    // Create categories service
-	tm := tmpls.New(rdb, cfg, store, files, categories) // Create parsed templates map
+	// Create parsed templates map
+	tm := tmpls.New(rdb, cfg, store, static, catRepo)
+
+	// Create domain services
+	auth := auth.New(usersRepo, store, rdb, cfg)      // Create auth service
+	posts := posts.New(postsRepo, rdb, tm, cfg, auth) // Create posts service
+	misc := misc.New(cfg, db, rdb, tm)                // Create miscellaneous service
+
+	// Create middlewares service
+	mw := middlewares.New(auth, cfg)
 
 	// Create new Server struct
 	newServer := &Server{
-		config: cfg,
-		files:  files,
-		rdb:    rdb,
-		db:     db,
-		store:  store,
-		tm:     tm,
-		users:  users,
-		auth:   auth,
-		posts:  posts.New(db, rdb, tm, cfg, auth),
-		mw:     middlewares.New(auth, cfg),
-		misc:   misc.New(cfg, db, rdb, tm),
+		auth:  auth,
+		posts: posts,
+		misc:  misc,
+		mw:    mw,
 	}
 
 	// Declare Server config

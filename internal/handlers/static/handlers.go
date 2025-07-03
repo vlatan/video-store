@@ -1,8 +1,8 @@
-package files
+package static
 
 import (
 	"bytes"
-	"factual-docs/internal/utils"
+	"factual-docs/internal/shared/utils"
 	"factual-docs/web"
 	"net/http"
 	"net/url"
