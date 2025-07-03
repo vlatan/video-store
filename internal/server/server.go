@@ -13,6 +13,7 @@ import (
 	"factual-docs/internal/misc"
 	"factual-docs/internal/models"
 	"factual-docs/internal/posts"
+	postsRepo "factual-docs/internal/repositories/posts"
 	usersRepo "factual-docs/internal/repositories/users"
 	"factual-docs/internal/shared/config"
 	"factual-docs/internal/shared/database"
@@ -39,21 +40,23 @@ func NewServer() *http.Server {
 	cfg := config.New()          // Create new config service
 	db := database.New(cfg)      // Create database service
 	rdb := redis.New(cfg)        // Create Redis service
-	store := newCookieStore(cfg) // Create cookie store
-	files := files.New(cfg)      // Create minified static files map
+	store := newCookieStore(cfg) // Create Cookie store
+	files := files.New(cfg)      // Minify and store in memory some static files
 
 	// Create DB repositories
-	usersRepo := usersRepo.New(db) // Create users repo
+	usersRepo := usersRepo.New(db)      // Create users repo
+	postsRepo := postsRepo.New(db, cfg) // Create posts repo
 
-	// Create handlers
-	auth := auth.New(usersRepo, store, rdb, cfg)        // Create auth service
+	// Create domain services
 	categories := categories.New(db)                    // Create categories service
 	tm := tmpls.New(rdb, cfg, store, files, categories) // Create parsed templates map
+	auth := auth.New(usersRepo, store, rdb, cfg)        // Create auth service
+	posts := posts.New(postsRepo, rdb, tm, cfg, auth)
 
 	// Create new Server struct
 	newServer := &Server{
 		auth:  auth,
-		posts: posts.New(db, rdb, tm, cfg, auth),
+		posts: posts,
 		mw:    middlewares.New(auth, cfg),
 		misc:  misc.New(cfg, db, rdb, tm),
 	}
