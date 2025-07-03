@@ -54,13 +54,17 @@ func NewServer() *http.Server {
 	// Create domain services
 	auth := auth.New(usersRepo, store, rdb, cfg)      // Create auth service
 	posts := posts.New(postsRepo, rdb, tm, cfg, auth) // Create posts service
+	misc := misc.New(cfg, db, rdb, tm)                // Create miscellaneous service
+
+	// Create middlewares service
+	mw := middlewares.New(auth, cfg)
 
 	// Create new Server struct
 	newServer := &Server{
 		auth:  auth,
 		posts: posts,
-		mw:    middlewares.New(auth, cfg),
-		misc:  misc.New(cfg, db, rdb, tm),
+		misc:  misc,
+		mw:    mw,
 	}
 
 	// Declare Server config
