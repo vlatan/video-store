@@ -10,6 +10,7 @@ import (
 	"html/template"
 	"io/fs"
 	"log"
+	"maps"
 	"net/http"
 	"path/filepath"
 	"slices"
@@ -24,6 +25,7 @@ import (
 const base = "templates/base.html"
 const content = "templates/content.html"
 const partials = "templates/partials"
+const sitemaps = "templates/sitemaps"
 
 var needsContent = []string{"home", "search", "category"}
 
@@ -68,8 +70,12 @@ func New(
 		m := minify.New()
 		m.AddFunc("text/html", html.Minify)
 
+		templates := parseHTMLTemplates(m)
+		// Copy sitemaps templates to main template map
+		maps.Copy(templates, parseXMLTemplates(m))
+
 		tmInstance = &service{
-			templates:  parseTemplates(m),
+			templates:  templates,
 			rdb:        rdb,
 			config:     config,
 			store:      store,
@@ -83,7 +89,7 @@ func New(
 }
 
 // Parse the templates and create a template map
-func parseTemplates(m *minify.M) templateMap {
+func parseHTMLTemplates(m *minify.M) templateMap {
 
 	tm := make(templateMap)
 	baseTemplate := template.Must(parseFiles(m, nil, base))
@@ -127,6 +133,44 @@ func parseTemplates(m *minify.M) templateMap {
 
 	// Walk the directory and parse each template
 	if err := fs.WalkDir(web.Files, partials, walkDirFunc); err != nil {
+		log.Println(err)
+	}
+
+	return tm
+}
+
+func parseXMLTemplates(m *minify.M) templateMap {
+
+	tm := make(templateMap)
+
+	// Function used to process each file/dir in the root, including the root
+	walkDirFunc := func(path string, info fs.DirEntry, err error) error {
+
+		// The err argument reports an error related to path,
+		// signaling that WalkDir will not walk into that directory.
+		// Returning back the error will cause WalkDir to stop walking the entire tree.
+		// https://pkg.go.dev/io/fs#WalkDirFunc
+		if err != nil {
+			return err
+		}
+
+		// Skip directories
+		if info.IsDir() {
+			return nil
+		}
+
+		// Extract the template name
+		name := filepath.Base(path)
+		name = name[:len(name)-len(filepath.Ext(name))]
+
+		part := []string{path}
+		tm[name] = template.Must(parseFiles(m, nil, part...))
+
+		return nil
+	}
+
+	// Walk the directory and parse each template
+	if err := fs.WalkDir(web.Files, sitemaps, walkDirFunc); err != nil {
 		log.Println(err)
 	}
 
