@@ -1,4 +1,4 @@
-package repositories
+package users
 
 import (
 	"context"
@@ -8,48 +8,48 @@ import (
 	"github.com/markbates/goth"
 )
 
-type User struct {
+type Repository struct {
 	db database.Service
 }
 
-func NewUserRepo(db database.Service) *User {
-	return &User{db: db}
+func New(db database.Service) *Repository {
+	return &Repository{db: db}
 }
 
 // Add or update a user
-func (u *User) UpsertUser(ctx context.Context, gu *goth.User, analyticsID string) (int, error) {
+func (r *Repository) UpsertUser(ctx context.Context, u *goth.User, analyticsID string) (int, error) {
 
 	var (
 		googleID   string
 		facebookID string
 	)
 
-	switch gu.Provider {
+	switch u.Provider {
 	case "google":
-		googleID = gu.UserID
+		googleID = u.UserID
 	case "facebook":
-		facebookID = gu.UserID
+		facebookID = u.UserID
 	}
 
 	var id int
-	err := u.db.QueryRow(
+	err := r.db.QueryRow(
 		ctx,
 		upsertUserQuery,
 		NullString(&googleID),
 		NullString(&facebookID),
 		NullString(&analyticsID),
-		NullString(&gu.FirstName),
-		NullString(&gu.Email),
-		NullString(&gu.AvatarURL),
+		NullString(&u.FirstName),
+		NullString(&u.Email),
+		NullString(&u.AvatarURL),
 	).Scan(&id)
 
 	return id, err
 }
 
-func (u *User) DeleteUser(ctx context.Context, userID int) (int64, error) {
-	return u.db.Exec(ctx, deleteUserQuery, userID)
+func (r *Repository) DeleteUser(ctx context.Context, userID int) (int64, error) {
+	return r.db.Exec(ctx, deleteUserQuery, userID)
 }
 
-func (u *User) UpdateLastUserSeen(ctx context.Context, userID int, now time.Time) (int64, error) {
-	return u.db.Exec(ctx, updateLastUserSeenQuery, userID, now)
+func (r *Repository) UpdateLastUserSeen(ctx context.Context, userID int, now time.Time) (int64, error) {
+	return r.db.Exec(ctx, updateLastUserSeenQuery, userID, now)
 }

@@ -1,4 +1,4 @@
-package repositories
+package users
 
 const upsertUserQuery = `
 	WITH existing_user AS (

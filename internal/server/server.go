@@ -13,7 +13,7 @@ import (
 	"factual-docs/internal/misc"
 	"factual-docs/internal/models"
 	"factual-docs/internal/posts"
-	repositories "factual-docs/internal/repositories/users"
+	usersRepo "factual-docs/internal/repositories/users"
 	"factual-docs/internal/shared/config"
 	"factual-docs/internal/shared/database"
 	"factual-docs/internal/shared/redis"
@@ -43,7 +43,7 @@ func NewServer() *http.Server {
 	files := files.New(cfg)      // Create minified static files map
 
 	// Create DB repositories
-	usersRepo := repositories.NewUserRepo(db) // Create users repo
+	usersRepo := usersRepo.New(db) // Create users repo
 
 	// Create handlers
 	auth := auth.New(usersRepo, store, rdb, cfg)        // Create auth service

@@ -1,7 +1,7 @@
 package auth
 
 import (
-	repositories "factual-docs/internal/repositories/users"
+	"factual-docs/internal/repositories/users"
 	"factual-docs/internal/shared/config"
 	"factual-docs/internal/shared/redis"
 
@@ -9,13 +9,13 @@ import (
 )
 
 type Service struct {
-	usersRepo *repositories.User
+	usersRepo *users.Repository
 	store     *sessions.CookieStore
 	rdb       redis.Service
 	config    *config.Config
 }
 
-func New(usersRepo *repositories.User, store *sessions.CookieStore, rdb redis.Service, config *config.Config) *Service {
+func New(usersRepo *users.Repository, store *sessions.CookieStore, rdb redis.Service, config *config.Config) *Service {
 	return &Service{
 		usersRepo: usersRepo,
 		store:     store,
