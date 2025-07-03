@@ -28,7 +28,7 @@ type Post struct {
 	ShortDesc        string     `json:"short_description,omitempty"`
 	MetaDesc         string     `json:"meta_description,omitempty"`
 	RelatedPosts     []Post     `json:"related_posts,omitempty"`
-	UploadDate       time.Time  `json:"upload_date,omitempty"`
+	UploadDate       *time.Time `json:"upload_date,omitempty"` // needs pointer to omit the date
 	Duration         *Duration  `json:"duration,omitempty"`
 	CurrentUserLiked bool       `json:"current_user_liked,omitempty"`
 	CurrentUserFaved bool       `json:"current_user_faved,omitempty"`
