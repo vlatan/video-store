@@ -1,7 +1,7 @@
 package tmpls
 
 import (
-	"factual-docs/internal/files"
+	"factual-docs/internal/handlers/files"
 	"factual-docs/internal/models"
 	"factual-docs/internal/repositories/categories"
 	"factual-docs/internal/shared/config"

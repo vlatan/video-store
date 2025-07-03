@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"time"
 
-	"factual-docs/internal/files"
 	"factual-docs/internal/handlers/auth"
+	"factual-docs/internal/handlers/files"
 	"factual-docs/internal/middlewares"
 	"factual-docs/internal/misc"
 	"factual-docs/internal/models"
