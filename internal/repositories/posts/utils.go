@@ -12,9 +12,6 @@ import (
 	"strings"
 )
 
-// Validate video ID
-var validVideoID = regexp.MustCompile("^([-a-zA-Z0-9_]{11})$")
-
 // Valid ISO time format
 var validISO8601 = regexp.MustCompile(`(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:\.\d+)?)S)?`)
 
@@ -55,20 +52,10 @@ func parseISO8601Duration(duration string) (string, error) {
 	return fmt.Sprintf("%02d:%02d:%02d", hours, minutes, seconds), nil
 }
 
-// Check if category is valid
-func isValidCategory(categories []models.Category, slug string) (models.Category, bool) {
-	for _, category := range categories {
-		if category.Slug == slug {
-			return category, true
-		}
-	}
-	return models.Category{}, false
-}
-
 // Get post's related posts based on provided title as search query
-func (s *Service) getRelatedPosts(ctx context.Context, title string) (posts []models.Post, err error) {
+func (r *Repository) GetRelatedPosts(ctx context.Context, title string) (posts []models.Post, err error) {
 	// Search the DB for posts
-	searchedPosts, err := s.SearchPosts(ctx, title, s.config.NumRelatedPosts+1, 0)
+	searchedPosts, err := r.SearchPosts(ctx, title, r.config.NumRelatedPosts+1, 0)
 
 	if err != nil {
 		return posts, err
@@ -109,13 +96,13 @@ func srcset(thumbnails map[string]models.Thumbnail, maxWidth int) string {
 }
 
 // Query the DB for posts based on variadic arguments
-func (s *Service) queryPosts(
+func (r *Repository) queryPosts(
 	ctx context.Context,
 	query string,
 	args ...any,
 ) (posts []models.Post, err error) {
 	// Get rows from DB
-	rows, err := s.db.Query(ctx, query, args...)
+	rows, err := r.db.Query(ctx, query, args...)
 	if err != nil {
 		return posts, err
 	}

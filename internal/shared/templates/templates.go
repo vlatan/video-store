@@ -1,9 +1,9 @@
 package tmpls
 
 import (
-	"factual-docs/internal/categories"
-	"factual-docs/internal/files"
+	"factual-docs/internal/handlers/static"
 	"factual-docs/internal/models"
+	"factual-docs/internal/repositories/categories"
 	"factual-docs/internal/shared/config"
 	"factual-docs/internal/shared/redis"
 	"factual-docs/web"
@@ -43,12 +43,12 @@ type Service interface {
 type templateMap map[string]*template.Template
 
 type service struct {
-	templates  templateMap
-	rdb        redis.Service
-	config     *config.Config
-	store      *sessions.CookieStore
-	sf         *files.Service
-	categories *categories.Service
+	templates templateMap
+	rdb       redis.Service
+	config    *config.Config
+	store     *sessions.CookieStore
+	sf        *static.Service
+	catRepo   *categories.Repository
 }
 
 var (
@@ -61,20 +61,20 @@ func New(
 	rdb redis.Service,
 	config *config.Config,
 	store *sessions.CookieStore,
-	sf *files.Service,
-	categories *categories.Service,
+	sf *static.Service,
+	catRepo *categories.Repository,
 ) Service {
 	once.Do(func() {
 		m := minify.New()
 		m.AddFunc("text/html", html.Minify)
 
 		tmInstance = &service{
-			templates:  parseTemplates(m),
-			rdb:        rdb,
-			config:     config,
-			store:      store,
-			sf:         sf,
-			categories: categories,
+			templates: parseTemplates(m),
+			rdb:       rdb,
+			config:    config,
+			store:     store,
+			sf:        sf,
+			catRepo:   catRepo,
 		}
 
 	})

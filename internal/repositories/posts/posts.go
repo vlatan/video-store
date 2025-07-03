@@ -2,38 +2,29 @@ package posts
 
 import (
 	"context"
-	"factual-docs/internal/auth"
 	"factual-docs/internal/models"
 	"factual-docs/internal/shared/config"
 	"factual-docs/internal/shared/database"
-	"factual-docs/internal/shared/redis"
-	tmpls "factual-docs/internal/shared/templates"
 	"fmt"
 	"strings"
 )
 
-type Service struct {
+type Repository struct {
 	db     database.Service
-	rdb    redis.Service
-	tm     tmpls.Service
 	config *config.Config
-	auth   *auth.Service
 }
 
-func New(db database.Service, rdb redis.Service, tm tmpls.Service, config *config.Config, auth *auth.Service) *Service {
-	return &Service{
+func New(db database.Service, config *config.Config) *Repository {
+	return &Repository{
 		db:     db,
-		rdb:    rdb,
-		tm:     tm,
 		config: config,
-		auth:   auth,
 	}
 }
 
 // Get a limited number of posts with offset
-func (s *Service) GetPosts(ctx context.Context, page int, orderBy string) ([]models.Post, error) {
+func (r *Repository) GetPosts(ctx context.Context, page int, orderBy string) ([]models.Post, error) {
 
-	limit := s.config.PostsPerPage
+	limit := r.config.PostsPerPage
 	offset := (page - 1) * limit
 
 	order := "upload_date DESC"
@@ -42,18 +33,18 @@ func (s *Service) GetPosts(ctx context.Context, page int, orderBy string) ([]mod
 	}
 
 	query := fmt.Sprintf(getPostsQuery, order)
-	return s.queryPosts(ctx, query, limit, offset)
+	return r.queryPosts(ctx, query, limit, offset)
 }
 
 // Get a limited number of posts from one category with offset
-func (s *Service) GetCategoryPosts(
+func (r *Repository) GetCategoryPosts(
 	ctx context.Context,
 	categorySlug,
 	orderBy string,
 	page int,
 ) ([]models.Post, error) {
 
-	limit := s.config.PostsPerPage
+	limit := r.config.PostsPerPage
 	offset := (page - 1) * limit
 
 	order := "upload_date DESC"
@@ -62,18 +53,18 @@ func (s *Service) GetCategoryPosts(
 	}
 
 	query := fmt.Sprintf(getCategoryPostsQuery, order)
-	return s.queryPosts(ctx, query, categorySlug, limit, offset)
+	return r.queryPosts(ctx, query, categorySlug, limit, offset)
 }
 
 // Get single post from DB based on a video ID
-func (s *Service) GetSinglePost(ctx context.Context, videoID string) (post models.Post, err error) {
+func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (post models.Post, err error) {
 
 	var thumbnails []byte
 	var category models.Category
 	var duration models.Duration
 
 	// Get single row from DB
-	err = s.db.QueryRow(ctx, getSinglePostQuery, videoID).Scan(
+	err = r.db.QueryRow(ctx, getSinglePostQuery, videoID).Scan(
 		&post.ID,
 		&post.VideoID,
 		&post.Title,
@@ -133,12 +124,12 @@ func (s *Service) GetSinglePost(ctx context.Context, videoID string) (post model
 
 // Get posts based on a user search query
 // Transform the user query into two queries with words separated by '&' and '|'
-func (s *Service) SearchPosts(ctx context.Context, searchTerm string, limit, offset int) (posts models.Posts, err error) {
+func (r *Repository) SearchPosts(ctx context.Context, searchTerm string, limit, offset int) (posts models.Posts, err error) {
 
 	// andQuery, orQuery := normalizeSearchQuery(searchQuery)
 
 	// Get rows from DB
-	rows, err := s.db.Query(ctx, searchPostsQuery, searchTerm, limit, offset)
+	rows, err := r.db.Query(ctx, searchPostsQuery, searchTerm, limit, offset)
 	if err != nil {
 		return posts, err
 	}

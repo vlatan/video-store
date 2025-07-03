@@ -8,16 +8,16 @@ import (
 	"github.com/markbates/goth"
 )
 
-type Service struct {
+type Repository struct {
 	db database.Service
 }
 
-func New(db database.Service) *Service {
-	return &Service{db: db}
+func New(db database.Service) *Repository {
+	return &Repository{db: db}
 }
 
 // Add or update a user
-func (s *Service) UpsertUser(ctx context.Context, u *goth.User, analyticsID string) (int, error) {
+func (r *Repository) UpsertUser(ctx context.Context, u *goth.User, analyticsID string) (int, error) {
 
 	var (
 		googleID   string
@@ -32,7 +32,7 @@ func (s *Service) UpsertUser(ctx context.Context, u *goth.User, analyticsID stri
 	}
 
 	var id int
-	err := s.db.QueryRow(
+	err := r.db.QueryRow(
 		ctx,
 		upsertUserQuery,
 		NullString(&googleID),
@@ -46,10 +46,10 @@ func (s *Service) UpsertUser(ctx context.Context, u *goth.User, analyticsID stri
 	return id, err
 }
 
-func (s *Service) DeleteUser(ctx context.Context, userID int) (int64, error) {
-	return s.db.Exec(ctx, deleteUserQuery, userID)
+func (r *Repository) DeleteUser(ctx context.Context, userID int) (int64, error) {
+	return r.db.Exec(ctx, deleteUserQuery, userID)
 }
 
-func (s *Service) UpdateLastUserSeen(ctx context.Context, userID int, now time.Time) (int64, error) {
-	return s.db.Exec(ctx, updateLastUserSeenQuery, userID, now)
+func (r *Repository) UpdateLastUserSeen(ctx context.Context, userID int, now time.Time) (int64, error) {
+	return r.db.Exec(ctx, updateLastUserSeenQuery, userID, now)
 }
