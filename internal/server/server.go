@@ -8,8 +8,8 @@ import (
 
 	"factual-docs/internal/handlers/auth"
 	"factual-docs/internal/handlers/files"
+	"factual-docs/internal/handlers/misc"
 	"factual-docs/internal/middlewares"
-	"factual-docs/internal/misc"
 	"factual-docs/internal/models"
 	"factual-docs/internal/posts"
 	catRepo "factual-docs/internal/repositories/categories"
