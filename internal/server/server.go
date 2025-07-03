@@ -13,30 +13,19 @@ import (
 	"factual-docs/internal/misc"
 	"factual-docs/internal/models"
 	"factual-docs/internal/posts"
+	repositories "factual-docs/internal/repositories/users"
 	"factual-docs/internal/shared/config"
 	"factual-docs/internal/shared/database"
 	"factual-docs/internal/shared/redis"
 	tmpls "factual-docs/internal/shared/templates"
-	"factual-docs/internal/users"
-
-	"github.com/gorilla/sessions"
 )
 
 type Server struct {
-	// Interfaces
-	db  database.Service
-	rdb redis.Service
-	tm  tmpls.Service
-
-	// Ordinary structs
-	config *config.Config
-	store  *sessions.CookieStore
-	files  *files.Service
-	users  *users.Service
-	auth   *auth.Service
-	posts  *posts.Service
-	mw     *middlewares.Service
-	misc   *misc.Service
+	files *files.Service
+	auth  *auth.Service
+	posts *posts.Service
+	mw    *middlewares.Service
+	misc  *misc.Service
 }
 
 // Create new HTTP server
@@ -46,31 +35,27 @@ func NewServer() *http.Server {
 	gob.Register(&models.FlashMessage{})
 	gob.Register(time.Time{})
 
+	// Create esential services
 	cfg := config.New()          // Create new config service
 	db := database.New(cfg)      // Create database service
 	rdb := redis.New(cfg)        // Create Redis service
 	store := newCookieStore(cfg) // Create cookie store
-	files := files.New(cfg)      // Create minified files map
+	files := files.New(cfg)      // Create minified static files map
 
-	users := users.New(db)                   // Create users service
-	auth := auth.New(users, store, rdb, cfg) // Create auth service
+	// Create DB repositories
+	usersRepo := repositories.NewUserRepo(db) // Create users repo
 
+	// Create handlers
+	auth := auth.New(usersRepo, store, rdb, cfg)        // Create auth service
 	categories := categories.New(db)                    // Create categories service
 	tm := tmpls.New(rdb, cfg, store, files, categories) // Create parsed templates map
 
 	// Create new Server struct
 	newServer := &Server{
-		config: cfg,
-		files:  files,
-		rdb:    rdb,
-		db:     db,
-		store:  store,
-		tm:     tm,
-		users:  users,
-		auth:   auth,
-		posts:  posts.New(db, rdb, tm, cfg, auth),
-		mw:     middlewares.New(auth, cfg),
-		misc:   misc.New(cfg, db, rdb, tm),
+		auth:  auth,
+		posts: posts.New(db, rdb, tm, cfg, auth),
+		mw:    middlewares.New(auth, cfg),
+		misc:  misc.New(cfg, db, rdb, tm),
 	}
 
 	// Declare Server config
