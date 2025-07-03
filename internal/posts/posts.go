@@ -1,7 +1,7 @@
 package posts
 
 import (
-	"factual-docs/internal/auth"
+	"factual-docs/internal/handlers/auth"
 	postsRepo "factual-docs/internal/repositories/posts"
 	"factual-docs/internal/shared/config"
 	"factual-docs/internal/shared/redis"
