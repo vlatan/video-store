@@ -1,7 +1,7 @@
 package models
 
 import (
-	"factual-docs/internal/handlers/files"
+	"factual-docs/internal/handlers/static"
 	"factual-docs/internal/shared/config"
 	"html/template"
 	"strings"
@@ -23,7 +23,7 @@ type HTMLErrorData struct {
 
 // Data struct to pass to templates
 type TemplateData struct {
-	StaticFiles   files.StaticFiles
+	StaticFiles   static.StaticFiles
 	Config        *config.Config
 	Title         string
 	CurrentPost   *Post

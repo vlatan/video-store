@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"factual-docs/internal/handlers/auth"
-	"factual-docs/internal/handlers/files"
 	"factual-docs/internal/handlers/misc"
 	"factual-docs/internal/handlers/posts"
+	"factual-docs/internal/handlers/static"
 	"factual-docs/internal/middlewares"
 	"factual-docs/internal/models"
 	catRepo "factual-docs/internal/repositories/categories"
@@ -22,7 +22,7 @@ import (
 )
 
 type Server struct {
-	files *files.Service
+	files *static.Service
 	auth  *auth.Service
 	posts *posts.Service
 	mw    *middlewares.Service
@@ -41,7 +41,7 @@ func NewServer() *http.Server {
 	db := database.New(cfg)      // Create database service
 	rdb := redis.New(cfg)        // Create Redis service
 	store := newCookieStore(cfg) // Create Cookie store
-	files := files.New(cfg)      // Minify and store static files
+	static := static.New(cfg)    // Minify and store static files
 
 	// Create DB repositories
 	usersRepo := usersRepo.New(db)      // Create users repo
@@ -49,7 +49,7 @@ func NewServer() *http.Server {
 	catRepo := catRepo.New(db)          // Create categories repo
 
 	// Create parsed templates map
-	tm := tmpls.New(rdb, cfg, store, files, catRepo)
+	tm := tmpls.New(rdb, cfg, store, static, catRepo)
 
 	// Create domain services
 	auth := auth.New(usersRepo, store, rdb, cfg)      // Create auth service

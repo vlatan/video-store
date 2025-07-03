@@ -1,7 +1,7 @@
 package tmpls
 
 import (
-	"factual-docs/internal/handlers/files"
+	"factual-docs/internal/handlers/static"
 	"factual-docs/internal/models"
 	"factual-docs/internal/repositories/categories"
 	"factual-docs/internal/shared/config"
@@ -47,7 +47,7 @@ type service struct {
 	rdb       redis.Service
 	config    *config.Config
 	store     *sessions.CookieStore
-	sf        *files.Service
+	sf        *static.Service
 	catRepo   *categories.Repository
 }
 
@@ -61,7 +61,7 @@ func New(
 	rdb redis.Service,
 	config *config.Config,
 	store *sessions.CookieStore,
-	sf *files.Service,
+	sf *static.Service,
 	catRepo *categories.Repository,
 ) Service {
 	once.Do(func() {
