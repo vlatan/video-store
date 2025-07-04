@@ -22,11 +22,11 @@ import (
 )
 
 type Server struct {
-	files *static.Service
-	auth  *auth.Service
-	posts *posts.Service
-	mw    *middlewares.Service
-	misc  *misc.Service
+	auth   *auth.Service
+	posts  *posts.Service
+	static *static.Service
+	mw     *middlewares.Service
+	misc   *misc.Service
 }
 
 // Create new HTTP server
@@ -61,10 +61,11 @@ func NewServer() *http.Server {
 
 	// Create new Server struct
 	newServer := &Server{
-		auth:  auth,
-		posts: posts,
-		misc:  misc,
-		mw:    mw,
+		auth:   auth,
+		posts:  posts,
+		static: static,
+		misc:   misc,
+		mw:     mw,
 	}
 
 	// Declare Server config

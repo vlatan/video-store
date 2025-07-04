@@ -5,6 +5,8 @@
 * Cron
 * Post new video
 
+* Write custom errors middlware
+
 * User avatar saved to redis not locally
   Need to solve this discrepancy
 
