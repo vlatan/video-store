@@ -12,8 +12,10 @@ type contextKey struct {
 	name string
 }
 
+// Universal context key to get the user from context
 var UserContextKey = contextKey{name: "user"}
 
+// Favicons used in the website
 var Favicons = []string{
 	"/android-chrome-192x192.png",
 	"/android-chrome-512x512.png",

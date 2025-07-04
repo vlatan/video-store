@@ -5,6 +5,7 @@ import (
 	"errors"
 	"factual-docs/internal/shared/config"
 	"fmt"
+	"strings"
 
 	"google.golang.org/api/option"
 	"google.golang.org/api/youtube/v3"
@@ -31,15 +32,50 @@ func (s *Service) GetVideo(videoID string) (*youtube.Video, error) {
 	part := []string{"status", "snippet", "contentDetails"}
 	response, err := s.youtube.Videos.List(part).Id(videoID).Do()
 	if err != nil {
-		msg := fmt.Sprint("Unable to get a response from YouTube: %v", err)
+		msg := fmt.Sprint("unable to get a response from YouTube: %v", err)
 		return nil, errors.New(msg)
 	}
 
 	var videoList []*youtube.Video = response.Items
 	if len(videoList) == 0 {
-		msg := fmt.Sprint("Probably no such video with this ID: %s", videoID)
+		msg := fmt.Sprint("probably no such video with this ID: %s", videoID)
 		return nil, errors.New(msg)
 	}
 
 	return videoList[0], nil
+}
+
+// Validate a YouTube video against custom criteria
+func (s *Service) ValidateYTVideo(video *youtube.Video) error {
+	if video.Status.PrivacyStatus == "private" {
+		return errors.New("this video is not public")
+	}
+
+	if video.ContentDetails.ContentRating.YtRating == "ytAgeRestricted" {
+		return errors.New("this video is age-restricted")
+	}
+
+	if !video.Status.Embeddable {
+		return errors.New("this video is not embeddable")
+	}
+
+	if video.ContentDetails.RegionRestriction != nil {
+		return errors.New("this video is region-restricted")
+	}
+
+	var language string = strings.ToLower(video.Snippet.DefaultLanguage)
+	if language != "" && !strings.HasPrefix(language, "en") {
+		return errors.New("this video's title and/or description is not in English")
+	}
+
+	var broadcast string = video.Snippet.LiveBroadcastContent
+	if broadcast != "" && broadcast != "none" {
+		return errors.New("this video is not fully broadcasted")
+	}
+
+	// duration = convertDuration(response["contentDetails"]["duration"])
+	// if duration.seconds < 1800:
+	//     raise ValidationError("This video is too short. Minimum length 30 minutes.")
+
+	return nil
 }

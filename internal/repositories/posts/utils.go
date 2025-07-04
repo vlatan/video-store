@@ -6,14 +6,9 @@ import (
 	"errors"
 	"factual-docs/internal/models"
 	"fmt"
-	"regexp"
 	"sort"
-	"strconv"
 	"strings"
 )
-
-// Valid ISO time format
-var validISO8601 = regexp.MustCompile(`(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:\.\d+)?)S)?`)
 
 // Unserialize thumbnails
 func unmarshalThumbs(thumbs []byte) (thumbnails map[string]models.Thumbnail, err error) {
@@ -28,28 +23,6 @@ func unmarshalThumbs(thumbs []byte) (thumbnails map[string]models.Thumbnail, err
 	}
 
 	return thumbnails, err
-}
-
-// Parse ISO8601 duration in a human readable string
-func parseISO8601Duration(duration string) (string, error) {
-	// Remove PT prefix
-	if !strings.HasPrefix(duration, "PT") {
-		return "", fmt.Errorf("invalid duration format: %s", duration)
-	}
-	duration = strings.TrimPrefix(duration, "PT")
-
-	// Find the substrings (hours, minutes, seconds)
-	matches := validISO8601.FindStringSubmatch(duration)
-	if len(matches) == 0 {
-		return "", fmt.Errorf("invalid duration format: %s", duration)
-	}
-
-	hours, _ := strconv.Atoi(matches[1])
-	minutes, _ := strconv.Atoi(matches[2])
-	sec, _ := strconv.ParseFloat(matches[3], 64)
-	seconds := int(sec)
-
-	return fmt.Sprintf("%02d:%02d:%02d", hours, minutes, seconds), nil
 }
 
 // Get post's related posts based on provided title as search query

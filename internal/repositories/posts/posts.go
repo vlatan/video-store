@@ -82,7 +82,7 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (post mo
 		return post, err
 	}
 
-	humanDuration, _ := parseISO8601Duration(duration.ISO)
+	humanDuration, _ := duration.ISO.Human()
 	duration.Human = humanDuration
 
 	post.Category = &category
