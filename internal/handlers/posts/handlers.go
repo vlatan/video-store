@@ -220,6 +220,9 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 // Handle adding new post via form
 func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 
+	// Close the body
+	defer r.Body.Close()
+
 	// Populate needed data for an empty form
 	data := s.tm.NewData(w, r)
 	data.CurrentUser = s.auth.GetCurrentUser(w, r)
@@ -278,10 +281,14 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		// Normalize the title
+		// Normalize the tags
+		// Remove the video from deleted video if there
+		// Add video to the database (we need the args)
 		// Possibly fetch genai description (in the background with context timeout?)
-		// Add flash
-		// Redirect on success
-		s.tm.RenderHTML(w, r, "form", data)
+
+		redirectTo := fmt.Sprintf("/video/%s/", videoID)
+		http.Redirect(w, r, redirectTo, http.StatusFound)
 	default:
 		s.tm.HTMLError(w, r, http.StatusMethodNotAllowed, data)
 	}
