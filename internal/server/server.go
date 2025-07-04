@@ -22,7 +22,6 @@ import (
 )
 
 type Server struct {
-	files  *static.Service
 	auth   *auth.Service
 	posts  *posts.Service
 	static *static.Service
