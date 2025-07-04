@@ -3,6 +3,7 @@ package yt
 import (
 	"context"
 	"errors"
+	"factual-docs/internal/models"
 	"factual-docs/internal/shared/config"
 	"fmt"
 	"strings"
@@ -46,7 +47,7 @@ func (s *Service) GetVideo(videoID string) (*youtube.Video, error) {
 }
 
 // Validate a YouTube video against custom criteria
-func (s *Service) ValidateYTVideo(video *youtube.Video) error {
+func (s *Service) ValidateYouTubeVideo(video *youtube.Video) error {
 	if video.Status.PrivacyStatus == "private" {
 		return errors.New("this video is not public")
 	}
@@ -73,9 +74,10 @@ func (s *Service) ValidateYTVideo(video *youtube.Video) error {
 		return errors.New("this video is not fully broadcasted")
 	}
 
-	// duration = convertDuration(response["contentDetails"]["duration"])
-	// if duration.seconds < 1800:
-	//     raise ValidationError("This video is too short. Minimum length 30 minutes.")
+	duration := models.ISO8601Duration(video.ContentDetails.Duration)
+	if seconds, _ := duration.Seconds(); seconds < 1800 {
+		return errors.New("this video is too short. Minimum length 30 minutes")
+	}
 
 	return nil
 }
