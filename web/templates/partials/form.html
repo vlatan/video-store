@@ -1,0 +1,44 @@
+{{ define "extra_preload_css" }}
+<link rel="preload" href='{{ .AddVersion "/static/css/form.css" }}' as="style">
+{{ end }}
+
+{{ define "extra_css" }}
+<link rel="stylesheet" type="text/css" href='{{ .AddVersion "/static/css/form.css" }}'>
+{{ end }}
+
+{{ define "title_tag" }}
+{{ .Title }} - {{ .Config.AppName }}
+{{ end }}
+
+{{ define "content" }}
+<div class="form-content">
+    <form method="POST" action="">
+        {{ .CSRFField }}
+        <fieldset class="form-group">
+            <legend class="form-legend">{{ .Form.Legend }}</legend>
+            {{ if .Form.Title }}
+            <div class="form-group">
+                <label class="form-label" for="title">{{ .Form.Title.Label }}</label>
+                <input class="form-input" id="title" name="title" placeholder="{{ .Form.Title.Placeholder }}" required
+                    type="text">
+            </div>
+            {{ end }}
+            <div class="form-group">
+                <label class="form-label" for="content">{{ .Form.Content.Label }}</label>
+                <input class="form-input" id="content" name="content" placeholder="{{ .Form.Content.Placeholder }}"
+                    required type="text">
+            </div>
+        </fieldset>
+        <div class="form-group button-group">
+            <input class="form-button" id="submit" name="submit" type="submit" value="Submit">
+            {{ if .Form.Content.Errors }}
+            <div class="form-invalid-feedback">
+                {{ range .Form.Content.Errors }}
+                <span>{{ .Message }}</span>
+                {{ end }}
+            </div>
+            {{ end }}
+        </div>
+    </form>
+</div>
+{{ end }}

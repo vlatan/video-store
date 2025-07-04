@@ -21,41 +21,6 @@ func New(db database.Service, config *config.Config) *Repository {
 	}
 }
 
-// Get a limited number of posts with offset
-func (r *Repository) GetPosts(ctx context.Context, page int, orderBy string) ([]models.Post, error) {
-
-	limit := r.config.PostsPerPage
-	offset := (page - 1) * limit
-
-	order := "upload_date DESC"
-	if orderBy == "likes" {
-		order = "likes DESC, " + order
-	}
-
-	query := fmt.Sprintf(getPostsQuery, order)
-	return r.queryPosts(ctx, query, limit, offset)
-}
-
-// Get a limited number of posts from one category with offset
-func (r *Repository) GetCategoryPosts(
-	ctx context.Context,
-	categorySlug,
-	orderBy string,
-	page int,
-) ([]models.Post, error) {
-
-	limit := r.config.PostsPerPage
-	offset := (page - 1) * limit
-
-	order := "upload_date DESC"
-	if orderBy == "likes" {
-		order = "likes DESC, " + order
-	}
-
-	query := fmt.Sprintf(getCategoryPostsQuery, order)
-	return r.queryPosts(ctx, query, categorySlug, limit, offset)
-}
-
 // Get single post from DB based on a video ID
 func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (post models.Post, err error) {
 
@@ -120,6 +85,41 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (post mo
 	post.Srcset = srcset(thumbsMap, maxThumb.Width)
 
 	return post, err
+}
+
+// Get a limited number of posts with offset
+func (r *Repository) GetPosts(ctx context.Context, page int, orderBy string) ([]models.Post, error) {
+
+	limit := r.config.PostsPerPage
+	offset := (page - 1) * limit
+
+	order := "upload_date DESC"
+	if orderBy == "likes" {
+		order = "likes DESC, " + order
+	}
+
+	query := fmt.Sprintf(getPostsQuery, order)
+	return r.queryPosts(ctx, query, limit, offset)
+}
+
+// Get a limited number of posts from one category with offset
+func (r *Repository) GetCategoryPosts(
+	ctx context.Context,
+	categorySlug,
+	orderBy string,
+	page int,
+) ([]models.Post, error) {
+
+	limit := r.config.PostsPerPage
+	offset := (page - 1) * limit
+
+	order := "upload_date DESC"
+	if orderBy == "likes" {
+		order = "likes DESC, " + order
+	}
+
+	query := fmt.Sprintf(getCategoryPostsQuery, order)
+	return r.queryPosts(ctx, query, categorySlug, limit, offset)
 }
 
 // Get posts based on a user search query
