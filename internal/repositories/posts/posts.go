@@ -60,8 +60,8 @@ func (r *Repository) GetCategoryPosts(
 func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (post models.Post, err error) {
 
 	var thumbnails []byte
-	// var category models.Category
-	// var duration models.Duration
+	var category models.Category
+	var duration models.Duration
 
 	// Get single row from DB
 	err = r.db.QueryRow(ctx, getSinglePostQuery, videoID).Scan(
@@ -72,18 +72,21 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (post mo
 		&post.Likes,
 		&post.Description,
 		&post.ShortDesc,
-		&post.Category.Slug,
-		&post.Category.Name,
+		&category.Slug,
+		&category.Name,
 		&post.UploadDate,
-		&post.Duration.ISO,
+		&duration.ISO,
 	)
 
 	if err != nil {
 		return post, err
 	}
 
-	humanDuration, _ := post.Duration.ISO.Human()
-	post.Duration.Human = humanDuration
+	humanDuration, _ := duration.ISO.Human()
+	duration.Human = humanDuration
+
+	post.Category = &category
+	post.Duration = &duration
 
 	// Like button text
 	post.LikeButtonText = "Like"
