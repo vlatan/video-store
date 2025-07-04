@@ -24,6 +24,7 @@ type HTMLErrorData struct {
 type FormGroup struct {
 	Label       string
 	Placeholder string
+	Value       string
 }
 
 func (f *FormGroup) IsEmpty() bool {

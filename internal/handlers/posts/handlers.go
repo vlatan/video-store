@@ -232,15 +232,55 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 		// Serve the page with the form
 		s.tm.RenderHTML(w, r, "form", data)
 	case "POST":
-		// TODO: Handle the form
-		// Get values from the form
-		// Parse the video URL to get the ID
-		// Validate the video ID
-		// Retrieve the YT metadata
-		// Validate against the metadata
+		err := r.ParseForm()
+		if err != nil {
+			errors := []models.FlashMessage{failedForm}
+			data.Errors = &errors
+			s.tm.RenderHTML(w, r, "form", data)
+			return
+		}
+
+		// Get the URL from the form
+		url := r.FormValue("content")
+		data.Form.Content.Value = url
+
+		// TODO: Diferentiate the errors
+
+		// Exctract the ID from the URL
+		videoID, err := extractYouTubeID(url)
+		if err != nil {
+			errors := []models.FlashMessage{failedForm}
+			data.Errors = &errors
+			s.tm.RenderHTML(w, r, "form", data)
+			return
+		}
+
+		// Validate the YT ID
+		if validVideoID.FindStringSubmatch(videoID) == nil {
+			errors := []models.FlashMessage{failedForm}
+			data.Errors = &errors
+			s.tm.RenderHTML(w, r, "form", data)
+			return
+		}
+
+		metadata, err := s.yt.GetVideo(videoID)
+		if err != nil {
+			errors := []models.FlashMessage{failedForm}
+			data.Errors = &errors
+			s.tm.RenderHTML(w, r, "form", data)
+			return
+		}
+
+		if err := s.yt.ValidateYouTubeVideo(metadata); err != nil {
+			errors := []models.FlashMessage{failedForm}
+			data.Errors = &errors
+			s.tm.RenderHTML(w, r, "form", data)
+			return
+		}
+
 		// Possibly fetch genai description (in the background with context timeout?)
+		// Add flash
 		// Redirect on success
-		// Pass form errors to data if any
 		s.tm.RenderHTML(w, r, "form", data)
 	default:
 		s.tm.HTMLError(w, r, http.StatusMethodNotAllowed, data)
