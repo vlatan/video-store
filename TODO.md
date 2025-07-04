@@ -1,9 +1,12 @@
+* Solve redirect destination on logout on a forbidden page
+  Track forbidden page and if redirect destination one of them go home
+
+* Post new video
 * Sources
 * Pages
 * Admin (get users with pagination)
 * Sitemap
 * Cron
-* Post new video
 
 * Write custom errors middlware
 

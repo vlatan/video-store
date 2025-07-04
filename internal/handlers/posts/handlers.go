@@ -217,6 +217,36 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 	s.tm.RenderHTML(w, r, "search", data)
 }
 
+// Handle adding new post via form
+func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
+
+	// Populate needed data for an empty form
+	data := s.tm.NewData(w, r)
+	data.CurrentUser = s.auth.GetCurrentUser(w, r)
+	data.Form.Legend = "New Video"
+	data.Form.Content.Label = "Post YouTube Video URL"
+	data.Form.Content.Placeholder = "Video URL here..."
+
+	switch r.Method {
+	case "GET":
+		// Serve the page with the form
+		s.tm.RenderHTML(w, r, "form", data)
+	case "POST":
+		// TODO: Handle the form
+		// Get values from the form
+		// Parse the video URL to get the ID
+		// Validate the video ID
+		// Retrieve the YT metadata
+		// Validate against the metadata
+		// Possibly fetch genai description (in the background with context timeout?)
+		// Redirect on success
+		// Pass form errors to data if any
+		s.tm.RenderHTML(w, r, "form", data)
+	default:
+		s.tm.HTMLError(w, r, http.StatusMethodNotAllowed, data)
+	}
+}
+
 // Handle a single post
 func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 	// Get category slug from URL

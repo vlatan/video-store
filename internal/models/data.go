@@ -21,21 +21,37 @@ type HTMLErrorData struct {
 	Text    string
 }
 
+type FormGroup struct {
+	Label       string
+	Placeholder string
+}
+
+func (f *FormGroup) IsEmpty() bool {
+	return f.Label == "" && f.Placeholder == ""
+}
+
+type Form struct {
+	Legend  string
+	Content FormGroup
+	Errors  *[]FlashMessage
+}
+
 // Data struct to pass to templates
 type TemplateData struct {
-	StaticFiles   static.StaticFiles
-	Config        *config.Config
-	Title         string
-	CurrentPost   *Post
-	CurrentUser   *User
-	CurrentURI    string
-	CanonicalURL  string
-	Posts         Posts
+	StaticFiles  static.StaticFiles
+	Config       *config.Config
+	Title        string
+	CurrentPost  *Post
+	CurrentUser  *User
+	CurrentURI   string
+	CanonicalURL string
+	Posts
 	Categories    []Category
 	FlashMessages []*FlashMessage
 	SearchQuery   string
 	HTMLErrorData *HTMLErrorData
 	CSRFField     template.HTML
+	Form
 }
 
 // Check if current user is admin
