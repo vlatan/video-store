@@ -98,8 +98,6 @@ func (s *Service) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 // Delete the user account
 // Wrap this with middleware to allow only authnenticated users
 func (s *Service) DeleteAccountHandler(w http.ResponseWriter, r *http.Request) {
-	// This is a POST request, close the body
-	defer r.Body.Close()
 
 	// The origin URL of the user
 	redirectTo := getRedirectPath(r)

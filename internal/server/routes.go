@@ -32,5 +32,11 @@ func (s *Server) RegisterRoutes() http.Handler {
 	CSRF := s.mw.CreateCSRFMiddleware()
 
 	// Chain middlwares that apply to all requests
-	return s.mw.ApplyToAll(s.mw.RecoverPanic, s.mw.WWWRedirect, CSRF, s.mw.AddHeaders)(mux)
+	return s.mw.ApplyToAll(
+		s.mw.RecoverPanic,
+		s.mw.CloseBody,
+		s.mw.WWWRedirect,
+		CSRF,
+		s.mw.AddHeaders,
+	)(mux)
 }

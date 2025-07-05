@@ -35,11 +35,6 @@ func (s *Service) IsAuthenticated(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		// Close request body for POST methods to prevent resource leaks
-		if r.Method == http.MethodPost {
-			defer r.Body.Close()
-		}
-
 		// Serve forbidden error
 		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 	}
@@ -56,14 +51,20 @@ func (s *Service) IsAdmin(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
+		// Serve forbidden error
+		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+	}
+}
+
+// Close the body if POST request
+func (s *Service) CloseBody(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Close request body for POST methods to prevent resource leaks
 		if r.Method == http.MethodPost {
 			defer r.Body.Close()
 		}
-
-		// Serve forbidden error
-		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
-	}
+		next.ServeHTTP(w, r)
+	})
 }
 
 // Do not crash the app on panic, serve 500 error to the client

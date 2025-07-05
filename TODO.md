@@ -1,5 +1,5 @@
 * Get current user will add user in context only if auth or admin,
-  but then we are getting the current use again in the handler,
+  but then we are getting the current user again in the handler,
   and if not in context we're going to get it from session.
   Think about this.
 

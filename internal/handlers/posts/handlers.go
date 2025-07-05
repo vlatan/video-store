@@ -220,9 +220,6 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 // Handle adding new post via form
 func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 
-	// Close the body
-	defer r.Body.Close()
-
 	// Populate needed data for an empty form
 	data := s.tm.NewData(w, r)
 	data.CurrentUser = s.auth.GetCurrentUser(w, r)
@@ -376,9 +373,6 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 
 // Perform an action on a video
 func (s *Service) PostActionHandler(w http.ResponseWriter, r *http.Request) {
-
-	// This is a post request, close the body on exit
-	defer r.Body.Close()
 
 	// Validate the YT ID
 	videoID := r.PathValue("video")
