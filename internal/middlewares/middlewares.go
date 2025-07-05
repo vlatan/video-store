@@ -28,10 +28,8 @@ func New(auth *auth.Service, config *config.Config) *Service {
 func (s *Service) IsAuthenticated(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// If the user is authenticated move onto the next handler
-		if currentUser := s.auth.GetCurrentUser(w, r); currentUser.IsAuthenticated() {
-			// Pass the user in the context
-			ctx := context.WithValue(r.Context(), utils.UserContextKey, currentUser)
-			next(w, r.WithContext(ctx))
+		if user := s.auth.GetUserFromContext(r); user.IsAuthenticated() {
+			next(w, r)
 			return
 		}
 
@@ -44,16 +42,32 @@ func (s *Service) IsAuthenticated(next http.HandlerFunc) http.HandlerFunc {
 func (s *Service) IsAdmin(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// If the user is admin move onto the next handler
-		if cu := s.auth.GetCurrentUser(w, r); cu.IsAuthenticated() && cu.UserID == s.config.AdminOpenID {
-			// Pass the user in the context
-			ctx := context.WithValue(r.Context(), utils.UserContextKey, cu)
-			next(w, r.WithContext(ctx))
+		if user := s.auth.GetUserFromContext(r); user.IsAuthenticated() &&
+			user.UserID == s.config.AdminOpenID {
+			next(w, r)
 			return
 		}
 
 		// Serve forbidden error
 		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 	}
+}
+
+// Get user from session and put it in context
+func (s *Service) LoadUser(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		// Do nothing if static file
+		if isStatic(r) {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// Get user from session and put it in the request context
+		user := s.auth.GetUserFromSession(w, r) // Can be nil
+		ctx := context.WithValue(r.Context(), utils.UserContextKey, user)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
 }
 
 // Close the body if POST request
@@ -70,15 +84,19 @@ func (s *Service) CloseBody(next http.Handler) http.Handler {
 // Do not crash the app on panic, serve 500 error to the client
 func (s *Service) RecoverPanic(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		defer func() {
-			if err := recover(); err != nil {
-				// Log the panic with stack trace
-				log.Printf("Panic in %s %s: %#v", r.Method, r.URL.Path, err)
+		// If in production recover panic
+		if !s.config.Debug {
+			defer func() {
+				if err := recover(); err != nil {
+					// Log the panic with stack trace
+					log.Printf("Panic in %s %s: %#v", r.Method, r.URL.Path, err)
 
-				// Return 500 to client
-				http.Error(w, "Something went wrong", http.StatusInternalServerError)
-			}
-		}()
+					// Return 500 to client
+					http.Error(w, "Something went wrong", http.StatusInternalServerError)
+				}
+			}()
+		}
+
 		next.ServeHTTP(w, r)
 	})
 }
@@ -87,9 +105,9 @@ func (s *Service) RecoverPanic(next http.Handler) http.Handler {
 func (s *Service) AddHeaders(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		// Add CF cache control header if user not logged in or not static file
-		cu := s.auth.GetCurrentUser(w, r)
-		if !cu.IsAuthenticated() && !strings.HasPrefix(r.URL.Path, "/static/") {
+		// Add CF cache control header if user not logged in AND not static file
+		user := s.auth.GetUserFromContext(r)
+		if !user.IsAuthenticated() && !isStatic(r) {
 			w.Header().Set("CDN-Cache-Control", "14400")
 		}
 
@@ -148,8 +166,8 @@ func (s *Service) CreateCSRFMiddleware() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-			// Skip CSRF for static files (prefix match)
-			if strings.HasPrefix(r.URL.Path, "/static/") {
+			// Do nothing if static file
+			if isStatic(r) {
 				next.ServeHTTP(w, r)
 				return
 			}

@@ -1,12 +1,5 @@
-* On auth middlwares get current user will add user in context only if auth or admin,
-  otherwise will serve forbidden.
-
-  But then we are getting the current user again in the handler,
-  and if not in context we're going to get it from session.
-  Think about this.
-
 * Solve redirect destination on logout on a forbidden route
-  Track forbidden routes and if redirect destination one of them go home.
+  Track forbidden routes and if redirect destination is one of them go home.
   For example you are on a new video route and you logout, the redirect
   will be on that route but you'll get foribidden.
 

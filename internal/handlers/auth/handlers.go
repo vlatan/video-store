@@ -103,7 +103,7 @@ func (s *Service) DeleteAccountHandler(w http.ResponseWriter, r *http.Request) {
 	redirectTo := getRedirectPath(r)
 
 	// Get the current user
-	currentUser := s.GetCurrentUser(w, r)
+	currentUser := s.GetUserFromContext(r)
 
 	// Remove gothic session if any
 	if err := gothic.Logout(w, r); err != nil {
