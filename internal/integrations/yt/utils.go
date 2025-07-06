@@ -1,6 +1,9 @@
 package yt
 
-import "regexp"
+import (
+	"regexp"
+	"strings"
+)
 
 var bracketedContent = regexp.MustCompile(`[\(\[].*?[\)\]]`)
 var extraSpace = regexp.MustCompile(`\s+`)
@@ -54,4 +57,63 @@ var quotes = map[rune]bool{
 	'\u201D': true, // U+201D right double quotation mark
 	'\u2018': true, // U+2018 left single quotation mark
 	'\u2019': true, // U+2019 right single quotation mark
+}
+
+// Normalize the YouTube video title
+func normalizeTitle(title string) string {
+
+	// Cut off the title at certain substrings
+	for _, substring := range []string{" I SLICE ", " // ", " | "} {
+		title = strings.Split(title, substring)[0]
+	}
+
+	// Remove bracketed content
+	title = strings.TrimSpace(bracketedContent.ReplaceAllString(title, ""))
+
+	// Remove extra spaces
+	title = extraSpace.ReplaceAllString(title, " ")
+
+	// Split the title into words and remove the last word if it's 'documentary'
+	words := strings.Split(title, " ")
+	if strings.ToLower(words[len(words)-1]) == "documentary" {
+		words = words[1:]
+	}
+
+	// Iterate the words and mutate them
+	for i, w := range words {
+		// Convert word to runes
+		runes := []rune(w)
+
+		var fq string
+		var lq string
+
+		// Remove quotation marks from the word at start/end
+		// and store them for later use
+		if len(runes) > 1 {
+			if quotes[runes[0]] {
+				fq = string(runes[0])
+				w = string(runes[1:])
+			}
+
+			if quotes[runes[len(runes)-1]] {
+				lq = string(runes[len(runes)-1])
+				w = string(runes[:1])
+			}
+		}
+
+		// If not the first word try to lowercase the word
+		if i > 0 {
+			currentWord := strings.ToLower(w)
+			previousWord := []rune(words[i-1])
+			lastRune := previousWord[len(previousWord)-1]
+			// The word is a preposition but not after a punctuation
+			if preps[currentWord] && !puncts[lastRune] {
+				// Replace the actual word in the slice
+				words[i] = fq + currentWord + lq
+			}
+		}
+
+	}
+
+	return strings.Join(words, " ")
 }
