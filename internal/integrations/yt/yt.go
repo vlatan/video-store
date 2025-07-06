@@ -5,7 +5,7 @@ import (
 	"errors"
 	"factual-docs/internal/models"
 	"factual-docs/internal/shared/config"
-	"fmt"
+	"log"
 	"strings"
 
 	"google.golang.org/api/option"
@@ -33,13 +33,15 @@ func (s *Service) GetVideo(videoID string) (*youtube.Video, error) {
 	part := []string{"status", "snippet", "contentDetails"}
 	response, err := s.youtube.Videos.List(part).Id(videoID).Do()
 	if err != nil {
-		msg := fmt.Sprint("unable to get a response from YouTube: %v", err)
+		msg := "unable to get a response from YouTube"
+		log.Printf("%s: %v", msg, err)
 		return nil, errors.New(msg)
 	}
 
 	var videoList []*youtube.Video = response.Items
 	if len(videoList) == 0 {
-		msg := fmt.Sprint("probably no such video with this ID: %s", videoID)
+		msg := "probably no such video with this ID"
+		log.Printf("%s: %v", msg, err)
 		return nil, errors.New(msg)
 	}
 
@@ -76,7 +78,7 @@ func (s *Service) ValidateYouTubeVideo(video *youtube.Video) error {
 
 	duration := models.ISO8601Duration(video.ContentDetails.Duration)
 	if seconds, _ := duration.Seconds(); seconds < 1800 {
-		return errors.New("this video is too short. Minimum length 30 minutes")
+		return errors.New("this video is too short")
 	}
 
 	return nil

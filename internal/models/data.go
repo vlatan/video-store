@@ -34,7 +34,7 @@ func (f *FormGroup) IsEmpty() bool {
 type Form struct {
 	Legend  string
 	Content FormGroup
-	Errors  *[]FlashMessage
+	Error   *FlashMessage
 }
 
 // Data struct to pass to templates

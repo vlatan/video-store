@@ -40,5 +40,5 @@ func extractYouTubeID(rawURL string) (string, error) {
 		}
 	}
 
-	return "", errors.New("cannot extract the ID")
+	return "", errors.New("could not extract the video ID")
 }

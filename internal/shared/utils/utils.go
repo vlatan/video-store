@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"path"
 	"strconv"
+	"strings"
 )
 
 type contextKey struct {
@@ -77,4 +78,12 @@ func GetPageNum(r *http.Request) (page int) {
 	}
 
 	return page
+}
+
+// First letter to uppercase
+func Capitalize(s string) string {
+	if s == "" {
+		return s
+	}
+	return strings.ToUpper(s[:1]) + s[1:]
 }

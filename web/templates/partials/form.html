@@ -24,11 +24,9 @@
         </fieldset>
         <div class="form-group button-group">
             <input class="form-button" id="submit" name="submit" type="submit" value="Submit">
-            {{ if .Form.Errors }}
+            {{ if .Form.Error }}
             <div class="form-invalid-feedback">
-                {{ range .Form.Errors }}
-                <span>{{ .Message }}</span>
-                {{ end }}
+                <span>{{ .Form.Error.Message }}.</span>
             </div>
             {{ end }}
         </div>

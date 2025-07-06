@@ -220,9 +220,11 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 // Handle adding new post via form
 func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 
-	// Populate needed data for an empty form
+	// Compose data object
 	data := s.tm.NewData(w, r)
 	data.CurrentUser = s.auth.GetUserFromContext(r)
+
+	// Populate needed data for an empty form
 	data.Form.Legend = "New Video"
 	data.Form.Content.Label = "Post YouTube Video URL"
 	data.Form.Content.Placeholder = "Video URL here..."
@@ -231,11 +233,15 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 	case "GET":
 		// Serve the page with the form
 		s.tm.RenderHTML(w, r, "form", data)
+
 	case "POST":
+
+		var formError models.FlashMessage
+
 		err := r.ParseForm()
 		if err != nil {
-			errors := []models.FlashMessage{failedForm}
-			data.Errors = &errors
+			formError.Message = "Could not parse the form"
+			data.Error = &formError
 			s.tm.RenderHTML(w, r, "form", data)
 			return
 		}
@@ -244,36 +250,35 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 		url := r.FormValue("content")
 		data.Form.Content.Value = url
 
-		// TODO: Diferentiate the errors
-
 		// Exctract the ID from the URL
 		videoID, err := extractYouTubeID(url)
 		if err != nil {
-			errors := []models.FlashMessage{failedForm}
-			data.Errors = &errors
+			formError.Message = "Could not extract the video ID"
+			data.Form.Error = &formError
 			s.tm.RenderHTML(w, r, "form", data)
 			return
 		}
 
 		// Validate the YT ID
 		if validVideoID.FindStringSubmatch(videoID) == nil {
-			errors := []models.FlashMessage{failedForm}
-			data.Errors = &errors
+			formError.Message = "Could not validate the video ID"
+			data.Form.Error = &formError
 			s.tm.RenderHTML(w, r, "form", data)
 			return
 		}
 
+		// Fetch video data from YouTube
 		metadata, err := s.yt.GetVideo(videoID)
 		if err != nil {
-			errors := []models.FlashMessage{failedForm}
-			data.Errors = &errors
+			formError.Message = utils.Capitalize(err.Error())
+			data.Form.Error = &formError
 			s.tm.RenderHTML(w, r, "form", data)
 			return
 		}
 
 		if err := s.yt.ValidateYouTubeVideo(metadata); err != nil {
-			errors := []models.FlashMessage{failedForm}
-			data.Errors = &errors
+			formError.Message = utils.Capitalize(err.Error())
+			data.Form.Error = &formError
 			s.tm.RenderHTML(w, r, "form", data)
 			return
 		}
