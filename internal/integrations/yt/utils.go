@@ -3,6 +3,7 @@ package yt
 import (
 	"regexp"
 	"strings"
+	"unicode"
 )
 
 var bracketedContent = regexp.MustCompile(`[\(\[].*?[\)\]]`)
@@ -46,9 +47,6 @@ var puncts = map[rune]bool{
 	'|':      true,
 }
 
-// Other weird strings
-var others = []string{"//", "--"}
-
 // Usual quotes
 var quotes = map[rune]bool{
 	'"':      true, // U+0022 straight double quote
@@ -76,43 +74,53 @@ func normalizeTitle(title string) string {
 	// Split the title into words and remove the last word if it's 'documentary'
 	words := strings.Split(title, " ")
 	if strings.ToLower(words[len(words)-1]) == "documentary" {
-		words = words[1:]
+		words = words[:len(words)-1]
 	}
 
-	// Iterate the words and mutate them
+	// Iterate over the words and mutate them
 	for i, w := range words {
-		// Convert word to runes
+		// Convert word to runes slice
 		runes := []rune(w)
 
-		var fq string
-		var lq string
+		// First and last quote
+		var fq rune
+		var lq rune
 
 		// Remove quotation marks from the word at start/end
 		// and store them for later use
 		if len(runes) > 1 {
 			if quotes[runes[0]] {
-				fq = string(runes[0])
-				w = string(runes[1:])
+				fq = runes[0]
+				runes = runes[1:]
 			}
 
-			if quotes[runes[len(runes)-1]] {
-				lq = string(runes[len(runes)-1])
-				w = string(runes[:1])
-			}
-		}
-
-		// If not the first word try to lowercase the word
-		if i > 0 {
-			currentWord := strings.ToLower(w)
-			previousWord := []rune(words[i-1])
-			lastRune := previousWord[len(previousWord)-1]
-			// The word is a preposition but not after a punctuation
-			if preps[currentWord] && !puncts[lastRune] {
-				// Replace the actual word in the slice
-				words[i] = fq + currentWord + lq
+			lastIndex := len(runes) - 1
+			if quotes[runes[lastIndex]] {
+				lq = runes[lastIndex]
+				runes = runes[:lastIndex]
 			}
 		}
 
+		// Loweracse the current word
+		currentWord := strings.ToLower(string(runes))
+
+		// Get the last rune of the previous words
+		previousWord := []rune(words[i-1])
+		lastRune := previousWord[len(previousWord)-1]
+
+		// The word is a preposition but not after a punctuation
+		if i > 0 && preps[currentWord] && !puncts[lastRune] {
+			words[i] = string(fq) + currentWord + string(lq)
+			// The word is after punctuation and is capitalized
+		} else if unicode.IsUpper(runes[0]) {
+			words[i] = string(fq) + string(runes) + string(lq)
+			// The word is after a punctuation and should be capitalized
+		} else {
+			words[i] = string(fq) +
+				string(unicode.ToUpper(runes[0])) +
+				string(runes[1:]) +
+				string(lq)
+		}
 	}
 
 	return strings.Join(words, " ")
