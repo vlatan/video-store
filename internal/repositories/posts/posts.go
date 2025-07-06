@@ -2,11 +2,14 @@ package posts
 
 import (
 	"context"
+	"errors"
 	"factual-docs/internal/models"
 	"factual-docs/internal/shared/config"
 	"factual-docs/internal/shared/database"
 	"fmt"
 	"strings"
+
+	"github.com/jackc/pgx/v5"
 )
 
 type Repository struct {
@@ -19,6 +22,11 @@ func New(db database.Service, config *config.Config) *Repository {
 		db:     db,
 		config: config,
 	}
+}
+
+func (r *Repository) PostExists(ctx context.Context, videoID string) bool {
+	err := r.db.QueryRow(ctx, postExistsQuery, videoID).Scan()
+	return !errors.Is(err, pgx.ErrNoRows)
 }
 
 // Get single post from DB based on a video ID

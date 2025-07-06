@@ -267,6 +267,14 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		// Check if the video is already posted
+		if s.postsRepo.PostExists(r.Context(), videoID) {
+			formError.Message = "Video already posted"
+			data.Form.Error = &formError
+			s.tm.RenderHTML(w, r, "form", data)
+			return
+		}
+
 		// Fetch video data from YouTube
 		metadata, err := s.yt.GetVideos(videoID)
 		if err != nil {
@@ -276,6 +284,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		// Validate the video data
 		if err := s.yt.ValidateYouTubeVideo(metadata[0]); err != nil {
 			formError.Message = utils.Capitalize(err.Error())
 			data.Form.Error = &formError
@@ -283,10 +292,9 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// Normalize the title
-		// Normalize the tags
-		// Remove the video from deleted video if there
-		// Add video to the database (we need the args)
+		// TODO: Normalize the video data (title, tags, etc)
+		// TODO: INSERT the video in DB, remove from Deleted video if any
+
 		// Possibly fetch genai description (in the background with context timeout?)
 
 		redirectTo := fmt.Sprintf("/video/%s/", videoID)

@@ -1,5 +1,10 @@
 package posts
 
+const postExistsQuery = `
+	SELECT 1 FROM post
+	WHERE video_id = $1
+`
+
 const getPostsQuery = `
 	SELECT video_id, title, thumbnails, (
 		SELECT COUNT(*) FROM post_like
