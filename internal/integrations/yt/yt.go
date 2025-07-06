@@ -28,10 +28,11 @@ func New(ctx context.Context, config *config.Config) (*Service, error) {
 	}, err
 }
 
-// Get YouTube video metadata, provided the video ID
-func (s *Service) GetVideo(videoID string) (*youtube.Video, error) {
+// Get YouTube video metadata, provided the video ID.
+// Returns client facing error messages if any.
+func (s *Service) GetVideos(videoIDs ...string) ([]*youtube.Video, error) {
 	part := []string{"status", "snippet", "contentDetails"}
-	response, err := s.youtube.Videos.List(part).Id(videoID).Do()
+	response, err := s.youtube.Videos.List(part).Id(videoIDs...).Do()
 	if err != nil {
 		msg := "unable to get a response from YouTube"
 		log.Printf("%s: %v", msg, err)
@@ -40,15 +41,16 @@ func (s *Service) GetVideo(videoID string) (*youtube.Video, error) {
 
 	var videoList []*youtube.Video = response.Items
 	if len(videoList) == 0 {
-		msg := "probably no such video with this ID"
-		log.Printf("%s: %v", msg, err)
+		msg := "could not fetch a result from YouTube"
+		log.Printf("%s; response.Items: %v", msg, videoList)
 		return nil, errors.New(msg)
 	}
 
-	return videoList[0], nil
+	return videoList, nil
 }
 
-// Validate a YouTube video against custom criteria
+// Validate a YouTube video against custom criteria.
+// Returns client facing error messages if any.
 func (s *Service) ValidateYouTubeVideo(video *youtube.Video) error {
 	if video.Status.PrivacyStatus == "private" {
 		return errors.New("this video is not public")
