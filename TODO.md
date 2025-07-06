@@ -1,7 +1,3 @@
-* Solve redirect destination on logout on a forbidden route
-  Track forbidden routes and if redirect destination is one of them go home.
-  For example you are on a new video route and you logout, the redirect
-  will be on that route but you'll get foribidden.
 
 * Post new video
 * Sources

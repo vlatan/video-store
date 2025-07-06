@@ -10,19 +10,56 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/markbates/goth"
 )
 
+// Hardcode the static protected routes
+var staticProtectedPaths = map[string]bool{
+	"/video/new":      true,
+	"/health/":        true,
+	"/account/delete": true,
+}
+
+// Detect if it's a protected route
+func isProtectedRoute(path string) bool {
+
+	// The logout path
+	if strings.HasPrefix(path, "/logout/") {
+		return true
+	}
+
+	// Dynamic video routes - check if it has an action
+	parts := strings.Split(strings.Trim(path, "/"), "/")
+	if len(parts) == 3 && parts[0] == "video" && parts[2] != "" {
+		return true // /video/{video}/{action} - protected
+	}
+
+	return staticProtectedPaths[path]
+}
+
 // Extracts the value from the query param "redirect"
 func getRedirectPath(r *http.Request) string {
 	redirectParam := r.URL.Query().Get("redirect")
+
 	if redirectParam == "" {
 		return "/"
 	}
+
+	parsedURL, err := url.Parse(redirectParam)
+	if err != nil {
+		return "/"
+	}
+
+	if isProtectedRoute(parsedURL.Path) {
+		return "/"
+	}
+
 	return redirectParam
 }
 
