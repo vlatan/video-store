@@ -44,7 +44,7 @@ func (r *Repository) GetRelatedPosts(ctx context.Context, title string) (posts [
 }
 
 // Create a srcset string from a map of thumbnails
-func srcset(thumbnails map[string]models.Thumbnail, maxWidth int) string {
+func srcset(thumbnails map[string]models.Thumbnail, maxWidth int64) string {
 
 	// Get the Thumbnail structs from the map
 	items := make([]models.Thumbnail, 0, len(thumbnails))
@@ -61,7 +61,7 @@ func srcset(thumbnails map[string]models.Thumbnail, maxWidth int) string {
 	var result string
 	for _, item := range items {
 		if item.Width <= maxWidth {
-			result += fmt.Sprintf("%s %dw, ", item.URL, item.Width)
+			result += fmt.Sprintf("%s %dw, ", item.Url, item.Width)
 		}
 	}
 
