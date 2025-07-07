@@ -1,4 +1,3 @@
-* Normalize the title (weird strings)
 * Post new video
 * Sources
 * Pages
