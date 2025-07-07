@@ -107,7 +107,7 @@ func (s *Service) CreatePost(video *youtube.Video, playlistID string) *models.Po
 	post.Description = urls.ReplaceAllString(video.Snippet.Description, "")
 	post.Tags = normalizeTags(video.Snippet.Tags, post.Title, post.Description)
 
-	// Parse the upload date
+	// Parse the upload date into an object
 	parsedTime, _ := time.Parse("2006-01-02T15:04:05Z", video.Snippet.PublishedAt)
 	post.UploadDate = &parsedTime
 
