@@ -7,6 +7,7 @@ import (
 	"factual-docs/internal/shared/config"
 	"log"
 	"strings"
+	"time"
 
 	"google.golang.org/api/option"
 	"google.golang.org/api/youtube/v3"
@@ -93,6 +94,9 @@ func (s *Service) CreatePost(video *youtube.Video, playlistID string) *models.Po
 	post.Title = normalizeTitle(video.Snippet.Title)
 	description := urls.ReplaceAllString(video.Snippet.Description, "")
 	post.Tags = normalizeTags(video.Snippet.Tags, post.Title, description)
+
+	parsedTime, _ := time.Parse("2006-01-02T15:04:05Z", video.Snippet.PublishedAt)
+	post.UploadDate = &parsedTime
 
 	return &post
 }

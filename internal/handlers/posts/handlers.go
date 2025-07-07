@@ -292,13 +292,15 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		s.yt.CreatePost(metadata[0], "")
+
 		// TODO: Normalize the video data (title, tags, etc)
 		// TODO: INSERT the video in DB, remove from Deleted video if any
 
 		// Possibly fetch genai description (in the background with context timeout?)
 
-		redirectTo := fmt.Sprintf("/video/%s/", videoID)
-		http.Redirect(w, r, redirectTo, http.StatusFound)
+		// redirectTo := fmt.Sprintf("/video/%s/", videoID)
+		// http.Redirect(w, r, redirectTo, http.StatusFound)
 	default:
 		s.tm.HTMLError(w, r, http.StatusMethodNotAllowed, data)
 	}

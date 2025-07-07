@@ -102,19 +102,23 @@ func normalizeTitle(title string) string {
 			}
 		}
 
-		// Loweracse the current word
-		currentWord := strings.ToLower(string(runes))
+		// This is not the first word
+		if i > 0 {
+			// Loweracse the current word
+			currentWord := strings.ToLower(string(runes))
+			// Get the last rune of the previous words
+			previousWord := []rune(words[i-1])
+			lastRune := previousWord[len(previousWord)-1]
 
-		// Get the last rune of the previous words
-		previousWord := []rune(words[i-1])
-		lastRune := previousWord[len(previousWord)-1]
+			// The word is a preposition but not after a punctuation
+			if preps[currentWord] && !puncts[lastRune] {
+				words[i] = string(fq) + currentWord + string(lq)
+			}
 
-		// The word is a preposition but not after a punctuation
-		if i > 0 && preps[currentWord] && !puncts[lastRune] {
-			words[i] = string(fq) + currentWord + string(lq)
 			// The word is after punctuation and is capitalized
 		} else if unicode.IsUpper(runes[0]) {
 			words[i] = string(fq) + string(runes) + string(lq)
+
 			// The word is after a punctuation and should be capitalized
 		} else {
 			words[i] = string(fq) +
@@ -136,8 +140,8 @@ func normalizeTags(tags []string, title, description string) (result string) {
 		"documentaries": true,
 	}
 
-	// Make title and description lowercase and split them in words
-	// on non-alphanumeric runes
+	// Make title and description lowercase and
+	// split them in words on non-alphanumeric runes
 	used := strings.FieldsFunc(
 		strings.ToLower(title+" "+description), func(c rune) bool {
 			return !unicode.IsLetter(c) && !unicode.IsNumber(c)
