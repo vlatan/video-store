@@ -92,16 +92,24 @@ func (s *Service) ValidateYouTubeVideo(video *youtube.Video) error {
 func (s *Service) CreatePost(video *youtube.Video, playlistID string) *models.Post {
 	var post models.Post
 	post.VideoID = video.Id
+	post.PlaylistID = playlistID
+
+	// Assign the thumbnails
+	post.Thumbnails = &models.Thumbnails{}
 	post.Thumbnails.Default = video.Snippet.Thumbnails.Default
+	post.Thumbnails.Medium = video.Snippet.Thumbnails.Medium
+	post.Thumbnails.High = video.Snippet.Thumbnails.High
+	post.Thumbnails.Standard = video.Snippet.Thumbnails.Standard
+	post.Thumbnails.Maxres = video.Snippet.Thumbnails.Maxres
+
+	// Normalize title, description and tags
 	post.Title = normalizeTitle(video.Snippet.Title)
 	post.Description = urls.ReplaceAllString(video.Snippet.Description, "")
 	post.Tags = normalizeTags(video.Snippet.Tags, post.Title, post.Description)
+
+	// Parse the upload date
 	parsedTime, _ := time.Parse("2006-01-02T15:04:05Z", video.Snippet.PublishedAt)
 	post.UploadDate = &parsedTime
-
-	if playlistID != "" {
-		post.PlaylistID = playlistID
-	}
 
 	return &post
 }

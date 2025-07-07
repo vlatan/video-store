@@ -293,8 +293,8 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		s.yt.CreatePost(metadata[0], "")
+		s.tm.RenderHTML(w, r, "form", data)
 
-		// TODO: Normalize the video data (title, tags, etc)
 		// TODO: INSERT the video in DB, remove from Deleted video if any
 
 		// Possibly fetch genai description (in the background with context timeout?)
