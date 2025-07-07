@@ -307,8 +307,6 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 		// TODO: Remove from Deleted video if any
 		// Possibly in the same query
 
-		s.tm.RenderHTML(w, r, "form", data)
-
 		// Possibly fetch genai description (in the background with context timeout?)
 
 		redirectTo := fmt.Sprintf("/video/%s/", videoID)

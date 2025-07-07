@@ -1,4 +1,7 @@
 * Post new video
+  Cannot read the newly added video because of the short description
+  Error while getting the video '0yQ6P0Yc3HM' from DB: can't scan into dest[6] (col: short_description): cannot scan NULL into *string
+  
 * Sources
 * Pages
 * Admin (get users with pagination)
