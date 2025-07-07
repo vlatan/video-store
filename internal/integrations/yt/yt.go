@@ -90,8 +90,9 @@ func (s *Service) ValidateYouTubeVideo(video *youtube.Video) error {
 // Create post object
 func (s *Service) CreatePost(video *youtube.Video, playlistID string) *models.Post {
 	var post models.Post
-
 	post.Title = normalizeTitle(video.Snippet.Title)
+	description := urls.ReplaceAllString(video.Snippet.Description, "")
+	post.Tags = normalizeTags(video.Snippet.Tags, post.Title, description)
 
 	return &post
 }

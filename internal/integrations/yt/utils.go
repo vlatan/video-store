@@ -8,6 +8,7 @@ import (
 
 var bracketedContent = regexp.MustCompile(`[\(\[].*?[\)\]]`)
 var extraSpace = regexp.MustCompile(`\s+`)
+var urls = regexp.MustCompile(`http\S+`)
 
 // Common prepositions
 var preps = map[string]bool{
@@ -124,4 +125,37 @@ func normalizeTitle(title string) string {
 	}
 
 	return strings.Join(words, " ")
+}
+
+// Normalize tags, remove duplicate words
+func normalizeTags(tags []string, title, description string) (result string) {
+
+	// Assemble a map
+	seen := map[string]bool{
+		"documentary":   true,
+		"documentaries": true,
+	}
+
+	// Make title and description lowercase and split them in words
+	// on non-alphanumeric runes
+	used := strings.FieldsFunc(
+		strings.ToLower(title+" "+description), func(c rune) bool {
+			return !unicode.IsLetter(c) && !unicode.IsNumber(c)
+		})
+
+	// Put those words in the seen map
+	for _, word := range used {
+		seen[word] = true
+	}
+
+	// Go over the tags and see what you can include
+	for _, tag := range tags {
+		lowerTag := strings.ToLower(tag)
+		if !seen[lowerTag] {
+			seen[lowerTag] = true
+			result += tag + " "
+		}
+	}
+
+	return strings.TrimSpace(result)
 }
