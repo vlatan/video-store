@@ -5,6 +5,21 @@ const postExistsQuery = `
 	WHERE video_id = $1
 `
 
+const insertPostQuery = `
+	INSERT INTO post (
+		video_id, 
+		playlist_id, 
+		title, 
+		thumbnails, 
+		description, 
+		tags, 
+		duration, 
+		upload_date, 
+		user_id
+	)
+	VALUES ($1, NULLIF($2, ''), $3, $4, $5, $6, $7, $8, NULLIF($9, 0))
+`
+
 const getPostsQuery = `
 	SELECT video_id, title, thumbnails, (
 		SELECT COUNT(*) FROM post_like

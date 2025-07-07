@@ -292,15 +292,27 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		s.yt.CreatePost(metadata[0], "")
-		s.tm.RenderHTML(w, r, "form", data)
+		post := s.yt.CreatePost(metadata[0], "")
+		post.UserID = data.CurrentUser.ID
 
-		// TODO: INSERT the video in DB, remove from Deleted video if any
+		rowsAffected, err := s.postsRepo.InsertPost(r.Context(), post)
+		if err != nil || rowsAffected == 0 {
+			log.Printf("Could not insert the video '%s' in DB: %v", post.VideoID, err)
+			formError.Message = "Could not insert the video in DB"
+			data.Form.Error = &formError
+			s.tm.RenderHTML(w, r, "form", data)
+			return
+		}
+
+		// TODO: Remove from Deleted video if any
+		// Possibly in the same query
+
+		s.tm.RenderHTML(w, r, "form", data)
 
 		// Possibly fetch genai description (in the background with context timeout?)
 
-		// redirectTo := fmt.Sprintf("/video/%s/", videoID)
-		// http.Redirect(w, r, redirectTo, http.StatusFound)
+		redirectTo := fmt.Sprintf("/video/%s/", videoID)
+		http.Redirect(w, r, redirectTo, http.StatusFound)
 	default:
 		s.tm.HTMLError(w, r, http.StatusMethodNotAllowed, data)
 	}

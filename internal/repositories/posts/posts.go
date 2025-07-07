@@ -30,6 +30,28 @@ func (r *Repository) PostExists(ctx context.Context, videoID string) bool {
 	return !errors.Is(err, pgx.ErrNoRows)
 }
 
+func (r *Repository) InsertPost(ctx context.Context, post *models.Post) (int64, error) {
+	// Marshal the thumbnails
+	thumbnails, err := json.Marshal(post.Thumbnails)
+	if err != nil {
+		return 0, err
+	}
+	// Execute the query
+	return r.db.Exec(
+		ctx,
+		insertPostQuery,
+		post.VideoID,
+		post.PlaylistID,
+		post.Title,
+		thumbnails,
+		post.Description,
+		post.Tags,
+		post.Duration.ISO,
+		post.UploadDate,
+		post.UserID,
+	)
+}
+
 // Get single post from DB based on a video ID
 func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (post models.Post, err error) {
 

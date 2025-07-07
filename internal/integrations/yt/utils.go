@@ -84,20 +84,20 @@ func normalizeTitle(title string) string {
 		runes := []rune(w)
 
 		// First and last quote
-		var fq rune
-		var lq rune
+		var fq string
+		var lq string
 
 		// Remove quotation marks from the word at start/end
 		// and store them for later use
 		if len(runes) > 1 {
 			if quotes[runes[0]] {
-				fq = runes[0]
+				fq = string(runes[0])
 				runes = runes[1:]
 			}
 
 			lastIndex := len(runes) - 1
 			if quotes[runes[lastIndex]] {
-				lq = runes[lastIndex]
+				lq = string(runes[lastIndex])
 				runes = runes[:lastIndex]
 			}
 		}
