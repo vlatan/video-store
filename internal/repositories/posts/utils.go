@@ -3,27 +3,9 @@ package posts
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"factual-docs/internal/models"
 	"fmt"
-	"sort"
-	"strings"
 )
-
-// Unserialize thumbnails
-func unmarshalThumbs(thumbs []byte) (thumbnails map[string]models.Thumbnail, err error) {
-	err = json.Unmarshal(thumbs, &thumbnails)
-	if err != nil {
-		return thumbnails, err
-	}
-
-	// Check if no thumbnails at all
-	if len(thumbnails) == 0 {
-		return thumbnails, errors.New("no thumbnails found")
-	}
-
-	return thumbnails, err
-}
 
 // Get post's related posts based on provided title as search query
 func (r *Repository) GetRelatedPosts(ctx context.Context, title string) (posts []models.Post, err error) {
@@ -41,31 +23,6 @@ func (r *Repository) GetRelatedPosts(ctx context.Context, title string) (posts [
 	}
 
 	return posts, err
-}
-
-// Create a srcset string from a map of thumbnails
-func srcset(thumbnails map[string]models.Thumbnail, maxWidth int64) string {
-
-	// Get the Thumbnail structs from the map
-	items := make([]models.Thumbnail, 0, len(thumbnails))
-	for _, item := range thumbnails {
-		items = append(items, item)
-	}
-
-	// Sort the thumbnails by width
-	sort.Slice(items, func(i, j int) bool {
-		return items[i].Width < items[j].Width
-	})
-
-	// Create the srcset string
-	var result string
-	for _, item := range items {
-		if item.Width <= maxWidth {
-			result += fmt.Sprintf("%s %dw, ", item.Url, item.Width)
-		}
-	}
-
-	return strings.TrimSuffix(result, ", ")
 }
 
 // Query the DB for posts based on variadic arguments
@@ -94,15 +51,14 @@ func (r *Repository) queryPosts(
 		}
 
 		// Unserialize thumbnails
-		thumbsMap, err := unmarshalThumbs(thumbnails)
-		if err != nil {
+		var thumbs models.Thumbnails
+		if err = json.Unmarshal(thumbnails, &thumbs); err != nil {
 			return posts, fmt.Errorf("video ID '%s': %v", post.VideoID, err)
 		}
 
 		// Craft srcset string
-		post.Srcset = srcset(thumbsMap, 480)
-		thumb := thumbsMap["medium"]
-		post.Thumbnail = &thumb
+		post.Srcset = thumbs.Srcset(480)
+		post.Thumbnail = thumbs.Medium
 
 		// Include the processed post in the result
 		posts = append(posts, post)

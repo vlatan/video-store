@@ -2,6 +2,7 @@ package posts
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"factual-docs/internal/models"
 	"factual-docs/internal/shared/config"
@@ -70,27 +71,20 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (post mo
 	}
 
 	// Unserialize thumbnails
-	thumbsMap, err := unmarshalThumbs(thumbnails)
-	if err != nil {
+	var thumbs models.Thumbnails
+	if err = json.Unmarshal(thumbnails, &thumbs); err != nil {
 		return post, fmt.Errorf("video ID '%s': %v", videoID, err)
 	}
 
-	// Get the thumbnail with the maximum width
-	var maxThumb models.Thumbnail
-	for _, thumb := range thumbsMap {
-		if thumb.Width > maxThumb.Width {
-			maxThumb = thumb
-		}
-	}
-
 	// Assign the biggest thumbnail to post
-	post.Thumbnail = &maxThumb
+	maxThumb := thumbs.MaxThumb()
+	post.Thumbnail = maxThumb
 
 	// Get the first sentence of the short description to be used as meta description
 	post.MetaDesc = strings.Split(post.ShortDesc, ".")[0]
 
 	// Make srcset string
-	post.Srcset = srcset(thumbsMap, maxThumb.Width)
+	post.Srcset = thumbs.Srcset(maxThumb.Width)
 
 	return post, err
 }
@@ -157,14 +151,13 @@ func (r *Repository) SearchPosts(ctx context.Context, searchTerm string, limit, 
 		}
 
 		// Unserialize thumbnails
-		thumbsMap, err := unmarshalThumbs(thumbnails)
-		if err != nil {
+		var thumbs models.Thumbnails
+		if err = json.Unmarshal(thumbnails, &thumbs); err != nil {
 			return posts, fmt.Errorf("video ID '%s': %v", post.VideoID, err)
 		}
 
-		post.Srcset = srcset(thumbsMap, 480)
-		thumb := thumbsMap["medium"]
-		post.Thumbnail = &thumb
+		post.Srcset = thumbs.Srcset(480)
+		post.Thumbnail = thumbs.Medium
 
 		// Include the processed post in the result
 		posts.Items = append(posts.Items, post)
