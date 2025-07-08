@@ -89,10 +89,11 @@ func (s *Service) ValidateYouTubeVideo(video *youtube.Video) error {
 }
 
 // Create post object
-func (s *Service) CreatePost(video *youtube.Video, playlistID string) *models.Post {
+func (s *Service) CreatePost(video *youtube.Video, playlistID, provider string) *models.Post {
 	var post models.Post
 	post.VideoID = video.Id
 	post.PlaylistID = playlistID
+	post.Provider = provider
 
 	// Assign the thumbnails
 	post.Thumbnails = &models.Thumbnails{}

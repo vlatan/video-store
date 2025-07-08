@@ -31,6 +31,7 @@ type Duration struct {
 
 type Post struct {
 	ID               int         `json:"id,omitempty"`
+	Provider         string      `json:"provider,omitempty"`
 	VideoID          string      `json:"video_id,omitempty"`
 	UserID           int         `json:"user_id,omitempty"`
 	Title            string      `json:"title,omitempty"`

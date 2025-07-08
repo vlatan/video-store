@@ -292,7 +292,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		post := s.yt.CreatePost(metadata[0], "")
+		post := s.yt.CreatePost(metadata[0], "", "YouTube")
 		post.UserID = data.CurrentUser.ID
 
 		rowsAffected, err := s.postsRepo.InsertPost(r.Context(), post)
@@ -303,9 +303,6 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 			s.tm.RenderHTML(w, r, "form", data)
 			return
 		}
-
-		// TODO: Remove from Deleted video if any
-		// Possibly in the same query
 
 		// Possibly fetch genai description (in the background with context timeout?)
 

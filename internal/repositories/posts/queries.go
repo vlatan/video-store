@@ -12,6 +12,7 @@ const insertPostQuery = `
 	)
 	INSERT INTO post (
 		video_id, 
+		provider,
 		playlist_id, 
 		title, 
 		thumbnails, 
@@ -21,7 +22,7 @@ const insertPostQuery = `
 		upload_date, 
 		user_id
 	)
-	VALUES ($1, NULLIF($2, ''), $3, $4, $5, $6, $7, $8, NULLIF($9, 0))
+	VALUES ($1, NULLIF($2, ''), NULLIF($3, ''), $4, $5, $6, $7, $8, $9, NULLIF($10, 0))
 `
 
 const getPostsQuery = `
@@ -153,8 +154,8 @@ const deletePostQuery = `
 	WITH dp AS (
 		DELETE FROM post
 		WHERE video_id = $1
-		RETURNING video_id
+		RETURNING video_id, NULLIF(provider, '') as provider
 	)
-	INSERT INTO deleted_post (video_id)
-	SELECT video_id FROM dp;
+	INSERT INTO deleted_post (video_id, provider)
+	SELECT video_id, provider FROM dp;
 `
