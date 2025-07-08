@@ -86,7 +86,7 @@
 						Duration: <time itemprop="duration" datetime="{{ .CurrentPost.Duration.ISO }}">
 							{{ .CurrentPost.Duration.Human }}
 						</time>
-						{{ if .CurrentPost.Category }}
+						{{ if .CurrentPost.Category.Slug }}
 						| Category: <a class="nav-item" href="/category/{{ .CurrentPost.Category.Slug }}/">
 							{{ .CurrentPost.Category.Name }}</a>
 						{{ end }}
