@@ -6,6 +6,7 @@ import (
 	"factual-docs/internal/models"
 	"factual-docs/internal/shared/config"
 	"fmt"
+	"strings"
 
 	"google.golang.org/genai"
 )
@@ -77,4 +78,22 @@ func (s *Service) GenerateContent(ctx context.Context, prompt string) (*models.G
 	}
 
 	return &response, nil
+}
+
+// Create the prompt and generate content using Gemini
+func (s *Service) GenerateInfo(ctx context.Context, title string, categories []string) (*models.GenaiResponse, error) {
+
+	catString := strings.Join(categories, ", ")
+	prompt := fmt.Sprintf("Write one short paragraph synopsis for the documentary '%s'\n\n", title) +
+		"When writing the synopsis:\n" +
+		"	- Do not include timestamps.\n" +
+		"	- Do not include meta comments about the documentary itself, " +
+		"e.g., 'The film provides,' 'This production offers', " +
+		"'The narrative charts', 'This documentary explores'.\n" +
+		"	- Do not use concluding remarks, e.g., 'Ultimately', 'In conclusion'.\n" +
+		"	- Do not repeat the documentary title inside the synopsis.\n\n" +
+		fmt.Sprintf("Also select one category for the documentary '%s' ", title) +
+		fmt.Sprintf("from these categories: '%s'.", catString)
+
+	return s.GenerateContent(ctx, prompt)
 }
