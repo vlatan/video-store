@@ -7,6 +7,7 @@ import (
 	"factual-docs/internal/models"
 	"factual-docs/internal/shared/config"
 	"factual-docs/internal/shared/database"
+	"factual-docs/internal/shared/utils"
 	"fmt"
 	"strings"
 
@@ -55,9 +56,14 @@ func (r *Repository) InsertPost(ctx context.Context, post *models.Post) (int64, 
 // Get single post from DB based on a video ID
 func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (post models.Post, err error) {
 
-	var thumbnails []byte
-	var category models.Category
-	var duration models.Duration
+	var (
+		thumbnails []byte
+		category   models.Category
+		duration   models.Duration
+		shortDesc  *string
+		slug       *string
+		name       *string
+	)
 
 	// Get single row from DB
 	err = r.db.QueryRow(ctx, getSinglePostQuery, videoID).Scan(
@@ -67,9 +73,9 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (post mo
 		&thumbnails,
 		&post.Likes,
 		&post.Description,
-		&post.ShortDesc,
-		&category.Slug,
-		&category.Name,
+		&shortDesc,
+		&slug,
+		&name,
 		&post.UploadDate,
 		&duration.ISO,
 	)
@@ -77,6 +83,12 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (post mo
 	if err != nil {
 		return post, err
 	}
+
+	// Needs pointers in the scan for nullable strings
+	// And here we're getting them back to strings
+	post.ShortDesc = utils.PtrToString(shortDesc)
+	category.Slug = utils.PtrToString(slug)
+	category.Name = utils.PtrToString(name)
 
 	humanDuration, _ := duration.ISO.Human()
 	duration.Human = humanDuration

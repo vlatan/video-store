@@ -96,3 +96,10 @@ func NullString(s *string) sql.NullString {
 	}
 	return sql.NullString{String: *s, Valid: true}
 }
+
+func PtrToString(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
+}
