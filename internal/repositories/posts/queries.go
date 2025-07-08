@@ -6,6 +6,10 @@ const postExistsQuery = `
 `
 
 const insertPostQuery = `
+	WITH deleted_rows AS (
+		DELETE FROM deleted_post
+		WHERE video_id = $1
+	)
 	INSERT INTO post (
 		video_id, 
 		playlist_id, 
