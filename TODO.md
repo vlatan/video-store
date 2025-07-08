@@ -3,7 +3,6 @@
 * Admin (get users with pagination)
 * Sitemap
 * Cron
-* Post new video
 
 * Write custom errors middlware
 

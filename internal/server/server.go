@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"encoding/gob"
 	"fmt"
 	"net/http"
@@ -10,6 +11,8 @@ import (
 	"factual-docs/internal/handlers/misc"
 	"factual-docs/internal/handlers/posts"
 	"factual-docs/internal/handlers/static"
+	"factual-docs/internal/integrations/gemini"
+	"factual-docs/internal/integrations/yt"
 	"factual-docs/internal/middlewares"
 	"factual-docs/internal/models"
 	catRepo "factual-docs/internal/repositories/categories"
@@ -51,10 +54,23 @@ func NewServer() *http.Server {
 	// Create parsed templates map
 	tm := tmpls.New(rdb, cfg, store, static, catRepo)
 
+	// Create YouTube service
+	ctx := context.Background()
+	yt, err := yt.New(ctx, cfg)
+	if err != nil {
+		panic(err)
+	}
+
+	// Create Gemini client
+	gemini, err := gemini.New(ctx, cfg)
+	if err != nil {
+		panic(err)
+	}
+
 	// Create domain services
-	auth := auth.New(usersRepo, store, rdb, cfg)      // Create auth service
-	posts := posts.New(postsRepo, rdb, tm, cfg, auth) // Create posts service
-	misc := misc.New(cfg, db, rdb, tm)                // Create miscellaneous service
+	auth := auth.New(usersRepo, store, rdb, cfg)                  // Create auth service
+	posts := posts.New(postsRepo, rdb, tm, cfg, auth, yt, gemini) // Create posts service
+	misc := misc.New(cfg, db, rdb, tm)                            // Create miscellaneous service
 
 	// Create middlewares service
 	mw := middlewares.New(auth, cfg)

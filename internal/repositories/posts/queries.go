@@ -1,5 +1,35 @@
 package posts
 
+const postExistsQuery = `
+	SELECT 1 FROM post
+	WHERE video_id = $1
+`
+
+const insertPostQuery = `
+	WITH deleted_rows AS (
+		DELETE FROM deleted_post
+		WHERE video_id = $1
+	)
+	INSERT INTO post (
+		video_id, 
+		provider,
+		playlist_id, 
+		title, 
+		thumbnails, 
+		description, 
+		short_description,
+		tags, 
+		duration, 
+		upload_date, 
+		user_id,
+		category_id
+	)
+	VALUES (
+		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NULLIF($11, 0),
+		(SELECT id FROM category WHERE name = $12)
+	)
+`
+
 const getPostsQuery = `
 	SELECT video_id, title, thumbnails, (
 		SELECT COUNT(*) FROM post_like
@@ -129,8 +159,8 @@ const deletePostQuery = `
 	WITH dp AS (
 		DELETE FROM post
 		WHERE video_id = $1
-		RETURNING video_id
+		RETURNING video_id, NULLIF(provider, '') as provider
 	)
-	INSERT INTO deleted_post (video_id)
-	SELECT video_id FROM dp;
+	INSERT INTO deleted_post (video_id, provider)
+	SELECT video_id, provider FROM dp;
 `

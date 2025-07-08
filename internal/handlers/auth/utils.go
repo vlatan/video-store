@@ -10,19 +10,56 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/markbates/goth"
 )
 
+// Hardcode the static protected routes
+var staticProtectedPaths = map[string]bool{
+	"/video/new":      true,
+	"/health/":        true,
+	"/account/delete": true,
+}
+
+// Detect if it's a protected route
+func isProtectedRoute(path string) bool {
+
+	// The logout path
+	if strings.HasPrefix(path, "/logout/") {
+		return true
+	}
+
+	// Dynamic video routes - check if it has an action
+	parts := strings.Split(strings.Trim(path, "/"), "/")
+	if len(parts) == 3 && parts[0] == "video" && parts[2] != "" {
+		return true // /video/{video}/{action} - protected
+	}
+
+	return staticProtectedPaths[path]
+}
+
 // Extracts the value from the query param "redirect"
 func getRedirectPath(r *http.Request) string {
 	redirectParam := r.URL.Query().Get("redirect")
+
 	if redirectParam == "" {
 		return "/"
 	}
+
+	parsedURL, err := url.Parse(redirectParam)
+	if err != nil {
+		return "/"
+	}
+
+	if isProtectedRoute(parsedURL.Path) {
+		return "/"
+	}
+
 	return redirectParam
 }
 
@@ -113,24 +150,24 @@ func (s *Service) logoutUser(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-// Retrieve the user from context or session, return User struct
-func (s *Service) GetCurrentUser(w http.ResponseWriter, r *http.Request) *models.User {
+// Get the user from context
+func (s *Service) GetUserFromContext(r *http.Request) *models.User {
+	user, _ := r.Context().Value(utils.UserContextKey).(*models.User)
+	return user // nil if user not in context
+}
 
-	// Try to get the current user from context first,
-	// in case an upstream middleware already got the user from session
-	if currentUser, ok := r.Context().Value(utils.UserContextKey).(*models.User); ok {
-		return currentUser
-	}
-
+// Get the user from session
+func (s *Service) GetUserFromSession(w http.ResponseWriter, r *http.Request) *models.User {
+	// Get session from store
 	session, err := s.store.Get(r, s.config.SessionName)
 	if session == nil || err != nil {
-		return &models.User{}
+		return nil
 	}
 
 	// Get user row ID from session
 	id, ok := session.Values["ID"].(int)
 	if id == 0 || !ok {
-		return &models.User{}
+		return nil
 	}
 
 	// Update last seen

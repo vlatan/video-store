@@ -3,6 +3,7 @@ package users
 import (
 	"context"
 	"factual-docs/internal/shared/database"
+	"factual-docs/internal/shared/utils"
 	"time"
 
 	"github.com/markbates/goth"
@@ -35,12 +36,12 @@ func (r *Repository) UpsertUser(ctx context.Context, u *goth.User, analyticsID s
 	err := r.db.QueryRow(
 		ctx,
 		upsertUserQuery,
-		NullString(&googleID),
-		NullString(&facebookID),
-		NullString(&analyticsID),
-		NullString(&u.FirstName),
-		NullString(&u.Email),
-		NullString(&u.AvatarURL),
+		utils.NullString(&googleID),
+		utils.NullString(&facebookID),
+		utils.NullString(&analyticsID),
+		utils.NullString(&u.FirstName),
+		utils.NullString(&u.Email),
+		utils.NullString(&u.AvatarURL),
 	).Scan(&id)
 
 	return id, err

@@ -10,6 +10,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	// Register routes
 	mux.HandleFunc("GET /{$}", s.posts.HomeHandler)
+	mux.HandleFunc("/video/new", s.mw.IsAdmin(s.posts.NewPostHandler))
 	mux.HandleFunc("GET /video/{video}/{$}", s.posts.SinglePostHandler)
 	mux.HandleFunc("POST /video/{video}/{action}", s.mw.IsAuthenticated(s.posts.PostActionHandler))
 	mux.HandleFunc("GET /category/{category}/{$}", s.posts.CategoryPostsHandler)
@@ -31,5 +32,12 @@ func (s *Server) RegisterRoutes() http.Handler {
 	CSRF := s.mw.CreateCSRFMiddleware()
 
 	// Chain middlwares that apply to all requests
-	return s.mw.ApplyToAll(s.mw.RecoverPanic, s.mw.WWWRedirect, CSRF, s.mw.AddHeaders)(mux)
+	return s.mw.ApplyToAll(
+		s.mw.RecoverPanic,
+		s.mw.CloseBody,
+		s.mw.WWWRedirect,
+		s.mw.LoadUser,
+		CSRF,
+		s.mw.AddHeaders,
+	)(mux)
 }

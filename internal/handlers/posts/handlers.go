@@ -19,7 +19,7 @@ func (s *Service) HomeHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Generate template data
 	data := s.tm.NewData(w, r)
-	data.CurrentUser = s.auth.GetCurrentUser(w, r)
+	data.CurrentUser = s.auth.GetUserFromContext(r)
 
 	// Get page number from a query param
 	page := utils.GetPageNum(r)
@@ -84,7 +84,7 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 	// Generate template data (it gets all the categories too)
 	// This is probably wasteful for non-existing category
 	data := s.tm.NewData(w, r)
-	data.CurrentUser = s.auth.GetCurrentUser(w, r)
+	data.CurrentUser = s.auth.GetUserFromContext(r)
 
 	// Check if the category is valid
 	category, valid := isValidCategory(data.Categories, slug)
@@ -163,7 +163,7 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Generate the default data
 	data := s.tm.NewData(w, r)
-	data.CurrentUser = s.auth.GetCurrentUser(w, r)
+	data.CurrentUser = s.auth.GetUserFromContext(r)
 	data.SearchQuery = searchQuery
 
 	limit := s.config.PostsPerPage
@@ -217,6 +217,112 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 	s.tm.RenderHTML(w, r, "search", data)
 }
 
+// Handle adding new post via form
+func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
+
+	// Compose data object
+	data := s.tm.NewData(w, r)
+	data.CurrentUser = s.auth.GetUserFromContext(r)
+
+	// Populate needed data for an empty form
+	data.Form.Legend = "New Video"
+	data.Form.Content.Label = "Post YouTube Video URL"
+	data.Form.Content.Placeholder = "Video URL here..."
+
+	switch r.Method {
+	case "GET":
+		// Serve the page with the form
+		s.tm.RenderHTML(w, r, "form", data)
+
+	case "POST":
+
+		var formError models.FlashMessage
+
+		err := r.ParseForm()
+		if err != nil {
+			formError.Message = "Could not parse the form"
+			data.Error = &formError
+			s.tm.RenderHTML(w, r, "form", data)
+			return
+		}
+
+		// Get the URL from the form
+		url := r.FormValue("content")
+		data.Form.Content.Value = url
+
+		// Exctract the ID from the URL
+		videoID, err := extractYouTubeID(url)
+		if err != nil {
+			formError.Message = "Could not extract the video ID"
+			data.Form.Error = &formError
+			s.tm.RenderHTML(w, r, "form", data)
+			return
+		}
+
+		// Validate the YT ID
+		if validVideoID.FindStringSubmatch(videoID) == nil {
+			formError.Message = "Could not validate the video ID"
+			data.Form.Error = &formError
+			s.tm.RenderHTML(w, r, "form", data)
+			return
+		}
+
+		// Check if the video is already posted
+		if s.postsRepo.PostExists(r.Context(), videoID) {
+			formError.Message = "Video already posted"
+			data.Form.Error = &formError
+			s.tm.RenderHTML(w, r, "form", data)
+			return
+		}
+
+		// Fetch video data from YouTube
+		metadata, err := s.yt.GetVideos(videoID)
+		if err != nil {
+			formError.Message = utils.Capitalize(err.Error())
+			data.Form.Error = &formError
+			s.tm.RenderHTML(w, r, "form", data)
+			return
+		}
+
+		// Validate the video data
+		if err := s.yt.ValidateYouTubeVideo(metadata[0]); err != nil {
+			formError.Message = utils.Capitalize(err.Error())
+			data.Form.Error = &formError
+			s.tm.RenderHTML(w, r, "form", data)
+			return
+		}
+
+		// Create post object
+		post := s.yt.CreatePost(metadata[0], "", "YouTube")
+		post.UserID = data.CurrentUser.ID
+
+		// Generate content using Gemini
+		gc, err := s.gemini.GenerateInfo(r.Context(), post.Title, data.Categories)
+		if err != nil {
+			log.Printf("Content generation using Gemini failed: %v", err)
+		}
+
+		if gc != nil {
+			post.ShortDesc = gc.Description
+			post.Category = &models.Category{Name: gc.Category}
+		}
+
+		rowsAffected, err := s.postsRepo.InsertPost(r.Context(), post)
+		if err != nil || rowsAffected == 0 {
+			log.Printf("Could not insert the video '%s' in DB: %v", post.VideoID, err)
+			formError.Message = "Could not insert the video in DB"
+			data.Form.Error = &formError
+			s.tm.RenderHTML(w, r, "form", data)
+			return
+		}
+
+		redirectTo := fmt.Sprintf("/video/%s/", videoID)
+		http.Redirect(w, r, redirectTo, http.StatusFound)
+	default:
+		s.tm.HTMLError(w, r, http.StatusMethodNotAllowed, data)
+	}
+}
+
 // Handle a single post
 func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 	// Get category slug from URL
@@ -224,7 +330,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Generate the default data
 	data := s.tm.NewData(w, r)
-	data.CurrentUser = s.auth.GetCurrentUser(w, r)
+	data.CurrentUser = s.auth.GetUserFromContext(r)
 
 	// Validate the YT ID
 	if validVideoID.FindStringSubmatch(videoID) == nil {
@@ -300,9 +406,6 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 // Perform an action on a video
 func (s *Service) PostActionHandler(w http.ResponseWriter, r *http.Request) {
 
-	// This is a post request, close the body on exit
-	defer r.Body.Close()
-
 	// Validate the YT ID
 	videoID := r.PathValue("video")
 	if validVideoID.FindStringSubmatch(videoID) == nil {
@@ -321,7 +424,7 @@ func (s *Service) PostActionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get the current user
-	currentUser := s.auth.GetCurrentUser(w, r)
+	currentUser := s.auth.GetUserFromContext(r)
 
 	// Check if user is authorized to edit or delete (admin)
 	if (action == "edit" || action == "delete") &&
