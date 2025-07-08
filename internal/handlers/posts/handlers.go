@@ -292,8 +292,18 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		// Create post object
 		post := s.yt.CreatePost(metadata[0], "", "YouTube")
 		post.UserID = data.CurrentUser.ID
+
+		// Generate content using Gemini
+		gc, err := s.gemini.GenerateInfo(r.Context(), post.Title, data.Categories)
+		if err != nil {
+			log.Printf("Content generation using Gemini failed: %v", err)
+		}
+
+		post.ShortDesc = gc.Description
+		post.Category = &models.Category{Name: gc.Category}
 
 		rowsAffected, err := s.postsRepo.InsertPost(r.Context(), post)
 		if err != nil || rowsAffected == 0 {
@@ -303,8 +313,6 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 			s.tm.RenderHTML(w, r, "form", data)
 			return
 		}
-
-		// Possibly fetch genai description (in the background with context timeout?)
 
 		redirectTo := fmt.Sprintf("/video/%s/", videoID)
 		http.Redirect(w, r, redirectTo, http.StatusFound)

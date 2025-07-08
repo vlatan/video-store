@@ -81,9 +81,18 @@ func (s *Service) GenerateContent(ctx context.Context, prompt string) (*models.G
 }
 
 // Create the prompt and generate content using Gemini
-func (s *Service) GenerateInfo(ctx context.Context, title string, categories []string) (*models.GenaiResponse, error) {
+func (s *Service) GenerateInfo(
+	ctx context.Context,
+	title string,
+	categories []models.Category,
+) (*models.GenaiResponse, error) {
 
-	catString := strings.Join(categories, ", ")
+	var catString string
+	for _, cat := range categories {
+		catString += cat.Name + ", "
+	}
+	catString = strings.TrimSuffix(catString, ", ")
+
 	prompt := fmt.Sprintf("Write one short paragraph synopsis for the documentary '%s'\n\n", title) +
 		"When writing the synopsis:\n" +
 		"	- Do not include timestamps.\n" +
