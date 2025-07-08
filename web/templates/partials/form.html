@@ -24,6 +24,7 @@
         </fieldset>
         <div class="form-group button-group">
             <input class="form-button" id="submit" name="submit" type="submit" value="Submit">
+            <div class="submit-spinner"></div>
             {{ if .Form.Error }}
             <div class="form-invalid-feedback">
                 <span>{{ .Form.Error.Message }}.</span>
