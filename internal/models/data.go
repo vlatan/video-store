@@ -8,6 +8,13 @@ import (
 	"time"
 )
 
+// The response from the Genai API
+type GenaiResponse struct {
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Category    string `json:"category"`
+}
+
 // Flash message object to store to session for the next page
 type FlashMessage struct {
 	Message  string
