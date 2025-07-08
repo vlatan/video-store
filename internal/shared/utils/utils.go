@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"database/sql"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -86,4 +87,12 @@ func Capitalize(s string) string {
 		return s
 	}
 	return strings.ToUpper(s[:1]) + s[1:]
+}
+
+// Helper function to convert string pointer or empty string to sql.NullString
+func NullString(s *string) sql.NullString {
+	if s == nil || *s == "" {
+		return sql.NullString{Valid: false}
+	}
+	return sql.NullString{String: *s, Valid: true}
 }
