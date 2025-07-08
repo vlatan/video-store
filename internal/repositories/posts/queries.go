@@ -17,12 +17,17 @@ const insertPostQuery = `
 		title, 
 		thumbnails, 
 		description, 
+		short_description,
 		tags, 
 		duration, 
 		upload_date, 
-		user_id
+		user_id,
+		category_id
 	)
-	VALUES ($1, NULLIF($2, ''), NULLIF($3, ''), $4, $5, $6, $7, $8, $9, NULLIF($10, 0))
+	VALUES (
+		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NULLIF($11, 0),
+		(SELECT id FROM category WHERE name = $12)
+	)
 `
 
 const getPostsQuery = `
