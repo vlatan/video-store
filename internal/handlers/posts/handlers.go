@@ -302,8 +302,10 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 			log.Printf("Content generation using Gemini failed: %v", err)
 		}
 
-		post.ShortDesc = gc.Description
-		post.Category = &models.Category{Name: gc.Category}
+		if gc != nil {
+			post.ShortDesc = gc.Description
+			post.Category = &models.Category{Name: gc.Category}
+		}
 
 		rowsAffected, err := s.postsRepo.InsertPost(r.Context(), post)
 		if err != nil || rowsAffected == 0 {
