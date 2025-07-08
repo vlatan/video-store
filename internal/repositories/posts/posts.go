@@ -59,12 +59,11 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (post mo
 
 	post.Duration = &models.Duration{}
 
-	var (
+	var ( // Nullable strings in the DB need pointers for the scan
 		thumbnails []byte
 		shortDesc  *string
-		// Nullable strings in the DB need pointers for the scan
-		slug *string
-		name *string
+		slug       *string
+		name       *string
 	)
 
 	// Get single row from DB
@@ -86,14 +85,14 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (post mo
 		return post, err
 	}
 
-	// Define category if not null
+	// Define category if not nil
 	if slug != nil && name != nil {
 		post.Category = &models.Category{}
 		post.Category.Slug = utils.PtrToString(slug)
 		post.Category.Name = utils.PtrToString(name)
 	}
 
-	// And here we're getting them back to strings
+	// Define short desc
 	post.ShortDesc = utils.PtrToString(shortDesc)
 
 	// Provide humand readable video duration
