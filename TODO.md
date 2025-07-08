@@ -1,6 +1,3 @@
-* Post new video
-  Do not show category at all in templates if null
-  
 * Sources
 * Pages
 * Admin (get users with pagination)

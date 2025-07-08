@@ -102,7 +102,7 @@ func (s *Service) GenerateInfo(
 		"	- Do not use concluding remarks, e.g., 'Ultimately', 'In conclusion'.\n" +
 		"	- Do not repeat the documentary title inside the synopsis.\n\n" +
 		fmt.Sprintf("Also select one category for the documentary '%s' ", title) +
-		fmt.Sprintf("from these categories: '%s'.", catString)
+		fmt.Sprintf("from these categories: %s.", catString)
 
 	return s.GenerateContent(ctx, prompt)
 }
