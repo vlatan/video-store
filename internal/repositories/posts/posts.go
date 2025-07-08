@@ -57,10 +57,11 @@ func (r *Repository) InsertPost(ctx context.Context, post *models.Post) (int64, 
 // Get single post from DB based on a video ID
 func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (post models.Post, err error) {
 
+	post.Category = &models.Category{}
+	post.Duration = &models.Duration{}
+
 	var (
 		thumbnails []byte
-		category   models.Category
-		duration   models.Duration
 		shortDesc  *string
 		slug       *string
 		name       *string
@@ -78,7 +79,7 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (post mo
 		&slug,
 		&name,
 		&post.UploadDate,
-		&duration.ISO,
+		&post.Duration.ISO,
 	)
 
 	if err != nil {
@@ -88,14 +89,12 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (post mo
 	// Needs pointers in the scan for nullable strings
 	// And here we're getting them back to strings
 	post.ShortDesc = utils.PtrToString(shortDesc)
-	category.Slug = utils.PtrToString(slug)
-	category.Name = utils.PtrToString(name)
+	post.Category.Slug = utils.PtrToString(slug)
+	post.Category.Name = utils.PtrToString(name)
 
-	humanDuration, _ := duration.ISO.Human()
-	duration.Human = humanDuration
-
-	post.Category = &category
-	post.Duration = &duration
+	// Provide humand readable video duration
+	humanDuration, _ := post.Duration.ISO.Human()
+	post.Duration.Human = humanDuration
 
 	// Like button text
 	post.LikeButtonText = "Like"
