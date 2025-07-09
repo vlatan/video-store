@@ -40,6 +40,7 @@ func (s *Service) SourcesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data.Sources = sources
+	data.Title = "Sources"
 	s.tm.RenderHTML(w, r, "sources", data)
 
 }
