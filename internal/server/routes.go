@@ -14,6 +14,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	mux.HandleFunc("GET /video/{video}/{$}", s.posts.SinglePostHandler)
 	mux.HandleFunc("POST /video/{video}/{action}", s.mw.IsAuthenticated(s.posts.PostActionHandler))
 	mux.HandleFunc("GET /category/{category}/{$}", s.posts.CategoryPostsHandler)
+	mux.HandleFunc("GET /sources/{$}", s.sources.SourcesHandler)
 	mux.HandleFunc("GET /search/{$}", s.posts.SearchPostsHandler)
 	mux.HandleFunc("GET /health/{$}", s.mw.IsAdmin(s.misc.HealthHandler))
 	mux.HandleFunc("GET /static/", s.static.StaticHandler)

@@ -1,0 +1,41 @@
+{{ define "extra_preload_css" }}
+<link rel="preload" href='{{ .AddVersion "/static/css/sources.css" }}' as="style">
+{{ end }}
+
+{{ define "extra_css" }}
+<link rel="stylesheet" type="text/css" href='{{ .AddVersion "/static/css/sources.css" }}'>
+{{ end }}
+
+{{ define "extra_meta" }}
+<meta property='og:title' content='{{ .Title }}'>
+<meta property='og:url' content='{{ .CanonicalURL }}'>
+<meta property='og:type' content='article'>
+{{ end }}
+
+{{ define "title_tag" }}
+{{ .Title }} - {{ .Config.AppName }}
+{{ end }}
+
+{{ define "content" }}
+<div class="playlists-content">
+
+    {{ range .Sources }}
+    <a class="playlist-link" href="/source/{{ .PlaylistID }}/">
+        <img class="channel-img" src="{{ .Thumbnail.Url }}" width="{{ .Thumbnail.Width }}"
+            height="{{ .Thumbnail.Height }}" alt="{{ .Title }}">
+        {{ if .ChannelTitle }}
+        <h2 class="playlist-title">{{ .ChannelTitle }}</h2>
+        {{ else }}
+        <h2 class="playlist-title">{{ .Title }}</h2>
+        {{ end }}
+
+    </a>
+    {{ end }}
+
+    <a class="playlist-link" href="/source/other/">
+        <span class="orphans">Other</span>
+        <h2 class="playlist-title">Other Uploads</h2>
+    </a>
+
+</div>
+{{ end }}

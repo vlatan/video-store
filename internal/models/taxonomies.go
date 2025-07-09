@@ -1,13 +1,15 @@
 package models
 
 type Category struct {
-	Name string `db:"name"`
-	Slug string `db:"slug"`
+	Name string `json:"name,omitempty"`
+	Slug string `json:"slug,omitempty"`
 }
 
 type Source struct {
-	PlaylistID        string     `db:"playlist_id"`
-	Title             string     `db:"title"`
-	Thumbnails        Thumbnails `db:"thumbnails"`
-	ChannelThumbnails Thumbnails `db:"channel_thumbnails"`
+	PlaylistID        string      `json:"playlist_id,omitempty"`
+	Title             string      `json:"title,omitempty"`
+	Thumbnail         *Thumbnail  `json:"thumbnail,omitempty"`
+	Thumbnails        *Thumbnails `json:"thumbnails,omitempty"`
+	ChannelTitle      string      `json:"channel_title,omitempty"`
+	ChannelThumbnails *Thumbnails `json:"channel_thumbnails,omitempty"`
 }

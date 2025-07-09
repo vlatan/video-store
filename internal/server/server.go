@@ -10,6 +10,7 @@ import (
 	"factual-docs/internal/handlers/auth"
 	"factual-docs/internal/handlers/misc"
 	"factual-docs/internal/handlers/posts"
+	"factual-docs/internal/handlers/sources"
 	"factual-docs/internal/handlers/static"
 	"factual-docs/internal/integrations/gemini"
 	"factual-docs/internal/integrations/yt"
@@ -17,6 +18,7 @@ import (
 	"factual-docs/internal/models"
 	catRepo "factual-docs/internal/repositories/categories"
 	postsRepo "factual-docs/internal/repositories/posts"
+	sourcesRepo "factual-docs/internal/repositories/sources"
 	usersRepo "factual-docs/internal/repositories/users"
 	"factual-docs/internal/shared/config"
 	"factual-docs/internal/shared/database"
@@ -25,11 +27,12 @@ import (
 )
 
 type Server struct {
-	auth   *auth.Service
-	posts  *posts.Service
-	static *static.Service
-	mw     *middlewares.Service
-	misc   *misc.Service
+	auth    *auth.Service
+	posts   *posts.Service
+	sources *sources.Service
+	static  *static.Service
+	mw      *middlewares.Service
+	misc    *misc.Service
 }
 
 // Create new HTTP server
@@ -50,6 +53,7 @@ func NewServer() *http.Server {
 	usersRepo := usersRepo.New(db)      // Create users repo
 	postsRepo := postsRepo.New(db, cfg) // Create posts repo
 	catRepo := catRepo.New(db)          // Create categories repo
+	sourcesRepo := sourcesRepo.New(db, cfg)
 
 	// Create parsed templates map
 	tm := tmpls.New(rdb, cfg, store, static, catRepo)
@@ -70,6 +74,7 @@ func NewServer() *http.Server {
 	// Create domain services
 	auth := auth.New(usersRepo, store, rdb, cfg)                  // Create auth service
 	posts := posts.New(postsRepo, rdb, tm, cfg, auth, yt, gemini) // Create posts service
+	sources := sources.New(sourcesRepo, rdb, tm, cfg, auth, yt)   // Create sources service
 	misc := misc.New(cfg, db, rdb, tm)                            // Create miscellaneous service
 
 	// Create middlewares service
@@ -77,11 +82,12 @@ func NewServer() *http.Server {
 
 	// Create new Server struct
 	newServer := &Server{
-		auth:   auth,
-		posts:  posts,
-		static: static,
-		misc:   misc,
-		mw:     mw,
+		auth:    auth,
+		posts:   posts,
+		sources: sources,
+		static:  static,
+		misc:    misc,
+		mw:      mw,
 	}
 
 	// Declare Server config

@@ -53,13 +53,14 @@ type TemplateData struct {
 	CurrentUser  *User
 	CurrentURI   string
 	CanonicalURL string
-	Posts
+	*Posts
+	Sources       []Source
 	Categories    []Category
 	FlashMessages []*FlashMessage
 	SearchQuery   string
 	HTMLErrorData *HTMLErrorData
 	CSRFField     template.HTML
-	Form
+	*Form
 }
 
 // Check if current user is admin
