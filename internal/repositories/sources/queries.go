@@ -1,5 +1,10 @@
 package sources
 
+const postExistsQuery = `
+	SELECT 1 FROM playlist
+	WHERE playlist_id = $1
+`
+
 const getSourcesQuery = `
 	SELECT playlist_id, title, channel_title, channel_thumbnails FROM playlist
 	WHERE id IN (SELECT DISTINCT playlist_db_id FROM post)
