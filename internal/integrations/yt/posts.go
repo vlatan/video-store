@@ -21,14 +21,14 @@ func (s *Service) GetVideos(videoIDs ...string) ([]*youtube.Video, error) {
 		return nil, errors.New(msg)
 	}
 
-	var videoList []*youtube.Video = response.Items
-	if len(videoList) == 0 {
+	var videos []*youtube.Video = response.Items
+	if len(videos) == 0 {
 		msg := "could not fetch a result from YouTube"
-		log.Printf("%s; response.Items: %v", msg, videoList)
+		log.Printf("%s; response.Items: %v", msg, videos)
 		return nil, errors.New(msg)
 	}
 
-	return videoList, nil
+	return videos, nil
 }
 
 // Validate a YouTube video against custom criteria.
