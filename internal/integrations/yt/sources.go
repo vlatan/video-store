@@ -2,6 +2,7 @@ package yt
 
 import (
 	"errors"
+	"factual-docs/internal/models"
 	"log"
 
 	"google.golang.org/api/youtube/v3"
@@ -47,4 +48,35 @@ func (s *Service) GetChannels(channelIDs ...string) ([]*youtube.Channel, error) 
 	}
 
 	return channels, nil
+}
+
+// Create source object
+func (s *Service) NewYouTubeSource(playlist *youtube.Playlist, channel *youtube.Channel) *models.Source {
+	var source models.Source
+	source.PlaylistID = playlist.Id
+	source.ChannelID = playlist.Snippet.ChannelId
+	source.Title = playlist.Snippet.Title
+	source.ChannelTitle = channel.Snippet.Title
+
+	// Assign the playlist thumbnails
+	source.Thumbnails = &models.Thumbnails{}
+	source.Thumbnails.Default = playlist.Snippet.Thumbnails.Default
+	source.Thumbnails.Medium = playlist.Snippet.Thumbnails.Medium
+	source.Thumbnails.High = playlist.Snippet.Thumbnails.High
+	source.Thumbnails.Standard = playlist.Snippet.Thumbnails.Standard
+	source.Thumbnails.Maxres = playlist.Snippet.Thumbnails.Maxres
+
+	// Assign the channel thumbnails
+	source.ChannelThumbnails = &models.Thumbnails{}
+	source.ChannelThumbnails.Default = channel.Snippet.Thumbnails.Default
+	source.ChannelThumbnails.Medium = channel.Snippet.Thumbnails.Medium
+	source.ChannelThumbnails.High = channel.Snippet.Thumbnails.High
+	source.ChannelThumbnails.Standard = channel.Snippet.Thumbnails.Standard
+	source.ChannelThumbnails.Maxres = channel.Snippet.Thumbnails.Maxres
+
+	// Assign descriptions
+	source.Description = playlist.Snippet.Description
+	source.ChannelDescription = channel.Snippet.Description
+
+	return &source
 }

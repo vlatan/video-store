@@ -3,6 +3,8 @@ package sources
 import (
 	"factual-docs/internal/models"
 	"factual-docs/internal/shared/redis"
+	"factual-docs/internal/shared/utils"
+	"fmt"
 	"log"
 	"net/http"
 )
@@ -96,32 +98,42 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		s.tm.RenderHTML(w, r, "form", data)
+		// Fetch playlist metadata from YouTube
+		sources, err := s.yt.GetSources(playlistID)
+		if err != nil {
+			formError.Message = utils.Capitalize(err.Error())
+			data.Form.Error = &formError
+			s.tm.RenderHTML(w, r, "form", data)
+			return
+		}
 
-		// // Fetch video data from YouTube
-		// metadata, err := s.yt.GetVideos(videoID)
-		// if err != nil {
-		// 	formError.Message = utils.Capitalize(err.Error())
-		// 	data.Form.Error = &formError
-		// 	s.tm.RenderHTML(w, r, "form", data)
-		// 	return
-		// }
+		// Fetch channel data from YouTube
+		channels, err := s.yt.GetChannels(sources[0].Snippet.ChannelId)
+		if err != nil {
+			formError.Message = utils.Capitalize(err.Error())
+			data.Form.Error = &formError
+			s.tm.RenderHTML(w, r, "form", data)
+			return
+		}
 
-		// // Create post object
-		// post := s.yt.CreatePost(metadata[0], "", "YouTube")
-		// post.UserID = data.CurrentUser.ID
+		// Create a source object
+		source := s.yt.NewYouTubeSource(sources[0], channels[0])
+		source.UserID = data.CurrentUser.ID
 
-		// rowsAffected, err := s.sourcesRepo.InsertSource(r.Context(), post)
-		// if err != nil || rowsAffected == 0 {
-		// 	log.Printf("Could not insert the video '%s' in DB: %v", post.VideoID, err)
-		// 	formError.Message = "Could not insert the video in DB"
-		// 	data.Form.Error = &formError
-		// 	s.tm.RenderHTML(w, r, "form", data)
-		// 	return
-		// }
+		// Insert the source in DB
+		rowsAffected, err := s.sourcesRepo.InsertSource(r.Context(), source)
+		if err != nil || rowsAffected == 0 {
+			log.Printf("Could not insert the source '%s' in DB: %v", source.PlaylistID, err)
+			formError.Message = "Could not insert the source in DB"
+			data.Form.Error = &formError
+			s.tm.RenderHTML(w, r, "form", data)
+			return
+		}
 
-		// redirectTo := fmt.Sprintf("/video/%s/", videoID)
-		// http.Redirect(w, r, redirectTo, http.StatusFound)
+		// Check out the souurce
+		redirectTo := fmt.Sprintf("/source/%s/", playlistID)
+		http.Redirect(w, r, redirectTo, http.StatusFound)
+
 	default:
 		s.tm.HTMLError(w, r, http.StatusMethodNotAllowed, data)
 	}

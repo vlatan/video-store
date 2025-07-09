@@ -30,7 +30,7 @@ func (r *Repository) SourceExists(ctx context.Context, playlistID string) bool {
 	return !errors.Is(err, pgx.ErrNoRows)
 }
 
-func (r *Repository) InsertSource(ctx context.Context, source models.Source) (int64, error) {
+func (r *Repository) InsertSource(ctx context.Context, source *models.Source) (int64, error) {
 	// Marshal the playlist thumbnails
 	thumbnails, err := json.Marshal(source.Thumbnails)
 	if err != nil {

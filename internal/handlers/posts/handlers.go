@@ -309,6 +309,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 			post.Category = &models.Category{Name: gc.Category}
 		}
 
+		// Insert the video
 		rowsAffected, err := s.postsRepo.InsertPost(r.Context(), post)
 		if err != nil || rowsAffected == 0 {
 			log.Printf("Could not insert the video '%s' in DB: %v", post.VideoID, err)
@@ -318,8 +319,10 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		// Check out the video
 		redirectTo := fmt.Sprintf("/video/%s/", videoID)
 		http.Redirect(w, r, redirectTo, http.StatusFound)
+
 	default:
 		s.tm.HTMLError(w, r, http.StatusMethodNotAllowed, data)
 	}
