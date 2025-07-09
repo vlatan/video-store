@@ -295,7 +295,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Create post object
-		post := s.yt.CreatePost(metadata[0], "", "YouTube")
+		post := s.yt.NewYouTubePost(metadata[0], "")
 		post.UserID = data.CurrentUser.ID
 
 		// Generate content using Gemini
