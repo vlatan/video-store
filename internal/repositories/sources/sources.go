@@ -36,14 +36,20 @@ func (r *Repository) GetSources(ctx context.Context) ([]models.Source, error) {
 		var source models.Source
 		var thumbnails []byte
 
-		if err := rows.Scan(&source.PlaylistID, &source.Title, &thumbnails); err != nil {
+		if err := rows.Scan(
+			&source.PlaylistID,
+			&source.Title,
+			&source.ChannelTitle,
+			&thumbnails,
+		); err != nil {
 			return []models.Source{}, err
 		}
 
 		// Unserialize thumbnails
 		var channelThumbs models.Thumbnails
 		if err = json.Unmarshal(thumbnails, &channelThumbs); err != nil {
-			return sources, fmt.Errorf("playlist ID '%s': %v", source.PlaylistID, err)
+			msg := "could not ummarshal the channel thumbs on playlist"
+			return sources, fmt.Errorf("%s: '%s': %v", msg, source.PlaylistID, err)
 		}
 
 		source.Thumbnail = channelThumbs.Medium
