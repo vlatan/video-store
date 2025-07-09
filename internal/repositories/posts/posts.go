@@ -37,6 +37,7 @@ func (r *Repository) InsertPost(ctx context.Context, post *models.Post) (int64, 
 	if err != nil {
 		return 0, err
 	}
+
 	// Execute the query
 	return r.db.Exec(
 		ctx,

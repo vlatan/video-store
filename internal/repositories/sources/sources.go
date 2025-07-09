@@ -6,6 +6,7 @@ import (
 	"factual-docs/internal/models"
 	"factual-docs/internal/shared/config"
 	"factual-docs/internal/shared/database"
+	"factual-docs/internal/shared/utils"
 	"fmt"
 )
 
@@ -19,6 +20,36 @@ func New(db database.Service, config *config.Config) *Repository {
 		db:     db,
 		config: config,
 	}
+}
+
+func (r *Repository) InsertSource(ctx context.Context, source models.Source) (int64, error) {
+	// Marshal the playlist thumbnails
+	thumbnails, err := json.Marshal(source.Thumbnails)
+	if err != nil {
+		return 0, err
+	}
+
+	// Marshal the channel thumbnails
+	chThumbnails, err := json.Marshal(source.ChannelThumbnails)
+	if err != nil {
+		return 0, err
+	}
+
+	// Execute the query
+	return r.db.Exec(
+		ctx,
+		insertSourceQuery,
+		source.PlaylistID,
+		source.ChannelID,
+		source.Title,
+		utils.NullString(&source.ChannelTitle),
+		thumbnails,
+		chThumbnails,
+		utils.NullString(&source.Description),
+		utils.NullString(&source.ChannelDescription),
+		source.UserID,
+	)
+
 }
 
 // Get a limited number of posts with offset
