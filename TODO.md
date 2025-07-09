@@ -1,4 +1,12 @@
 * Sources
+  * Single source posts handler (should it be at the sources handlers and use posts repo?)
+    The same with the single category posts handler?
+    The same with the search?
+
+  * Since the source (playlist) is showing the channel thumbnail two playlists
+    from the same channel will be shown with the same thumbnail. Maybe add or use the
+    playlist title if it's not the entire channel uploads playlist.
+
 * Pages
 * Admin (get users with pagination)
 * Sitemap
