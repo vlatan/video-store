@@ -330,7 +330,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 
 // Handle a single post
 func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
-	// Get category slug from URL
+	// Get video id from URL path
 	videoID := r.PathValue("video")
 
 	// Generate the default data
