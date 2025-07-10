@@ -215,7 +215,7 @@ func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
 	data.Posts = &models.Posts{}
 	data.Posts.Items = posts
 	// data.Title = category.Name
-	s.tm.RenderHTML(w, r, "category", data)
+	s.tm.RenderHTML(w, r, "source", data)
 }
 
 // Handle the requests from the searchform

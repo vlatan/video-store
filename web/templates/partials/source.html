@@ -1,0 +1,26 @@
+{{ define "extra_preload_css" }}
+<link rel="preload" href='{{ .AddVersion "/static/css/content.css" }}' as="style">
+{{ end }}
+
+{{ define "extra_css" }}
+<link rel="stylesheet" type="text/css" href='{{ .AddVersion "/static/css/content.css" }}'>
+{{ end }}
+
+{{ define "extra_meta" }}
+<meta property='og:title' content='{{ .Title }}'>
+<meta property='og:type' content='article'>
+<meta property='og:url' content='{{ .CanonicalURL }}'>
+{{ end }}
+
+{{ define "title_tag" }}
+{{ .Title }} - {{ .Config.AppName }}
+{{ end }}
+
+{{ define "content" }}
+<h1 class="content-title">{{ .Title }}</h1>
+{{ template "content.html" . }}
+{{ end }}
+
+{{ define "extra_scripts" }}
+<script defer src='{{ .AddVersion "/static/js/scroll.js" }}'></script>
+{{ end }}
