@@ -21,7 +21,7 @@ func (s *Service) SourcesHandler(w http.ResponseWriter, r *http.Request) {
 		!data.IsCurrentUserAdmin(),
 		r.Context(),
 		s.rdb,
-		"all:sources",
+		"sources",
 		s.config.CacheTimeout,
 		&sources,
 		func() ([]models.Source, error) {
