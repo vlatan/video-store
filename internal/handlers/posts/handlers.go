@@ -145,8 +145,76 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	data.Posts = &models.Posts{}
 	data.Posts.Items = posts
 	data.Title = category.Name
+	s.tm.RenderHTML(w, r, "category", data)
+}
+
+// Handle posts in a certain source
+func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
+
+	// Get category slug from URL
+	sourceID := r.PathValue("source")
+
+	// Generate template data (it gets all the categories too)
+	// This is probably wasteful for non-existing category
+	data := s.tm.NewData(w, r)
+	data.CurrentUser = s.auth.GetUserFromContext(r)
+
+	// Get page number from a query param
+	page := utils.GetPageNum(r)
+	redisKey := fmt.Sprintf("source:%s:posts:page:%d", sourceID, page)
+
+	// Get the order_by query param if any
+	orderBy := r.URL.Query().Get("order_by")
+	if orderBy == "likes" {
+		redisKey += ":likes"
+	}
+
+	var posts []models.Post
+	err := redis.GetItems(
+		!data.IsCurrentUserAdmin(),
+		r.Context(),
+		s.rdb,
+		redisKey,
+		s.config.CacheTimeout,
+		&posts,
+		func() ([]models.Post, error) {
+			return s.postsRepo.GetSourcePosts(r.Context(), sourceID, orderBy, page)
+		},
+	)
+
+	if err != nil {
+		log.Printf("Was unabale to fetch posts on URI '%s': %v", r.RequestURI, err)
+		if page > 1 {
+			s.tm.JSONError(w, r, http.StatusInternalServerError)
+			return
+		}
+		s.tm.HTMLError(w, r, http.StatusInternalServerError, data)
+		return
+	}
+
+	if len(posts) == 0 {
+		log.Printf("Fetched zero posts on URI '%s'", r.RequestURI)
+		if page > 1 {
+			s.tm.JSONError(w, r, http.StatusNotFound)
+			return
+		}
+		s.tm.HTMLError(w, r, http.StatusNotFound, data)
+		return
+	}
+
+	// If not the first page return JSON
+	if page > 1 {
+		time.Sleep(time.Millisecond * 400)
+		s.tm.WriteJSON(w, r, posts)
+		return
+	}
+
+	data.Posts = &models.Posts{}
+	data.Posts.Items = posts
+	// data.Title = category.Name
 	s.tm.RenderHTML(w, r, "category", data)
 }
 
