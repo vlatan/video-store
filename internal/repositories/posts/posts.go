@@ -164,6 +164,26 @@ func (r *Repository) GetCategoryPosts(
 	return r.queryPosts(ctx, query, categorySlug, limit, offset)
 }
 
+// Get a limited number of posts from one category with offset
+func (r *Repository) GetSourcePosts(
+	ctx context.Context,
+	playlistID,
+	orderBy string,
+	page int,
+) ([]models.Post, error) {
+
+	limit := r.config.PostsPerPage
+	offset := (page - 1) * limit
+
+	order := "upload_date DESC"
+	if orderBy == "likes" {
+		order = "likes DESC, " + order
+	}
+
+	query := fmt.Sprintf(getSourcePostsQuery, order)
+	return r.queryPosts(ctx, query, playlistID, limit, offset)
+}
+
 // Get posts based on a user search query
 // Transform the user query into two queries with words separated by '&' and '|'
 func (r *Repository) SearchPosts(ctx context.Context, searchTerm string, limit, offset int) (posts models.Posts, err error) {

@@ -69,6 +69,16 @@ const getCategoryPostsQuery = `
 	LIMIT $2 OFFSET $3
 `
 
+const getSourcePostsQuery = `
+	SELECT video_id, title, thumbnails, (
+		SELECT COUNT(*) FROM post_like
+		WHERE post_like.post_id = post.id
+	) AS likes FROM post 
+	WHERE playlist_db_id = (SELECT id FROM playlist WHERE playlist_id = $1) 
+	ORDER BY %s
+	LIMIT $2 OFFSET $3
+`
+
 const searchPostsQuery = `
 	WITH search_terms AS (
 		SELECT
