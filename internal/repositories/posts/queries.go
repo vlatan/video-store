@@ -80,7 +80,7 @@ const getSourcePostsQuery = `
 	JOIN playlist AS p ON post.playlist_db_id = p.id
 	LEFT JOIN post_like AS pl ON pl.post_id = post.id
 	WHERE p.playlist_id = $1
-	GROUP BY p.title, post.id, post.video_id, post.title, post.thumbnails
+	GROUP BY p.id, post.id
 	ORDER BY %s
 	LIMIT $2 OFFSET $3;
 `
@@ -97,17 +97,16 @@ const searchPostsQuery = `
 		p.video_id,
 		p.title,
 		p.thumbnails,
-		(
-			SELECT COUNT(*)
-			FROM post_like
-			WHERE post_like.post_id = p.id
-		) AS likes,
+		COUNT(pl.id) AS likes,
 		CASE 
 			WHEN $3 = 0 THEN COUNT(*) OVER()
 			ELSE 0
 		END AS total_results
-	FROM post AS p, search_terms AS st
+	FROM post AS p
+	CROSS JOIN search_terms AS st
+	LEFT JOIN post_like AS pl ON pl.post_id = p.id
 	WHERE p.search_vector @@ st.and_query OR p.search_vector @@ st.or_query
+	GROUP BY p.id, st.and_query, st.or_query, st.raw_query
 	ORDER BY 
 		(ts_rank(p.search_vector, st.and_query, 32) * 2) + 
 		ts_rank(p.search_vector, st.or_query, 32) +
