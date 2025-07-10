@@ -19,14 +19,13 @@ func (s *Service) GetSources(playlistIDs ...string) ([]*youtube.Playlist, error)
 		return nil, errors.New(msg)
 	}
 
-	var playlists []*youtube.Playlist = response.Items
-	if len(playlists) == 0 {
+	if len(response.Items) == 0 {
 		msg := "could not fetch a result from YouTube"
-		log.Printf("%s; response.Items: %v", msg, playlists)
+		log.Printf("%s; response.Items: %v", msg, response.Items)
 		return nil, errors.New(msg)
 	}
 
-	return playlists, nil
+	return response.Items, nil
 }
 
 // Get channels metadata, provided channel ids.
@@ -40,14 +39,13 @@ func (s *Service) GetChannels(channelIDs ...string) ([]*youtube.Channel, error) 
 		return nil, errors.New(msg)
 	}
 
-	var channels []*youtube.Channel = response.Items
-	if len(channels) == 0 {
+	if len(response.Items) == 0 {
 		msg := "could not fetch a result from YouTube"
-		log.Printf("%s; response.Items: %v", msg, channels)
+		log.Printf("%s; response.Items: %v", msg, response.Items)
 		return nil, errors.New(msg)
 	}
 
-	return channels, nil
+	return response.Items, nil
 }
 
 // Create source object
