@@ -54,6 +54,7 @@ type Post struct {
 }
 
 type Posts struct {
+	Title    string
 	Items    []Post
 	TotalNum int
 	TimeTook string

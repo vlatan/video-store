@@ -70,13 +70,19 @@ const getCategoryPostsQuery = `
 `
 
 const getSourcePostsQuery = `
-	SELECT video_id, title, thumbnails, (
-		SELECT COUNT(*) FROM post_like
-		WHERE post_like.post_id = post.id
-	) AS likes FROM post 
-	WHERE playlist_db_id = (SELECT id FROM playlist WHERE playlist_id = $1) 
+	SELECT 
+		p.title AS playlist_title, 
+		post.video_id, 
+		post.title, 
+		post.thumbnails,
+		COUNT(pl.id) AS likes
+	FROM post
+	JOIN playlist AS p ON post.playlist_db_id = p.id
+	LEFT JOIN post_like AS pl ON pl.post_id = post.id
+	WHERE p.playlist_id = $1
+	GROUP BY p.title, post.id, post.video_id, post.title, post.thumbnails
 	ORDER BY %s
-	LIMIT $2 OFFSET $3
+	LIMIT $2 OFFSET $3;
 `
 
 const searchPostsQuery = `

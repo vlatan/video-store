@@ -170,18 +170,8 @@ func (r *Repository) GetSourcePosts(
 	playlistID,
 	orderBy string,
 	page int,
-) ([]models.Post, error) {
-
-	limit := r.config.PostsPerPage
-	offset := (page - 1) * limit
-
-	order := "upload_date DESC"
-	if orderBy == "likes" {
-		order = "likes DESC, " + order
-	}
-
-	query := fmt.Sprintf(getSourcePostsQuery, order)
-	return r.queryPosts(ctx, query, playlistID, limit, offset)
+) (*models.Posts, error) {
+	return r.queryTaxonomyPosts(ctx, getSourcePostsQuery, playlistID, orderBy, page)
 }
 
 // Get posts based on a user search query

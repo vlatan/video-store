@@ -1,5 +1,6 @@
 * Sources
-  Need the source title on source page 
+
+* When inserting a post I need to populate the playlist_db_id too if any.
 
 * Pages
 * Admin (get users with pagination)

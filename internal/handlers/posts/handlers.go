@@ -172,7 +172,7 @@ func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
 		redisKey += ":likes"
 	}
 
-	var posts []models.Post
+	var posts = &models.Posts{}
 	err := redis.GetItems(
 		!data.IsCurrentUserAdmin(),
 		r.Context(),
@@ -180,7 +180,7 @@ func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
 		redisKey,
 		s.config.CacheTimeout,
 		&posts,
-		func() ([]models.Post, error) {
+		func() (*models.Posts, error) {
 			return s.postsRepo.GetSourcePosts(r.Context(), sourceID, orderBy, page)
 		},
 	)
@@ -195,7 +195,7 @@ func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(posts) == 0 {
+	if len(posts.Items) == 0 {
 		log.Printf("Fetched zero posts on URI '%s'", r.RequestURI)
 		if page > 1 {
 			s.tm.JSONError(w, r, http.StatusNotFound)
@@ -208,13 +208,12 @@ func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
 	// If not the first page return JSON
 	if page > 1 {
 		time.Sleep(time.Millisecond * 400)
-		s.tm.WriteJSON(w, r, posts)
+		s.tm.WriteJSON(w, r, posts.Items)
 		return
 	}
 
-	data.Posts = &models.Posts{}
-	data.Posts.Items = posts
-	// data.Title = category.Name
+	data.Posts = posts
+	data.Title = data.Posts.Title
 	s.tm.RenderHTML(w, r, "source", data)
 }
 
