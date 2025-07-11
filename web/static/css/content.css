@@ -10,16 +10,19 @@
     grid-template-columns: repeat(3, 1fr);
   }
 }
+
 @media screen and (max-width: 700px) {
   .scroll-content {
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
 @media screen and (max-width: 360px) {
   .scroll-content {
     grid-template-columns: 1fr;
   }
 }
+
 .video-block {
   position: relative;
 }
@@ -87,10 +90,12 @@ h2.video-title {
   0% {
     transform: rotate(0deg);
   }
+
   100% {
     transform: rotate(360deg);
   }
 }
+
 /* ################# Specific to User Library ################# */
 .remove-option {
   position: absolute;

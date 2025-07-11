@@ -1,6 +1,7 @@
-# Project factual-docs
+# Factual Docs (Go)
 
-One Paragraph of project description goes here
+YouTube clone that maintains itself by pulling from documentary channels on YouTube.
+
 
 ## Getting Started
 

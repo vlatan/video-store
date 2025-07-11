@@ -1,19 +1,23 @@
 package utils
 
 import (
+	"database/sql"
 	"fmt"
 	"net/http"
 	"net/url"
 	"path"
 	"strconv"
+	"strings"
 )
 
 type contextKey struct {
 	name string
 }
 
+// Universal context key to get the user from context
 var UserContextKey = contextKey{name: "user"}
 
+// Favicons used in the website
 var Favicons = []string{
 	"/android-chrome-192x192.png",
 	"/android-chrome-512x512.png",
@@ -75,4 +79,27 @@ func GetPageNum(r *http.Request) (page int) {
 	}
 
 	return page
+}
+
+// First letter to uppercase
+func Capitalize(s string) string {
+	if s == "" {
+		return s
+	}
+	return strings.ToUpper(s[:1]) + s[1:]
+}
+
+// Helper function to convert string pointer or empty string to sql.NullString
+func NullString(s *string) sql.NullString {
+	if s == nil || *s == "" {
+		return sql.NullString{Valid: false}
+	}
+	return sql.NullString{String: *s, Valid: true}
+}
+
+func PtrToString(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
 }

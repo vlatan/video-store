@@ -8,6 +8,13 @@ import (
 	"time"
 )
 
+// The response from the Genai API
+type GenaiResponse struct {
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Category    string `json:"category"`
+}
+
 // Flash message object to store to session for the next page
 type FlashMessage struct {
 	Message  string
@@ -21,21 +28,39 @@ type HTMLErrorData struct {
 	Text    string
 }
 
+type FormGroup struct {
+	Label       string
+	Placeholder string
+	Value       string
+}
+
+func (f *FormGroup) IsEmpty() bool {
+	return f.Label == "" && f.Placeholder == ""
+}
+
+type Form struct {
+	Legend  string
+	Content FormGroup
+	Error   *FlashMessage
+}
+
 // Data struct to pass to templates
 type TemplateData struct {
-	StaticFiles   static.StaticFiles
-	Config        *config.Config
-	Title         string
-	CurrentPost   *Post
-	CurrentUser   *User
-	CurrentURI    string
-	CanonicalURL  string
-	Posts         Posts
+	StaticFiles  static.StaticFiles
+	Config       *config.Config
+	Title        string
+	CurrentPost  *Post
+	CurrentUser  *User
+	CurrentURI   string
+	CanonicalURL string
+	*Posts
+	Sources       []Source
 	Categories    []Category
 	FlashMessages []*FlashMessage
 	SearchQuery   string
 	HTMLErrorData *HTMLErrorData
 	CSRFField     template.HTML
+	*Form
 }
 
 // Check if current user is admin

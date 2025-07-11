@@ -153,3 +153,20 @@ if (currentPath !== privacyPath && acceptCookies !== 'true') {
         snackbar.remove();
     });
 }
+
+
+// ==========================================================================
+// Form
+// ==========================================================================
+
+
+const formSubmit = document.querySelector('.form-button');
+const formSpinner = document.querySelector('.submit-spinner');
+
+if (formSubmit) {
+    formSubmit.addEventListener('click', () => {
+        if (formSpinner) {
+            formSpinner.classList.add('show')
+        }
+    });
+}

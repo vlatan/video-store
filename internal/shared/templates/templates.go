@@ -27,7 +27,7 @@ const content = "templates/content.html"
 const partials = "templates/partials"
 const sitemaps = "templates/sitemaps"
 
-var needsContent = []string{"home", "search", "category"}
+var needsContent = []string{"home", "search", "category", "source"}
 
 type Service interface {
 	// Create new template data

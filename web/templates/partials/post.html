@@ -10,12 +10,12 @@
 <meta property='og:title' content='{{ .Title }}'>
 <meta property='og:type' content='video.movie'>
 <meta property='og:url' content='{{ .CanonicalURL }}'>
-<meta property='og:image' content='{{ .CurrentPost.Thumbnail.URL }}'>
-<meta name='thumbnail' content='{{ .CurrentPost.Thumbnail.URL }}'>
+<meta property='og:image' content='{{ .CurrentPost.Thumbnail.Url  }}'>
+<meta name='thumbnail' content='{{ .CurrentPost.Thumbnail.Url  }}'>
 
 <meta name="twitter:title" content="{{ .Title }}">
 <meta property="twitter:url" content="{{ .CanonicalURL }}">
-<meta name="twitter:image" content="{{ .CurrentPost.Thumbnail.URL }}">
+<meta name="twitter:image" content="{{ .CurrentPost.Thumbnail.Url  }}">
 
 {{ if .CurrentPost.MetaDesc }}
 <meta name='description' content='{{ .CurrentPost.MetaDesc }}.'>
@@ -30,19 +30,19 @@
 
 {{ define "content" }}
 <article class="media-content" itemscope itemtype="https://schema.org/Movie">
-	<meta itemprop="image" content="{{ .CurrentPost.Thumbnail.URL }}">
+	<meta itemprop="image" content="{{ .CurrentPost.Thumbnail.Url  }}">
 	<meta itemprop="genre" content="Documentary">
 	<div class="video-content">
 		<div class="player" itemprop="video" itemscope itemtype="https://schema.org/VideoObject">
 			<meta itemprop="name" content="{{ .CurrentPost.Title }}">
-			<meta itemprop="thumbnailUrl" content="{{ .CurrentPost.Thumbnail.URL }}">
+			<meta itemprop="thumbnailUrl" content="{{ .CurrentPost.Thumbnail.Url  }}">
 			<meta itemprop="embedUrl" content="https://www.youtube-nocookie.com/embed/{{ .CurrentPost.VideoID }}">
 			{{ if .CurrentPost.MetaDesc }}
 			<meta itemprop="description" content="{{ .CurrentPost.MetaDesc }}.">
 			{{ end }}
 			<meta itemprop="uploadDate" content='{{ .CurrentPost.UploadDate.Format "2006-01-02T15:04:05Z07:00" }}'>
 			<div class="player-content" id="{{ .CurrentPost.VideoID }}">
-				<img alt="{{ .CurrentPost.Title }}" src="{{ .CurrentPost.Thumbnail.URL }}"
+				<img alt="{{ .CurrentPost.Title }}" src="{{ .CurrentPost.Thumbnail.Url  }}"
 					srcset="{{ .CurrentPost.Srcset }}">
 				<div class="play"></div>
 			</div>
@@ -131,7 +131,7 @@
 		<div class="related_videos">
 			{{ range .CurrentPost.RelatedPosts }}
 			<a href="/video/{{ .VideoID }}/" class="related-video">
-				<img class="related-img" src="{{ .Thumbnail.URL }}" width="{{ .Thumbnail.Width }}"
+				<img class="related-img" src="{{ .Thumbnail.Url  }}" width="{{ .Thumbnail.Width }}"
 					height="{{ .Thumbnail.Height }}" alt="{{ .Title }}">
 				<h2 class="related-post-title">
 					{{ .Title }}
