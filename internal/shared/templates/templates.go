@@ -11,7 +11,6 @@ import (
 	"html/template"
 	"io/fs"
 	"log"
-	"maps"
 	"net/http"
 	"path/filepath"
 	"regexp"
@@ -56,7 +55,12 @@ const partials = "templates/partials"
 const sitemaps = "templates/sitemaps"
 
 // Which templates need content
-var needsContent = []string{"home", "search", "category", "source"}
+var needsContent = []string{
+	"home.html",
+	"search.html",
+	"category.html",
+	"source.html",
+}
 
 var validXML = regexp.MustCompile("[/+]xml$")
 
@@ -78,12 +82,8 @@ func New(
 		m.AddFunc("text/html", html.Minify)
 		m.AddFuncRegexp(validXML, xml.Minify)
 
-		templates := parseHTMLTemplates(m)
-		// Copy sitemaps templates to main template map
-		maps.Copy(templates, parseXMLTemplates(m))
-
 		tmInstance = &service{
-			templates: templates,
+			templates: parseTemplates(m),
 			rdb:       rdb,
 			config:    config,
 			store:     store,
@@ -97,7 +97,7 @@ func New(
 }
 
 // Parse the templates and create a template map
-func parseHTMLTemplates(m *minify.M) templateMap {
+func parseTemplates(m *minify.M) templateMap {
 
 	tm := make(templateMap)
 	baseTemplate := template.Must(parseFiles(m, nil, base))
@@ -118,15 +118,8 @@ func parseHTMLTemplates(m *minify.M) templateMap {
 			return nil
 		}
 
-		// Clone the base
-		baseTmpl, err := baseTemplate.Clone()
-		if err != nil {
-			log.Fatalf("couldn't clone the base '%s' template", base)
-		}
-
 		// Extract the template name
 		name := filepath.Base(path)
-		name = name[:len(name)-len(filepath.Ext(name))]
 
 		// Include the "content" if needed
 		part := []string{path}
@@ -134,53 +127,27 @@ func parseHTMLTemplates(m *minify.M) templateMap {
 			part = append(part, content)
 		}
 
+		// Clone the base if needed
+		var baseTmpl *template.Template
+		if !strings.Contains(path, "sitemaps") {
+			baseTmpl, err = baseTemplate.Clone()
+			if err != nil {
+				log.Fatalf("couldn't clone the base '%s' template", base)
+			}
+		}
+
 		tm[name] = template.Must(parseFiles(m, baseTmpl, part...))
-
 		return nil
 	}
 
-	// Walk the directory and parse each template
+	// Walk the directory and parse each template in partials
 	if err := fs.WalkDir(web.Files, partials, walkDirFunc); err != nil {
-		log.Println(err)
+		log.Fatal(err)
 	}
 
-	return tm
-}
-
-// Parse XML templates
-func parseXMLTemplates(m *minify.M) templateMap {
-
-	tm := make(templateMap)
-
-	// Function used to process each file/dir in the root, including the root
-	walkDirFunc := func(path string, info fs.DirEntry, err error) error {
-
-		// The err argument reports an error related to path,
-		// signaling that WalkDir will not walk into that directory.
-		// Returning back the error will cause WalkDir to stop walking the entire tree.
-		// https://pkg.go.dev/io/fs#WalkDirFunc
-		if err != nil {
-			return err
-		}
-
-		// Skip directories
-		if info.IsDir() {
-			return nil
-		}
-
-		// Extract the template name
-		name := filepath.Base(path)
-		name = name[:len(name)-len(filepath.Ext(name))]
-
-		// We do not need the base, just one file to parse
-		tm[name] = template.Must(parseFiles(m, nil, path))
-
-		return nil
-	}
-
-	// Walk the directory and parse each template
+	// Walk the directory and parse each template in sitemaps
 	if err := fs.WalkDir(web.Files, sitemaps, walkDirFunc); err != nil {
-		log.Println(err)
+		log.Fatal(err)
 	}
 
 	return tm

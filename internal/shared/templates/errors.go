@@ -18,7 +18,7 @@ type JSONErrorData struct {
 func (s *service) HTMLError(w http.ResponseWriter, r *http.Request, statusCode int, data *models.TemplateData) {
 
 	// Check for the error template
-	tmpl, exists := s.templates["error"]
+	tmpl, exists := s.templates["error.html"]
 
 	if !exists {
 		log.Printf("Could not find the 'error' template on URI '%s'", r.RequestURI)

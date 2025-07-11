@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+{{ .XMLDeclaration }}
 <xsl:stylesheet version="1.0"
                 xmlns:html="http://www.w3.org/TR/REC-html40"
                 xmlns:sitemap="http://www.sitemaps.org/schemas/sitemap/0.9"
