@@ -37,6 +37,7 @@ func (r *Repository) InsertPost(ctx context.Context, post *models.Post) (int64, 
 	if err != nil {
 		return 0, err
 	}
+
 	// Execute the query
 	return r.db.Exec(
 		ctx,
@@ -149,25 +150,23 @@ func (r *Repository) GetCategoryPosts(
 	categorySlug,
 	orderBy string,
 	page int,
-) ([]models.Post, error) {
+) (*models.Posts, error) {
+	return r.queryTaxonomyPosts(ctx, getCategoryPostsQuery, categorySlug, orderBy, page)
+}
 
-	limit := r.config.PostsPerPage
-	offset := (page - 1) * limit
-
-	order := "upload_date DESC"
-	if orderBy == "likes" {
-		order = "likes DESC, " + order
-	}
-
-	query := fmt.Sprintf(getCategoryPostsQuery, order)
-	return r.queryPosts(ctx, query, categorySlug, limit, offset)
+// Get a limited number of posts from one category with offset
+func (r *Repository) GetSourcePosts(
+	ctx context.Context,
+	playlistID,
+	orderBy string,
+	page int,
+) (*models.Posts, error) {
+	return r.queryTaxonomyPosts(ctx, getSourcePostsQuery, playlistID, orderBy, page)
 }
 
 // Get posts based on a user search query
 // Transform the user query into two queries with words separated by '&' and '|'
 func (r *Repository) SearchPosts(ctx context.Context, searchTerm string, limit, offset int) (posts models.Posts, err error) {
-
-	// andQuery, orQuery := normalizeSearchQuery(searchQuery)
 
 	// Get rows from DB
 	rows, err := r.db.Query(ctx, searchPostsQuery, searchTerm, limit, offset)

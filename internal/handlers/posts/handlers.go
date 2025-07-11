@@ -71,6 +71,7 @@ func (s *Service) HomeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	data.Posts = &models.Posts{}
 	data.Posts.Items = posts
 	s.tm.RenderHTML(w, r, "home", data)
 }
@@ -86,17 +87,9 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 	data := s.tm.NewData(w, r)
 	data.CurrentUser = s.auth.GetUserFromContext(r)
 
-	// Check if the category is valid
-	category, valid := isValidCategory(data.Categories, slug)
-	if !valid {
-		log.Printf("Asked for invalid category '%s' on URI '%s'", slug, r.RequestURI)
-		s.tm.HTMLError(w, r, http.StatusNotFound, data)
-		return
-	}
-
 	// Get page number from a query param
 	page := utils.GetPageNum(r)
-	redisKey := fmt.Sprintf("%s:posts:page:%d", slug, page)
+	redisKey := fmt.Sprintf("category:%s:posts:page:%d", slug, page)
 
 	// Get the order_by query param if any
 	orderBy := r.URL.Query().Get("order_by")
@@ -104,7 +97,7 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 		redisKey += ":likes"
 	}
 
-	var posts []models.Post
+	var posts = &models.Posts{}
 	err := redis.GetItems(
 		!data.IsCurrentUserAdmin(),
 		r.Context(),
@@ -112,7 +105,7 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 		redisKey,
 		s.config.CacheTimeout,
 		&posts,
-		func() ([]models.Post, error) {
+		func() (*models.Posts, error) {
 			return s.postsRepo.GetCategoryPosts(r.Context(), slug, orderBy, page)
 		},
 	)
@@ -127,7 +120,7 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(posts) == 0 {
+	if len(posts.Items) == 0 {
 		log.Printf("Fetched zero posts on URI '%s'", r.RequestURI)
 		if page > 1 {
 			s.tm.JSONError(w, r, http.StatusNotFound)
@@ -140,13 +133,79 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 	// if not the first page return JSON
 	if page > 1 {
 		time.Sleep(time.Millisecond * 400)
-		s.tm.WriteJSON(w, r, posts)
+		s.tm.WriteJSON(w, r, posts.Items)
 		return
 	}
 
-	data.Posts.Items = posts
-	data.Title = category.Name
+	data.Posts = posts
+	data.Title = data.Posts.Title
 	s.tm.RenderHTML(w, r, "category", data)
+}
+
+// Handle posts in a certain source
+func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
+
+	// Get category slug from URL
+	sourceID := r.PathValue("source")
+
+	// Generate template data (it gets all the categories too)
+	// This is probably wasteful for non-existing category
+	data := s.tm.NewData(w, r)
+	data.CurrentUser = s.auth.GetUserFromContext(r)
+
+	// Get page number from a query param
+	page := utils.GetPageNum(r)
+	redisKey := fmt.Sprintf("source:%s:posts:page:%d", sourceID, page)
+
+	// Get the order_by query param if any
+	orderBy := r.URL.Query().Get("order_by")
+	if orderBy == "likes" {
+		redisKey += ":likes"
+	}
+
+	var posts = &models.Posts{}
+	err := redis.GetItems(
+		!data.IsCurrentUserAdmin(),
+		r.Context(),
+		s.rdb,
+		redisKey,
+		s.config.CacheTimeout,
+		&posts,
+		func() (*models.Posts, error) {
+			return s.postsRepo.GetSourcePosts(r.Context(), sourceID, orderBy, page)
+		},
+	)
+
+	if err != nil {
+		log.Printf("Was unabale to fetch posts on URI '%s': %v", r.RequestURI, err)
+		if page > 1 {
+			s.tm.JSONError(w, r, http.StatusInternalServerError)
+			return
+		}
+		s.tm.HTMLError(w, r, http.StatusInternalServerError, data)
+		return
+	}
+
+	if len(posts.Items) == 0 {
+		log.Printf("Fetched zero posts on URI '%s'", r.RequestURI)
+		if page > 1 {
+			s.tm.JSONError(w, r, http.StatusNotFound)
+			return
+		}
+		s.tm.HTMLError(w, r, http.StatusNotFound, data)
+		return
+	}
+
+	// If not the first page return JSON
+	if page > 1 {
+		time.Sleep(time.Millisecond * 400)
+		s.tm.WriteJSON(w, r, posts.Items)
+		return
+	}
+
+	data.Posts = posts
+	data.Title = data.Posts.Title
+	s.tm.RenderHTML(w, r, "source", data)
 }
 
 // Handle the requests from the searchform
@@ -212,8 +271,9 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data.Posts = posts
+	data.Posts = &posts
 	data.Posts.TimeTook = fmt.Sprintf("%.2f", end.Seconds())
+	data.Title = "Search"
 	s.tm.RenderHTML(w, r, "search", data)
 }
 
@@ -225,9 +285,11 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 	data.CurrentUser = s.auth.GetUserFromContext(r)
 
 	// Populate needed data for an empty form
+	data.Form = &models.Form{}
 	data.Form.Legend = "New Video"
 	data.Form.Content.Label = "Post YouTube Video URL"
 	data.Form.Content.Placeholder = "Video URL here..."
+	data.Title = "Add New Video"
 
 	switch r.Method {
 	case "GET":
@@ -293,7 +355,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Create post object
-		post := s.yt.CreatePost(metadata[0], "", "YouTube")
+		post := s.yt.NewYouTubePost(metadata[0], "")
 		post.UserID = data.CurrentUser.ID
 
 		// Generate content using Gemini
@@ -307,6 +369,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 			post.Category = &models.Category{Name: gc.Category}
 		}
 
+		// Insert the video
 		rowsAffected, err := s.postsRepo.InsertPost(r.Context(), post)
 		if err != nil || rowsAffected == 0 {
 			log.Printf("Could not insert the video '%s' in DB: %v", post.VideoID, err)
@@ -316,8 +379,10 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		// Check out the video
 		redirectTo := fmt.Sprintf("/video/%s/", videoID)
 		http.Redirect(w, r, redirectTo, http.StatusFound)
+
 	default:
 		s.tm.HTMLError(w, r, http.StatusMethodNotAllowed, data)
 	}
@@ -325,7 +390,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 
 // Handle a single post
 func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
-	// Get category slug from URL
+	// Get video id from URL path
 	videoID := r.PathValue("video")
 
 	// Generate the default data
