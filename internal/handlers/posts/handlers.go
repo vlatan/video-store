@@ -289,6 +289,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 	data.Form.Legend = "New Video"
 	data.Form.Content.Label = "Post YouTube Video URL"
 	data.Form.Content.Placeholder = "Video URL here..."
+	data.Title = "Add New Video"
 
 	switch r.Method {
 	case "GET":

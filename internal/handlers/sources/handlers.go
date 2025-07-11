@@ -59,6 +59,7 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 	data.Form.Legend = "New Playlist"
 	data.Form.Content.Label = "Post YouTube Playlist URL"
 	data.Form.Content.Placeholder = "Playlist URL here..."
+	data.Title = "Add New Source"
 
 	switch r.Method {
 	case "GET":
