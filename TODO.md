@@ -1,6 +1,8 @@
 
 * Sitemap
+  Minify the base and content as starting templates and proceed to minify the rest.
   Solve +html in RenderHTML, maybe separate function for RenderXML, RenderXSL
+  Maybe use the names including the extension.
 
 * Pages
 * Admin (get users with pagination)
