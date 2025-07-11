@@ -30,19 +30,6 @@ const insertPostQuery = `
 	)
 `
 
-const getPostsQuery = `
-	SELECT
-		video_id, 
-		title, 
-		thumbnails,
-		COUNT(pl.id) AS likes
-	FROM post
-	LEFT JOIN post_like AS pl ON pl.post_id = post.id
-	GROUP BY post.id
-	ORDER BY %s
-	LIMIT $1 OFFSET $2
-`
-
 const getSinglePostQuery = `
 	SELECT 
 		post.id,
@@ -61,6 +48,19 @@ const getSinglePostQuery = `
 	LEFT JOIN category ON category.id = post.category_id
 	WHERE video_id = $1
 	GROUP BY post.id, category.id
+`
+
+const getPostsQuery = `
+	SELECT
+		video_id, 
+		title, 
+		thumbnails,
+		COUNT(pl.id) AS likes
+	FROM post
+	LEFT JOIN post_like AS pl ON pl.post_id = post.id
+	GROUP BY post.id
+	ORDER BY %s
+	LIMIT $1 OFFSET $2
 `
 
 const getCategoryPostsQuery = `
