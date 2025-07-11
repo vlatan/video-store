@@ -16,7 +16,7 @@ func (s *service) HTMLError(w http.ResponseWriter, r *http.Request, statusCode i
 	tmpl, exists := s.templates["error.html"]
 
 	if !exists {
-		log.Printf("Could not find the 'error' template on URI '%s'", r.RequestURI)
+		log.Printf("Could not find the 'error.html' template on URI '%s'", r.RequestURI)
 		http.Error(w, http.StatusText(statusCode), statusCode)
 		return
 	}
