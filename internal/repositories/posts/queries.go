@@ -31,10 +31,14 @@ const insertPostQuery = `
 `
 
 const getPostsQuery = `
-	SELECT video_id, title, thumbnails, (
-		SELECT COUNT(*) FROM post_like
-		WHERE post_like.post_id = post.id
-	) AS likes FROM post
+	SELECT
+		video_id, 
+		title, 
+		thumbnails,
+		COUNT(pl.id) AS likes
+	FROM post
+	LEFT JOIN post_like AS pl ON pl.post_id = post.id
+	GROUP BY post.id
 	ORDER BY %s
 	LIMIT $1 OFFSET $2
 `
@@ -44,19 +48,19 @@ const getSinglePostQuery = `
 		post.id,
 		video_id,
 		title, 
-		thumbnails, (
-			SELECT COUNT(*) FROM post_like
-			WHERE post_like.post_id = post.id
-		) AS likes, 
+		thumbnails,
+		COUNT(pl.id) AS likes,
 		description,
 		short_description,
-		slug AS category_slug,
-		name AS category_name,
+		category.slug AS category_slug,
+		category.name AS category_name,
 		upload_date,
 		duration
 	FROM post 
-	LEFT JOIN category ON post.category_id = category.id
-	WHERE video_id = $1 
+	LEFT JOIN post_like AS pl ON pl.post_id = post.id
+	LEFT JOIN category ON category.id = post.category_id
+	WHERE video_id = $1
+	GROUP BY post.id, category.id
 `
 
 const getCategoryPostsQuery = `
