@@ -60,13 +60,19 @@ const getSinglePostQuery = `
 `
 
 const getCategoryPostsQuery = `
-	SELECT video_id, title, thumbnails, (
-		SELECT COUNT(*) FROM post_like
-		WHERE post_like.post_id = post.id
-	) AS likes FROM post 
-	WHERE category_id = (SELECT id FROM category WHERE slug = $1) 
+	SELECT 
+		c.name AS category_title, 
+		post.video_id, 
+		post.title, 
+		post.thumbnails,
+		COUNT(pl.id) AS likes
+	FROM post
+	JOIN category AS c ON c.id = post.category_id 
+	LEFT JOIN post_like AS pl ON pl.post_id = post.id
+	WHERE c.slug = $1
+	GROUP BY c.id, post.id
 	ORDER BY %s
-	LIMIT $2 OFFSET $3
+	LIMIT $2 OFFSET $3;
 `
 
 const getSourcePostsQuery = `

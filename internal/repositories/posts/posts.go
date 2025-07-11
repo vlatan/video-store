@@ -150,18 +150,8 @@ func (r *Repository) GetCategoryPosts(
 	categorySlug,
 	orderBy string,
 	page int,
-) ([]models.Post, error) {
-
-	limit := r.config.PostsPerPage
-	offset := (page - 1) * limit
-
-	order := "upload_date DESC"
-	if orderBy == "likes" {
-		order = "likes DESC, " + order
-	}
-
-	query := fmt.Sprintf(getCategoryPostsQuery, order)
-	return r.queryPosts(ctx, query, categorySlug, limit, offset)
+) (*models.Posts, error) {
+	return r.queryTaxonomyPosts(ctx, getCategoryPostsQuery, categorySlug, orderBy, page)
 }
 
 // Get a limited number of posts from one category with offset

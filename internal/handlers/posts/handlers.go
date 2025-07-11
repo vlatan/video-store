@@ -87,17 +87,9 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 	data := s.tm.NewData(w, r)
 	data.CurrentUser = s.auth.GetUserFromContext(r)
 
-	// Check if the category is valid
-	category, valid := isValidCategory(data.Categories, slug)
-	if !valid {
-		log.Printf("Asked for invalid category '%s' on URI '%s'", slug, r.RequestURI)
-		s.tm.HTMLError(w, r, http.StatusNotFound, data)
-		return
-	}
-
 	// Get page number from a query param
 	page := utils.GetPageNum(r)
-	redisKey := fmt.Sprintf("%s:posts:page:%d", slug, page)
+	redisKey := fmt.Sprintf("category:%s:posts:page:%d", slug, page)
 
 	// Get the order_by query param if any
 	orderBy := r.URL.Query().Get("order_by")
@@ -105,7 +97,7 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 		redisKey += ":likes"
 	}
 
-	var posts []models.Post
+	var posts = &models.Posts{}
 	err := redis.GetItems(
 		!data.IsCurrentUserAdmin(),
 		r.Context(),
@@ -113,7 +105,7 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 		redisKey,
 		s.config.CacheTimeout,
 		&posts,
-		func() ([]models.Post, error) {
+		func() (*models.Posts, error) {
 			return s.postsRepo.GetCategoryPosts(r.Context(), slug, orderBy, page)
 		},
 	)
@@ -128,7 +120,7 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(posts) == 0 {
+	if len(posts.Items) == 0 {
 		log.Printf("Fetched zero posts on URI '%s'", r.RequestURI)
 		if page > 1 {
 			s.tm.JSONError(w, r, http.StatusNotFound)
@@ -141,13 +133,12 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 	// if not the first page return JSON
 	if page > 1 {
 		time.Sleep(time.Millisecond * 400)
-		s.tm.WriteJSON(w, r, posts)
+		s.tm.WriteJSON(w, r, posts.Items)
 		return
 	}
 
-	data.Posts = &models.Posts{}
-	data.Posts.Items = posts
-	data.Title = category.Name
+	data.Posts = posts
+	data.Title = data.Posts.Title
 	s.tm.RenderHTML(w, r, "category", data)
 }
 
