@@ -46,16 +46,16 @@ const getPostsQuery = `
 const getSinglePostQuery = `
 	SELECT 
 		post.id,
-		video_id,
-		title, 
-		thumbnails,
+		post.video_id,
+		post.title, 
+		post.thumbnails,
 		COUNT(pl.id) AS likes,
-		description,
-		short_description,
-		category.slug AS category_slug,
-		category.name AS category_name,
-		upload_date,
-		duration
+		post.description,
+		post.short_description,
+		category.slug,
+		category.name,
+		post.upload_date,
+		post.duration
 	FROM post 
 	LEFT JOIN post_like AS pl ON pl.post_id = post.id
 	LEFT JOIN category ON category.id = post.category_id
