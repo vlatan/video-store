@@ -16,8 +16,15 @@ type JSONErrorData struct {
 
 // Write HTML error to response
 func (s *service) HTMLError(w http.ResponseWriter, r *http.Request, statusCode int, data *models.TemplateData) {
-	// Stream status code early
-	w.WriteHeader(statusCode)
+
+	// Check for the error template
+	tmpl, exists := s.templates["error"]
+
+	if !exists {
+		log.Printf("Could not find the 'error' template on URI '%s'", r.RequestURI)
+		http.Error(w, http.StatusText(statusCode), statusCode)
+		return
+	}
 
 	// Craft template data
 	data.HTMLErrorData = &models.HTMLErrorData{
@@ -39,20 +46,16 @@ func (s *service) HTMLError(w http.ResponseWriter, r *http.Request, statusCode i
 		data.HTMLErrorData.Text = "Sorry about that. We're working on fixing this."
 	}
 
-	tmpl, exists := s.templates["error"]
-
-	if !exists {
-		log.Printf("Could not find the 'error' template on URI '%s'", r.RequestURI)
-		http.Error(w, http.StatusText(statusCode), statusCode)
-		return
-	}
-
+	// Write template to buffer
 	var buf bytes.Buffer
 	if err := tmpl.ExecuteTemplate(&buf, "error.html", data); err != nil {
 		log.Printf("Failed to execute the HTML template 'error' on URI '%s': %v", r.RequestURI, err)
 		http.Error(w, http.StatusText(statusCode), statusCode)
 		return
 	}
+
+	// Set status code before writing the response
+	w.WriteHeader(statusCode)
 
 	if _, err := buf.WriteTo(w); err != nil {
 		// Too late for recovery here, just log the error
