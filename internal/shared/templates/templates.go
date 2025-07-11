@@ -7,27 +7,23 @@ import (
 	"factual-docs/internal/shared/config"
 	"factual-docs/internal/shared/redis"
 	"factual-docs/web"
+	"fmt"
 	"html/template"
 	"io/fs"
 	"log"
 	"maps"
 	"net/http"
 	"path/filepath"
+	"regexp"
 	"slices"
+	"strings"
 	"sync"
 
 	"github.com/gorilla/sessions"
 	"github.com/tdewolff/minify"
 	"github.com/tdewolff/minify/html"
+	"github.com/tdewolff/minify/xml"
 )
-
-// These are files/dirs within the embedded filesystem 'web'
-const base = "templates/base.html"
-const content = "templates/content.html"
-const partials = "templates/partials"
-const sitemaps = "templates/sitemaps"
-
-var needsContent = []string{"home", "search", "category", "source"}
 
 type Service interface {
 	// Create new template data
@@ -53,6 +49,17 @@ type service struct {
 	catRepo   *categories.Repository
 }
 
+// These are files/dirs within the embedded filesystem 'web'
+const base = "templates/base.html"
+const content = "templates/content.html"
+const partials = "templates/partials"
+const sitemaps = "templates/sitemaps"
+
+// Which templates need content
+var needsContent = []string{"home", "search", "category", "source"}
+
+var validXML = regexp.MustCompile("[/+]xml$")
+
 var (
 	tmInstance *service
 	once       sync.Once
@@ -69,6 +76,7 @@ func New(
 	once.Do(func() {
 		m := minify.New()
 		m.AddFunc("text/html", html.Minify)
+		m.AddFuncRegexp(validXML, xml.Minify)
 
 		templates := parseHTMLTemplates(m)
 		// Copy sitemaps templates to main template map
@@ -139,6 +147,7 @@ func parseHTMLTemplates(m *minify.M) templateMap {
 	return tm
 }
 
+// Parse XML templates
 func parseXMLTemplates(m *minify.M) templateMap {
 
 	tm := make(templateMap)
@@ -163,8 +172,8 @@ func parseXMLTemplates(m *minify.M) templateMap {
 		name := filepath.Base(path)
 		name = name[:len(name)-len(filepath.Ext(name))]
 
-		part := []string{path}
-		tm[name] = template.Must(parseFiles(m, nil, part...))
+		// We do not need the base, just one file to parse
+		tm[name] = template.Must(parseFiles(m, nil, path))
 
 		return nil
 	}
@@ -194,7 +203,23 @@ func parseFiles(m *minify.M, tmpl *template.Template, filepaths ...string) (*tem
 			tmpl = tmpl.New(name)
 		}
 
-		mb, err := m.Bytes("text/html", b)
+		// Get the file extension
+		var ext string = strings.Split(name, ".")[1]
+
+		// Set media type
+		var mediaType string
+		switch ext {
+		case "html":
+			mediaType = "text/html"
+		case "xml", "xsl":
+			mediaType = "text/xml"
+		}
+
+		if mediaType == "" {
+			return nil, fmt.Errorf("unknown media type: %s", fp)
+		}
+
+		mb, err := m.Bytes(mediaType, b)
 		if err != nil {
 			return nil, err
 		}

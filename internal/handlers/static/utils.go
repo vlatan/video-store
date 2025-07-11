@@ -38,24 +38,26 @@ func parseStaticFiles(m *minify.M, dir string) StaticFiles {
 			return err
 		}
 
-		// Get the fyle type
-		fileType := strings.Split(info.Name(), ".")[1]
+		// Get the file extension
+		ext := strings.Split(info.Name(), ".")[1]
 
 		// Set media type
 		var mediaType string
-		switch fileType {
+		switch ext {
 		case "css":
 			mediaType = "text/css"
 		case "js":
 			mediaType = "application/javascript"
 		}
 
+		if mediaType == "" {
+			return fmt.Errorf("unknown media type: %s", path)
+		}
+
 		// Minify the content (only CSS or JS)
-		if mediaType != "" {
-			b, err = m.Bytes(mediaType, b)
-			if err != nil {
-				return err
-			}
+		b, err = m.Bytes(mediaType, b)
+		if err != nil {
+			return err
 		}
 
 		// Create Etag as a hexadecimal md5 hash of the file content
