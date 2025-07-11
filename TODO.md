@@ -1,8 +1,3 @@
-* Sources
-  Use tax functions on category and maybe even on search
-
-* When inserting a post I need to populate the playlist_db_id too if any.
-
 * Pages
 * Admin (get users with pagination)
 * Sitemap

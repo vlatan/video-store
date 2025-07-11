@@ -22,11 +22,13 @@ const insertPostQuery = `
 		duration, 
 		upload_date, 
 		user_id,
-		category_id
+		category_id,
+		playlist_db_id
 	)
 	VALUES (
 		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NULLIF($11, 0),
-		(SELECT id FROM category WHERE name = $12)
+		(SELECT id FROM category WHERE name = $12),
+		(SELECT id FROM playlist WHERE playlist_id = $3::varchar(50))
 	)
 `
 
