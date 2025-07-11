@@ -69,8 +69,6 @@ func (s *service) HTMLError(w http.ResponseWriter, r *http.Request, statusCode i
 
 // Write JSON error to response
 func (s *service) JSONError(w http.ResponseWriter, r *http.Request, statusCode int) {
-	// Stream status code early
-	w.WriteHeader(statusCode)
 
 	// Craft data
 	data := JSONErrorData{
@@ -83,9 +81,13 @@ func (s *service) JSONError(w http.ResponseWriter, r *http.Request, statusCode i
 	if err != nil {
 		log.Printf("Failed to encode JSON 'error' response on URI '%s': %v", r.RequestURI, err)
 		http.Error(w, http.StatusText(statusCode), statusCode)
+		return
 	}
 
+	// Set status code before writing the response
+	w.WriteHeader(statusCode)
 	w.Header().Set("Content-Type", "application/json")
+
 	if _, err := w.Write(jsonData); err != nil {
 		// Too late for recovery here, just log the error
 		log.Printf("Failed to write JSON 'error' to response on URI '%s': %v", r.RequestURI, err)

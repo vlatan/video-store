@@ -1,7 +1,5 @@
 
 * Sitemap
-* Move static parse files in shared probably, leave only the handler in handlers
-
 * Pages
 * Admin (get users with pagination)
 * Cron
