@@ -9,11 +9,6 @@ import (
 	"strconv"
 )
 
-type JSONErrorData struct {
-	Error string `json:"error"`
-	Code  int    `json:"code"`
-}
-
 // Write HTML error to response
 func (s *service) HTMLError(w http.ResponseWriter, r *http.Request, statusCode int, data *models.TemplateData) {
 
@@ -71,7 +66,7 @@ func (s *service) HTMLError(w http.ResponseWriter, r *http.Request, statusCode i
 func (s *service) JSONError(w http.ResponseWriter, r *http.Request, statusCode int) {
 
 	// Craft data
-	data := JSONErrorData{
+	data := models.JSONErrorData{
 		Error: http.StatusText(statusCode),
 		Code:  statusCode,
 	}

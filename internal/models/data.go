@@ -28,6 +28,12 @@ type HTMLErrorData struct {
 	Text    string
 }
 
+// Specific data for the JSON response
+type JSONErrorData struct {
+	Error string `json:"error"`
+	Code  int    `json:"code"`
+}
+
 type FormGroup struct {
 	Label       string
 	Placeholder string
