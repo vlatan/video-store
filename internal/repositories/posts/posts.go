@@ -168,8 +168,6 @@ func (r *Repository) GetSourcePosts(
 // Transform the user query into two queries with words separated by '&' and '|'
 func (r *Repository) SearchPosts(ctx context.Context, searchTerm string, limit, offset int) (posts models.Posts, err error) {
 
-	// andQuery, orQuery := normalizeSearchQuery(searchQuery)
-
 	// Get rows from DB
 	rows, err := r.db.Query(ctx, searchPostsQuery, searchTerm, limit, offset)
 	if err != nil {
