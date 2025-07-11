@@ -273,6 +273,7 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	data.Posts = &posts
 	data.Posts.TimeTook = fmt.Sprintf("%.2f", end.Seconds())
+	data.Title = "Search"
 	s.tm.RenderHTML(w, r, "search", data)
 }
 
