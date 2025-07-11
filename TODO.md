@@ -1,3 +1,8 @@
+* Errors on failed custom error template you should serve simple text page because the status header was already sent
+
+* Parse files can't probably used on xml because of mb, err := m.Bytes("text/html", b)
+* Move static parse files in shared probably, leave only the handler in handlers
+
 * Pages
 * Admin (get users with pagination)
 * Sitemap

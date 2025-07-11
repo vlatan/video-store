@@ -48,7 +48,7 @@ func (s *service) HTMLError(w http.ResponseWriter, r *http.Request, statusCode i
 	}
 
 	var buf bytes.Buffer
-	if err := tmpl.ExecuteTemplate(&buf, "base.html", data); err != nil {
+	if err := tmpl.ExecuteTemplate(&buf, "error.html", data); err != nil {
 		log.Printf("Failed to execute the HTML template 'error' on URI '%s': %v", r.RequestURI, err)
 		http.Error(w, http.StatusText(statusCode), statusCode)
 		return

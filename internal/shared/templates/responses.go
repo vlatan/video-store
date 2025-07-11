@@ -39,7 +39,7 @@ func (s *service) RenderHTML(w http.ResponseWriter, r *http.Request, templateNam
 	}
 
 	var buf bytes.Buffer
-	if err := tmpl.ExecuteTemplate(&buf, "base.html", data); err != nil {
+	if err := tmpl.ExecuteTemplate(&buf, templateName+".html", data); err != nil {
 		log.Printf(
 			"Failed to execute the HTML template '%s' on URI '%s': %v",
 			templateName,
