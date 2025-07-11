@@ -1,5 +1,7 @@
 
 * Sitemap
+  Solve +html in RenderHTML, maybe separate function for RenderXML, RenderXSL
+
 * Pages
 * Admin (get users with pagination)
 * Cron
