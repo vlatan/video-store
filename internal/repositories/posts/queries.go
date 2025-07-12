@@ -97,6 +97,13 @@ const getSourcePostsQuery = `
 	LIMIT $2 OFFSET $3;
 `
 
+const getPostsByMonth = `
+	SELECT video_id, updated_at
+	FROM post
+	WHERE EXTRACT(YEAR FROM TIMESTAMP, upload_date) = $1
+	AND EXTRACT(MONTH FROM TIMESTAMP, upload_date) = $2
+`
+
 const searchPostsQuery = `
 	WITH search_terms AS (
 		SELECT
