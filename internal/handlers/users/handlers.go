@@ -46,3 +46,42 @@ func (s *Service) UserFavoritesHandler(w http.ResponseWriter, r *http.Request) {
 	data.Title = "Your Favorite Documentaries:"
 	s.tm.RenderHTML(w, r, "user_library.html", data)
 }
+
+// Users admin dashboard
+func (s *Service) AdminUsersHandler(w http.ResponseWriter, r *http.Request) {
+	// Get the page number from the request query param
+	page := utils.GetPageNum(r)
+
+	// Generate template data
+	data := s.tm.NewData(w, r)
+	data.CurrentUser = s.auth.GetUserFromContext(r)
+
+	users, err := s.usersRepo.GetUsers(r.Context(), page)
+
+	if err != nil {
+		log.Printf("Was unabale to fetch users on URI '%s': %v", r.RequestURI, err)
+		if page > 1 {
+			s.tm.JSONError(w, r, http.StatusInternalServerError)
+			return
+		}
+		s.tm.HTMLError(w, r, http.StatusInternalServerError, data)
+		return
+	}
+
+	if page > 1 && len(users) == 0 {
+		log.Printf("Fetched zero users on URI '%s'", r.RequestURI)
+		s.tm.JSONError(w, r, http.StatusNotFound)
+		return
+	}
+
+	// If not the first page return JSON
+	if page > 1 {
+		time.Sleep(time.Millisecond * 400)
+		s.tm.WriteJSON(w, r, users)
+		return
+	}
+
+	data.Users = users
+	data.Title = "Admin Dashboard"
+	s.tm.RenderHTML(w, r, "admin.html", data)
+}

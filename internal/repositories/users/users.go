@@ -79,29 +79,41 @@ func (r *Repository) GetUsers(ctx context.Context, page int) (users []models.Use
 
 	// Iterate over the rows
 	for rows.Next() {
+
 		var user models.User
-		var googleID string
-		var facebookID string
+
+		// All these are nullable in the DB, so we
+		// temp use pointers to accept NULL values
+		var googleID *string
+		var facebookID *string
+		var name *string
+		var email *string
+		var avatarURL *string
 
 		// Get user row data to destination
 		if err = rows.Scan(
 			&googleID,
 			&facebookID,
-			&user.Name,
-			&user.Email,
-			&user.AvatarURL,
-			user.LastSeen,
-			user.CreatedAt,
+			&name,
+			&email,
+			&avatarURL,
+			&user.LastSeen,
+			&user.CreatedAt,
 		); err != nil {
 			return users, err
 		}
 
-		user.Provider = "Google"
-		if facebookID != "" {
-			user.Provider = "Facebook"
+		user.Provider = "google"
+		if utils.PtrToString(facebookID) != "" {
+			user.Provider = "facebook"
 		}
 
-		// Include the processed post in the result
+		// Convert the pointers back to strings
+		user.Name = utils.PtrToString(name)
+		user.Email = utils.PtrToString(email)
+		user.AvatarURL = utils.PtrToString(avatarURL)
+
+		// Include the user in the result
 		users = append(users, user)
 	}
 

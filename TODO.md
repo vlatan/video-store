@@ -1,8 +1,9 @@
 
-* Users
-  List users in admin dash
+* Users in dashboard
   Get local avatars if ANY concurrently
-  Format dates on users dash if needed
+  Format dates on users dash
+  Adjust index to start at 1
+  Provide paginated view (scroll or pagination)
 
 * Pages
 
