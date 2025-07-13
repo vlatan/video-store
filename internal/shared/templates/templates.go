@@ -7,25 +7,22 @@ import (
 	"factual-docs/internal/shared/config"
 	"factual-docs/internal/shared/redis"
 	"factual-docs/web"
+	"fmt"
 	"html/template"
 	"io/fs"
 	"log"
 	"net/http"
 	"path/filepath"
+	"regexp"
 	"slices"
+	"strings"
 	"sync"
 
 	"github.com/gorilla/sessions"
 	"github.com/tdewolff/minify"
 	"github.com/tdewolff/minify/html"
+	"github.com/tdewolff/minify/xml"
 )
-
-// These are files/dirs within the embedded filesystem 'web'
-const base = "templates/base.html"
-const content = "templates/content.html"
-const partials = "templates/partials"
-
-var needsContent = []string{"home", "search", "category", "source"}
 
 type Service interface {
 	// Create new template data
@@ -51,6 +48,22 @@ type service struct {
 	catRepo   *categories.Repository
 }
 
+// These are files/dirs within the embedded filesystem 'web'
+const base = "templates/base.html"
+const content = "templates/content.html"
+const partials = "templates/partials"
+const sitemaps = "templates/sitemaps"
+
+// Which templates need content
+var needsContent = []string{
+	"home.html",
+	"search.html",
+	"category.html",
+	"source.html",
+}
+
+var validXML = regexp.MustCompile("[/+]xml$")
+
 var (
 	tmInstance *service
 	once       sync.Once
@@ -67,6 +80,7 @@ func New(
 	once.Do(func() {
 		m := minify.New()
 		m.AddFunc("text/html", html.Minify)
+		m.AddFuncRegexp(validXML, xml.Minify)
 
 		tmInstance = &service{
 			templates: parseTemplates(m),
@@ -104,15 +118,8 @@ func parseTemplates(m *minify.M) templateMap {
 			return nil
 		}
 
-		// Clone the base
-		baseTmpl, err := baseTemplate.Clone()
-		if err != nil {
-			log.Fatalf("couldn't clone the base '%s' template", base)
-		}
-
 		// Extract the template name
 		name := filepath.Base(path)
-		name = name[:len(name)-len(filepath.Ext(name))]
 
 		// Include the "content" if needed
 		part := []string{path}
@@ -120,14 +127,27 @@ func parseTemplates(m *minify.M) templateMap {
 			part = append(part, content)
 		}
 
-		tm[name] = template.Must(parseFiles(m, baseTmpl, part...))
+		// Clone the base if needed
+		var baseTmpl *template.Template
+		if !strings.Contains(path, "sitemaps") {
+			baseTmpl, err = baseTemplate.Clone()
+			if err != nil {
+				log.Fatalf("couldn't clone the base '%s' template", base)
+			}
+		}
 
+		tm[name] = template.Must(parseFiles(m, baseTmpl, part...))
 		return nil
 	}
 
-	// Walk the directory and parse each template
+	// Walk the directory and parse each template in partials
 	if err := fs.WalkDir(web.Files, partials, walkDirFunc); err != nil {
-		log.Println(err)
+		log.Fatal(err)
+	}
+
+	// Walk the directory and parse each template in sitemaps
+	if err := fs.WalkDir(web.Files, sitemaps, walkDirFunc); err != nil {
+		log.Fatal(err)
 	}
 
 	return tm
@@ -150,7 +170,23 @@ func parseFiles(m *minify.M, tmpl *template.Template, filepaths ...string) (*tem
 			tmpl = tmpl.New(name)
 		}
 
-		mb, err := m.Bytes("text/html", b)
+		// Get the file extension
+		var ext string = strings.Split(name, ".")[1]
+
+		// Set media type
+		var mediaType string
+		switch ext {
+		case "html":
+			mediaType = "text/html"
+		case "xml", "xsl":
+			mediaType = "text/xml"
+		}
+
+		if mediaType == "" {
+			return nil, fmt.Errorf("unknown media type: %s", fp)
+		}
+
+		mb, err := m.Bytes(mediaType, b)
 		if err != nil {
 			return nil, err
 		}

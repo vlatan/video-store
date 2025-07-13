@@ -43,7 +43,7 @@ func (s *Service) SourcesHandler(w http.ResponseWriter, r *http.Request) {
 
 	data.Sources = sources
 	data.Title = "Sources"
-	s.tm.RenderHTML(w, r, "sources", data)
+	s.tm.RenderHTML(w, r, "sources.html", data)
 
 }
 
@@ -64,7 +64,7 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
 		// Serve the page with the form
-		s.tm.RenderHTML(w, r, "form", data)
+		s.tm.RenderHTML(w, r, "form.html", data)
 
 	case "POST":
 
@@ -74,7 +74,7 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			formError.Message = "Could not parse the form"
 			data.Error = &formError
-			s.tm.RenderHTML(w, r, "form", data)
+			s.tm.RenderHTML(w, r, "form.html", data)
 			return
 		}
 
@@ -87,7 +87,7 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			formError.Message = "Could not extract the playlist ID"
 			data.Form.Error = &formError
-			s.tm.RenderHTML(w, r, "form", data)
+			s.tm.RenderHTML(w, r, "form.html", data)
 			return
 		}
 
@@ -95,7 +95,7 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 		if s.sourcesRepo.SourceExists(r.Context(), playlistID) {
 			formError.Message = "Source already posted"
 			data.Form.Error = &formError
-			s.tm.RenderHTML(w, r, "form", data)
+			s.tm.RenderHTML(w, r, "form.html", data)
 			return
 		}
 
@@ -104,7 +104,7 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			formError.Message = utils.Capitalize(err.Error())
 			data.Form.Error = &formError
-			s.tm.RenderHTML(w, r, "form", data)
+			s.tm.RenderHTML(w, r, "form.html", data)
 			return
 		}
 
@@ -113,7 +113,7 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			formError.Message = utils.Capitalize(err.Error())
 			data.Form.Error = &formError
-			s.tm.RenderHTML(w, r, "form", data)
+			s.tm.RenderHTML(w, r, "form.html", data)
 			return
 		}
 
@@ -127,7 +127,7 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 			log.Printf("Could not insert the source '%s' in DB: %v", source.PlaylistID, err)
 			formError.Message = "Could not insert the source in DB"
 			data.Form.Error = &formError
-			s.tm.RenderHTML(w, r, "form", data)
+			s.tm.RenderHTML(w, r, "form.html", data)
 			return
 		}
 

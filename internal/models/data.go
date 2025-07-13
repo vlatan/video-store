@@ -4,6 +4,7 @@ import (
 	"factual-docs/internal/handlers/static"
 	"factual-docs/internal/shared/config"
 	"html/template"
+	"net/url"
 	"strings"
 	"time"
 )
@@ -28,14 +29,16 @@ type HTMLErrorData struct {
 	Text    string
 }
 
+// Specific data for the JSON response
+type JSONErrorData struct {
+	Error string `json:"error"`
+	Code  int    `json:"code"`
+}
+
 type FormGroup struct {
 	Label       string
 	Placeholder string
 	Value       string
-}
-
-func (f *FormGroup) IsEmpty() bool {
-	return f.Label == "" && f.Placeholder == ""
 }
 
 type Form struct {
@@ -46,21 +49,32 @@ type Form struct {
 
 // Data struct to pass to templates
 type TemplateData struct {
-	StaticFiles  static.StaticFiles
-	Config       *config.Config
-	Title        string
-	CurrentPost  *Post
-	CurrentUser  *User
-	CurrentURI   string
-	CanonicalURL string
+	StaticFiles static.StaticFiles
+	Config      *config.Config
+	Title       string
+	CurrentPost *Post
+	CurrentUser *User
+	CurrentURI  string
+	BaseURL     *url.URL
 	*Posts
-	Sources       []Source
-	Categories    []Category
-	FlashMessages []*FlashMessage
-	SearchQuery   string
-	HTMLErrorData *HTMLErrorData
-	CSRFField     template.HTML
+	Sources         []Source
+	Categories      []Category
+	FlashMessages   []*FlashMessage
+	SearchQuery     string
+	HTMLErrorData   *HTMLErrorData
+	CSRFField       template.HTML
+	XMLDeclarations []template.HTML
 	*Form
+}
+
+func (td *TemplateData) CanonicalURL() string {
+	return td.BaseURL.String()
+}
+
+func (td *TemplateData) AbsoluteURL(path string) string {
+	u := *td.BaseURL // Copy the URL
+	u.Path = path
+	return u.String()
 }
 
 // Check if current user is admin

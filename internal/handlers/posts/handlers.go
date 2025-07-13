@@ -73,7 +73,7 @@ func (s *Service) HomeHandler(w http.ResponseWriter, r *http.Request) {
 
 	data.Posts = &models.Posts{}
 	data.Posts.Items = posts
-	s.tm.RenderHTML(w, r, "home", data)
+	s.tm.RenderHTML(w, r, "home.html", data)
 }
 
 // Handle posts in a certain category
@@ -139,7 +139,7 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	data.Posts = posts
 	data.Title = data.Posts.Title
-	s.tm.RenderHTML(w, r, "category", data)
+	s.tm.RenderHTML(w, r, "category.html", data)
 }
 
 // Handle posts in a certain source
@@ -205,7 +205,7 @@ func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	data.Posts = posts
 	data.Title = data.Posts.Title
-	s.tm.RenderHTML(w, r, "source", data)
+	s.tm.RenderHTML(w, r, "source.html", data)
 }
 
 // Handle the requests from the searchform
@@ -274,7 +274,7 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 	data.Posts = &posts
 	data.Posts.TimeTook = fmt.Sprintf("%.2f", end.Seconds())
 	data.Title = "Search"
-	s.tm.RenderHTML(w, r, "search", data)
+	s.tm.RenderHTML(w, r, "search.html", data)
 }
 
 // Handle adding new post via form
@@ -294,7 +294,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
 		// Serve the page with the form
-		s.tm.RenderHTML(w, r, "form", data)
+		s.tm.RenderHTML(w, r, "form.html", data)
 
 	case "POST":
 
@@ -304,7 +304,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			formError.Message = "Could not parse the form"
 			data.Error = &formError
-			s.tm.RenderHTML(w, r, "form", data)
+			s.tm.RenderHTML(w, r, "form.html", data)
 			return
 		}
 
@@ -317,7 +317,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			formError.Message = "Could not extract the video ID"
 			data.Form.Error = &formError
-			s.tm.RenderHTML(w, r, "form", data)
+			s.tm.RenderHTML(w, r, "form.html", data)
 			return
 		}
 
@@ -325,7 +325,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 		if validVideoID.FindStringSubmatch(videoID) == nil {
 			formError.Message = "Could not validate the video ID"
 			data.Form.Error = &formError
-			s.tm.RenderHTML(w, r, "form", data)
+			s.tm.RenderHTML(w, r, "form.html", data)
 			return
 		}
 
@@ -333,7 +333,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 		if s.postsRepo.PostExists(r.Context(), videoID) {
 			formError.Message = "Video already posted"
 			data.Form.Error = &formError
-			s.tm.RenderHTML(w, r, "form", data)
+			s.tm.RenderHTML(w, r, "form.html", data)
 			return
 		}
 
@@ -342,7 +342,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			formError.Message = utils.Capitalize(err.Error())
 			data.Form.Error = &formError
-			s.tm.RenderHTML(w, r, "form", data)
+			s.tm.RenderHTML(w, r, "form.html", data)
 			return
 		}
 
@@ -350,7 +350,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 		if err := s.yt.ValidateYouTubeVideo(metadata[0]); err != nil {
 			formError.Message = utils.Capitalize(err.Error())
 			data.Form.Error = &formError
-			s.tm.RenderHTML(w, r, "form", data)
+			s.tm.RenderHTML(w, r, "form.html", data)
 			return
 		}
 
@@ -375,7 +375,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 			log.Printf("Could not insert the video '%s' in DB: %v", post.VideoID, err)
 			formError.Message = "Could not insert the video in DB"
 			data.Form.Error = &formError
-			s.tm.RenderHTML(w, r, "form", data)
+			s.tm.RenderHTML(w, r, "form.html", data)
 			return
 		}
 
@@ -465,7 +465,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 	)
 
 	data.CurrentPost.RelatedPosts = relatedPosts
-	s.tm.RenderHTML(w, r, "post", data)
+	s.tm.RenderHTML(w, r, "post.html", data)
 }
 
 // Perform an action on a video

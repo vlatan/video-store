@@ -1,3 +1,5 @@
+{{ template "base.html" . }}
+
 {{ define "extra_preload_css" }}
 <link rel="preload" href='{{ .AddVersion "/static/css/form.css" }}' as="style">
 {{ end }}

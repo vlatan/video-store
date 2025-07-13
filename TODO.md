@@ -1,6 +1,11 @@
+
+* Sitemap
+  Separate xml templates for pages, sources, categories, misc
+  Figure out a way to handle the main index xml page
+
+
 * Pages
 * Admin (get users with pagination)
-* Sitemap
 * Cron
 * User watch later
 

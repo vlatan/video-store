@@ -38,12 +38,12 @@ func parseStaticFiles(m *minify.M, dir string) StaticFiles {
 			return err
 		}
 
-		// Get the fyle type
-		fileType := strings.Split(info.Name(), ".")[1]
+		// Get the file extension
+		ext := strings.Split(info.Name(), ".")[1]
 
 		// Set media type
 		var mediaType string
-		switch fileType {
+		switch ext {
 		case "css":
 			mediaType = "text/css"
 		case "js":

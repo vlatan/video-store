@@ -43,25 +43,23 @@ func (s *service) NewData(w http.ResponseWriter, r *http.Request) *models.Templa
 		Config:        s.config,
 		Categories:    categories,
 		CurrentURI:    r.RequestURI,
-		CanonicalURL:  getCanonicalURL(r),
+		BaseURL:       getBaseURL(r),
 		FlashMessages: flashMessages,
 		CSRFField:     csrf.TemplateField(r),
 	}
 }
 
-// Get canonilca absolute URL
-func getCanonicalURL(r *http.Request) string {
+// Create base URL object (absolute path only)
+func getBaseURL(r *http.Request) *url.URL {
 	// Determine scheme
 	scheme := "http"
 	if r.TLS != nil {
 		scheme = "https"
 	}
 
-	canonical := &url.URL{
+	return &url.URL{
 		Scheme: scheme,
 		Host:   r.Host,
 		Path:   r.URL.Path,
 	}
-
-	return canonical.String()
 }

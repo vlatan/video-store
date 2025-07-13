@@ -9,15 +9,17 @@ import (
 	"strconv"
 )
 
-type JSONErrorData struct {
-	Error string `json:"error"`
-	Code  int    `json:"code"`
-}
-
 // Write HTML error to response
 func (s *service) HTMLError(w http.ResponseWriter, r *http.Request, statusCode int, data *models.TemplateData) {
-	// Stream status code early
-	w.WriteHeader(statusCode)
+
+	// Check for the error template
+	tmpl, exists := s.templates["error.html"]
+
+	if !exists {
+		log.Printf("Could not find the 'error.html' template on URI '%s'", r.RequestURI)
+		http.Error(w, http.StatusText(statusCode), statusCode)
+		return
+	}
 
 	// Craft template data
 	data.HTMLErrorData = &models.HTMLErrorData{
@@ -39,20 +41,16 @@ func (s *service) HTMLError(w http.ResponseWriter, r *http.Request, statusCode i
 		data.HTMLErrorData.Text = "Sorry about that. We're working on fixing this."
 	}
 
-	tmpl, exists := s.templates["error"]
-
-	if !exists {
-		log.Printf("Could not find the 'error' template on URI '%s'", r.RequestURI)
-		http.Error(w, http.StatusText(statusCode), statusCode)
-		return
-	}
-
+	// Write template to buffer
 	var buf bytes.Buffer
-	if err := tmpl.ExecuteTemplate(&buf, "base.html", data); err != nil {
+	if err := tmpl.ExecuteTemplate(&buf, "error.html", data); err != nil {
 		log.Printf("Failed to execute the HTML template 'error' on URI '%s': %v", r.RequestURI, err)
 		http.Error(w, http.StatusText(statusCode), statusCode)
 		return
 	}
+
+	// Set status code before writing the response
+	w.WriteHeader(statusCode)
 
 	if _, err := buf.WriteTo(w); err != nil {
 		// Too late for recovery here, just log the error
@@ -66,11 +64,9 @@ func (s *service) HTMLError(w http.ResponseWriter, r *http.Request, statusCode i
 
 // Write JSON error to response
 func (s *service) JSONError(w http.ResponseWriter, r *http.Request, statusCode int) {
-	// Stream status code early
-	w.WriteHeader(statusCode)
 
 	// Craft data
-	data := JSONErrorData{
+	data := models.JSONErrorData{
 		Error: http.StatusText(statusCode),
 		Code:  statusCode,
 	}
@@ -80,9 +76,13 @@ func (s *service) JSONError(w http.ResponseWriter, r *http.Request, statusCode i
 	if err != nil {
 		log.Printf("Failed to encode JSON 'error' response on URI '%s': %v", r.RequestURI, err)
 		http.Error(w, http.StatusText(statusCode), statusCode)
+		return
 	}
 
+	// Set status code before writing the response
+	w.WriteHeader(statusCode)
 	w.Header().Set("Content-Type", "application/json")
+
 	if _, err := w.Write(jsonData); err != nil {
 		// Too late for recovery here, just log the error
 		log.Printf("Failed to write JSON 'error' to response on URI '%s': %v", r.RequestURI, err)
