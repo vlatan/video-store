@@ -13,6 +13,7 @@
 
 * API calls need retries
 * Write custom errors middlware
+* Trim services of what related services they don't use
 
 * User avatar saved to redis not locally
   Need to solve this discrepancy

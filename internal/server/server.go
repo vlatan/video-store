@@ -13,6 +13,7 @@ import (
 	"factual-docs/internal/handlers/sitemaps"
 	"factual-docs/internal/handlers/sources"
 	"factual-docs/internal/handlers/static"
+	"factual-docs/internal/handlers/users"
 	"factual-docs/internal/integrations/gemini"
 	"factual-docs/internal/integrations/yt"
 	"factual-docs/internal/middlewares"
@@ -29,6 +30,7 @@ import (
 
 type Server struct {
 	auth     *auth.Service
+	users    *users.Service
 	posts    *posts.Service
 	sources  *sources.Service
 	sitemaps *sitemaps.Service
@@ -75,6 +77,7 @@ func NewServer() *http.Server {
 
 	// Create domain services
 	auth := auth.New(usersRepo, store, rdb, cfg)
+	users := users.New(usersRepo, postsRepo, rdb, tm, cfg, auth)
 	posts := posts.New(postsRepo, rdb, tm, cfg, auth, yt, gemini)
 	sources := sources.New(postsRepo, sourcesRepo, rdb, tm, cfg, auth, yt)
 	sitemaps := sitemaps.New(postsRepo, sourcesRepo, catsRepo, rdb, tm, cfg)
@@ -86,6 +89,7 @@ func NewServer() *http.Server {
 	// Create new Server struct
 	newServer := &Server{
 		auth:     auth,
+		users:    users,
 		posts:    posts,
 		sources:  sources,
 		sitemaps: sitemaps,
