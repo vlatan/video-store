@@ -4,6 +4,7 @@ import (
 	"factual-docs/internal/handlers/static"
 	"factual-docs/internal/shared/config"
 	"html/template"
+	"net/url"
 	"strings"
 	"time"
 )
@@ -48,13 +49,13 @@ type Form struct {
 
 // Data struct to pass to templates
 type TemplateData struct {
-	StaticFiles  static.StaticFiles
-	Config       *config.Config
-	Title        string
-	CurrentPost  *Post
-	CurrentUser  *User
-	CurrentURI   string
-	CanonicalURL string
+	StaticFiles static.StaticFiles
+	Config      *config.Config
+	Title       string
+	CurrentPost *Post
+	CurrentUser *User
+	CurrentURI  string
+	BaseURL     *url.URL
 	*Posts
 	Sources         []Source
 	Categories      []Category
@@ -64,6 +65,16 @@ type TemplateData struct {
 	CSRFField       template.HTML
 	XMLDeclarations []template.HTML
 	*Form
+}
+
+func (td *TemplateData) CanonicalURL() string {
+	return td.BaseURL.String()
+}
+
+func (td *TemplateData) AbsoluteURL(path string) string {
+	u := *td.BaseURL // Copy the URL
+	u.Path = path
+	return u.String()
 }
 
 // Check if current user is admin
