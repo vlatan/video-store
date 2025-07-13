@@ -17,7 +17,7 @@ func (s *Service) UserFavoritesHandler(w http.ResponseWriter, r *http.Request) {
 	data := s.tm.NewData(w, r)
 	data.CurrentUser = s.auth.GetUserFromContext(r)
 
-	posts, err := s.postsRepo.GetUserGavedPosts(r.Context(), data.CurrentUser.ID, page)
+	posts, err := s.postsRepo.GetUserFavedPosts(r.Context(), data.CurrentUser.ID, page)
 
 	if err != nil {
 		log.Printf("Was unabale to fetch posts on URI '%s': %v", r.RequestURI, err)

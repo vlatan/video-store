@@ -51,3 +51,17 @@ const upsertUserQuery = `
 const deleteUserQuery = "DELETE FROM app_user WHERE id = $1"
 
 const updateLastUserSeenQuery = "UPDATE app_user SET last_seen = $2 WHERE id = $1"
+
+const getUsersQuery = `
+	SELECT
+		google_id, 
+		facebook_id, 
+		name,
+		email,
+		picture,
+		last_seen,
+		created_at
+	FROM app_user
+	ORDER BY created_at
+	LIMIT $1 OFFSET $2
+`

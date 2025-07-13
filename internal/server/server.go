@@ -54,7 +54,7 @@ func NewServer() *http.Server {
 	static := static.New(cfg)
 
 	// Create DB repositories
-	usersRepo := usersRepo.New(db)
+	usersRepo := usersRepo.New(db, cfg)
 	postsRepo := postsRepo.New(db, cfg)
 	catsRepo := catsRepo.New(db)
 	sourcesRepo := sourcesRepo.New(db, cfg)

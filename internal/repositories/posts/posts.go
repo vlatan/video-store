@@ -199,7 +199,7 @@ func (r *Repository) GetPostsByMonth(ctx context.Context, year, month string) (p
 }
 
 // Get user's favorited posts
-func (r *Repository) GetUserGavedPosts(
+func (r *Repository) GetUserFavedPosts(
 	ctx context.Context,
 	userID,
 	page int,
