@@ -8,7 +8,7 @@ document.addEventListener('click', event => {
             messageText = "Succesfully removed.";
         }
         const url = `/video/${remove.dataset.id}/${action}`;
-        fetch(url, { method: 'POST' }).then(response => {
+        postData(url).then(response => {
             if (response.ok) {
                 remove.parentElement.remove();
                 setAlert(messageText);

@@ -1,7 +1,6 @@
 
 * Users
   List users in admin dash
-  Watch later dash for each user
 
 * Pages
 
