@@ -74,9 +74,9 @@ func NewServer() *http.Server {
 	}
 
 	// Create domain services
-	auth := auth.New(usersRepo, store, rdb, cfg)                  // Create auth service
-	posts := posts.New(postsRepo, rdb, tm, cfg, auth, yt, gemini) // Create posts service
-	sources := sources.New(sourcesRepo, rdb, tm, cfg, auth, yt)   // Create sources service
+	auth := auth.New(usersRepo, store, rdb, cfg)                           // Create auth service
+	posts := posts.New(postsRepo, rdb, tm, cfg, auth, yt, gemini)          // Create posts service
+	sources := sources.New(postsRepo, sourcesRepo, rdb, tm, cfg, auth, yt) // Create sources service
 	sitemaps := sitemaps.New(postsRepo, sourcesRepo, catsRepo, rdb, tm, cfg)
 	misc := misc.New(cfg, db, rdb, tm) // Create miscellaneous service
 

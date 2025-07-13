@@ -22,7 +22,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	// Sources
 	mux.HandleFunc("/source/new", s.mw.IsAdmin(s.sources.NewSourceHandler))
-	mux.HandleFunc("GET /source/{source}/{$}", s.posts.SourcePostsHandler)
+	mux.HandleFunc("GET /source/{source}/{$}", s.sources.SourcePostsHandler)
 	mux.HandleFunc("GET /sources/{$}", s.sources.SourcesHandler)
 
 	// Authentication

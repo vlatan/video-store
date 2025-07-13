@@ -3,6 +3,7 @@ package sources
 import (
 	"factual-docs/internal/handlers/auth"
 	"factual-docs/internal/integrations/yt"
+	postsRepo "factual-docs/internal/repositories/posts"
 	sourcesRepo "factual-docs/internal/repositories/sources"
 	"factual-docs/internal/shared/config"
 	"factual-docs/internal/shared/redis"
@@ -10,6 +11,7 @@ import (
 )
 
 type Service struct {
+	postsRepo   *postsRepo.Repository
 	sourcesRepo *sourcesRepo.Repository
 	rdb         redis.Service
 	tm          tmpls.Service
@@ -19,6 +21,7 @@ type Service struct {
 }
 
 func New(
+	postsRepo *postsRepo.Repository,
 	sourcesRepo *sourcesRepo.Repository,
 	rdb redis.Service,
 	tm tmpls.Service,
@@ -27,6 +30,7 @@ func New(
 	yt *yt.Service,
 ) *Service {
 	return &Service{
+		postsRepo:   postsRepo,
 		sourcesRepo: sourcesRepo,
 		rdb:         rdb,
 		tm:          tm,
