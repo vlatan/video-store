@@ -50,5 +50,5 @@ func (s *Service) SitemapPostsHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/xml")
 
 	data.Posts = &posts
-	s.tm.RenderHTML(w, r, "sitemap_page.xml", data)
+	s.tm.RenderHTML(w, r, "sitemap_posts.xml", data)
 }
