@@ -1,6 +1,8 @@
 
 * Users
   List users in admin dash
+  Get local avatars if ANY concurrently
+  Format dates on users dash if needed
 
 * Pages
 

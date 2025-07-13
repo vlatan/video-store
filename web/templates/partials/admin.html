@@ -1,0 +1,48 @@
+{{ template "base.html" . }}
+
+{{ define "extra_preload_css" }}
+<link rel="preload" href='{{ .AddVersion "/static/css/admin.css" }}' as="style">
+{{ end }}
+
+{{ define "extra_css" }}
+<link rel="stylesheet" type="text/css" href='{{ .AddVersion "/static/css/admin.css" }}'>
+{{ end }}
+
+{{ define "title_tag" }}
+{{ .Title }} - {{ .Config.AppName }}
+{{ end }}
+
+{{ define "content" }}
+<h1 class="dashboard-title">{{ .Title }}</h1>
+<div class="dashboard">
+    <div class="dashboard-item dashboard-header-item">#</div>
+    <div class="dashboard-item dashboard-header-item">Picture</div>
+    <div class="dashboard-item dashboard-header-item">Name</div>
+    <div class="dashboard-item dashboard-header-item">Email</div>
+    <div class="dashboard-item dashboard-header-item">Login Provider</div>
+    <div class="dashboard-item dashboard-header-item">Signup</div>
+    <div class="dashboard-item dashboard-header-item">Last Seen</div>
+
+    {{ range $index, $user := .Users }}
+    <div class="dashboard-item">{{ $index }}.</div>
+    <div class="dashboard-item dashboard-user-img-container">
+        <img class="dashboard-user-img" src="{{ $user.AvatarURL}}">
+    </div>
+    <div class="dashboard-item">{{ $user.Name }}</div>
+    <div class="dashboard-item">{{ $user.Email }}</div>
+    {{ if eq $user.Provder "google" }}
+    <div class="dashboard-item">Google</div>
+    {{ else }}
+    <div class="dashboard-item">Facebook</div>
+    {{ end }}
+    <div class="dashboard-item">{{ $user.CreatedAt }}</div>
+    <div class="dashboard-item">
+        {{ if $user.LastSeen }}
+        {{ $user.LastSeen }}
+        {{ else }}
+        N/A
+        {{ end }}
+    </div>
+    {{ end }}
+</div>
+{{ end }}

@@ -57,6 +57,7 @@ type TemplateData struct {
 	CurrentURI  string
 	BaseURL     *url.URL
 	*Posts
+	Users           []User
 	Sources         []Source
 	Categories      []Category
 	FlashMessages   []*FlashMessage
