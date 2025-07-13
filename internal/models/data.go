@@ -40,10 +40,6 @@ type FormGroup struct {
 	Value       string
 }
 
-func (f *FormGroup) IsEmpty() bool {
-	return f.Label == "" && f.Placeholder == ""
-}
-
 type Form struct {
 	Legend  string
 	Content FormGroup

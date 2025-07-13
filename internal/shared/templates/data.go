@@ -49,7 +49,7 @@ func (s *service) NewData(w http.ResponseWriter, r *http.Request) *models.Templa
 	}
 }
 
-// Get canonilca absolute URL
+// Get canonical absolute URL
 func getCanonicalURL(r *http.Request) string {
 	// Determine scheme
 	scheme := "http"
