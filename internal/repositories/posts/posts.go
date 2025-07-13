@@ -239,7 +239,7 @@ func (r *Repository) SearchPosts(ctx context.Context, searchTerm string, limit, 
 	}
 
 	// If error during iteration
-	if err := rows.Err(); err != nil {
+	if err = rows.Err(); err != nil {
 		return posts, err
 	}
 

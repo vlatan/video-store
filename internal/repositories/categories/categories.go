@@ -36,7 +36,7 @@ func (r *Repository) GetCategories(ctx context.Context) ([]models.Category, erro
 		categories = append(categories, category)
 	}
 
-	if err := rows.Err(); err != nil {
+	if err = rows.Err(); err != nil {
 		return []models.Category{}, err
 	}
 

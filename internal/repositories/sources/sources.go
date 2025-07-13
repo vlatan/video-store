@@ -97,7 +97,7 @@ func (r *Repository) GetSources(ctx context.Context) ([]models.Source, error) {
 		sources = append(sources, source)
 	}
 
-	if err := rows.Err(); err != nil {
+	if err = rows.Err(); err != nil {
 		return sources, err
 	}
 

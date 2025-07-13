@@ -65,7 +65,7 @@ func (r *Repository) queryPosts(
 	}
 
 	// If error during iteration
-	if err := rows.Err(); err != nil {
+	if err = rows.Err(); err != nil {
 		return posts, err
 	}
 
@@ -127,7 +127,7 @@ func (r *Repository) queryTaxonomyPosts(
 	}
 
 	// If error during iteration
-	if err := rows.Err(); err != nil {
+	if err = rows.Err(); err != nil {
 		return nil, err
 	}
 
