@@ -1,5 +1,6 @@
 
 * Users
+  Skip sitemaps and ads.txt in CSFR middlware
   List users in admin dash
 
 * Pages

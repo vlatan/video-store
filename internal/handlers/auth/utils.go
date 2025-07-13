@@ -21,9 +21,10 @@ import (
 
 // Hardcode the static protected routes
 var staticProtectedPaths = map[string]bool{
-	"/video/new":      true,
-	"/health/":        true,
-	"/account/delete": true,
+	"/video/new":       true,
+	"/health/":         true,
+	"/account/delete":  true,
+	"/user/favorites/": true,
 }
 
 // Detect if it's a protected route
