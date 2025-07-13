@@ -172,8 +172,14 @@ func (s *Service) CreateCSRFMiddleware() func(http.Handler) http.Handler {
 				return
 			}
 
-			// Skip CSRF for health endpoint (exact match)
-			if r.URL.Path == "/health/" {
+			// Skip CSRF for exact match
+			if r.URL.Path == "/health/" || r.URL.Path == "/ads.txt" {
+				next.ServeHTTP(w, r)
+				return
+			}
+
+			// Skip CSRF for sitemaps
+			if strings.HasPrefix(r.URL.Path, "/sitemap") {
 				next.ServeHTTP(w, r)
 				return
 			}
