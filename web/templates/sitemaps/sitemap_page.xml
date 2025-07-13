@@ -1,10 +1,9 @@
-<?xml version="1.0" encoding="utf-8"?>
-<?xml-stylesheet type="text/xsl" href="/sitemap.xsl"?>
+{{ range .XMLDeclarations }}{{ . }}{{ end }}
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
-    {{ range . }}
+    {{ range .Posts.Items }}
     <url>
-        <loc>{{ .loc }}</loc>
-        <lastmod>{{ .lastmod }}</lastmod>
+        <!-- <loc>{{ .loc }}</loc> -->
+        <lastmod>{{ .UpdatedAt }}</lastmod>
         <changefreq>weekly</changefreq>
 		<priority>0.8</priority>
     </url>

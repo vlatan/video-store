@@ -60,13 +60,13 @@ type TemplateData struct {
 	CurrentURI   string
 	CanonicalURL string
 	*Posts
-	Sources        []Source
-	Categories     []Category
-	FlashMessages  []*FlashMessage
-	SearchQuery    string
-	HTMLErrorData  *HTMLErrorData
-	CSRFField      template.HTML
-	XMLDeclaration template.HTML
+	Sources         []Source
+	Categories      []Category
+	FlashMessages   []*FlashMessage
+	SearchQuery     string
+	HTMLErrorData   *HTMLErrorData
+	CSRFField       template.HTML
+	XMLDeclarations []template.HTML
 	*Form
 }
 

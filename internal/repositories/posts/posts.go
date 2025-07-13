@@ -164,6 +164,40 @@ func (r *Repository) GetSourcePosts(
 	return r.queryTaxonomyPosts(ctx, getSourcePostsQuery, playlistID, orderBy, page)
 }
 
+// Get posts in a given month of a given year
+func (r *Repository) GetPostsByMonth(ctx context.Context, year, month string) (posts models.Posts, err error) {
+
+	// Get rows from DB
+	rows, err := r.db.Query(ctx, getPostsByMonthQuery, year, month)
+	if err != nil {
+		return posts, err
+	}
+
+	// Close rows on exit
+	defer rows.Close()
+
+	// Iterate over the rows
+	for rows.Next() {
+		var post models.Post
+
+		// Paste post from row to struct
+		if err = rows.Scan(&post.VideoID, &post.UpdatedAt); err != nil {
+			return posts, err
+		}
+
+		// Include the processed post in the result
+		posts.Items = append(posts.Items, post)
+	}
+
+	// If error during iteration
+	if err = rows.Err(); err != nil {
+		return posts, err
+	}
+
+	return posts, err
+
+}
+
 // Get posts based on a user search query
 // Transform the user query into two queries with words separated by '&' and '|'
 func (r *Repository) SearchPosts(ctx context.Context, searchTerm string, limit, offset int) (posts models.Posts, err error) {
