@@ -96,6 +96,11 @@ func (r *Repository) GetUsers(ctx context.Context, page int) (users []models.Use
 			return users, err
 		}
 
+		user.Provider = "Google"
+		if facebookID != "" {
+			user.Provider = "Facebook"
+		}
+
 		// Include the processed post in the result
 		users = append(users, user)
 	}
