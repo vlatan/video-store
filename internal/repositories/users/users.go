@@ -105,9 +105,12 @@ func (r *Repository) GetUsers(ctx context.Context, page int) (users []models.Use
 			return users, err
 		}
 
+		// Set user provider and user provider ID
 		user.Provider = "google"
-		if utils.PtrToString(facebookID) != "" {
+		user.UserID = utils.PtrToString(googleID)
+		if fbID := utils.PtrToString(facebookID); fbID != "" {
 			user.Provider = "facebook"
+			user.UserID = fbID
 		}
 
 		// Convert the pointers back to strings
