@@ -103,7 +103,7 @@ func (s *Service) UsersHandler(w http.ResponseWriter, r *http.Request) {
 			}()
 
 			// Add result to channel
-			localAvatar := s.auth.GetAvatar(r, user.AvatarURL, user.AnalyticsID)
+			localAvatar := user.GetAvatar(r.Context(), s.rdb, s.config)
 			avatars <- avatarResult{
 				index:       i,
 				localAvatar: localAvatar,

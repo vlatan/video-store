@@ -1,6 +1,19 @@
 package models
 
-import "time"
+import (
+	"context"
+	"crypto/md5"
+	"encoding/hex"
+	"factual-docs/internal/shared/config"
+	"factual-docs/internal/shared/redis"
+	"fmt"
+	"io"
+	"log"
+	"net/http"
+	"os"
+	"path/filepath"
+	"time"
+)
 
 // User struct to store in the USER info in session
 // A simplified version of goth.User
@@ -18,7 +31,119 @@ type User struct {
 	CreatedAt      *time.Time `json:"created_at,omitempty"`
 }
 
-// Check if user is authenticated
+// Check if the user is authenticated
 func (u *User) IsAuthenticated() bool {
 	return u != nil && u.UserID != ""
+}
+
+// Set the user analytics ID
+func (u *User) SetAnalyticsID() {
+	analyticsID := u.UserID + u.Provider + u.Email
+	u.AnalyticsID = fmt.Sprintf("%x", md5.Sum([]byte(analyticsID)))
+}
+
+// Get user avatar path, either from redis, or download and store avatar path to redis
+func (u *User) GetAvatar(ctx context.Context, rdb redis.Service, config *config.Config) string {
+	// Set the anaylytics ID in case it's missing
+	if u.AnalyticsID == "" {
+		u.SetAnalyticsID()
+	}
+
+	// Get avatar URL from Redis
+	redisKey := fmt.Sprintf("avatar:%s", u.AnalyticsID)
+	avatar, err := rdb.Get(ctx, redisKey)
+	if err == nil {
+		return avatar
+	}
+
+	// Attempt to download the avatar, set default avatar on fail
+	etag, err := u.DownloadAvatar(config)
+	if err != nil {
+		avatar = "/static/images/default-avatar.jpg"
+		rdb.Set(ctx, redisKey, avatar, 24*7*time.Hour)
+		return avatar
+	}
+
+	// Save avatar URL to Redis and return
+	avatar = "/static/images/avatars/" + u.AnalyticsID + ".jpg?v=" + etag
+	rdb.Set(ctx, redisKey, avatar, 24*7*time.Hour)
+	return avatar
+}
+
+// Download remote image (user avatar)
+func (u *User) DownloadAvatar(config *config.Config) (string, error) {
+	// Set the anaylytics ID in case it's missing
+	if u.AnalyticsID == "" {
+		u.SetAnalyticsID()
+	}
+
+	// Get remote file
+	response, err := http.Get(u.AvatarURL)
+	if err != nil {
+		return "", fmt.Errorf("can't read the remote file: %v", err)
+	}
+	defer response.Body.Close()
+
+	// Ensure the HTTP request was successful (status code 2xx)
+	if response.StatusCode < 200 || response.StatusCode >= 300 {
+		return "", fmt.Errorf(
+			"failed to download avatar from %s: received status code %d",
+			u.AvatarURL,
+			response.StatusCode,
+		)
+	}
+
+	// Create a file for writing
+	destination := filepath.Join(config.DataVolume, u.AnalyticsID+".jpg")
+	file, err := os.Create(destination)
+	if err != nil {
+		return "", fmt.Errorf("couldn't create file '%s': %v", destination, err)
+	}
+
+	// Flag to track if the download was successful
+	valid := false
+
+	// Run this clean up function on exit
+	defer func() {
+		if err := file.Close(); err != nil { // Close the file
+			log.Printf("Warning: failed to close file '%s': %v\n", destination, err)
+		}
+		if !valid { // Remove the file if not successfuly created
+			if err := os.Remove(destination); err != nil {
+				log.Printf("Failed to remove partially created file '%s': %v\n", destination, err)
+			}
+		}
+	}()
+
+	// Init a hasher
+	hasher := md5.New()
+
+	// Create a multiwriter to write to the hasher and to the file
+	multiWriter := io.MultiWriter(hasher, file)
+
+	// Stream the response body directly into the hasher and the file
+	_, err = io.Copy(multiWriter, response.Body)
+	if err != nil {
+		return "", fmt.Errorf("couldn't hash or write to file '%s': %v", destination, err)
+	}
+
+	// Get the final hash sum and convert to a hex string
+	hashInBytes := hasher.Sum(nil)
+	hashString := hex.EncodeToString(hashInBytes)
+
+	valid = true
+	return hashString, nil
+}
+
+// Delete local avatar if exists
+func (u *User) DeleteAvatar(ctx context.Context, rdb redis.Service, config *config.Config) {
+	avatarPath := filepath.Join(config.DataVolume, u.AnalyticsID+".jpg")
+	if err := os.Remove(avatarPath); err != nil && err != os.ErrNotExist {
+		log.Printf("Could not remove the local avatar %s: %v", avatarPath, err)
+	}
+
+	redisKey := fmt.Sprintf("avatar:%s", u.AnalyticsID)
+	if err := rdb.Delete(ctx, redisKey); err != nil {
+		log.Printf("Could not remove the avatar %s from Redis: %v", redisKey, err)
+	}
 }
