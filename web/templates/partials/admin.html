@@ -26,7 +26,7 @@
     {{ range $index, $user := .Users }}
     <div class="dashboard-item">{{ len (printf "a%*s" $index "") }}.</div>
     <div class="dashboard-item dashboard-user-img-container">
-        <img class="dashboard-user-img" src="{{ $user.AvatarURL}}">
+        <img class="dashboard-user-img" src="{{ $user.LocalAvatarURL}}">
     </div>
     <div class="dashboard-item">{{ $user.Name }}</div>
     <div class="dashboard-item">{{ $user.Email }}</div>

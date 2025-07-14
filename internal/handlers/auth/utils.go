@@ -200,13 +200,13 @@ func (s *Service) GetUserFromSession(w http.ResponseWriter, r *http.Request) *mo
 		Provider:       session.Values["Provider"].(string),
 		AvatarURL:      avatarURL,
 		AnalyticsID:    analyticsID,
-		LocalAvatarURL: s.getAvatar(r, avatarURL, analyticsID),
+		LocalAvatarURL: s.GetAvatar(r, avatarURL, analyticsID),
 		AccessToken:    session.Values["AccessToken"].(string),
 	}
 }
 
 // Get user avatar path, either from redis, or download and store avatar path to redis
-func (s *Service) getAvatar(r *http.Request, avatarURL, analyticsID string) string {
+func (s *Service) GetAvatar(r *http.Request, avatarURL, analyticsID string) string {
 	// Get avatar URL from Redis
 	redisKey := fmt.Sprintf("avatar:%s", analyticsID)
 	avatar, err := s.rdb.Get(r.Context(), redisKey)

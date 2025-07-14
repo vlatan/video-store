@@ -59,6 +59,7 @@ const getUsersQuery = `
 		name,
 		email,
 		picture,
+		analytics_id,
 		last_seen,
 		created_at
 	FROM app_user

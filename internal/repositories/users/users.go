@@ -89,6 +89,7 @@ func (r *Repository) GetUsers(ctx context.Context, page int) (users []models.Use
 		var name *string
 		var email *string
 		var avatarURL *string
+		var analytics_id *string
 
 		// Get user row data to destination
 		if err = rows.Scan(
@@ -97,6 +98,7 @@ func (r *Repository) GetUsers(ctx context.Context, page int) (users []models.Use
 			&name,
 			&email,
 			&avatarURL,
+			&analytics_id,
 			&user.LastSeen,
 			&user.CreatedAt,
 		); err != nil {
