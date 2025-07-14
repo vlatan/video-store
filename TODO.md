@@ -1,7 +1,6 @@
 
 * Users in dashboard
   Get local avatars if ANY concurrently
-  Adjust index to start at 1
   Provide paginated view (scroll or pagination)
 
 * Pages

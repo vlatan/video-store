@@ -24,7 +24,7 @@
     <div class="dashboard-item dashboard-header-item">Last Seen</div>
 
     {{ range $index, $user := .Users }}
-    <div class="dashboard-item">{{ $index }}.</div>
+    <div class="dashboard-item">{{ len (printf "a%*s" $index "") }}.</div>
     <div class="dashboard-item dashboard-user-img-container">
         <img class="dashboard-user-img" src="{{ $user.AvatarURL}}">
     </div>
