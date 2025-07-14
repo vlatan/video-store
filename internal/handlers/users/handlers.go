@@ -4,7 +4,6 @@ import (
 	"factual-docs/internal/shared/utils"
 	"log"
 	"net/http"
-	"sync"
 	"time"
 )
 
@@ -82,42 +81,7 @@ func (s *Service) UsersHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	type avatarResult struct {
-		index       int
-		localAvatar string
-	}
-
-	var wg sync.WaitGroup
-	avatars := make(chan avatarResult, s.config.PostsPerPage)
-	semaphore := make(chan struct{}, 20) // max 20 paralel calls
-
-	for i, user := range users {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-
-			// semaphore will block if full
-			semaphore <- struct{}{}
-			defer func() {
-				<-semaphore
-			}()
-
-			// Add result to channel
-			localAvatar := user.GetAvatar(r.Context(), s.rdb, s.config)
-			avatars <- avatarResult{
-				index:       i,
-				localAvatar: localAvatar,
-			}
-		}()
-	}
-
-	// Wait for the goroutines to finish in a separate goroutine
-	// And once done close the channel
-	go func() {
-		wg.Wait()
-		close(avatars)
-	}()
-
+	avatars := s.GetAvatars(r.Context(), users)
 	for avatar := range avatars {
 		users[avatar.index].LocalAvatarURL = avatar.localAvatar
 	}

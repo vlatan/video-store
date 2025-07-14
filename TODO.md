@@ -1,11 +1,5 @@
 
 * Users in dashboard
-
-  Get local avatars if ANY concurrently
-  There are users with empty analytics IDs and the first user with empty analytics ID
-  is saved with "avatar:" redis key and then all the users that
-  don't have analytics ID retrieve this same avatar as theirs.
-
   Provide paginated view (scroll or pagination)
 
 * Pages
