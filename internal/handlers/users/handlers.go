@@ -74,16 +74,16 @@ func (s *Service) UsersHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	avatars := s.GetAvatars(r.Context(), users)
+	for avatar := range avatars {
+		users[avatar.index].LocalAvatarURL = avatar.localAvatar
+	}
+
 	// If not the first page return JSON
 	if page > 1 {
 		time.Sleep(time.Millisecond * 400)
 		s.tm.WriteJSON(w, r, users)
 		return
-	}
-
-	avatars := s.GetAvatars(r.Context(), users)
-	for avatar := range avatars {
-		users[avatar.index].LocalAvatarURL = avatar.localAvatar
 	}
 
 	data.Users = users
