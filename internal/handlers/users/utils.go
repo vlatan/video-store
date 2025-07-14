@@ -15,7 +15,7 @@ type avatarResult struct {
 func (s *Service) GetAvatars(ctx context.Context, users []models.User) chan avatarResult {
 	var wg sync.WaitGroup
 	avatars := make(chan avatarResult, s.config.PostsPerPage)
-	semaphore := make(chan struct{}, 20) // max 20 paralel calls
+	semaphore := make(chan struct{}, 10) // max 10 paralel calls
 
 	for i, user := range users {
 		wg.Add(1)
