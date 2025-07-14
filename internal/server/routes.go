@@ -37,7 +37,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	// Users
 	mux.HandleFunc("POST /account/delete", s.mw.IsAuthenticated(s.auth.DeleteAccountHandler))
 	mux.HandleFunc("GET /user/favorites/{$}", s.mw.IsAuthenticated(s.users.UserFavoritesHandler))
-	mux.HandleFunc("GET /users/{$}", s.mw.IsAdmin(s.users.AdminUsersHandler))
+	mux.HandleFunc("GET /users/{$}", s.mw.IsAdmin(s.users.UsersHandler))
 
 	// The rest
 	mux.HandleFunc("GET /search/{$}", s.posts.SearchPostsHandler)

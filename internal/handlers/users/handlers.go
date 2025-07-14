@@ -48,7 +48,7 @@ func (s *Service) UserFavoritesHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // Users admin dashboard
-func (s *Service) AdminUsersHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Service) UsersHandler(w http.ResponseWriter, r *http.Request) {
 	// Get the page number from the request query param
 	page := utils.GetPageNum(r)
 

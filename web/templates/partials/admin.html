@@ -35,10 +35,10 @@
     {{ else }}
     <div class="dashboard-item">Facebook</div>
     {{ end }}
-    <div class="dashboard-item">{{ $user.CreatedAt }}</div>
+    <div class="dashboard-item">{{ $user.CreatedAt.Format "2006-01-02 15:04" }}</div>
     <div class="dashboard-item">
         {{ if $user.LastSeen }}
-        {{ $user.LastSeen }}
+        {{ $user.LastSeen.Format "2006-01-02 15:04" }}
         {{ else }}
         N/A
         {{ end }}
