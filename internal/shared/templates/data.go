@@ -10,6 +10,11 @@ import (
 	"github.com/gorilla/csrf"
 )
 
+// Get the map containing the static files
+func (s *service) GetStaticFiles() models.StaticFiles {
+	return s.StaticFiles
+}
+
 // Creates new default data struct to be passed to the templates
 // Instead of manualy envoking this function in each route it can be envoked in a middleware
 // and passed donwstream as value to the request context.
@@ -40,7 +45,7 @@ func (s *service) NewData(w http.ResponseWriter, r *http.Request) *models.Templa
 	session.Save(r, w)
 
 	return &models.TemplateData{
-		StaticFiles:   s.sf.GetStaticFiles(),
+		StaticFiles:   s.StaticFiles,
 		Config:        s.config,
 		Categories:    categories,
 		CurrentURI:    r.RequestURI,

@@ -1,11 +1,10 @@
 
-* Check if you need the auth service if you only use get user from context
-  And move get user from context to utils
-  Also see if you can move GetUserFromSession to utils
+* Also see if you can move GetUserFromSession to utils
 
 * Pages
   Add Edit button on page
   Slugify
+  The about page is garbled.
 
 * Sitemaps
   Separate xml templates for pages, sources, categories, misc

@@ -13,7 +13,6 @@ import (
 	"factual-docs/internal/handlers/posts"
 	"factual-docs/internal/handlers/sitemaps"
 	"factual-docs/internal/handlers/sources"
-	"factual-docs/internal/handlers/static"
 	"factual-docs/internal/handlers/users"
 	"factual-docs/internal/integrations/gemini"
 	"factual-docs/internal/integrations/yt"
@@ -37,7 +36,6 @@ type Server struct {
 	pages    *pages.Service
 	sources  *sources.Service
 	sitemaps *sitemaps.Service
-	static   *static.Service
 	mw       *middlewares.Service
 	misc     *misc.Service
 }
@@ -54,7 +52,6 @@ func NewServer() *http.Server {
 	db := database.New(cfg)
 	rdb := redis.New(cfg)
 	store := newCookieStore(cfg)
-	static := static.New(cfg)
 
 	// Create DB repositories
 	usersRepo := usersRepo.New(db, cfg)
@@ -64,7 +61,7 @@ func NewServer() *http.Server {
 	sourcesRepo := sourcesRepo.New(db, cfg)
 
 	// Create parsed templates map
-	tm := tmpls.New(rdb, cfg, store, static, catsRepo)
+	tm := tmpls.New(rdb, cfg, store, catsRepo)
 
 	// Create YouTube service
 	ctx := context.Background()
@@ -99,7 +96,6 @@ func NewServer() *http.Server {
 		pages:    pages,
 		sources:  sources,
 		sitemaps: sitemaps,
-		static:   static,
 		misc:     misc,
 		mw:       mw,
 	}

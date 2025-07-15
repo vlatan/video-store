@@ -45,12 +45,12 @@ func (s *Server) RegisterRoutes() http.Handler {
 	// The rest
 	mux.HandleFunc("GET /search/{$}", s.posts.SearchPostsHandler)
 	mux.HandleFunc("GET /health/{$}", s.mw.IsAdmin(s.misc.HealthHandler))
-	mux.HandleFunc("GET /static/", s.static.StaticHandler)
+	mux.HandleFunc("GET /static/", s.misc.StaticHandler)
 	mux.HandleFunc("GET /ads.txt", s.misc.AdsTextHandler)
 
 	// Register favicons serving from root
 	for _, favicon := range utils.Favicons {
-		mux.HandleFunc("GET "+favicon, s.static.StaticHandler)
+		mux.HandleFunc("GET "+favicon, s.misc.StaticHandler)
 	}
 
 	// Create Cross-Site Request Forgery middleware
