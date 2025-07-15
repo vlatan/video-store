@@ -47,7 +47,7 @@ type service struct {
 	config    *config.Config
 	store     *sessions.CookieStore
 	sf        *static.Service
-	catRepo   *categories.Repository
+	catsRepo  *categories.Repository
 }
 
 // These are files/dirs within the embedded filesystem 'web'
@@ -77,7 +77,7 @@ func New(
 	config *config.Config,
 	store *sessions.CookieStore,
 	sf *static.Service,
-	catRepo *categories.Repository,
+	catsRepo *categories.Repository,
 ) Service {
 	once.Do(func() {
 		m := minify.New()
@@ -90,7 +90,7 @@ func New(
 			config:    config,
 			store:     store,
 			sf:        sf,
-			catRepo:   catRepo,
+			catsRepo:  catsRepo,
 		}
 
 	})
