@@ -1,13 +1,20 @@
 package models
 
 import (
-	"factual-docs/internal/handlers/static"
 	"factual-docs/internal/shared/config"
 	"html/template"
 	"net/url"
 	"strings"
 	"time"
 )
+
+type FileInfo struct {
+	Bytes     []byte
+	MediaType string
+	Etag      string
+}
+
+type StaticFiles map[string]FileInfo
 
 // The response from the Genai API
 type GenaiResponse struct {
@@ -49,7 +56,7 @@ type Form struct {
 
 // Data struct to pass to templates
 type TemplateData struct {
-	StaticFiles     static.StaticFiles
+	StaticFiles     StaticFiles
 	Config          *config.Config
 	Title           string
 	CurrentPost     *Post

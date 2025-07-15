@@ -1,6 +1,7 @@
 package static
 
 import (
+	"factual-docs/internal/models"
 	"factual-docs/internal/shared/config"
 	"regexp"
 	"sync"
@@ -10,16 +11,8 @@ import (
 	"github.com/tdewolff/minify/js"
 )
 
-type FileInfo struct {
-	Bytes     []byte
-	MediaType string
-	Etag      string
-}
-
-type StaticFiles map[string]FileInfo
-
 type Service struct {
-	sf     StaticFiles
+	sf     models.StaticFiles
 	config *config.Config
 }
 
@@ -47,6 +40,6 @@ func New(config *config.Config) *Service {
 }
 
 // Returns the static files map
-func (s *Service) GetStaticFiles() StaticFiles {
+func (s *Service) GetStaticFiles() models.StaticFiles {
 	return s.sf
 }

@@ -2,6 +2,7 @@ package static
 
 import (
 	"crypto/md5"
+	"factual-docs/internal/models"
 	"factual-docs/web"
 	"fmt"
 	"io/fs"
@@ -12,9 +13,9 @@ import (
 )
 
 // Create minified versions of the static files and cache them in memory.
-func parseStaticFiles(m *minify.M, dir string) StaticFiles {
+func parseStaticFiles(m *minify.M, dir string) models.StaticFiles {
 
-	sf := make(StaticFiles)
+	sf := make(models.StaticFiles)
 
 	// Function used to process each file/dir in the root, including the root
 	walkDirFunc := func(path string, info fs.DirEntry, err error) error {
@@ -73,7 +74,11 @@ func parseStaticFiles(m *minify.M, dir string) StaticFiles {
 		}
 
 		// Save all the data in the struct
-		sf[name] = FileInfo{b, mediaType, etag}
+		sf[name] = models.FileInfo{
+			Bytes:     b,
+			MediaType: mediaType,
+			Etag:      etag,
+		}
 
 		return nil
 	}

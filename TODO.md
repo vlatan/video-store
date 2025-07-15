@@ -4,6 +4,7 @@
   Also see if you can move GetUserFromSession to utils
 
 * Pages
+  Add Edit button on page
   Slugify
 
 * Sitemaps
