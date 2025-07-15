@@ -18,7 +18,7 @@ import (
 func (s *Service) HomeHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Generate template data
-	data := s.view.NewData(w, r)
+	data := s.ui.NewData(w, r)
 	data.CurrentUser = utils.GetUserFromContext(r)
 
 	// Get page number from a query param
@@ -47,33 +47,33 @@ func (s *Service) HomeHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("Was unabale to fetch posts on URI '%s': %v", r.RequestURI, err)
 		if page > 1 {
-			s.view.JSONError(w, r, http.StatusInternalServerError)
+			s.ui.JSONError(w, r, http.StatusInternalServerError)
 			return
 		}
-		s.view.HTMLError(w, r, http.StatusInternalServerError, data)
+		s.ui.HTMLError(w, r, http.StatusInternalServerError, data)
 		return
 	}
 
 	if len(posts) == 0 {
 		log.Printf("Fetched zero posts on URI '%s'", r.RequestURI)
 		if page > 1 {
-			s.view.JSONError(w, r, http.StatusNotFound)
+			s.ui.JSONError(w, r, http.StatusNotFound)
 			return
 		}
-		s.view.HTMLError(w, r, http.StatusNotFound, data)
+		s.ui.HTMLError(w, r, http.StatusNotFound, data)
 		return
 	}
 
 	// If not the first page return JSON
 	if page > 1 {
 		time.Sleep(time.Millisecond * 400)
-		s.view.WriteJSON(w, r, posts)
+		s.ui.WriteJSON(w, r, posts)
 		return
 	}
 
 	data.Posts = &models.Posts{}
 	data.Posts.Items = posts
-	s.view.RenderHTML(w, r, "home.html", data)
+	s.ui.RenderHTML(w, r, "home.html", data)
 }
 
 // Handle posts in a certain category
@@ -84,7 +84,7 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Generate template data (it gets all the categories too)
 	// This is probably wasteful for non-existing category
-	data := s.view.NewData(w, r)
+	data := s.ui.NewData(w, r)
 	data.CurrentUser = utils.GetUserFromContext(r)
 
 	// Get page number from a query param
@@ -113,33 +113,33 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("Was unabale to fetch posts on URI '%s': %v", r.RequestURI, err)
 		if page > 1 {
-			s.view.JSONError(w, r, http.StatusInternalServerError)
+			s.ui.JSONError(w, r, http.StatusInternalServerError)
 			return
 		}
-		s.view.HTMLError(w, r, http.StatusInternalServerError, data)
+		s.ui.HTMLError(w, r, http.StatusInternalServerError, data)
 		return
 	}
 
 	if len(posts.Items) == 0 {
 		log.Printf("Fetched zero posts on URI '%s'", r.RequestURI)
 		if page > 1 {
-			s.view.JSONError(w, r, http.StatusNotFound)
+			s.ui.JSONError(w, r, http.StatusNotFound)
 			return
 		}
-		s.view.HTMLError(w, r, http.StatusNotFound, data)
+		s.ui.HTMLError(w, r, http.StatusNotFound, data)
 		return
 	}
 
 	// if not the first page return JSON
 	if page > 1 {
 		time.Sleep(time.Millisecond * 400)
-		s.view.WriteJSON(w, r, posts.Items)
+		s.ui.WriteJSON(w, r, posts.Items)
 		return
 	}
 
 	data.Posts = posts
 	data.Title = data.Posts.Title
-	s.view.RenderHTML(w, r, "category.html", data)
+	s.ui.RenderHTML(w, r, "category.html", data)
 }
 
 // Handle the requests from the searchform
@@ -155,7 +155,7 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 	page := utils.GetPageNum(r)
 
 	// Generate the default data
-	data := s.view.NewData(w, r)
+	data := s.ui.NewData(w, r)
 	data.CurrentUser = utils.GetUserFromContext(r)
 	data.SearchQuery = searchQuery
 
@@ -185,37 +185,37 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("Was unabale to fetch posts on URI '%s': %v", r.RequestURI, err)
 		if page > 1 {
-			s.view.JSONError(w, r, http.StatusInternalServerError)
+			s.ui.JSONError(w, r, http.StatusInternalServerError)
 			return
 		}
-		s.view.HTMLError(w, r, http.StatusInternalServerError, data)
+		s.ui.HTMLError(w, r, http.StatusInternalServerError, data)
 		return
 	}
 
 	if page > 1 && len(posts.Items) == 0 {
 		log.Printf("Fetched zero posts on URI '%s'", r.RequestURI)
-		s.view.JSONError(w, r, http.StatusNotFound)
+		s.ui.JSONError(w, r, http.StatusNotFound)
 		return
 	}
 
 	// If not the first page return JSON
 	if page > 1 {
 		time.Sleep(time.Millisecond * 400)
-		s.view.WriteJSON(w, r, posts.Items)
+		s.ui.WriteJSON(w, r, posts.Items)
 		return
 	}
 
 	data.Posts = &posts
 	data.Posts.TimeTook = fmt.Sprintf("%.2f", end.Seconds())
 	data.Title = "Search"
-	s.view.RenderHTML(w, r, "search.html", data)
+	s.ui.RenderHTML(w, r, "search.html", data)
 }
 
 // Handle adding new post via form
 func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Compose data object
-	data := s.view.NewData(w, r)
+	data := s.ui.NewData(w, r)
 	data.CurrentUser = utils.GetUserFromContext(r)
 
 	// Populate needed data for an empty form
@@ -228,7 +228,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
 		// Serve the page with the form
-		s.view.RenderHTML(w, r, "form.html", data)
+		s.ui.RenderHTML(w, r, "form.html", data)
 
 	case "POST":
 
@@ -238,7 +238,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			formError.Message = "Could not parse the form"
 			data.Error = &formError
-			s.view.RenderHTML(w, r, "form.html", data)
+			s.ui.RenderHTML(w, r, "form.html", data)
 			return
 		}
 
@@ -251,7 +251,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			formError.Message = "Could not extract the video ID"
 			data.Form.Error = &formError
-			s.view.RenderHTML(w, r, "form.html", data)
+			s.ui.RenderHTML(w, r, "form.html", data)
 			return
 		}
 
@@ -259,7 +259,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 		if validVideoID.FindStringSubmatch(videoID) == nil {
 			formError.Message = "Could not validate the video ID"
 			data.Form.Error = &formError
-			s.view.RenderHTML(w, r, "form.html", data)
+			s.ui.RenderHTML(w, r, "form.html", data)
 			return
 		}
 
@@ -267,7 +267,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 		if s.postsRepo.PostExists(r.Context(), videoID) {
 			formError.Message = "Video already posted"
 			data.Form.Error = &formError
-			s.view.RenderHTML(w, r, "form.html", data)
+			s.ui.RenderHTML(w, r, "form.html", data)
 			return
 		}
 
@@ -276,7 +276,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			formError.Message = utils.Capitalize(err.Error())
 			data.Form.Error = &formError
-			s.view.RenderHTML(w, r, "form.html", data)
+			s.ui.RenderHTML(w, r, "form.html", data)
 			return
 		}
 
@@ -284,7 +284,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 		if err := s.yt.ValidateYouTubeVideo(metadata[0]); err != nil {
 			formError.Message = utils.Capitalize(err.Error())
 			data.Form.Error = &formError
-			s.view.RenderHTML(w, r, "form.html", data)
+			s.ui.RenderHTML(w, r, "form.html", data)
 			return
 		}
 
@@ -309,7 +309,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 			log.Printf("Could not insert the video '%s' in DB: %v", post.VideoID, err)
 			formError.Message = "Could not insert the video in DB"
 			data.Form.Error = &formError
-			s.view.RenderHTML(w, r, "form.html", data)
+			s.ui.RenderHTML(w, r, "form.html", data)
 			return
 		}
 
@@ -318,7 +318,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, redirectTo, http.StatusFound)
 
 	default:
-		s.view.HTMLError(w, r, http.StatusMethodNotAllowed, data)
+		s.ui.HTMLError(w, r, http.StatusMethodNotAllowed, data)
 	}
 }
 
@@ -328,13 +328,13 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 	videoID := r.PathValue("video")
 
 	// Generate the default data
-	data := s.view.NewData(w, r)
+	data := s.ui.NewData(w, r)
 	data.CurrentUser = utils.GetUserFromContext(r)
 
 	// Validate the YT ID
 	if validVideoID.FindStringSubmatch(videoID) == nil {
 		log.Println("Not a valid video ID:", videoID)
-		s.view.HTMLError(w, r, http.StatusNotFound, data)
+		s.ui.HTMLError(w, r, http.StatusNotFound, data)
 		return
 	}
 
@@ -353,13 +353,13 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 
 	if errors.Is(err, pgx.ErrNoRows) {
 		log.Println("Can't find the video in DB:", videoID)
-		s.view.HTMLError(w, r, http.StatusNotFound, data)
+		s.ui.HTMLError(w, r, http.StatusNotFound, data)
 		return
 	}
 
 	if err != nil {
 		log.Printf("Error while getting the video '%s' from DB: %v", videoID, err)
-		s.view.HTMLError(w, r, http.StatusInternalServerError, data)
+		s.ui.HTMLError(w, r, http.StatusInternalServerError, data)
 		return
 	}
 
@@ -393,7 +393,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 	)
 
 	data.CurrentPost.RelatedPosts = relatedPosts
-	s.view.RenderHTML(w, r, "post.html", data)
+	s.ui.RenderHTML(w, r, "post.html", data)
 }
 
 // Perform an action on a video
@@ -403,7 +403,7 @@ func (s *Service) PostActionHandler(w http.ResponseWriter, r *http.Request) {
 	videoID := r.PathValue("video")
 	if validVideoID.FindStringSubmatch(videoID) == nil {
 		log.Println("Not a valid video ID:", videoID)
-		s.view.JSONError(w, r, http.StatusNotFound)
+		s.ui.JSONError(w, r, http.StatusNotFound)
 		return
 	}
 
@@ -412,7 +412,7 @@ func (s *Service) PostActionHandler(w http.ResponseWriter, r *http.Request) {
 	allowedActions := []string{"like", "unlike", "fave", "unfave", "edit", "delete"}
 	if !slices.Contains(allowedActions, action) {
 		log.Printf("Not a valid action '%s' on video: %s\n", action, videoID)
-		s.view.JSONError(w, r, http.StatusNotFound)
+		s.ui.JSONError(w, r, http.StatusNotFound)
 		return
 	}
 
@@ -422,7 +422,7 @@ func (s *Service) PostActionHandler(w http.ResponseWriter, r *http.Request) {
 	// Check if user is authorized to edit or delete (admin)
 	if (action == "edit" || action == "delete") &&
 		currentUser.UserID != s.config.AdminOpenID {
-		s.view.JSONError(w, r, http.StatusForbidden)
+		s.ui.JSONError(w, r, http.StatusForbidden)
 		return
 	}
 
@@ -440,6 +440,6 @@ func (s *Service) PostActionHandler(w http.ResponseWriter, r *http.Request) {
 	case "delete":
 		s.handleDeletePost(w, r, currentUser.ID, videoID)
 	default:
-		s.view.JSONError(w, r, http.StatusBadRequest)
+		s.ui.JSONError(w, r, http.StatusBadRequest)
 	}
 }

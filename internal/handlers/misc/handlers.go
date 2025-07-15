@@ -39,7 +39,7 @@ func (s *Service) HealthHandler(w http.ResponseWriter, r *http.Request) {
 		"server_status":   getServerStats(),
 	}
 
-	s.view.WriteJSON(w, r, data)
+	s.ui.WriteJSON(w, r, data)
 }
 
 // Handle static files
@@ -55,7 +55,7 @@ func (s *Service) StaticHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "max-age=31536000")
 
 	// Get the file information
-	fileInfo, ok := s.view.GetStaticFiles()[r.URL.Path]
+	fileInfo, ok := s.ui.GetStaticFiles()[r.URL.Path]
 
 	// Set content type header if media type available
 	if ok && fileInfo.MediaType != "" {

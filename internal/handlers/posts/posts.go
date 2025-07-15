@@ -6,13 +6,13 @@ import (
 	postsRepo "factual-docs/internal/repositories/posts"
 	"factual-docs/internal/shared/config"
 	"factual-docs/internal/shared/redis"
-	"factual-docs/internal/shared/view"
+	"factual-docs/internal/shared/ui"
 )
 
 type Service struct {
 	postsRepo *postsRepo.Repository
 	rdb       redis.Service
-	view      view.Service
+	ui        ui.Service
 	config    *config.Config
 	yt        *yt.Service
 	gemini    *gemini.Service
@@ -21,7 +21,7 @@ type Service struct {
 func New(
 	postsRepo *postsRepo.Repository,
 	rdb redis.Service,
-	view view.Service,
+	ui ui.Service,
 	config *config.Config,
 	yt *yt.Service,
 	gemini *gemini.Service,
@@ -29,7 +29,7 @@ func New(
 	return &Service{
 		postsRepo: postsRepo,
 		rdb:       rdb,
-		view:      view,
+		ui:        ui,
 		config:    config,
 		yt:        yt,
 		gemini:    gemini,

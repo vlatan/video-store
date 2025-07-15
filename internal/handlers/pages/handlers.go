@@ -19,7 +19,7 @@ func (s *Service) SinglePageHandler(w http.ResponseWriter, r *http.Request) {
 	slug := r.PathValue("slug")
 
 	// Generate the default data
-	data := s.view.NewData(w, r)
+	data := s.ui.NewData(w, r)
 	data.CurrentUser = utils.GetUserFromContext(r)
 
 	var page models.Page
@@ -37,13 +37,13 @@ func (s *Service) SinglePageHandler(w http.ResponseWriter, r *http.Request) {
 
 	if errors.Is(err, pgx.ErrNoRows) {
 		log.Println("Can't find the page in DB:", slug)
-		s.view.HTMLError(w, r, http.StatusNotFound, data)
+		s.ui.HTMLError(w, r, http.StatusNotFound, data)
 		return
 	}
 
 	if err != nil {
 		log.Printf("Error while getting the page '%s' from DB: %v", slug, err)
-		s.view.HTMLError(w, r, http.StatusInternalServerError, data)
+		s.ui.HTMLError(w, r, http.StatusInternalServerError, data)
 		return
 	}
 
@@ -51,5 +51,5 @@ func (s *Service) SinglePageHandler(w http.ResponseWriter, r *http.Request) {
 	data.CurrentPage = &page
 	data.Title = page.Title
 
-	s.view.RenderHTML(w, r, "page.html", data)
+	s.ui.RenderHTML(w, r, "page.html", data)
 }

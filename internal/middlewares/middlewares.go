@@ -3,8 +3,8 @@ package middlewares
 import (
 	"context"
 	"factual-docs/internal/shared/config"
+	"factual-docs/internal/shared/ui"
 	"factual-docs/internal/shared/utils"
-	"factual-docs/internal/shared/view"
 	"log"
 	"net/http"
 	"strings"
@@ -13,13 +13,13 @@ import (
 )
 
 type Service struct {
-	view   view.Service
+	ui     ui.Service
 	config *config.Config
 }
 
-func New(view view.Service, config *config.Config) *Service {
+func New(ui ui.Service, config *config.Config) *Service {
 	return &Service{
-		view:   view,
+		ui:     ui,
 		config: config,
 	}
 }
@@ -64,7 +64,7 @@ func (s *Service) LoadUser(next http.Handler) http.Handler {
 		}
 
 		// Get user from session and put it in the request context
-		user := s.view.GetUserFromSession(w, r) // Can be nil
+		user := s.ui.GetUserFromSession(w, r) // Can be nil
 		ctx := context.WithValue(r.Context(), utils.UserContextKey, user)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})

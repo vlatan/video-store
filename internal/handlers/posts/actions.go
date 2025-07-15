@@ -122,7 +122,7 @@ func (s *Service) handleDeletePost(w http.ResponseWriter, r *http.Request, userI
 		Category: "info",
 	}
 
-	s.view.StoreFlashMessage(w, r, &successDelete)
+	s.ui.StoreFlashMessage(w, r, &successDelete)
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
@@ -133,14 +133,14 @@ func (s *Service) handleEdit(w http.ResponseWriter, r *http.Request, videoID str
 	// Deocode JSON
 	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
 		log.Printf("Could not decode the JSON body on path: %s", r.URL.Path)
-		s.view.JSONError(w, r, http.StatusBadRequest)
+		s.ui.JSONError(w, r, http.StatusBadRequest)
 		return
 	}
 
 	// Check for title or description
 	if data.Title == "" && data.Description == "" {
 		log.Printf("No title and description in body on path: %s", r.URL.Path)
-		s.view.JSONError(w, r, http.StatusBadRequest)
+		s.ui.JSONError(w, r, http.StatusBadRequest)
 		return
 	}
 

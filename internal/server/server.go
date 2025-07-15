@@ -26,7 +26,7 @@ import (
 	"factual-docs/internal/shared/config"
 	"factual-docs/internal/shared/database"
 	"factual-docs/internal/shared/redis"
-	"factual-docs/internal/shared/view"
+	"factual-docs/internal/shared/ui"
 )
 
 type Server struct {
@@ -54,14 +54,14 @@ func NewServer() *http.Server {
 	store := newCookieStore(cfg)
 
 	// Create DB repositories
+	catsRepo := catsRepo.New(db)
 	usersRepo := usersRepo.New(db, cfg)
 	postsRepo := postsRepo.New(db, cfg)
 	pagesRepo := pagesRepo.New(db, cfg)
-	catsRepo := catsRepo.New(db)
 	sourcesRepo := sourcesRepo.New(db, cfg)
 
-	// Create view service
-	view := view.New(rdb, cfg, store, catsRepo, usersRepo)
+	// Create user interface service
+	ui := ui.New(rdb, cfg, store, catsRepo, usersRepo)
 
 	// Create YouTube service
 	ctx := context.Background()
@@ -77,14 +77,14 @@ func NewServer() *http.Server {
 	}
 
 	// Create domain services
-	mw := middlewares.New(view, cfg)
-	auth := auth.New(usersRepo, store, rdb, view, cfg)
-	pages := pages.New(pagesRepo, rdb, view, cfg)
-	users := users.New(usersRepo, postsRepo, rdb, view, cfg)
-	posts := posts.New(postsRepo, rdb, view, cfg, yt, gemini)
-	sources := sources.New(postsRepo, sourcesRepo, rdb, view, cfg, yt)
-	sitemaps := sitemaps.New(postsRepo, sourcesRepo, catsRepo, rdb, view, cfg)
-	misc := misc.New(cfg, db, rdb, view)
+	mw := middlewares.New(ui, cfg)
+	auth := auth.New(usersRepo, store, rdb, ui, cfg)
+	pages := pages.New(pagesRepo, rdb, ui, cfg)
+	users := users.New(usersRepo, postsRepo, rdb, ui, cfg)
+	posts := posts.New(postsRepo, rdb, ui, cfg, yt, gemini)
+	sources := sources.New(postsRepo, sourcesRepo, rdb, ui, cfg, yt)
+	sitemaps := sitemaps.New(postsRepo, sourcesRepo, catsRepo, rdb, ui, cfg)
+	misc := misc.New(cfg, db, rdb, ui)
 
 	// Create new Server struct
 	newServer := &Server{
