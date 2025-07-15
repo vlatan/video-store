@@ -195,7 +195,7 @@ func parseStaticFiles(m *minify.M, dir string) models.StaticFiles {
 		}
 
 		// Save all the data in the struct
-		sf[name] = models.FileInfo{
+		sf[name] = &models.FileInfo{
 			Bytes:     b,
 			MediaType: mediaType,
 			Etag:      etag,

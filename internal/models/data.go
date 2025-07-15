@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-type StaticFiles map[string]FileInfo
+type StaticFiles map[string]*FileInfo
 type TemplateMap map[string]*template.Template
 
 type FileInfo struct {
