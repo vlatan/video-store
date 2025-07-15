@@ -1,5 +1,7 @@
 
-* Also see if you can move GetUserFromSession to utils
+* Move GetUserFromSession to templates
+* Move StoreFlashMessage to templates
+* Rename templates ervice because it is not just for templates
 
 * Pages
   Add Edit button on page

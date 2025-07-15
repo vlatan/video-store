@@ -60,7 +60,7 @@ func NewServer() *http.Server {
 	catsRepo := catsRepo.New(db)
 	sourcesRepo := sourcesRepo.New(db, cfg)
 
-	// Create parsed templates map
+	// Create templates service
 	tm := tmpls.New(rdb, cfg, store, catsRepo)
 
 	// Create YouTube service
