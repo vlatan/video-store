@@ -14,7 +14,14 @@
 
 {{ define "content" }}
 <div class="dashboard-wrap">
-    <h1 class="dashboard-title">{{ .Title }}</h1>
+    <header class="dashboard-title-wrap">
+        <h1 class="dashboard-title">
+            {{ .Title }}
+        </h1>
+        {{ if .PaginationInfo }}
+        ({{ .PaginationInfo.TotalRecords }} users)
+        {{ end }}
+    </header>
     <div class="dashboard">
         <div class="dashboard-item dashboard-header-item">#</div>
         <div class="dashboard-item dashboard-header-item">Picture</div>

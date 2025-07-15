@@ -4,12 +4,17 @@
   gap: 2rem;
 }
 
-.dashboard-title {
+.dashboard-title-wrap {
   align-self: flex-start;
-  font-size: 1.2rem;
-  line-height: normal;
+  display: flex;
+  gap: 1rem;
   padding-bottom: calc(var(--content-padding) / 3);
   border-bottom: 1px solid #696969;
+}
+
+.dashboard-title {
+  font-size: 1.2rem;
+  line-height: normal;
 }
 
 .dashboard {
