@@ -27,6 +27,8 @@ import (
 type Service interface {
 	// Create new template data
 	NewData(w http.ResponseWriter, r *http.Request) *models.TemplateData
+	// Create new pagination struct
+	NewPagination(currentPage, totalRecords, pageSize int) *models.PaginationInfo
 	// Write JSON to response
 	WriteJSON(w http.ResponseWriter, r *http.Request, data any)
 	// Write HTML template to response

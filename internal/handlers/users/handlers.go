@@ -1,7 +1,6 @@
 package users
 
 import (
-	"factual-docs/internal/models"
 	"factual-docs/internal/shared/utils"
 	"log"
 	"net/http"
@@ -69,7 +68,7 @@ func (s *Service) UsersHandler(w http.ResponseWriter, r *http.Request) {
 		users.Items[avatar.index].LocalAvatarURL = avatar.localAvatar
 	}
 
-	data.PaginationInfo = models.CalculatePagination(
+	data.PaginationInfo = s.tm.NewPagination(
 		page,
 		users.TotalNum,
 		s.config.PostsPerPage,
