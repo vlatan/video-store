@@ -1,7 +1,6 @@
 
-* Move GetUserFromSession to templates
-* Move StoreFlashMessage to templates
-* Rename templates service because it is not just for templates
+* Rename view
+  https://claude.ai/chat/aa12d770-ea40-4f28-abb0-518b653403a6
 
 * Pages
   Add Edit button on page

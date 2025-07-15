@@ -47,7 +47,7 @@ func NewServer() *http.Server {
 	gob.Register(&models.FlashMessage{})
 	gob.Register(time.Time{})
 
-	// Create esential services
+	// Create essential services
 	cfg := config.New()
 	db := database.New(cfg)
 	rdb := redis.New(cfg)
@@ -81,7 +81,7 @@ func NewServer() *http.Server {
 	auth := auth.New(usersRepo, store, rdb, view, cfg)
 	pages := pages.New(pagesRepo, rdb, view, cfg)
 	users := users.New(usersRepo, postsRepo, rdb, view, cfg)
-	posts := posts.New(postsRepo, rdb, view, cfg, auth, yt, gemini)
+	posts := posts.New(postsRepo, rdb, view, cfg, yt, gemini)
 	sources := sources.New(postsRepo, sourcesRepo, rdb, view, cfg, yt)
 	sitemaps := sitemaps.New(postsRepo, sourcesRepo, catsRepo, rdb, view, cfg)
 	misc := misc.New(cfg, db, rdb, view)

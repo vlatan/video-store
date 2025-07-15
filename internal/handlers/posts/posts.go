@@ -1,7 +1,6 @@
 package posts
 
 import (
-	"factual-docs/internal/handlers/auth"
 	"factual-docs/internal/integrations/gemini"
 	"factual-docs/internal/integrations/yt"
 	postsRepo "factual-docs/internal/repositories/posts"
@@ -15,7 +14,6 @@ type Service struct {
 	rdb       redis.Service
 	view      view.Service
 	config    *config.Config
-	auth      *auth.Service
 	yt        *yt.Service
 	gemini    *gemini.Service
 }
@@ -25,7 +23,6 @@ func New(
 	rdb redis.Service,
 	view view.Service,
 	config *config.Config,
-	auth *auth.Service,
 	yt *yt.Service,
 	gemini *gemini.Service,
 ) *Service {
@@ -34,7 +31,6 @@ func New(
 		rdb:       rdb,
 		view:      view,
 		config:    config,
-		auth:      auth,
 		yt:        yt,
 		gemini:    gemini,
 	}
