@@ -363,12 +363,6 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if post.ID == 0 {
-		log.Println("Can't find the video in DB:", videoID)
-		s.tm.HTMLError(w, r, http.StatusNotFound, data)
-		return
-	}
-
 	// Assign the post to data
 	data.CurrentPost = &post
 	data.Title = post.Title

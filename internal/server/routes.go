@@ -20,6 +20,9 @@ func (s *Server) RegisterRoutes() http.Handler {
 	// Categories
 	mux.HandleFunc("GET /category/{category}/{$}", s.posts.CategoryPostsHandler)
 
+	// Pages
+	mux.HandleFunc("GET /page/{slug}/{$}", s.pages.SinglePageHandler)
+
 	// Sources
 	mux.HandleFunc("/source/new", s.mw.IsAdmin(s.sources.NewSourceHandler))
 	mux.HandleFunc("GET /source/{source}/{$}", s.sources.SourcePostsHandler)

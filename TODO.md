@@ -1,7 +1,10 @@
 
+* Check if you need the auth service if you only use get user from context
+  And move get user from context to utils
+  Also see if you can move GetUserFromSession to utils
+
 * Pages
   Slugify
-  Markdown
 
 * Sitemaps
   Separate xml templates for pages, sources, categories, misc

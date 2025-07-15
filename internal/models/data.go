@@ -53,6 +53,7 @@ type TemplateData struct {
 	Config          *config.Config
 	Title           string
 	CurrentPost     *Post
+	CurrentPage     *Page
 	CurrentUser     *User
 	CurrentURI      string
 	BaseURL         *url.URL
