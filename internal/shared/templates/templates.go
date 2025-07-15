@@ -36,7 +36,7 @@ type Service interface {
 
 type service struct {
 	templates   models.TemplateMap
-	StaticFiles models.StaticFiles
+	staticFiles models.StaticFiles
 	rdb         redis.Service
 	config      *config.Config
 	store       *sessions.CookieStore
@@ -67,7 +67,7 @@ func New(
 
 		tmInstance = &service{
 			templates:   parseTemplates(m),
-			StaticFiles: parseStaticFiles(m, "static"),
+			staticFiles: parseStaticFiles(m, "static"),
 			rdb:         rdb,
 			config:      config,
 			store:       store,

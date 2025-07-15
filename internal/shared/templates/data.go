@@ -12,7 +12,7 @@ import (
 
 // Get the map containing the static files
 func (s *service) GetStaticFiles() models.StaticFiles {
-	return s.StaticFiles
+	return s.staticFiles
 }
 
 // Creates new default data struct to be passed to the templates
