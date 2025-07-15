@@ -2,6 +2,7 @@ package utils
 
 import (
 	"database/sql"
+	"factual-docs/internal/models"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -26,6 +27,12 @@ var Favicons = []string{
 	"/favicon-32x32.png",
 	"/favicon.ico",
 	"/site.webmanifest",
+}
+
+// Get the user from context
+func GetUserFromContext(r *http.Request) *models.User {
+	user, _ := r.Context().Value(UserContextKey).(*models.User)
+	return user // nil if user not in context
 }
 
 // Validates a path

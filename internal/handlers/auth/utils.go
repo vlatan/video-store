@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/md5"
 	"factual-docs/internal/models"
-	"factual-docs/internal/shared/utils"
 	"fmt"
 	"log"
 	"net/http"
@@ -145,12 +144,6 @@ func (s *Service) logoutUser(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	return nil
-}
-
-// Get the user from context
-func (s *Service) GetUserFromContext(r *http.Request) *models.User {
-	user, _ := r.Context().Value(utils.UserContextKey).(*models.User)
-	return user // nil if user not in context
 }
 
 // Get the user from session

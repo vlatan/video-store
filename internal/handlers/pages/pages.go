@@ -1,7 +1,6 @@
 package pages
 
 import (
-	"factual-docs/internal/handlers/auth"
 	pagesRepo "factual-docs/internal/repositories/pages"
 	"factual-docs/internal/shared/config"
 	"factual-docs/internal/shared/redis"
@@ -13,7 +12,6 @@ type Service struct {
 	rdb       redis.Service
 	tm        tmpls.Service
 	config    *config.Config
-	auth      *auth.Service
 }
 
 func New(
@@ -21,13 +19,11 @@ func New(
 	rdb redis.Service,
 	tm tmpls.Service,
 	config *config.Config,
-	auth *auth.Service,
 ) *Service {
 	return &Service{
 		pagesRepo: pagesRepo,
 		rdb:       rdb,
 		tm:        tm,
 		config:    config,
-		auth:      auth,
 	}
 }

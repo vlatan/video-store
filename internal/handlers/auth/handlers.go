@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"factual-docs/internal/shared/utils"
 	"log"
 	"net/http"
 
@@ -103,7 +104,7 @@ func (s *Service) DeleteAccountHandler(w http.ResponseWriter, r *http.Request) {
 	redirectTo := getRedirectPath(r)
 
 	// Get the current user
-	currentUser := s.GetUserFromContext(r)
+	currentUser := utils.GetUserFromContext(r)
 
 	// Remove gothic session if any
 	if err := gothic.Logout(w, r); err != nil {

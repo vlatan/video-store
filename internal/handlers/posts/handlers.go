@@ -19,7 +19,7 @@ func (s *Service) HomeHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Generate template data
 	data := s.tm.NewData(w, r)
-	data.CurrentUser = s.auth.GetUserFromContext(r)
+	data.CurrentUser = utils.GetUserFromContext(r)
 
 	// Get page number from a query param
 	page := utils.GetPageNum(r)
@@ -85,7 +85,7 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 	// Generate template data (it gets all the categories too)
 	// This is probably wasteful for non-existing category
 	data := s.tm.NewData(w, r)
-	data.CurrentUser = s.auth.GetUserFromContext(r)
+	data.CurrentUser = utils.GetUserFromContext(r)
 
 	// Get page number from a query param
 	page := utils.GetPageNum(r)
@@ -156,7 +156,7 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Generate the default data
 	data := s.tm.NewData(w, r)
-	data.CurrentUser = s.auth.GetUserFromContext(r)
+	data.CurrentUser = utils.GetUserFromContext(r)
 	data.SearchQuery = searchQuery
 
 	limit := s.config.PostsPerPage
@@ -216,7 +216,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Compose data object
 	data := s.tm.NewData(w, r)
-	data.CurrentUser = s.auth.GetUserFromContext(r)
+	data.CurrentUser = utils.GetUserFromContext(r)
 
 	// Populate needed data for an empty form
 	data.Form = &models.Form{}
@@ -329,7 +329,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Generate the default data
 	data := s.tm.NewData(w, r)
-	data.CurrentUser = s.auth.GetUserFromContext(r)
+	data.CurrentUser = utils.GetUserFromContext(r)
 
 	// Validate the YT ID
 	if validVideoID.FindStringSubmatch(videoID) == nil {
@@ -417,7 +417,7 @@ func (s *Service) PostActionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get the current user
-	currentUser := s.auth.GetUserFromContext(r)
+	currentUser := utils.GetUserFromContext(r)
 
 	// Check if user is authorized to edit or delete (admin)
 	if (action == "edit" || action == "delete") &&

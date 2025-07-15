@@ -4,6 +4,7 @@ import (
 	"errors"
 	"factual-docs/internal/models"
 	"factual-docs/internal/shared/redis"
+	"factual-docs/internal/shared/utils"
 	"fmt"
 	"log"
 	"net/http"
@@ -19,7 +20,7 @@ func (s *Service) SinglePageHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Generate the default data
 	data := s.tm.NewData(w, r)
-	data.CurrentUser = s.auth.GetUserFromContext(r)
+	data.CurrentUser = utils.GetUserFromContext(r)
 
 	var page models.Page
 	err := redis.GetItems(
