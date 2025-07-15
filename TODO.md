@@ -1,7 +1,4 @@
 
-* Users in dashboard
-  Do not like pagination functions in models, possibly move to templates data
-
 * Pages
 
 * Sitemaps

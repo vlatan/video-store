@@ -15,12 +15,8 @@
 {{ define "content" }}
 <div class="dashboard-wrap">
     <header class="dashboard-title-wrap">
-        <h1 class="dashboard-title">
-            {{ .Title }}
-        </h1>
-        {{ if .PaginationInfo }}
-        ({{ .PaginationInfo.TotalRecords }} users)
-        {{ end }}
+        <h1 class="dashboard-title">{{ .Title }}</h1>
+        <span>({{ .PaginationInfo.TotalRecords }} users)</span>
     </header>
     <div class="dashboard">
         <div class="dashboard-item dashboard-item-number dashboard-header-item">#</div>
@@ -32,7 +28,9 @@
         <div class="dashboard-item dashboard-header-item">Last Seen</div>
 
         {{ range $index, $user := .Users.Items }}
-        <div class="dashboard-item dashboard-item-number">{{ len (printf "a%*s" $index "") }}</div>
+        <div class="dashboard-item dashboard-item-number">
+            {{ $.PaginationInfo.OrdinalNumber $index }}
+        </div>
         <div class="dashboard-item dashboard-item-img">
             <img class="dashboard-user-img" src="{{ $user.LocalAvatarURL}}">
         </div>
@@ -54,7 +52,6 @@
         {{ end }}
     </div>
 
-    {{ if and .PaginationInfo .PaginationInfo.Pages }}
     <div class="pagination">
         {{ range .PaginationInfo.Pages }}
         {{ if .IsEllipsis }}
@@ -66,6 +63,5 @@
         {{ end }}
         {{ end }}
     </div>
-    {{ end }}
     {{ end }}
 </div>

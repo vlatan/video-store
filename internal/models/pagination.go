@@ -13,3 +13,7 @@ type PageInfo struct {
 	IsCurrent  bool
 	IsEllipsis bool
 }
+
+func (p *PaginationInfo) OrdinalNumber(index int) int {
+	return (p.CurrentPage-1)*p.PageSize + index + 1
+}
