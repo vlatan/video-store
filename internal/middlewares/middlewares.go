@@ -4,23 +4,22 @@ import (
 	"context"
 	"factual-docs/internal/shared/config"
 	"factual-docs/internal/shared/utils"
+	"factual-docs/internal/shared/view"
 	"log"
 	"net/http"
 	"strings"
-
-	tmpls "factual-docs/internal/shared/templates"
 
 	"github.com/gorilla/csrf"
 )
 
 type Service struct {
-	tm     tmpls.Service
+	view   view.Service
 	config *config.Config
 }
 
-func New(tm tmpls.Service, config *config.Config) *Service {
+func New(view view.Service, config *config.Config) *Service {
 	return &Service{
-		tm:     tm,
+		view:   view,
 		config: config,
 	}
 }
@@ -65,7 +64,7 @@ func (s *Service) LoadUser(next http.Handler) http.Handler {
 		}
 
 		// Get user from session and put it in the request context
-		user := s.tm.GetUserFromSession(w, r) // Can be nil
+		user := s.view.GetUserFromSession(w, r) // Can be nil
 		ctx := context.WithValue(r.Context(), utils.UserContextKey, user)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})

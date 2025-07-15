@@ -1,4 +1,4 @@
-package tmpls
+package view
 
 import (
 	"crypto/md5"
@@ -32,7 +32,7 @@ var needsContent = []string{
 // Parse the templates and create a template map
 func parseTemplates(m *minify.M) models.TemplateMap {
 
-	tm := make(models.TemplateMap)
+	templateMap := make(models.TemplateMap)
 	baseTemplate := template.Must(parseTemplateFiles(m, nil, base))
 
 	// Function used to process each file/dir in the root, including the root
@@ -69,7 +69,7 @@ func parseTemplates(m *minify.M) models.TemplateMap {
 			}
 		}
 
-		tm[name] = template.Must(parseTemplateFiles(m, baseTmpl, part...))
+		templateMap[name] = template.Must(parseTemplateFiles(m, baseTmpl, part...))
 		return nil
 	}
 
@@ -83,7 +83,7 @@ func parseTemplates(m *minify.M) models.TemplateMap {
 		log.Fatal(err)
 	}
 
-	return tm
+	return templateMap
 }
 
 // Minify and parse the HTML templates as per the tdewolff/minify docs.

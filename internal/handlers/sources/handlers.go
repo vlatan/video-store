@@ -13,7 +13,7 @@ import (
 // Handle all sources page
 func (s *Service) SourcesHandler(w http.ResponseWriter, r *http.Request) {
 	// Generate template data
-	data := s.tm.NewData(w, r)
+	data := s.view.NewData(w, r)
 	data.CurrentUser = utils.GetUserFromContext(r)
 
 	// Get sources from redis or DB
@@ -32,19 +32,19 @@ func (s *Service) SourcesHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		log.Printf("Was unabale to fetch sources on URI '%s': %v", r.RequestURI, err)
-		s.tm.HTMLError(w, r, http.StatusInternalServerError, data)
+		s.view.HTMLError(w, r, http.StatusInternalServerError, data)
 		return
 	}
 
 	if len(sources) == 0 {
 		log.Printf("Fetched zero sources on URI '%s'", r.RequestURI)
-		s.tm.HTMLError(w, r, http.StatusNotFound, data)
+		s.view.HTMLError(w, r, http.StatusNotFound, data)
 		return
 	}
 
 	data.Sources = sources
 	data.Title = "Sources"
-	s.tm.RenderHTML(w, r, "sources.html", data)
+	s.view.RenderHTML(w, r, "sources.html", data)
 
 }
 
@@ -52,7 +52,7 @@ func (s *Service) SourcesHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Compose data object
-	data := s.tm.NewData(w, r)
+	data := s.view.NewData(w, r)
 	data.CurrentUser = utils.GetUserFromContext(r)
 
 	// Populate needed data for an empty form
@@ -65,7 +65,7 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
 		// Serve the page with the form
-		s.tm.RenderHTML(w, r, "form.html", data)
+		s.view.RenderHTML(w, r, "form.html", data)
 
 	case "POST":
 
@@ -75,7 +75,7 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			formError.Message = "Could not parse the form"
 			data.Error = &formError
-			s.tm.RenderHTML(w, r, "form.html", data)
+			s.view.RenderHTML(w, r, "form.html", data)
 			return
 		}
 
@@ -88,7 +88,7 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			formError.Message = "Could not extract the playlist ID"
 			data.Form.Error = &formError
-			s.tm.RenderHTML(w, r, "form.html", data)
+			s.view.RenderHTML(w, r, "form.html", data)
 			return
 		}
 
@@ -96,7 +96,7 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 		if s.sourcesRepo.SourceExists(r.Context(), playlistID) {
 			formError.Message = "Source already posted"
 			data.Form.Error = &formError
-			s.tm.RenderHTML(w, r, "form.html", data)
+			s.view.RenderHTML(w, r, "form.html", data)
 			return
 		}
 
@@ -105,7 +105,7 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			formError.Message = utils.Capitalize(err.Error())
 			data.Form.Error = &formError
-			s.tm.RenderHTML(w, r, "form.html", data)
+			s.view.RenderHTML(w, r, "form.html", data)
 			return
 		}
 
@@ -114,7 +114,7 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			formError.Message = utils.Capitalize(err.Error())
 			data.Form.Error = &formError
-			s.tm.RenderHTML(w, r, "form.html", data)
+			s.view.RenderHTML(w, r, "form.html", data)
 			return
 		}
 
@@ -128,7 +128,7 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 			log.Printf("Could not insert the source '%s' in DB: %v", source.PlaylistID, err)
 			formError.Message = "Could not insert the source in DB"
 			data.Form.Error = &formError
-			s.tm.RenderHTML(w, r, "form.html", data)
+			s.view.RenderHTML(w, r, "form.html", data)
 			return
 		}
 
@@ -137,7 +137,7 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, redirectTo, http.StatusFound)
 
 	default:
-		s.tm.HTMLError(w, r, http.StatusMethodNotAllowed, data)
+		s.view.HTMLError(w, r, http.StatusMethodNotAllowed, data)
 	}
 }
 
@@ -149,7 +149,7 @@ func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Generate template data (it gets all the categories too)
 	// This is probably wasteful for non-existing category
-	data := s.tm.NewData(w, r)
+	data := s.view.NewData(w, r)
 	data.CurrentUser = utils.GetUserFromContext(r)
 
 	// Get page number from a query param
@@ -178,31 +178,31 @@ func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("Was unabale to fetch posts on URI '%s': %v", r.RequestURI, err)
 		if page > 1 {
-			s.tm.JSONError(w, r, http.StatusInternalServerError)
+			s.view.JSONError(w, r, http.StatusInternalServerError)
 			return
 		}
-		s.tm.HTMLError(w, r, http.StatusInternalServerError, data)
+		s.view.HTMLError(w, r, http.StatusInternalServerError, data)
 		return
 	}
 
 	if len(posts.Items) == 0 {
 		log.Printf("Fetched zero posts on URI '%s'", r.RequestURI)
 		if page > 1 {
-			s.tm.JSONError(w, r, http.StatusNotFound)
+			s.view.JSONError(w, r, http.StatusNotFound)
 			return
 		}
-		s.tm.HTMLError(w, r, http.StatusNotFound, data)
+		s.view.HTMLError(w, r, http.StatusNotFound, data)
 		return
 	}
 
 	// If not the first page return JSON
 	if page > 1 {
 		time.Sleep(time.Millisecond * 400)
-		s.tm.WriteJSON(w, r, posts.Items)
+		s.view.WriteJSON(w, r, posts.Items)
 		return
 	}
 
 	data.Posts = posts
 	data.Title = data.Posts.Title
-	s.tm.RenderHTML(w, r, "source.html", data)
+	s.view.RenderHTML(w, r, "source.html", data)
 }

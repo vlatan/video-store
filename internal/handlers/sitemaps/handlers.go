@@ -8,24 +8,24 @@ import (
 
 // Serve the xml style, whixh is xsl
 func (s *Service) SitemapStyleHandler(w http.ResponseWriter, r *http.Request) {
-	data := s.tm.NewData(w, r)
+	data := s.view.NewData(w, r)
 	data.XMLDeclarations = []template.HTML{template.HTML(`<?xml version="1.0" encoding="UTF-8"?>`)}
 	w.Header().Set("Content-Type", "text/xsl")
-	s.tm.RenderHTML(w, r, "sitemap.xsl", data)
+	s.view.RenderHTML(w, r, "sitemap.xsl", data)
 }
 
 // Serve the posts from a given year and months on a single page
 func (s *Service) SitemapPostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	// create new data struct
-	data := s.tm.NewData(w, r)
+	data := s.view.NewData(w, r)
 
 	// Extract the year and the month
 	year := r.PathValue("year")
 	month := r.PathValue("month")
 
 	if !validateDate(year, month) {
-		s.tm.HTMLError(w, r, http.StatusNotFound, data)
+		s.view.HTMLError(w, r, http.StatusNotFound, data)
 		return
 	}
 
@@ -33,13 +33,13 @@ func (s *Service) SitemapPostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		log.Printf("Was unabale to fetch posts on URI '%s': %v", r.RequestURI, err)
-		s.tm.HTMLError(w, r, http.StatusInternalServerError, data)
+		s.view.HTMLError(w, r, http.StatusInternalServerError, data)
 		return
 	}
 
 	if len(posts.Items) == 0 {
 		log.Printf("Fetched zero posts on URI '%s'", r.RequestURI)
-		s.tm.HTMLError(w, r, http.StatusNotFound, data)
+		s.view.HTMLError(w, r, http.StatusNotFound, data)
 		return
 	}
 
@@ -50,5 +50,5 @@ func (s *Service) SitemapPostsHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/xml")
 
 	data.Posts = &posts
-	s.tm.RenderHTML(w, r, "sitemap_posts.xml", data)
+	s.view.RenderHTML(w, r, "sitemap_posts.xml", data)
 }

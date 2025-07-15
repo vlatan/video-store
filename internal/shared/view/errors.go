@@ -1,4 +1,4 @@
-package tmpls
+package view
 
 import (
 	"bytes"
