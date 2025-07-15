@@ -7,8 +7,6 @@ type PaginationInfo struct {
 	TotalPages   int
 	TotalRecords int
 	PageSize     int
-	HasPrevious  bool
-	HasNext      bool
 	Pages        []PageInfo
 }
 
@@ -43,15 +41,8 @@ func CalculatePagination(currentPage, totalRecords, pageSize int) *PaginationInf
 // Creates the page number sequence with ellipsis
 func generatePageNumbers(currentPage, totalPages int) (pages []PageInfo) {
 
-	// If we have 7 or fewer pages, show them all
-	if totalPages <= 7 {
-		for i := 1; i <= totalPages; i++ {
-			pages = append(pages, PageInfo{
-				Number:     i,
-				IsCurrent:  i == currentPage,
-				IsEllipsis: false,
-			})
-		}
+	// No pages if just one page
+	if totalPages <= 1 {
 		return pages
 	}
 
@@ -62,14 +53,13 @@ func generatePageNumbers(currentPage, totalPages int) (pages []PageInfo) {
 		IsEllipsis: false,
 	})
 
-	// Determine the range of pages to show around current page
-	start := max(2, currentPage-2)
-	end := min(totalPages-1, currentPage+2)
+	// The range of pages to show around the current page
+	start := max(2, currentPage-1)
+	end := min(totalPages-1, currentPage+1)
 
 	// Add ellipsis after first page if needed
 	if start > 2 {
 		pages = append(pages, PageInfo{
-			Number:     0,
 			IsCurrent:  false,
 			IsEllipsis: true,
 		})
@@ -87,7 +77,6 @@ func generatePageNumbers(currentPage, totalPages int) (pages []PageInfo) {
 	// Add ellipsis before last page if needed
 	if end < totalPages-1 {
 		pages = append(pages, PageInfo{
-			Number:     0,
 			IsCurrent:  false,
 			IsEllipsis: true,
 		})

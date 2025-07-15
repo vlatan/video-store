@@ -1,6 +1,6 @@
 
 * Users in dashboard
-  Provide paginated view (scroll or pagination)
+  Do not like pagination functions in models, possibly move to templates data
 
 * Pages
 
