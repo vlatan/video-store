@@ -23,8 +23,8 @@
         {{ end }}
     </header>
     <div class="dashboard">
-        <div class="dashboard-item dashboard-header-item">#</div>
-        <div class="dashboard-item dashboard-header-item">Picture</div>
+        <div class="dashboard-item dashboard-item-number dashboard-header-item">#</div>
+        <div class="dashboard-item dashboard-item-img dashboard-header-item">Picture</div>
         <div class="dashboard-item dashboard-header-item">Name</div>
         <div class="dashboard-item dashboard-header-item">Email</div>
         <div class="dashboard-item dashboard-header-item">Login Provider</div>
@@ -32,8 +32,8 @@
         <div class="dashboard-item dashboard-header-item">Last Seen</div>
 
         {{ range $index, $user := .Users.Items }}
-        <div class="dashboard-item">{{ len (printf "a%*s" $index "") }}.</div>
-        <div class="dashboard-item dashboard-user-img-container">
+        <div class="dashboard-item dashboard-item-number">{{ len (printf "a%*s" $index "") }}</div>
+        <div class="dashboard-item dashboard-item-img">
             <img class="dashboard-user-img" src="{{ $user.LocalAvatarURL}}">
         </div>
         <div class="dashboard-item">{{ $user.Name }}</div>
