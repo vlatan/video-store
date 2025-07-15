@@ -49,22 +49,23 @@ type Form struct {
 
 // Data struct to pass to templates
 type TemplateData struct {
-	StaticFiles static.StaticFiles
-	Config      *config.Config
-	Title       string
-	CurrentPost *Post
-	CurrentUser *User
-	CurrentURI  string
-	BaseURL     *url.URL
-	*Posts
-	Users           []User
+	StaticFiles     static.StaticFiles
+	Config          *config.Config
+	Title           string
+	CurrentPost     *Post
+	CurrentUser     *User
+	CurrentURI      string
+	BaseURL         *url.URL
 	Sources         []Source
 	Categories      []Category
 	FlashMessages   []*FlashMessage
 	SearchQuery     string
-	HTMLErrorData   *HTMLErrorData
 	CSRFField       template.HTML
 	XMLDeclarations []template.HTML
+	*HTMLErrorData
+	*PaginationInfo
+	*Posts
+	*Users
 	*Form
 }
 

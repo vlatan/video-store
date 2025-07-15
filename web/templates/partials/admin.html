@@ -23,7 +23,7 @@
     <div class="dashboard-item dashboard-header-item">Signup</div>
     <div class="dashboard-item dashboard-header-item">Last Seen</div>
 
-    {{ range $index, $user := .Users }}
+    {{ range $index, $user := .Users.Items }}
     <div class="dashboard-item">{{ len (printf "a%*s" $index "") }}.</div>
     <div class="dashboard-item dashboard-user-img-container">
         <img class="dashboard-user-img" src="{{ $user.LocalAvatarURL}}">
@@ -44,5 +44,6 @@
         {{ end }}
     </div>
     {{ end }}
+
 </div>
 {{ end }}

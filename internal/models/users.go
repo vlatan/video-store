@@ -15,6 +15,12 @@ import (
 	"time"
 )
 
+// Collection of users
+type Users struct {
+	TotalNum int
+	Items    []User
+}
+
 // User struct to store in the USER info in session
 // A simplified version of goth.User
 type User struct {

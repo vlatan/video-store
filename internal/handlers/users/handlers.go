@@ -1,6 +1,7 @@
 package users
 
 import (
+	"factual-docs/internal/models"
 	"factual-docs/internal/shared/utils"
 	"log"
 	"net/http"
@@ -57,34 +58,22 @@ func (s *Service) UsersHandler(w http.ResponseWriter, r *http.Request) {
 	data.CurrentUser = s.auth.GetUserFromContext(r)
 
 	users, err := s.usersRepo.GetUsers(r.Context(), page)
-
 	if err != nil {
 		log.Printf("Was unabale to fetch users on URI '%s': %v", r.RequestURI, err)
-		if page > 1 {
-			s.tm.JSONError(w, r, http.StatusInternalServerError)
-			return
-		}
 		s.tm.HTMLError(w, r, http.StatusInternalServerError, data)
 		return
 	}
 
-	if page > 1 && len(users) == 0 {
-		log.Printf("Fetched zero users on URI '%s'", r.RequestURI)
-		s.tm.JSONError(w, r, http.StatusNotFound)
-		return
-	}
-
-	avatars := s.GetAvatars(r.Context(), users)
+	avatars := s.GetAvatars(r.Context(), users.Items)
 	for avatar := range avatars {
-		users[avatar.index].LocalAvatarURL = avatar.localAvatar
+		users.Items[avatar.index].LocalAvatarURL = avatar.localAvatar
 	}
 
-	// If not the first page return JSON
-	if page > 1 {
-		time.Sleep(time.Millisecond * 400)
-		s.tm.WriteJSON(w, r, users)
-		return
-	}
+	data.PaginationInfo = models.CalculatePagination(
+		page,
+		users.TotalNum,
+		s.config.PostsPerPage,
+	)
 
 	data.Users = users
 	data.Title = "Admin Dashboard"
