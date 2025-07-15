@@ -8,13 +8,14 @@ import (
 	"time"
 )
 
+type StaticFiles map[string]FileInfo
+type TemplateMap map[string]*template.Template
+
 type FileInfo struct {
 	Bytes     []byte
 	MediaType string
 	Etag      string
 }
-
-type StaticFiles map[string]FileInfo
 
 // The response from the Genai API
 type GenaiResponse struct {

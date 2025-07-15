@@ -15,8 +15,6 @@ import (
 	"github.com/tdewolff/minify"
 )
 
-type templateMap map[string]*template.Template
-
 // These are files/dirs within the embedded filesystem 'web'
 const base = "templates/base.html"
 const content = "templates/content.html"
@@ -32,9 +30,9 @@ var needsContent = []string{
 }
 
 // Parse the templates and create a template map
-func parseTemplates(m *minify.M) templateMap {
+func parseTemplates(m *minify.M) models.TemplateMap {
 
-	tm := make(templateMap)
+	tm := make(models.TemplateMap)
 	baseTemplate := template.Must(parseTemplateFiles(m, nil, base))
 
 	// Function used to process each file/dir in the root, including the root

@@ -45,7 +45,7 @@ func (s *service) NewData(w http.ResponseWriter, r *http.Request) *models.Templa
 	session.Save(r, w)
 
 	return &models.TemplateData{
-		StaticFiles:   s.StaticFiles,
+		StaticFiles:   s.GetStaticFiles(),
 		Config:        s.config,
 		Categories:    categories,
 		CurrentURI:    r.RequestURI,

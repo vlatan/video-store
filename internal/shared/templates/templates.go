@@ -35,7 +35,7 @@ type Service interface {
 }
 
 type service struct {
-	templates   templateMap
+	templates   models.TemplateMap
 	StaticFiles models.StaticFiles
 	rdb         redis.Service
 	config      *config.Config
