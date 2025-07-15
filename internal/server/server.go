@@ -13,6 +13,7 @@ import (
 	"factual-docs/internal/handlers/sitemaps"
 	"factual-docs/internal/handlers/sources"
 	"factual-docs/internal/handlers/static"
+	"factual-docs/internal/handlers/users"
 	"factual-docs/internal/integrations/gemini"
 	"factual-docs/internal/integrations/yt"
 	"factual-docs/internal/middlewares"
@@ -29,6 +30,7 @@ import (
 
 type Server struct {
 	auth     *auth.Service
+	users    *users.Service
 	posts    *posts.Service
 	sources  *sources.Service
 	sitemaps *sitemaps.Service
@@ -45,16 +47,16 @@ func NewServer() *http.Server {
 	gob.Register(time.Time{})
 
 	// Create esential services
-	cfg := config.New()          // Create new config service
-	db := database.New(cfg)      // Create database service
-	rdb := redis.New(cfg)        // Create Redis service
-	store := newCookieStore(cfg) // Create Cookie store
-	static := static.New(cfg)    // Minify and store static files
+	cfg := config.New()
+	db := database.New(cfg)
+	rdb := redis.New(cfg)
+	store := newCookieStore(cfg)
+	static := static.New(cfg)
 
 	// Create DB repositories
-	usersRepo := usersRepo.New(db)      // Create users repo
-	postsRepo := postsRepo.New(db, cfg) // Create posts repo
-	catsRepo := catsRepo.New(db)        // Create categories repo
+	usersRepo := usersRepo.New(db, cfg)
+	postsRepo := postsRepo.New(db, cfg)
+	catsRepo := catsRepo.New(db)
 	sourcesRepo := sourcesRepo.New(db, cfg)
 
 	// Create parsed templates map
@@ -74,11 +76,12 @@ func NewServer() *http.Server {
 	}
 
 	// Create domain services
-	auth := auth.New(usersRepo, store, rdb, cfg)                  // Create auth service
-	posts := posts.New(postsRepo, rdb, tm, cfg, auth, yt, gemini) // Create posts service
-	sources := sources.New(sourcesRepo, rdb, tm, cfg, auth, yt)   // Create sources service
+	auth := auth.New(usersRepo, store, rdb, cfg)
+	users := users.New(usersRepo, postsRepo, rdb, tm, cfg, auth)
+	posts := posts.New(postsRepo, rdb, tm, cfg, auth, yt, gemini)
+	sources := sources.New(postsRepo, sourcesRepo, rdb, tm, cfg, auth, yt)
 	sitemaps := sitemaps.New(postsRepo, sourcesRepo, catsRepo, rdb, tm, cfg)
-	misc := misc.New(cfg, db, rdb, tm) // Create miscellaneous service
+	misc := misc.New(cfg, db, rdb, tm)
 
 	// Create middlewares service
 	mw := middlewares.New(auth, cfg)
@@ -86,6 +89,7 @@ func NewServer() *http.Server {
 	// Create new Server struct
 	newServer := &Server{
 		auth:     auth,
+		users:    users,
 		posts:    posts,
 		sources:  sources,
 		sitemaps: sitemaps,

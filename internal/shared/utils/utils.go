@@ -73,12 +73,7 @@ func GetPageNum(r *http.Request) (page int) {
 		page = pageInt
 	}
 
-	// Do not allow negative or zero pages
-	if page <= 0 {
-		page = 1
-	}
-
-	return page
+	return max(page, 1)
 }
 
 // First letter to uppercase

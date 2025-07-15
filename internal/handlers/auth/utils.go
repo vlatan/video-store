@@ -3,16 +3,12 @@ package auth
 import (
 	"bytes"
 	"crypto/md5"
-	"encoding/hex"
 	"factual-docs/internal/models"
 	"factual-docs/internal/shared/utils"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"net/url"
-	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -21,9 +17,10 @@ import (
 
 // Hardcode the static protected routes
 var staticProtectedPaths = map[string]bool{
-	"/video/new":      true,
-	"/health/":        true,
-	"/account/delete": true,
+	"/video/new":       true,
+	"/health/":         true,
+	"/account/delete":  true,
+	"/user/favorites/": true,
 }
 
 // Detect if it's a protected route
@@ -191,40 +188,20 @@ func (s *Service) GetUserFromSession(w http.ResponseWriter, r *http.Request) *mo
 	analyticsID := session.Values["AnalyticsID"].(string)
 	avatarURL := session.Values["AvatarURL"].(string)
 
-	return &models.User{
-		ID:             id,
-		UserID:         session.Values["UserID"].(string),
-		Email:          session.Values["Email"].(string),
-		Name:           session.Values["Name"].(string),
-		Provider:       session.Values["Provider"].(string),
-		AvatarURL:      avatarURL,
-		AnalyticsID:    analyticsID,
-		LocalAvatarURL: s.getAvatar(r, avatarURL, analyticsID),
-		AccessToken:    session.Values["AccessToken"].(string),
-	}
-}
-
-// Get user avatar path, either from redis, or download and store avatar path to redis
-func (s *Service) getAvatar(r *http.Request, avatarURL, analyticsID string) string {
-	// Get avatar URL from Redis
-	redisKey := fmt.Sprintf("avatar:%s", analyticsID)
-	avatar, err := s.rdb.Get(r.Context(), redisKey)
-	if err == nil {
-		return avatar
+	user := models.User{
+		ID:          id,
+		UserID:      session.Values["UserID"].(string),
+		Email:       session.Values["Email"].(string),
+		Name:        session.Values["Name"].(string),
+		Provider:    session.Values["Provider"].(string),
+		AvatarURL:   avatarURL,
+		AnalyticsID: analyticsID,
+		AccessToken: session.Values["AccessToken"].(string),
 	}
 
-	// Attempt to download the avatar, set default avatar on fail
-	etag, err := s.downloadAvatar(avatarURL, analyticsID)
-	if err != nil {
-		avatar = "/static/images/default-avatar.jpg"
-		s.rdb.Set(r.Context(), redisKey, avatar, 24*7*time.Hour)
-		return avatar
-	}
+	user.LocalAvatarURL = user.GetAvatar(r.Context(), s.rdb, s.config)
 
-	// Save avatar URL to Redis and return
-	avatar = "/static/images/avatars/" + analyticsID + ".jpg?v=" + etag
-	s.rdb.Set(r.Context(), redisKey, avatar, 24*7*time.Hour)
-	return avatar
+	return &user
 }
 
 // Check if same dates
@@ -232,79 +209,6 @@ func sameDate(t1, t2 time.Time) bool {
 	y1, m1, d1 := t1.Date()
 	y2, m2, d2 := t2.Date()
 	return y1 == y2 && m1 == m2 && d1 == d2
-}
-
-// Download remote image (user avatar)
-func (s *Service) downloadAvatar(avatarURL, analyticsID string) (string, error) {
-	// Get remote file
-	response, err := http.Get(avatarURL)
-	if err != nil {
-		return "", fmt.Errorf("can't read the remote file: %v", err)
-	}
-	defer response.Body.Close()
-
-	// Ensure the HTTP request was successful (status code 2xx)
-	if response.StatusCode < 200 || response.StatusCode >= 300 {
-		return "", fmt.Errorf(
-			"failed to download avatar from %s: received status code %d",
-			avatarURL,
-			response.StatusCode,
-		)
-	}
-
-	// Create a file for writing
-	destination := filepath.Join(s.config.DataVolume, analyticsID+".jpg")
-	file, err := os.Create(destination)
-	if err != nil {
-		return "", fmt.Errorf("couldn't create file '%s': %v", destination, err)
-	}
-
-	// Flag to track if the download was successful
-	valid := false
-
-	// Run this clean up function on exit
-	defer func() {
-		if err := file.Close(); err != nil { // Close the file
-			log.Printf("Warning: failed to close file '%s': %v\n", destination, err)
-		}
-		if !valid { // Remove the file if not successfuly created
-			if err := os.Remove(destination); err != nil {
-				log.Printf("Failed to remove partially created file '%s': %v\n", destination, err)
-			}
-		}
-	}()
-
-	// Init a hasher
-	hasher := md5.New()
-
-	// Create a multiwriter to write to the hasher and to the file
-	multiWriter := io.MultiWriter(hasher, file)
-
-	// Stream the response body directly into the hasher and the file
-	_, err = io.Copy(multiWriter, response.Body)
-	if err != nil {
-		return "", fmt.Errorf("couldn't hash or write to file '%s': %v", destination, err)
-	}
-
-	// Get the final hash sum and convert to a hex string
-	hashInBytes := hasher.Sum(nil)
-	hashString := hex.EncodeToString(hashInBytes)
-
-	valid = true
-	return hashString, nil
-}
-
-// Delete local avatar if exists
-func (s *Service) deleteAvatar(r *http.Request, analyticsID string) {
-	avatarPath := filepath.Join(s.config.DataVolume, analyticsID+".jpg")
-	if err := os.Remove(avatarPath); err != nil && err != os.ErrNotExist {
-		log.Printf("Could not remove the local avatar %s: %v", avatarPath, err)
-	}
-
-	redisKey := fmt.Sprintf("avatar:%s", analyticsID)
-	if err := s.rdb.Delete(r.Context(), redisKey); err != nil {
-		log.Printf("Could not remove the avatar %s from Redis: %v", redisKey, err)
-	}
 }
 
 // Send revoke request. It will work if the access token is not expired.

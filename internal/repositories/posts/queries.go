@@ -104,6 +104,25 @@ const getPostsByMonthQuery = `
 	AND EXTRACT(MONTH FROM upload_date) = $2
 `
 
+const getUserFavedPostsQuery = `
+	SELECT
+		p.video_id,
+		p.title,
+		p.thumbnails,
+		COUNT(pl.id) AS likes,
+		CASE 
+			WHEN $3 = 0 THEN COUNT(*) OVER()
+			ELSE 0
+		END AS total_results
+	FROM post AS p
+	LEFT JOIN post_like AS pl ON pl.post_id = p.id
+	LEFT JOIN post_fave AS pf ON pf.post_id = p.id
+	WHERE pf.user_id = $1
+	GROUP BY p.id, pf.id
+	ORDER BY pf.created_at, p.upload_date
+	LIMIT $2 OFFSET $3
+`
+
 const searchPostsQuery = `
 	WITH search_terms AS (
 		SELECT

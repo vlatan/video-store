@@ -1,0 +1,67 @@
+{{ template "base.html" . }}
+
+{{ define "extra_preload_css" }}
+<link rel="preload" href='{{ .AddVersion "/static/css/admin.css" }}' as="style">
+{{ end }}
+
+{{ define "extra_css" }}
+<link rel="stylesheet" type="text/css" href='{{ .AddVersion "/static/css/admin.css" }}'>
+{{ end }}
+
+{{ define "title_tag" }}
+{{ .Title }} - {{ .Config.AppName }}
+{{ end }}
+
+{{ define "content" }}
+<div class="dashboard-wrap">
+    <header class="dashboard-title-wrap">
+        <h1 class="dashboard-title">{{ .Title }}</h1>
+        <span>({{ .PaginationInfo.TotalRecords }} users)</span>
+    </header>
+    <div class="dashboard">
+        <div class="dashboard-item dashboard-item-number dashboard-header-item">#</div>
+        <div class="dashboard-item dashboard-item-img dashboard-header-item">Picture</div>
+        <div class="dashboard-item dashboard-header-item">Name</div>
+        <div class="dashboard-item dashboard-header-item">Email</div>
+        <div class="dashboard-item dashboard-header-item">Login Provider</div>
+        <div class="dashboard-item dashboard-header-item">Signup</div>
+        <div class="dashboard-item dashboard-header-item">Last Seen</div>
+
+        {{ range $index, $user := .Users.Items }}
+        <div class="dashboard-item dashboard-item-number">
+            {{ $.PaginationInfo.OrdinalNumber $index }}
+        </div>
+        <div class="dashboard-item dashboard-item-img">
+            <img class="dashboard-user-img" src="{{ $user.LocalAvatarURL}}">
+        </div>
+        <div class="dashboard-item">{{ $user.Name }}</div>
+        <div class="dashboard-item">{{ $user.Email }}</div>
+        {{ if eq $user.Provider "google" }}
+        <div class="dashboard-item">Google</div>
+        {{ else }}
+        <div class="dashboard-item">Facebook</div>
+        {{ end }}
+        <div class="dashboard-item">{{ $user.CreatedAt.Format "2006-01-02 15:04" }}</div>
+        <div class="dashboard-item">
+            {{ if $user.LastSeen }}
+            {{ $user.LastSeen.Format "2006-01-02 15:04" }}
+            {{ else }}
+            N/A
+            {{ end }}
+        </div>
+        {{ end }}
+    </div>
+
+    <div class="pagination">
+        {{ range .PaginationInfo.Pages }}
+        {{ if .IsEllipsis }}
+        <span>...</span>
+        {{ else if .IsCurrent}}
+        <span class="pagination-item pagination-item-current">{{ .Number }}</span>
+        {{ else }}
+        <a href="/users/?page={{ .Number }}" class="pagination-item">{{ .Number }}</a>
+        {{ end }}
+        {{ end }}
+    </div>
+    {{ end }}
+</div>

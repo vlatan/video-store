@@ -22,7 +22,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	// Sources
 	mux.HandleFunc("/source/new", s.mw.IsAdmin(s.sources.NewSourceHandler))
-	mux.HandleFunc("GET /source/{source}/{$}", s.posts.SourcePostsHandler)
+	mux.HandleFunc("GET /source/{source}/{$}", s.sources.SourcePostsHandler)
 	mux.HandleFunc("GET /sources/{$}", s.sources.SourcesHandler)
 
 	// Authentication
@@ -36,6 +36,8 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	// Users
 	mux.HandleFunc("POST /account/delete", s.mw.IsAuthenticated(s.auth.DeleteAccountHandler))
+	mux.HandleFunc("GET /user/favorites/{$}", s.mw.IsAuthenticated(s.users.UserFavoritesHandler))
+	mux.HandleFunc("GET /users/{$}", s.mw.IsAdmin(s.users.UsersHandler))
 
 	// The rest
 	mux.HandleFunc("GET /search/{$}", s.posts.SearchPostsHandler)

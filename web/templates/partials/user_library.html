@@ -1,0 +1,63 @@
+{{ template "base.html" . }}
+
+{{ define "extra_preload_css" }}
+<link rel="preload" href='{{ .AddVersion "/static/css/content.css" }}' as="style">
+{{ end }}
+
+{{ define "extra_css" }}
+<link rel="stylesheet" type="text/css" href='{{ .AddVersion "/static/css/content.css" }}'>
+{{ end }}
+
+{{ define "extra_meta" }}
+<meta property='og:title' content='{{ .Title }}'>
+<meta property='og:type' content='article'>
+<meta property='og:url' content='{{ .CanonicalURL }}'>
+{{ end }}
+
+{{ define "title_tag" }}
+{{ .Title }} - {{ .Config.AppName }}
+{{ end }}
+
+{{ define "content" }}
+<h1 class="content-title">{{ .Title }}</h1>
+{{ .CSRFField }}
+
+<div id="scroller" class="scroll-content">
+
+    {{ range .Posts.Items }}
+    <div class="video-block">
+        <span data-id="{{ .VideoID }}" class="remove-option">&times;</span>
+        <a class="video-link" href="/video/{{ .VideoID }}/">
+            <span class="video-img-wrap">
+                <img class="video-img" alt="{{ .Title }}" src="{{ .Thumbnail.Url  }}" srcset="{{ .Srcset }}">
+            </span>
+            <h2 class="video-title">{{ .Title }}</h2>
+        </a>
+    </div>
+    {{ end }}
+
+    <template id="post_template">
+        <div class="video-block">
+            <span class="remove-option">&times;</span>
+            <a class="video-link" href="#">
+                <span class="video-img-wrap">
+                    <img class="video-img" src="#">
+                </span>
+                <h2 class="video-title"></h2>
+            </a>
+        </div>
+    </template>
+
+</div>
+
+<div class="sentinel" id="sentinel">
+    <div role="status"></div>
+</div>
+{{ end }}
+
+{{ define "extra_scripts" }}
+<script defer src='{{ .AddVersion "/static/js/list.js" }}'></script>
+{{ if and .Posts.TotalNum (gt .Posts.TotalNum .Config.PostsPerPage) }}
+<script defer src='{{ .AddVersion "/static/js/scroll.js" }}'></script>
+{{ end }}
+{{ end }}
