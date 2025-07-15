@@ -1,7 +1,7 @@
 
 * Move GetUserFromSession to templates
 * Move StoreFlashMessage to templates
-* Rename templates ervice because it is not just for templates
+* Rename templates service because it is not just for templates
 
 * Pages
   Add Edit button on page

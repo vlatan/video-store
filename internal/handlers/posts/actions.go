@@ -122,7 +122,7 @@ func (s *Service) handleDeletePost(w http.ResponseWriter, r *http.Request, userI
 		Category: "info",
 	}
 
-	s.auth.StoreFlashMessage(w, r, &successDelete)
+	s.tm.StoreFlashMessage(w, r, &successDelete)
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 

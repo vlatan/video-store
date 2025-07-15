@@ -2,24 +2,25 @@ package middlewares
 
 import (
 	"context"
-	"factual-docs/internal/handlers/auth"
 	"factual-docs/internal/shared/config"
 	"factual-docs/internal/shared/utils"
 	"log"
 	"net/http"
 	"strings"
 
+	tmpls "factual-docs/internal/shared/templates"
+
 	"github.com/gorilla/csrf"
 )
 
 type Service struct {
-	auth   *auth.Service
+	tm     tmpls.Service
 	config *config.Config
 }
 
-func New(auth *auth.Service, config *config.Config) *Service {
+func New(tm tmpls.Service, config *config.Config) *Service {
 	return &Service{
-		auth:   auth,
+		tm:     tm,
 		config: config,
 	}
 }
@@ -64,7 +65,7 @@ func (s *Service) LoadUser(next http.Handler) http.Handler {
 		}
 
 		// Get user from session and put it in the request context
-		user := s.auth.GetUserFromSession(w, r) // Can be nil
+		user := s.tm.GetUserFromSession(w, r) // Can be nil
 		ctx := context.WithValue(r.Context(), utils.UserContextKey, user)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})

@@ -3,6 +3,7 @@ package tmpls
 import (
 	"factual-docs/internal/models"
 	"factual-docs/internal/repositories/categories"
+	"factual-docs/internal/repositories/users"
 	"factual-docs/internal/shared/config"
 	"factual-docs/internal/shared/redis"
 	"net/http"
@@ -18,6 +19,10 @@ import (
 )
 
 type Service interface {
+	// Get the user from session
+	GetUserFromSession(w http.ResponseWriter, r *http.Request) *models.User
+	// Store flash message in a session
+	StoreFlashMessage(w http.ResponseWriter, r *http.Request, m *models.FlashMessage)
 	// Get the map containing the static files
 	GetStaticFiles() models.StaticFiles
 	// Create new template data
@@ -41,6 +46,7 @@ type service struct {
 	config      *config.Config
 	store       *sessions.CookieStore
 	catsRepo    *categories.Repository
+	usersRepo   *users.Repository
 }
 
 var validJS = regexp.MustCompile("^(application|text)/(x-)?(java|ecma)script$")
@@ -57,6 +63,7 @@ func New(
 	config *config.Config,
 	store *sessions.CookieStore,
 	catsRepo *categories.Repository,
+	usersRepo *users.Repository,
 ) Service {
 	once.Do(func() {
 		m := minify.New()
@@ -72,6 +79,7 @@ func New(
 			config:      config,
 			store:       store,
 			catsRepo:    catsRepo,
+			usersRepo:   usersRepo,
 		}
 
 	})

@@ -61,7 +61,7 @@ func NewServer() *http.Server {
 	sourcesRepo := sourcesRepo.New(db, cfg)
 
 	// Create templates service
-	tm := tmpls.New(rdb, cfg, store, catsRepo)
+	tm := tmpls.New(rdb, cfg, store, catsRepo, usersRepo)
 
 	// Create YouTube service
 	ctx := context.Background()
@@ -77,16 +77,14 @@ func NewServer() *http.Server {
 	}
 
 	// Create domain services
-	auth := auth.New(usersRepo, store, rdb, cfg)
+	mw := middlewares.New(tm, cfg)
+	auth := auth.New(usersRepo, store, rdb, tm, cfg)
 	pages := pages.New(pagesRepo, rdb, tm, cfg)
 	users := users.New(usersRepo, postsRepo, rdb, tm, cfg)
 	posts := posts.New(postsRepo, rdb, tm, cfg, auth, yt, gemini)
 	sources := sources.New(postsRepo, sourcesRepo, rdb, tm, cfg, yt)
 	sitemaps := sitemaps.New(postsRepo, sourcesRepo, catsRepo, rdb, tm, cfg)
 	misc := misc.New(cfg, db, rdb, tm)
-
-	// Create middlewares service
-	mw := middlewares.New(auth, cfg)
 
 	// Create new Server struct
 	newServer := &Server{
