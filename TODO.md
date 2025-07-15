@@ -1,5 +1,7 @@
 
 * Pages
+  Slugify
+  Markdown
 
 * Sitemaps
   Separate xml templates for pages, sources, categories, misc
@@ -10,6 +12,7 @@
 * API calls need retries
 * Write custom errors middlware
 * Trim services of what related services they don't use
+* Add new category form
 
 * User avatar saved to redis not locally
   Need to solve this discrepancy

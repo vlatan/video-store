@@ -1,0 +1,26 @@
+{{ template "base.html" . }}
+
+{{ define "extra_preload_css" }}
+<link rel="preload" href='{{ .AddVersion "/static/css/page.css" }}' as="style">
+{{ end }}
+
+{{ define "extra_css" }}
+<link rel="stylesheet" type="text/css" href='{{ .AddVersion "/static/css/page.css" }}'>
+{{ end }}
+
+{{ define "extra_meta" }}
+<meta property='og:title' content='{{ .Title }}'>
+<meta property='og:type' content='article'>
+<meta property='og:url' content='{{ .CanonicalURL }}'>
+{{ end }}
+
+{{ define "title_tag" }}
+{{ .Title }} - {{ .Config.AppName }}
+{{ end }}
+
+{{ define "content" }}
+<div class="page">
+    <h1>{{ .Title }}</h1>
+    {{ .Content }}
+</div>
+{{ end }}
