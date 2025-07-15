@@ -52,6 +52,7 @@
         {{ end }}
     </div>
 
+    {{ if gt (len .PaginationInfo.Pages) 1 }}
     <div class="pagination">
         {{ range .PaginationInfo.Pages }}
         {{ if .IsEllipsis }}
@@ -65,3 +66,4 @@
     </div>
     {{ end }}
 </div>
+{{ end }}
