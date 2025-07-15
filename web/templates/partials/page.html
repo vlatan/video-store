@@ -9,18 +9,18 @@
 {{ end }}
 
 {{ define "extra_meta" }}
-<meta property='og:title' content='{{ .Title }}'>
+<meta property='og:title' content='{{ .Page.Title }}'>
 <meta property='og:type' content='article'>
 <meta property='og:url' content='{{ .CanonicalURL }}'>
 {{ end }}
 
 {{ define "title_tag" }}
-{{ .Title }} - {{ .Config.AppName }}
+{{ .Page.Title }} - {{ .Config.AppName }}
 {{ end }}
 
 {{ define "content" }}
 <div class="page">
-    <h1>{{ .Title }}</h1>
-    {{ .Content }}
+    <h1>{{ .Page.Title }}</h1>
+    {{ .Page.Content }}
 </div>
 {{ end }}
