@@ -11,6 +11,7 @@ import (
 	"log"
 	"net/http"
 
+	slugify "github.com/gosimple/slug"
 	"github.com/jackc/pgx/v5"
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/yuin/goldmark"
@@ -22,7 +23,7 @@ const pageCacheKey = "page:%s"
 func (s *Service) SinglePageHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Get the page slug from URL
-	slug := r.PathValue("slug")
+	pageSlug := r.PathValue("slug")
 
 	// Generate the default data
 	data := s.ui.NewData(w, r)
@@ -33,29 +34,29 @@ func (s *Service) SinglePageHandler(w http.ResponseWriter, r *http.Request) {
 		!data.IsCurrentUserAdmin(),
 		r.Context(),
 		s.rdb,
-		fmt.Sprintf(pageCacheKey, slug),
+		fmt.Sprintf(pageCacheKey, pageSlug),
 		s.config.CacheTimeout,
 		&page,
 		func() (models.Page, error) {
-			return s.pagesRepo.GetSinglePage(r.Context(), slug)
+			return s.pagesRepo.GetSinglePage(r.Context(), pageSlug)
 		},
 	)
 
 	if errors.Is(err, pgx.ErrNoRows) {
-		log.Println("Can't find the page in DB:", slug)
+		log.Println("Can't find the page in DB:", pageSlug)
 		s.ui.HTMLError(w, r, http.StatusNotFound, data)
 		return
 	}
 
 	if err != nil {
-		log.Printf("Error while getting the page '%s' from DB: %v", slug, err)
+		log.Printf("Error while getting the page '%s' from DB: %v", pageSlug, err)
 		s.ui.HTMLError(w, r, http.StatusInternalServerError, data)
 		return
 	}
 
 	var buf bytes.Buffer
 	if err := goldmark.Convert([]byte(page.Content), &buf); err != nil {
-		log.Printf("Could not convert markdown to html on '%s': %v", slug, err)
+		log.Printf("Could not convert markdown to html on '%s': %v", pageSlug, err)
 		s.ui.HTMLError(w, r, http.StatusInternalServerError, data)
 		return
 	}
@@ -152,6 +153,75 @@ func (s *Service) UpdatePageHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Check out the updated page
 		redirectTo := fmt.Sprintf("/page/%s/", slug)
+		http.Redirect(w, r, redirectTo, http.StatusFound)
+
+	default:
+		s.ui.HTMLError(w, r, http.StatusMethodNotAllowed, data)
+	}
+}
+
+// Create new page
+func (s *Service) NewPageHandler(w http.ResponseWriter, r *http.Request) {
+
+	// Compose data object
+	data := s.ui.NewData(w, r)
+	data.CurrentUser = utils.GetUserFromContext(r)
+
+	// Populate needed data for an empty form
+	data.Form = &models.Form{
+		Legend: "Edit Page",
+		Title: &models.FormGroup{
+			Label:       "Title",
+			Placeholder: "Your title...",
+		},
+		Content: &models.FormGroup{
+			Type:        models.FieldTypeTextarea,
+			Label:       "Content",
+			Placeholder: "You can use markdown...",
+		},
+	}
+	data.Title = "Add New Page"
+
+	switch r.Method {
+	case "GET":
+		// Serve the page with the form
+		s.ui.RenderHTML(w, r, "form.html", data)
+
+	case "POST":
+		var formError models.FlashMessage
+
+		err := r.ParseForm()
+		if err != nil {
+			formError.Message = "Could not parse the form"
+			data.Form.Error = &formError
+			s.ui.RenderHTML(w, r, "form.html", data)
+			return
+		}
+
+		// Get the title and the content from the form
+		data.Form.Content.Value = r.FormValue("content")
+		data.Form.Title.Value = r.FormValue("title")
+		// Create the slug from the title
+		pageSlug := slugify.Make(data.Form.Title.Value)
+
+		// Update the page
+		rowsAffected, err := s.pagesRepo.InsertPage(
+			r.Context(),
+			pageSlug,
+			data.Form.Title.Value,
+			data.Form.Content.Value,
+		)
+
+		if err != nil || rowsAffected == 0 {
+			log.Printf("Could not insert the page '%s' in DB: %v", pageSlug, err)
+			formError.Message = "Could not insert the page in DB. Try changing the title."
+			data.Form.Error = &formError
+			s.ui.RenderHTML(w, r, "form.html", data)
+			return
+		}
+
+		// Check out the updated page
+		redirectTo := fmt.Sprintf("/page/%s/", pageSlug)
 		http.Redirect(w, r, redirectTo, http.StatusFound)
 
 	default:

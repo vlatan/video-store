@@ -6,6 +6,7 @@ require (
 	github.com/caarlos0/env v3.5.0+incompatible
 	github.com/gorilla/csrf v1.7.3
 	github.com/gorilla/sessions v1.1.1
+	github.com/gosimple/slug v1.15.0
 	github.com/jackc/pgx/v5 v5.7.5
 	github.com/markbates/goth v1.81.0
 	github.com/microcosm-cc/bluemonday v1.0.27
@@ -38,6 +39,7 @@ require (
 	github.com/gorilla/mux v1.6.2 // indirect
 	github.com/gorilla/securecookie v1.1.2 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
+	github.com/gosimple/unidecode v1.0.1 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect

@@ -2,11 +2,13 @@
 * Pages
   Add Edit button on page
   Slugify
-  The about page is garbled.
+  Delete a page
 
 * Sitemaps
   Separate xml templates for pages, sources, categories, misc
   Figure out a way to handle the main index xml page
+
+* Add new category form
 
 * Cron
 * API calls need retries
