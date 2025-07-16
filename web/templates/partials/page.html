@@ -20,7 +20,15 @@
 
 {{ define "content" }}
 <div class="page">
-    <h1>{{ .Title }}</h1>
+    <div class="page-title-wrap">
+        <h1>{{ .Title }}</h1>
+        {{ if .IsCurrentUserAdmin }}
+        <div class="page-buttons">
+            <a href="/page/{{ .CurrentPage.Slug }}/delete" class="modal-button">Delete</a>
+            <a href="/page/{{ .CurrentPage.Slug }}/edit" class="modal-button edit-content">Edit</a>
+        </div>
+        {{ end }}
+    </div>
     {{ .CurrentPage.HTMLContent }}
 </div>
 {{ end }}

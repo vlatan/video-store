@@ -37,16 +37,19 @@ html {
   font-size: 16px;
   line-height: 1.5;
 }
+
 @media (min-width: 85.375em) {
   html {
     font-size: 19.2px;
   }
 }
+
 @media (min-width: 120em) {
   html {
     font-size: 22.4px;
   }
 }
+
 @media (min-width: 160em) {
   html {
     font-size: 25.6px;
@@ -95,8 +98,7 @@ a {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  -moz-column-gap: calc(var(--content-padding) * 7);
-       column-gap: calc(var(--content-padding) * 7);
+  column-gap: calc(var(--content-padding) * 7);
   height: var(--header-hight);
   position: relative;
 }
@@ -112,7 +114,7 @@ a.logo {
   text-transform: uppercase;
 }
 
-a.logo > * {
+a.logo>* {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -148,8 +150,7 @@ a.logo:hover span:last-child {
 .navbar {
   display: flex;
   flex: 1;
-  -moz-column-gap: var(--content-padding);
-       column-gap: var(--content-padding);
+  column-gap: var(--content-padding);
   justify-content: flex-end;
   align-items: center;
 }
@@ -255,18 +256,19 @@ button.search-arrow {
 .category-show-dropdown {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  -moz-column-gap: calc(var(--content-padding) + 0.5rem);
-       column-gap: calc(var(--content-padding) + 0.5rem);
+  column-gap: calc(var(--content-padding) + 0.5rem);
 }
 
 @keyframes growOut {
   80% {
     transform: scale(1.1);
   }
+
   100% {
     transform: scale(1);
   }
 }
+
 .nav-item {
   cursor: pointer;
   position: relative;
@@ -396,6 +398,7 @@ a.nav-item:hover::after {
     visibility: hidden;
   }
 }
+
 /* ############# Generic Modal ############# */
 /* The Modal (background) */
 .modal {
@@ -419,6 +422,7 @@ a.nav-item:hover::after {
     opacity: 0;
   }
 }
+
 /* Modal Content/Box */
 .modal-content {
   position: relative;
@@ -445,13 +449,15 @@ a.nav-item:hover::after {
     opacity: 1;
   }
 }
+
 /* ############# Specific to delete Video/Account Modal ############# */
 h2.modal-title {
   line-height: 1;
 }
 
 /* Set a style for all modal buttons */
-button.modal-button {
+button.modal-button,
+a.modal-button {
   background-color: red;
   color: white;
   border-radius: 5px;
@@ -459,6 +465,13 @@ button.modal-button {
   border: 1px solid transparent;
   cursor: pointer;
   opacity: 0.9;
+}
+
+button.edit-content,
+a.edit-content {
+  background-color: var(--secondary-background-color);
+  border: 1px solid var(--primary-border-color);
+  max-width: 6.5rem;
 }
 
 button.modal-button:hover {
@@ -502,11 +515,13 @@ button.cancel-button {
 
 /* Change styles for cancel button and delete button on extra small screens */
 @media screen and (max-width: 300px) {
+
   .cancelbtn,
   .deletebtn {
     width: 100%;
   }
 }
+
 /* ############# Specific to Login Modal ############# */
 .login-modal-content {
   max-width: calc(286px + 2 * var(--content-padding));
@@ -628,8 +643,7 @@ button.cancel-button {
   display: flex;
   align-items: center;
   justify-content: center;
-  -moz-column-gap: 1rem;
-       column-gap: 1rem;
+  column-gap: 1rem;
   background-color: var(--primary-background-color);
   padding: 0.3rem 0.6rem;
   border: 1px solid var(--primary-border-color);
@@ -638,7 +652,7 @@ button.cancel-button {
   visibility: visible;
 }
 
-.site-footer > * {
+.site-footer>* {
   display: block;
 }
 
@@ -705,18 +719,19 @@ button.cancel-button {
 /* ############# Media Queries ############# */
 @media screen and (max-width: 1024px) {
   .site-header {
-    -moz-column-gap: calc(var(--content-padding) * 3);
-         column-gap: calc(var(--content-padding) * 3);
+    column-gap: calc(var(--content-padding) * 3);
   }
 }
+
 @media screen and (max-width: 900px) {
   :root {
     --content-padding: 1rem;
   }
+
   .site-header {
-    -moz-column-gap: var(--content-padding);
-         column-gap: var(--content-padding);
+    column-gap: var(--content-padding);
   }
+
   .hamburger-icon {
     display: flex;
     flex-direction: column;
@@ -725,6 +740,7 @@ button.cancel-button {
     width: 20px;
     gap: 4px;
   }
+
   .bar1,
   .bar2,
   .bar3 {
@@ -734,34 +750,43 @@ button.cancel-button {
     background-color: #fff;
     transition: 0.4s transform;
   }
+
   .hamburger-icon-change .bar1 {
     transform: translate(0, 0.38em) rotate(-45deg);
   }
+
   .hamburger-icon-change .bar2 {
     opacity: 0;
   }
+
   .hamburger-icon-change .bar3 {
     transform: translate(0, -0.38em) rotate(45deg);
   }
+
   .username-text,
   .categories-text {
     display: none;
   }
+
   .nav-item.categories::after {
     content: none;
   }
+
   .nav-item.username,
   .nav-item.categories {
     padding: 0;
   }
+
   .nav-item.username::after {
     content: none;
   }
+
   .dropdown-content::after,
   .category-dropdown-content:after {
     right: 5%;
   }
 }
+
 @media screen and (max-width: 600px) {
   .search-form {
     display: none;
@@ -773,18 +798,22 @@ button.cancel-button {
     left: 0;
     animation: expandSearch 200ms ease-in forwards;
   }
+
   @keyframes expandSearch {
     to {
       transform: translateY(-50%) scaleX(1);
     }
   }
+
   button.search-button-mobile {
     display: flex;
   }
+
   .site-footer {
     width: 100%;
     flex-wrap: wrap;
   }
+
   .snackbar {
     outline: unset;
     inset: auto auto 0 auto;
@@ -792,11 +821,13 @@ button.cancel-button {
     max-width: none;
   }
 }
+
 /* Change styles for drop down menus on small screen */
 @media screen and (max-width: 400px) {
   .dropdown {
     position: unset;
   }
+
   .dropdown-content,
   .category-dropdown-content {
     top: 100%;

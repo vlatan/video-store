@@ -27,6 +27,7 @@ func (r *Repository) GetSinglePage(ctx context.Context, slug string) (page model
 
 	// Get single row from DB
 	err = r.db.QueryRow(ctx, getSinglePageQuery, slug).Scan(
+		&page.Slug,
 		&page.Title,
 		&content,
 	)
