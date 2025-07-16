@@ -1,6 +1,7 @@
 package pages
 
 import (
+	"bytes"
 	"errors"
 	"factual-docs/internal/models"
 	"factual-docs/internal/shared/redis"
@@ -12,7 +13,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/microcosm-cc/bluemonday"
-	"github.com/russross/blackfriday/v2"
+	"github.com/yuin/goldmark"
 )
 
 // Handle single page
@@ -50,9 +51,14 @@ func (s *Service) SinglePageHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Convert the markdown too safe html
-	unsafeHTML := blackfriday.Run([]byte(page.Content))
-	html := bluemonday.UGCPolicy().SanitizeBytes(unsafeHTML)
+	var buf bytes.Buffer
+	if err := goldmark.Convert([]byte(page.Content), &buf); err != nil {
+		log.Printf("Could not convert markdown to html on '%s': %v", slug, err)
+		s.ui.HTMLError(w, r, http.StatusInternalServerError, data)
+		return
+	}
+
+	html := bluemonday.UGCPolicy().SanitizeBytes(buf.Bytes())
 	page.HTMLContent = template.HTML(html)
 
 	// Assign the page to data
@@ -86,7 +92,7 @@ func (s *Service) UpdatePageHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Populate needed data for an empty page form
+	// Populate needed data for the page form
 	data.Form = &models.Form{
 		Legend: "Edit Page",
 		Title: &models.FormGroup{
@@ -110,6 +116,7 @@ func (s *Service) UpdatePageHandler(w http.ResponseWriter, r *http.Request) {
 
 	case "POST":
 		var formError models.FlashMessage
+
 		err := r.ParseForm()
 		if err != nil {
 			formError.Message = "Could not parse the form"
@@ -117,5 +124,32 @@ func (s *Service) UpdatePageHandler(w http.ResponseWriter, r *http.Request) {
 			s.ui.RenderHTML(w, r, "form.html", data)
 			return
 		}
+
+		// Get the title and the content from the form
+		data.Form.Content.Value = r.FormValue("content")
+		data.Form.Title.Value = r.FormValue("title")
+
+		// Update the page
+		rowsAffected, err := s.pagesRepo.UpdatePage(
+			r.Context(),
+			slug,
+			data.Form.Title.Value,
+			data.Form.Content.Value,
+		)
+
+		if err != nil || rowsAffected == 0 {
+			log.Printf("Could not update the page '%s' in DB: %v", slug, err)
+			formError.Message = "Could not update the page in DB"
+			data.Form.Error = &formError
+			s.ui.RenderHTML(w, r, "form.html", data)
+			return
+		}
+
+		// Check out the updated page
+		redirectTo := fmt.Sprintf("/page/%s/", slug)
+		http.Redirect(w, r, redirectTo, http.StatusFound)
+
+	default:
+		s.ui.HTMLError(w, r, http.StatusMethodNotAllowed, data)
 	}
 }

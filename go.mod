@@ -10,8 +10,8 @@ require (
 	github.com/markbates/goth v1.81.0
 	github.com/microcosm-cc/bluemonday v1.0.27
 	github.com/redis/go-redis/v9 v9.8.0
-	github.com/russross/blackfriday/v2 v2.1.0
 	github.com/tdewolff/minify v2.3.6+incompatible
+	github.com/yuin/goldmark v1.7.12
 	google.golang.org/api v0.240.0
 	google.golang.org/genai v1.14.0
 )
