@@ -1,7 +1,6 @@
 
 * Pages
-  Add Edit button on page
-  Delete a page route and delete button.
+  Delete a page route.
 
 * Sitemaps
   Separate xml templates for pages, sources, categories, misc
