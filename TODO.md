@@ -1,8 +1,7 @@
 
 * Pages
   Add Edit button on page
-  Slugify
-  Delete a page
+  Delete a page route and delete button.
 
 * Sitemaps
   Separate xml templates for pages, sources, categories, misc
