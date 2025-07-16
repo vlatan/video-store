@@ -16,7 +16,7 @@ import (
 	"github.com/yuin/goldmark"
 )
 
-const redisKey = "page:%s"
+const pageCacheKey = "page:%s"
 
 // Handle single page
 func (s *Service) SinglePageHandler(w http.ResponseWriter, r *http.Request) {
@@ -33,7 +33,7 @@ func (s *Service) SinglePageHandler(w http.ResponseWriter, r *http.Request) {
 		!data.IsCurrentUserAdmin(),
 		r.Context(),
 		s.rdb,
-		fmt.Sprintf(redisKey, slug),
+		fmt.Sprintf(pageCacheKey, slug),
 		s.config.CacheTimeout,
 		&page,
 		func() (models.Page, error) {
@@ -148,7 +148,7 @@ func (s *Service) UpdatePageHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Delete the redis cache, ignore the error
-		s.rdb.Delete(r.Context(), fmt.Sprintf(redisKey, slug))
+		s.rdb.Delete(r.Context(), fmt.Sprintf(pageCacheKey, slug))
 
 		// Check out the updated page
 		redirectTo := fmt.Sprintf("/page/%s/", slug)
