@@ -56,10 +56,13 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 	data.CurrentUser = utils.GetUserFromContext(r)
 
 	// Populate needed data for an empty form
-	data.Form = &models.Form{}
-	data.Form.Legend = "New Playlist"
-	data.Form.Content.Label = "Post YouTube Playlist URL"
-	data.Form.Content.Placeholder = "Playlist URL here..."
+	data.Form = &models.Form{
+		Legend: "New Playlist",
+		Content: &models.FormGroup{
+			Label:       "Post YouTube Playlist URL",
+			Placeholder: "Playlist URL here...",
+		},
+	}
 	data.Title = "Add New Source"
 
 	switch r.Method {
@@ -74,7 +77,7 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 		err := r.ParseForm()
 		if err != nil {
 			formError.Message = "Could not parse the form"
-			data.Error = &formError
+			data.Form.Error = &formError
 			s.ui.RenderHTML(w, r, "form.html", data)
 			return
 		}

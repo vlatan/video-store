@@ -6,10 +6,6 @@ import (
 	"factual-docs/internal/shared/config"
 	"factual-docs/internal/shared/database"
 	"factual-docs/internal/shared/utils"
-	"html/template"
-
-	"github.com/microcosm-cc/bluemonday"
-	"github.com/russross/blackfriday/v2"
 )
 
 type Repository struct {
@@ -24,8 +20,9 @@ func New(db database.Service, config *config.Config) *Repository {
 	}
 }
 
+// Get single page from DB
 func (r *Repository) GetSinglePage(ctx context.Context, slug string) (page models.Page, err error) {
-	// Nullable strings in the DB need pointer for the scan
+	// Nullable string
 	var content *string
 
 	// Get single row from DB
@@ -38,11 +35,11 @@ func (r *Repository) GetSinglePage(ctx context.Context, slug string) (page model
 		return page, err
 	}
 
-	// If needed markdown content can be included in the page object
-	markdownContent := utils.PtrToString(content)
-	unsafe := blackfriday.Run([]byte(markdownContent))
-	html := bluemonday.UGCPolicy().SanitizeBytes(unsafe)
-	page.HTMLContent = template.HTML(html)
-
+	page.Content = utils.PtrToString(content)
 	return page, err
+}
+
+// Update page
+func (r *Repository) UpdatePage(ctx context.Context, slug, title, content string) (int64, error) {
+	return r.db.Exec(ctx, updatePageQuery, slug, title, content)
 }

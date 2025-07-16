@@ -219,10 +219,13 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 	data.CurrentUser = utils.GetUserFromContext(r)
 
 	// Populate needed data for an empty form
-	data.Form = &models.Form{}
-	data.Form.Legend = "New Video"
-	data.Form.Content.Label = "Post YouTube Video URL"
-	data.Form.Content.Placeholder = "Video URL here..."
+	data.Form = &models.Form{
+		Legend: "New Video",
+		Content: &models.FormGroup{
+			Label:       "Post YouTube Video URL",
+			Placeholder: "Video URL here...",
+		},
+	}
 	data.Title = "Add New Video"
 
 	switch r.Method {
@@ -237,7 +240,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 		err := r.ParseForm()
 		if err != nil {
 			formError.Message = "Could not parse the form"
-			data.Error = &formError
+			data.Form.Error = &formError
 			s.ui.RenderHTML(w, r, "form.html", data)
 			return
 		}

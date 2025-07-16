@@ -22,6 +22,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	// Pages
 	mux.HandleFunc("GET /page/{slug}/{$}", s.pages.SinglePageHandler)
+	mux.HandleFunc("/page/{slug}/edit", s.mw.IsAdmin(s.pages.UpdatePageHandler))
 
 	// Sources
 	mux.HandleFunc("/source/new", s.mw.IsAdmin(s.sources.NewSourceHandler))

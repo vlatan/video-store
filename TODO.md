@@ -9,8 +9,8 @@
   Figure out a way to handle the main index xml page
 
 * Cron
-
 * API calls need retries
+
 * Write custom errors middlware
 * Trim services of what related services they don't use
 * Add new category form
