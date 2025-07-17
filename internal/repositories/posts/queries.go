@@ -97,6 +97,22 @@ const getSourcePostsQuery = `
 	LIMIT $2 OFFSET $3;
 `
 
+const getOrphanPostsQuery = `
+	SELECT 
+		p.title AS playlist_title, 
+		post.video_id, 
+		post.title, 
+		post.thumbnails,
+		COUNT(pl.id) AS likes
+	FROM post
+	JOIN playlist AS p ON post.playlist_db_id = p.id
+	LEFT JOIN post_like AS pl ON pl.post_id = post.id
+	WHERE playlist_id IS NULL OR playlist_id = ''
+	GROUP BY p.id, post.id
+	ORDER BY %s
+	LIMIT $2 OFFSET $3;
+`
+
 const getPostsByMonthQuery = `
 	SELECT video_id, updated_at
 	FROM post

@@ -1,7 +1,7 @@
 
 * Sitemaps
   Handle OTHER sources (orphaned posts)
-  Separate xml templates for pages, sources, categories, misc
+  Last mod on category or source links should be the last created post date
   Figure out a way to handle the main index xml page
 
 * Cron
