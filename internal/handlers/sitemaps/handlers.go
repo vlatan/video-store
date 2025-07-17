@@ -47,8 +47,8 @@ func (s *Service) SitemapPostsHandler(w http.ResponseWriter, r *http.Request) {
 		template.HTML(`<?xml version="1.0" encoding="UTF-8"?>`),
 		template.HTML(`<?xml-stylesheet type="text/xsl" href="/sitemap.xsl"?>`),
 	}
-	w.Header().Set("Content-Type", "text/xml")
 
 	data.Posts = &posts
+	w.Header().Set("Content-Type", "text/xml")
 	s.ui.RenderHTML(w, r, "sitemap_posts.xml", data)
 }
