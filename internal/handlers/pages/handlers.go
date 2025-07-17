@@ -201,6 +201,7 @@ func (s *Service) NewPageHandler(w http.ResponseWriter, r *http.Request) {
 		// Get the title and the content from the form
 		data.Form.Content.Value = r.FormValue("content")
 		data.Form.Title.Value = r.FormValue("title")
+
 		// Create the slug from the title
 		pageSlug := slugify.Make(data.Form.Title.Value)
 
