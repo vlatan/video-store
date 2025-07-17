@@ -1,6 +1,9 @@
 package sitemaps
 
 import (
+	"factual-docs/internal/models"
+	"factual-docs/internal/shared/redis"
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -29,7 +32,19 @@ func (s *Service) SitemapPostsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	posts, err := s.postsRepo.GetPostsByMonth(r.Context(), year, month)
+	// Cache DB results except for admin
+	var posts models.Posts
+	err := redis.GetItems(
+		!data.IsCurrentUserAdmin(),
+		r.Context(),
+		s.rdb,
+		fmt.Sprintf("posts:%s:%s", year, month),
+		s.config.CacheTimeout,
+		&posts,
+		func() (models.Posts, error) {
+			return s.postsRepo.GetPostsByMonth(r.Context(), year, month)
+		},
+	)
 
 	if err != nil {
 		log.Printf("Was unabale to fetch posts on URI '%s': %v", r.RequestURI, err)
@@ -48,7 +63,15 @@ func (s *Service) SitemapPostsHandler(w http.ResponseWriter, r *http.Request) {
 		template.HTML(`<?xml-stylesheet type="text/xsl" href="/sitemap.xsl"?>`),
 	}
 
-	data.Posts = &posts
+	// Create sitemap items
+	for _, post := range posts.Items {
+		path := fmt.Sprintf("/video/%s/", post.VideoID)
+		data.SitemapItems = append(data.SitemapItems, &models.SitemapItem{
+			Location:     data.AbsoluteURL(path),
+			LastModified: post.UpdatedAt,
+		})
+	}
+
 	w.Header().Set("Content-Type", "text/xml")
-	s.ui.RenderHTML(w, r, "sitemap_posts.xml", data)
+	s.ui.RenderHTML(w, r, "sitemap_items.xml", data)
 }

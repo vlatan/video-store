@@ -74,6 +74,11 @@ type Form struct {
 	Error   *FlashMessage
 }
 
+type SitemapItem struct {
+	Location     string
+	LastModified *time.Time
+}
+
 // Data struct to pass to templates
 type TemplateData struct {
 	StaticFiles     StaticFiles
@@ -90,6 +95,7 @@ type TemplateData struct {
 	SearchQuery     string
 	CSRFField       template.HTML
 	XMLDeclarations []template.HTML
+	SitemapItems    []*SitemapItem
 	*HTMLErrorData
 	*PaginationInfo
 	*Posts

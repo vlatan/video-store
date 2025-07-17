@@ -35,6 +35,21 @@ func GetUserFromContext(r *http.Request) *models.User {
 	return user // nil if user not in context
 }
 
+// Create base URL object (absolute path only)
+func GetBaseURL(r *http.Request) *url.URL {
+	// Determine scheme
+	scheme := "http"
+	if r.TLS != nil {
+		scheme = "https"
+	}
+
+	return &url.URL{
+		Scheme: scheme,
+		Host:   r.Host,
+		Path:   r.URL.Path,
+	}
+}
+
 // Validates a path
 func ValidateFilePath(p string) error {
 	if p == "" {
