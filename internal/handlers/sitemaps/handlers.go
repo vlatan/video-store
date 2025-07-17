@@ -3,6 +3,7 @@ package sitemaps
 import (
 	"factual-docs/internal/models"
 	"factual-docs/internal/shared/redis"
+	"factual-docs/internal/shared/utils"
 	"fmt"
 	"html/template"
 	"log"
@@ -22,6 +23,7 @@ func (s *Service) SitemapPostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	// create new data struct
 	data := s.ui.NewData(w, r)
+	data.CurrentUser = utils.GetUserFromContext(r)
 
 	// Extract the year and the month
 	year := r.PathValue("year")
@@ -81,6 +83,7 @@ func (s *Service) SitemapMiscHandler(w http.ResponseWriter, r *http.Request) {
 
 	// create new data struct
 	data := s.ui.NewData(w, r)
+	data.CurrentUser = utils.GetUserFromContext(r)
 
 	// Cache DB results except for admin
 	var pages []models.Page
@@ -123,6 +126,41 @@ func (s *Service) SitemapMiscHandler(w http.ResponseWriter, r *http.Request) {
 		data.SitemapItems = append(data.SitemapItems, &models.SitemapItem{
 			Location:     data.AbsoluteURL(path),
 			LastModified: category.UpdatedAt,
+		})
+	}
+
+	// Get sources from redis or DB
+	var sources []models.Source
+	err = redis.GetItems(
+		!data.IsCurrentUserAdmin(),
+		r.Context(),
+		s.rdb,
+		"sources",
+		s.config.CacheTimeout,
+		&sources,
+		func() ([]models.Source, error) {
+			return s.sourcesRepo.GetSources(r.Context())
+		},
+	)
+
+	if err != nil {
+		log.Printf("Was unabale to fetch sources on URI '%s': %v", r.RequestURI, err)
+		s.ui.HTMLError(w, r, http.StatusInternalServerError, data)
+		return
+	}
+
+	if len(sources) == 0 {
+		log.Printf("Fetched zero sources on URI '%s'", r.RequestURI)
+		s.ui.HTMLError(w, r, http.StatusNotFound, data)
+		return
+	}
+
+	// Add sources to sitemap
+	for _, source := range sources {
+		path := fmt.Sprintf("/source/%s/", source.PlaylistID)
+		data.SitemapItems = append(data.SitemapItems, &models.SitemapItem{
+			Location:     data.AbsoluteURL(path),
+			LastModified: source.UpdatedAt,
 		})
 	}
 

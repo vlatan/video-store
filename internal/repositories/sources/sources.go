@@ -80,6 +80,7 @@ func (r *Repository) GetSources(ctx context.Context) ([]models.Source, error) {
 			&source.Title,
 			&source.ChannelTitle,
 			&thumbnails,
+			&source.UpdatedAt,
 		); err != nil {
 			return []models.Source{}, err
 		}

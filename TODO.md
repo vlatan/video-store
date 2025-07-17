@@ -1,5 +1,6 @@
 
 * Sitemaps
+  Handle OTHER sources (orphaned posts)
   Separate xml templates for pages, sources, categories, misc
   Figure out a way to handle the main index xml page
 
@@ -18,3 +19,4 @@
 * Add slug input to page
 * Add new category form as well as delete, edit routes
 * Setup updated_at triggers for the tables
+* Check for nil values in templates
