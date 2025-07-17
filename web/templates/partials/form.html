@@ -32,7 +32,7 @@
                     required value="{{ .Form.Content.Value }}" type="text">
                 {{ else if .Form.Content.Type.IsTextarea }}
                 <textarea class="form-input" id="content" name="content" placeholder="{{ .Form.Content.Placeholder }}"
-                    required="" rows="15">{{ .Form.Content.Value }}</textarea>
+                    required rows="15">{{ .Form.Content.Value }}</textarea>
                 {{ end }}
             </div>
         </fieldset>

@@ -21,3 +21,4 @@
 * Setup updated_at triggers for the tables
 * Maybe minify CSS and JS files before deployment and save them before embedding
   Calculate just etags on init or on the fly in the route
+* Refactor JS in functions and classes
