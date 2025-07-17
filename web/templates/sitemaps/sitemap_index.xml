@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/xsl" href="/sitemap.xsl"?>
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-    {{ range . }}
+    {{ range .SitemapItems }}
     <sitemap>
-        <loc>{{ .loc }}</loc>
-        <lastmod>{{ .lastmod }}</lastmod>
+        <loc>{{ .Location }}</loc>
+        <lastmod>{{ .LastModified.Format "2006-01-02" }}</lastmod>
     </sitemap>
     {{ end }}
 </sitemapindex>
