@@ -2,8 +2,8 @@ package middlewares
 
 import (
 	"context"
-	"factual-docs/internal/handlers/auth"
 	"factual-docs/internal/shared/config"
+	"factual-docs/internal/shared/ui"
 	"factual-docs/internal/shared/utils"
 	"log"
 	"net/http"
@@ -13,13 +13,13 @@ import (
 )
 
 type Service struct {
-	auth   *auth.Service
+	ui     ui.Service
 	config *config.Config
 }
 
-func New(auth *auth.Service, config *config.Config) *Service {
+func New(ui ui.Service, config *config.Config) *Service {
 	return &Service{
-		auth:   auth,
+		ui:     ui,
 		config: config,
 	}
 }
@@ -28,7 +28,7 @@ func New(auth *auth.Service, config *config.Config) *Service {
 func (s *Service) IsAuthenticated(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// If the user is authenticated move onto the next handler
-		if user := s.auth.GetUserFromContext(r); user.IsAuthenticated() {
+		if user := utils.GetUserFromContext(r); user.IsAuthenticated() {
 			next(w, r)
 			return
 		}
@@ -42,7 +42,7 @@ func (s *Service) IsAuthenticated(next http.HandlerFunc) http.HandlerFunc {
 func (s *Service) IsAdmin(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// If the user is admin move onto the next handler
-		if user := s.auth.GetUserFromContext(r); user.IsAuthenticated() &&
+		if user := utils.GetUserFromContext(r); user.IsAuthenticated() &&
 			user.UserID == s.config.AdminOpenID {
 			next(w, r)
 			return
@@ -64,7 +64,7 @@ func (s *Service) LoadUser(next http.Handler) http.Handler {
 		}
 
 		// Get user from session and put it in the request context
-		user := s.auth.GetUserFromSession(w, r) // Can be nil
+		user := s.ui.GetUserFromSession(w, r) // Can be nil
 		ctx := context.WithValue(r.Context(), utils.UserContextKey, user)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
@@ -106,7 +106,7 @@ func (s *Service) AddHeaders(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		// Add CF cache control header if user not logged in AND not static file
-		user := s.auth.GetUserFromContext(r)
+		user := utils.GetUserFromContext(r)
 		if !user.IsAuthenticated() && !isStatic(r) {
 			w.Header().Set("CDN-Cache-Control", "14400")
 		}

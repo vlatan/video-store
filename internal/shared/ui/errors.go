@@ -1,4 +1,4 @@
-package tmpls
+package ui
 
 import (
 	"bytes"

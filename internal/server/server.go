@@ -9,32 +9,33 @@ import (
 
 	"factual-docs/internal/handlers/auth"
 	"factual-docs/internal/handlers/misc"
+	"factual-docs/internal/handlers/pages"
 	"factual-docs/internal/handlers/posts"
 	"factual-docs/internal/handlers/sitemaps"
 	"factual-docs/internal/handlers/sources"
-	"factual-docs/internal/handlers/static"
 	"factual-docs/internal/handlers/users"
 	"factual-docs/internal/integrations/gemini"
 	"factual-docs/internal/integrations/yt"
 	"factual-docs/internal/middlewares"
 	"factual-docs/internal/models"
 	catsRepo "factual-docs/internal/repositories/categories"
+	pagesRepo "factual-docs/internal/repositories/pages"
 	postsRepo "factual-docs/internal/repositories/posts"
 	sourcesRepo "factual-docs/internal/repositories/sources"
 	usersRepo "factual-docs/internal/repositories/users"
 	"factual-docs/internal/shared/config"
 	"factual-docs/internal/shared/database"
 	"factual-docs/internal/shared/redis"
-	tmpls "factual-docs/internal/shared/templates"
+	"factual-docs/internal/shared/ui"
 )
 
 type Server struct {
 	auth     *auth.Service
 	users    *users.Service
 	posts    *posts.Service
+	pages    *pages.Service
 	sources  *sources.Service
 	sitemaps *sitemaps.Service
-	static   *static.Service
 	mw       *middlewares.Service
 	misc     *misc.Service
 }
@@ -46,21 +47,21 @@ func NewServer() *http.Server {
 	gob.Register(&models.FlashMessage{})
 	gob.Register(time.Time{})
 
-	// Create esential services
+	// Create essential services
 	cfg := config.New()
 	db := database.New(cfg)
 	rdb := redis.New(cfg)
 	store := newCookieStore(cfg)
-	static := static.New(cfg)
 
 	// Create DB repositories
+	catsRepo := catsRepo.New(db)
 	usersRepo := usersRepo.New(db, cfg)
 	postsRepo := postsRepo.New(db, cfg)
-	catsRepo := catsRepo.New(db)
+	pagesRepo := pagesRepo.New(db, cfg)
 	sourcesRepo := sourcesRepo.New(db, cfg)
 
-	// Create parsed templates map
-	tm := tmpls.New(rdb, cfg, store, static, catsRepo)
+	// Create user interface service
+	ui := ui.New(rdb, cfg, store, catsRepo, usersRepo)
 
 	// Create YouTube service
 	ctx := context.Background()
@@ -76,24 +77,23 @@ func NewServer() *http.Server {
 	}
 
 	// Create domain services
-	auth := auth.New(usersRepo, store, rdb, cfg)
-	users := users.New(usersRepo, postsRepo, rdb, tm, cfg, auth)
-	posts := posts.New(postsRepo, rdb, tm, cfg, auth, yt, gemini)
-	sources := sources.New(postsRepo, sourcesRepo, rdb, tm, cfg, auth, yt)
-	sitemaps := sitemaps.New(postsRepo, sourcesRepo, catsRepo, rdb, tm, cfg)
-	misc := misc.New(cfg, db, rdb, tm)
-
-	// Create middlewares service
-	mw := middlewares.New(auth, cfg)
+	mw := middlewares.New(ui, cfg)
+	auth := auth.New(usersRepo, store, rdb, ui, cfg)
+	pages := pages.New(pagesRepo, rdb, ui, cfg)
+	users := users.New(usersRepo, postsRepo, rdb, ui, cfg)
+	posts := posts.New(postsRepo, rdb, ui, cfg, yt, gemini)
+	sources := sources.New(postsRepo, sourcesRepo, rdb, ui, cfg, yt)
+	sitemaps := sitemaps.New(postsRepo, sourcesRepo, catsRepo, rdb, ui, cfg)
+	misc := misc.New(cfg, db, rdb, ui)
 
 	// Create new Server struct
 	newServer := &Server{
 		auth:     auth,
 		users:    users,
 		posts:    posts,
+		pages:    pages,
 		sources:  sources,
 		sitemaps: sitemaps,
-		static:   static,
 		misc:     misc,
 		mw:       mw,
 	}

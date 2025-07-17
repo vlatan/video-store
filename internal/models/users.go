@@ -37,6 +37,8 @@ type User struct {
 	CreatedAt      *time.Time `json:"created_at,omitempty"`
 }
 
+const avatarcacheKey = "avatar:%s"
+
 // Check if the user is authenticated
 func (u *User) IsAuthenticated() bool {
 	return u != nil && u.UserID != ""
@@ -56,7 +58,7 @@ func (u *User) GetAvatar(ctx context.Context, rdb redis.Service, config *config.
 	}
 
 	// Get avatar URL from Redis
-	redisKey := fmt.Sprintf("avatar:%s", u.AnalyticsID)
+	redisKey := fmt.Sprintf(avatarcacheKey, u.AnalyticsID)
 	avatar, err := rdb.Get(ctx, redisKey)
 	if err == nil {
 		return avatar
@@ -148,7 +150,7 @@ func (u *User) DeleteAvatar(ctx context.Context, rdb redis.Service, config *conf
 		log.Printf("Could not remove the local avatar %s: %v", avatarPath, err)
 	}
 
-	redisKey := fmt.Sprintf("avatar:%s", u.AnalyticsID)
+	redisKey := fmt.Sprintf(avatarcacheKey, u.AnalyticsID)
 	if err := rdb.Delete(ctx, redisKey); err != nil {
 		log.Printf("Could not remove the avatar %s from Redis: %v", redisKey, err)
 	}

@@ -20,6 +20,12 @@ func (s *Server) RegisterRoutes() http.Handler {
 	// Categories
 	mux.HandleFunc("GET /category/{category}/{$}", s.posts.CategoryPostsHandler)
 
+	// Pages
+	mux.HandleFunc("GET /page/{slug}/{$}", s.pages.SinglePageHandler)
+	mux.HandleFunc("/page/{slug}/edit", s.mw.IsAdmin(s.pages.UpdatePageHandler))
+	mux.HandleFunc("/page/new", s.mw.IsAdmin(s.pages.NewPageHandler))
+	mux.HandleFunc("POST /page/{slug}/delete", s.mw.IsAdmin(s.pages.DeletePageHandler))
+
 	// Sources
 	mux.HandleFunc("/source/new", s.mw.IsAdmin(s.sources.NewSourceHandler))
 	mux.HandleFunc("GET /source/{source}/{$}", s.sources.SourcePostsHandler)
@@ -42,12 +48,12 @@ func (s *Server) RegisterRoutes() http.Handler {
 	// The rest
 	mux.HandleFunc("GET /search/{$}", s.posts.SearchPostsHandler)
 	mux.HandleFunc("GET /health/{$}", s.mw.IsAdmin(s.misc.HealthHandler))
-	mux.HandleFunc("GET /static/", s.static.StaticHandler)
+	mux.HandleFunc("GET /static/", s.misc.StaticHandler)
 	mux.HandleFunc("GET /ads.txt", s.misc.AdsTextHandler)
 
 	// Register favicons serving from root
 	for _, favicon := range utils.Favicons {
-		mux.HandleFunc("GET "+favicon, s.static.StaticHandler)
+		mux.HandleFunc("GET "+favicon, s.misc.StaticHandler)
 	}
 
 	// Create Cross-Site Request Forgery middleware

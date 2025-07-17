@@ -9,6 +9,7 @@
     grid-template-columns: 100%;
   }
 }
+
 .video-content {
   display: flex;
   flex-direction: column;
@@ -64,6 +65,7 @@
     width: 50px;
   }
 }
+
 .player iframe {
   position: absolute;
   top: 0;
@@ -93,17 +95,9 @@ h1.video-title {
   border-bottom: 1px solid rgb(88, 88, 150);
 }
 
-button.edit-title,
-button.edit-description {
-  background-color: var(--secondary-background-color);
-  border: 1px solid var(--primary-border-color);
-  max-width: 6.5rem;
-}
-
 .other-metadata {
   display: flex;
-  -moz-column-gap: 1rem;
-       column-gap: 1rem;
+  column-gap: 1rem;
 }
 
 .metadata-block {
@@ -142,23 +136,28 @@ button.edit-description {
     padding-bottom: calc(var(--content-padding) / 2);
   }
 }
+
 @media screen and (max-width: 700px) {
+
   .metadata,
   .unpublished {
     gap: var(--content-padding);
   }
+
   h1.video-title,
   .video-description,
   .short_desc_wrap {
     padding-bottom: var(--content-padding);
   }
 }
+
 @media screen and (max-width: 600px) {
   .metadata-block {
     flex-wrap: wrap;
     justify-content: flex-start;
   }
 }
+
 /* ############# Social (Likes and Faves) ############# */
 .social {
   align-self: flex-start;
@@ -207,11 +206,11 @@ button.edit-description {
     gap: 0.8rem;
   }
 }
+
 .related-video {
   display: grid;
   grid-template-columns: 45% auto;
-  -moz-column-gap: 1rem;
-       column-gap: 1rem;
+  column-gap: 1rem;
   text-decoration: none;
   transition: var(--img-hover-transition-duration) filter;
 }

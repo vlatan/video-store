@@ -1,4 +1,4 @@
-package tmpls
+package ui
 
 import (
 	"factual-docs/internal/models"
@@ -9,6 +9,11 @@ import (
 
 	"github.com/gorilla/csrf"
 )
+
+// Get the map containing the static files
+func (s *service) GetStaticFiles() models.StaticFiles {
+	return s.staticFiles
+}
 
 // Creates new default data struct to be passed to the templates
 // Instead of manualy envoking this function in each route it can be envoked in a middleware
@@ -24,7 +29,7 @@ func (s *service) NewData(w http.ResponseWriter, r *http.Request) *models.Templa
 		s.config.CacheTimeout,
 		&categories,
 		func() ([]models.Category, error) {
-			return s.catRepo.GetCategories(r.Context())
+			return s.catsRepo.GetCategories(r.Context())
 		},
 	)
 
@@ -40,7 +45,7 @@ func (s *service) NewData(w http.ResponseWriter, r *http.Request) *models.Templa
 	session.Save(r, w)
 
 	return &models.TemplateData{
-		StaticFiles:   s.sf.GetStaticFiles(),
+		StaticFiles:   s.GetStaticFiles(),
 		Config:        s.config,
 		Categories:    categories,
 		CurrentURI:    r.RequestURI,

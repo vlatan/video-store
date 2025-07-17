@@ -1,54 +1,19 @@
-package tmpls
+package ui
 
 import (
-	"factual-docs/internal/handlers/static"
+	"crypto/md5"
 	"factual-docs/internal/models"
-	"factual-docs/internal/repositories/categories"
-	"factual-docs/internal/shared/config"
-	"factual-docs/internal/shared/redis"
 	"factual-docs/web"
 	"fmt"
 	"html/template"
 	"io/fs"
 	"log"
-	"net/http"
 	"path/filepath"
-	"regexp"
 	"slices"
 	"strings"
-	"sync"
 
-	"github.com/gorilla/sessions"
 	"github.com/tdewolff/minify"
-	"github.com/tdewolff/minify/html"
-	"github.com/tdewolff/minify/xml"
 )
-
-type Service interface {
-	// Create new template data
-	NewData(w http.ResponseWriter, r *http.Request) *models.TemplateData
-	// Create new pagination struct
-	NewPagination(currentPage, totalRecords, pageSize int) *models.PaginationInfo
-	// Write JSON to response
-	WriteJSON(w http.ResponseWriter, r *http.Request, data any)
-	// Write HTML template to response
-	RenderHTML(w http.ResponseWriter, r *http.Request, templateName string, data *models.TemplateData)
-	// Write JSON error to response
-	JSONError(w http.ResponseWriter, r *http.Request, statusCode int)
-	// Write HTML error to response
-	HTMLError(w http.ResponseWriter, r *http.Request, statusCode int, data *models.TemplateData)
-}
-
-type templateMap map[string]*template.Template
-
-type service struct {
-	templates templateMap
-	rdb       redis.Service
-	config    *config.Config
-	store     *sessions.CookieStore
-	sf        *static.Service
-	catRepo   *categories.Repository
-}
 
 // These are files/dirs within the embedded filesystem 'web'
 const base = "templates/base.html"
@@ -64,45 +29,11 @@ var needsContent = []string{
 	"source.html",
 }
 
-var validXML = regexp.MustCompile("[/+]xml$")
-
-var (
-	tmInstance *service
-	once       sync.Once
-)
-
-// Walk the partials directory and parse the templates.
-func New(
-	rdb redis.Service,
-	config *config.Config,
-	store *sessions.CookieStore,
-	sf *static.Service,
-	catRepo *categories.Repository,
-) Service {
-	once.Do(func() {
-		m := minify.New()
-		m.AddFunc("text/html", html.Minify)
-		m.AddFuncRegexp(validXML, xml.Minify)
-
-		tmInstance = &service{
-			templates: parseTemplates(m),
-			rdb:       rdb,
-			config:    config,
-			store:     store,
-			sf:        sf,
-			catRepo:   catRepo,
-		}
-
-	})
-
-	return tmInstance
-}
-
 // Parse the templates and create a template map
-func parseTemplates(m *minify.M) templateMap {
+func parseTemplates(m *minify.M) models.TemplateMap {
 
-	tm := make(templateMap)
-	baseTemplate := template.Must(parseFiles(m, nil, base))
+	templateMap := make(models.TemplateMap)
+	baseTemplate := template.Must(parseTemplateFiles(m, nil, base))
 
 	// Function used to process each file/dir in the root, including the root
 	walkDirFunc := func(path string, info fs.DirEntry, err error) error {
@@ -138,7 +69,7 @@ func parseTemplates(m *minify.M) templateMap {
 			}
 		}
 
-		tm[name] = template.Must(parseFiles(m, baseTmpl, part...))
+		templateMap[name] = template.Must(parseTemplateFiles(m, baseTmpl, part...))
 		return nil
 	}
 
@@ -152,11 +83,11 @@ func parseTemplates(m *minify.M) templateMap {
 		log.Fatal(err)
 	}
 
-	return tm
+	return templateMap
 }
 
 // Minify and parse the HTML templates as per the tdewolff/minify docs.
-func parseFiles(m *minify.M, tmpl *template.Template, filepaths ...string) (*template.Template, error) {
+func parseTemplateFiles(m *minify.M, tmpl *template.Template, filepaths ...string) (*template.Template, error) {
 
 	for _, fp := range filepaths {
 
@@ -200,4 +131,83 @@ func parseFiles(m *minify.M, tmpl *template.Template, filepaths ...string) (*tem
 	}
 
 	return tmpl, nil
+}
+
+// Create minified versions of the static files and cache them in memory.
+func parseStaticFiles(m *minify.M, dir string) models.StaticFiles {
+
+	sf := make(models.StaticFiles)
+
+	// Function used to process each file/dir in the root, including the root
+	walkDirFunc := func(path string, info fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		// Skip directories
+		if info.IsDir() {
+			return nil
+		}
+
+		// Skip minified files
+		if strings.Contains(info.Name(), ".min.") {
+			return nil
+		}
+
+		// Read the file
+		b, err := fs.ReadFile(web.Files, path)
+		if err != nil {
+			return err
+		}
+
+		// Get the file extension
+		ext := strings.Split(info.Name(), ".")[1]
+
+		// Set media type
+		var mediaType string
+		switch ext {
+		case "css":
+			mediaType = "text/css"
+		case "js":
+			mediaType = "application/javascript"
+		}
+
+		// Minify the content (only CSS or JS)
+		if mediaType != "" {
+			b, err = m.Bytes(mediaType, b)
+			if err != nil {
+				return err
+			}
+		}
+
+		// Create Etag as a hexadecimal md5 hash of the file content
+		etag := fmt.Sprintf("%x", md5.Sum(b))
+
+		// Store empty bytes array if this is not CSS or JS
+		if mediaType == "" {
+			b = make([]byte, 0)
+		}
+
+		// Ensure the name starts with "/"
+		name := path
+		if !strings.HasPrefix(name, "/") {
+			name = "/" + name
+		}
+
+		// Save all the data in the struct
+		sf[name] = &models.FileInfo{
+			Bytes:     b,
+			MediaType: mediaType,
+			Etag:      etag,
+		}
+
+		return nil
+	}
+
+	// Walk the directory and process each file
+	if err := fs.WalkDir(web.Files, dir, walkDirFunc); err != nil {
+		log.Println(err)
+	}
+
+	return sf
 }

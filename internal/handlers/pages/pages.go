@@ -1,37 +1,29 @@
-package posts
+package pages
 
 import (
-	"factual-docs/internal/integrations/gemini"
-	"factual-docs/internal/integrations/yt"
-	postsRepo "factual-docs/internal/repositories/posts"
+	pagesRepo "factual-docs/internal/repositories/pages"
 	"factual-docs/internal/shared/config"
 	"factual-docs/internal/shared/redis"
 	"factual-docs/internal/shared/ui"
 )
 
 type Service struct {
-	postsRepo *postsRepo.Repository
+	pagesRepo *pagesRepo.Repository
 	rdb       redis.Service
 	ui        ui.Service
 	config    *config.Config
-	yt        *yt.Service
-	gemini    *gemini.Service
 }
 
 func New(
-	postsRepo *postsRepo.Repository,
+	pagesRepo *pagesRepo.Repository,
 	rdb redis.Service,
 	ui ui.Service,
 	config *config.Config,
-	yt *yt.Service,
-	gemini *gemini.Service,
 ) *Service {
 	return &Service{
-		postsRepo: postsRepo,
+		pagesRepo: pagesRepo,
 		rdb:       rdb,
 		ui:        ui,
 		config:    config,
-		yt:        yt,
-		gemini:    gemini,
 	}
 }

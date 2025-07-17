@@ -1,4 +1,4 @@
-// sleep time expects milliseconds
+// Sleep time expects milliseconds
 const sleep = time => {
     return new Promise(resolve => setTimeout(resolve, time));
 };
@@ -159,14 +159,25 @@ if (currentPath !== privacyPath && acceptCookies !== 'true') {
 // Form
 // ==========================================================================
 
-
+const formInputs = document.querySelectorAll('.form-input');
 const formSubmit = document.querySelector('.form-button');
 const formSpinner = document.querySelector('.submit-spinner');
 
 if (formSubmit) {
     formSubmit.addEventListener('click', () => {
-        if (formSpinner) {
-            formSpinner.classList.add('show')
+
+        // Check if all required inputs have values
+        let ok = true
+        for (const inputElement of formInputs) {
+            if (inputElement.required && inputElement.value.trim() === '') {
+                ok = false
+            }
+        }
+
+        if (ok) {
+            if (formSpinner) {
+                formSpinner.classList.add('show')
+            }
         }
     });
 }

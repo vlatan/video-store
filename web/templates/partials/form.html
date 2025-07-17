@@ -18,10 +18,22 @@
         {{ .CSRFField }}
         <fieldset class="form-group">
             <legend class="form-legend">{{ .Form.Legend }}</legend>
+            {{ if .Form.Title }}
+            <div class="form-group">
+                <label class="form-label" for="title">{{ .Form.Title.Label }}</label>
+                <input class="form-input" id="title" name="title" placeholder="{{ .Form.Title.Placeholder }}" required
+                    value="{{ .Form.Title.Value }}" type="text">
+            </div>
+            {{ end }}
             <div class="form-group">
                 <label class="form-label" for="content">{{ .Form.Content.Label }}</label>
+                {{ if .Form.Content.Type.IsInput }}
                 <input class="form-input" id="content" name="content" placeholder="{{ .Form.Content.Placeholder }}"
                     required value="{{ .Form.Content.Value }}" type="text">
+                {{ else if .Form.Content.Type.IsTextarea }}
+                <textarea class="form-input" id="content" name="content" placeholder="{{ .Form.Content.Placeholder }}"
+                    required rows="15">{{ .Form.Content.Value }}</textarea>
+                {{ end }}
             </div>
         </fieldset>
         <div class="form-group button-group">

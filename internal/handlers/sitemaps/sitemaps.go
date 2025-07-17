@@ -6,7 +6,7 @@ import (
 	sourcesRepo "factual-docs/internal/repositories/sources"
 	"factual-docs/internal/shared/config"
 	"factual-docs/internal/shared/redis"
-	tmpls "factual-docs/internal/shared/templates"
+	"factual-docs/internal/shared/ui"
 )
 
 type Service struct {
@@ -14,7 +14,7 @@ type Service struct {
 	sourcesRepo *sourcesRepo.Repository
 	catsRepo    *catsRepo.Repository
 	rdb         redis.Service
-	tm          tmpls.Service
+	ui          ui.Service
 	config      *config.Config
 }
 
@@ -23,7 +23,7 @@ func New(
 	sourcesRepo *sourcesRepo.Repository,
 	catsRepo *catsRepo.Repository,
 	rdb redis.Service,
-	tm tmpls.Service,
+	ui ui.Service,
 	config *config.Config,
 ) *Service {
 	return &Service{
@@ -31,7 +31,7 @@ func New(
 		sourcesRepo: sourcesRepo,
 		catsRepo:    catsRepo,
 		rdb:         rdb,
-		tm:          tm,
+		ui:          ui,
 		config:      config,
 	}
 }
