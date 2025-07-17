@@ -15,7 +15,6 @@ func (s *Service) UserFavoritesHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Generate template data
 	data := s.ui.NewData(w, r)
-	data.CurrentUser = utils.GetUserFromContext(r)
 
 	posts, err := s.postsRepo.GetUserFavedPosts(r.Context(), data.CurrentUser.ID, page)
 
@@ -54,7 +53,6 @@ func (s *Service) UsersHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Generate template data
 	data := s.ui.NewData(w, r)
-	data.CurrentUser = utils.GetUserFromContext(r)
 
 	users, err := s.usersRepo.GetUsers(r.Context(), page)
 	if err != nil {

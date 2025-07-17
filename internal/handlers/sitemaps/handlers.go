@@ -3,7 +3,6 @@ package sitemaps
 import (
 	"factual-docs/internal/models"
 	"factual-docs/internal/shared/redis"
-	"factual-docs/internal/shared/utils"
 	"fmt"
 	"html/template"
 	"log"
@@ -23,7 +22,6 @@ func (s *Service) SitemapPostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	// create new data struct
 	data := s.ui.NewData(w, r)
-	data.CurrentUser = utils.GetUserFromContext(r)
 
 	// Extract the year and the month
 	year := r.PathValue("year")
@@ -83,7 +81,6 @@ func (s *Service) SitemapMiscHandler(w http.ResponseWriter, r *http.Request) {
 
 	// create new data struct
 	data := s.ui.NewData(w, r)
-	data.CurrentUser = utils.GetUserFromContext(r)
 
 	// Cache DB results except for admin
 	var pages []models.Page

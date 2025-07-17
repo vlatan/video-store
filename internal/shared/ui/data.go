@@ -49,6 +49,7 @@ func (s *service) NewData(w http.ResponseWriter, r *http.Request) *models.Templa
 		Config:        s.config,
 		Categories:    categories,
 		CurrentURI:    r.RequestURI,
+		CurrentUser:   utils.GetUserFromContext(r),
 		BaseURL:       utils.GetBaseURL(r),
 		FlashMessages: flashMessages,
 		CSRFField:     csrf.TemplateField(r),
