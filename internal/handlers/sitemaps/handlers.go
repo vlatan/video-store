@@ -108,12 +108,21 @@ func (s *Service) SitemapMiscHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Create sitemap items
+	// Add pages to sitemap
 	for _, page := range pages {
 		path := fmt.Sprintf("/page/%s/", page.Slug)
 		data.SitemapItems = append(data.SitemapItems, &models.SitemapItem{
 			Location:     data.AbsoluteURL(path),
 			LastModified: page.UpdatedAt,
+		})
+	}
+
+	// Add categories to sitemap
+	for _, category := range data.Categories {
+		path := fmt.Sprintf("/category/%s/", category.Slug)
+		data.SitemapItems = append(data.SitemapItems, &models.SitemapItem{
+			Location:     data.AbsoluteURL(path),
+			LastModified: category.UpdatedAt,
 		})
 	}
 
