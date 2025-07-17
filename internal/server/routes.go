@@ -39,6 +39,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	// Sitemaps
 	mux.HandleFunc("GET /sitemap.xsl", s.sitemaps.SitemapStyleHandler)
 	mux.HandleFunc("GET /sitemap/{year}/{month}/videos.xml", s.sitemaps.SitemapPostsHandler)
+	mux.HandleFunc("GET /sitemap/misc.xml", s.sitemaps.SitemapMiscHandler)
 
 	// Users
 	mux.HandleFunc("POST /account/delete", s.mw.IsAuthenticated(s.auth.DeleteAccountHandler))

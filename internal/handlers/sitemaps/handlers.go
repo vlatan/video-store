@@ -75,3 +75,54 @@ func (s *Service) SitemapPostsHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/xml")
 	s.ui.RenderHTML(w, r, "sitemap_items.xml", data)
 }
+
+// Serve the posts from a given year and months on a single page
+func (s *Service) SitemapMiscHandler(w http.ResponseWriter, r *http.Request) {
+
+	// create new data struct
+	data := s.ui.NewData(w, r)
+
+	// Cache DB results except for admin
+	var pages []models.Page
+	err := redis.GetItems(
+		!data.IsCurrentUserAdmin(),
+		r.Context(),
+		s.rdb,
+		"pages",
+		s.config.CacheTimeout,
+		&pages,
+		func() ([]models.Page, error) {
+			return s.pagesRepo.GetPages(r.Context())
+		},
+	)
+
+	if err != nil {
+		log.Printf("Was unabale to fetch posts on URI '%s': %v", r.RequestURI, err)
+		s.ui.HTMLError(w, r, http.StatusInternalServerError, data)
+		return
+	}
+
+	if len(pages) == 0 {
+		log.Printf("Fetched zero posts on URI '%s'", r.RequestURI)
+		s.ui.HTMLError(w, r, http.StatusNotFound, data)
+		return
+	}
+
+	// Create sitemap items
+	for _, page := range pages {
+		path := fmt.Sprintf("/page/%s/", page.Slug)
+		data.SitemapItems = append(data.SitemapItems, &models.SitemapItem{
+			Location:     data.AbsoluteURL(path),
+			LastModified: page.UpdatedAt,
+		})
+	}
+
+	data.XMLDeclarations = []template.HTML{
+		template.HTML(`<?xml version="1.0" encoding="UTF-8"?>`),
+		template.HTML(`<?xml-stylesheet type="text/xsl" href="/sitemap.xsl"?>`),
+	}
+
+	w.Header().Set("Content-Type", "text/xml")
+	s.ui.RenderHTML(w, r, "sitemap_items.xml", data)
+
+}
