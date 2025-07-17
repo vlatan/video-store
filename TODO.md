@@ -1,6 +1,6 @@
 
 * Pages
-  Delete a page route.
+  Add slug input to page?
 
 * Sitemaps
   Separate xml templates for pages, sources, categories, misc

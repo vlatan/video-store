@@ -228,3 +228,32 @@ func (s *Service) NewPageHandler(w http.ResponseWriter, r *http.Request) {
 		s.ui.HTMLError(w, r, http.StatusMethodNotAllowed, data)
 	}
 }
+
+func (s *Service) DeletePageHandler(w http.ResponseWriter, r *http.Request) {
+	// Get the page slug from URL
+	pageSlug := r.PathValue("slug")
+
+	// Get the current user
+	currentUser := utils.GetUserFromContext(r)
+
+	rowsAffected, err := s.pagesRepo.DeletePage(r.Context(), pageSlug)
+	if err != nil {
+		log.Printf("User %d could not delete page %s: %v\n", currentUser.ID, pageSlug, err)
+		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
+		return
+	}
+
+	if rowsAffected == 0 {
+		log.Printf("No such page %s to delete.\n", pageSlug)
+		http.NotFound(w, r)
+		return
+	}
+
+	successDelete := models.FlashMessage{
+		Message:  "The page has been deleted!",
+		Category: "info",
+	}
+
+	s.ui.StoreFlashMessage(w, r, &successDelete)
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+}

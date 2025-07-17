@@ -49,3 +49,8 @@ func (r *Repository) UpdatePage(ctx context.Context, slug, title, content string
 func (r *Repository) InsertPage(ctx context.Context, slug, title, content string) (int64, error) {
 	return r.db.Exec(ctx, insertPageQuery, slug, title, utils.NullString(&content))
 }
+
+// Delete page
+func (r *Repository) DeletePage(ctx context.Context, slug string) (int64, error) {
+	return r.db.Exec(ctx, deletePageQuery, slug)
+}

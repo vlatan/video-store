@@ -16,3 +16,8 @@ const insertPageQuery = `
 	INSERT INTO page (slug, title, content)
 	VALUES ($1, $2, $3)
 `
+
+const deletePageQuery = `
+	DELETE FROM page
+	WHERE slug = $1
+`

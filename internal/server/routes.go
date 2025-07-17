@@ -24,6 +24,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	mux.HandleFunc("GET /page/{slug}/{$}", s.pages.SinglePageHandler)
 	mux.HandleFunc("/page/{slug}/edit", s.mw.IsAdmin(s.pages.UpdatePageHandler))
 	mux.HandleFunc("/page/new", s.mw.IsAdmin(s.pages.NewPageHandler))
+	mux.HandleFunc("POST /page/{slug}/delete", s.mw.IsAdmin(s.pages.DeletePageHandler))
 
 	// Sources
 	mux.HandleFunc("/source/new", s.mw.IsAdmin(s.sources.NewSourceHandler))
