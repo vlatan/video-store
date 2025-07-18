@@ -26,7 +26,7 @@ func New(db database.Service, config *config.Config) *Repository {
 }
 
 func (r *Repository) SourceExists(ctx context.Context, playlistID string) bool {
-	err := r.db.QueryRow(ctx, postExistsQuery, playlistID).Scan()
+	err := r.db.QueryRow(ctx, sourceExistsQuery, playlistID).Scan()
 	return !errors.Is(err, pgx.ErrNoRows)
 }
 

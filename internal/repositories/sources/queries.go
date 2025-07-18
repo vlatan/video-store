@@ -1,6 +1,6 @@
 package sources
 
-const postExistsQuery = `
+const sourceExistsQuery = `
 	SELECT 1 FROM playlist
 	WHERE playlist_id = $1
 `
