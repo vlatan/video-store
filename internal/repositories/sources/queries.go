@@ -20,8 +20,8 @@ const getSourcesQuery = `
 
 const getSitemapSourcesQuery = `
 	SELECT p.playlist_id, MAX(post.created_at)
-	FROM playlist AS p
-	JOIN post ON post.playlist_db_id = p.id
+	FROM post
+	LEFT JOIN playlist AS p ON p.id = post.playlist_db_id
 	GROUP BY p.playlist_id
 `
 

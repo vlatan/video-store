@@ -39,6 +39,9 @@ func (s *Server) RegisterRoutes() http.Handler {
 	// Sitemaps
 	mux.HandleFunc("GET /sitemap.xsl", s.sitemaps.SitemapStyleHandler)
 	mux.HandleFunc("GET /sitemap/{year}/{month}/videos.xml", s.sitemaps.SitemapPostsHandler)
+	mux.HandleFunc("GET /sitemap/pages.xml", s.sitemaps.SitemapPagesHandler)
+	mux.HandleFunc("GET /sitemap/categories.xml", s.sitemaps.SitemapCategoriesHandler)
+	mux.HandleFunc("GET /sitemap/sources.xml", s.sitemaps.SitemapSourcesHandler)
 	mux.HandleFunc("GET /sitemap/misc.xml", s.sitemaps.SitemapMiscHandler)
 
 	// Users

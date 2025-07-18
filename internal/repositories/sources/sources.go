@@ -118,9 +118,15 @@ func (r *Repository) GetSitemapSources(ctx context.Context) ([]models.Source, er
 	for rows.Next() {
 		// Get categories from DB
 		var source models.Source
+		var playlistID *string
 
-		if err := rows.Scan(&source.PlaylistID, &source.UpdatedAt); err != nil {
+		if err := rows.Scan(&playlistID, &source.UpdatedAt); err != nil {
 			return []models.Source{}, err
+		}
+
+		source.PlaylistID = utils.PtrToString(playlistID)
+		if source.PlaylistID == "" {
+			source.PlaylistID = "other"
 		}
 
 		// Include the category in the result
