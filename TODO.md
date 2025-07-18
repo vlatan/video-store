@@ -1,6 +1,5 @@
 
 * Sitemaps
-  Handle OTHER sources (orphaned posts)
   Last mod on category or source links should be the last created post date
   Figure out a way to handle the main index xml page
 

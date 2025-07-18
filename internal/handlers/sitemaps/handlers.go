@@ -82,13 +82,13 @@ func (s *Service) SitemapMiscHandler(w http.ResponseWriter, r *http.Request) {
 	// create new data struct
 	data := s.ui.NewData(w, r)
 
-	// Cache DB results except for admin
+	// Get the pages
 	var pages []models.Page
 	err := redis.GetItems(
 		!data.IsCurrentUserAdmin(),
 		r.Context(),
 		s.rdb,
-		"pages",
+		"sitemap:pages",
 		s.config.CacheTimeout,
 		&pages,
 		func() ([]models.Page, error) {
@@ -97,13 +97,13 @@ func (s *Service) SitemapMiscHandler(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if err != nil {
-		log.Printf("Was unabale to fetch posts on URI '%s': %v", r.RequestURI, err)
+		log.Printf("Was unabale to fetch pages on URI '%s': %v", r.RequestURI, err)
 		s.ui.HTMLError(w, r, http.StatusInternalServerError, data)
 		return
 	}
 
 	if len(pages) == 0 {
-		log.Printf("Fetched zero posts on URI '%s'", r.RequestURI)
+		log.Printf("Fetched zero pages on URI '%s'", r.RequestURI)
 		s.ui.HTMLError(w, r, http.StatusNotFound, data)
 		return
 	}
@@ -117,8 +117,34 @@ func (s *Service) SitemapMiscHandler(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
+	// Get the sitemap categories
+	var categories []models.Category
+	err = redis.GetItems(
+		!data.IsCurrentUserAdmin(),
+		r.Context(),
+		s.rdb,
+		"sitemap:categories",
+		s.config.CacheTimeout,
+		&categories,
+		func() ([]models.Category, error) {
+			return s.catsRepo.GetSitemapCategories(r.Context())
+		},
+	)
+
+	if err != nil {
+		log.Printf("Was unabale to fetch categories on URI '%s': %v", r.RequestURI, err)
+		s.ui.HTMLError(w, r, http.StatusInternalServerError, data)
+		return
+	}
+
+	if len(pages) == 0 {
+		log.Printf("Fetched zero categories on URI '%s'", r.RequestURI)
+		s.ui.HTMLError(w, r, http.StatusNotFound, data)
+		return
+	}
+
 	// Add categories to sitemap
-	for _, category := range data.Categories {
+	for _, category := range categories {
 		path := fmt.Sprintf("/category/%s/", category.Slug)
 		data.SitemapItems = append(data.SitemapItems, &models.SitemapItem{
 			Location:     data.AbsoluteURL(path),

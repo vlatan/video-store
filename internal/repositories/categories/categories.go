@@ -14,7 +14,7 @@ func New(db database.Service) *Repository {
 	return &Repository{db: db}
 }
 
-// Get a limited number of posts with offset
+// Get all valid categories
 func (r *Repository) GetCategories(ctx context.Context) ([]models.Category, error) {
 
 	rows, err := r.db.Query(ctx, getCategoriesQuery)
@@ -29,6 +29,35 @@ func (r *Repository) GetCategories(ctx context.Context) ([]models.Category, erro
 		// Get categories from DB
 		var category models.Category
 		if err := rows.Scan(&category.Name, &category.Slug, &category.UpdatedAt); err != nil {
+			return []models.Category{}, err
+		}
+
+		// Include the category in the result
+		categories = append(categories, category)
+	}
+
+	if err = rows.Err(); err != nil {
+		return []models.Category{}, err
+	}
+
+	return categories, nil
+}
+
+// Get a limited number of posts with offset
+func (r *Repository) GetSitemapCategories(ctx context.Context) ([]models.Category, error) {
+
+	rows, err := r.db.Query(ctx, getSitemapCategoriesQuery)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var categories []models.Category
+	for rows.Next() {
+
+		// Get categories from DB
+		var category models.Category
+		if err := rows.Scan(&category.Slug, &category.UpdatedAt); err != nil {
 			return []models.Category{}, err
 		}
 
