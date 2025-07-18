@@ -258,10 +258,10 @@ func (s *Service) SitemapMiscHandler(w http.ResponseWriter, r *http.Request) {
 	data := s.ui.NewData(w, r)
 
 	var wg sync.WaitGroup
-	// var mu sync.Mutex
+	var mu sync.Mutex
 	errors := make(chan error, 2)
 
-	// Get the sitemap sources
+	// Get the latest post date
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -283,10 +283,12 @@ func (s *Service) SitemapMiscHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		mu.Lock()
 		data.SitemapItems = append(data.SitemapItems, &models.SitemapItem{
 			Location:     data.AbsoluteURL("/"),
 			LastModified: date,
 		})
+		mu.Unlock()
 	}()
 
 	// Wait for all goroutines
