@@ -203,6 +203,9 @@ func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data.Posts = posts
+	if sourceID == "other" {
+		data.Posts.Title = "Other Uploads"
+	}
 	data.Title = data.Posts.Title
 	s.ui.RenderHTML(w, r, "source.html", data)
 }

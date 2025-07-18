@@ -78,7 +78,7 @@ const getCategoryPostsQuery = `
 	WHERE c.slug = $1
 	GROUP BY c.id, post.id
 	ORDER BY %s
-	LIMIT $2 OFFSET $3;
+	LIMIT $2 OFFSET $3
 `
 
 const getSourcePostsQuery = `
@@ -89,28 +89,17 @@ const getSourcePostsQuery = `
 		post.thumbnails,
 		COUNT(pl.id) AS likes
 	FROM post
-	JOIN playlist AS p ON post.playlist_db_id = p.id
+	LEFT JOIN playlist AS p ON post.playlist_db_id = p.id
 	LEFT JOIN post_like AS pl ON pl.post_id = post.id
-	WHERE p.playlist_id = $1
+	WHERE
+		CASE 
+    		WHEN $1::VARCHAR = 'other'
+			THEN (post.playlist_id IS NULL OR post.playlist_id = '')
+    		ELSE post.playlist_id = $1::VARCHAR
+  		END
 	GROUP BY p.id, post.id
 	ORDER BY %s
-	LIMIT $2 OFFSET $3;
-`
-
-const getOrphanPostsQuery = `
-	SELECT 
-		p.title AS playlist_title, 
-		post.video_id, 
-		post.title, 
-		post.thumbnails,
-		COUNT(pl.id) AS likes
-	FROM post
-	JOIN playlist AS p ON post.playlist_db_id = p.id
-	LEFT JOIN post_like AS pl ON pl.post_id = post.id
-	WHERE playlist_id IS NULL OR playlist_id = ''
-	GROUP BY p.id, post.id
-	ORDER BY %s
-	LIMIT $2 OFFSET $3;
+	LIMIT $2 OFFSET $3
 `
 
 const getPostsByMonthQuery = `
@@ -231,5 +220,5 @@ const deletePostQuery = `
 		RETURNING video_id, NULLIF(provider, '') as provider
 	)
 	INSERT INTO deleted_post (video_id, provider)
-	SELECT video_id, provider FROM dp;
+	SELECT video_id, provider FROM dp
 `
