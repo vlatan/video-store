@@ -9,7 +9,6 @@ import (
 	"factual-docs/internal/shared/utils"
 	"fmt"
 	"strings"
-	"time"
 )
 
 type Repository struct {
@@ -28,13 +27,6 @@ func New(db database.Service, config *config.Config) *Repository {
 func (r *Repository) PostExists(ctx context.Context, videoID string) bool {
 	err := r.db.QueryRow(ctx, postExistsQuery, videoID).Scan()
 	return err != nil
-}
-
-// Check the newest post's date
-func (r *Repository) NewestPostDate(ctx context.Context) (*time.Time, error) {
-	var date *time.Time
-	err := r.db.QueryRow(ctx, getNewestPostDateQuery).Scan(&date)
-	return date, err
 }
 
 // Insert post in DB
@@ -169,72 +161,6 @@ func (r *Repository) GetSourcePosts(
 	page int,
 ) (*models.Posts, error) {
 	return r.queryTaxonomyPosts(ctx, getSourcePostsQuery, playlistID, orderBy, page)
-}
-
-// Get posts in a given month of a given year
-func (r *Repository) GetPostsByMonth(ctx context.Context, year, month string) (posts models.Posts, err error) {
-
-	// Get rows from DB
-	rows, err := r.db.Query(ctx, getPostsByMonthQuery, year, month)
-	if err != nil {
-		return posts, err
-	}
-
-	// Close rows on exit
-	defer rows.Close()
-
-	// Iterate over the rows
-	for rows.Next() {
-		var post models.Post
-
-		// Paste post from row to struct
-		if err = rows.Scan(&post.VideoID, &post.UpdatedAt); err != nil {
-			return posts, err
-		}
-
-		// Include the processed post in the result
-		posts.Items = append(posts.Items, post)
-	}
-
-	// If error during iteration
-	if err = rows.Err(); err != nil {
-		return posts, err
-	}
-
-	return posts, err
-}
-
-// Get posts in a given month of a given year
-func (r *Repository) MaxPostsDatesByMonth(ctx context.Context) (posts []models.Post, err error) {
-
-	// Get rows from DB
-	rows, err := r.db.Query(ctx, getMaxPostDatesByMonthQuery)
-	if err != nil {
-		return posts, err
-	}
-
-	// Close rows on exit
-	defer rows.Close()
-
-	// Iterate over the rows
-	for rows.Next() {
-		var post models.Post
-
-		// Paste post from row to struct
-		if err = rows.Scan(&post.UploadDate, &post.UpdatedAt); err != nil {
-			return posts, err
-		}
-
-		// Include the processed post in the result
-		posts = append(posts, post)
-	}
-
-	// If error during iteration
-	if err = rows.Err(); err != nil {
-		return posts, err
-	}
-
-	return posts, err
 }
 
 // Get user's favorited posts

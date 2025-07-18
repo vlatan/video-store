@@ -5,11 +5,6 @@ const sourceExistsQuery = `
 	WHERE playlist_id = $1
 `
 
-const getNewestSourceDateQuery = `
-	SELECT MAX(created_at)
-	FROM playlist
-`
-
 const getSourcesQuery = `
 	SELECT
 		p.playlist_id, 
@@ -21,13 +16,6 @@ const getSourcesQuery = `
 	JOIN post ON post.playlist_db_id = p.id
 	GROUP BY p.id
 	ORDER BY p.id DESC
-`
-
-const getSitemapSourcesQuery = `
-	SELECT p.playlist_id, MAX(post.created_at)
-	FROM post
-	LEFT JOIN playlist AS p ON p.id = post.playlist_db_id
-	GROUP BY p.playlist_id
 `
 
 const insertSourceQuery = `

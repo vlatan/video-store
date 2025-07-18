@@ -5,20 +5,6 @@ const postExistsQuery = `
 	WHERE video_id = $1
 `
 
-const getNewestPostDateQuery = `
-	SELECT MAX(created_at)
-	FROM post
-`
-
-const getMaxPostDatesByMonthQuery = `
-	SELECT
-		DATE_TRUNC('month', upload_date) AS month,
-		MAX(updated_at)
-	FROM post
-	GROUP BY month
-	ORDER BY month DESC
-`
-
 const insertPostQuery = `
 	WITH deleted_rows AS (
 		DELETE FROM deleted_post
@@ -114,13 +100,6 @@ const getSourcePostsQuery = `
 	GROUP BY p.id, post.id
 	ORDER BY %s
 	LIMIT $2 OFFSET $3
-`
-
-const getPostsByMonthQuery = `
-	SELECT video_id, updated_at
-	FROM post
-	WHERE EXTRACT(YEAR FROM upload_date) = $1
-	AND EXTRACT(MONTH FROM upload_date) = $2
 `
 
 const getUserFavedPostsQuery = `

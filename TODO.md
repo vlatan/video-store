@@ -2,7 +2,6 @@
 * Sitemaps
   Maybe create sitemap DB repo
   Check ordering in query and sitemap map
-  Remove redundant queries and methods from previous sitemap try
 
 * Cron
 * API calls need retries

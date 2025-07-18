@@ -21,8 +21,3 @@ const deletePageQuery = `
 	DELETE FROM page
 	WHERE slug = $1
 `
-
-const getPagesQuery = `
-	SELECT slug, updated_at
-	FROM page
-`

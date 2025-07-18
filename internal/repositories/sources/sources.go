@@ -8,7 +8,6 @@ import (
 	"factual-docs/internal/shared/database"
 	"factual-docs/internal/shared/utils"
 	"fmt"
-	"time"
 )
 
 type Repository struct {
@@ -27,13 +26,6 @@ func New(db database.Service, config *config.Config) *Repository {
 func (r *Repository) SourceExists(ctx context.Context, playlistID string) bool {
 	err := r.db.QueryRow(ctx, sourceExistsQuery, playlistID).Scan()
 	return err != nil
-}
-
-// Check the newest post's date
-func (r *Repository) NewestSourceDate(ctx context.Context) (*time.Time, error) {
-	var date *time.Time
-	err := r.db.QueryRow(ctx, getNewestSourceDateQuery).Scan(&date)
-	return date, err
 }
 
 // Add new source to DB
@@ -100,41 +92,6 @@ func (r *Repository) GetSources(ctx context.Context) ([]models.Source, error) {
 		}
 
 		source.Thumbnail = channelThumbs.Medium
-
-		// Include the category in the result
-		sources = append(sources, source)
-	}
-
-	if err = rows.Err(); err != nil {
-		return sources, err
-	}
-
-	return sources, nil
-}
-
-// Get sitemap sources
-func (r *Repository) GetSitemapSources(ctx context.Context) ([]models.Source, error) {
-
-	rows, err := r.db.Query(ctx, getSitemapSourcesQuery)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var sources []models.Source
-	for rows.Next() {
-		// Get categories from DB
-		var source models.Source
-		var playlistID *string
-
-		if err := rows.Scan(&playlistID, &source.UpdatedAt); err != nil {
-			return []models.Source{}, err
-		}
-
-		source.PlaylistID = utils.PtrToString(playlistID)
-		if source.PlaylistID == "" {
-			source.PlaylistID = "other"
-		}
 
 		// Include the category in the result
 		sources = append(sources, source)
