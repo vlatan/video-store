@@ -104,3 +104,32 @@ func (r *Repository) GetSources(ctx context.Context) ([]models.Source, error) {
 
 	return sources, nil
 }
+
+// Get sitemap sources
+func (r *Repository) GetSitemapSources(ctx context.Context) ([]models.Source, error) {
+
+	rows, err := r.db.Query(ctx, getSitemapSourcesQuery)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var sources []models.Source
+	for rows.Next() {
+		// Get categories from DB
+		var source models.Source
+
+		if err := rows.Scan(&source.PlaylistID, &source.UpdatedAt); err != nil {
+			return []models.Source{}, err
+		}
+
+		// Include the category in the result
+		sources = append(sources, source)
+	}
+
+	if err = rows.Err(); err != nil {
+		return sources, err
+	}
+
+	return sources, nil
+}

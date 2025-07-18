@@ -18,6 +18,13 @@ const getSourcesQuery = `
 	ORDER BY p.id DESC
 `
 
+const getSitemapSourcesQuery = `
+	SELECT p.playlist_id, MAX(post.created_at)
+	FROM playlist AS p
+	JOIN post ON post.playlist_db_id = p.id
+	GROUP BY p.playlist_id
+`
+
 const insertSourceQuery = `
 	INSERT INTO playlist (
 		playlist_id, 

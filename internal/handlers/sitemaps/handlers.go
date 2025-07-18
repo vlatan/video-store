@@ -164,11 +164,11 @@ func (s *Service) SitemapMiscHandler(w http.ResponseWriter, r *http.Request) {
 			!data.IsCurrentUserAdmin(),
 			r.Context(),
 			s.rdb,
-			"sources",
+			"sitemap:sources",
 			s.config.CacheTimeout,
 			&sources,
 			func() ([]models.Source, error) {
-				return s.sourcesRepo.GetSources(r.Context())
+				return s.sourcesRepo.GetSitemapSources(r.Context())
 			},
 		)
 
@@ -214,5 +214,4 @@ func (s *Service) SitemapMiscHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s.ui.RenderHTML(w, r, "sitemap_items.xml", data)
-
 }
