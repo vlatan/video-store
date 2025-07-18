@@ -7,14 +7,15 @@ const postExistsQuery = `
 
 const getSourcesQuery = `
 	SELECT
-		playlist_id, 
-		title, 
-		channel_title, 
-		channel_thumbnails,
-		updated_at
-	FROM playlist
-	WHERE id IN (SELECT DISTINCT playlist_db_id FROM post)
-	ORDER BY id DESC
+		p.playlist_id, 
+		p.title, 
+		p.channel_title, 
+		p.channel_thumbnails,
+		p.updated_at
+	FROM playlist AS p
+	JOIN post ON post.playlist_db_id = p.id
+	GROUP BY p.id
+	ORDER BY p.id DESC
 `
 
 const insertSourceQuery = `
