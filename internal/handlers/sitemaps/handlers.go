@@ -251,7 +251,7 @@ func (s *Service) SitemapSourcesHandler(w http.ResponseWriter, r *http.Request) 
 	s.ui.RenderHTML(w, r, "sitemap_items.xml", data)
 }
 
-// Serve the pages, categories, sources, etc. URLs to one single sitemap page
+// Show the rest of URLs in a sitemap
 func (s *Service) SitemapMiscHandler(w http.ResponseWriter, r *http.Request) {
 
 	// create new data struct
@@ -286,6 +286,36 @@ func (s *Service) SitemapMiscHandler(w http.ResponseWriter, r *http.Request) {
 		mu.Lock()
 		data.SitemapItems = append(data.SitemapItems, &models.SitemapItem{
 			Location:     data.AbsoluteURL("/"),
+			LastModified: date,
+		})
+		mu.Unlock()
+	}()
+
+	// Get the latest source date
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		var date *time.Time
+		err := redis.GetItems(
+			!data.IsCurrentUserAdmin(),
+			r.Context(),
+			s.rdb,
+			"newest:source:date",
+			s.config.CacheTimeout,
+			&date,
+			func() (*time.Time, error) {
+				return s.sourcesRepo.NewestSourceDate(r.Context())
+			},
+		)
+
+		if err != nil {
+			errors <- err
+			return
+		}
+
+		mu.Lock()
+		data.SitemapItems = append(data.SitemapItems, &models.SitemapItem{
+			Location:     data.AbsoluteURL("/sources/"),
 			LastModified: date,
 		})
 		mu.Unlock()

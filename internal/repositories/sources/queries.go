@@ -5,6 +5,11 @@ const sourceExistsQuery = `
 	WHERE playlist_id = $1
 `
 
+const getNewestSourceDateQuery = `
+	SELECT MAX(created_at)
+	FROM playlist
+`
+
 const getSourcesQuery = `
 	SELECT
 		p.playlist_id, 
