@@ -5,6 +5,11 @@ const postExistsQuery = `
 	WHERE video_id = $1
 `
 
+const getNewestPostDateQuery = `
+	SELECT MAX(created_at)
+	FROM post
+`
+
 const insertPostQuery = `
 	WITH deleted_rows AS (
 		DELETE FROM deleted_post

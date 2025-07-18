@@ -10,6 +10,7 @@ import (
 	"factual-docs/internal/shared/utils"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 )
@@ -26,11 +27,20 @@ func New(db database.Service, config *config.Config) *Repository {
 	}
 }
 
+// Check if the post exists
 func (r *Repository) PostExists(ctx context.Context, videoID string) bool {
 	err := r.db.QueryRow(ctx, postExistsQuery, videoID).Scan()
 	return !errors.Is(err, pgx.ErrNoRows)
 }
 
+// Check the newest post's date
+func (r *Repository) NewestPostDate(ctx context.Context) (*time.Time, error) {
+	var date *time.Time
+	err := r.db.QueryRow(ctx, getNewestPostDateQuery).Scan(&date)
+	return date, err
+}
+
+// Insert post in DB
 func (r *Repository) InsertPost(ctx context.Context, post *models.Post) (int64, error) {
 	// Marshal the thumbnails
 	thumbnails, err := json.Marshal(post.Thumbnails)

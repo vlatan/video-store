@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"sync"
+	"time"
 )
 
 // Serve the xml style, whixh is xsl
@@ -258,13 +259,34 @@ func (s *Service) SitemapMiscHandler(w http.ResponseWriter, r *http.Request) {
 
 	var wg sync.WaitGroup
 	// var mu sync.Mutex
-	errors := make(chan error, 4)
+	errors := make(chan error, 2)
 
 	// Get the sitemap sources
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
+		var date *time.Time
+		err := redis.GetItems(
+			!data.IsCurrentUserAdmin(),
+			r.Context(),
+			s.rdb,
+			"newest:post:date",
+			s.config.CacheTimeout,
+			&date,
+			func() (*time.Time, error) {
+				return s.postsRepo.NewestPostDate(r.Context())
+			},
+		)
 
+		if err != nil {
+			errors <- err
+			return
+		}
+
+		data.SitemapItems = append(data.SitemapItems, &models.SitemapItem{
+			Location:     data.AbsoluteURL("/"),
+			LastModified: date,
+		})
 	}()
 
 	// Wait for all goroutines
