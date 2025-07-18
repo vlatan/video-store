@@ -15,6 +15,9 @@ func (s *Service) SitemapStyleHandler(w http.ResponseWriter, r *http.Request) {
 	data := s.ui.NewData(w, r)
 	data.XMLDeclarations = []template.HTML{template.HTML(`<?xml version="1.0" encoding="UTF-8"?>`)}
 	w.Header().Set("Content-Type", "text/xsl")
+	if !data.IsCurrentUserAdmin() {
+		w.Header().Set("Cache-Control", "public, max-age=3600")
+	}
 	s.ui.RenderHTML(w, r, "sitemap.xsl", data)
 }
 
@@ -187,7 +190,6 @@ func (s *Service) SitemapMiscHandler(w http.ResponseWriter, r *http.Request) {
 			})
 			mu.Unlock()
 		}
-
 	}()
 
 	// Wait for all goroutines
