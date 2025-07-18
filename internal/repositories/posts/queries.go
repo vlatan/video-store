@@ -236,3 +236,73 @@ const deletePostQuery = `
 	INSERT INTO deleted_post (video_id, provider)
 	SELECT video_id, provider FROM dp
 `
+
+const sitemapDataQuery = `
+	-- Posts (simple case)
+	SELECT
+		'post' as type,
+		CONCAT('/video/', video_id, '/') AS url,
+		updated_at
+	FROM post
+
+	UNION ALL
+
+	-- Pages (simple case)
+	SELECT
+		'page' AS type,
+		CONCAT('/page/', slug, '/') AS url,
+		updated_at
+	FROM page
+
+	UNION ALL
+
+	-- Playlists (last modified = latest upload date post in playlist)
+	SELECT
+		'source' AS type, 
+		CONCAT('/source/', p.playlist_id, '/') AS url, 
+		MAX(post.upload_date) AS updated_at
+	FROM playlist AS p
+	LEFT JOIN post ON post.playlist_db_id = p.id
+	GROUP BY p.id
+
+	UNION ALL
+
+	-- "Other" playlist (last modified = latest upload date post without playlist)
+	SELECT
+		'source' AS type,
+		'/source/other/' AS url,
+		MAX(post.upload_date) AS updated_at
+	FROM post
+	WHERE playlist_id IS NULL OR playlist_id = ''
+
+	UNION ALL
+
+	-- Categories (last modified = latest upload date post in category)
+	SELECT
+		'category' AS type,
+		CONCAT('/category/', c.slug, '/') AS url,
+		MAX(post.upload_date) AS updated_at
+	FROM category AS c
+	LEFT JOIN post ON post.category_id = c.id
+	GROUP BY c.id
+
+	UNION ALL
+
+	-- Homepage (last modified = latest upload date post in DB)
+	SELECT
+		'misc' AS type,
+		'/' AS url,
+		MAX(upload_date) AS updated_at
+	FROM post
+
+	UNION ALL
+
+	-- Playlists page (last modified = newest playlist in DB)
+	SELECT 
+		'misc' AS type,
+		'/sources/' AS url, 
+		MAX(created_at) AS updated_at
+	FROM playlist
+
+	ORDER BY type, updated_at DESC
+`

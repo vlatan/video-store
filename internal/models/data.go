@@ -74,11 +74,6 @@ type Form struct {
 	Error   *FlashMessage
 }
 
-type SitemapItem struct {
-	Location     string
-	LastModified *time.Time
-}
-
 // Data struct to pass to templates
 type TemplateData struct {
 	StaticFiles     StaticFiles
