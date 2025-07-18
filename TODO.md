@@ -1,6 +1,4 @@
 
-* Fix PostExists and SourceExists
-
 * Sitemaps
   Handle sitemap index
 

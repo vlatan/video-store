@@ -3,7 +3,6 @@ package posts
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"factual-docs/internal/models"
 	"factual-docs/internal/shared/config"
 	"factual-docs/internal/shared/database"
@@ -11,8 +10,6 @@ import (
 	"fmt"
 	"strings"
 	"time"
-
-	"github.com/jackc/pgx/v5"
 )
 
 type Repository struct {
@@ -30,7 +27,7 @@ func New(db database.Service, config *config.Config) *Repository {
 // Check if the post exists
 func (r *Repository) PostExists(ctx context.Context, videoID string) bool {
 	err := r.db.QueryRow(ctx, postExistsQuery, videoID).Scan()
-	return !errors.Is(err, pgx.ErrNoRows)
+	return err != nil
 }
 
 // Check the newest post's date

@@ -3,15 +3,12 @@ package sources
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"factual-docs/internal/models"
 	"factual-docs/internal/shared/config"
 	"factual-docs/internal/shared/database"
 	"factual-docs/internal/shared/utils"
 	"fmt"
 	"time"
-
-	"github.com/jackc/pgx/v5"
 )
 
 type Repository struct {
@@ -29,7 +26,7 @@ func New(db database.Service, config *config.Config) *Repository {
 // Check if source exists
 func (r *Repository) SourceExists(ctx context.Context, playlistID string) bool {
 	err := r.db.QueryRow(ctx, sourceExistsQuery, playlistID).Scan()
-	return !errors.Is(err, pgx.ErrNoRows)
+	return err != nil
 }
 
 // Check the newest post's date
