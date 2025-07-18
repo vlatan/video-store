@@ -10,6 +10,15 @@ const getNewestPostDateQuery = `
 	FROM post
 `
 
+const getMaxPostDatesByMonthQuery = `
+	SELECT
+		DATE_TRUNC('month', upload_date) AS month,
+		MAX(updated_at)
+	FROM post
+	GROUP BY month
+	ORDER BY month DESC
+`
+
 const insertPostQuery = `
 	WITH deleted_rows AS (
 		DELETE FROM deleted_post

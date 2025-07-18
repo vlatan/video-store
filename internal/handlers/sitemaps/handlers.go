@@ -346,3 +346,76 @@ func (s *Service) SitemapMiscHandler(w http.ResponseWriter, r *http.Request) {
 
 	s.ui.RenderHTML(w, r, "sitemap_items.xml", data)
 }
+
+// Handle the sitemap index
+func (s *Service) SitemapIndexHandler(w http.ResponseWriter, r *http.Request) {
+	// create new data struct
+	data := s.ui.NewData(w, r)
+
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+	errors := make(chan error, 2)
+
+	// Get grouped posts by month
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		var posts []models.Post
+		err := redis.GetItems(
+			!data.IsCurrentUserAdmin(),
+			r.Context(),
+			s.rdb,
+			"posts:month",
+			s.config.CacheTimeout,
+			&posts,
+			func() ([]models.Post, error) {
+				return s.postsRepo.MaxPostsDatesByMonth(r.Context())
+			},
+		)
+
+		if err != nil {
+			errors <- err
+			return
+		}
+
+		// Add grouped post URLs to sitemap
+		for _, post := range posts {
+			path := fmt.Sprintf(
+				"/sitemap/%d/%02d/videos.xml",
+				post.UploadDate.Year(),
+				post.UploadDate.Month(),
+			)
+			mu.Lock()
+			data.SitemapItems = append(data.SitemapItems, &models.SitemapItem{
+				Location:     data.AbsoluteURL(path),
+				LastModified: post.UpdatedAt,
+			})
+			mu.Unlock()
+		}
+	}()
+
+	// Wait for all goroutines
+	wg.Wait()
+	close(errors)
+
+	// Check for errors
+	for err := range errors {
+		if err != nil {
+			log.Printf("Was unabale to fetch items on URI '%s': %v", r.RequestURI, err)
+			s.ui.HTMLError(w, r, http.StatusInternalServerError, data)
+			return
+		}
+	}
+
+	data.XMLDeclarations = []template.HTML{
+		template.HTML(`<?xml version="1.0" encoding="UTF-8"?>`),
+		template.HTML(`<?xml-stylesheet type="text/xsl" href="/sitemap.xsl"?>`),
+	}
+
+	w.Header().Set("Content-Type", "text/xml")
+	if !data.IsCurrentUserAdmin() {
+		w.Header().Set("Cache-Control", "public, max-age=3600")
+	}
+
+	s.ui.RenderHTML(w, r, "sitemap_items.xml", data)
+}

@@ -202,7 +202,39 @@ func (r *Repository) GetPostsByMonth(ctx context.Context, year, month string) (p
 	}
 
 	return posts, err
+}
 
+// Get posts in a given month of a given year
+func (r *Repository) MaxPostsDatesByMonth(ctx context.Context) (posts []models.Post, err error) {
+
+	// Get rows from DB
+	rows, err := r.db.Query(ctx, getMaxPostDatesByMonthQuery)
+	if err != nil {
+		return posts, err
+	}
+
+	// Close rows on exit
+	defer rows.Close()
+
+	// Iterate over the rows
+	for rows.Next() {
+		var post models.Post
+
+		// Paste post from row to struct
+		if err = rows.Scan(&post.UploadDate, &post.UpdatedAt); err != nil {
+			return posts, err
+		}
+
+		// Include the processed post in the result
+		posts = append(posts, post)
+	}
+
+	// If error during iteration
+	if err = rows.Err(); err != nil {
+		return posts, err
+	}
+
+	return posts, err
 }
 
 // Get user's favorited posts
