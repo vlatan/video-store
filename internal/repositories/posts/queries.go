@@ -93,9 +93,9 @@ const getSourcePostsQuery = `
 	LEFT JOIN post_like AS pl ON pl.post_id = post.id
 	WHERE
 		CASE 
-    		WHEN $1::VARCHAR = 'other'
-			THEN (post.playlist_id IS NULL OR post.playlist_id = '')
-    		ELSE post.playlist_id = $1::VARCHAR
+    		WHEN $1 = 'other'
+			THEN (p.playlist_id IS NULL OR p.playlist_id = '')
+    		ELSE p.playlist_id = $1
   		END
 	GROUP BY p.id, post.id
 	ORDER BY %s
