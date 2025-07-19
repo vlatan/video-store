@@ -1,11 +1,12 @@
 
-* Sitemaps
-  Maybe create sitemap DB repo
-
 * Cron
 * API calls need retries
 
-* Write custom errors middlware
+* Dockerfile
+
+* Write custom errors middlware,
+  Detect html requests and return custom HTML errors
+  
 * Trim services of what related services they don't use
 
 * User avatar URL exists in redis but not locally
