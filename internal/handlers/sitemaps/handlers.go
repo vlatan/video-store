@@ -55,9 +55,9 @@ func (s *Service) SitemapPartHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "text/xml")
-	// if !data.IsCurrentUserAdmin() {
-	// 	w.Header().Set("Cache-Control", "public, max-age=3600")
-	// }
+	if !data.IsCurrentUserAdmin() {
+		w.Header().Set("Cache-Control", "public, max-age=3600")
+	}
 
 	s.ui.RenderHTML(w, r, "sitemap_items.xml", data)
 }
@@ -89,9 +89,9 @@ func (s *Service) SitemapIndexHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "text/xml")
-	// if !data.IsCurrentUserAdmin() {
-	// 	w.Header().Set("Cache-Control", "public, max-age=3600")
-	// }
+	if !data.IsCurrentUserAdmin() {
+		w.Header().Set("Cache-Control", "public, max-age=3600")
+	}
 
 	s.ui.RenderHTML(w, r, "sitemap_index.xml", data)
 }
