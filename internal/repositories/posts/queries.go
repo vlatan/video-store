@@ -217,7 +217,7 @@ const deletePostQuery = `
 `
 
 const sitemapDataQuery = `
-	-- Posts (simple case)
+	-- Posts (last modified = last updated_at)
 	SELECT
 		'post' as type,
 		CONCAT('/video/', video_id, '/') AS url,
@@ -226,7 +226,7 @@ const sitemapDataQuery = `
 
 	UNION ALL
 
-	-- Pages (simple case)
+	-- Pages (last modified = last updated_at)
 	SELECT
 		'page' AS type,
 		CONCAT('/page/', slug, '/') AS url,
@@ -246,7 +246,7 @@ const sitemapDataQuery = `
 
 	UNION ALL
 
-	-- "Other" playlist (last modified = latest upload date post without playlist)
+	-- Orphans (last modified = latest upload date post without playlist)
 	SELECT
 		'source' AS type,
 		'/source/other/' AS url,
@@ -282,6 +282,4 @@ const sitemapDataQuery = `
 		'/sources/' AS url, 
 		MAX(created_at) AS updated_at
 	FROM playlist
-
-	ORDER BY type, updated_at DESC
 `

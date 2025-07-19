@@ -1,7 +1,6 @@
 
 * Sitemaps
   Maybe create sitemap DB repo
-  Check ordering in query and sitemap map
 
 * Cron
 * API calls need retries
@@ -9,7 +8,7 @@
 * Write custom errors middlware
 * Trim services of what related services they don't use
 
-* User avatar saved to redis not locally
+* User avatar URL exists in redis but not locally
   Need to solve this discrepancy
 
 * Minify CSS and JS files during development.
