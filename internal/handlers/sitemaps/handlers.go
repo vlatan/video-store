@@ -2,7 +2,6 @@ package sitemaps
 
 import (
 	"factual-docs/internal/models"
-	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -77,10 +76,9 @@ func (s *Service) SitemapIndexHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for key, value := range sitemap {
-		path := fmt.Sprintf("/sitemap/%s/part.xml", key)
+	for _, value := range sitemap {
 		data.SitemapItems = append(data.SitemapItems, &models.SitemapItem{
-			Location:     data.AbsoluteURL(path),
+			Location:     value.Location,
 			LastModified: value.LastModified,
 		})
 	}

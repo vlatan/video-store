@@ -9,8 +9,8 @@ import (
 	"time"
 )
 
-// Get sitemap data from DB and split it in smaller chunks
-func (s *Service) ProcessSitemapData(r *http.Request, partSize int) (models.Sitemap, error) {
+// Get sitemap data from DB and split it in smaller parts
+func (s *Service) GetSitemapData(r *http.Request, partSize int) (models.Sitemap, error) {
 
 	// Fetch the entire sitemap data from DB
 	data, err := s.postsRepo.SitemapData(r.Context())
@@ -26,6 +26,7 @@ func (s *Service) ProcessSitemapData(r *http.Request, partSize int) (models.Site
 		return nil, fmt.Errorf("fetched zero sitemap items on URI '%s'", r.RequestURI)
 	}
 
+	// Get base absolute URL
 	baseURL := utils.GetBaseURL(r)
 
 	// Additional processing to get the last modified time for each part
@@ -51,8 +52,10 @@ func (s *Service) ProcessSitemapData(r *http.Request, partSize int) (models.Site
 		}
 
 		key := fmt.Sprintf("%02d", (i/partSize)+1)
+		path := fmt.Sprintf("/sitemap/%s/part.xml", key)
 		result[key] = models.SitemapPart{
 			Entries:      entries,
+			Location:     utils.AbsoluteURL(baseURL, path),
 			LastModified: maxTime.Format("2006-01-02"),
 		}
 	}
@@ -80,7 +83,7 @@ func (s *Service) GetSitemap(r *http.Request, sitemapKey string) (models.Sitemap
 	}
 
 	// Get data from DB and construct a sitemap
-	sitemap, err := s.ProcessSitemapData(r, sitemapPartSize)
+	sitemap, err := s.GetSitemapData(r, sitemapPartSize)
 	if err != nil {
 		return nil, err
 	}
@@ -118,7 +121,7 @@ func (s *Service) GetSitemapPart(r *http.Request, sitemapKey, partKey string) (m
 	}
 
 	// Get data from DB and construct a sitemap
-	sitemap, err := s.ProcessSitemapData(r, sitemapPartSize)
+	sitemap, err := s.GetSitemapData(r, sitemapPartSize)
 	if err != nil {
 		return part, err
 	}

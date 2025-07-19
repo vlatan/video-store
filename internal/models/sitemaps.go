@@ -8,6 +8,7 @@ type SitemapItem struct {
 
 type SitemapPart struct {
 	Entries      []*SitemapItem
+	Location     string
 	LastModified string
 }
 
