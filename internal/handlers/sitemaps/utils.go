@@ -95,6 +95,7 @@ func (s *Service) GetSitemap(r *http.Request, sitemapKey string) (models.Sitemap
 		if err != nil {
 			return nil, err
 		}
+		// Implicit conversion of key from string to []byte
 		hsetValues = append(hsetValues, key, partJson)
 	}
 
