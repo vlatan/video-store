@@ -9,11 +9,12 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-// Generic wrapper getting and setting from cache
+// Generic wrapper getting and setting from cache,
 // with provided anonymous function which in implementation will
-// call an underlying database method
+// call an underlying method
 // Returns an error or nil.
-// It can bypass the call from redis altogether if the flag cached is false.
+// It can bypass the call to redis altogether and go straight to database,
+// if the flag cached is false.
 func GetItems[T any](
 	cached bool,
 	ctx context.Context,

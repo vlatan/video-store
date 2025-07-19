@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"factual-docs/internal/models"
+	"factual-docs/internal/shared/utils"
 	"fmt"
 )
 
@@ -106,11 +107,20 @@ func (r *Repository) queryTaxonomyPosts(
 	for rows.Next() {
 		var post models.Post
 		var thumbnails []byte
+		var playlistTitle *string
 
 		// Paste post from row to struct, thumbnails in a separate var
-		if err = rows.Scan(&posts.Title, &post.VideoID, &post.Title, &thumbnails, &post.Likes); err != nil {
+		if err = rows.Scan(
+			&playlistTitle,
+			&post.VideoID,
+			&post.Title,
+			&thumbnails,
+			&post.Likes,
+		); err != nil {
 			return nil, err
 		}
+
+		posts.Title = utils.PtrToString(playlistTitle)
 
 		// Unserialize thumbnails
 		var thumbs models.Thumbnails

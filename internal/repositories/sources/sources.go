@@ -3,14 +3,11 @@ package sources
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"factual-docs/internal/models"
 	"factual-docs/internal/shared/config"
 	"factual-docs/internal/shared/database"
 	"factual-docs/internal/shared/utils"
 	"fmt"
-
-	"github.com/jackc/pgx/v5"
 )
 
 type Repository struct {
@@ -25,11 +22,13 @@ func New(db database.Service, config *config.Config) *Repository {
 	}
 }
 
+// Check if source exists
 func (r *Repository) SourceExists(ctx context.Context, playlistID string) bool {
-	err := r.db.QueryRow(ctx, postExistsQuery, playlistID).Scan()
-	return !errors.Is(err, pgx.ErrNoRows)
+	err := r.db.QueryRow(ctx, sourceExistsQuery, playlistID).Scan()
+	return err != nil
 }
 
+// Add new source to DB
 func (r *Repository) InsertSource(ctx context.Context, source *models.Source) (int64, error) {
 	// Marshal the playlist thumbnails
 	thumbnails, err := json.Marshal(source.Thumbnails)
@@ -60,7 +59,7 @@ func (r *Repository) InsertSource(ctx context.Context, source *models.Source) (i
 
 }
 
-// Get a limited number of posts with offset
+// Get a limited number of sources with offset
 func (r *Repository) GetSources(ctx context.Context) ([]models.Source, error) {
 
 	rows, err := r.db.Query(ctx, getSourcesQuery)
@@ -80,6 +79,7 @@ func (r *Repository) GetSources(ctx context.Context) ([]models.Source, error) {
 			&source.Title,
 			&source.ChannelTitle,
 			&thumbnails,
+			&source.UpdatedAt,
 		); err != nil {
 			return []models.Source{}, err
 		}

@@ -2,7 +2,8 @@
 <xsl:stylesheet version="1.0"
                 xmlns:html="http://www.w3.org/TR/REC-html40"
                 xmlns:sitemap="http://www.sitemaps.org/schemas/sitemap/0.9"
-                xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+                xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+				xml:space="preserve">
 	<xsl:output method="html" version="4.0" encoding="UTF-8" indent="yes" />
 
 	<xsl:template match="/">
@@ -33,7 +34,7 @@
 
  		<div id="intro">
 			<p>This is a XML Sitemap which is supposed to be processed by search engines which follow the XML Sitemap standard.</p>
-			<p>You can find more information about XML sitemaps at <a rel="nofollow" href="https://www.sitemaps.org/">sitemaps.org</a>.</p>
+			<p >You can find more information about XML sitemaps at&#160;<a rel="nofollow" href="https://www.sitemaps.org/">sitemaps.org</a>.</p>
 			<div><a href="/sitemap.xml">&#8593; Sitemap Index</a></div>
 		</div>
 
@@ -80,7 +81,7 @@
 
          <div id="intro">
 			<p>This is a XML Sitemap which is supposed to be processed by search engines which follow the XML Sitemap standard.</p>
-			<p>You can find more information about XML sitemaps at <a rel="nofollow" href="https://www.sitemaps.org/">sitemaps.org</a>.</p>
+			<p>You can find more information about XML sitemaps at&#160;<a rel="nofollow" href="https://www.sitemaps.org/">sitemaps.org</a>.</p>
 			<p>This file contains links to sub-sitemaps, follow them to see the actual sitemap content.</p>
 			<div><a href="/">&#8593; {{ .Config.AppName }}</a></div>
 		</div>

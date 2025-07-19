@@ -90,6 +90,7 @@ type TemplateData struct {
 	SearchQuery     string
 	CSRFField       template.HTML
 	XMLDeclarations []template.HTML
+	SitemapItems    []*SitemapItem
 	*HTMLErrorData
 	*PaginationInfo
 	*Posts

@@ -3,9 +3,9 @@ package ui
 import (
 	"factual-docs/internal/models"
 	"factual-docs/internal/shared/redis"
+	"factual-docs/internal/shared/utils"
 	"math"
 	"net/http"
-	"net/url"
 
 	"github.com/gorilla/csrf"
 )
@@ -49,24 +49,10 @@ func (s *service) NewData(w http.ResponseWriter, r *http.Request) *models.Templa
 		Config:        s.config,
 		Categories:    categories,
 		CurrentURI:    r.RequestURI,
-		BaseURL:       getBaseURL(r),
+		CurrentUser:   utils.GetUserFromContext(r),
+		BaseURL:       utils.GetBaseURL(r),
 		FlashMessages: flashMessages,
 		CSRFField:     csrf.TemplateField(r),
-	}
-}
-
-// Create base URL object (absolute path only)
-func getBaseURL(r *http.Request) *url.URL {
-	// Determine scheme
-	scheme := "http"
-	if r.TLS != nil {
-		scheme = "https"
-	}
-
-	return &url.URL{
-		Scheme: scheme,
-		Host:   r.Host,
-		Path:   r.URL.Path,
 	}
 }
 

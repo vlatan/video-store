@@ -14,7 +14,7 @@ func New(db database.Service) *Repository {
 	return &Repository{db: db}
 }
 
-// Get a limited number of posts with offset
+// Get all valid categories
 func (r *Repository) GetCategories(ctx context.Context) ([]models.Category, error) {
 
 	rows, err := r.db.Query(ctx, getCategoriesQuery)
@@ -28,7 +28,7 @@ func (r *Repository) GetCategories(ctx context.Context) ([]models.Category, erro
 
 		// Get categories from DB
 		var category models.Category
-		if err := rows.Scan(&category.Name, &category.Slug); err != nil {
+		if err := rows.Scan(&category.Name, &category.Slug, &category.UpdatedAt); err != nil {
 			return []models.Category{}, err
 		}
 

@@ -14,7 +14,6 @@ import (
 func (s *Service) SourcesHandler(w http.ResponseWriter, r *http.Request) {
 	// Generate template data
 	data := s.ui.NewData(w, r)
-	data.CurrentUser = utils.GetUserFromContext(r)
 
 	// Get sources from redis or DB
 	var sources []models.Source
@@ -53,7 +52,6 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Compose data object
 	data := s.ui.NewData(w, r)
-	data.CurrentUser = utils.GetUserFromContext(r)
 
 	// Populate needed data for an empty form
 	data.Form = &models.Form{
@@ -153,7 +151,6 @@ func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
 	// Generate template data (it gets all the categories too)
 	// This is probably wasteful for non-existing category
 	data := s.ui.NewData(w, r)
-	data.CurrentUser = utils.GetUserFromContext(r)
 
 	// Get page number from a query param
 	page := utils.GetPageNum(r)
@@ -206,6 +203,9 @@ func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data.Posts = posts
+	if sourceID == "other" {
+		data.Posts.Title = "Other Uploads"
+	}
 	data.Title = data.Posts.Title
 	s.ui.RenderHTML(w, r, "source.html", data)
 }

@@ -3,15 +3,13 @@ package posts
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"factual-docs/internal/models"
 	"factual-docs/internal/shared/config"
 	"factual-docs/internal/shared/database"
 	"factual-docs/internal/shared/utils"
 	"fmt"
 	"strings"
-
-	"github.com/jackc/pgx/v5"
+	"time"
 )
 
 type Repository struct {
@@ -26,11 +24,13 @@ func New(db database.Service, config *config.Config) *Repository {
 	}
 }
 
+// Check if the post exists
 func (r *Repository) PostExists(ctx context.Context, videoID string) bool {
 	err := r.db.QueryRow(ctx, postExistsQuery, videoID).Scan()
-	return !errors.Is(err, pgx.ErrNoRows)
+	return err != nil
 }
 
+// Insert post in DB
 func (r *Repository) InsertPost(ctx context.Context, post *models.Post) (int64, error) {
 	// Marshal the thumbnails
 	thumbnails, err := json.Marshal(post.Thumbnails)
@@ -164,40 +164,6 @@ func (r *Repository) GetSourcePosts(
 	return r.queryTaxonomyPosts(ctx, getSourcePostsQuery, playlistID, orderBy, page)
 }
 
-// Get posts in a given month of a given year
-func (r *Repository) GetPostsByMonth(ctx context.Context, year, month string) (posts models.Posts, err error) {
-
-	// Get rows from DB
-	rows, err := r.db.Query(ctx, getPostsByMonthQuery, year, month)
-	if err != nil {
-		return posts, err
-	}
-
-	// Close rows on exit
-	defer rows.Close()
-
-	// Iterate over the rows
-	for rows.Next() {
-		var post models.Post
-
-		// Paste post from row to struct
-		if err = rows.Scan(&post.VideoID, &post.UpdatedAt); err != nil {
-			return posts, err
-		}
-
-		// Include the processed post in the result
-		posts.Items = append(posts.Items, post)
-	}
-
-	// If error during iteration
-	if err = rows.Err(); err != nil {
-		return posts, err
-	}
-
-	return posts, err
-
-}
-
 // Get user's favorited posts
 func (r *Repository) GetUserFavedPosts(
 	ctx context.Context,
@@ -302,4 +268,40 @@ func (r *Repository) SearchPosts(ctx context.Context, searchTerm string, limit, 
 	}
 
 	return posts, err
+}
+
+func (r *Repository) SitemapData(ctx context.Context) (data []*models.SitemapItem, err error) {
+
+	// Get rows from DB
+	rows, err := r.db.Query(ctx, sitemapDataQuery)
+	if err != nil {
+		return data, err
+	}
+
+	// Close rows on exit
+	defer rows.Close()
+
+	// Iterate over the rows
+	for rows.Next() {
+		var item models.SitemapItem
+		var lastModified *time.Time
+
+		// Paste post from row to struct, thumbnails in a separate var
+		if err = rows.Scan(&item.Type, &item.Location, &lastModified); err != nil {
+			return data, err
+		}
+
+		item.LastModified = lastModified.Format("2006-01-02")
+
+		// Include the processed post in the result
+		data = append(data, &item)
+	}
+
+	// If error during iteration
+	if err = rows.Err(); err != nil {
+		return data, err
+	}
+
+	return data, err
+
 }

@@ -1,7 +1,6 @@
 
 * Sitemaps
-  Separate xml templates for pages, sources, categories, misc
-  Figure out a way to handle the main index xml page
+  Maybe create sitemap DB repo
 
 * Cron
 * API calls need retries
@@ -9,7 +8,7 @@
 * Write custom errors middlware
 * Trim services of what related services they don't use
 
-* User avatar saved to redis not locally
+* User avatar URL exists in redis but not locally
   Need to solve this discrepancy
 
 * Minify CSS and JS files during development.
@@ -18,3 +17,4 @@
 * Add slug input to page
 * Add new category form as well as delete, edit routes
 * Setup updated_at triggers for the tables
+* Check for nil values in templates

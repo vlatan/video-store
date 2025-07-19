@@ -19,7 +19,6 @@ func (s *Service) HomeHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Generate template data
 	data := s.ui.NewData(w, r)
-	data.CurrentUser = utils.GetUserFromContext(r)
 
 	// Get page number from a query param
 	page := utils.GetPageNum(r)
@@ -85,7 +84,6 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 	// Generate template data (it gets all the categories too)
 	// This is probably wasteful for non-existing category
 	data := s.ui.NewData(w, r)
-	data.CurrentUser = utils.GetUserFromContext(r)
 
 	// Get page number from a query param
 	page := utils.GetPageNum(r)
@@ -156,7 +154,6 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Generate the default data
 	data := s.ui.NewData(w, r)
-	data.CurrentUser = utils.GetUserFromContext(r)
 	data.SearchQuery = searchQuery
 
 	limit := s.config.PostsPerPage
@@ -216,7 +213,6 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Compose data object
 	data := s.ui.NewData(w, r)
-	data.CurrentUser = utils.GetUserFromContext(r)
 
 	// Populate needed data for an empty form
 	data.Form = &models.Form{
@@ -332,7 +328,6 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Generate the default data
 	data := s.ui.NewData(w, r)
-	data.CurrentUser = utils.GetUserFromContext(r)
 
 	// Validate the YT ID
 	if validVideoID.FindStringSubmatch(videoID) == nil {

@@ -78,7 +78,7 @@ const getCategoryPostsQuery = `
 	WHERE c.slug = $1
 	GROUP BY c.id, post.id
 	ORDER BY %s
-	LIMIT $2 OFFSET $3;
+	LIMIT $2 OFFSET $3
 `
 
 const getSourcePostsQuery = `
@@ -89,19 +89,17 @@ const getSourcePostsQuery = `
 		post.thumbnails,
 		COUNT(pl.id) AS likes
 	FROM post
-	JOIN playlist AS p ON post.playlist_db_id = p.id
+	LEFT JOIN playlist AS p ON post.playlist_db_id = p.id
 	LEFT JOIN post_like AS pl ON pl.post_id = post.id
-	WHERE p.playlist_id = $1
+	WHERE
+		CASE 
+    		WHEN $1 = 'other'
+			THEN (p.playlist_id IS NULL OR p.playlist_id = '')
+    		ELSE p.playlist_id = $1
+  		END
 	GROUP BY p.id, post.id
 	ORDER BY %s
-	LIMIT $2 OFFSET $3;
-`
-
-const getPostsByMonthQuery = `
-	SELECT video_id, updated_at
-	FROM post
-	WHERE EXTRACT(YEAR FROM upload_date) = $1
-	AND EXTRACT(MONTH FROM upload_date) = $2
+	LIMIT $2 OFFSET $3
 `
 
 const getUserFavedPostsQuery = `
@@ -215,5 +213,73 @@ const deletePostQuery = `
 		RETURNING video_id, NULLIF(provider, '') as provider
 	)
 	INSERT INTO deleted_post (video_id, provider)
-	SELECT video_id, provider FROM dp;
+	SELECT video_id, provider FROM dp
+`
+
+const sitemapDataQuery = `
+	-- Posts (last modified = last updated_at)
+	SELECT
+		'post' as type,
+		CONCAT('/video/', video_id, '/') AS url,
+		updated_at
+	FROM post
+
+	UNION ALL
+
+	-- Pages (last modified = last updated_at)
+	SELECT
+		'page' AS type,
+		CONCAT('/page/', slug, '/') AS url,
+		updated_at
+	FROM page
+
+	UNION ALL
+
+	-- Playlists (last modified = latest upload date post in playlist)
+	SELECT
+		'source' AS type, 
+		CONCAT('/source/', p.playlist_id, '/') AS url, 
+		MAX(post.upload_date) AS updated_at
+	FROM playlist AS p
+	LEFT JOIN post ON post.playlist_db_id = p.id
+	GROUP BY p.id
+
+	UNION ALL
+
+	-- Orphans (last modified = latest upload date post without playlist)
+	SELECT
+		'source' AS type,
+		'/source/other/' AS url,
+		MAX(post.upload_date) AS updated_at
+	FROM post
+	WHERE playlist_id IS NULL OR playlist_id = ''
+
+	UNION ALL
+
+	-- Categories (last modified = latest upload date post in category)
+	SELECT
+		'category' AS type,
+		CONCAT('/category/', c.slug, '/') AS url,
+		MAX(post.upload_date) AS updated_at
+	FROM category AS c
+	LEFT JOIN post ON post.category_id = c.id
+	GROUP BY c.id
+
+	UNION ALL
+
+	-- Homepage (last modified = latest upload date post in DB)
+	SELECT
+		'misc' AS type,
+		'/' AS url,
+		MAX(upload_date) AS updated_at
+	FROM post
+
+	UNION ALL
+
+	-- Playlists page (last modified = newest playlist in DB)
+	SELECT 
+		'misc' AS type,
+		'/sources/' AS url, 
+		MAX(created_at) AS updated_at
+	FROM playlist
 `

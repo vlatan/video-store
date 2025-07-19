@@ -48,6 +48,7 @@ type Post struct {
 	PlaylistID       string      `json:"playlist_id,omitempty"`
 	RelatedPosts     []Post      `json:"related_posts,omitempty"`
 	UploadDate       *time.Time  `json:"upload_date,omitempty"` // needs pointer to omit the date
+	CreatedAt        *time.Time  `json:"created_at,omitempty"`
 	UpdatedAt        *time.Time  `json:"updated_at,omitempty"`
 	Duration         *Duration   `json:"duration,omitempty"`
 	CurrentUserLiked bool        `json:"current_user_liked,omitempty"`

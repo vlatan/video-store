@@ -27,7 +27,6 @@ func (s *Service) SinglePageHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Generate the default data
 	data := s.ui.NewData(w, r)
-	data.CurrentUser = utils.GetUserFromContext(r)
 
 	var page models.Page
 	err := redis.GetItems(
@@ -79,7 +78,6 @@ func (s *Service) UpdatePageHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Compose data object
 	data := s.ui.NewData(w, r)
-	data.CurrentUser = utils.GetUserFromContext(r)
 
 	// Get the page data straight from DB
 	page, err := s.pagesRepo.GetSinglePage(r.Context(), slug)
@@ -165,7 +163,6 @@ func (s *Service) NewPageHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Compose data object
 	data := s.ui.NewData(w, r)
-	data.CurrentUser = utils.GetUserFromContext(r)
 
 	// Populate needed data for an empty form
 	data.Form = &models.Form{
