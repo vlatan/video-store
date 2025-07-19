@@ -112,7 +112,6 @@ func (s *Service) GetSitemap(r *http.Request, sitemapKey string) (models.Sitemap
 func (s *Service) GetSitemapPart(r *http.Request, sitemapKey, partKey string) (models.SitemapPart, error) {
 
 	var part models.SitemapPart
-
 	jsonPart, err := s.rdb.HGet(r.Context(), sitemapKey, partKey)
 	if err == nil {
 		err = json.Unmarshal([]byte(jsonPart), &part)
