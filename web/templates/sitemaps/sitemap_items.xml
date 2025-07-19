@@ -3,7 +3,7 @@
     {{ range .SitemapItems }}
     <url>
         <loc>{{ .Location }}</loc>
-        <lastmod>{{ .LastModified.Format "2006-01-02" }}</lastmod>
+        <lastmod>{{ .LastModified }}</lastmod>
         <changefreq>weekly</changefreq>
 		<priority>0.8</priority>
     </url>

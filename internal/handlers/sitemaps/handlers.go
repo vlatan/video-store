@@ -2,7 +2,6 @@ package sitemaps
 
 import (
 	"factual-docs/internal/models"
-	"factual-docs/internal/shared/redis"
 	"fmt"
 	"html/template"
 	"log"
@@ -39,20 +38,9 @@ func (s *Service) SitemapPartHandler(w http.ResponseWriter, r *http.Request) {
 	data := s.ui.NewData(w, r)
 
 	// Extract the part from URL
-	part := r.PathValue("part")
+	partKey := r.PathValue("part")
 
-	var sitemap models.Sitemap
-	err := redis.GetItems(
-		!data.IsCurrentUserAdmin(),
-		r.Context(),
-		s.rdb,
-		sitemapRedisKey,
-		s.config.CacheTimeout,
-		&sitemap,
-		func() (models.Sitemap, error) {
-			return s.ProcessSitemapData(r, sitemapPartSize)
-		},
-	)
+	sitemapPart, err := s.GetSitemapPart(r, sitemapRedisKey, partKey)
 
 	if err != nil {
 		log.Println(err)
@@ -60,19 +48,7 @@ func (s *Service) SitemapPartHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sitemapPart, ok := sitemap[part]
-	if !ok {
-		log.Println("Sitemap part not found")
-		s.ui.HTMLError(w, r, http.StatusInternalServerError, data)
-		return
-	}
-
-	for _, entry := range sitemapPart.Entries {
-		data.SitemapItems = append(data.SitemapItems, &models.SitemapItem{
-			Location:     data.AbsoluteURL(entry.Location),
-			LastModified: entry.LastModified,
-		})
-	}
+	data.SitemapItems = sitemapPart.Entries
 
 	data.XMLDeclarations = []template.HTML{
 		template.HTML(`<?xml version="1.0" encoding="UTF-8"?>`),
@@ -80,9 +56,9 @@ func (s *Service) SitemapPartHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "text/xml")
-	if !data.IsCurrentUserAdmin() {
-		w.Header().Set("Cache-Control", "public, max-age=3600")
-	}
+	// if !data.IsCurrentUserAdmin() {
+	// 	w.Header().Set("Cache-Control", "public, max-age=3600")
+	// }
 
 	s.ui.RenderHTML(w, r, "sitemap_items.xml", data)
 }
@@ -93,18 +69,7 @@ func (s *Service) SitemapIndexHandler(w http.ResponseWriter, r *http.Request) {
 	// create new data struct
 	data := s.ui.NewData(w, r)
 
-	var sitemap models.Sitemap
-	err := redis.GetItems(
-		!data.IsCurrentUserAdmin(),
-		r.Context(),
-		s.rdb,
-		sitemapRedisKey,
-		s.config.CacheTimeout,
-		&sitemap,
-		func() (models.Sitemap, error) {
-			return s.ProcessSitemapData(r, sitemapPartSize)
-		},
-	)
+	sitemap, err := s.GetSitemap(r, sitemapRedisKey)
 
 	if err != nil {
 		log.Println(err)
@@ -126,9 +91,9 @@ func (s *Service) SitemapIndexHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "text/xml")
-	if !data.IsCurrentUserAdmin() {
-		w.Header().Set("Cache-Control", "public, max-age=3600")
-	}
+	// if !data.IsCurrentUserAdmin() {
+	// 	w.Header().Set("Cache-Control", "public, max-age=3600")
+	// }
 
 	s.ui.RenderHTML(w, r, "sitemap_index.xml", data)
 }

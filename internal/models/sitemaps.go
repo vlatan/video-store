@@ -1,16 +1,14 @@
 package models
 
-import "time"
-
 type SitemapItem struct {
 	Type         string
 	Location     string
-	LastModified *time.Time
+	LastModified string
 }
 
 type SitemapPart struct {
-	Entries      []SitemapItem
-	LastModified *time.Time
+	Entries      []*SitemapItem
+	LastModified string
 }
 
 type Sitemap map[string]SitemapPart

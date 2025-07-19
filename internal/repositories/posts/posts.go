@@ -9,6 +9,7 @@ import (
 	"factual-docs/internal/shared/utils"
 	"fmt"
 	"strings"
+	"time"
 )
 
 type Repository struct {
@@ -269,7 +270,7 @@ func (r *Repository) SearchPosts(ctx context.Context, searchTerm string, limit, 
 	return posts, err
 }
 
-func (r *Repository) SitemapData(ctx context.Context) (data []models.SitemapItem, err error) {
+func (r *Repository) SitemapData(ctx context.Context) (data []*models.SitemapItem, err error) {
 
 	// Get rows from DB
 	rows, err := r.db.Query(ctx, sitemapDataQuery)
@@ -283,14 +284,17 @@ func (r *Repository) SitemapData(ctx context.Context) (data []models.SitemapItem
 	// Iterate over the rows
 	for rows.Next() {
 		var item models.SitemapItem
+		var lastModified *time.Time
 
 		// Paste post from row to struct, thumbnails in a separate var
-		if err = rows.Scan(&item.Type, &item.Location, &item.LastModified); err != nil {
+		if err = rows.Scan(&item.Type, &item.Location, &lastModified); err != nil {
 			return data, err
 		}
 
+		item.LastModified = lastModified.Format("2006-01-02")
+
 		// Include the processed post in the result
-		data = append(data, item)
+		data = append(data, &item)
 	}
 
 	// If error during iteration

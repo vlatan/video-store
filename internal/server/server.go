@@ -83,7 +83,7 @@ func NewServer() *http.Server {
 	users := users.New(usersRepo, postsRepo, rdb, ui, cfg)
 	posts := posts.New(postsRepo, rdb, ui, cfg, yt, gemini)
 	sources := sources.New(postsRepo, sourcesRepo, rdb, ui, cfg, yt)
-	sitemaps := sitemaps.New(postsRepo, sourcesRepo, catsRepo, pagesRepo, rdb, ui, cfg)
+	sitemaps := sitemaps.New(postsRepo, rdb, ui, cfg)
 	misc := misc.New(cfg, db, rdb, ui)
 
 	// Create new Server struct

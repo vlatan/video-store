@@ -50,6 +50,13 @@ func GetBaseURL(r *http.Request) *url.URL {
 	}
 }
 
+// Construct an absolute url given a base url and path
+func AbsoluteURL(baseURL *url.URL, path string) string {
+	u := *baseURL // Copy the URL
+	u.Path = path
+	return u.String()
+}
+
 // Validates a path
 func ValidateFilePath(p string) error {
 	if p == "" {
