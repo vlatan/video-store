@@ -46,38 +46,62 @@ func (s *Service) GetSourceItems(playlistID string) ([]*youtube.PlaylistItem, er
 }
 
 // Get playlists metadata, provided playlist ids.
-// Returns client facing error messages if any.
 func (s *Service) GetSources(playlistIDs ...string) ([]*youtube.Playlist, error) {
+
+	var result []*youtube.Playlist
 	part := []string{"snippet"}
 
-	response, err := s.youtube.Playlists.List(part).Id(playlistIDs...).Do()
-	if err != nil {
-		return nil, err
+	batchSize := 50
+	for i := 0; i < len(playlistIDs); i += batchSize {
+
+		// YouTube can fetch info about 50 items at most
+		end := min(i+batchSize, len(playlistIDs))
+		batch := playlistIDs[i:end]
+		response, err := s.youtube.Playlists.List(part).Id(batch...).Do()
+		if err != nil {
+			return nil, err
+		}
+
+		if len(response.Items) == 0 {
+			msg := "empty response from YouTube"
+			return nil, errors.New(msg)
+		}
+
+		result = append(result, response.Items...)
+
 	}
 
-	if len(response.Items) == 0 {
-		msg := "empty response from YouTube"
-		return nil, errors.New(msg)
-	}
-
-	return response.Items, nil
+	return result, nil
 }
 
 // Get channels metadata, provided channel ids.
-// Returns client facing error messages if any.
 func (s *Service) GetChannels(channelIDs ...string) ([]*youtube.Channel, error) {
+
+	var result []*youtube.Channel
 	part := []string{"snippet"}
-	response, err := s.youtube.Channels.List(part).Id(channelIDs...).Do()
-	if err != nil {
-		return nil, err
+
+	batchSize := 50
+	for i := 0; i < len(channelIDs); i += batchSize {
+
+		// YouTube can fetch info about 50 items at most
+		end := min(i+batchSize, len(channelIDs))
+		batch := channelIDs[i:end]
+		response, err := s.youtube.Channels.List(part).Id(batch...).Do()
+
+		if err != nil {
+			return result, err
+		}
+
+		if len(response.Items) == 0 {
+			msg := "empty response from YouTube"
+			return result, errors.New(msg)
+		}
+
+		result = append(result, response.Items...)
+
 	}
 
-	if len(response.Items) == 0 {
-		msg := "empty response from YouTube"
-		return nil, errors.New(msg)
-	}
-
-	return response.Items, nil
+	return result, nil
 }
 
 // Create source object

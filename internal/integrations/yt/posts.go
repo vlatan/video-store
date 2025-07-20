@@ -18,7 +18,7 @@ func (s *Service) GetVideos(videoIDs ...string) ([]*youtube.Video, error) {
 	batchSize := 50
 	for i := 0; i < len(videoIDs); i += batchSize {
 
-		// YouTube can fetch ingo about 50 videos at most
+		// YouTube can fetch info about 50 items at most
 		end := min(i+batchSize, len(videoIDs))
 		batch := videoIDs[i:end]
 		response, err := s.youtube.Videos.List(part).Id(batch...).Do()
