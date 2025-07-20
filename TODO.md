@@ -1,3 +1,4 @@
+* Move avatars out of the web
 
 * Cron
 * API calls need retries

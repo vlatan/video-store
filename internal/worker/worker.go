@@ -8,10 +8,12 @@ import (
 	"factual-docs/internal/repositories/sources"
 	"factual-docs/internal/shared/config"
 	"factual-docs/internal/shared/database"
+	"fmt"
 	"log"
 )
 
 type Service struct {
+	ctx         context.Context
 	postsRepo   *posts.Repository
 	sourcesRepo *sources.Repository
 	config      *config.Config
@@ -43,6 +45,7 @@ func New() *Service {
 	}
 
 	return &Service{
+		ctx:         ctx,
 		postsRepo:   postsRepo,
 		sourcesRepo: sourcesRepo,
 		config:      cfg,
@@ -52,29 +55,51 @@ func New() *Service {
 }
 
 // Run the worker
-func (s *Service) Run() {
+func (s *Service) Run() error {
 
 	log.Println("Worker running...")
 
-	playlistID := "PL_pPc6-qR9ZwlDyyk6o-X_gib47lpqlGP"
-
-	sourceItems, err := s.yt.GetSourceItems(playlistID)
+	// Fetch ALL the playlists from DB
+	// Refresh their info if any changes
+	dbSources, err := s.sourcesRepo.GetSources(s.ctx)
 	if err != nil {
-		log.Printf("Playlist '%s': %v", playlistID, err)
-		return
+		return fmt.Errorf("could not fetch the playlists from DB: %v", err)
 	}
 
-	var videoIDs []string
-	for _, source := range sourceItems {
-		videoIDs = append(videoIDs, source.ContentDetails.VideoId)
+	log.Println(len(dbSources))
+
+	playlistIDs := make([]string, len(dbSources))
+	for i, source := range dbSources {
+		playlistIDs[i] = source.PlaylistID
 	}
 
-	videosMetadata, err := s.yt.GetVideos(videoIDs...)
+	log.Println(len(playlistIDs))
+
+	sources, err := s.yt.GetSources(playlistIDs...)
 	if err != nil {
-		log.Printf("Playlist '%s' videos: %v", playlistID, err)
-		return
+		return fmt.Errorf("could not fetch the playlists from YouTube: %v", err)
 	}
 
-	log.Println(len(videosMetadata))
+	log.Println(len(sources))
 
+	// sourceItems, err := s.yt.GetSourceItems(playlistID)
+	// if err != nil {
+	// 	log.Printf("Playlist '%s': %v", playlistID, err)
+	// 	return
+	// }
+
+	// var videoIDs []string
+	// for _, source := range sourceItems {
+	// 	videoIDs = append(videoIDs, source.ContentDetails.VideoId)
+	// }
+
+	// videosMetadata, err := s.yt.GetVideos(videoIDs...)
+	// if err != nil {
+	// 	log.Printf("Playlist '%s' videos: %v", playlistID, err)
+	// 	return
+	// }
+
+	// log.Println(len(videosMetadata))
+
+	return nil
 }

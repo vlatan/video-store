@@ -64,6 +64,23 @@ services:
       redis:
         condition: service_healthy
 
+  worker:
+    build:
+      context: .
+      args:
+        TARGET: "worker"
+    container_name: worker
+    command: [ "true" ]
+    env_file: .env
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
 volumes:
   redis_data:
   postgres_data:

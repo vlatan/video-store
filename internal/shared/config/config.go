@@ -8,7 +8,7 @@ import (
 )
 
 type Config struct {
-	// Running locally or not
+	// Running localy or not
 	Debug            bool   `env:"DEBUG" envDefault:"false"`
 	SessionKey       string `env:"SESSION_KEY"`
 	SessionName      string `env:"SESSION_NAME" envDefault:"_app_session"`

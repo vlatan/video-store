@@ -1,8 +1,13 @@
 package main
 
-import "factual-docs/internal/worker"
+import (
+	"factual-docs/internal/worker"
+	"log"
+)
 
 func main() {
 	worker := worker.New()
-	worker.Run()
+	if err := worker.Run(); err != nil {
+		log.Println(err)
+	}
 }
