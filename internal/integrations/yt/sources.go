@@ -25,12 +25,11 @@ func (s *Service) GetSourceItems(playlistID string) ([]*youtube.PlaylistItem, er
 			Do()
 
 		if err != nil {
-			msg := "unable to get a response from YouTube"
-			return result, errors.New(msg)
+			return result, err
 		}
 
 		if len(response.Items) == 0 {
-			msg := "could not fetch a result from YouTube"
+			msg := "empty response from YouTube"
 			return result, errors.New(msg)
 		}
 
@@ -52,12 +51,11 @@ func (s *Service) GetSources(playlistIDs ...string) ([]*youtube.Playlist, error)
 	part := []string{"snippet"}
 	response, err := s.youtube.Playlists.List(part).Id(playlistIDs...).Do()
 	if err != nil {
-		msg := "unable to get a response from YouTube"
-		return nil, errors.New(msg)
+		return nil, err
 	}
 
 	if len(response.Items) == 0 {
-		msg := "could not fetch a result from YouTube"
+		msg := "empty response from YouTube"
 		return nil, errors.New(msg)
 	}
 
@@ -70,12 +68,11 @@ func (s *Service) GetChannels(channelIDs ...string) ([]*youtube.Channel, error) 
 	part := []string{"snippet"}
 	response, err := s.youtube.Channels.List(part).Id(channelIDs...).Do()
 	if err != nil {
-		msg := "unable to get a response from YouTube"
-		return nil, errors.New(msg)
+		return nil, err
 	}
 
 	if len(response.Items) == 0 {
-		msg := "could not fetch a result from YouTube"
+		msg := "empty response from YouTube"
 		return nil, errors.New(msg)
 	}
 

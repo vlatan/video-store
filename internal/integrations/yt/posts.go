@@ -10,17 +10,15 @@ import (
 )
 
 // Get YouTube videos metadata, provided video IDs.
-// Returns client facing error messages if any.
 func (s *Service) GetVideos(videoIDs ...string) ([]*youtube.Video, error) {
 	part := []string{"status", "snippet", "contentDetails"}
 	response, err := s.youtube.Videos.List(part).Id(videoIDs...).Do()
 	if err != nil {
-		msg := "unable to get a response from YouTube"
-		return nil, errors.New(msg)
+		return nil, err
 	}
 
 	if len(response.Items) == 0 {
-		msg := "could not fetch a result from YouTube"
+		msg := "empty response from YouTube"
 		return nil, errors.New(msg)
 	}
 

@@ -56,7 +56,7 @@ func (s *Service) Run() {
 
 	log.Println("Worker running...")
 
-	playlistID := "test"
+	playlistID := "PL_pPc6-qR9ZwlDyyk6o-X_gib47lpqlGP"
 
 	sourceItems, err := s.yt.GetSourceItems(playlistID)
 	if err != nil {
@@ -64,6 +64,17 @@ func (s *Service) Run() {
 		return
 	}
 
-	log.Println(len(sourceItems))
+	var videoIDs []string
+	for _, source := range sourceItems {
+		videoIDs = append(videoIDs, source.ContentDetails.VideoId)
+	}
+
+	videosMetadata, err := s.yt.GetVideos(videoIDs...)
+	if err != nil {
+		log.Printf("Playlist '%s' videos: %v", playlistID, err)
+		return
+	}
+
+	log.Println(len(videosMetadata))
 
 }
