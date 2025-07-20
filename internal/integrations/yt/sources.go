@@ -13,10 +13,10 @@ func (s *Service) GetSourceItems(playlistID string) ([]*youtube.PlaylistItem, er
 
 	var result []*youtube.PlaylistItem
 	var nextPageToken string
+	part := []string{"contentDetails"}
 
 	for {
 		// Get playlist items
-		part := []string{"contentDetails"}
 		response, err := s.youtube.PlaylistItems.
 			List(part).
 			MaxResults(50).
@@ -36,7 +36,7 @@ func (s *Service) GetSourceItems(playlistID string) ([]*youtube.PlaylistItem, er
 		result = append(result, response.Items...)
 		nextPageToken = response.NextPageToken
 
-		// if no more pages break the while loop, we're done
+		// if no more pages break the loop, we're done
 		if nextPageToken == "" {
 			break
 		}
@@ -49,6 +49,7 @@ func (s *Service) GetSourceItems(playlistID string) ([]*youtube.PlaylistItem, er
 // Returns client facing error messages if any.
 func (s *Service) GetSources(playlistIDs ...string) ([]*youtube.Playlist, error) {
 	part := []string{"snippet"}
+
 	response, err := s.youtube.Playlists.List(part).Id(playlistIDs...).Do()
 	if err != nil {
 		return nil, err
