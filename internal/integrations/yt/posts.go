@@ -3,7 +3,6 @@ package yt
 import (
 	"errors"
 	"factual-docs/internal/models"
-	"log"
 	"strings"
 	"time"
 
@@ -17,13 +16,11 @@ func (s *Service) GetVideos(videoIDs ...string) ([]*youtube.Video, error) {
 	response, err := s.youtube.Videos.List(part).Id(videoIDs...).Do()
 	if err != nil {
 		msg := "unable to get a response from YouTube"
-		log.Printf("%s: %v", msg, err)
 		return nil, errors.New(msg)
 	}
 
 	if len(response.Items) == 0 {
 		msg := "could not fetch a result from YouTube"
-		log.Printf("%s; response.Items: %v", msg, response.Items)
 		return nil, errors.New(msg)
 	}
 

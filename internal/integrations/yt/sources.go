@@ -3,10 +3,48 @@ package yt
 import (
 	"errors"
 	"factual-docs/internal/models"
-	"log"
 
 	"google.golang.org/api/youtube/v3"
 )
+
+// Get YouTube's playlist items, provided a playlist ID
+// Fetching can't be done at once, but in a paginated way
+func (s *Service) GetSourceItems(playlistID string) ([]*youtube.PlaylistItem, error) {
+
+	var result []*youtube.PlaylistItem
+	var nextPageToken string
+
+	for {
+		// Get playlist items
+		part := []string{"contentDetails"}
+		response, err := s.youtube.PlaylistItems.
+			List(part).
+			MaxResults(50).
+			PageToken(nextPageToken).
+			PlaylistId(playlistID).
+			Do()
+
+		if err != nil {
+			msg := "unable to get a response from YouTube"
+			return result, errors.New(msg)
+		}
+
+		if len(response.Items) == 0 {
+			msg := "could not fetch a result from YouTube"
+			return result, errors.New(msg)
+		}
+
+		result = append(result, response.Items...)
+		nextPageToken = response.NextPageToken
+
+		// if no more pages break the while loop, we're done
+		if nextPageToken == "" {
+			break
+		}
+	}
+
+	return result, nil
+}
 
 // Get playlists metadata, provided playlist ids.
 // Returns client facing error messages if any.
@@ -15,13 +53,11 @@ func (s *Service) GetSources(playlistIDs ...string) ([]*youtube.Playlist, error)
 	response, err := s.youtube.Playlists.List(part).Id(playlistIDs...).Do()
 	if err != nil {
 		msg := "unable to get a response from YouTube"
-		log.Printf("%s: %v", msg, err)
 		return nil, errors.New(msg)
 	}
 
 	if len(response.Items) == 0 {
 		msg := "could not fetch a result from YouTube"
-		log.Printf("%s; response.Items: %v", msg, response.Items)
 		return nil, errors.New(msg)
 	}
 
@@ -35,13 +71,11 @@ func (s *Service) GetChannels(channelIDs ...string) ([]*youtube.Channel, error) 
 	response, err := s.youtube.Channels.List(part).Id(channelIDs...).Do()
 	if err != nil {
 		msg := "unable to get a response from YouTube"
-		log.Printf("%s: %v", msg, err)
 		return nil, errors.New(msg)
 	}
 
 	if len(response.Items) == 0 {
 		msg := "could not fetch a result from YouTube"
-		log.Printf("%s; response.Items: %v", msg, response.Items)
 		return nil, errors.New(msg)
 	}
 

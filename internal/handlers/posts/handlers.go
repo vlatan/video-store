@@ -273,6 +273,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 		// Fetch video data from YouTube
 		metadata, err := s.yt.GetVideos(videoID)
 		if err != nil {
+			log.Printf("Video '%s': %v", videoID, err)
 			formError.Message = utils.Capitalize(err.Error())
 			data.Form.Error = &formError
 			s.ui.RenderHTML(w, r, "form.html", data)
@@ -281,6 +282,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Validate the video data
 		if err := s.yt.ValidateYouTubeVideo(metadata[0]); err != nil {
+			log.Printf("Video '%s': %v", videoID, err)
 			formError.Message = utils.Capitalize(err.Error())
 			data.Form.Error = &formError
 			s.ui.RenderHTML(w, r, "form.html", data)

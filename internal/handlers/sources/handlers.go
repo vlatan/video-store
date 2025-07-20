@@ -104,6 +104,7 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 		// Fetch playlist metadata from YouTube
 		sources, err := s.yt.GetSources(playlistID)
 		if err != nil {
+			log.Printf("Playlist '%s': %v", playlistID, err)
 			formError.Message = utils.Capitalize(err.Error())
 			data.Form.Error = &formError
 			s.ui.RenderHTML(w, r, "form.html", data)
@@ -111,8 +112,10 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Fetch channel data from YouTube
-		channels, err := s.yt.GetChannels(sources[0].Snippet.ChannelId)
+		channeID := sources[0].Snippet.ChannelId
+		channels, err := s.yt.GetChannels(channeID)
 		if err != nil {
+			log.Printf("Channel '%s': %v", channeID, err)
 			formError.Message = utils.Capitalize(err.Error())
 			data.Form.Error = &formError
 			s.ui.RenderHTML(w, r, "form.html", data)
