@@ -65,16 +65,14 @@ services:
         condition: service_healthy
 
   worker:
-    build:
-      context: .
-      args:
-        TARGET: "worker"
+    image: golang:1.24
     container_name: worker
     command: [ "true" ]
     env_file: .env
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
+      - ./bin:/src/bin
     depends_on:
       postgres:
         condition: service_healthy

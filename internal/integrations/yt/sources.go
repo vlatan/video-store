@@ -98,7 +98,6 @@ func (s *Service) GetChannels(channelIDs ...string) ([]*youtube.Channel, error) 
 		}
 
 		result = append(result, response.Items...)
-
 	}
 
 	return result, nil

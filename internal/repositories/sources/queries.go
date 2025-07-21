@@ -7,7 +7,8 @@ const sourceExistsQuery = `
 
 const getSourcesQuery = `
 	SELECT
-		playlist_id, 
+		playlist_id,
+		channel_id,
 		title, 
 		channel_title, 
 		channel_thumbnails,
@@ -29,4 +30,18 @@ const insertSourceQuery = `
 		user_id
 	)
 	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NULLIF($9, 0))
+`
+
+const updateSourceQuery = `
+	UPDATE playlist
+	SET
+		channel_id = $2,
+		title = $3,
+		channel_title = $4,
+		thumbnails = $5,
+		channel_thumbnails = $6,
+		description = $7,
+		channel_description = $8,
+		updated_at = NOW()
+	WHERE playlist_id = $1
 `

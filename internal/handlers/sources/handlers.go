@@ -112,10 +112,10 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Fetch channel data from YouTube
-		channeID := sources[0].Snippet.ChannelId
-		channels, err := s.yt.GetChannels(channeID)
+		channelID := sources[0].Snippet.ChannelId
+		channels, err := s.yt.GetChannels(channelID)
 		if err != nil {
-			log.Printf("Channel '%s': %v", channeID, err)
+			log.Printf("Channel '%s': %v", channelID, err)
 			formError.Message = "Unable to fetch channel info from YouTube"
 			data.Form.Error = &formError
 			s.ui.RenderHTML(w, r, "form.html", data)

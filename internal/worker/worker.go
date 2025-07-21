@@ -60,27 +60,39 @@ func (s *Service) Run() error {
 	log.Println("Worker running...")
 
 	// Fetch ALL the playlists from DB
-	// Refresh their info if any changes
 	dbSources, err := s.sourcesRepo.GetSources(s.ctx)
 	if err != nil {
 		return fmt.Errorf("could not fetch the playlists from DB: %v", err)
 	}
 
-	log.Println(len(dbSources))
-
+	// Extract playlist and channel IDs
 	playlistIDs := make([]string, len(dbSources))
+	channelIDs := make([]string, len(dbSources))
 	for i, source := range dbSources {
 		playlistIDs[i] = source.PlaylistID
+		channelIDs[i] = source.ChannelID
 	}
 
-	log.Println(len(playlistIDs))
-
+	// Fetch playlists from YouTube
 	sources, err := s.yt.GetSources(playlistIDs...)
 	if err != nil {
 		return fmt.Errorf("could not fetch the playlists from YouTube: %v", err)
 	}
 
-	log.Println(len(sources))
+	// Fetch corresponding channels
+	channels, err := s.yt.GetChannels(channelIDs...)
+	if err != nil {
+		return fmt.Errorf("could not fetch the channels from YouTube: %v", err)
+	}
+
+	// Update each source
+	for i, source := range sources {
+		newSource := s.yt.NewYouTubeSource(source, channels[i])
+		rowsAffected, err := s.sourcesRepo.UpdateSource(s.ctx, newSource)
+		if err != nil || rowsAffected == 0 {
+			return fmt.Errorf("could not update source '%s' in DB: %v", newSource.PlaylistID, err)
+		}
+	}
 
 	// sourceItems, err := s.yt.GetSourceItems(playlistID)
 	// if err != nil {
