@@ -216,6 +216,11 @@ const deletePostQuery = `
 	SELECT video_id, provider FROM dp
 `
 
+const isPostDeletedQuery = `
+	SELECT 1 FROM deleted_post
+	WHERE video_id = $1
+`
+
 const sitemapDataQuery = `
 	-- Posts (last modified = last updated_at)
 	SELECT

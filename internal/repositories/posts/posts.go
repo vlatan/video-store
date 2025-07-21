@@ -30,6 +30,12 @@ func (r *Repository) PostExists(ctx context.Context, videoID string) bool {
 	return err != nil
 }
 
+// Check if the post is deleted
+func (r *Repository) IsPostDeleted(ctx context.Context, videoID string) bool {
+	err := r.db.QueryRow(ctx, isPostDeletedQuery, videoID).Scan()
+	return err == nil
+}
+
 // Insert post in DB
 func (r *Repository) InsertPost(ctx context.Context, post *models.Post) (int64, error) {
 	// Marshal the thumbnails

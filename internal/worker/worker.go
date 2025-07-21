@@ -4,6 +4,7 @@ import (
 	"context"
 	"factual-docs/internal/integrations/gemini"
 	"factual-docs/internal/integrations/yt"
+	"factual-docs/internal/models"
 	"factual-docs/internal/repositories/posts"
 	"factual-docs/internal/repositories/sources"
 	"factual-docs/internal/shared/config"
@@ -59,7 +60,8 @@ func (s *Service) Run() error {
 
 	log.Println("Worker running...")
 
-	// Fetch ALL the playlists from DB
+	// Fetch all the playlists from DB
+	log.Println("Fetching playlists from DB...")
 	dbSources, err := s.sourcesRepo.GetSources(s.ctx)
 	if err != nil {
 		return fmt.Errorf("could not fetch the playlists from DB: %v", err)
@@ -74,18 +76,21 @@ func (s *Service) Run() error {
 	}
 
 	// Fetch playlists from YouTube
+	log.Println("Fetching playlists from YouTube...")
 	sources, err := s.yt.GetSources(playlistIDs...)
 	if err != nil {
 		return fmt.Errorf("could not fetch the playlists from YouTube: %v", err)
 	}
 
 	// Fetch corresponding channels
+	log.Println("Fetching channels from YouTube...")
 	channels, err := s.yt.GetChannels(channelIDs...)
 	if err != nil {
 		return fmt.Errorf("could not fetch the channels from YouTube: %v", err)
 	}
 
-	// Update each source
+	// Update each playlist in DB
+	log.Println("Updating the playlists in DB...")
 	for i, source := range sources {
 		newSource := s.yt.NewYouTubeSource(source, channels[i])
 		rowsAffected, err := s.sourcesRepo.UpdateSource(s.ctx, newSource)
@@ -94,24 +99,38 @@ func (s *Service) Run() error {
 		}
 	}
 
-	// sourceItems, err := s.yt.GetSourceItems(playlistID)
-	// if err != nil {
-	// 	log.Printf("Playlist '%s': %v", playlistID, err)
-	// 	return
-	// }
+	// Get valid videos from playlists
+	log.Println("Fetching videos from YouTube...")
+	videos := make(map[string]*models.Post)
+	for _, playlistID := range playlistIDs {
+		sourceItems, err := s.yt.GetSourceItems(playlistID)
+		if err != nil {
+			return fmt.Errorf("could not get items from YouTube on source '%s': %v", playlistID, err)
+		}
 
-	// var videoIDs []string
-	// for _, source := range sourceItems {
-	// 	videoIDs = append(videoIDs, source.ContentDetails.VideoId)
-	// }
+		// Collect the video IDs
+		var videoIDs []string
+		for _, item := range sourceItems {
+			videoIDs = append(videoIDs, item.ContentDetails.VideoId)
+		}
 
-	// videosMetadata, err := s.yt.GetVideos(videoIDs...)
-	// if err != nil {
-	// 	log.Printf("Playlist '%s' videos: %v", playlistID, err)
-	// 	return
-	// }
+		// Get all the videos metadata
+		videosMetadata, err := s.yt.GetVideos(videoIDs...)
+		if err != nil {
+			return fmt.Errorf("could not get videos from YouTube: %v", err)
+		}
 
-	// log.Println(len(videosMetadata))
+		// Keep only the valid videos
+		for _, video := range videosMetadata {
+			err := s.yt.ValidateYouTubeVideo(video)
+			if err == nil && !s.postsRepo.IsPostDeleted(s.ctx, video.Id) {
+				newVideo := s.yt.NewYouTubePost(video, playlistID)
+				videos[video.Id] = newVideo
+			}
+		}
+	}
+
+	log.Println("VALID VIDEOS:", len(videos))
 
 	return nil
 }

@@ -1,9 +1,11 @@
-* Move avatars out of the web
+* Move avatars out of the web because they are
+  ending up in the docker container
 
 * Cron
 * API calls need retries
 
-* Dockerfile
+* Setup updated_at triggers for the tables
+  https://claude.ai/chat/49e95de4-f9f6-4d04-a5d5-dab613c0ae93
 
 * Write custom errors middlware,
   Detect html requests and return custom HTML errors
@@ -18,5 +20,4 @@
 * Refactor JS in functions and classes
 * Add slug input to page
 * Add new category form as well as delete, edit routes
-* Setup updated_at triggers for the tables
 * Check for nil values in templates
