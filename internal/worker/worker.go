@@ -12,6 +12,7 @@ import (
 	"factual-docs/internal/shared/database"
 	"fmt"
 	"log"
+	"time"
 )
 
 type Service struct {
@@ -59,10 +60,11 @@ func New() *Service {
 // Run the worker
 func (s *Service) Run() error {
 
+	start := time.Now()
+
 	log.Println("Worker running...")
 
 	// Fetch all the playlists from DB
-	log.Println("Fetching playlists from DB...")
 	dbSources, err := s.sourcesRepo.GetSources(s.ctx)
 
 	if err != nil {
@@ -82,21 +84,18 @@ func (s *Service) Run() error {
 	}
 
 	// Fetch playlists from YouTube
-	log.Println("Fetching playlists from YouTube...")
 	sources, err := s.yt.GetSources(playlistIDs...)
 	if err != nil {
 		return fmt.Errorf("could not fetch the playlists from YouTube: %v", err)
 	}
 
 	// Fetch corresponding channels
-	log.Println("Fetching channels from YouTube...")
 	channels, err := s.yt.GetChannels(channelIDs...)
 	if err != nil {
 		return fmt.Errorf("could not fetch the channels from YouTube: %v", err)
 	}
 
 	// Update each playlist in DB
-	log.Println("Updating the playlists in DB...")
 	for i, source := range sources {
 		newSource := s.yt.NewYouTubeSource(source, channels[i])
 		rowsAffected, err := s.sourcesRepo.UpdateSource(s.ctx, newSource)
@@ -105,8 +104,9 @@ func (s *Service) Run() error {
 		}
 	}
 
+	log.Printf("Fetched and updated %d playlists", len(sources))
+
 	// Get valid videos from playlists
-	log.Println("Fetching videos from YouTube...")
 	ytVideos := make(map[string]*models.Post)
 	for _, playlistID := range playlistIDs {
 		sourceItems, err := s.yt.GetSourceItems(playlistID)
@@ -137,7 +137,7 @@ func (s *Service) Run() error {
 	}
 
 	log.Printf("Fetched %d valid videos from YouTube", len(ytVideos))
-	log.Println("Fetching videos from DB...")
+
 	videos, err := s.postsRepo.GetAllPosts(s.ctx)
 
 	if err != nil {
@@ -145,7 +145,7 @@ func (s *Service) Run() error {
 	}
 
 	if len(videos) == 0 {
-		return errors.New("fetched ZERO video from DB")
+		return errors.New("fetched ZERO videos from DB")
 	}
 
 	// Transform the videos slice to map
@@ -156,13 +156,36 @@ func (s *Service) Run() error {
 
 	log.Printf("Fetched %d videos from DB", len(dbVideos))
 
-	// Check for deleted videos
+	// Delete videos if any
+	var deleted int
 	for videoID := range dbVideos {
 		if _, exists := ytVideos[videoID]; !exists {
-			// Remove the video from DB
-
+			rowsAffected, err := s.postsRepo.DeletePost(s.ctx, videoID)
+			if err != nil || rowsAffected == 0 {
+				return fmt.Errorf("could not delete the video '%s' in DB: %v", videoID, err)
+			}
+			deleted++
 		}
 	}
+
+	log.Printf("Deleted %d videos", deleted)
+
+	// var inserted, updated int
+	for videoID := range ytVideos {
+		if _, exists := dbVideos[videoID]; !exists {
+			// Generate short desc and category and insert the video in DB
+			continue
+		}
+
+		// Check if the video has short desc and category
+		//  and if not generate and update the post
+	}
+
+	// Fetch the orphans from DB and from YT
+	// check if some are deleted or became invalid
+
+	elapsed := time.Since(start)
+	log.Printf("Time took: %s", elapsed)
 
 	return nil
 }

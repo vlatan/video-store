@@ -45,3 +45,8 @@ func (r *Repository) UpdateDesc(ctx context.Context, videoID, description string
 func (r *Repository) BanPost(ctx context.Context, videoID string) (int64, error) {
 	return r.db.Exec(ctx, banPostQuery, videoID)
 }
+
+// Ban a post (move it to deleted table)
+func (r *Repository) DeletePost(ctx context.Context, videoID string) (int64, error) {
+	return r.db.Exec(ctx, deletePostQuery, videoID)
+}

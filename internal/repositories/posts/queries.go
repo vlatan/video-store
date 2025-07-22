@@ -230,6 +230,11 @@ const isPostBanneddQuery = `
 	WHERE video_id = $1
 `
 
+const deletePostQuery = `
+	DELETE FROM post
+	WHERE video_id = $1
+`
+
 const sitemapDataQuery = `
 	-- Posts (last modified = last updated_at)
 	SELECT
