@@ -138,7 +138,7 @@ func (s *Service) Run() error {
 
 	log.Printf("Fetched %d valid videos from YouTube", len(ytVideos))
 
-	videos, err := s.postsRepo.GetAllPosts(s.ctx)
+	videos, err := s.postsRepo.GetAllSourcedPosts(s.ctx)
 
 	if err != nil {
 		return fmt.Errorf("could not fetch the videos from DB: %v", err)

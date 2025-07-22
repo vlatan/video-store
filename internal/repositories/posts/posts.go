@@ -136,10 +136,10 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (post mo
 }
 
 // Get all the posts from DB
-func (r *Repository) GetAllPosts(ctx context.Context) (posts []models.Post, err error) {
+func (r *Repository) GetAllSourcedPosts(ctx context.Context) (posts []models.Post, err error) {
 
 	// Get rows from DB
-	rows, err := r.db.Query(ctx, getAllPostsQuery)
+	rows, err := r.db.Query(ctx, GetAllSourcedPostsQuery)
 	if err != nil {
 		return posts, err
 	}

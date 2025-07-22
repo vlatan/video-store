@@ -65,13 +65,14 @@ const getPostsQuery = `
 	LIMIT $1 OFFSET $2
 `
 
-const getAllPostsQuery = `
+const GetAllSourcedPostsQuery = `
 	SELECT
 		video_id,
 		playlist_id,
 		title, 
 		short_description
 	FROM post
+	WHERE playlist_db_id IS NOT NULL
 `
 
 const getCategoryPostsQuery = `
