@@ -2,6 +2,7 @@
   ending up in the docker container
 
 * Get random videos as related if none
+* Add back the orphaned videos
 
 * Cron
 * API calls need retries
@@ -20,7 +21,7 @@
 
 * Minify CSS and JS files during development.
   Calculate just etags on compile or on the fly in the route
-  
+
 * Refactor JS in functions and classes
 * Add slug input to page
 * Add new category form as well as delete, edit routes

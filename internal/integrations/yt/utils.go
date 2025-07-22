@@ -102,24 +102,24 @@ func normalizeTitle(title string) string {
 			}
 		}
 
-		// This is not the first word
+		// Loweracse the current word
+		currentWord := strings.ToLower(string(runes))
+		var previousWordLastRune rune
 		if i > 0 {
-			// Loweracse the current word
-			currentWord := strings.ToLower(string(runes))
-			// Get the last rune of the previous words
 			previousWord := []rune(words[i-1])
-			lastRune := previousWord[len(previousWord)-1]
+			previousWordLastRune = previousWord[len(previousWord)-1]
+		}
 
-			// The word is a preposition but not after a punctuation
-			if preps[currentWord] && !puncts[lastRune] {
-				words[i] = string(fq) + currentWord + string(lq)
-			}
+		// This is not the first word
+		// The word is a preposition but not after a punctuation
+		if i > 0 && preps[currentWord] && !puncts[previousWordLastRune] {
+			words[i] = string(fq) + currentWord + string(lq)
 
-			// The word is after punctuation and is capitalized
+			// The word is already capitalized or an acronym
 		} else if unicode.IsUpper(runes[0]) {
 			words[i] = string(fq) + string(runes) + string(lq)
 
-			// The word is after a punctuation and should be capitalized
+			// capitalize any other word
 		} else {
 			words[i] = string(fq) +
 				string(unicode.ToUpper(runes[0])) +
