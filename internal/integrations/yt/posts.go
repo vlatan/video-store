@@ -24,12 +24,12 @@ func (s *Service) GetVideos(videoIDs ...string) ([]*youtube.Video, error) {
 		response, err := s.youtube.Videos.List(part).Id(batch...).Do()
 
 		if err != nil {
-			return result, err
+			return nil, err
 		}
 
 		if len(response.Items) == 0 {
 			msg := "empty response from YouTube"
-			return result, errors.New(msg)
+			return nil, errors.New(msg)
 		}
 
 		result = append(result, response.Items...)

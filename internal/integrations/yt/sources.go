@@ -25,12 +25,12 @@ func (s *Service) GetSourceItems(playlistID string) ([]*youtube.PlaylistItem, er
 			Do()
 
 		if err != nil {
-			return result, err
+			return nil, err
 		}
 
 		if len(response.Items) == 0 {
 			msg := "empty response from YouTube"
-			return result, errors.New(msg)
+			return nil, errors.New(msg)
 		}
 
 		result = append(result, response.Items...)
@@ -89,12 +89,12 @@ func (s *Service) GetChannels(channelIDs ...string) ([]*youtube.Channel, error) 
 		response, err := s.youtube.Channels.List(part).Id(batch...).Do()
 
 		if err != nil {
-			return result, err
+			return nil, err
 		}
 
 		if len(response.Items) == 0 {
 			msg := "empty response from YouTube"
-			return result, errors.New(msg)
+			return nil, errors.New(msg)
 		}
 
 		result = append(result, response.Items...)
