@@ -65,6 +65,15 @@ const getPostsQuery = `
 	LIMIT $1 OFFSET $2
 `
 
+const getAllPostsQuery = `
+	SELECT
+		video_id,
+		playlist_id,
+		title, 
+		short_description
+	FROM post
+`
+
 const getCategoryPostsQuery = `
 	SELECT 
 		c.name AS category_title, 

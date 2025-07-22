@@ -135,8 +135,55 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (post mo
 	return post, err
 }
 
+// Get all the posts from DB
+func (r *Repository) GetAllPosts(ctx context.Context) (posts []models.Post, err error) {
+
+	// Get rows from DB
+	rows, err := r.db.Query(ctx, getAllPostsQuery)
+	if err != nil {
+		return posts, err
+	}
+
+	// Close rows on exit
+	defer rows.Close()
+
+	// Iterate over the rows
+	for rows.Next() {
+		var post models.Post
+		var playlistID *string
+		var shortDesc *string
+
+		// Paste post from row to struct, thumbnails in a separate var
+		if err = rows.Scan(
+			&post.VideoID,
+			&playlistID,
+			&post.Title,
+			&shortDesc,
+		); err != nil {
+			return posts, err
+		}
+
+		post.PlaylistID = utils.PtrToString(playlistID)
+		post.ShortDesc = utils.PtrToString(shortDesc)
+
+		// Include the processed post in the result
+		posts = append(posts, post)
+	}
+
+	// If error during iteration
+	if err = rows.Err(); err != nil {
+		return posts, err
+	}
+
+	return posts, err
+}
+
 // Get a limited number of posts with offset
-func (r *Repository) GetPosts(ctx context.Context, page int, orderBy string) ([]models.Post, error) {
+func (r *Repository) GetPosts(
+	ctx context.Context,
+	page int,
+	orderBy string,
+) (posts []models.Post, err error) {
 
 	limit := r.config.PostsPerPage
 	offset := (page - 1) * limit
@@ -147,7 +194,51 @@ func (r *Repository) GetPosts(ctx context.Context, page int, orderBy string) ([]
 	}
 
 	query := fmt.Sprintf(getPostsQuery, order)
-	return r.queryPosts(ctx, query, limit, offset)
+
+	// Get rows from DB
+	rows, err := r.db.Query(ctx, query, limit, offset)
+	if err != nil {
+		return posts, err
+	}
+
+	// Close rows on exit
+	defer rows.Close()
+
+	// Iterate over the rows
+	for rows.Next() {
+		var post models.Post
+		var thumbnails []byte
+
+		// Paste post from row to struct, thumbnails in a separate var
+		if err = rows.Scan(
+			&post.VideoID,
+			&post.Title,
+			&thumbnails,
+			&post.Likes,
+		); err != nil {
+			return posts, err
+		}
+
+		// Unserialize thumbnails
+		var thumbs models.Thumbnails
+		if err = json.Unmarshal(thumbnails, &thumbs); err != nil {
+			return posts, fmt.Errorf("video ID '%s': %v", post.VideoID, err)
+		}
+
+		// Craft srcset string
+		post.Srcset = thumbs.Srcset(480)
+		post.Thumbnail = thumbs.Medium
+
+		// Include the processed post in the result
+		posts = append(posts, post)
+	}
+
+	// If error during iteration
+	if err = rows.Err(); err != nil {
+		return posts, err
+	}
+
+	return posts, err
 }
 
 // Get a limited number of posts from one category with offset

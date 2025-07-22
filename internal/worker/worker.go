@@ -2,6 +2,7 @@ package worker
 
 import (
 	"context"
+	"errors"
 	"factual-docs/internal/integrations/gemini"
 	"factual-docs/internal/integrations/yt"
 	"factual-docs/internal/models"
@@ -63,8 +64,13 @@ func (s *Service) Run() error {
 	// Fetch all the playlists from DB
 	log.Println("Fetching playlists from DB...")
 	dbSources, err := s.sourcesRepo.GetSources(s.ctx)
+
 	if err != nil {
 		return fmt.Errorf("could not fetch the playlists from DB: %v", err)
+	}
+
+	if len(dbSources) == 0 {
+		return errors.New("fetched ZERO playlists from DB")
 	}
 
 	// Extract playlist and channel IDs
@@ -101,7 +107,7 @@ func (s *Service) Run() error {
 
 	// Get valid videos from playlists
 	log.Println("Fetching videos from YouTube...")
-	videos := make(map[string]*models.Post)
+	ytVideos := make(map[string]*models.Post)
 	for _, playlistID := range playlistIDs {
 		sourceItems, err := s.yt.GetSourceItems(playlistID)
 		if err != nil {
@@ -125,12 +131,38 @@ func (s *Service) Run() error {
 			err := s.yt.ValidateYouTubeVideo(video)
 			if err == nil && !s.postsRepo.IsPostDeleted(s.ctx, video.Id) {
 				newVideo := s.yt.NewYouTubePost(video, playlistID)
-				videos[video.Id] = newVideo
+				ytVideos[video.Id] = newVideo
 			}
 		}
 	}
 
-	log.Println("VALID VIDEOS:", len(videos))
+	log.Printf("Fetched %d valid videos from YouTube", len(ytVideos))
+	log.Println("Fetching videos from DB...")
+	videos, err := s.postsRepo.GetAllPosts(s.ctx)
+
+	if err != nil {
+		return fmt.Errorf("could not fetch the videos from DB: %v", err)
+	}
+
+	if len(videos) == 0 {
+		return errors.New("fetched ZERO video from DB")
+	}
+
+	// Transform the videos slice to map
+	dbVideos := make(map[string]*models.Post)
+	for _, video := range videos {
+		dbVideos[video.VideoID] = &video
+	}
+
+	log.Printf("Fetched %d videos from DB", len(dbVideos))
+
+	// Check for deleted videos
+	for videoID := range dbVideos {
+		if _, exists := ytVideos[videoID]; !exists {
+			// Remove the video from DB
+
+		}
+	}
 
 	return nil
 }
