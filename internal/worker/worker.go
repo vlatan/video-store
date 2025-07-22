@@ -200,9 +200,10 @@ func (s *Service) Run() error {
 				log.Printf("Gemini content generation on video '%s' failed: %v", videoID, err)
 			}
 
-			if gr != nil {
+			ytVideo.Category = &models.Category{}
+			if err == nil && gr != nil {
 				ytVideo.ShortDesc = gr.Description
-				ytVideo.Category = &models.Category{Name: gr.Category}
+				ytVideo.Category.Name = gr.Category
 			}
 
 			// Insert the video
@@ -217,7 +218,8 @@ func (s *Service) Run() error {
 		}
 
 		// Check for no short description or category
-		if dbVideo.ShortDesc == "" || dbVideo.Category == nil {
+		// dbVideo.Category is constructed (not nil) in GetAllSourcedPosts
+		if dbVideo.ShortDesc == "" || dbVideo.Category.Name == "" {
 
 			gr, err := s.gemini.GenerateInfo(s.ctx, ytVideo.Title, categories)
 			if err != nil || gr == nil {
@@ -230,8 +232,7 @@ func (s *Service) Run() error {
 				dbVideo.ShortDesc = gr.Description
 			}
 
-			dbVideo.Category = &models.Category{}
-			if dbVideo.Category == nil {
+			if dbVideo.Category.Name == "" {
 				dbVideo.Category.Name = gr.Category
 			}
 
@@ -250,7 +251,7 @@ func (s *Service) Run() error {
 	// check if some are deleted or became invalid
 
 	log.Printf("Added %d videos", inserted)
-	log.Printf("Update %d videos", updated)
+	log.Printf("Updated %d videos", updated)
 
 	elapsed := time.Since(start)
 	log.Printf("Time took: %s", elapsed)

@@ -52,7 +52,7 @@ const getSinglePostQuery = `
 	GROUP BY post.id, category.id
 `
 
-const getPostsQuery = `
+const getHomePostsQuery = `
 	SELECT
 		video_id, 
 		title, 
@@ -70,8 +70,10 @@ const getAllSourcedPostsQuery = `
 		video_id,
 		playlist_id,
 		title, 
-		short_description
+		short_description,
+		cat.name AS category_name
 	FROM post
+	LEFT JOIN category AS cat ON cat.id = post.category_id
 	WHERE playlist_db_id IS NOT NULL
 `
 

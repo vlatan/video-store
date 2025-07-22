@@ -39,7 +39,7 @@ func (s *Service) HomeHandler(w http.ResponseWriter, r *http.Request) {
 		s.config.CacheTimeout,
 		&posts,
 		func() ([]models.Post, error) {
-			return s.postsRepo.GetPosts(r.Context(), page, orderBy)
+			return s.postsRepo.GetHomePosts(r.Context(), page, orderBy)
 		},
 	)
 

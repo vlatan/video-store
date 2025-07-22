@@ -154,6 +154,7 @@ func (r *Repository) GetAllSourcedPosts(ctx context.Context) (posts []models.Pos
 		var post models.Post
 		var playlistID *string
 		var shortDesc *string
+		var categoryName *string
 
 		// Paste post from row to struct, thumbnails in a separate var
 		if err = rows.Scan(
@@ -161,12 +162,14 @@ func (r *Repository) GetAllSourcedPosts(ctx context.Context) (posts []models.Pos
 			&playlistID,
 			&post.Title,
 			&shortDesc,
+			&categoryName,
 		); err != nil {
 			return posts, err
 		}
 
 		post.PlaylistID = utils.PtrToString(playlistID)
 		post.ShortDesc = utils.PtrToString(shortDesc)
+		post.Category = &models.Category{Name: utils.PtrToString(categoryName)}
 
 		// Include the processed post in the result
 		posts = append(posts, post)
@@ -181,7 +184,7 @@ func (r *Repository) GetAllSourcedPosts(ctx context.Context) (posts []models.Pos
 }
 
 // Get a limited number of posts with offset
-func (r *Repository) GetPosts(
+func (r *Repository) GetHomePosts(
 	ctx context.Context,
 	page int,
 	orderBy string,
@@ -195,7 +198,7 @@ func (r *Repository) GetPosts(
 		order = "likes DESC, " + order
 	}
 
-	query := fmt.Sprintf(getPostsQuery, order)
+	query := fmt.Sprintf(getHomePostsQuery, order)
 
 	// Get rows from DB
 	rows, err := r.db.Query(ctx, query, limit, offset)
