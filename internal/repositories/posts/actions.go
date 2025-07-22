@@ -41,6 +41,11 @@ func (r *Repository) UpdateDesc(ctx context.Context, videoID, description string
 	return r.db.Exec(ctx, updateDescQuery, videoID, description)
 }
 
+// Update post description
+func (r *Repository) UpdateGeneratedData(ctx context.Context, post *models.Post) (int64, error) {
+	return r.db.Exec(ctx, updateGeneretedDataQuery, post.VideoID, post.Category.Name, post.ShortDesc)
+}
+
 // Delete a post
 func (r *Repository) BanPost(ctx context.Context, videoID string) (int64, error) {
 	return r.db.Exec(ctx, banPostQuery, videoID)

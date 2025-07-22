@@ -216,6 +216,15 @@ const updateDescQuery = `
 	WHERE video_id = $1
 `
 
+const updateGeneretedDataQuery = `
+	UPDATE post
+	SET
+		category_id = (SELECT id FROM category WHERE name = $2),
+		short_description = $3,
+		updated_at = NOW()
+	WHERE video_id = $1
+`
+
 const banPostQuery = `
 	WITH dp AS (
 		DELETE FROM post

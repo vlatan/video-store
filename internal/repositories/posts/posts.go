@@ -26,13 +26,15 @@ func New(db database.Service, config *config.Config) *Repository {
 
 // Check if the post exists
 func (r *Repository) PostExists(ctx context.Context, videoID string) bool {
-	err := r.db.QueryRow(ctx, postExistsQuery, videoID).Scan()
-	return err != nil
+	var value int
+	err := r.db.QueryRow(ctx, postExistsQuery, videoID).Scan(&value)
+	return err == nil
 }
 
 // Check if the post is deleted
 func (r *Repository) IsPostBanned(ctx context.Context, videoID string) bool {
-	err := r.db.QueryRow(ctx, isPostBanneddQuery, videoID).Scan()
+	var value int
+	err := r.db.QueryRow(ctx, isPostBanneddQuery, videoID).Scan(&value)
 	return err == nil
 }
 
@@ -59,7 +61,7 @@ func (r *Repository) InsertPost(ctx context.Context, post *models.Post) (int64, 
 		post.Duration.ISO,
 		post.UploadDate,
 		post.UserID,
-		post.Category.Name,
+		utils.NullString(&post.Category.Name),
 	)
 }
 

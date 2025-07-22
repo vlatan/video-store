@@ -211,7 +211,7 @@ func (s *Service) Run() error {
 				log.Printf("Failed to insert video '%s': %v", videoID, err)
 			}
 
-			time.Sleep(time.Second)
+			time.Sleep(2 * time.Second)
 			inserted++
 			continue
 		}
@@ -222,7 +222,7 @@ func (s *Service) Run() error {
 			gr, err := s.gemini.GenerateInfo(s.ctx, ytVideo.Title, categories)
 			if err != nil || gr == nil {
 				log.Printf("Gemini content generation on video '%s' failed: %v", videoID, err)
-				time.Sleep(time.Second)
+				time.Sleep(2 * time.Second)
 				continue
 			}
 
@@ -230,19 +230,27 @@ func (s *Service) Run() error {
 				dbVideo.ShortDesc = gr.Description
 			}
 
+			dbVideo.Category = &models.Category{}
 			if dbVideo.Category == nil {
-				dbVideo.Category = &models.Category{Name: gr.Category}
+				dbVideo.Category.Name = gr.Category
 			}
 
-			// Update the db video here
+			// Update the db video
+			rowsAffected, err := s.postsRepo.UpdateGeneratedData(s.ctx, dbVideo)
+			if err != nil || rowsAffected == 0 {
+				log.Printf("Failed to update video '%s': %v", videoID, err)
+			}
 
-			time.Sleep(time.Second)
+			time.Sleep(2 * time.Second)
 			updated++
 		}
 	}
 
 	// Fetch the orphans from DB and from YT
 	// check if some are deleted or became invalid
+
+	log.Printf("Added %d videos", inserted)
+	log.Printf("Update %d videos", updated)
 
 	elapsed := time.Since(start)
 	log.Printf("Time took: %s", elapsed)

@@ -299,9 +299,10 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 			log.Printf("Content generation using Gemini failed: %v", err)
 		}
 
-		if gc != nil {
+		post.Category = &models.Category{}
+		if err == nil && gc != nil {
 			post.ShortDesc = gc.Description
-			post.Category = &models.Category{Name: gc.Category}
+			post.Category.Name = gc.Category
 		}
 
 		// Insert the video
