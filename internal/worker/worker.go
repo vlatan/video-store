@@ -6,6 +6,7 @@ import (
 	"factual-docs/internal/integrations/gemini"
 	"factual-docs/internal/integrations/yt"
 	"factual-docs/internal/models"
+	"factual-docs/internal/repositories/categories"
 	"factual-docs/internal/repositories/posts"
 	"factual-docs/internal/repositories/sources"
 	"factual-docs/internal/shared/config"
@@ -19,6 +20,7 @@ type Service struct {
 	ctx         context.Context
 	postsRepo   *posts.Repository
 	sourcesRepo *sources.Repository
+	catsRepo    *categories.Repository
 	config      *config.Config
 	yt          *yt.Service
 	gemini      *gemini.Service
@@ -33,6 +35,7 @@ func New() *Service {
 	// Create DB repositories
 	postsRepo := posts.New(db, cfg)
 	sourcesRepo := sources.New(db, cfg)
+	catsRepo := categories.New(db)
 
 	// Create YouTube service
 	ctx := context.Background()
@@ -51,6 +54,7 @@ func New() *Service {
 		ctx:         ctx,
 		postsRepo:   postsRepo,
 		sourcesRepo: sourcesRepo,
+		catsRepo:    catsRepo,
 		config:      cfg,
 		yt:          yt,
 		gemini:      gemini,
@@ -138,27 +142,29 @@ func (s *Service) Run() error {
 
 	log.Printf("Fetched %d valid videos from YouTube", len(ytVideos))
 
-	videos, err := s.postsRepo.GetAllSourcedPosts(s.ctx)
+	sourcedVideos, err := s.postsRepo.GetAllSourcedPosts(s.ctx)
 
 	if err != nil {
-		return fmt.Errorf("could not fetch the videos from DB: %v", err)
+		return fmt.Errorf("could not fetch the sourced videos from DB: %v", err)
 	}
 
-	if len(videos) == 0 {
-		return errors.New("fetched ZERO videos from DB")
+	if len(sourcedVideos) == 0 {
+		return errors.New("fetched ZERO sourced videos from DB")
 	}
 
 	// Transform the videos slice to map
-	dbVideos := make(map[string]*models.Post)
-	for _, video := range videos {
-		dbVideos[video.VideoID] = &video
+	sourcedDbVideos := make(map[string]*models.Post)
+	for _, video := range sourcedVideos {
+		sourcedDbVideos[video.VideoID] = &video
 	}
 
-	log.Printf("Fetched %d videos from DB", len(dbVideos))
+	log.Printf("Fetched %d videos from DB", len(sourcedDbVideos))
+
+	// ###################################################################
 
 	// Delete videos if any
 	var deleted int
-	for videoID := range dbVideos {
+	for videoID := range sourcedDbVideos {
 		if _, exists := ytVideos[videoID]; !exists {
 			rowsAffected, err := s.postsRepo.DeletePost(s.ctx, videoID)
 			if err != nil || rowsAffected == 0 {
@@ -170,15 +176,69 @@ func (s *Service) Run() error {
 
 	log.Printf("Deleted %d videos", deleted)
 
-	// var inserted, updated int
-	for videoID := range ytVideos {
-		if _, exists := dbVideos[videoID]; !exists {
-			// Generate short desc and category and insert the video in DB
+	// Get the categories
+	categories, err := s.catsRepo.GetCategories(s.ctx)
+
+	if err != nil {
+		return fmt.Errorf("could not fetch the categories from DB: %v", err)
+	}
+
+	if len(categories) == 0 {
+		return errors.New("fetched ZERO categories from DB")
+	}
+
+	var inserted, updated int
+	for videoID, ytVideo := range ytVideos {
+
+		// Check first if the video exists in DB
+		dbVideo, exists := sourcedDbVideos[videoID]
+
+		if !exists {
+
+			gr, err := s.gemini.GenerateInfo(s.ctx, ytVideo.Title, categories)
+			if err != nil {
+				log.Printf("Gemini content generation on video '%s' failed: %v", videoID, err)
+			}
+
+			if gr != nil {
+				ytVideo.ShortDesc = gr.Description
+				ytVideo.Category = &models.Category{Name: gr.Category}
+			}
+
+			// Insert the video
+			rowsAffected, err := s.postsRepo.InsertPost(s.ctx, ytVideo)
+			if err != nil || rowsAffected == 0 {
+				log.Printf("Failed to insert video '%s': %v", videoID, err)
+			}
+
+			time.Sleep(time.Second)
+			inserted++
 			continue
 		}
 
-		// Check if the video has short desc and category
-		//  and if not generate and update the post
+		// Check for no short description or category
+		if dbVideo.ShortDesc == "" || dbVideo.Category == nil {
+
+			gr, err := s.gemini.GenerateInfo(s.ctx, ytVideo.Title, categories)
+			if err != nil || gr == nil {
+				log.Printf("Gemini content generation on video '%s' failed: %v", videoID, err)
+				time.Sleep(time.Second)
+				continue
+			}
+
+			if dbVideo.ShortDesc == "" {
+				dbVideo.ShortDesc = gr.Description
+			}
+
+			if dbVideo.Category == nil {
+				dbVideo.Category = &models.Category{Name: gr.Category}
+			}
+
+			// Update the db video here
+
+			time.Sleep(time.Second)
+			updated++
+		}
 	}
 
 	// Fetch the orphans from DB and from YT

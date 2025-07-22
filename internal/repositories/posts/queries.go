@@ -65,7 +65,7 @@ const getPostsQuery = `
 	LIMIT $1 OFFSET $2
 `
 
-const GetAllSourcedPostsQuery = `
+const getAllSourcedPostsQuery = `
 	SELECT
 		video_id,
 		playlist_id,
