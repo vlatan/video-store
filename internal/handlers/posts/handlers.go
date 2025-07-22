@@ -438,7 +438,7 @@ func (s *Service) PostActionHandler(w http.ResponseWriter, r *http.Request) {
 	case "edit":
 		s.handleEdit(w, r, videoID, currentUser)
 	case "delete":
-		s.handleDeletePost(w, r, currentUser.ID, videoID)
+		s.handleBanPost(w, r, currentUser.ID, videoID)
 	default:
 		s.ui.JSONError(w, r, http.StatusBadRequest)
 	}

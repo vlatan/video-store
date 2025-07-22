@@ -215,7 +215,7 @@ const updateDescQuery = `
 	WHERE video_id = $1
 `
 
-const deletePostQuery = `
+const banPostQuery = `
 	WITH dp AS (
 		DELETE FROM post
 		WHERE video_id = $1
