@@ -225,7 +225,7 @@ const banPostQuery = `
 	SELECT video_id, provider FROM dp
 `
 
-const isPostDeletedQuery = `
+const isPostBanneddQuery = `
 	SELECT 1 FROM deleted_post
 	WHERE video_id = $1
 `

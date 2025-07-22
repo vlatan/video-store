@@ -129,7 +129,7 @@ func (s *Service) Run() error {
 		// Keep only the valid videos
 		for _, video := range videosMetadata {
 			err := s.yt.ValidateYouTubeVideo(video)
-			if err == nil && !s.postsRepo.IsPostDeleted(s.ctx, video.Id) {
+			if err == nil && !s.postsRepo.IsPostBanned(s.ctx, video.Id) {
 				newVideo := s.yt.NewYouTubePost(video, playlistID)
 				ytVideos[video.Id] = newVideo
 			}

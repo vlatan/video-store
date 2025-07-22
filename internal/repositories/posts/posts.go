@@ -31,8 +31,8 @@ func (r *Repository) PostExists(ctx context.Context, videoID string) bool {
 }
 
 // Check if the post is deleted
-func (r *Repository) IsPostDeleted(ctx context.Context, videoID string) bool {
-	err := r.db.QueryRow(ctx, isPostDeletedQuery, videoID).Scan()
+func (r *Repository) IsPostBanned(ctx context.Context, videoID string) bool {
+	err := r.db.QueryRow(ctx, isPostBanneddQuery, videoID).Scan()
 	return err == nil
 }
 
