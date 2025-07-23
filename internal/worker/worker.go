@@ -2,7 +2,6 @@ package worker
 
 import (
 	"context"
-	"errors"
 	"factual-docs/internal/integrations/gemini"
 	"factual-docs/internal/integrations/yt"
 	"factual-docs/internal/models"
@@ -123,7 +122,10 @@ func (s *Service) Run() error {
 	for _, playlistID := range playlistIDs {
 		sourceItems, err := s.yt.GetSourceItems(playlistID)
 		if err != nil {
-			return fmt.Errorf("could not get items from YouTube on source '%s': %v", playlistID, err)
+			return fmt.Errorf(
+				"could not get items from YouTube on source '%s': %v",
+				playlistID, err,
+			)
 		}
 
 		// Collect the video IDs
@@ -152,12 +154,11 @@ func (s *Service) Run() error {
 
 	sourcedVideos, err := s.postsRepo.GetAllSourcedPosts(s.ctx)
 
-	if err != nil {
-		return fmt.Errorf("could not fetch the sourced videos from DB: %v", err)
-	}
-
-	if len(sourcedVideos) == 0 {
-		return errors.New("fetched ZERO sourced videos from DB")
+	if err != nil || len(sourcedVideos) == 0 {
+		return fmt.Errorf(
+			"could not fetch the sourced videos from DB; Result: %v; Error: %v",
+			sourcedVideos, err,
+		)
 	}
 
 	// Transform the videos slice to map
@@ -176,7 +177,10 @@ func (s *Service) Run() error {
 		if _, exists := ytVideos[videoID]; !exists {
 			rowsAffected, err := s.postsRepo.DeletePost(s.ctx, videoID)
 			if err != nil || rowsAffected == 0 {
-				return fmt.Errorf("could not delete the video '%s' in DB: %v", videoID, err)
+				return fmt.Errorf(
+					"could not delete the video '%s' in DB: %v",
+					videoID, err,
+				)
 			}
 			deleted++
 		}
@@ -187,12 +191,11 @@ func (s *Service) Run() error {
 	// Get the categories
 	categories, err := s.catsRepo.GetCategories(s.ctx)
 
-	if err != nil {
-		return fmt.Errorf("could not fetch the categories from DB: %v", err)
-	}
-
-	if len(categories) == 0 {
-		return errors.New("fetched ZERO categories from DB")
+	if err != nil || len(categories) == 0 {
+		return fmt.Errorf(
+			"could not fetch the categories from DB; Result: %v; Error: %v",
+			categories, err,
+		)
 	}
 
 	var inserted, updated int
@@ -205,7 +208,10 @@ func (s *Service) Run() error {
 
 			gr, err := s.gemini.GenerateInfo(s.ctx, ytVideo.Title, categories)
 			if err != nil {
-				log.Printf("Gemini content generation on video '%s' failed: %v", videoID, err)
+				log.Printf(
+					"Gemini content generation on video '%s' failed: %v",
+					videoID, err,
+				)
 			}
 
 			ytVideo.Category = &models.Category{}
@@ -231,7 +237,11 @@ func (s *Service) Run() error {
 
 			gr, err := s.gemini.GenerateInfo(s.ctx, ytVideo.Title, categories)
 			if err != nil || gr == nil {
-				log.Printf("Gemini content generation on video '%s' failed: %v", videoID, err)
+				log.Printf(
+					"Gemini content generation on video '%s' failed: %v",
+					videoID, err,
+				)
+
 				time.Sleep(2 * time.Second)
 				continue
 			}
