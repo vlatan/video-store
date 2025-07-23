@@ -10,6 +10,7 @@ import (
 	"factual-docs/internal/repositories/sources"
 	"factual-docs/internal/shared/config"
 	"factual-docs/internal/shared/database"
+	"factual-docs/internal/shared/utils"
 	"fmt"
 	"log"
 	"time"
@@ -209,7 +210,19 @@ func (s *Service) Run() error {
 
 		if !exists {
 
-			gr, err := s.gemini.GenerateInfo(s.ctx, ytVideo.Title, categories)
+			// Generate content using Gemini
+			genaiResponse, err := utils.Retry(
+				s.ctx,
+				time.Second,
+				3, func() (*models.GenaiResponse, error) {
+					return s.gemini.GenerateInfo(
+						s.ctx,
+						ytVideo.Title,
+						categories,
+					)
+				},
+			)
+
 			if err != nil {
 				log.Printf(
 					"Gemini content generation on video '%s' failed: %v",
@@ -218,9 +231,9 @@ func (s *Service) Run() error {
 			}
 
 			ytVideo.Category = &models.Category{}
-			if err == nil && gr != nil {
-				ytVideo.ShortDesc = gr.Description
-				ytVideo.Category.Name = gr.Category
+			if err == nil && genaiResponse != nil {
+				ytVideo.ShortDesc = genaiResponse.Description
+				ytVideo.Category.Name = genaiResponse.Category
 			}
 
 			// Insert the video
@@ -229,7 +242,6 @@ func (s *Service) Run() error {
 				log.Printf("Failed to insert video '%s': %v", videoID, err)
 			}
 
-			time.Sleep(2 * time.Second)
 			inserted++
 			continue
 		}
@@ -238,23 +250,33 @@ func (s *Service) Run() error {
 		// dbVideo.Category is constructed (not nil) when getting from DB
 		if dbVideo.ShortDesc == "" || dbVideo.Category.Name == "" {
 
-			gr, err := s.gemini.GenerateInfo(s.ctx, ytVideo.Title, categories)
-			if err != nil || gr == nil {
+			// Generate content using Gemini
+			genaiResponse, err := utils.Retry(
+				s.ctx,
+				time.Second,
+				3, func() (*models.GenaiResponse, error) {
+					return s.gemini.GenerateInfo(
+						s.ctx,
+						ytVideo.Title,
+						categories,
+					)
+				},
+			)
+
+			if err != nil || genaiResponse == nil {
 				log.Printf(
 					"Gemini content generation on video '%s' failed: %v",
 					videoID, err,
 				)
-
-				time.Sleep(2 * time.Second)
 				continue
 			}
 
 			if dbVideo.ShortDesc == "" {
-				dbVideo.ShortDesc = gr.Description
+				dbVideo.ShortDesc = genaiResponse.Description
 			}
 
 			if dbVideo.Category.Name == "" {
-				dbVideo.Category.Name = gr.Category
+				dbVideo.Category.Name = genaiResponse.Category
 			}
 
 			// Update the db video
@@ -263,7 +285,6 @@ func (s *Service) Run() error {
 				log.Printf("Failed to update video '%s': %v", videoID, err)
 			}
 
-			time.Sleep(2 * time.Second)
 			updated++
 		}
 	}
@@ -321,23 +342,33 @@ func (s *Service) Run() error {
 		// dbVideo.Category is constructed (not nil) when getting from DB
 		if dbVideo.ShortDesc == "" || dbVideo.Category.Name == "" {
 
-			gr, err := s.gemini.GenerateInfo(s.ctx, ytVideo.Title, categories)
-			if err != nil || gr == nil {
+			// Generate content using Gemini
+			genaiResponse, err := utils.Retry(
+				s.ctx,
+				time.Second,
+				3, func() (*models.GenaiResponse, error) {
+					return s.gemini.GenerateInfo(
+						s.ctx,
+						ytVideo.Title,
+						categories,
+					)
+				},
+			)
+
+			if err != nil || genaiResponse == nil {
 				log.Printf(
 					"Gemini content generation on video '%s' failed: %v",
 					videoID, err,
 				)
-
-				time.Sleep(2 * time.Second)
 				continue
 			}
 
 			if dbVideo.ShortDesc == "" {
-				dbVideo.ShortDesc = gr.Description
+				dbVideo.ShortDesc = genaiResponse.Description
 			}
 
 			if dbVideo.Category.Name == "" {
-				dbVideo.Category.Name = gr.Category
+				dbVideo.Category.Name = genaiResponse.Category
 			}
 
 			// Update the db video
@@ -346,7 +377,6 @@ func (s *Service) Run() error {
 				log.Printf("Failed to update video '%s': %v", videoID, err)
 			}
 
-			time.Sleep(2 * time.Second)
 			updated++
 		}
 	}
