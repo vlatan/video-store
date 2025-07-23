@@ -49,7 +49,7 @@ func (s *Service) UpdateData(
 	}
 
 	// Update the db video
-	rowsAffected, err := s.postsRepo.UpdateGeneratedData(s.ctx, video)
+	rowsAffected, err := s.postsRepo.UpdateGeneratedData(ctx, video)
 	if err != nil || rowsAffected == 0 {
 		log.Printf("Failed to update video '%s': %v", video.VideoID, err)
 		return false

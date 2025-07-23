@@ -13,6 +13,7 @@ import (
 	"factual-docs/internal/shared/utils"
 	"fmt"
 	"log"
+	"reflect"
 	"time"
 )
 
@@ -76,6 +77,9 @@ func (s *Service) Run(ctx context.Context) error {
 		)
 	}
 
+	items := utils.Plural(len(dbSources), "playlist")
+	log.Printf("Fetched %d %s from DB", len(dbSources), items)
+
 	// Extract playlist and channel IDs
 	playlistIDs := make([]string, len(dbSources))
 	channelIDs := make([]string, len(dbSources))
@@ -103,8 +107,19 @@ func (s *Service) Run(ctx context.Context) error {
 	}
 
 	// Update each playlist in DB
+	var updatedPlaylists int
 	for i, source := range sources {
+
 		newSource := s.yt.NewYouTubeSource(source, channels[i])
+
+		// Check if channel thumbnails have changed
+		if reflect.DeepEqual(
+			dbSources[i].ChannelThumbnails,
+			newSource.ChannelThumbnails,
+		) {
+			continue
+		}
+
 		rowsAffected, err := s.sourcesRepo.UpdateSource(ctx, newSource)
 		if err != nil || rowsAffected == 0 {
 			return fmt.Errorf(
@@ -112,9 +127,12 @@ func (s *Service) Run(ctx context.Context) error {
 				newSource.PlaylistID, err,
 			)
 		}
+
+		updatedPlaylists++
 	}
 
-	log.Printf("Fetched and updated %d playlists", len(sources))
+	items = utils.Plural(len(sources), "playlist")
+	log.Printf("Fetched %d %s from YouTube", len(sources), items)
 
 	// Get valid videos from playlists
 	ytVideos := make(map[string]*models.Post)
@@ -149,7 +167,8 @@ func (s *Service) Run(ctx context.Context) error {
 		}
 	}
 
-	log.Printf("Fetched %d valid videos from YouTube", len(ytVideos))
+	items = utils.Plural(len(ytVideos), "video")
+	log.Printf("Fetched %d valid %s from YouTube", len(ytVideos), items)
 
 	allVideos, err := s.postsRepo.GetAllPosts(ctx)
 	if err != nil || len(allVideos) == 0 {
@@ -160,18 +179,25 @@ func (s *Service) Run(ctx context.Context) error {
 	}
 
 	// Transform the videos slice to maps
-	sourcedDbVideos := make(map[string]*models.Post)
+	// Collect the orphans video IDs too
+	var orphanVideoIDs []string
 	orphanDbVideos := make(map[string]*models.Post)
+	sourcedDbVideos := make(map[string]*models.Post)
 	for _, video := range allVideos {
 		if video.PlaylistID == "" {
 			orphanDbVideos[video.VideoID] = &video
+			orphanVideoIDs = append(orphanVideoIDs, video.VideoID)
 			continue
 		}
 
 		sourcedDbVideos[video.VideoID] = &video
 	}
 
-	log.Printf("Fetched %d videos from DB", len(sourcedDbVideos))
+	items = utils.Plural(len(sourcedDbVideos), "video")
+	log.Printf("Fetched %d sourced %s from DB", len(sourcedDbVideos), items)
+
+	items = utils.Plural(len(orphanDbVideos), "video")
+	log.Printf("Fetched %d orphan %s from DB", len(orphanDbVideos), items)
 
 	// ###################################################################
 
@@ -244,12 +270,6 @@ func (s *Service) Run(ctx context.Context) error {
 
 	// ###################################################################
 
-	// Collect the orphans video IDs
-	var orphanVideoIDs []string
-	for videoID := range orphanDbVideos {
-		orphanVideoIDs = append(orphanVideoIDs, videoID)
-	}
-
 	// Get orphans metadata from YouTube
 	orphansMetadata, err := s.yt.GetVideos(ctx, orphanVideoIDs...)
 	if err != nil {
@@ -258,6 +278,9 @@ func (s *Service) Run(ctx context.Context) error {
 			err,
 		)
 	}
+
+	items = utils.Plural(len(orphansMetadata), "video")
+	log.Printf("Fetched %d orphan %s from YouTube", len(orphansMetadata), items)
 
 	// Keep only the valid orphan YT videos
 	var orphanYTvideos = make(map[string]*models.Post)
@@ -296,9 +319,11 @@ func (s *Service) Run(ctx context.Context) error {
 		}
 	}
 
-	log.Printf("Deleted %d %s", deleted, utils.SingularPlural(deleted, "video"))
-	log.Printf("Added %d %s", inserted, utils.SingularPlural(inserted, "video"))
-	log.Printf("Updated %d %s", updated, utils.SingularPlural(updated, "video"))
+	items = utils.Plural(updatedPlaylists, "playlist")
+	log.Printf("Updated %d %s", updatedPlaylists, items)
+	log.Printf("Deleted %d %s", deleted, utils.Plural(deleted, "video"))
+	log.Printf("Added %d %s", inserted, utils.Plural(inserted, "video"))
+	log.Printf("Updated %d %s", updated, utils.Plural(updated, "video"))
 
 	elapsed := time.Since(start)
 	log.Printf("Time took: %s", elapsed)

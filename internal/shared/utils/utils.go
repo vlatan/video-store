@@ -132,7 +132,7 @@ func PtrToString(s *string) string {
 	return *s
 }
 
-func SingularPlural(num int, word string) string {
+func Plural(num int, word string) string {
 	if num == 1 {
 		return word
 	}
