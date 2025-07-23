@@ -294,15 +294,26 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 		post.UserID = data.CurrentUser.ID
 
 		// Generate content using Gemini
-		gc, err := s.gemini.GenerateInfo(r.Context(), post.Title, data.Categories)
+		genaiResponse, err := utils.Retry(
+			r.Context(),
+			0*time.Second,
+			3, func() (*models.GenaiResponse, error) {
+				return s.gemini.GenerateInfo(
+					r.Context(),
+					post.Title,
+					data.Categories,
+				)
+			},
+		)
+
 		if err != nil {
 			log.Printf("Content generation using Gemini failed: %v", err)
 		}
 
 		post.Category = &models.Category{}
-		if err == nil && gc != nil {
-			post.ShortDesc = gc.Description
-			post.Category.Name = gc.Category
+		if err == nil && genaiResponse != nil {
+			post.ShortDesc = genaiResponse.Description
+			post.Category.Name = genaiResponse.Category
 		}
 
 		// Insert the video
