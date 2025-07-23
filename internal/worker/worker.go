@@ -212,13 +212,10 @@ func (s *Service) Run() error {
 
 			// Generate content using Gemini
 			genaiResponse, err := utils.Retry(
-				s.ctx,
-				time.Second,
-				3, func() (*models.GenaiResponse, error) {
+				s.ctx, time.Second, 5,
+				func() (*models.GenaiResponse, error) {
 					return s.gemini.GenerateInfo(
-						s.ctx,
-						ytVideo.Title,
-						categories,
+						s.ctx, ytVideo.Title, categories,
 					)
 				},
 			)

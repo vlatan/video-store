@@ -27,13 +27,10 @@ func (s *Service) UpdateData(
 
 	// Generate content using Gemini
 	genaiResponse, err := utils.Retry(
-		ctx,
-		time.Second,
-		3, func() (*models.GenaiResponse, error) {
+		ctx, time.Second, 5,
+		func() (*models.GenaiResponse, error) {
 			return s.gemini.GenerateInfo(
-				ctx,
-				title,
-				categories,
+				ctx, title, categories,
 			)
 		},
 	)
