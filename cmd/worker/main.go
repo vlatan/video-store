@@ -1,13 +1,15 @@
 package main
 
 import (
+	"context"
 	"factual-docs/internal/worker"
 	"log"
 )
 
 func main() {
 	worker := worker.New()
-	if err := worker.Run(); err != nil {
+	ctx := context.Background()
+	if err := worker.Run(ctx); err != nil {
 		log.Println(err)
 	}
 }

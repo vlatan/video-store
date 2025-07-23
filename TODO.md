@@ -1,7 +1,3 @@
-* Cron
-* API calls need retries
-  Put retries inside the YT and Gemini methods
-
 * Get random videos as related if none
 * Make redis cache function to return T
 

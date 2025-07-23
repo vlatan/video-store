@@ -17,7 +17,6 @@ import (
 )
 
 type Service struct {
-	ctx         context.Context
 	postsRepo   *posts.Repository
 	sourcesRepo *sources.Repository
 	catsRepo    *categories.Repository
@@ -51,7 +50,6 @@ func New() *Service {
 	}
 
 	return &Service{
-		ctx:         ctx,
 		postsRepo:   postsRepo,
 		sourcesRepo: sourcesRepo,
 		catsRepo:    catsRepo,
@@ -62,14 +60,14 @@ func New() *Service {
 }
 
 // Run the worker
-func (s *Service) Run() error {
+func (s *Service) Run(ctx context.Context) error {
 
 	start := time.Now()
 
 	log.Println("Worker running...")
 
 	// Fetch all the playlists from DB
-	dbSources, err := s.sourcesRepo.GetSources(s.ctx)
+	dbSources, err := s.sourcesRepo.GetSources(ctx)
 
 	if err != nil || len(dbSources) == 0 {
 		return fmt.Errorf(
@@ -87,7 +85,7 @@ func (s *Service) Run() error {
 	}
 
 	// Fetch playlists from YouTube
-	sources, err := s.yt.GetSources(s.ctx, playlistIDs...)
+	sources, err := s.yt.GetSources(ctx, playlistIDs...)
 	if err != nil {
 		return fmt.Errorf(
 			"could not fetch the playlists from YouTube: %v",
@@ -96,7 +94,7 @@ func (s *Service) Run() error {
 	}
 
 	// Fetch corresponding channels
-	channels, err := s.yt.GetChannels(s.ctx, channelIDs...)
+	channels, err := s.yt.GetChannels(ctx, channelIDs...)
 	if err != nil {
 		return fmt.Errorf(
 			"could not fetch the channels from YouTube: %v",
@@ -107,7 +105,7 @@ func (s *Service) Run() error {
 	// Update each playlist in DB
 	for i, source := range sources {
 		newSource := s.yt.NewYouTubeSource(source, channels[i])
-		rowsAffected, err := s.sourcesRepo.UpdateSource(s.ctx, newSource)
+		rowsAffected, err := s.sourcesRepo.UpdateSource(ctx, newSource)
 		if err != nil || rowsAffected == 0 {
 			return fmt.Errorf(
 				"could not update source '%s' in DB: %v",
@@ -121,7 +119,7 @@ func (s *Service) Run() error {
 	// Get valid videos from playlists
 	ytVideos := make(map[string]*models.Post)
 	for _, playlistID := range playlistIDs {
-		sourceItems, err := s.yt.GetSourceItems(s.ctx, playlistID)
+		sourceItems, err := s.yt.GetSourceItems(ctx, playlistID)
 		if err != nil {
 			return fmt.Errorf(
 				"could not get items from YouTube on source '%s': %v",
@@ -136,7 +134,7 @@ func (s *Service) Run() error {
 		}
 
 		// Get all the videos metadata
-		videosMetadata, err := s.yt.GetVideos(s.ctx, videoIDs...)
+		videosMetadata, err := s.yt.GetVideos(ctx, videoIDs...)
 		if err != nil {
 			return fmt.Errorf("could not get videos from YouTube: %v", err)
 		}
@@ -144,7 +142,7 @@ func (s *Service) Run() error {
 		// Keep only the valid videos
 		for _, video := range videosMetadata {
 			err := s.yt.ValidateYouTubeVideo(video)
-			if err == nil && !s.postsRepo.IsPostBanned(s.ctx, video.Id) {
+			if err == nil && !s.postsRepo.IsPostBanned(ctx, video.Id) {
 				newVideo := s.yt.NewYouTubePost(video, playlistID)
 				ytVideos[video.Id] = newVideo
 			}
@@ -153,7 +151,7 @@ func (s *Service) Run() error {
 
 	log.Printf("Fetched %d valid videos from YouTube", len(ytVideos))
 
-	allVideos, err := s.postsRepo.GetAllPosts(s.ctx)
+	allVideos, err := s.postsRepo.GetAllPosts(ctx)
 	if err != nil || len(allVideos) == 0 {
 		return fmt.Errorf(
 			"could not fetch the sourced videos from DB; Rows: %v; Error: %v",
@@ -181,7 +179,7 @@ func (s *Service) Run() error {
 	var deleted int
 	for videoID := range sourcedDbVideos {
 		if _, exists := ytVideos[videoID]; !exists {
-			rowsAffected, err := s.postsRepo.DeletePost(s.ctx, videoID)
+			rowsAffected, err := s.postsRepo.DeletePost(ctx, videoID)
 			if err != nil || rowsAffected == 0 {
 				return fmt.Errorf(
 					"could not delete the video '%s' in DB: %v",
@@ -193,7 +191,7 @@ func (s *Service) Run() error {
 	}
 
 	// Get the categories
-	categories, err := s.catsRepo.GetCategories(s.ctx)
+	categories, err := s.catsRepo.GetCategories(ctx)
 
 	if err != nil || len(categories) == 0 {
 		return fmt.Errorf(
@@ -212,7 +210,7 @@ func (s *Service) Run() error {
 
 			// Generate content using Gemini
 			genaiResponse, err := s.gemini.GenerateInfo(
-				s.ctx, ytVideo.Title, categories,
+				ctx, ytVideo.Title, categories,
 			)
 
 			if err != nil {
@@ -229,7 +227,7 @@ func (s *Service) Run() error {
 			}
 
 			// Insert the video
-			rowsAffected, err := s.postsRepo.InsertPost(s.ctx, ytVideo)
+			rowsAffected, err := s.postsRepo.InsertPost(ctx, ytVideo)
 			if err != nil || rowsAffected == 0 {
 				log.Printf("Failed to insert video '%s': %v", videoID, err)
 			}
@@ -238,7 +236,7 @@ func (s *Service) Run() error {
 			continue
 		}
 
-		if s.UpdateData(s.ctx, dbVideo, ytVideo.Title, categories) {
+		if s.UpdateData(ctx, dbVideo, ytVideo.Title, categories) {
 			updated++
 		}
 
@@ -253,7 +251,7 @@ func (s *Service) Run() error {
 	}
 
 	// Get orphans metadata from YouTube
-	orphansMetadata, err := s.yt.GetVideos(s.ctx, orphanVideoIDs...)
+	orphansMetadata, err := s.yt.GetVideos(ctx, orphanVideoIDs...)
 	if err != nil {
 		return fmt.Errorf(
 			"could not get the orphan videos from YouTube: %v",
@@ -282,7 +280,7 @@ func (s *Service) Run() error {
 		// Check if the video exists in fetched YT orphan videos
 		ytVideo, exists := orphanYTvideos[videoID]
 		if !exists {
-			rowsAffected, err := s.postsRepo.DeletePost(s.ctx, videoID)
+			rowsAffected, err := s.postsRepo.DeletePost(ctx, videoID)
 			if err != nil || rowsAffected == 0 {
 				return fmt.Errorf(
 					"could not delete the video '%s' in DB: %v",
@@ -293,7 +291,7 @@ func (s *Service) Run() error {
 			continue
 		}
 
-		if s.UpdateData(s.ctx, dbVideo, ytVideo.Title, categories) {
+		if s.UpdateData(ctx, dbVideo, ytVideo.Title, categories) {
 			updated++
 		}
 	}
