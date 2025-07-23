@@ -14,7 +14,7 @@ func (r *Repository) GetRelatedPosts(ctx context.Context, title string) (posts [
 	searchedPosts, err := r.SearchPosts(ctx, title, r.config.NumRelatedPosts+1, 0)
 
 	if err != nil {
-		return posts, err
+		return nil, err
 	}
 
 	for _, sp := range searchedPosts.Items {

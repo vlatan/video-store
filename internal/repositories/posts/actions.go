@@ -6,9 +6,11 @@ import (
 )
 
 // Check if the user liked and/or faved a post
-func (r *Repository) GetUserActions(ctx context.Context, userID, postID int) (actions models.Actions, err error) {
-	err = r.db.QueryRow(ctx, userActionsQuery, userID, postID).Scan(&actions.Liked, &actions.Faved)
-	return actions, err
+func (r *Repository) GetUserActions(ctx context.Context, userID, postID int) (*models.Actions, error) {
+	row := r.db.QueryRow(ctx, userActionsQuery, userID, postID)
+	var actions models.Actions
+	err := row.Scan(&actions.Liked, &actions.Faved)
+	return &actions, err
 }
 
 // User likes a post

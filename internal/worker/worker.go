@@ -71,12 +71,11 @@ func (s *Service) Run() error {
 	// Fetch all the playlists from DB
 	dbSources, err := s.sourcesRepo.GetSources(s.ctx)
 
-	if err != nil {
-		return fmt.Errorf("could not fetch the playlists from DB: %v", err)
-	}
-
-	if len(dbSources) == 0 {
-		return errors.New("fetched ZERO playlists from DB")
+	if err != nil || len(dbSources) == 0 {
+		return fmt.Errorf(
+			"could not fetch the sources from DB; Result: %v; Error: %v",
+			dbSources, err,
+		)
 	}
 
 	// Extract playlist and channel IDs
@@ -90,13 +89,19 @@ func (s *Service) Run() error {
 	// Fetch playlists from YouTube
 	sources, err := s.yt.GetSources(playlistIDs...)
 	if err != nil {
-		return fmt.Errorf("could not fetch the playlists from YouTube: %v", err)
+		return fmt.Errorf(
+			"could not fetch the playlists from YouTube: %v",
+			err,
+		)
 	}
 
 	// Fetch corresponding channels
 	channels, err := s.yt.GetChannels(channelIDs...)
 	if err != nil {
-		return fmt.Errorf("could not fetch the channels from YouTube: %v", err)
+		return fmt.Errorf(
+			"could not fetch the channels from YouTube: %v",
+			err,
+		)
 	}
 
 	// Update each playlist in DB
@@ -104,7 +109,10 @@ func (s *Service) Run() error {
 		newSource := s.yt.NewYouTubeSource(source, channels[i])
 		rowsAffected, err := s.sourcesRepo.UpdateSource(s.ctx, newSource)
 		if err != nil || rowsAffected == 0 {
-			return fmt.Errorf("could not update source '%s' in DB: %v", newSource.PlaylistID, err)
+			return fmt.Errorf(
+				"could not update source '%s' in DB: %v",
+				newSource.PlaylistID, err,
+			)
 		}
 	}
 

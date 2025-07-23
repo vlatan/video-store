@@ -29,7 +29,7 @@ func (r *Repository) GetCategories(ctx context.Context) ([]models.Category, erro
 		// Get categories from DB
 		var category models.Category
 		if err := rows.Scan(&category.Name, &category.Slug, &category.UpdatedAt); err != nil {
-			return []models.Category{}, err
+			return nil, err
 		}
 
 		// Include the category in the result
@@ -37,7 +37,7 @@ func (r *Repository) GetCategories(ctx context.Context) ([]models.Category, erro
 	}
 
 	if err = rows.Err(); err != nil {
-		return []models.Category{}, err
+		return nil, err
 	}
 
 	return categories, nil

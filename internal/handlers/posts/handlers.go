@@ -164,7 +164,7 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	// For search posts we are using the database.Posts struct,
 	// so we can add total results and time took
-	var posts models.Posts
+	var posts *models.Posts
 	err := redis.GetItems(
 		!data.IsCurrentUserAdmin(),
 		r.Context(),
@@ -172,7 +172,7 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Sprintf("posts:search:page:%d:%s", page, encodedSearchQuery),
 		s.config.CacheTimeout,
 		&posts,
-		func() (models.Posts, error) {
+		func() (*models.Posts, error) {
 			return s.postsRepo.SearchPosts(r.Context(), searchQuery, limit, offset)
 		},
 	)
@@ -202,7 +202,7 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data.Posts = &posts
+	data.Posts = posts
 	data.Posts.TimeTook = fmt.Sprintf("%.2f", end.Seconds())
 	data.Title = "Search"
 	s.ui.RenderHTML(w, r, "search.html", data)
@@ -339,7 +339,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var post models.Post
+	var post *models.Post
 	err := redis.GetItems(
 		!data.CurrentUser.IsAuthenticated(),
 		r.Context(),
@@ -347,7 +347,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Sprintf("post:%s", videoID),
 		s.config.CacheTimeout,
 		&post,
-		func() (models.Post, error) {
+		func() (*models.Post, error) {
 			return s.postsRepo.GetSinglePost(r.Context(), videoID)
 		},
 	)
@@ -365,7 +365,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Assign the post to data
-	data.CurrentPost = &post
+	data.CurrentPost = post
 	data.Title = post.Title
 
 	// Check whether the current user liked and/or faved the post

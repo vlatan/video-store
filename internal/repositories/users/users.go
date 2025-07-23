@@ -134,5 +134,5 @@ func (r *Repository) GetUsers(ctx context.Context, page int) (*models.Users, err
 		return nil, err
 	}
 
-	return &users, err
+	return &users, nil
 }

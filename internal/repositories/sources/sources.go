@@ -24,8 +24,9 @@ func New(db database.Service, config *config.Config) *Repository {
 
 // Check if source exists
 func (r *Repository) SourceExists(ctx context.Context, playlistID string) bool {
-	err := r.db.QueryRow(ctx, sourceExistsQuery, playlistID).Scan()
-	return err != nil
+	var result int
+	err := r.db.QueryRow(ctx, sourceExistsQuery, playlistID).Scan(&result)
+	return err == nil
 }
 
 // Add new source to DB
@@ -110,14 +111,14 @@ func (r *Repository) GetSources(ctx context.Context) ([]models.Source, error) {
 			&thumbnails,
 			&source.UpdatedAt,
 		); err != nil {
-			return []models.Source{}, err
+			return nil, err
 		}
 
 		// Unserialize thumbnails
 		var channelThumbs models.Thumbnails
 		if err = json.Unmarshal(thumbnails, &channelThumbs); err != nil {
 			msg := "could not ummarshal the channel thumbs on playlist"
-			return sources, fmt.Errorf("%s: '%s': %v", msg, source.PlaylistID, err)
+			return nil, fmt.Errorf("%s: '%s': %v", msg, source.PlaylistID, err)
 		}
 
 		source.Thumbnail = channelThumbs.Medium
@@ -127,7 +128,7 @@ func (r *Repository) GetSources(ctx context.Context) ([]models.Source, error) {
 	}
 
 	if err = rows.Err(); err != nil {
-		return sources, err
+		return nil, err
 	}
 
 	return sources, nil
