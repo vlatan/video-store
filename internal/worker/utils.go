@@ -1,8 +1,69 @@
 package worker
 
-func vs(num int) string {
-	if num == 1 {
-		return "video"
+import (
+	"context"
+	"factual-docs/internal/models"
+	"factual-docs/internal/shared/utils"
+	"log"
+	"time"
+)
+
+// Update generated gemini data on a video
+func (s *Service) UpdateData(
+	ctx context.Context,
+	video *models.Post,
+	title string,
+	categories []models.Category,
+) bool {
+
+	if video == nil {
+		return false
 	}
-	return "videos"
+
+	// Nothing to update short desc and category are populated
+	if video.ShortDesc != "" && video.Category.Name != "" {
+		return false
+	}
+
+	// Generate content using Gemini
+	genaiResponse, err := utils.Retry(
+		ctx,
+		time.Second,
+		3, func() (*models.GenaiResponse, error) {
+			return s.gemini.GenerateInfo(
+				ctx,
+				title,
+				categories,
+			)
+		},
+	)
+
+	if err != nil || genaiResponse == nil {
+		log.Printf(
+			"Gemini content generation on video '%s' failed: %v",
+			video.VideoID, err,
+		)
+		return false
+	}
+
+	if video.ShortDesc == "" {
+		video.ShortDesc = genaiResponse.Description
+	}
+
+	if video.Category == nil {
+		video.Category = &models.Category{}
+	}
+
+	if video.Category.Name == "" {
+		video.Category.Name = genaiResponse.Category
+	}
+
+	// Update the db video
+	rowsAffected, err := s.postsRepo.UpdateGeneratedData(s.ctx, video)
+	if err != nil || rowsAffected == 0 {
+		log.Printf("Failed to update video '%s': %v", video.VideoID, err)
+		return false
+	}
+
+	return true
 }

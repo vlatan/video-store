@@ -246,47 +246,10 @@ func (s *Service) Run() error {
 			continue
 		}
 
-		// Check for no short description or category
-		// dbVideo.Category is constructed (not nil) when getting from DB
-		if dbVideo.ShortDesc == "" || dbVideo.Category.Name == "" {
-
-			// Generate content using Gemini
-			genaiResponse, err := utils.Retry(
-				s.ctx,
-				time.Second,
-				3, func() (*models.GenaiResponse, error) {
-					return s.gemini.GenerateInfo(
-						s.ctx,
-						ytVideo.Title,
-						categories,
-					)
-				},
-			)
-
-			if err != nil || genaiResponse == nil {
-				log.Printf(
-					"Gemini content generation on video '%s' failed: %v",
-					videoID, err,
-				)
-				continue
-			}
-
-			if dbVideo.ShortDesc == "" {
-				dbVideo.ShortDesc = genaiResponse.Description
-			}
-
-			if dbVideo.Category.Name == "" {
-				dbVideo.Category.Name = genaiResponse.Category
-			}
-
-			// Update the db video
-			rowsAffected, err := s.postsRepo.UpdateGeneratedData(s.ctx, dbVideo)
-			if err != nil || rowsAffected == 0 {
-				log.Printf("Failed to update video '%s': %v", videoID, err)
-			}
-
+		if s.UpdateData(s.ctx, dbVideo, ytVideo.Title, categories) {
 			updated++
 		}
+
 	}
 
 	// ###################################################################
@@ -338,52 +301,14 @@ func (s *Service) Run() error {
 			continue
 		}
 
-		// Check for no short description or category
-		// dbVideo.Category is constructed (not nil) when getting from DB
-		if dbVideo.ShortDesc == "" || dbVideo.Category.Name == "" {
-
-			// Generate content using Gemini
-			genaiResponse, err := utils.Retry(
-				s.ctx,
-				time.Second,
-				3, func() (*models.GenaiResponse, error) {
-					return s.gemini.GenerateInfo(
-						s.ctx,
-						ytVideo.Title,
-						categories,
-					)
-				},
-			)
-
-			if err != nil || genaiResponse == nil {
-				log.Printf(
-					"Gemini content generation on video '%s' failed: %v",
-					videoID, err,
-				)
-				continue
-			}
-
-			if dbVideo.ShortDesc == "" {
-				dbVideo.ShortDesc = genaiResponse.Description
-			}
-
-			if dbVideo.Category.Name == "" {
-				dbVideo.Category.Name = genaiResponse.Category
-			}
-
-			// Update the db video
-			rowsAffected, err := s.postsRepo.UpdateGeneratedData(s.ctx, dbVideo)
-			if err != nil || rowsAffected == 0 {
-				log.Printf("Failed to update video '%s': %v", videoID, err)
-			}
-
+		if s.UpdateData(s.ctx, dbVideo, ytVideo.Title, categories) {
 			updated++
 		}
 	}
 
-	log.Printf("Deleted %d %s", deleted, vs(deleted))
-	log.Printf("Added %d %s", inserted, vs(inserted))
-	log.Printf("Updated %d %s", updated, vs(updated))
+	log.Printf("Deleted %d %s", deleted, utils.SingularPlural(deleted, "video"))
+	log.Printf("Added %d %s", inserted, utils.SingularPlural(inserted, "video"))
+	log.Printf("Updated %d %s", updated, utils.SingularPlural(updated, "video"))
 
 	elapsed := time.Since(start)
 	log.Printf("Time took: %s", elapsed)

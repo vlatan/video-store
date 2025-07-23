@@ -132,6 +132,13 @@ func PtrToString(s *string) string {
 	return *s
 }
 
+func SingularPlural(num int, word string) string {
+	if num == 1 {
+		return word
+	}
+	return word + "s"
+}
+
 // Retry a function
 func Retry[T any](
 	ctx context.Context,
