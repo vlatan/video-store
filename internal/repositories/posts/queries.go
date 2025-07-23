@@ -65,7 +65,7 @@ const getHomePostsQuery = `
 	LIMIT $1 OFFSET $2
 `
 
-const getAllSourcedPostsQuery = `
+const getAllPostsQuery = `
 	SELECT
 		video_id,
 		playlist_id,
@@ -74,7 +74,6 @@ const getAllSourcedPostsQuery = `
 		cat.name AS category_name
 	FROM post
 	LEFT JOIN category AS cat ON cat.id = post.category_id
-	WHERE playlist_db_id IS NOT NULL
 `
 
 const getCategoryPostsQuery = `

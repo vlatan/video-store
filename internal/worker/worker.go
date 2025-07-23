@@ -72,8 +72,8 @@ func (s *Service) Run() error {
 
 	if err != nil || len(dbSources) == 0 {
 		return fmt.Errorf(
-			"could not fetch the sources from DB; Result: %v; Error: %v",
-			dbSources, err,
+			"could not fetch the sources from DB; Rows: %v; Error: %v",
+			len(dbSources), err,
 		)
 	}
 
@@ -152,18 +152,23 @@ func (s *Service) Run() error {
 
 	log.Printf("Fetched %d valid videos from YouTube", len(ytVideos))
 
-	sourcedVideos, err := s.postsRepo.GetAllSourcedPosts(s.ctx)
-
-	if err != nil || len(sourcedVideos) == 0 {
+	allVideos, err := s.postsRepo.GetAllPosts(s.ctx)
+	if err != nil || len(allVideos) == 0 {
 		return fmt.Errorf(
-			"could not fetch the sourced videos from DB; Result: %v; Error: %v",
-			sourcedVideos, err,
+			"could not fetch the sourced videos from DB; Rows: %v; Error: %v",
+			len(allVideos), err,
 		)
 	}
 
-	// Transform the videos slice to map
+	// Transform the videos slice to maps
 	sourcedDbVideos := make(map[string]*models.Post)
-	for _, video := range sourcedVideos {
+	orphanDbVideos := make(map[string]*models.Post)
+	for _, video := range allVideos {
+		if video.PlaylistID == "" {
+			orphanDbVideos[video.VideoID] = &video
+			continue
+		}
+
 		sourcedDbVideos[video.VideoID] = &video
 	}
 
@@ -186,15 +191,13 @@ func (s *Service) Run() error {
 		}
 	}
 
-	log.Printf("Deleted %d videos", deleted)
-
 	// Get the categories
 	categories, err := s.catsRepo.GetCategories(s.ctx)
 
 	if err != nil || len(categories) == 0 {
 		return fmt.Errorf(
-			"could not fetch the categories from DB; Result: %v; Error: %v",
-			categories, err,
+			"could not fetch the categories from DB; Rows: %v; Error: %v",
+			len(categories), err,
 		)
 	}
 
@@ -232,7 +235,7 @@ func (s *Service) Run() error {
 		}
 
 		// Check for no short description or category
-		// dbVideo.Category is constructed (not nil) in GetAllSourcedPosts
+		// dbVideo.Category is constructed (not nil) when getting from DB
 		if dbVideo.ShortDesc == "" || dbVideo.Category.Name == "" {
 
 			gr, err := s.gemini.GenerateInfo(s.ctx, ytVideo.Title, categories)
@@ -265,11 +268,92 @@ func (s *Service) Run() error {
 		}
 	}
 
-	// Fetch the orphans from DB and from YT
-	// check if some are deleted or became invalid
+	// ###################################################################
 
-	log.Printf("Added %d videos", inserted)
-	log.Printf("Updated %d videos", updated)
+	// Collect the orphans video IDs
+	var orphanVideoIDs []string
+	for videoID := range orphanDbVideos {
+		orphanVideoIDs = append(orphanVideoIDs, videoID)
+	}
+
+	// Get orphans metadata from YouTube
+	orphansMetadata, err := s.yt.GetVideos(orphanVideoIDs...)
+	if err != nil {
+		return fmt.Errorf(
+			"could not get the orphan videos from YouTube: %v",
+			err,
+		)
+	}
+
+	// Keep only the valid orphan YT videos
+	var orphanYTvideos = make(map[string]*models.Post)
+	for _, video := range orphansMetadata {
+		err := s.yt.ValidateYouTubeVideo(video)
+		if err == nil {
+			// Assign playlist ID if any (unorphane the video)
+			var playlistID string
+			if _, exists := ytVideos[video.Id]; exists {
+				playlistID = ytVideos[video.Id].PlaylistID
+			}
+			newVideo := s.yt.NewYouTubePost(video, playlistID)
+			orphanYTvideos[video.Id] = newVideo
+		}
+	}
+
+	// Remove invalid orhpans
+	for videoID, dbVideo := range orphanDbVideos {
+
+		// Check if the video exists in fetched YT orphan videos
+		ytVideo, exists := orphanYTvideos[videoID]
+		if !exists {
+			rowsAffected, err := s.postsRepo.DeletePost(s.ctx, videoID)
+			if err != nil || rowsAffected == 0 {
+				return fmt.Errorf(
+					"could not delete the video '%s' in DB: %v",
+					videoID, err,
+				)
+			}
+			deleted++
+			continue
+		}
+
+		// Check for no short description or category
+		// dbVideo.Category is constructed (not nil) when getting from DB
+		if dbVideo.ShortDesc == "" || dbVideo.Category.Name == "" {
+
+			gr, err := s.gemini.GenerateInfo(s.ctx, ytVideo.Title, categories)
+			if err != nil || gr == nil {
+				log.Printf(
+					"Gemini content generation on video '%s' failed: %v",
+					videoID, err,
+				)
+
+				time.Sleep(2 * time.Second)
+				continue
+			}
+
+			if dbVideo.ShortDesc == "" {
+				dbVideo.ShortDesc = gr.Description
+			}
+
+			if dbVideo.Category.Name == "" {
+				dbVideo.Category.Name = gr.Category
+			}
+
+			// Update the db video
+			rowsAffected, err := s.postsRepo.UpdateGeneratedData(s.ctx, dbVideo)
+			if err != nil || rowsAffected == 0 {
+				log.Printf("Failed to update video '%s': %v", videoID, err)
+			}
+
+			time.Sleep(2 * time.Second)
+			updated++
+		}
+	}
+
+	log.Printf("Deleted %d %s", deleted, vs(deleted))
+	log.Printf("Added %d %s", inserted, vs(inserted))
+	log.Printf("Updated %d %s", updated, vs(updated))
 
 	elapsed := time.Since(start)
 	log.Printf("Time took: %s", elapsed)
