@@ -57,8 +57,8 @@ func NewServer() *http.Server {
 	catsRepo := catsRepo.New(db)
 	usersRepo := usersRepo.New(db, cfg)
 	postsRepo := postsRepo.New(db, cfg)
-	pagesRepo := pagesRepo.New(db, cfg)
-	sourcesRepo := sourcesRepo.New(db, cfg)
+	pagesRepo := pagesRepo.New(db)
+	sourcesRepo := sourcesRepo.New(db)
 
 	// Create user interface service
 	ui := ui.New(rdb, cfg, store, catsRepo, usersRepo)

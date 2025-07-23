@@ -33,7 +33,7 @@ func New() *Service {
 
 	// Create DB repositories
 	postsRepo := posts.New(db, cfg)
-	sourcesRepo := sources.New(db, cfg)
+	sourcesRepo := sources.New(db)
 	catsRepo := categories.New(db)
 
 	// Create YouTube service

@@ -3,20 +3,17 @@ package pages
 import (
 	"context"
 	"factual-docs/internal/models"
-	"factual-docs/internal/shared/config"
 	"factual-docs/internal/shared/database"
 	"factual-docs/internal/shared/utils"
 )
 
 type Repository struct {
-	db     database.Service
-	config *config.Config
+	db database.Service
 }
 
-func New(db database.Service, config *config.Config) *Repository {
+func New(db database.Service) *Repository {
 	return &Repository{
-		db:     db,
-		config: config,
+		db: db,
 	}
 }
 
