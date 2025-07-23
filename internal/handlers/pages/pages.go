@@ -4,7 +4,7 @@ import (
 	pagesRepo "factual-docs/internal/repositories/pages"
 	"factual-docs/internal/shared/config"
 	"factual-docs/internal/shared/redis"
-	"factual-docs/internal/shared/ui"
+	"factual-docs/internal/ui"
 )
 
 type Service struct {
