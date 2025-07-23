@@ -296,7 +296,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 		// Generate content using Gemini
 		genaiResponse, err := utils.Retry(
 			r.Context(),
-			0*time.Second,
+			time.Second,
 			3, func() (*models.GenaiResponse, error) {
 				return s.gemini.GenerateInfo(
 					r.Context(),
