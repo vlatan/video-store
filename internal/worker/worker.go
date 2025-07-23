@@ -13,7 +13,6 @@ import (
 	"factual-docs/internal/shared/utils"
 	"fmt"
 	"log"
-	"reflect"
 	"time"
 )
 
@@ -113,7 +112,7 @@ func (s *Service) Run(ctx context.Context) error {
 		newSource := s.yt.NewYouTubeSource(source, channels[i])
 
 		// Check if channel thumbnails have changed
-		if reflect.DeepEqual(
+		if utils.ThumbnailsEqual(
 			dbSources[i].ChannelThumbnails,
 			newSource.ChannelThumbnails,
 		) {
