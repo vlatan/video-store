@@ -211,13 +211,8 @@ func (s *Service) Run() error {
 		if !exists {
 
 			// Generate content using Gemini
-			genaiResponse, err := utils.Retry(
-				s.ctx, time.Second, 5,
-				func() (*models.GenaiResponse, error) {
-					return s.gemini.GenerateInfo(
-						s.ctx, ytVideo.Title, categories,
-					)
-				},
+			genaiResponse, err := s.gemini.GenerateInfo(
+				s.ctx, ytVideo.Title, categories,
 			)
 
 			if err != nil {

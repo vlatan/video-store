@@ -3,9 +3,7 @@ package worker
 import (
 	"context"
 	"factual-docs/internal/models"
-	"factual-docs/internal/shared/utils"
 	"log"
-	"time"
 )
 
 // Update generated gemini data on a video
@@ -26,13 +24,8 @@ func (s *Service) UpdateData(
 	}
 
 	// Generate content using Gemini
-	genaiResponse, err := utils.Retry(
-		ctx, time.Second, 5,
-		func() (*models.GenaiResponse, error) {
-			return s.gemini.GenerateInfo(
-				ctx, title, categories,
-			)
-		},
+	genaiResponse, err := s.gemini.GenerateInfo(
+		ctx, title, categories,
 	)
 
 	if err != nil || genaiResponse == nil {

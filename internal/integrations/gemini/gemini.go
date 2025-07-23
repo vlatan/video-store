@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"factual-docs/internal/models"
 	"factual-docs/internal/shared/config"
+	"factual-docs/internal/shared/utils"
 	"fmt"
 	"strings"
+	"time"
 
 	"google.golang.org/genai"
 )
@@ -15,6 +17,36 @@ import (
 type Service struct {
 	config *config.Config
 	gemini *genai.Client
+}
+
+// Configure safety settings to block none
+var blockNone = genai.HarmBlockThresholdBlockNone
+var safetySettings = []*genai.SafetySetting{
+	{Category: genai.HarmCategoryHateSpeech, Threshold: blockNone},
+	{Category: genai.HarmCategoryDangerousContent, Threshold: blockNone},
+	{Category: genai.HarmCategoryHarassment, Threshold: blockNone},
+	{Category: genai.HarmCategorySexuallyExplicit, Threshold: blockNone},
+}
+
+// Define the JSON schema for the response
+var schema = &genai.Schema{
+	Type: genai.TypeObject,
+	Properties: map[string]*genai.Schema{
+		"title": {
+			Type:        genai.TypeString,
+			Description: "Title",
+		},
+		"description": {
+			Type:        genai.TypeString,
+			Description: "Description",
+		},
+
+		"category": {
+			Type:        genai.TypeString,
+			Description: "Category",
+		},
+	},
+	Required: []string{"title", "description", "category"},
 }
 
 // Create new Gemini service
@@ -26,36 +58,6 @@ func New(ctx context.Context, config *config.Config) (*Service, error) {
 
 // Generate content given a prompt
 func (s *Service) GenerateContent(ctx context.Context, prompt string) (*models.GenaiResponse, error) {
-
-	// Configure safety settings to block none
-	blockNone := genai.HarmBlockThresholdBlockNone
-	safetySettings := []*genai.SafetySetting{
-		{Category: genai.HarmCategoryHateSpeech, Threshold: blockNone},
-		{Category: genai.HarmCategoryDangerousContent, Threshold: blockNone},
-		{Category: genai.HarmCategoryHarassment, Threshold: blockNone},
-		{Category: genai.HarmCategorySexuallyExplicit, Threshold: blockNone},
-	}
-
-	// Define the JSON schema for the response
-	schema := &genai.Schema{
-		Type: genai.TypeObject,
-		Properties: map[string]*genai.Schema{
-			"title": {
-				Type:        genai.TypeString,
-				Description: "Title",
-			},
-			"description": {
-				Type:        genai.TypeString,
-				Description: "Description",
-			},
-
-			"category": {
-				Type:        genai.TypeString,
-				Description: "Category",
-			},
-		},
-		Required: []string{"title", "description", "category"},
-	}
 
 	result, err := s.gemini.Models.GenerateContent(
 		ctx,
@@ -104,5 +106,10 @@ func (s *Service) GenerateInfo(
 		fmt.Sprintf("Also select one category for the documentary '%s' ", title) +
 		fmt.Sprintf("from these categories: %s.", catString)
 
-	return s.GenerateContent(ctx, prompt)
+	return utils.Retry(
+		ctx, time.Second, 5,
+		func() (*models.GenaiResponse, error) {
+			return s.GenerateContent(ctx, prompt)
+		},
+	)
 }

@@ -294,15 +294,8 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 		post.UserID = data.CurrentUser.ID
 
 		// Generate content using Gemini
-		genaiResponse, err := utils.Retry(
-			r.Context(), time.Second, 5,
-			func() (*models.GenaiResponse, error) {
-				return s.gemini.GenerateInfo(
-					r.Context(),
-					post.Title,
-					data.Categories,
-				)
-			},
+		genaiResponse, err := s.gemini.GenerateInfo(
+			r.Context(), post.Title, data.Categories,
 		)
 
 		if err != nil {
