@@ -1,9 +1,9 @@
 * Cron
 * API calls need retries
-  https://github.com/cenkalti/backoff/blob/v5/example_test.go
+  Put retries on YT calls?
 
 * Get random videos as related if none
-* Make cache function to return T
+* Make redis cache function to return T
 
 * Setup updated_at triggers for the tables
   https://claude.ai/chat/49e95de4-f9f6-4d04-a5d5-dab613c0ae93

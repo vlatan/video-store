@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
+	"google.golang.org/api/youtube/v3"
 )
 
 // Handle the Home page
@@ -271,7 +272,13 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Fetch video data from YouTube
-		metadata, err := s.yt.GetVideos(videoID)
+		metadata, err := utils.Retry(
+			r.Context(), time.Second, 5,
+			func() ([]*youtube.Video, error) {
+				return s.yt.GetVideos(videoID)
+			},
+		)
+
 		if err != nil {
 			log.Printf("Video '%s': %v", videoID, err)
 			formError.Message = "Unable to fetch the video from YouTube"
@@ -295,9 +302,8 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Generate content using Gemini
 		genaiResponse, err := utils.Retry(
-			r.Context(),
-			time.Second,
-			3, func() (*models.GenaiResponse, error) {
+			r.Context(), time.Second, 5,
+			func() (*models.GenaiResponse, error) {
 				return s.gemini.GenerateInfo(
 					r.Context(),
 					post.Title,
