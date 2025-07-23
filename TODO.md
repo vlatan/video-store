@@ -1,15 +1,9 @@
-* Fix edit button
-
-* Move avatars out of the web because they are
-  ending up in the docker container
-
 * Get random videos as related if none
 * Add back the orphaned videos
 
 * Cron
 * API calls need retries
   https://github.com/cenkalti/backoff/blob/v5/example_test.go
-  Attach orphan post to playlist
 
 * Use logger
   https://go.dev/blog/slog
@@ -19,6 +13,7 @@
 
 * Write custom errors middlware,
   Detect html requests and return custom HTML errors
+  https://claude.ai/chat/80a403c0-994d-4377-8c47-b5087a6e6af1
   
 * Trim services of what related services they don't use
 
