@@ -8,8 +8,6 @@ import (
 	"log"
 	"net/http"
 	"time"
-
-	"google.golang.org/api/youtube/v3"
 )
 
 // Handle all sources page
@@ -104,13 +102,7 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Fetch playlist metadata from YouTube
-		sources, err := utils.Retry(
-			r.Context(), time.Second, 5,
-			func() ([]*youtube.Playlist, error) {
-				return s.yt.GetSources(playlistID)
-			},
-		)
-
+		sources, err := s.yt.GetSources(playlistID)
 		if err != nil {
 			log.Printf("Playlist '%s': %v", playlistID, err)
 			formError.Message = "Unable to fetch the playlist from YouTube"
