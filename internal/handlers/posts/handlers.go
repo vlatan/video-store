@@ -271,7 +271,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Fetch video data from YouTube
-		metadata, err := s.yt.GetVideos(videoID)
+		metadata, err := s.yt.GetVideos(r.Context(), videoID)
 		if err != nil {
 			log.Printf("Video '%s': %v", videoID, err)
 			formError.Message = "Unable to fetch the video from YouTube"

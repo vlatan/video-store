@@ -1,8 +1,10 @@
 package yt
 
 import (
+	"context"
 	"errors"
 	"factual-docs/internal/models"
+	"factual-docs/internal/shared/utils"
 	"strings"
 	"time"
 
@@ -10,7 +12,7 @@ import (
 )
 
 // Get YouTube videos metadata, provided video IDs.
-func (s *Service) GetVideos(videoIDs ...string) ([]*youtube.Video, error) {
+func (s *Service) GetVideos(ctx context.Context, videoIDs ...string) ([]*youtube.Video, error) {
 
 	var result []*youtube.Video
 	part := []string{"status", "snippet", "contentDetails"}
@@ -21,7 +23,13 @@ func (s *Service) GetVideos(videoIDs ...string) ([]*youtube.Video, error) {
 		// YouTube can fetch info about 50 items at most
 		end := min(i+batchSize, len(videoIDs))
 		batch := videoIDs[i:end]
-		response, err := s.youtube.Videos.List(part).Id(batch...).Do()
+
+		response, err := utils.Retry(
+			ctx, time.Second, 5,
+			func() (*youtube.VideoListResponse, error) {
+				return s.youtube.Videos.List(part).Id(batch...).Do()
+			},
+		)
 
 		if err != nil {
 			return nil, err

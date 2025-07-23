@@ -87,7 +87,7 @@ func (s *Service) Run() error {
 	}
 
 	// Fetch playlists from YouTube
-	sources, err := s.yt.GetSources(playlistIDs...)
+	sources, err := s.yt.GetSources(s.ctx, playlistIDs...)
 	if err != nil {
 		return fmt.Errorf(
 			"could not fetch the playlists from YouTube: %v",
@@ -96,7 +96,7 @@ func (s *Service) Run() error {
 	}
 
 	// Fetch corresponding channels
-	channels, err := s.yt.GetChannels(channelIDs...)
+	channels, err := s.yt.GetChannels(s.ctx, channelIDs...)
 	if err != nil {
 		return fmt.Errorf(
 			"could not fetch the channels from YouTube: %v",
@@ -121,7 +121,7 @@ func (s *Service) Run() error {
 	// Get valid videos from playlists
 	ytVideos := make(map[string]*models.Post)
 	for _, playlistID := range playlistIDs {
-		sourceItems, err := s.yt.GetSourceItems(playlistID)
+		sourceItems, err := s.yt.GetSourceItems(s.ctx, playlistID)
 		if err != nil {
 			return fmt.Errorf(
 				"could not get items from YouTube on source '%s': %v",
@@ -136,7 +136,7 @@ func (s *Service) Run() error {
 		}
 
 		// Get all the videos metadata
-		videosMetadata, err := s.yt.GetVideos(videoIDs...)
+		videosMetadata, err := s.yt.GetVideos(s.ctx, videoIDs...)
 		if err != nil {
 			return fmt.Errorf("could not get videos from YouTube: %v", err)
 		}
@@ -253,7 +253,7 @@ func (s *Service) Run() error {
 	}
 
 	// Get orphans metadata from YouTube
-	orphansMetadata, err := s.yt.GetVideos(orphanVideoIDs...)
+	orphansMetadata, err := s.yt.GetVideos(s.ctx, orphanVideoIDs...)
 	if err != nil {
 		return fmt.Errorf(
 			"could not get the orphan videos from YouTube: %v",
