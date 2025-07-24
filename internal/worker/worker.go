@@ -305,8 +305,8 @@ func (s *Service) Run(ctx context.Context) error {
 		}
 	}
 
-	items = utils.Plural(len(ytOrphanVideos), "video")
-	log.Printf("Fetched %d orphan %s from YouTube", len(ytOrphanVideos), items)
+	items = utils.Plural(len(ytOrphanVideosMap), "video")
+	log.Printf("Fetched %d orphan %s from YouTube", len(ytOrphanVideosMap), items)
 
 	// Keep only the valid orphan YT videos
 	for videoID, video := range orphanDbVideosMap {
