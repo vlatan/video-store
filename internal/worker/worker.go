@@ -312,9 +312,7 @@ func (s *Service) Run(ctx context.Context) error {
 	for videoID, video := range orphanDbVideosMap {
 
 		// Check if the video exists on YouTube
-		_, exists := ytOrphanVideosMap[videoID]
-
-		if !exists {
+		if _, exists := ytOrphanVideosMap[videoID]; !exists {
 			rowsAffected, err := s.postsRepo.DeletePost(ctx, videoID)
 			if err != nil || rowsAffected == 0 {
 				return fmt.Errorf(
