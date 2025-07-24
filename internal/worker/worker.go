@@ -275,7 +275,9 @@ func (s *Service) Run(ctx context.Context) error {
 		// Insert the video
 		rowsAffected, err := s.postsRepo.InsertPost(ctx, ytVideo)
 		if err != nil || rowsAffected == 0 {
-			log.Printf("Failed to insert video '%s': %v", videoID, err)
+			return fmt.Errorf(
+				"failed to insert video '%s' in DB; Error: %v; Rows: %d",
+				videoID, err, rowsAffected)
 		}
 
 		inserted++
@@ -301,8 +303,8 @@ func (s *Service) Run(ctx context.Context) error {
 			rowsAffected, err := s.postsRepo.DeletePost(ctx, video.Id)
 			if err != nil || rowsAffected == 0 {
 				return fmt.Errorf(
-					"could not delete the video '%s' in DB: %v",
-					video.Id, err,
+					"could not delete the video '%s' in DB; Error: %v; Rows: %d",
+					video.Id, err, rowsAffected,
 				)
 			}
 			deleted++
