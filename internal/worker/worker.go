@@ -297,34 +297,42 @@ func (s *Service) Run(ctx context.Context) error {
 		)
 	}
 
+	// Create YT orphans map with only valid videos
+	ytOrphanVideosMap := make(map[string]*youtube.Video, len(ytOrphanVideos))
+	for _, video := range ytOrphanVideos {
+		if err := s.yt.ValidateYouTubeVideo(video); err == nil {
+			ytOrphanVideosMap[video.Id] = video
+		}
+	}
+
 	items = utils.Plural(len(ytOrphanVideos), "video")
 	log.Printf("Fetched %d orphan %s from YouTube", len(ytOrphanVideos), items)
 
 	// Keep only the valid orphan YT videos
-	for _, video := range ytOrphanVideos {
-		err := s.yt.ValidateYouTubeVideo(video)
+	for videoID, video := range orphanDbVideosMap {
 
-		if err != nil {
-			rowsAffected, err := s.postsRepo.DeletePost(ctx, video.Id)
+		// Check if the video exists on YouTube
+		_, exists := ytOrphanVideosMap[videoID]
+
+		if !exists {
+			rowsAffected, err := s.postsRepo.DeletePost(ctx, videoID)
 			if err != nil || rowsAffected == 0 {
 				return fmt.Errorf(
 					"could not delete the video '%s' in DB; Error: %v; Rows: %d",
-					video.Id, err, rowsAffected,
+					videoID, err, rowsAffected,
 				)
 			}
 			deleted++
 			continue
 		}
 
-		// Save playlist ID if any (to unorphane the video)
-		var playlistID string
-		if _, exists := ytSourcedVideosMap[video.Id]; exists {
-			playlistID = ytSourcedVideosMap[video.Id].PlaylistID
+		// Set playlist ID if any (to unorphane the video)
+		if _, exists := ytSourcedVideosMap[videoID]; exists {
+			video.PlaylistID = ytSourcedVideosMap[videoID].PlaylistID
 		}
 
-		// Create new YT video and attempt Update
-		newVideo := s.yt.NewYouTubePost(video, playlistID)
-		if s.UpdateData(ctx, newVideo, categories) {
+		// Attempt video update
+		if s.UpdateData(ctx, video, categories) {
 			updated++
 		}
 	}
