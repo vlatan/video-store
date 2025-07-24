@@ -152,7 +152,7 @@ func (s *Service) Run(ctx context.Context) error {
 	log.Printf("Fetched %d %s from YouTube", len(ytSources), items)
 
 	// Get valid videos from playlists
-	ytVideosMap := make(map[string]*models.Post)
+	ytSourcedVideosMap := make(map[string]*models.Post)
 	for _, playlistID := range playlistIDs {
 		sourceItems, err := s.yt.GetSourceItems(ctx, playlistID)
 		if err != nil {
@@ -179,13 +179,13 @@ func (s *Service) Run(ctx context.Context) error {
 			err := s.yt.ValidateYouTubeVideo(video)
 			if err == nil && !s.postsRepo.IsPostBanned(ctx, video.Id) {
 				newVideo := s.yt.NewYouTubePost(video, playlistID)
-				ytVideosMap[video.Id] = newVideo
+				ytSourcedVideosMap[video.Id] = newVideo
 			}
 		}
 	}
 
-	items = utils.Plural(len(ytVideosMap), "video")
-	log.Printf("Fetched %d valid %s from YouTube", len(ytVideosMap), items)
+	items = utils.Plural(len(ytSourcedVideosMap), "video")
+	log.Printf("Fetched %d valid %s from YouTube", len(ytSourcedVideosMap), items)
 
 	allVideos, err := s.postsRepo.GetAllPosts(ctx)
 	if err != nil || len(allVideos) == 0 {
@@ -221,16 +221,19 @@ func (s *Service) Run(ctx context.Context) error {
 	// Delete videos if any
 	var deleted int
 	for videoID := range sourcedDbVideosMap {
-		if _, exists := ytVideosMap[videoID]; !exists {
-			rowsAffected, err := s.postsRepo.DeletePost(ctx, videoID)
-			if err != nil || rowsAffected == 0 {
-				return fmt.Errorf(
-					"could not delete the video '%s' in DB: %v",
-					videoID, err,
-				)
-			}
-			deleted++
+		if _, exists := ytSourcedVideosMap[videoID]; exists {
+			continue
 		}
+
+		rowsAffected, err := s.postsRepo.DeletePost(ctx, videoID)
+		if err != nil || rowsAffected == 0 {
+			return fmt.Errorf(
+				"could not delete the video '%s' in DB: %v",
+				videoID, err,
+			)
+		}
+		delete(sourcedDbVideosMap, videoID)
+		deleted++
 	}
 
 	// Get the categories
@@ -244,11 +247,11 @@ func (s *Service) Run(ctx context.Context) error {
 	}
 
 	var inserted, updated int
-	for videoID, ytVideo := range ytVideosMap {
+	for videoID, ytVideo := range ytSourcedVideosMap {
 
 		// Attemp update if the video exists in DB
-		if _, exists := sourcedDbVideosMap[videoID]; exists {
-			if s.UpdateData(ctx, ytVideo, categories) {
+		if dbVideo, exists := sourcedDbVideosMap[videoID]; exists {
+			if s.UpdateData(ctx, dbVideo, categories) {
 				updated++
 			}
 			continue
@@ -286,7 +289,7 @@ func (s *Service) Run(ctx context.Context) error {
 	// ###################################################################
 
 	// Get orphans metadata from YouTube
-	orphansMetadata, err := s.yt.GetVideos(ctx, orphanVideoIDs...)
+	ytOrphansVideos, err := s.yt.GetVideos(ctx, orphanVideoIDs...)
 	if err != nil {
 		return fmt.Errorf(
 			"could not get the orphan videos from YouTube: %v",
@@ -294,12 +297,14 @@ func (s *Service) Run(ctx context.Context) error {
 		)
 	}
 
-	items = utils.Plural(len(orphansMetadata), "video")
-	log.Printf("Fetched %d orphan %s from YouTube", len(orphansMetadata), items)
+	items = utils.Plural(len(ytOrphansVideos), "video")
+	log.Printf("Fetched %d orphan %s from YouTube", len(ytOrphansVideos), items)
 
 	// Keep only the valid orphan YT videos
-	for _, video := range orphansMetadata {
-		if err := s.yt.ValidateYouTubeVideo(video); err != nil {
+	for _, video := range ytOrphansVideos {
+		err := s.yt.ValidateYouTubeVideo(video)
+
+		if err != nil {
 			rowsAffected, err := s.postsRepo.DeletePost(ctx, video.Id)
 			if err != nil || rowsAffected == 0 {
 				return fmt.Errorf(
@@ -313,8 +318,8 @@ func (s *Service) Run(ctx context.Context) error {
 
 		// Save playlist ID if any (to unorphane the video)
 		var playlistID string
-		if _, exists := ytVideosMap[video.Id]; exists {
-			playlistID = ytVideosMap[video.Id].PlaylistID
+		if _, exists := ytSourcedVideosMap[video.Id]; exists {
+			playlistID = ytSourcedVideosMap[video.Id].PlaylistID
 		}
 
 		// Create new YT video and attempt Update
