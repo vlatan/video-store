@@ -152,7 +152,7 @@ func (s *Service) Run(ctx context.Context) error {
 	log.Printf("Fetched %d %s from YouTube", len(ytSources), items)
 
 	// Get valid videos from playlists
-	ytVideos := make(map[string]*models.Post)
+	ytVideosMap := make(map[string]*models.Post)
 	for _, playlistID := range playlistIDs {
 		sourceItems, err := s.yt.GetSourceItems(ctx, playlistID)
 		if err != nil {
@@ -179,13 +179,13 @@ func (s *Service) Run(ctx context.Context) error {
 			err := s.yt.ValidateYouTubeVideo(video)
 			if err == nil && !s.postsRepo.IsPostBanned(ctx, video.Id) {
 				newVideo := s.yt.NewYouTubePost(video, playlistID)
-				ytVideos[video.Id] = newVideo
+				ytVideosMap[video.Id] = newVideo
 			}
 		}
 	}
 
-	items = utils.Plural(len(ytVideos), "video")
-	log.Printf("Fetched %d valid %s from YouTube", len(ytVideos), items)
+	items = utils.Plural(len(ytVideosMap), "video")
+	log.Printf("Fetched %d valid %s from YouTube", len(ytVideosMap), items)
 
 	allVideos, err := s.postsRepo.GetAllPosts(ctx)
 	if err != nil || len(allVideos) == 0 {
@@ -195,33 +195,33 @@ func (s *Service) Run(ctx context.Context) error {
 		)
 	}
 
-	// Transform the videos slice to maps
+	// Transform the videos slice to two maps (sourced and opphaned)
 	// Collect the orphans video IDs too
 	var orphanVideoIDs []string
-	orphanDbVideos := make(map[string]*models.Post)
-	sourcedDbVideos := make(map[string]*models.Post)
+	orphanDbVideosMap := make(map[string]*models.Post)
+	sourcedDbVideosMap := make(map[string]*models.Post)
 	for _, video := range allVideos {
 		if video.PlaylistID == "" {
-			orphanDbVideos[video.VideoID] = &video
+			orphanDbVideosMap[video.VideoID] = &video
 			orphanVideoIDs = append(orphanVideoIDs, video.VideoID)
 			continue
 		}
 
-		sourcedDbVideos[video.VideoID] = &video
+		sourcedDbVideosMap[video.VideoID] = &video
 	}
 
-	items = utils.Plural(len(sourcedDbVideos), "video")
-	log.Printf("Fetched %d sourced %s from DB", len(sourcedDbVideos), items)
+	items = utils.Plural(len(sourcedDbVideosMap), "video")
+	log.Printf("Fetched %d sourced %s from DB", len(sourcedDbVideosMap), items)
 
-	items = utils.Plural(len(orphanDbVideos), "video")
-	log.Printf("Fetched %d orphan %s from DB", len(orphanDbVideos), items)
+	items = utils.Plural(len(orphanDbVideosMap), "video")
+	log.Printf("Fetched %d orphan %s from DB", len(orphanDbVideosMap), items)
 
 	// ###################################################################
 
 	// Delete videos if any
 	var deleted int
-	for videoID := range sourcedDbVideos {
-		if _, exists := ytVideos[videoID]; !exists {
+	for videoID := range sourcedDbVideosMap {
+		if _, exists := ytVideosMap[videoID]; !exists {
 			rowsAffected, err := s.postsRepo.DeletePost(ctx, videoID)
 			if err != nil || rowsAffected == 0 {
 				return fmt.Errorf(
@@ -244,45 +244,41 @@ func (s *Service) Run(ctx context.Context) error {
 	}
 
 	var inserted, updated int
-	for videoID, ytVideo := range ytVideos {
+	for videoID, ytVideo := range ytVideosMap {
 
 		// Check first if the video exists in DB
-		dbVideo, exists := sourcedDbVideos[videoID]
+		if dbVideo, exists := sourcedDbVideosMap[videoID]; exists {
+			if s.UpdateData(ctx, dbVideo, ytVideo.Title, categories) {
+				updated++
+				continue
+			}
+		}
 
-		if !exists {
+		// Generate content using Gemini
+		genaiResponse, err := s.gemini.GenerateInfo(
+			ctx, ytVideo.Title, categories,
+		)
 
-			// Generate content using Gemini
-			genaiResponse, err := s.gemini.GenerateInfo(
-				ctx, ytVideo.Title, categories,
+		if err != nil {
+			log.Printf(
+				"Gemini content generation on video '%s' failed: %v",
+				videoID, err,
 			)
+		}
 
-			if err != nil {
-				log.Printf(
-					"Gemini content generation on video '%s' failed: %v",
-					videoID, err,
-				)
-			}
-
+		if err == nil && genaiResponse != nil {
 			ytVideo.Category = &models.Category{}
-			if err == nil && genaiResponse != nil {
-				ytVideo.ShortDesc = genaiResponse.Description
-				ytVideo.Category.Name = genaiResponse.Category
-			}
-
-			// Insert the video
-			rowsAffected, err := s.postsRepo.InsertPost(ctx, ytVideo)
-			if err != nil || rowsAffected == 0 {
-				log.Printf("Failed to insert video '%s': %v", videoID, err)
-			}
-
-			inserted++
-			continue
+			ytVideo.ShortDesc = genaiResponse.Description
+			ytVideo.Category.Name = genaiResponse.Category
 		}
 
-		if s.UpdateData(ctx, dbVideo, ytVideo.Title, categories) {
-			updated++
+		// Insert the video
+		rowsAffected, err := s.postsRepo.InsertPost(ctx, ytVideo)
+		if err != nil || rowsAffected == 0 {
+			log.Printf("Failed to insert video '%s': %v", videoID, err)
 		}
 
+		inserted++
 	}
 
 	// ###################################################################
@@ -300,25 +296,27 @@ func (s *Service) Run(ctx context.Context) error {
 	log.Printf("Fetched %d orphan %s from YouTube", len(orphansMetadata), items)
 
 	// Keep only the valid orphan YT videos
-	var orphanYTvideos = make(map[string]*models.Post)
+	var orphanYTvideosMap = make(map[string]*models.Post)
 	for _, video := range orphansMetadata {
-		err := s.yt.ValidateYouTubeVideo(video)
-		if err == nil {
-			// Assign playlist ID if any (unorphane the video)
-			var playlistID string
-			if _, exists := ytVideos[video.Id]; exists {
-				playlistID = ytVideos[video.Id].PlaylistID
-			}
-			newVideo := s.yt.NewYouTubePost(video, playlistID)
-			orphanYTvideos[video.Id] = newVideo
+		if err := s.yt.ValidateYouTubeVideo(video); err != nil {
+			continue
 		}
+
+		// Save playlist ID if any (to unorphane the video)
+		var playlistID string
+		if _, exists := ytVideosMap[video.Id]; exists {
+			playlistID = ytVideosMap[video.Id].PlaylistID
+		}
+
+		// Create new YT video
+		newVideo := s.yt.NewYouTubePost(video, playlistID)
+		orphanYTvideosMap[video.Id] = newVideo
 	}
 
 	// Remove invalid orhpans
-	for videoID, dbVideo := range orphanDbVideos {
-
+	for videoID, dbVideo := range orphanDbVideosMap {
 		// Check if the video exists in fetched YT orphan videos
-		ytVideo, exists := orphanYTvideos[videoID]
+		ytVideo, exists := orphanYTvideosMap[videoID]
 		if !exists {
 			rowsAffected, err := s.postsRepo.DeletePost(ctx, videoID)
 			if err != nil || rowsAffected == 0 {
