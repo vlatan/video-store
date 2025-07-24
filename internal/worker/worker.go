@@ -201,13 +201,13 @@ func (s *Service) Run(ctx context.Context) error {
 	orphanDbVideosMap := make(map[string]*models.Post)
 	sourcedDbVideosMap := make(map[string]*models.Post)
 	for _, video := range allVideos {
-		if video.PlaylistID == "" {
-			orphanDbVideosMap[video.VideoID] = &video
-			orphanVideoIDs = append(orphanVideoIDs, video.VideoID)
+		if video.PlaylistID != "" {
+			sourcedDbVideosMap[video.VideoID] = &video
 			continue
 		}
 
-		sourcedDbVideosMap[video.VideoID] = &video
+		orphanDbVideosMap[video.VideoID] = &video
+		orphanVideoIDs = append(orphanVideoIDs, video.VideoID)
 	}
 
 	items = utils.Plural(len(sourcedDbVideosMap), "video")
