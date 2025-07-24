@@ -289,7 +289,7 @@ func (s *Service) Run(ctx context.Context) error {
 	// ###################################################################
 
 	// Get orphans metadata from YouTube
-	ytOrphansVideos, err := s.yt.GetVideos(ctx, orphanVideoIDs...)
+	ytOrphanVideos, err := s.yt.GetVideos(ctx, orphanVideoIDs...)
 	if err != nil {
 		return fmt.Errorf(
 			"could not get the orphan videos from YouTube: %v",
@@ -297,11 +297,11 @@ func (s *Service) Run(ctx context.Context) error {
 		)
 	}
 
-	items = utils.Plural(len(ytOrphansVideos), "video")
-	log.Printf("Fetched %d orphan %s from YouTube", len(ytOrphansVideos), items)
+	items = utils.Plural(len(ytOrphanVideos), "video")
+	log.Printf("Fetched %d orphan %s from YouTube", len(ytOrphanVideos), items)
 
 	// Keep only the valid orphan YT videos
-	for _, video := range ytOrphansVideos {
+	for _, video := range ytOrphanVideos {
 		err := s.yt.ValidateYouTubeVideo(video)
 
 		if err != nil {
