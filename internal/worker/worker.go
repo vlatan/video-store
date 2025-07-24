@@ -14,6 +14,8 @@ import (
 	"fmt"
 	"log"
 	"time"
+
+	"google.golang.org/api/youtube/v3"
 )
 
 type Service struct {
@@ -79,21 +81,29 @@ func (s *Service) Run(ctx context.Context) error {
 	items := utils.Plural(len(dbSources), "playlist")
 	log.Printf("Fetched %d %s from DB", len(dbSources), items)
 
-	// Extract playlist and channel IDs
+	// Extract playlist IDs and create DB sources map
+	dbSourcesMap := make(map[string]*models.Source, len(dbSources))
 	playlistIDs := make([]string, len(dbSources))
-	channelIDs := make([]string, len(dbSources))
 	for i, source := range dbSources {
+		dbSourcesMap[source.PlaylistID] = &source
 		playlistIDs[i] = source.PlaylistID
-		channelIDs[i] = source.ChannelID
 	}
 
 	// Fetch playlists from YouTube
-	sources, err := s.yt.GetSources(ctx, playlistIDs...)
+	ytSources, err := s.yt.GetSources(ctx, playlistIDs...)
 	if err != nil {
 		return fmt.Errorf(
 			"could not fetch the playlists from YouTube: %v",
 			err,
 		)
+	}
+
+	// Extract channel IDs and create YT sources map
+	ytSourcesMap := make(map[string]*youtube.Playlist, len(ytSources))
+	channelIDs := make([]string, len(ytSources))
+	for i, source := range ytSources {
+		ytSourcesMap[source.Id] = source
+		channelIDs[i] = source.Snippet.ChannelId
 	}
 
 	// Fetch corresponding channels
@@ -105,15 +115,23 @@ func (s *Service) Run(ctx context.Context) error {
 		)
 	}
 
-	// Update each playlist in DB
-	var updatedPlaylists int
-	for i, source := range sources {
+	// Create channels map
+	channelsMap := make(map[string]*youtube.Channel, len(channels))
+	for _, channel := range channels {
+		channelsMap[channel.Id] = channel
+	}
 
-		newSource := s.yt.NewYouTubeSource(source, channels[i])
+	// Update each playlist in DB if change in thumbnails
+	var updatedPlaylists int
+	for playlistID, ytSource := range ytSourcesMap {
+
+		newSource := s.yt.NewYouTubeSource(
+			ytSource, channelsMap[ytSource.Snippet.ChannelId],
+		)
 
 		// Check if channel thumbnails have changed
 		if utils.ThumbnailsEqual(
-			dbSources[i].ChannelThumbnails,
+			dbSourcesMap[playlistID].ChannelThumbnails,
 			newSource.ChannelThumbnails,
 		) {
 			continue
@@ -130,8 +148,8 @@ func (s *Service) Run(ctx context.Context) error {
 		updatedPlaylists++
 	}
 
-	items = utils.Plural(len(sources), "playlist")
-	log.Printf("Fetched %d %s from YouTube", len(sources), items)
+	items = utils.Plural(len(ytSources), "playlist")
+	log.Printf("Fetched %d %s from YouTube", len(ytSources), items)
 
 	// Get valid videos from playlists
 	ytVideos := make(map[string]*models.Post)

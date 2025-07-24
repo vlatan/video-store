@@ -118,6 +118,7 @@ func (r *Repository) GetSources(ctx context.Context) ([]models.Source, error) {
 			return nil, fmt.Errorf("%s: '%s': %v", msg, source.PlaylistID, err)
 		}
 
+		source.ChannelThumbnails = &channelThumbs
 		source.Thumbnail = channelThumbs.Medium
 
 		// Include the category in the result
