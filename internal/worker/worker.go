@@ -246,9 +246,9 @@ func (s *Service) Run(ctx context.Context) error {
 	var inserted, updated int
 	for videoID, ytVideo := range ytVideosMap {
 
-		// Check first if the video exists in DB
-		if dbVideo, exists := sourcedDbVideosMap[videoID]; exists {
-			if s.UpdateData(ctx, dbVideo, ytVideo.Title, categories) {
+		// Attemp update if the video exists in DB
+		if _, exists := sourcedDbVideosMap[videoID]; exists {
+			if s.UpdateData(ctx, ytVideo, categories) {
 				updated++
 				continue
 			}
@@ -316,7 +316,7 @@ func (s *Service) Run(ctx context.Context) error {
 	// Remove invalid orhpans
 	for videoID, dbVideo := range orphanDbVideosMap {
 		// Check if the video exists in fetched YT orphan videos
-		ytVideo, exists := orphanYTvideosMap[videoID]
+		_, exists := orphanYTvideosMap[videoID]
 		if !exists {
 			rowsAffected, err := s.postsRepo.DeletePost(ctx, videoID)
 			if err != nil || rowsAffected == 0 {
@@ -329,7 +329,7 @@ func (s *Service) Run(ctx context.Context) error {
 			continue
 		}
 
-		if s.UpdateData(ctx, dbVideo, ytVideo.Title, categories) {
+		if s.UpdateData(ctx, dbVideo, categories) {
 			updated++
 		}
 	}

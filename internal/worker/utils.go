@@ -10,7 +10,6 @@ import (
 func (s *Service) UpdateData(
 	ctx context.Context,
 	video *models.Post,
-	title string,
 	categories []models.Category,
 ) bool {
 
@@ -25,7 +24,7 @@ func (s *Service) UpdateData(
 
 	// Generate content using Gemini
 	genaiResponse, err := s.gemini.GenerateInfo(
-		ctx, title, categories,
+		ctx, video.Title, categories,
 	)
 
 	if err != nil || genaiResponse == nil {
