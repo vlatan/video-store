@@ -1,3 +1,4 @@
+* Get retry delay info from genai error and respect it
 * Get random videos as related if none
 * Make redis cache function to return T
 

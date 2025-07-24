@@ -35,10 +35,16 @@ func Retry[T any](
 			continue
 		}
 
-		// Wait for exponential backoff
-		jitter := time.Duration(rand.Float64() * float64(time.Second))
-		delay = delay*2 + jitter
+		// Exponentialy increase the delay
+		if i > 0 {
+			delay *= 2
+		}
 
+		// Add jitter to the delay
+		jitter := time.Duration(rand.Float64() * float64(time.Second))
+		delay += jitter
+
+		// Wait for the delay or context end
 		select {
 		case <-ctx.Done():
 			return zero, errors.Join(ctx.Err(), lastError)
