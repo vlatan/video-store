@@ -250,8 +250,8 @@ func (s *Service) Run(ctx context.Context) error {
 		if _, exists := sourcedDbVideosMap[videoID]; exists {
 			if s.UpdateData(ctx, ytVideo, categories) {
 				updated++
-				continue
 			}
+			continue
 		}
 
 		// Generate content using Gemini
@@ -296,9 +296,16 @@ func (s *Service) Run(ctx context.Context) error {
 	log.Printf("Fetched %d orphan %s from YouTube", len(orphansMetadata), items)
 
 	// Keep only the valid orphan YT videos
-	var orphanYTvideosMap = make(map[string]*models.Post)
 	for _, video := range orphansMetadata {
 		if err := s.yt.ValidateYouTubeVideo(video); err != nil {
+			rowsAffected, err := s.postsRepo.DeletePost(ctx, video.Id)
+			if err != nil || rowsAffected == 0 {
+				return fmt.Errorf(
+					"could not delete the video '%s' in DB: %v",
+					video.Id, err,
+				)
+			}
+			deleted++
 			continue
 		}
 
@@ -308,28 +315,9 @@ func (s *Service) Run(ctx context.Context) error {
 			playlistID = ytVideosMap[video.Id].PlaylistID
 		}
 
-		// Create new YT video
+		// Create new YT video and attempt Update
 		newVideo := s.yt.NewYouTubePost(video, playlistID)
-		orphanYTvideosMap[video.Id] = newVideo
-	}
-
-	// Remove invalid orhpans
-	for videoID, dbVideo := range orphanDbVideosMap {
-		// Check if the video exists in fetched YT orphan videos
-		_, exists := orphanYTvideosMap[videoID]
-		if !exists {
-			rowsAffected, err := s.postsRepo.DeletePost(ctx, videoID)
-			if err != nil || rowsAffected == 0 {
-				return fmt.Errorf(
-					"could not delete the video '%s' in DB: %v",
-					videoID, err,
-				)
-			}
-			deleted++
-			continue
-		}
-
-		if s.UpdateData(ctx, dbVideo, categories) {
+		if s.UpdateData(ctx, newVideo, categories) {
 			updated++
 		}
 	}
