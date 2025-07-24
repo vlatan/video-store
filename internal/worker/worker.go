@@ -195,7 +195,7 @@ func (s *Service) Run(ctx context.Context) error {
 		)
 	}
 
-	// Transform the videos slice to two maps (sourced and opphaned)
+	// Transform the videos slice to two maps (sourced and orphaned)
 	// Collect the orphans video IDs too
 	var orphanVideoIDs []string
 	orphanDbVideosMap := make(map[string]*models.Post)
@@ -269,8 +269,8 @@ func (s *Service) Run(ctx context.Context) error {
 			)
 		}
 
+		ytVideo.Category = &models.Category{}
 		if err == nil && genaiResponse != nil {
-			ytVideo.Category = &models.Category{}
 			ytVideo.ShortDesc = genaiResponse.Description
 			ytVideo.Category.Name = genaiResponse.Category
 		}

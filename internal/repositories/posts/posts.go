@@ -46,6 +46,10 @@ func (r *Repository) InsertPost(ctx context.Context, post *models.Post) (int64, 
 		return 0, err
 	}
 
+	if post.Category == nil {
+		post.Category = &models.Category{}
+	}
+
 	// Execute the query
 	return r.db.Exec(
 		ctx,
