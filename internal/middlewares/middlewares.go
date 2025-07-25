@@ -194,7 +194,7 @@ func (s *Service) CreateCSRFMiddleware() func(http.Handler) http.Handler {
 	}
 }
 
-// Record the status code and server rich errors if the response is error
+// Record the status code and body and server rich errors if the response is error
 func (s *Service) HandleErrors(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
@@ -214,13 +214,13 @@ func (s *Service) HandleErrors(next http.Handler) http.Handler {
 		}
 
 		// This is an error
-		// Clear any previously buffered body and headers.
+		// Clear any previously buffered body
 		recorder.body.Reset()
 
 		// Client probably does not want HTML, serve JSON error
 		acceptHeader := r.Header.Get("Accept")
 		if !strings.Contains(acceptHeader, "text/html") {
-			w.Header().Set("Content-Type", "application/json")
+			w.Header().Set("Content-Type", "application/json; charset=utf-8")
 			s.ui.JSONError(recorder, r, recorder.status)
 			return
 		}
