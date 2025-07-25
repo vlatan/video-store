@@ -13,7 +13,7 @@ import (
 // Handle all sources page
 func (s *Service) SourcesHandler(w http.ResponseWriter, r *http.Request) {
 	// Generate template data
-	data := s.ui.NewData(w, r)
+	data := utils.GetDataFromContext(r)
 
 	// Get sources from redis or DB
 	sources, err := redis.GetItems(
@@ -29,13 +29,14 @@ func (s *Service) SourcesHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		log.Printf("Was unabale to fetch sources on URI '%s': %v", r.RequestURI, err)
-		s.ui.HTMLError(w, r, http.StatusInternalServerError, data)
+		status := http.StatusMethodNotAllowed
+		http.Error(w, http.StatusText(status), status)
 		return
 	}
 
 	if len(sources) == 0 {
 		log.Printf("Fetched zero sources on URI '%s'", r.RequestURI)
-		s.ui.HTMLError(w, r, http.StatusNotFound, data)
+		http.NotFound(w, r)
 		return
 	}
 
@@ -49,7 +50,7 @@ func (s *Service) SourcesHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Compose data object
-	data := s.ui.NewData(w, r)
+	data := utils.GetDataFromContext(r)
 
 	// Populate needed data for an empty form
 	data.Form = &models.Form{
@@ -139,7 +140,8 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, redirectTo, http.StatusFound)
 
 	default:
-		s.ui.HTMLError(w, r, http.StatusMethodNotAllowed, data)
+		status := http.StatusMethodNotAllowed
+		http.Error(w, http.StatusText(status), status)
 	}
 }
 
@@ -151,7 +153,7 @@ func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Generate template data (it gets all the categories too)
 	// This is probably wasteful for non-existing category
-	data := s.ui.NewData(w, r)
+	data := utils.GetDataFromContext(r)
 
 	// Get page number from a query param
 	page := utils.GetPageNum(r)
@@ -177,20 +179,22 @@ func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("Was unabale to fetch posts on URI '%s': %v", r.RequestURI, err)
 		if page > 1 {
-			s.ui.JSONError(w, r, http.StatusInternalServerError)
+			status := http.StatusInternalServerError
+			http.Error(w, http.StatusText(status), status)
 			return
 		}
-		s.ui.HTMLError(w, r, http.StatusInternalServerError, data)
+		status := http.StatusMethodNotAllowed
+		http.Error(w, http.StatusText(status), status)
 		return
 	}
 
 	if len(posts.Items) == 0 {
 		if page > 1 {
-			s.ui.JSONError(w, r, http.StatusNotFound)
+			http.NotFound(w, r)
 			return
 		}
 		log.Printf("Fetched zero posts on URI '%s'", r.RequestURI)
-		s.ui.HTMLError(w, r, http.StatusNotFound, data)
+		http.NotFound(w, r)
 		return
 	}
 

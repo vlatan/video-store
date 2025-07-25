@@ -133,14 +133,16 @@ func (s *Service) handleEdit(w http.ResponseWriter, r *http.Request, videoID str
 	// Deocode JSON
 	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
 		log.Printf("Could not decode the JSON body on path: %s", r.URL.Path)
-		s.ui.JSONError(w, r, http.StatusBadRequest)
+		status := http.StatusBadRequest
+		http.Error(w, http.StatusText(status), status)
 		return
 	}
 
 	// Check for title or description
 	if data.Title == "" && data.Description == "" {
 		log.Printf("No title and description in body on path: %s", r.URL.Path)
-		s.ui.JSONError(w, r, http.StatusBadRequest)
+		status := http.StatusBadRequest
+		http.Error(w, http.StatusText(status), status)
 		return
 	}
 

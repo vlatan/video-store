@@ -18,7 +18,7 @@ import (
 func (s *Service) HomeHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Generate template data
-	data := s.ui.NewData(w, r)
+	data := utils.GetDataFromContext(r)
 
 	// Get page number from a query param
 	page := utils.GetPageNum(r)
@@ -44,20 +44,22 @@ func (s *Service) HomeHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("Was unabale to fetch posts on URI '%s': %v", r.RequestURI, err)
 		if page > 1 {
-			s.ui.JSONError(w, r, http.StatusInternalServerError)
+			status := http.StatusInternalServerError
+			http.Error(w, http.StatusText(status), status)
 			return
 		}
-		s.ui.HTMLError(w, r, http.StatusInternalServerError, data)
+		status := http.StatusInternalServerError
+		http.Error(w, http.StatusText(status), status)
 		return
 	}
 
 	if len(posts) == 0 {
 		if page > 1 {
-			s.ui.JSONError(w, r, http.StatusNotFound)
+			http.NotFound(w, r)
 			return
 		}
 		log.Printf("Fetched zero posts on URI '%s'", r.RequestURI)
-		s.ui.HTMLError(w, r, http.StatusNotFound, data)
+		http.NotFound(w, r)
 		return
 	}
 
@@ -81,7 +83,7 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Generate template data (it gets all the categories too)
 	// This is probably wasteful for non-existing category
-	data := s.ui.NewData(w, r)
+	data := utils.GetDataFromContext(r)
 
 	// Get page number from a query param
 	page := utils.GetPageNum(r)
@@ -107,20 +109,22 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("Was unabale to fetch posts on URI '%s': %v", r.RequestURI, err)
 		if page > 1 {
-			s.ui.JSONError(w, r, http.StatusInternalServerError)
+			status := http.StatusInternalServerError
+			http.Error(w, http.StatusText(status), status)
 			return
 		}
-		s.ui.HTMLError(w, r, http.StatusInternalServerError, data)
+		status := http.StatusInternalServerError
+		http.Error(w, http.StatusText(status), status)
 		return
 	}
 
 	if len(posts.Items) == 0 {
 		if page > 1 {
-			s.ui.JSONError(w, r, http.StatusNotFound)
+			http.NotFound(w, r)
 			return
 		}
 		log.Printf("Fetched zero posts on URI '%s'", r.RequestURI)
-		s.ui.HTMLError(w, r, http.StatusNotFound, data)
+		http.NotFound(w, r)
 		return
 	}
 
@@ -149,7 +153,7 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 	page := utils.GetPageNum(r)
 
 	// Generate the default data
-	data := s.ui.NewData(w, r)
+	data := utils.GetDataFromContext(r)
 	data.SearchQuery = searchQuery
 
 	limit := s.config.PostsPerPage
@@ -176,15 +180,17 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("Was unabale to fetch posts on URI '%s': %v", r.RequestURI, err)
 		if page > 1 {
-			s.ui.JSONError(w, r, http.StatusInternalServerError)
+			status := http.StatusInternalServerError
+			http.Error(w, http.StatusText(status), status)
 			return
 		}
-		s.ui.HTMLError(w, r, http.StatusInternalServerError, data)
+		status := http.StatusInternalServerError
+		http.Error(w, http.StatusText(status), status)
 		return
 	}
 
 	if page > 1 && len(posts.Items) == 0 {
-		s.ui.JSONError(w, r, http.StatusNotFound)
+		http.NotFound(w, r)
 		return
 	}
 
@@ -205,7 +211,7 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Compose data object
-	data := s.ui.NewData(w, r)
+	data := utils.GetDataFromContext(r)
 
 	// Populate needed data for an empty form
 	data.Form = &models.Form{
@@ -316,7 +322,8 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, redirectTo, http.StatusFound)
 
 	default:
-		s.ui.HTMLError(w, r, http.StatusMethodNotAllowed, data)
+		status := http.StatusMethodNotAllowed
+		http.Error(w, http.StatusText(status), status)
 	}
 }
 
@@ -326,12 +333,12 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 	videoID := r.PathValue("video")
 
 	// Generate the default data
-	data := s.ui.NewData(w, r)
+	data := utils.GetDataFromContext(r)
 
 	// Validate the YT ID
 	if validVideoID.FindStringSubmatch(videoID) == nil {
 		log.Println("Not a valid video ID:", videoID)
-		s.ui.HTMLError(w, r, http.StatusNotFound, data)
+		http.NotFound(w, r)
 		return
 	}
 
@@ -348,13 +355,14 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 
 	if errors.Is(err, pgx.ErrNoRows) {
 		log.Println("Can't find the video in DB:", videoID)
-		s.ui.HTMLError(w, r, http.StatusNotFound, data)
+		http.NotFound(w, r)
 		return
 	}
 
 	if err != nil {
 		log.Printf("Error while getting the video '%s' from DB: %v", videoID, err)
-		s.ui.HTMLError(w, r, http.StatusInternalServerError, data)
+		status := http.StatusMethodNotAllowed
+		http.Error(w, http.StatusText(status), status)
 		return
 	}
 
@@ -396,7 +404,7 @@ func (s *Service) PostActionHandler(w http.ResponseWriter, r *http.Request) {
 	videoID := r.PathValue("video")
 	if validVideoID.FindStringSubmatch(videoID) == nil {
 		log.Println("Not a valid video ID:", videoID)
-		s.ui.JSONError(w, r, http.StatusNotFound)
+		http.NotFound(w, r)
 		return
 	}
 
@@ -405,7 +413,7 @@ func (s *Service) PostActionHandler(w http.ResponseWriter, r *http.Request) {
 	allowedActions := []string{"like", "unlike", "fave", "unfave", "edit", "delete"}
 	if !slices.Contains(allowedActions, action) {
 		log.Printf("Not a valid action '%s' on video: %s\n", action, videoID)
-		s.ui.JSONError(w, r, http.StatusNotFound)
+		http.NotFound(w, r)
 		return
 	}
 
@@ -415,7 +423,8 @@ func (s *Service) PostActionHandler(w http.ResponseWriter, r *http.Request) {
 	// Check if user is authorized to edit or delete (admin)
 	if (action == "edit" || action == "delete") &&
 		currentUser.UserID != s.config.AdminOpenID {
-		s.ui.JSONError(w, r, http.StatusForbidden)
+		status := http.StatusForbidden
+		http.Error(w, http.StatusText(status), status)
 		return
 	}
 
@@ -433,6 +442,7 @@ func (s *Service) PostActionHandler(w http.ResponseWriter, r *http.Request) {
 	case "delete":
 		s.handleBanPost(w, r, currentUser.ID, videoID)
 	default:
-		s.ui.JSONError(w, r, http.StatusBadRequest)
+		status := http.StatusBadRequest
+		http.Error(w, http.StatusText(status), status)
 	}
 }

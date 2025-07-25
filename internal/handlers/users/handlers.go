@@ -14,22 +14,24 @@ func (s *Service) UserFavoritesHandler(w http.ResponseWriter, r *http.Request) {
 	page := utils.GetPageNum(r)
 
 	// Generate template data
-	data := s.ui.NewData(w, r)
+	data := utils.GetDataFromContext(r)
 
 	posts, err := s.postsRepo.GetUserFavedPosts(r.Context(), data.CurrentUser.ID, page)
 
 	if err != nil {
 		log.Printf("Was unabale to fetch posts on URI '%s': %v", r.RequestURI, err)
 		if page > 1 {
-			s.ui.JSONError(w, r, http.StatusInternalServerError)
+			status := http.StatusInternalServerError
+			http.Error(w, http.StatusText(status), status)
 			return
 		}
-		s.ui.HTMLError(w, r, http.StatusInternalServerError, data)
+		status := http.StatusMethodNotAllowed
+		http.Error(w, http.StatusText(status), status)
 		return
 	}
 
 	if page > 1 && len(posts.Items) == 0 {
-		s.ui.JSONError(w, r, http.StatusNotFound)
+		http.NotFound(w, r)
 		return
 	}
 
@@ -51,12 +53,13 @@ func (s *Service) UsersHandler(w http.ResponseWriter, r *http.Request) {
 	page := utils.GetPageNum(r)
 
 	// Generate template data
-	data := s.ui.NewData(w, r)
+	data := utils.GetDataFromContext(r)
 
 	users, err := s.usersRepo.GetUsers(r.Context(), page)
 	if err != nil {
 		log.Printf("Was unabale to fetch users on URI '%s': %v", r.RequestURI, err)
-		s.ui.HTMLError(w, r, http.StatusInternalServerError, data)
+		status := http.StatusMethodNotAllowed
+		http.Error(w, http.StatusText(status), status)
 		return
 	}
 

@@ -39,7 +39,7 @@ func GetItems[T any](
 	cachedData, err := redisService.Get(ctx, cacheKey)
 	if err == nil && cachedData != "" {
 		var data T
-		err := json.Unmarshal([]byte(cachedData), data)
+		err := json.Unmarshal([]byte(cachedData), &data)
 		if err == nil {
 			return data, nil
 		}
