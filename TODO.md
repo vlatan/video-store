@@ -1,4 +1,3 @@
-* Get retry delay info from genai error and respect it
 * Get random videos as related if none
 * Make redis cache function to return T
 
@@ -11,6 +10,8 @@
   
 * User avatar URL exists in redis but not locally
   Need to solve this discrepancy
+
+##############################################################
 
 * Use logger
   https://go.dev/blog/slog
