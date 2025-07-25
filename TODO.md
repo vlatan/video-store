@@ -3,7 +3,7 @@
 
 * Write custom errors middlware,
   Detect html requests and return custom HTML errors
-  https://claude.ai/chat/80a403c0-994d-4377-8c47-b5087a6e6af1
+  https://gemini.google.com/app/559193d3fb8417de
   
 * User avatar URL exists in redis but not locally
   Need to solve this discrepancy
