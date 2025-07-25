@@ -21,25 +21,27 @@ func GetItems[T any](
 	redisService Service,
 	cacheKey string,
 	cacheTimeout time.Duration,
-	target *T, // Pointer to the variable where the result should go
 	dbFunc func() (T, error), // Function to get the data if cache miss
-) error {
+) (T, error) {
+
+	var zero T
+
 	// Check if the caller needs a cached result at all
 	if !cached {
 		data, err := dbFunc()
 		if err != nil {
-			return err
+			return zero, err
 		}
-		*target = data // Assign the data to the target pointer
-		return nil
+		return data, nil
 	}
 
 	// Try to get from Redis cache, unmarshall to target
 	cachedData, err := redisService.Get(ctx, cacheKey)
 	if err == nil && cachedData != "" {
-		err := json.Unmarshal([]byte(cachedData), target)
+		var data T
+		err := json.Unmarshal([]byte(cachedData), data)
 		if err == nil {
-			return nil
+			return data, nil
 		}
 		log.Printf("Error unmarshaling cached data for key '%s': %v", cacheKey, err)
 	} else if err != redis.Nil { // redis.Nil means key not found, other errors mean a problem
@@ -49,10 +51,8 @@ func GetItems[T any](
 	// If not in cache or error, execute the database function
 	data, err := dbFunc()
 	if err != nil {
-		return err
+		return zero, err
 	}
-
-	*target = data // Assign the data to the target pointer
 
 	// Cache the data for later use
 	err = redisService.Set(ctx, cacheKey, data, cacheTimeout)
@@ -61,5 +61,5 @@ func GetItems[T any](
 		log.Printf("Error setting cache in Redis for key '%s': %v", cacheKey, err)
 	}
 
-	return nil
+	return data, nil
 }

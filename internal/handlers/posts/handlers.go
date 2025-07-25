@@ -30,14 +30,12 @@ func (s *Service) HomeHandler(w http.ResponseWriter, r *http.Request) {
 		redisKey += ":likes"
 	}
 
-	var posts []models.Post
-	err := redis.GetItems(
+	posts, err := redis.GetItems(
 		!data.IsCurrentUserAdmin(),
 		r.Context(),
 		s.rdb,
 		redisKey,
 		s.config.CacheTimeout,
-		&posts,
 		func() ([]models.Post, error) {
 			return s.postsRepo.GetHomePosts(r.Context(), page, orderBy)
 		},
@@ -95,14 +93,12 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 		redisKey += ":likes"
 	}
 
-	var posts = &models.Posts{}
-	err := redis.GetItems(
+	posts, err := redis.GetItems(
 		!data.IsCurrentUserAdmin(),
 		r.Context(),
 		s.rdb,
 		redisKey,
 		s.config.CacheTimeout,
-		&posts,
 		func() (*models.Posts, error) {
 			return s.postsRepo.GetCategoryPosts(r.Context(), slug, orderBy, page)
 		},
@@ -164,14 +160,12 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	// For search posts we are using the database.Posts struct,
 	// so we can add total results and time took
-	var posts *models.Posts
-	err := redis.GetItems(
+	posts, err := redis.GetItems(
 		!data.IsCurrentUserAdmin(),
 		r.Context(),
 		s.rdb,
 		fmt.Sprintf("posts:search:page:%d:%s", page, encodedSearchQuery),
 		s.config.CacheTimeout,
-		&posts,
 		func() (*models.Posts, error) {
 			return s.postsRepo.SearchPosts(r.Context(), searchQuery, limit, offset)
 		},
@@ -341,14 +335,12 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var post *models.Post
-	err := redis.GetItems(
+	post, err := redis.GetItems(
 		!data.CurrentUser.IsAuthenticated(),
 		r.Context(),
 		s.rdb,
 		fmt.Sprintf("post:%s", videoID),
 		s.config.CacheTimeout,
-		&post,
 		func() (*models.Post, error) {
 			return s.postsRepo.GetSinglePost(r.Context(), videoID)
 		},
@@ -382,14 +374,12 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Ignore the error on related posts, no posts will be shown
-	var relatedPosts []models.Post
-	redis.GetItems(
+	relatedPosts, _ := redis.GetItems(
 		!data.CurrentUser.IsAuthenticated(),
 		r.Context(),
 		s.rdb,
 		fmt.Sprintf("post:%s:related_posts", videoID),
 		s.config.CacheTimeout,
-		&relatedPosts,
 		func() ([]models.Post, error) {
 			return s.postsRepo.GetRelatedPosts(r.Context(), post.Title)
 		},

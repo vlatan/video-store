@@ -20,14 +20,13 @@ func (s *service) GetStaticFiles() models.StaticFiles {
 // and passed donwstream as value to the request context.
 func (s *service) NewData(w http.ResponseWriter, r *http.Request) *models.TemplateData {
 
-	var categories []models.Category
-	redis.GetItems(
+	// Get the categories from cache
+	categories, _ := redis.GetItems(
 		true,
 		r.Context(),
 		s.rdb,
 		"categories",
 		s.config.CacheTimeout,
-		&categories,
 		func() ([]models.Category, error) {
 			return s.catsRepo.GetCategories(r.Context())
 		},

@@ -28,14 +28,12 @@ func (s *Service) SinglePageHandler(w http.ResponseWriter, r *http.Request) {
 	// Generate the default data
 	data := s.ui.NewData(w, r)
 
-	var page *models.Page
-	err := redis.GetItems(
+	page, err := redis.GetItems(
 		!data.IsCurrentUserAdmin(),
 		r.Context(),
 		s.rdb,
 		fmt.Sprintf(pageCacheKey, pageSlug),
 		s.config.CacheTimeout,
-		&page,
 		func() (*models.Page, error) {
 			return s.pagesRepo.GetSinglePage(r.Context(), pageSlug)
 		},

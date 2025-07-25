@@ -16,14 +16,12 @@ func (s *Service) SourcesHandler(w http.ResponseWriter, r *http.Request) {
 	data := s.ui.NewData(w, r)
 
 	// Get sources from redis or DB
-	var sources []models.Source
-	err := redis.GetItems(
+	sources, err := redis.GetItems(
 		!data.IsCurrentUserAdmin(),
 		r.Context(),
 		s.rdb,
 		"sources",
 		s.config.CacheTimeout,
-		&sources,
 		func() ([]models.Source, error) {
 			return s.sourcesRepo.GetSources(r.Context())
 		},
@@ -165,14 +163,12 @@ func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
 		redisKey += ":likes"
 	}
 
-	var posts = &models.Posts{}
-	err := redis.GetItems(
+	posts, err := redis.GetItems(
 		!data.IsCurrentUserAdmin(),
 		r.Context(),
 		s.rdb,
 		redisKey,
 		s.config.CacheTimeout,
-		&posts,
 		func() (*models.Posts, error) {
 			return s.postsRepo.GetSourcePosts(r.Context(), sourceID, orderBy, page)
 		},
