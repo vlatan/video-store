@@ -32,7 +32,6 @@ type Config struct {
 	GoogleOAuthScopes       []string `env:"GOOGLE_OAUTH_SCOPES" envDefault:"openid"`
 	GoogleOAuthClientID     string   `env:"GOOGLE_OAUTH_CLIENT_ID"`
 	GoogleOAuthClientSecret string   `env:"GOOGLE_OAUTH_CLIENT_SECRET"`
-	GoogleOAuthClientBase64 string   `env:"GOOGLE_OAUTH_CLIENT"`
 
 	// AdSense
 	AdSenseAccount string `env:"ADSENSE_ACCOUNT"`
@@ -51,7 +50,6 @@ type Config struct {
 	DBDatabase string `env:"DB_DATABASE"`
 	DBUsername string `env:"DB_USERNAME"`
 	DBPassword string `env:"DB_PASSWORD"`
-	DBSchema   string `env:"DB_SCHEMA" envDefault:"public"`
 
 	// Local app host and port
 	Host string `env:"HOST" envDefault:"localhost"`
