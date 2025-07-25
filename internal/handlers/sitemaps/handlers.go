@@ -2,6 +2,7 @@ package sitemaps
 
 import (
 	"factual-docs/internal/models"
+	"factual-docs/internal/shared/utils"
 	"html/template"
 	"log"
 	"net/http"
@@ -16,7 +17,7 @@ const (
 func (s *Service) SitemapStyleHandler(w http.ResponseWriter, r *http.Request) {
 
 	// create new data struct
-	data := s.ui.NewData(w, r)
+	data := utils.GetDataFromContext(r)
 
 	data.XMLDeclarations = []template.HTML{
 		template.HTML(`<?xml version="1.0" encoding="UTF-8"?>`),
@@ -34,7 +35,7 @@ func (s *Service) SitemapStyleHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Service) SitemapPartHandler(w http.ResponseWriter, r *http.Request) {
 
 	// create new data struct
-	data := s.ui.NewData(w, r)
+	data := utils.GetDataFromContext(r)
 
 	// Extract the part from URL
 	partKey := r.PathValue("part")
@@ -43,7 +44,8 @@ func (s *Service) SitemapPartHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		log.Println(err)
-		s.ui.HTMLError(w, r, http.StatusInternalServerError, data)
+		status := http.StatusMethodNotAllowed
+		http.Error(w, http.StatusText(status), status)
 		return
 	}
 
@@ -66,13 +68,14 @@ func (s *Service) SitemapPartHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Service) SitemapIndexHandler(w http.ResponseWriter, r *http.Request) {
 
 	// create new data struct
-	data := s.ui.NewData(w, r)
+	data := utils.GetDataFromContext(r)
 
 	sitemap, err := s.GetSitemap(r, sitemapRedisKey)
 
 	if err != nil {
 		log.Println(err)
-		s.ui.HTMLError(w, r, http.StatusInternalServerError, data)
+		status := http.StatusMethodNotAllowed
+		http.Error(w, http.StatusText(status), status)
 		return
 	}
 

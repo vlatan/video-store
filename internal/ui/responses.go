@@ -14,7 +14,8 @@ func (s *service) WriteJSON(w http.ResponseWriter, r *http.Request, data any) {
 	jsonData, err := json.Marshal(data)
 	if err != nil {
 		log.Printf("Failed to encode JSON response on URI '%s': %v", r.RequestURI, err)
-		s.JSONError(w, r, http.StatusInternalServerError)
+		status := http.StatusInternalServerError
+		http.Error(w, http.StatusText(status), status)
 		return
 	}
 
@@ -34,7 +35,8 @@ func (s *service) RenderHTML(w http.ResponseWriter, r *http.Request, templateNam
 
 	if !exists {
 		log.Printf("Could not find the '%s' template on URI '%s'", templateName, r.RequestURI)
-		s.HTMLError(w, r, http.StatusInternalServerError, data)
+		status := http.StatusInternalServerError
+		http.Error(w, http.StatusText(status), status)
 		return
 	}
 
@@ -46,7 +48,8 @@ func (s *service) RenderHTML(w http.ResponseWriter, r *http.Request, templateNam
 			r.RequestURI,
 			err,
 		)
-		s.HTMLError(w, r, http.StatusInternalServerError, data)
+		status := http.StatusInternalServerError
+		http.Error(w, http.StatusText(status), status)
 		return
 	}
 

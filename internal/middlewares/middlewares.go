@@ -54,18 +54,17 @@ func (s *Service) IsAdmin(next http.HandlerFunc) http.HandlerFunc {
 }
 
 // Get user from session and put it in context
-func (s *Service) LoadUser(next http.Handler) http.Handler {
+func (s *Service) LoadContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		// Do nothing if static file
-		if isStatic(r) {
-			next.ServeHTTP(w, r)
-			return
-		}
-
-		// Get user from session and put it in the request context
+		// Get user from session and store in context
 		user := s.ui.GetUserFromSession(w, r) // Can be nil
 		ctx := context.WithValue(r.Context(), utils.UserContextKey, user)
+
+		// Generate the default data and store in context too
+		data := s.ui.NewData(w, r)
+		ctx = context.WithValue(ctx, utils.DataContextKey, data)
+
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
@@ -193,6 +192,48 @@ func (s *Service) CreateCSRFMiddleware() func(http.Handler) http.Handler {
 			csrfMiddleware(next).ServeHTTP(w, r)
 		})
 	}
+}
+
+// Record the status code and body and server rich errors if the response is error
+func (s *Service) HandleErrors(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		// Create our custom response recorder
+		recorder := NewResponseRecorder(w)
+
+		// Defer the final response write until the function exits.
+		// This ensures that either the original response or the error response is written.
+		defer recorder.flush()
+
+		// Call the next handler in the chain
+		next.ServeHTTP(recorder, r)
+
+		// We don't care if this is not an error
+		if recorder.status < 400 {
+			return
+		}
+
+		// This is an error
+		// Clear any previously buffered body
+		recorder.body.Reset()
+
+		// Client probably does not want HTML, serve JSON error
+		acceptHeader := r.Header.Get("Accept")
+		if !strings.Contains(acceptHeader, "text/html") {
+			w.Header().Set("Content-Type", "application/json; charset=utf-8")
+			s.ui.JSONError(recorder, r, recorder.status)
+			return
+		}
+
+		// Client prefers HTML, render the HTML error template
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+
+		// Default data
+		data := utils.GetDataFromContext(r)
+
+		// Server rich HTML error
+		s.ui.HTMLError(recorder, r, recorder.status, data)
+	})
 }
 
 // Chain middlewares that apply to all handlers

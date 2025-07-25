@@ -25,8 +25,8 @@ func (s *Service) SinglePageHandler(w http.ResponseWriter, r *http.Request) {
 	// Get the page slug from URL
 	pageSlug := r.PathValue("slug")
 
-	// Generate the default data
-	data := s.ui.NewData(w, r)
+	// Default data
+	data := utils.GetDataFromContext(r)
 
 	page, err := redis.GetItems(
 		!data.IsCurrentUserAdmin(),
@@ -41,20 +41,22 @@ func (s *Service) SinglePageHandler(w http.ResponseWriter, r *http.Request) {
 
 	if errors.Is(err, pgx.ErrNoRows) {
 		log.Println("Can't find the page in DB:", pageSlug)
-		s.ui.HTMLError(w, r, http.StatusNotFound, data)
+		http.NotFound(w, r)
 		return
 	}
 
 	if err != nil {
 		log.Printf("Error while getting the page '%s' from DB: %v", pageSlug, err)
-		s.ui.HTMLError(w, r, http.StatusInternalServerError, data)
+		status := http.StatusInternalServerError
+		http.Error(w, http.StatusText(status), status)
 		return
 	}
 
 	var buf bytes.Buffer
 	if err := goldmark.Convert([]byte(page.Content), &buf); err != nil {
 		log.Printf("Could not convert markdown to html on '%s': %v", pageSlug, err)
-		s.ui.HTMLError(w, r, http.StatusInternalServerError, data)
+		status := http.StatusInternalServerError
+		http.Error(w, http.StatusText(status), status)
 		return
 	}
 
@@ -74,22 +76,23 @@ func (s *Service) UpdatePageHandler(w http.ResponseWriter, r *http.Request) {
 	// Get the page slug from URL
 	slug := r.PathValue("slug")
 
-	// Compose data object
-	data := s.ui.NewData(w, r)
-
 	// Get the page data straight from DB
 	page, err := s.pagesRepo.GetSinglePage(r.Context(), slug)
 	if errors.Is(err, pgx.ErrNoRows) {
 		log.Println("Can't find the page in DB:", slug)
-		s.ui.HTMLError(w, r, http.StatusNotFound, data)
+		http.NotFound(w, r)
 		return
 	}
 
 	if err != nil {
 		log.Printf("Error while getting the page '%s' from DB: %v", slug, err)
-		s.ui.HTMLError(w, r, http.StatusInternalServerError, data)
+		status := http.StatusInternalServerError
+		http.Error(w, http.StatusText(status), status)
 		return
 	}
+
+	// Default data
+	data := utils.GetDataFromContext(r)
 
 	// Populate needed data for the page form
 	data.Form = &models.Form{
@@ -152,7 +155,8 @@ func (s *Service) UpdatePageHandler(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, redirectTo, http.StatusFound)
 
 	default:
-		s.ui.HTMLError(w, r, http.StatusMethodNotAllowed, data)
+		status := http.StatusMethodNotAllowed
+		http.Error(w, http.StatusText(status), status)
 	}
 }
 
@@ -160,7 +164,7 @@ func (s *Service) UpdatePageHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Service) NewPageHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Compose data object
-	data := s.ui.NewData(w, r)
+	data := utils.GetDataFromContext(r)
 
 	// Populate needed data for an empty form
 	data.Form = &models.Form{
@@ -221,7 +225,8 @@ func (s *Service) NewPageHandler(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, redirectTo, http.StatusFound)
 
 	default:
-		s.ui.HTMLError(w, r, http.StatusMethodNotAllowed, data)
+		status := http.StatusMethodNotAllowed
+		http.Error(w, http.StatusText(status), status)
 	}
 }
 
