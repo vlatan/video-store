@@ -132,6 +132,20 @@ const getUserFavedPostsQuery = `
 	LIMIT $2 OFFSET $3
 `
 
+const getRandomPostsQuery = `
+	SELECT
+		p.video_id,
+		p.title,
+		p.thumbnails,
+		COUNT(pl.id) AS likes
+	FROM post AS p
+	LEFT JOIN post_like AS pl ON pl.post_id = p.id
+	WHERE p.title != $1
+	GROUP BY p.id
+	ORDER BY RANDOM()
+	LIMIT $2
+`
+
 const searchPostsQuery = `
 	WITH search_terms AS (
 		SELECT

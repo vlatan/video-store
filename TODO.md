@@ -1,4 +1,3 @@
-* Get random videos as related if none
 * Make redis cache function to return T
 
 * Setup updated_at triggers for the tables

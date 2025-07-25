@@ -29,7 +29,6 @@ func (s *Service) UserFavoritesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if page > 1 && len(posts.Items) == 0 {
-		log.Printf("Fetched zero posts on URI '%s'", r.RequestURI)
 		s.ui.JSONError(w, r, http.StatusNotFound)
 		return
 	}

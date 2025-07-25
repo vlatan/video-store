@@ -189,11 +189,11 @@ func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(posts.Items) == 0 {
-		log.Printf("Fetched zero posts on URI '%s'", r.RequestURI)
 		if page > 1 {
 			s.ui.JSONError(w, r, http.StatusNotFound)
 			return
 		}
+		log.Printf("Fetched zero posts on URI '%s'", r.RequestURI)
 		s.ui.HTMLError(w, r, http.StatusNotFound, data)
 		return
 	}
