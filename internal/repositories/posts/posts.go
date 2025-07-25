@@ -26,8 +26,16 @@ func New(db database.Service, config *config.Config) *Repository {
 
 // Check if the post exists
 func (r *Repository) PostExists(ctx context.Context, videoID string) bool {
-	err := r.db.QueryRow(ctx, postExistsQuery, videoID).Scan()
-	return err != nil
+	var result int
+	err := r.db.QueryRow(ctx, postExistsQuery, videoID).Scan(&result)
+	return err == nil
+}
+
+// Check if the post is deleted
+func (r *Repository) IsPostBanned(ctx context.Context, videoID string) bool {
+	var result int
+	err := r.db.QueryRow(ctx, isPostBanneddQuery, videoID).Scan(&result)
+	return err == nil
 }
 
 // Insert post in DB
@@ -36,6 +44,10 @@ func (r *Repository) InsertPost(ctx context.Context, post *models.Post) (int64, 
 	thumbnails, err := json.Marshal(post.Thumbnails)
 	if err != nil {
 		return 0, err
+	}
+
+	if post.Category == nil {
+		post.Category = &models.Category{}
 	}
 
 	// Execute the query
@@ -53,13 +65,14 @@ func (r *Repository) InsertPost(ctx context.Context, post *models.Post) (int64, 
 		post.Duration.ISO,
 		post.UploadDate,
 		post.UserID,
-		post.Category.Name,
+		utils.NullString(&post.Category.Name),
 	)
 }
 
 // Get single post from DB based on a video ID
-func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (post models.Post, err error) {
+func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (*models.Post, error) {
 
+	var post models.Post
 	post.Duration = &models.Duration{}
 
 	var ( // Nullable strings in the DB need pointers for the scan
@@ -70,7 +83,7 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (post mo
 	)
 
 	// Get single row from DB
-	err = r.db.QueryRow(ctx, getSinglePostQuery, videoID).Scan(
+	err := r.db.QueryRow(ctx, getSinglePostQuery, videoID).Scan(
 		&post.ID,
 		&post.VideoID,
 		&post.Title,
@@ -85,7 +98,7 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (post mo
 	)
 
 	if err != nil {
-		return post, err
+		return nil, err
 	}
 
 	// Define category if not nil
@@ -113,7 +126,7 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (post mo
 	// Unserialize thumbnails
 	var thumbs models.Thumbnails
 	if err = json.Unmarshal(thumbnails, &thumbs); err != nil {
-		return post, fmt.Errorf("video ID '%s': %v", videoID, err)
+		return nil, fmt.Errorf("video ID '%s': %v", videoID, err)
 	}
 
 	// Assign the biggest thumbnail to post
@@ -126,11 +139,61 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (post mo
 	// Make srcset string
 	post.Srcset = thumbs.Srcset(maxThumb.Width)
 
-	return post, err
+	return &post, err
+}
+
+// Get all the posts from DB
+func (r *Repository) GetAllPosts(ctx context.Context) (posts []models.Post, err error) {
+
+	// Get rows from DB
+	rows, err := r.db.Query(ctx, getAllPostsQuery)
+	if err != nil {
+		return nil, err
+	}
+
+	// Close rows on exit
+	defer rows.Close()
+
+	// Iterate over the rows
+	for rows.Next() {
+		var post models.Post
+		var playlistID *string
+		var shortDesc *string
+		var categoryName *string
+
+		// Paste post from row to struct, thumbnails in a separate var
+		if err = rows.Scan(
+			&post.VideoID,
+			&playlistID,
+			&post.Title,
+			&shortDesc,
+			&categoryName,
+		); err != nil {
+			return nil, err
+		}
+
+		post.PlaylistID = utils.PtrToString(playlistID)
+		post.ShortDesc = utils.PtrToString(shortDesc)
+		post.Category = &models.Category{Name: utils.PtrToString(categoryName)}
+
+		// Include the processed post in the result
+		posts = append(posts, post)
+	}
+
+	// If error during iteration
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return posts, err
 }
 
 // Get a limited number of posts with offset
-func (r *Repository) GetPosts(ctx context.Context, page int, orderBy string) ([]models.Post, error) {
+func (r *Repository) GetHomePosts(
+	ctx context.Context,
+	page int,
+	orderBy string,
+) (posts []models.Post, err error) {
 
 	limit := r.config.PostsPerPage
 	offset := (page - 1) * limit
@@ -140,8 +203,52 @@ func (r *Repository) GetPosts(ctx context.Context, page int, orderBy string) ([]
 		order = "likes DESC, " + order
 	}
 
-	query := fmt.Sprintf(getPostsQuery, order)
-	return r.queryPosts(ctx, query, limit, offset)
+	query := fmt.Sprintf(getHomePostsQuery, order)
+
+	// Get rows from DB
+	rows, err := r.db.Query(ctx, query, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+
+	// Close rows on exit
+	defer rows.Close()
+
+	// Iterate over the rows
+	for rows.Next() {
+		var post models.Post
+		var thumbnails []byte
+
+		// Paste post from row to struct, thumbnails in a separate var
+		if err = rows.Scan(
+			&post.VideoID,
+			&post.Title,
+			&thumbnails,
+			&post.Likes,
+		); err != nil {
+			return nil, err
+		}
+
+		// Unserialize thumbnails
+		var thumbs models.Thumbnails
+		if err = json.Unmarshal(thumbnails, &thumbs); err != nil {
+			return posts, fmt.Errorf("video ID '%s': %v", post.VideoID, err)
+		}
+
+		// Craft srcset string
+		post.Srcset = thumbs.Srcset(480)
+		post.Thumbnail = thumbs.Medium
+
+		// Include the processed post in the result
+		posts = append(posts, post)
+	}
+
+	// If error during iteration
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return posts, err
 }
 
 // Get a limited number of posts from one category with offset
@@ -224,12 +331,14 @@ func (r *Repository) GetUserFavedPosts(
 
 // Get posts based on a user search query
 // Transform the user query into two queries with words separated by '&' and '|'
-func (r *Repository) SearchPosts(ctx context.Context, searchTerm string, limit, offset int) (posts models.Posts, err error) {
+func (r *Repository) SearchPosts(ctx context.Context, searchTerm string, limit, offset int) (*models.Posts, error) {
+
+	var posts models.Posts
 
 	// Get rows from DB
 	rows, err := r.db.Query(ctx, searchPostsQuery, searchTerm, limit, offset)
 	if err != nil {
-		return posts, err
+		return nil, err
 	}
 
 	// Close rows on exit
@@ -243,13 +352,13 @@ func (r *Repository) SearchPosts(ctx context.Context, searchTerm string, limit, 
 
 		// Paste post from row to struct, thumbnails in a separate var
 		if err = rows.Scan(&post.VideoID, &post.Title, &thumbnails, &post.Likes, &totalNum); err != nil {
-			return posts, err
+			return nil, err
 		}
 
 		// Unserialize thumbnails
 		var thumbs models.Thumbnails
 		if err = json.Unmarshal(thumbnails, &thumbs); err != nil {
-			return posts, fmt.Errorf("video ID '%s': %v", post.VideoID, err)
+			return nil, fmt.Errorf("video ID '%s': %v", post.VideoID, err)
 		}
 
 		post.Srcset = thumbs.Srcset(480)
@@ -264,10 +373,10 @@ func (r *Repository) SearchPosts(ctx context.Context, searchTerm string, limit, 
 
 	// If error during iteration
 	if err = rows.Err(); err != nil {
-		return posts, err
+		return nil, err
 	}
 
-	return posts, err
+	return &posts, nil
 }
 
 func (r *Repository) SitemapData(ctx context.Context) (data []*models.SitemapItem, err error) {
@@ -275,7 +384,7 @@ func (r *Repository) SitemapData(ctx context.Context) (data []*models.SitemapIte
 	// Get rows from DB
 	rows, err := r.db.Query(ctx, sitemapDataQuery)
 	if err != nil {
-		return data, err
+		return nil, err
 	}
 
 	// Close rows on exit
@@ -299,9 +408,8 @@ func (r *Repository) SitemapData(ctx context.Context) (data []*models.SitemapIte
 
 	// If error during iteration
 	if err = rows.Err(); err != nil {
-		return data, err
+		return nil, err
 	}
 
 	return data, err
-
 }

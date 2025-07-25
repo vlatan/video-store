@@ -103,8 +103,8 @@ func (s *Service) handleUpdateDesc(w http.ResponseWriter, r *http.Request, userI
 }
 
 // Handle a post description update
-func (s *Service) handleDeletePost(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
-	rowsAffected, err := s.postsRepo.DeletePost(r.Context(), videoID)
+func (s *Service) handleBanPost(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
+	rowsAffected, err := s.postsRepo.BanPost(r.Context(), videoID)
 	if err != nil {
 		log.Printf("User %d could not delete the video %s: %v\n", userID, videoID, err)
 		http.Error(w, "Something went wrong.", http.StatusInternalServerError)

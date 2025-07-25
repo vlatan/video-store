@@ -64,6 +64,21 @@ services:
       redis:
         condition: service_healthy
 
+  worker:
+    image: golang:1.24
+    container_name: worker
+    command: [ "true" ]
+    env_file: .env
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+      - ./bin:/src/bin
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
 volumes:
   redis_data:
   postgres_data:

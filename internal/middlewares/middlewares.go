@@ -3,8 +3,8 @@ package middlewares
 import (
 	"context"
 	"factual-docs/internal/shared/config"
-	"factual-docs/internal/shared/ui"
 	"factual-docs/internal/shared/utils"
+	"factual-docs/internal/ui"
 	"log"
 	"net/http"
 	"strings"

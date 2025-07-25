@@ -3,41 +3,41 @@ package pages
 import (
 	"context"
 	"factual-docs/internal/models"
-	"factual-docs/internal/shared/config"
 	"factual-docs/internal/shared/database"
 	"factual-docs/internal/shared/utils"
 )
 
 type Repository struct {
-	db     database.Service
-	config *config.Config
+	db database.Service
 }
 
-func New(db database.Service, config *config.Config) *Repository {
+func New(db database.Service) *Repository {
 	return &Repository{
-		db:     db,
-		config: config,
+		db: db,
 	}
 }
 
 // Get single page from DB
-func (r *Repository) GetSinglePage(ctx context.Context, slug string) (page models.Page, err error) {
+func (r *Repository) GetSinglePage(ctx context.Context, slug string) (*models.Page, error) {
+
+	var page models.Page
+
 	// Nullable string
 	var content *string
 
 	// Get single row from DB
-	err = r.db.QueryRow(ctx, getSinglePageQuery, slug).Scan(
+	err := r.db.QueryRow(ctx, getSinglePageQuery, slug).Scan(
 		&page.Slug,
 		&page.Title,
 		&content,
 	)
 
 	if err != nil {
-		return page, err
+		return nil, err
 	}
 
 	page.Content = utils.PtrToString(content)
-	return page, err
+	return &page, err
 }
 
 // Update page

@@ -28,7 +28,7 @@ func (s *Service) SinglePageHandler(w http.ResponseWriter, r *http.Request) {
 	// Generate the default data
 	data := s.ui.NewData(w, r)
 
-	var page models.Page
+	var page *models.Page
 	err := redis.GetItems(
 		!data.IsCurrentUserAdmin(),
 		r.Context(),
@@ -36,7 +36,7 @@ func (s *Service) SinglePageHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Sprintf(pageCacheKey, pageSlug),
 		s.config.CacheTimeout,
 		&page,
-		func() (models.Page, error) {
+		func() (*models.Page, error) {
 			return s.pagesRepo.GetSinglePage(r.Context(), pageSlug)
 		},
 	)
@@ -64,7 +64,7 @@ func (s *Service) SinglePageHandler(w http.ResponseWriter, r *http.Request) {
 	page.HTMLContent = template.HTML(html)
 
 	// Assign the page to data
-	data.CurrentPage = &page
+	data.CurrentPage = page
 	data.Title = page.Title
 
 	s.ui.RenderHTML(w, r, "page.html", data)

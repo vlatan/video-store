@@ -7,15 +7,14 @@ const sourceExistsQuery = `
 
 const getSourcesQuery = `
 	SELECT
-		p.playlist_id, 
-		p.title, 
-		p.channel_title, 
-		p.channel_thumbnails,
-		p.updated_at
-	FROM playlist AS p
-	JOIN post ON post.playlist_db_id = p.id
-	GROUP BY p.id
-	ORDER BY p.id DESC
+		playlist_id,
+		channel_id,
+		title, 
+		channel_title, 
+		channel_thumbnails,
+		updated_at
+	FROM playlist
+	ORDER BY id DESC
 `
 
 const insertSourceQuery = `
@@ -31,4 +30,18 @@ const insertSourceQuery = `
 		user_id
 	)
 	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NULLIF($9, 0))
+`
+
+const updateSourceQuery = `
+	UPDATE playlist
+	SET
+		channel_id = $2,
+		title = $3,
+		channel_title = $4,
+		thumbnails = $5,
+		channel_thumbnails = $6,
+		description = $7,
+		channel_description = $8,
+		updated_at = NOW()
+	WHERE playlist_id = $1
 `

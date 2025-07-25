@@ -127,3 +127,41 @@ func PtrToString(s *string) string {
 	}
 	return *s
 }
+
+func Plural(num int, word string) string {
+	if num == 1 {
+		return word
+	}
+	return word + "s"
+}
+
+// Check thumbnails equality
+func ThumbnailsEqual(a, b *models.Thumbnails) bool {
+	if a == nil && b == nil {
+		return true
+	}
+
+	if a == nil || b == nil {
+		return false
+	}
+
+	return ThumbnailEqual(a.Default, b.Default) &&
+		ThumbnailEqual(a.Medium, b.Medium) &&
+		ThumbnailEqual(a.High, b.High) &&
+		ThumbnailEqual(a.Standard, b.Standard) &&
+		ThumbnailEqual(a.Maxres, b.Maxres)
+}
+
+// Check one thumbnail equality
+func ThumbnailEqual(a, b *models.Thumbnail) bool {
+	if a == nil && b == nil {
+		return true
+	}
+
+	if a == nil || b == nil {
+		return false
+	}
+
+	// Only compare the actual data fields we care about
+	return a.Height == b.Height && a.Url == b.Url && a.Width == b.Width
+}

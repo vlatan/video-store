@@ -52,7 +52,7 @@ const getSinglePostQuery = `
 	GROUP BY post.id, category.id
 `
 
-const getPostsQuery = `
+const getHomePostsQuery = `
 	SELECT
 		video_id, 
 		title, 
@@ -63,6 +63,17 @@ const getPostsQuery = `
 	GROUP BY post.id
 	ORDER BY %s
 	LIMIT $1 OFFSET $2
+`
+
+const getAllPostsQuery = `
+	SELECT
+		video_id,
+		playlist_id,
+		title, 
+		short_description,
+		cat.name AS category_name
+	FROM post
+	LEFT JOIN category AS cat ON cat.id = post.category_id
 `
 
 const getCategoryPostsQuery = `
@@ -206,7 +217,16 @@ const updateDescQuery = `
 	WHERE video_id = $1
 `
 
-const deletePostQuery = `
+const updateGeneretedDataQuery = `
+	UPDATE post
+	SET
+		category_id = (SELECT id FROM category WHERE name = $2),
+		short_description = $3,
+		updated_at = NOW()
+	WHERE video_id = $1
+`
+
+const banPostQuery = `
 	WITH dp AS (
 		DELETE FROM post
 		WHERE video_id = $1
@@ -214,6 +234,16 @@ const deletePostQuery = `
 	)
 	INSERT INTO deleted_post (video_id, provider)
 	SELECT video_id, provider FROM dp
+`
+
+const isPostBanneddQuery = `
+	SELECT 1 FROM deleted_post
+	WHERE video_id = $1
+`
+
+const deletePostQuery = `
+	DELETE FROM post
+	WHERE video_id = $1
 `
 
 const sitemapDataQuery = `

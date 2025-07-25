@@ -1,9 +1,10 @@
 package yt
 
 import (
+	"context"
 	"errors"
 	"factual-docs/internal/models"
-	"log"
+	"factual-docs/internal/shared/utils"
 	"strings"
 	"time"
 
@@ -11,23 +12,38 @@ import (
 )
 
 // Get YouTube videos metadata, provided video IDs.
-// Returns client facing error messages if any.
-func (s *Service) GetVideos(videoIDs ...string) ([]*youtube.Video, error) {
+func (s *Service) GetVideos(ctx context.Context, videoIDs ...string) ([]*youtube.Video, error) {
+
+	var result []*youtube.Video
 	part := []string{"status", "snippet", "contentDetails"}
-	response, err := s.youtube.Videos.List(part).Id(videoIDs...).Do()
-	if err != nil {
-		msg := "unable to get a response from YouTube"
-		log.Printf("%s: %v", msg, err)
-		return nil, errors.New(msg)
+
+	batchSize := 50
+	for i := 0; i < len(videoIDs); i += batchSize {
+
+		// YouTube can fetch info about 50 items at most
+		end := min(i+batchSize, len(videoIDs))
+		batch := videoIDs[i:end]
+
+		response, err := utils.Retry(
+			ctx, time.Second, 5,
+			func() (*youtube.VideoListResponse, error) {
+				return s.youtube.Videos.List(part).Id(batch...).Do()
+			},
+		)
+
+		if err != nil {
+			return nil, err
+		}
+
+		if len(response.Items) == 0 {
+			msg := "empty response from YouTube"
+			return nil, errors.New(msg)
+		}
+
+		result = append(result, response.Items...)
 	}
 
-	if len(response.Items) == 0 {
-		msg := "could not fetch a result from YouTube"
-		log.Printf("%s; response.Items: %v", msg, response.Items)
-		return nil, errors.New(msg)
-	}
-
-	return response.Items, nil
+	return result, nil
 }
 
 // Validate a YouTube video against custom criteria.

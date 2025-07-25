@@ -26,7 +26,7 @@ import (
 	"factual-docs/internal/shared/config"
 	"factual-docs/internal/shared/database"
 	"factual-docs/internal/shared/redis"
-	"factual-docs/internal/shared/ui"
+	"factual-docs/internal/ui"
 )
 
 type Server struct {
@@ -57,8 +57,8 @@ func NewServer() *http.Server {
 	catsRepo := catsRepo.New(db)
 	usersRepo := usersRepo.New(db, cfg)
 	postsRepo := postsRepo.New(db, cfg)
-	pagesRepo := pagesRepo.New(db, cfg)
-	sourcesRepo := sourcesRepo.New(db, cfg)
+	pagesRepo := pagesRepo.New(db)
+	sourcesRepo := sourcesRepo.New(db)
 
 	// Create user interface service
 	ui := ui.New(rdb, cfg, store, catsRepo, usersRepo)

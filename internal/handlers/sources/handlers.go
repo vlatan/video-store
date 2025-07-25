@@ -95,25 +95,28 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Check if the playlist is already posted
 		if s.sourcesRepo.SourceExists(r.Context(), playlistID) {
-			formError.Message = "Source already posted"
+			formError.Message = "Playlist already posted"
 			data.Form.Error = &formError
 			s.ui.RenderHTML(w, r, "form.html", data)
 			return
 		}
 
 		// Fetch playlist metadata from YouTube
-		sources, err := s.yt.GetSources(playlistID)
+		sources, err := s.yt.GetSources(r.Context(), playlistID)
 		if err != nil {
-			formError.Message = utils.Capitalize(err.Error())
+			log.Printf("Playlist '%s': %v", playlistID, err)
+			formError.Message = "Unable to fetch the playlist from YouTube"
 			data.Form.Error = &formError
 			s.ui.RenderHTML(w, r, "form.html", data)
 			return
 		}
 
 		// Fetch channel data from YouTube
-		channels, err := s.yt.GetChannels(sources[0].Snippet.ChannelId)
+		channelID := sources[0].Snippet.ChannelId
+		channels, err := s.yt.GetChannels(r.Context(), channelID)
 		if err != nil {
-			formError.Message = utils.Capitalize(err.Error())
+			log.Printf("Channel '%s': %v", channelID, err)
+			formError.Message = "Unable to fetch channel info from YouTube"
 			data.Form.Error = &formError
 			s.ui.RenderHTML(w, r, "form.html", data)
 			return

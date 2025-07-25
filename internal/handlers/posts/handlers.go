@@ -39,7 +39,7 @@ func (s *Service) HomeHandler(w http.ResponseWriter, r *http.Request) {
 		s.config.CacheTimeout,
 		&posts,
 		func() ([]models.Post, error) {
-			return s.postsRepo.GetPosts(r.Context(), page, orderBy)
+			return s.postsRepo.GetHomePosts(r.Context(), page, orderBy)
 		},
 	)
 
@@ -164,7 +164,7 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	// For search posts we are using the database.Posts struct,
 	// so we can add total results and time took
-	var posts models.Posts
+	var posts *models.Posts
 	err := redis.GetItems(
 		!data.IsCurrentUserAdmin(),
 		r.Context(),
@@ -172,7 +172,7 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Sprintf("posts:search:page:%d:%s", page, encodedSearchQuery),
 		s.config.CacheTimeout,
 		&posts,
-		func() (models.Posts, error) {
+		func() (*models.Posts, error) {
 			return s.postsRepo.SearchPosts(r.Context(), searchQuery, limit, offset)
 		},
 	)
@@ -202,7 +202,7 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data.Posts = &posts
+	data.Posts = posts
 	data.Posts.TimeTook = fmt.Sprintf("%.2f", end.Seconds())
 	data.Title = "Search"
 	s.ui.RenderHTML(w, r, "search.html", data)
@@ -271,9 +271,10 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Fetch video data from YouTube
-		metadata, err := s.yt.GetVideos(videoID)
+		metadata, err := s.yt.GetVideos(r.Context(), videoID)
 		if err != nil {
-			formError.Message = utils.Capitalize(err.Error())
+			log.Printf("Video '%s': %v", videoID, err)
+			formError.Message = "Unable to fetch the video from YouTube"
 			data.Form.Error = &formError
 			s.ui.RenderHTML(w, r, "form.html", data)
 			return
@@ -281,6 +282,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Validate the video data
 		if err := s.yt.ValidateYouTubeVideo(metadata[0]); err != nil {
+			log.Printf("Video '%s': %v", videoID, err)
 			formError.Message = utils.Capitalize(err.Error())
 			data.Form.Error = &formError
 			s.ui.RenderHTML(w, r, "form.html", data)
@@ -292,14 +294,18 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 		post.UserID = data.CurrentUser.ID
 
 		// Generate content using Gemini
-		gc, err := s.gemini.GenerateInfo(r.Context(), post.Title, data.Categories)
+		genaiResponse, err := s.gemini.GenerateInfo(
+			r.Context(), post.Title, data.Categories,
+		)
+
 		if err != nil {
 			log.Printf("Content generation using Gemini failed: %v", err)
 		}
 
-		if gc != nil {
-			post.ShortDesc = gc.Description
-			post.Category = &models.Category{Name: gc.Category}
+		post.Category = &models.Category{}
+		if err == nil && genaiResponse != nil {
+			post.ShortDesc = genaiResponse.Description
+			post.Category.Name = genaiResponse.Category
 		}
 
 		// Insert the video
@@ -336,7 +342,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var post models.Post
+	var post *models.Post
 	err := redis.GetItems(
 		!data.CurrentUser.IsAuthenticated(),
 		r.Context(),
@@ -344,7 +350,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Sprintf("post:%s", videoID),
 		s.config.CacheTimeout,
 		&post,
-		func() (models.Post, error) {
+		func() (*models.Post, error) {
 			return s.postsRepo.GetSinglePost(r.Context(), videoID)
 		},
 	)
@@ -362,7 +368,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Assign the post to data
-	data.CurrentPost = &post
+	data.CurrentPost = post
 	data.Title = post.Title
 
 	// Check whether the current user liked and/or faved the post
@@ -436,7 +442,7 @@ func (s *Service) PostActionHandler(w http.ResponseWriter, r *http.Request) {
 	case "edit":
 		s.handleEdit(w, r, videoID, currentUser)
 	case "delete":
-		s.handleDeletePost(w, r, currentUser.ID, videoID)
+		s.handleBanPost(w, r, currentUser.ID, videoID)
 	default:
 		s.ui.JSONError(w, r, http.StatusBadRequest)
 	}

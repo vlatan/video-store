@@ -95,7 +95,7 @@
 					</div>
 					{{ if .IsCurrentUserAdmin }}
 					<button data-modal="video" class="modal-button">Delete</button>
-					<button class="modal-button edit-content">Edit Title</button>
+					<button class="modal-button edit-title edit-content">Edit Title</button>
 					{{ end }}
 				</div>
 			</div>
@@ -113,7 +113,7 @@
 		</div>
 
 		{{ if .IsCurrentUserAdmin }}
-		<button class="modal-button edit-description">Edit Desc</button>
+		<button class="modal-button edit-description edit-content">Edit Desc</button>
 		{{ end }}
 
 		{{ else if .IsCurrentUserAdmin }}
@@ -123,7 +123,7 @@
 				{{ .CurrentPost.Description }}
 			</div>
 		</div>
-		<button class="modal-button edit-description">Edit Desc</button>
+		<button class="modal-button edit-description edit-content">Edit Desc</button>
 
 		{{ end }}
 

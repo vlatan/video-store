@@ -6,7 +6,7 @@ import (
 	sourcesRepo "factual-docs/internal/repositories/sources"
 	"factual-docs/internal/shared/config"
 	"factual-docs/internal/shared/redis"
-	"factual-docs/internal/shared/ui"
+	"factual-docs/internal/ui"
 )
 
 type Service struct {

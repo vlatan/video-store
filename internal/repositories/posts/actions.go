@@ -6,9 +6,11 @@ import (
 )
 
 // Check if the user liked and/or faved a post
-func (r *Repository) GetUserActions(ctx context.Context, userID, postID int) (actions models.Actions, err error) {
-	err = r.db.QueryRow(ctx, userActionsQuery, userID, postID).Scan(&actions.Liked, &actions.Faved)
-	return actions, err
+func (r *Repository) GetUserActions(ctx context.Context, userID, postID int) (*models.Actions, error) {
+	row := r.db.QueryRow(ctx, userActionsQuery, userID, postID)
+	var actions models.Actions
+	err := row.Scan(&actions.Liked, &actions.Faved)
+	return &actions, err
 }
 
 // User likes a post
@@ -41,7 +43,17 @@ func (r *Repository) UpdateDesc(ctx context.Context, videoID, description string
 	return r.db.Exec(ctx, updateDescQuery, videoID, description)
 }
 
+// Update post description
+func (r *Repository) UpdateGeneratedData(ctx context.Context, post *models.Post) (int64, error) {
+	return r.db.Exec(ctx, updateGeneretedDataQuery, post.VideoID, post.Category.Name, post.ShortDesc)
+}
+
 // Delete a post
+func (r *Repository) BanPost(ctx context.Context, videoID string) (int64, error) {
+	return r.db.Exec(ctx, banPostQuery, videoID)
+}
+
+// Ban a post (move it to deleted table)
 func (r *Repository) DeletePost(ctx context.Context, videoID string) (int64, error) {
 	return r.db.Exec(ctx, deletePostQuery, videoID)
 }

@@ -1,51 +1,127 @@
 package yt
 
 import (
+	"context"
 	"errors"
 	"factual-docs/internal/models"
-	"log"
+	"factual-docs/internal/shared/utils"
+	"time"
 
 	"google.golang.org/api/youtube/v3"
 )
 
+// Get YouTube's playlist items, provided a playlist ID
+// Fetching can't be done at once, but in a paginated way
+func (s *Service) GetSourceItems(ctx context.Context, playlistID string) ([]*youtube.PlaylistItem, error) {
+
+	var result []*youtube.PlaylistItem
+	var nextPageToken string
+	part := []string{"contentDetails"}
+
+	for {
+		// Get playlist items
+		response, err := utils.Retry(
+			ctx, time.Second, 5,
+			func() (*youtube.PlaylistItemListResponse, error) {
+				return s.youtube.PlaylistItems.
+					List(part).
+					MaxResults(50).
+					PageToken(nextPageToken).
+					PlaylistId(playlistID).
+					Do()
+			},
+		)
+
+		if err != nil {
+			return nil, err
+		}
+
+		if len(response.Items) == 0 {
+			msg := "empty response from YouTube"
+			return nil, errors.New(msg)
+		}
+
+		result = append(result, response.Items...)
+		nextPageToken = response.NextPageToken
+
+		// if no more pages break the loop, we're done
+		if nextPageToken == "" {
+			break
+		}
+	}
+
+	return result, nil
+}
+
 // Get playlists metadata, provided playlist ids.
-// Returns client facing error messages if any.
-func (s *Service) GetSources(playlistIDs ...string) ([]*youtube.Playlist, error) {
+func (s *Service) GetSources(ctx context.Context, playlistIDs ...string) ([]*youtube.Playlist, error) {
+
+	var result []*youtube.Playlist
 	part := []string{"snippet"}
-	response, err := s.youtube.Playlists.List(part).Id(playlistIDs...).Do()
-	if err != nil {
-		msg := "unable to get a response from YouTube"
-		log.Printf("%s: %v", msg, err)
-		return nil, errors.New(msg)
+
+	batchSize := 50
+	for i := 0; i < len(playlistIDs); i += batchSize {
+
+		// YouTube can fetch info about 50 items at most
+		end := min(i+batchSize, len(playlistIDs))
+		batch := playlistIDs[i:end]
+
+		response, err := utils.Retry(
+			ctx, time.Second, 5,
+			func() (*youtube.PlaylistListResponse, error) {
+				return s.youtube.Playlists.List(part).Id(batch...).Do()
+			},
+		)
+
+		if err != nil {
+			return nil, err
+		}
+
+		if len(response.Items) == 0 {
+			msg := "empty response from YouTube"
+			return nil, errors.New(msg)
+		}
+
+		result = append(result, response.Items...)
+
 	}
 
-	if len(response.Items) == 0 {
-		msg := "could not fetch a result from YouTube"
-		log.Printf("%s; response.Items: %v", msg, response.Items)
-		return nil, errors.New(msg)
-	}
-
-	return response.Items, nil
+	return result, nil
 }
 
 // Get channels metadata, provided channel ids.
-// Returns client facing error messages if any.
-func (s *Service) GetChannels(channelIDs ...string) ([]*youtube.Channel, error) {
+func (s *Service) GetChannels(ctx context.Context, channelIDs ...string) ([]*youtube.Channel, error) {
+
+	var result []*youtube.Channel
 	part := []string{"snippet"}
-	response, err := s.youtube.Channels.List(part).Id(channelIDs...).Do()
-	if err != nil {
-		msg := "unable to get a response from YouTube"
-		log.Printf("%s: %v", msg, err)
-		return nil, errors.New(msg)
+
+	batchSize := 50
+	for i := 0; i < len(channelIDs); i += batchSize {
+
+		// YouTube can fetch info about 50 items at most
+		end := min(i+batchSize, len(channelIDs))
+		batch := channelIDs[i:end]
+
+		response, err := utils.Retry(
+			ctx, time.Second, 5,
+			func() (*youtube.ChannelListResponse, error) {
+				return s.youtube.Channels.List(part).Id(batch...).Do()
+			},
+		)
+
+		if err != nil {
+			return nil, err
+		}
+
+		if len(response.Items) == 0 {
+			msg := "empty response from YouTube"
+			return nil, errors.New(msg)
+		}
+
+		result = append(result, response.Items...)
 	}
 
-	if len(response.Items) == 0 {
-		msg := "could not fetch a result from YouTube"
-		log.Printf("%s; response.Items: %v", msg, response.Items)
-		return nil, errors.New(msg)
-	}
-
-	return response.Items, nil
+	return result, nil
 }
 
 // Create source object

@@ -4,7 +4,7 @@ import (
 	"factual-docs/internal/repositories/users"
 	"factual-docs/internal/shared/config"
 	"factual-docs/internal/shared/redis"
-	"factual-docs/internal/shared/ui"
+	"factual-docs/internal/ui"
 
 	"github.com/gorilla/sessions"
 )
