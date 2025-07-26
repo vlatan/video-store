@@ -64,27 +64,47 @@ docker compose exec -it postgres psql -U xxx -d xxx
 No really a difference, except the app or the worker will be built and run by the `Dockerfile` so you need the `TARGET` environment variable in production to specify which one you want to run, `app` or the `worker`. That is the host needs to be able to pass this `TARGET` variable as a build argument.
 
 
-## Dump db data from the remote host and restore it locally to docker
+## Dump/Restore DB data
 
 Run `export HISTCONTROL=ignorespace` so you're able to hide bash commands from the history if they start with empty space. This is probably already set on your system in the `~/.bashrc` file, but to be sure run it, there's no harm.
 
-First, dump the database (data only `-a`) from the remote host in a tar format (`-F t`). The postgres version (postgres:16.3) needs to match the remote version.
-```
- docker run --rm -e PGPASSWORD=xxx \
-postgres:16.3 pg_dump -U xxx -h xxx -p xxx -a -F t xxx > db.dump
-```
-
-Copy the dump into the running local postgres container, which also has to match the version.
-```
- docker cp ./db.dump postgres:/tmp/db.dump
+Export the database URLs you'll need. Leave an empty space before the export commands. From now on you can use these variables in dump and restoee commands.
+``` bash
+ export PROD_DB_URL=postgresql://user:password@host:port/dbname
+ export LOCAL_DB_URL=postgresql://user:password@localhost:5432/dbname
 ```
 
-Execute the restore. Restore only the data (`-a`).
+The flag `-a` determines if you want to dump or restore the data with or without the schema. Include `-a` if you want the DATA ONLY.
 
+Dump from production:
+``` bash
+docker run --rm -e PROD_DB_URL postgres:16.3 pg_dump -F t -d $PROD_DB_URL > db.prod.dump
 ```
- docker compose exec -e PGPASSWORD=xxx \
-postgres pg_restore -U xxx -h localhost -p 5432 -d xxx -a -F t /tmp/db.dump
+
+Copy the dump file into the local running container:
+``` bash
+docker cp ./db.prod.dump postgres:/tmp/db.prod.dump
 ```
+
+Restore to the local running container:
+``` bash
+ docker compose exec -e LOCAL_DB_URL postgres pg_restore -F t -d $DATABASE_URL /tmp/db.prod.dump
+```
+
+Also, for example, dump from the local running container:
+``` bash
+docker compose exec -e LOCAL_DB_URL postgres pg_dump -F t -d $DATABASE_URL > db.local.dump
+```
+
+And, restore to production:
+``` bash
+docker run --rm -e PROD_DB_URL \
+-v ./db.local.dump:/db.local.dump postgres:16.3 \
+pg_restore -F t -d $PROD_DB_URL /db.local.dump
+```
+
+When we need tto access the local running postgres server we use `exec`, and when we want to reach the production we use `run` on our own temporary `postgres:16.3` container. The postgres versions need to match though.
+
 
 Confirm the data is there. This will land you at `psql` in the docker container from where you can see the tables, query the data, etc.
 ```
@@ -92,7 +112,7 @@ docker compose exec -it postgres psql -U xxx -d xxx
 ```
 
 
-## Migration commands
+## Database Golang migration commands
 
 Here's a little [PostgreSQL golang-migrate tutorial](https://github.com/golang-migrate/migrate/blob/master/database/postgres/TUTORIAL.md).
 
