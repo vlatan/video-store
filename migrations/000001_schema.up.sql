@@ -14,7 +14,7 @@ BEGIN
         RETURN OLD;
     END IF;
 END;
-$$ language 'plpgsql';
+$$ language plpgsql;
 
 
 -- Create function to automatically update the search_vector column
@@ -107,10 +107,10 @@ CREATE TABLE post (
     related JSONB,
     user_id INTEGER REFERENCES app_user(id),
     playlist_db_id INTEGER REFERENCES playlist(id),
-    category_id INTEGER REFERENCES category(id)
+    category_id INTEGER REFERENCES category(id),
     search_vector tsvector, -- search vector column
     created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 
