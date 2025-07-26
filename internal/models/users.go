@@ -61,7 +61,14 @@ func (u *User) GetAvatar(ctx context.Context, rdb redis.Service, config *config.
 	redisKey := fmt.Sprintf(avatarcacheKey, u.AnalyticsID)
 	avatar, err := rdb.Get(ctx, redisKey)
 	if err == nil {
-		return avatar
+		// Quick file existence check
+		destination := filepath.Join(config.DataVolume, u.AnalyticsID+".jpg")
+		if _, err := os.Stat(destination); err == nil {
+			return avatar
+		}
+
+		// File missing, clear stale cache
+		rdb.Delete(ctx, redisKey)
 	}
 
 	// Attempt to download the avatar, set default avatar on fail
