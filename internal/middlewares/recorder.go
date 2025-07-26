@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-// responseRecorder is a custom http.ResponseWriter that captures the status code
+// A custom http.ResponseWriter that captures the status code
 // and the body of the response. This allows the middleware to inspect the
 // response from the next handler before writing it to the client.
 type responseRecorder struct {
@@ -15,7 +15,7 @@ type responseRecorder struct {
 	status int
 }
 
-// NewResponseRecorder creates a new responseRecorder.
+// Creates a new responseRecorder
 func NewResponseRecorder(w http.ResponseWriter) *responseRecorder {
 	return &responseRecorder{
 		ResponseWriter: w,
@@ -24,17 +24,17 @@ func NewResponseRecorder(w http.ResponseWriter) *responseRecorder {
 	}
 }
 
-// WriteHeader captures the status code.
+// Captures the response status code
 func (r *responseRecorder) WriteHeader(statusCode int) {
 	r.status = statusCode
 }
 
-// Write captures the response body.
+// Captures the response body.
 func (r *responseRecorder) Write(b []byte) (int, error) {
 	return r.body.Write(b)
 }
 
-// flush sends the captured response (or a modified one) to the client.
+// Sends the captured response (or a modified one) to the client.
 func (r *responseRecorder) flush() {
 	r.ResponseWriter.WriteHeader(r.status)
 	if r.body.Len() > 0 {
