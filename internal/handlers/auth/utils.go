@@ -16,6 +16,9 @@ import (
 // Hardcode the static protected routes
 var staticProtectedPaths = map[string]bool{
 	"/video/new":       true,
+	"/page/new":        true,
+	"/source/new":      true,
+	"/users/":          true,
 	"/health/":         true,
 	"/account/delete":  true,
 	"/user/favorites/": true,
