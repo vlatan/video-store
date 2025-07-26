@@ -1,5 +1,3 @@
-* Fix login user
-
 * Use logger
   https://go.dev/blog/slog
 

@@ -61,8 +61,11 @@ func (s *Service) LoadContext(next http.Handler) http.Handler {
 		user := s.ui.GetUserFromSession(w, r) // Can be nil
 		ctx := context.WithValue(r.Context(), utils.UserContextKey, user)
 
-		// Generate the default data and store in context too
+		// Generate the default data
 		data := s.ui.NewData(w, r)
+		// Attach the user to be able to be accessed from data too
+		data.CurrentUser = user
+		// Store data to context
 		ctx = context.WithValue(ctx, utils.DataContextKey, data)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
