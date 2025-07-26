@@ -221,13 +221,13 @@ const unfaveQuery = `
 
 const updateTitleQuery = `
 	UPDATE post
-	SET title = $2, updated_at = NOW()
+	SET title = $2
 	WHERE video_id = $1
 `
 
 const updateDescQuery = `
 	UPDATE post
-	SET short_description = $2, updated_at = NOW()
+	SET short_description = $2
 	WHERE video_id = $1
 `
 
@@ -235,8 +235,7 @@ const updateGeneretedDataQuery = `
 	UPDATE post
 	SET
 		category_id = (SELECT id FROM category WHERE name = $2),
-		short_description = $3,
-		updated_at = NOW()
+		short_description = $3
 	WHERE video_id = $1
 `
 

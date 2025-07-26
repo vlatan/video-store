@@ -8,7 +8,7 @@ const getSinglePageQuery = `
 
 const updatePageQuery = `
 	UPDATE page
-	SET title = $2, content = $3, updated_at = NOW()
+	SET title = $2, content = $3
 	WHERE slug = $1
 `
 

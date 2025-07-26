@@ -1,3 +1,5 @@
+* Check for nil dereference in templates
+
 * Use logger
   https://go.dev/blog/slog
 
