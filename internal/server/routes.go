@@ -65,8 +65,8 @@ func (s *Server) RegisterRoutes() http.Handler {
 		s.mw.RecoverPanic,
 		s.mw.CloseBody,
 		s.mw.WWWRedirect,
-		s.mw.LoadContext,
 		CSRF,
+		s.mw.LoadContext,
 		s.mw.AddHeaders,
 		s.mw.HandleErrors,
 	)(mux)
