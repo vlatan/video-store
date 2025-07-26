@@ -1,5 +1,7 @@
 * Check for nil dereference in templates
 
+* Maybe the worker to backup the database?
+
 * Use logger
   https://go.dev/blog/slog
 
