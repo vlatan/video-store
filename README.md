@@ -58,6 +58,12 @@ To access the database use this, where `-U` is the user, and `-d` is the databas
 docker compose exec -it postgres psql -U xxx -d xxx
 ```
 
+
+## Run the app in production
+
+No really a difference, except the app or the worker will be built and run by the `Dockerfile` so you need the `TARGET` environment variable in production to specify which one you want to run, `app` or the `worker`. That is the host needs to be able to pass this `TARGET` variable as a build argument.
+
+
 ## Dump db data from the remote host and restore it locally to docker
 
 Run `export HISTCONTROL=ignorespace` so you're able to hide bash commands from the history if they start with empty space. This is probably already set on your system in the `~/.bashrc` file, but to be sure run it, there's no harm.
