@@ -41,6 +41,9 @@ func (s *service) NewData(w http.ResponseWriter, r *http.Request) *models.Templa
 			flashMessages = append(flashMessages, flash)
 		}
 	}
+
+	// Delete the flash session cookie created with s.store.Get
+	session.Options.MaxAge = -1
 	session.Save(r, w)
 
 	return &models.TemplateData{
