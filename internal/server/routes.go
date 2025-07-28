@@ -57,16 +57,14 @@ func (s *Server) RegisterRoutes() http.Handler {
 		mux.HandleFunc("GET "+favicon, s.misc.StaticHandler)
 	}
 
-	// Create Cross-Site Request Forgery middleware
-	CSRF := s.mw.CreateCSRFMiddleware()
-
 	// Chain middlwares that apply to all requests
 	return s.mw.ApplyToAll(
 		s.mw.RecoverPanic,
 		s.mw.CloseBody,
 		s.mw.WWWRedirect,
-		CSRF,
-		s.mw.LoadContext,
+		s.mw.LoadUser,
+		s.mw.CreateCSRFMiddleware(),
+		s.mw.LoadData,
 		s.mw.AddHeaders,
 		s.mw.HandleErrors,
 	)(mux)

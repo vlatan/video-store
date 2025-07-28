@@ -54,19 +54,35 @@ func (s *Service) IsAdmin(next http.HandlerFunc) http.HandlerFunc {
 }
 
 // Get user from session and put it in context
-func (s *Service) LoadContext(next http.Handler) http.Handler {
+func (s *Service) LoadUser(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		// Check if request possibly needs a cookie
+		if !utils.NeedsCookie(w, r) {
+			next.ServeHTTP(w, r)
+			return
+		}
 
 		// Get user from session and store in context
 		user := s.ui.GetUserFromSession(w, r) // Can be nil
 		ctx := context.WithValue(r.Context(), utils.UserContextKey, user)
 
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+// Get user from session and put it in context
+func (s *Service) LoadData(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		// Get user from context
+		user := utils.GetUserFromContext(r)
 		// Generate the default data
 		data := s.ui.NewData(w, r)
 		// Attach the user to be able to be accessed from data too
 		data.CurrentUser = user
 		// Store data to context
-		ctx = context.WithValue(ctx, utils.DataContextKey, data)
+		ctx := context.WithValue(r.Context(), utils.DataContextKey, data)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
@@ -109,7 +125,7 @@ func (s *Service) AddHeaders(next http.Handler) http.Handler {
 
 		// Add CF cache control header if user not logged in AND not static file
 		user := utils.GetUserFromContext(r)
-		if !user.IsAuthenticated() && !isStatic(r) {
+		if !user.IsAuthenticated() && !utils.IsStatic(r) {
 			w.Header().Set("CDN-Cache-Control", "14400")
 		}
 
@@ -164,24 +180,23 @@ func (s *Service) CreateCSRFMiddleware() func(http.Handler) http.Handler {
 		csrf.Path("/"),
 	)
 
-	// Return the wrapper that sets plain text context before calling CSRF
+	// Return the actual handler
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-			// Do nothing if static file
-			if isStatic(r) {
+			// Check if request possibly needs a cookie
+			if !utils.NeedsCookie(w, r) {
 				next.ServeHTTP(w, r)
 				return
 			}
 
-			// Skip CSRF for exact match
-			if r.URL.Path == "/health/" || r.URL.Path == "/ads.txt" {
-				next.ServeHTTP(w, r)
-				return
-			}
-
-			// Skip CSRF for sitemaps
-			if strings.HasPrefix(r.URL.Path, "/sitemap") {
+			// Anonimous users don't make POST requests,
+			// so no CSRF protection needed.
+			// gorilla/csrf sets Vary: Cookie header
+			// and we don't want that for anonimous requests,
+			// because we want to cache those.
+			user := utils.GetUserFromContext(r)
+			if !user.IsAuthenticated() {
 				next.ServeHTTP(w, r)
 				return
 			}

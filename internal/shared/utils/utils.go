@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -172,4 +173,28 @@ func ThumbnailEqual(a, b *models.Thumbnail) bool {
 
 	// Only compare the actual data fields we care about
 	return a.Height == b.Height && a.Url == b.Url && a.Width == b.Width
+}
+
+// Check if this is a static file
+func IsStatic(r *http.Request) bool {
+	return strings.HasPrefix(r.URL.Path, "/static/") ||
+		slices.Contains(Favicons, r.URL.Path)
+}
+
+// Check if a route needs to set a cookie
+func NeedsCookie(w http.ResponseWriter, r *http.Request) bool {
+
+	if IsStatic(r) {
+		return false
+	}
+
+	if r.URL.Path == "/ads.txt" {
+		return false
+	}
+
+	if strings.HasPrefix(r.URL.Path, "/sitemap") {
+		return false
+	}
+
+	return true
 }
