@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/gorilla/csrf"
+	"github.com/klauspost/compress/gzhttp"
 )
 
 type Service struct {
@@ -139,8 +140,6 @@ func (s *Service) AddHeaders(next http.Handler) http.Handler {
 		w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
 		// Referrer Policy
 		w.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
-		// Permissions Policy
-		w.Header().Set("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
 		next.ServeHTTP(w, r)
 	})
 }
@@ -252,6 +251,28 @@ func (s *Service) HandleErrors(next http.Handler) http.Handler {
 		// Server rich HTML error
 		s.ui.HTMLError(recorder, r, recorder.status, data)
 	})
+}
+
+// Compress non-static pages
+func (s *Service) CreateCompressMiddleware() func(http.Handler) http.Handler {
+
+	// Return the actual handler
+	return func(next http.Handler) http.Handler {
+
+		// Create the gzip handler
+		gzipHandler := gzhttp.GzipHandler(next)
+
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// Check if request serves static files
+			// Those are compressed on startup
+			if utils.IsStatic(r) {
+				next.ServeHTTP(w, r)
+				return
+			}
+
+			gzipHandler.ServeHTTP(w, r)
+		})
+	}
 }
 
 // Chain middlewares that apply to all handlers
