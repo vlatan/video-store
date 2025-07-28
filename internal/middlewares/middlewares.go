@@ -217,6 +217,7 @@ func (s *Service) CSRF(next http.Handler) http.Handler {
 	// Create the csrf middleware as per the gorilla/csrf documentation
 	csrfMiddleware := csrf.Protect(
 		[]byte(s.config.SecretKey),
+		csrf.CookieName(s.config.CsrfSessionName),
 		csrf.Secure(!s.config.Debug),
 		csrf.Path("/"),
 	)

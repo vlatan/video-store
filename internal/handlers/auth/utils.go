@@ -157,3 +157,16 @@ func revokeLogin(user *models.User) (response *http.Response, err error) {
 	defer response.Body.Close()
 	return response, err
 }
+
+func (s *Service) clearCSRFCookie(w http.ResponseWriter) {
+	cookie := &http.Cookie{
+		Name:     s.config.CsrfSessionName,
+		Value:    "",
+		Path:     "/",
+		MaxAge:   -1,
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteStrictMode,
+	}
+	http.SetCookie(w, cookie)
+}

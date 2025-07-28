@@ -13,6 +13,7 @@ type Config struct {
 	SessionKey       string `env:"SESSION_KEY"`
 	SessionName      string `env:"SESSION_NAME" envDefault:"_app_session"`
 	FlashSessionName string `env:"FLASH_SESSION_NAME" envDefault:"_flash_app_session"`
+	CsrfSessionName  string `env:"CSRF_SESSION_NAME" envDefault:"_csrf_app_session"`
 	DataVolume       string `env:"DATA_VOLUME" envDefault:"/data"`
 
 	// App settings

@@ -92,6 +92,9 @@ func (s *Service) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Unset the CSRF cookie
+	s.clearCSRFCookie(w)
+
 	s.ui.StoreFlashMessage(w, r, &successLogout)
 	http.Redirect(w, r, redirectTo, http.StatusSeeOther)
 }
@@ -121,6 +124,9 @@ func (s *Service) DeleteAccountHandler(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, redirectTo, http.StatusFound)
 		return
 	}
+
+	// Unset the CSRF cookie
+	s.clearCSRFCookie(w)
 
 	// Delete the user from DB
 	rowsAffected, err := s.usersRepo.DeleteUser(r.Context(), currentUser.ID)
