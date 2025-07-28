@@ -169,48 +169,6 @@ func (s *Service) WWWRedirect(next http.Handler) http.Handler {
 	})
 }
 
-// Create CSRF middlware with added plain text option for local development
-func (s *Service) CreateCSRFMiddleware() func(http.Handler) http.Handler {
-
-	// Create the csrf middleware as per the gorilla/csrf documentation
-	csrfMiddleware := csrf.Protect(
-		[]byte(s.config.SecretKey),
-		csrf.Secure(!s.config.Debug),
-		csrf.Path("/"),
-	)
-
-	// Return the actual handler
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-			// Check if request possibly needs a cookie
-			if !utils.NeedsCookie(w, r) {
-				next.ServeHTTP(w, r)
-				return
-			}
-
-			// Anonimous users don't make POST requests,
-			// so no CSRF protection needed.
-			// gorilla/csrf sets Vary: Cookie header
-			// and we don't want that for anonimous requests,
-			// because we want to cache those.
-			user := utils.GetUserFromContext(r)
-			if !user.IsAuthenticated() {
-				next.ServeHTTP(w, r)
-				return
-			}
-
-			// If debug set plain text (HTTP) schema
-			if s.config.Debug {
-				r = csrf.PlaintextHTTPRequest(r)
-			}
-
-			// Call the pre-created CSRF middleware
-			csrfMiddleware(next).ServeHTTP(w, r)
-		})
-	}
-}
-
 // Record the status code and body and server rich errors if the response is error
 func (s *Service) HandleErrors(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -253,26 +211,62 @@ func (s *Service) HandleErrors(next http.Handler) http.Handler {
 	})
 }
 
-// Compress non-static pages
-func (s *Service) CreateCompressMiddleware() func(http.Handler) http.Handler {
+// Create CSRF middlware with added plain text option for local development
+func (s *Service) CSRF(next http.Handler) http.Handler {
 
-	// Return the actual handler
-	return func(next http.Handler) http.Handler {
+	// Create the csrf middleware as per the gorilla/csrf documentation
+	csrfMiddleware := csrf.Protect(
+		[]byte(s.config.SecretKey),
+		csrf.Secure(!s.config.Debug),
+		csrf.Path("/"),
+	)
 
-		// Create the gzip handler
-		gzipHandler := gzhttp.GzipHandler(next)
+	// Return the handler function
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// Check if request serves static files
-			// Those are compressed on startup
-			if utils.IsStatic(r) {
-				next.ServeHTTP(w, r)
-				return
-			}
+		// Check if request possibly needs a cookie
+		if !utils.NeedsCookie(w, r) {
+			next.ServeHTTP(w, r)
+			return
+		}
 
-			gzipHandler.ServeHTTP(w, r)
-		})
-	}
+		// Anonimous users don't make POST requests,
+		// so no CSRF protection needed.
+		// gorilla/csrf sets Vary: Cookie header
+		// and we don't want that for anonimous requests,
+		// because we want to cache those.
+		user := utils.GetUserFromContext(r)
+		if !user.IsAuthenticated() {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// If debug set plain text (HTTP) schema
+		if s.config.Debug {
+			r = csrf.PlaintextHTTPRequest(r)
+		}
+
+		// Call the pre-created CSRF middleware
+		csrfMiddleware(next).ServeHTTP(w, r)
+	})
+}
+
+// Compress provides gzip compression to non-static pages
+func (s *Service) Compress(next http.Handler) http.Handler {
+
+	// Create the gzip handler
+	gzipHandler := gzhttp.GzipHandler(next)
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Check if request serves static files
+		// Those are compressed on startup
+		if utils.IsStatic(r) {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		gzipHandler.ServeHTTP(w, r)
+	})
 }
 
 // Chain middlewares that apply to all handlers
