@@ -4,7 +4,6 @@
   https://www.lemoda.net/go/gzip-handler/index.html
   https://github.com/klauspost/compress
 
-* Why on /static/favicons/site.webmanifest user is not authneticated?
 
 * The cloudflare CDN header, once we send it it's done for everyone?
 * Get from the backup a db and see how many orphans there were

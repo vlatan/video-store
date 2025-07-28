@@ -15,6 +15,7 @@ import (
 	"github.com/tdewolff/minify/css"
 	"github.com/tdewolff/minify/html"
 	"github.com/tdewolff/minify/js"
+	"github.com/tdewolff/minify/json"
 	"github.com/tdewolff/minify/xml"
 )
 
@@ -71,6 +72,7 @@ func New(
 		m.AddFunc("text/html", html.Minify)
 		m.AddFuncRegexp(validJS, js.Minify)
 		m.AddFuncRegexp(validXML, xml.Minify)
+		m.AddFunc("application/manifest+json", json.Minify)
 
 		tmInstance = &service{
 			templates:   parseTemplates(m),

@@ -157,7 +157,7 @@ func parseStaticFiles(m *minify.M, dir string) models.StaticFiles {
 		}
 
 		// Read the file
-		fb, err := fs.ReadFile(web.Files, path)
+		b, err := fs.ReadFile(web.Files, path)
 		if err != nil {
 			return err
 		}
@@ -172,28 +172,31 @@ func parseStaticFiles(m *minify.M, dir string) models.StaticFiles {
 			mediaType = "text/css"
 		case "js":
 			mediaType = "application/javascript"
+		case "webmanifest":
+			mediaType = "application/manifest+json"
 		}
 
-		var b []byte
+		// We can minify and gzip just certain files
 		var cb []byte
-
-		// Minify and gzip the content (only CSS or JS)
 		if mediaType != "" {
-			b, err = m.Bytes(mediaType, fb)
+
+			// Minify the content
+			b, err := m.Bytes(mediaType, b)
 			if err != nil {
 				return err
 			}
 
+			// Gzip the content
 			buf := new(bytes.Buffer)
 			gz := gzip.NewWriter(buf)
 			defer gz.Close()
 
-			_, err := gz.Write(b)
+			_, err = gz.Write(b)
 			if err != nil {
 				return err
 			}
 
-			// Close the writer manually to flush all data
+			// Close the writer explicitly to flush all bytes
 			if err = gz.Close(); err != nil {
 				return err
 			}
@@ -202,10 +205,7 @@ func parseStaticFiles(m *minify.M, dir string) models.StaticFiles {
 		}
 
 		// Create Etag as a hexadecimal md5 hash of the file content
-		var etag string
-		if len(b) > 0 {
-			etag = fmt.Sprintf("%x", md5.Sum(b))
-		}
+		etag := fmt.Sprintf("%x", md5.Sum(b))
 
 		// Ensure the name starts with "/"
 		name := path

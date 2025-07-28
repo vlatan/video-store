@@ -117,7 +117,7 @@ func (td *TemplateData) IsCurrentUserAdmin() bool {
 
 // Add version query string to file
 func (td *TemplateData) AddVersion(path string) string {
-	if fi, ok := td.StaticFiles[path]; ok {
+	if fi, ok := td.StaticFiles[path]; ok && fi.Etag != "" {
 		return path + "?v=" + fi.Etag
 	}
 	return path
