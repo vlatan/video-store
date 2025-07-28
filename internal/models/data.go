@@ -12,9 +12,10 @@ type StaticFiles map[string]*FileInfo
 type TemplateMap map[string]*template.Template
 
 type FileInfo struct {
-	Bytes     []byte
-	MediaType string
-	Etag      string
+	Bytes      []byte
+	Compressed []byte
+	MediaType  string
+	Etag       string
 }
 
 // The response from the Genai API
@@ -116,7 +117,7 @@ func (td *TemplateData) IsCurrentUserAdmin() bool {
 
 // Add version query string to file
 func (td *TemplateData) AddVersion(path string) string {
-	if fi, ok := td.StaticFiles[path]; ok {
+	if fi, ok := td.StaticFiles[path]; ok && fi.Etag != "" {
 		return path + "?v=" + fi.Etag
 	}
 	return path

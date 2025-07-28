@@ -1,11 +1,4 @@
 
-* Why on /static/favicons/site.webmanifest user is not authneticated?
-
-* Static files GZIP and bypass
-  https://www.lemoda.net/go/gzip-handler/index.html
-  https://github.com/klauspost/compress
-
-* The cloudflare CDN header, once we send it it's done for everyone?
 * Get from the backup a db and see how many orphans there were
 * Delete the python convert script and everything with it
 

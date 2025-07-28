@@ -63,9 +63,10 @@ func (s *Server) RegisterRoutes() http.Handler {
 		s.mw.CloseBody,
 		s.mw.WWWRedirect,
 		s.mw.LoadUser,
-		s.mw.CreateCSRFMiddleware(),
+		s.mw.CSRF,
 		s.mw.LoadData,
 		s.mw.AddHeaders,
+		s.mw.Compress,
 		s.mw.HandleErrors,
 	)(mux)
 }

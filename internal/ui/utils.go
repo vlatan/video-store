@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"bytes"
+	"compress/gzip"
 	"crypto/md5"
 	"factual-docs/internal/models"
 	"factual-docs/web"
@@ -170,23 +172,40 @@ func parseStaticFiles(m *minify.M, dir string) models.StaticFiles {
 			mediaType = "text/css"
 		case "js":
 			mediaType = "application/javascript"
+		case "webmanifest":
+			mediaType = "application/manifest+json"
 		}
 
-		// Minify the content (only CSS or JS)
+		// We can minify and gzip just certain files
+		var cb []byte
 		if mediaType != "" {
-			b, err = m.Bytes(mediaType, b)
+
+			// Minify the content
+			b, err := m.Bytes(mediaType, b)
 			if err != nil {
 				return err
 			}
+
+			// Gzip the content
+			buf := new(bytes.Buffer)
+			gz := gzip.NewWriter(buf)
+			defer gz.Close()
+
+			_, err = gz.Write(b)
+			if err != nil {
+				return err
+			}
+
+			// Close the writer explicitly to flush all bytes
+			if err = gz.Close(); err != nil {
+				return err
+			}
+
+			cb = buf.Bytes()
 		}
 
 		// Create Etag as a hexadecimal md5 hash of the file content
 		etag := fmt.Sprintf("%x", md5.Sum(b))
-
-		// Store empty bytes array if this is not CSS or JS
-		if mediaType == "" {
-			b = make([]byte, 0)
-		}
 
 		// Ensure the name starts with "/"
 		name := path
@@ -196,9 +215,10 @@ func parseStaticFiles(m *minify.M, dir string) models.StaticFiles {
 
 		// Save all the data in the struct
 		sf[name] = &models.FileInfo{
-			Bytes:     b,
-			MediaType: mediaType,
-			Etag:      etag,
+			Bytes:      b,
+			Compressed: cb,
+			MediaType:  mediaType,
+			Etag:       etag,
 		}
 
 		return nil
