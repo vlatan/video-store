@@ -75,7 +75,7 @@ func (s *Service) loginUser(w http.ResponseWriter, r *http.Request, gothUser *go
 
 	// Get a session. We're ignoring the error resulted from decoding an
 	// existing session: Get() always returns a session, even if empty map[]
-	session, _ := s.store.Get(r, s.config.SessionName)
+	session, _ := s.store.Get(r, s.config.UserSessionName)
 	now := time.Now()
 
 	// Store user values in session
@@ -116,7 +116,7 @@ func (s *Service) getUserFinalRedirect(w http.ResponseWriter, r *http.Request) s
 // Logout the user, delete the session
 func (s *Service) logoutUser(w http.ResponseWriter, r *http.Request) error {
 	// Invalidate the user session
-	session, err := s.store.Get(r, s.config.SessionName)
+	session, err := s.store.Get(r, s.config.UserSessionName)
 	if err != nil {
 		return err
 	}

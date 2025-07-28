@@ -28,7 +28,7 @@ func (s *service) StoreFlashMessage(
 // Get the user from session
 func (s *service) GetUserFromSession(w http.ResponseWriter, r *http.Request) *models.User {
 	// Get session from store
-	session, err := s.store.Get(r, s.config.SessionName)
+	session, err := s.store.Get(r, s.config.UserSessionName)
 	if session == nil || err != nil {
 		return nil
 	}
