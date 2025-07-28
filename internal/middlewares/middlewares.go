@@ -54,19 +54,29 @@ func (s *Service) IsAdmin(next http.HandlerFunc) http.HandlerFunc {
 }
 
 // Get user from session and put it in context
-func (s *Service) LoadContext(next http.Handler) http.Handler {
+func (s *Service) LoadUser(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		// Get user from session and store in context
 		user := s.ui.GetUserFromSession(w, r) // Can be nil
 		ctx := context.WithValue(r.Context(), utils.UserContextKey, user)
 
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+// Get user from session and put it in context
+func (s *Service) LoadData(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		// Get user from context
+		user := utils.GetUserFromContext(r)
 		// Generate the default data
 		data := s.ui.NewData(w, r)
 		// Attach the user to be able to be accessed from data too
 		data.CurrentUser = user
 		// Store data to context
-		ctx = context.WithValue(ctx, utils.DataContextKey, data)
+		ctx := context.WithValue(r.Context(), utils.DataContextKey, data)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
@@ -167,6 +177,13 @@ func (s *Service) CreateCSRFMiddleware() func(http.Handler) http.Handler {
 	// Return the wrapper that sets plain text context before calling CSRF
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+			// Anonimous users don't make backend p
+			user := utils.GetUserFromContext(r)
+			if !user.IsAuthenticated() {
+				next.ServeHTTP(w, r)
+				return
+			}
 
 			// Do nothing if static file
 			if isStatic(r) {
