@@ -57,6 +57,12 @@ func (s *Service) IsAdmin(next http.HandlerFunc) http.HandlerFunc {
 func (s *Service) LoadUser(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
+		// Check if request possibly needs a cookie
+		if !utils.NeedsCookie(w, r) {
+			next.ServeHTTP(w, r)
+			return
+		}
+
 		// Get user from session and store in context
 		user := s.ui.GetUserFromSession(w, r) // Can be nil
 		ctx := context.WithValue(r.Context(), utils.UserContextKey, user)
@@ -119,7 +125,7 @@ func (s *Service) AddHeaders(next http.Handler) http.Handler {
 
 		// Add CF cache control header if user not logged in AND not static file
 		user := utils.GetUserFromContext(r)
-		if !user.IsAuthenticated() && !isStatic(r) {
+		if !user.IsAuthenticated() && !utils.IsStatic(r) {
 			w.Header().Set("CDN-Cache-Control", "14400")
 		}
 
@@ -178,20 +184,8 @@ func (s *Service) CreateCSRFMiddleware() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-			// Do nothing if static file
-			if isStatic(r) {
-				next.ServeHTTP(w, r)
-				return
-			}
-
-			// Skip CSRF for exact match
-			if r.URL.Path == "/health/" || r.URL.Path == "/ads.txt" {
-				next.ServeHTTP(w, r)
-				return
-			}
-
-			// Skip CSRF for sitemaps
-			if strings.HasPrefix(r.URL.Path, "/sitemap") {
+			// Check if request possibly needs a cookie
+			if !utils.NeedsCookie(w, r) {
 				next.ServeHTTP(w, r)
 				return
 			}
