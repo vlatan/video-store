@@ -1,5 +1,4 @@
 
-* The cloudflare CDN header, once we send it it's done for everyone?
 * Get from the backup a db and see how many orphans there were
 * Delete the python convert script and everything with it
 
