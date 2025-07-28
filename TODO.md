@@ -1,7 +1,5 @@
 
-* Static files GZIP and bypass
-  https://claude.ai/chat/d9ead877-6400-4213-a927-33cc5ded9fdd 
-  https://www.lemoda.net/go/gzip-handler/index.html
+* GZIP HTML
   https://github.com/klauspost/compress
 
 
