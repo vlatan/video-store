@@ -174,11 +174,15 @@ func (s *Service) CreateCSRFMiddleware() func(http.Handler) http.Handler {
 		csrf.Path("/"),
 	)
 
-	// Return the wrapper that sets plain text context before calling CSRF
+	// Return the actual handler
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-			// Anonimous users don't make backend p
+			// Anonimous users don't make POST requests,
+			// so no CSRF protection needed.
+			// gorilla/csrf sets Vary: Cookie header
+			// and we don't want that for anonimous requests,
+			// because we want to cache those.
 			user := utils.GetUserFromContext(r)
 			if !user.IsAuthenticated() {
 				next.ServeHTTP(w, r)
