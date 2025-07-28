@@ -51,24 +51,43 @@ func (s *Service) StaticHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Set long max age cache conttrol
+	// Set long max age cache conttrol and vary cache based on compression
 	w.Header().Set("Cache-Control", "max-age=31536000")
+	w.Header().Set("Vary", "Accept-Encoding")
 
 	// Get the file information
 	fileInfo, ok := s.ui.GetStaticFiles()[r.URL.Path]
+
+	// Set Etag if etag available
+	if ok && fileInfo.Etag != "" {
+		w.Header().Set("Etag", fmt.Sprintf(`"%s"`, fileInfo.Etag))
+	}
+
+	// Return 304 if etag match
+	noneMatch := strings.Trim(r.Header.Get("If-None-Match"), "\"")
+	if ok && fileInfo.Etag != "" && noneMatch == fileInfo.Etag {
+		w.WriteHeader(http.StatusNotModified)
+		return
+	}
 
 	// Set content type header if media type available
 	if ok && fileInfo.MediaType != "" {
 		w.Header().Set("Content-Type", fileInfo.MediaType)
 	}
 
-	// Set Etag if etag available
-	if ok && fileInfo.Etag != "" {
-		w.Header().Set("Etag", fileInfo.Etag)
+	// Check if client accepts gzip
+	if strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
+		if ok && fileInfo.Compressed != nil && len(fileInfo.Compressed) > 0 {
+			w.Header().Set("Content-Encoding", "gzip")
+			w.Header().Set("Content-Length", fmt.Sprintf("%d", len(fileInfo.Compressed)))
+			http.ServeContent(w, r, r.URL.Path, time.Time{}, bytes.NewReader(fileInfo.Compressed))
+			return
+		}
 	}
 
 	// Serve the file content if we have bytes stored
 	if ok && fileInfo.Bytes != nil && len(fileInfo.Bytes) > 0 {
+		w.Header().Set("Content-Length", fmt.Sprintf("%d", len(fileInfo.Bytes)))
 		http.ServeContent(w, r, r.URL.Path, time.Time{}, bytes.NewReader(fileInfo.Bytes))
 		return
 	}

@@ -12,9 +12,10 @@ type StaticFiles map[string]*FileInfo
 type TemplateMap map[string]*template.Template
 
 type FileInfo struct {
-	Bytes     []byte
-	MediaType string
-	Etag      string
+	Bytes      []byte
+	Compressed []byte
+	MediaType  string
+	Etag       string
 }
 
 // The response from the Genai API
