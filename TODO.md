@@ -1,4 +1,6 @@
 
+* Why on /static/favicons/site.webmanifest user is not authneticated?
+
 * Static files GZIP and bypass
   https://www.lemoda.net/go/gzip-handler/index.html
   https://github.com/klauspost/compress
