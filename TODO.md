@@ -1,9 +1,6 @@
 
 * Get from the backup a db and see how many orphans there were
-* Delete the python convert script and everything with it
-
 * Check for nil dereference in templates
-
 * Maybe the worker to backup the database?
 
 * Use logger
