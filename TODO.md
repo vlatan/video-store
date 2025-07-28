@@ -1,21 +1,12 @@
 
-* Does not set Vary header
-  w.Header().Set("Vary", "Accept-Encoding")
-
 * Static files GZIP and bypass
   https://claude.ai/chat/d9ead877-6400-4213-a927-33cc5ded9fdd 
   https://www.lemoda.net/go/gzip-handler/index.html
   https://github.com/klauspost/compress
 
-* Do not set session and flash cookie on static files
+* Why on /static/favicons/site.webmanifest user is not authneticated?
 
-* Set csfr cookie only for auth or admin users
-  I should probably not create the csrf.Protect middlware at all in this case
-  because that produces the cookie.
-  Check if I should do this at all?
-  https://claude.ai/chat/6757dc08-0008-4ea6-a6b2-91ea949e9aa1
-
-* The cloudflare cdn header, once we send it it's done for everyone?
+* The cloudflare CDN header, once we send it it's done for everyone?
 * Get from the backup a db and see how many orphans there were
 * Delete the python convert script and everything with it
 

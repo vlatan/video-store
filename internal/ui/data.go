@@ -32,19 +32,22 @@ func (s *service) NewData(w http.ResponseWriter, r *http.Request) *models.Templa
 		},
 	)
 
-	// Get any flash messages from session and put to data
-	session, _ := s.store.Get(r, s.config.FlashSessionName)
-	flashes := session.Flashes()
-	flashMessages := []*models.FlashMessage{}
-	for _, v := range flashes {
-		if flash, ok := v.(*models.FlashMessage); ok && flash != nil {
-			flashMessages = append(flashMessages, flash)
+	// Check if request possibly needs a cookie
+	var flashMessages []*models.FlashMessage
+	if utils.NeedsCookie(w, r) {
+		// Get any flash messages from session and put to data
+		session, _ := s.store.Get(r, s.config.FlashSessionName)
+		flashes := session.Flashes()
+		for _, v := range flashes {
+			if flash, ok := v.(*models.FlashMessage); ok && flash != nil {
+				flashMessages = append(flashMessages, flash)
+			}
 		}
-	}
 
-	// Delete the flash session cookie created with s.store.Get
-	session.Options.MaxAge = -1
-	session.Save(r, w)
+		// Delete the flash session cookie created with s.store.Get
+		session.Options.MaxAge = -1
+		session.Save(r, w)
+	}
 
 	return &models.TemplateData{
 		StaticFiles:   s.GetStaticFiles(),
