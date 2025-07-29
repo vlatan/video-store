@@ -121,11 +121,11 @@ func (u *User) DownloadAvatar(config *config.Config) (string, error) {
 	// Run this clean up function on exit
 	defer func() {
 		if err := file.Close(); err != nil { // Close the file
-			log.Printf("Warning: failed to close file '%s': %v\n", destination, err)
+			log.Printf("Warning: failed to close file '%s': %v", destination, err)
 		}
 		if !valid { // Remove the file if not successfuly created
 			if err := os.Remove(destination); err != nil {
-				log.Printf("Failed to remove partially created file '%s': %v\n", destination, err)
+				log.Printf("Failed to remove partially created file '%s': %v", destination, err)
 			}
 		}
 	}()

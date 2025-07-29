@@ -239,7 +239,7 @@ func (s *Service) DeletePageHandler(w http.ResponseWriter, r *http.Request) {
 
 	rowsAffected, err := s.pagesRepo.DeletePage(r.Context(), pageSlug)
 	if err != nil {
-		log.Printf("User %d could not delete page %s: %v\n", currentUser.ID, pageSlug, err)
+		log.Printf("User %d could not delete page %s: %v", currentUser.ID, pageSlug, err)
 		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
 		return
 	}
