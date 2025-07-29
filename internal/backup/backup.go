@@ -41,19 +41,28 @@ func New(ctx context.Context) *Service {
 // Run dumps a database to file and uploads that file to S3
 func (s *Service) Run(ctx context.Context) error {
 
+	log.Println("Backup service running...")
+
 	dbDump := fmt.Sprintf("backup-%v", time.Now().Format("2006-01-02T15-04"))
 	if err := s.DumpDatabase(dbDump); err != nil {
 		return err
 	}
+
+	log.Println("Database dumped.")
 
 	cDump := fmt.Sprintf("%s.gz", dbDump)
 	if err := s.CompressFile(dbDump, cDump); err != nil {
 		return err
 	}
 
+	log.Println("Database compressed.")
+
 	if err := s.UploadFile(ctx, s.config.AwsBucketName, cDump, cDump); err != nil {
 		return err
 	}
+
+	log.Println("Database uploaded to S3 bucket.")
+	log.Println("Backup finished successfully.")
 
 	return nil
 }
