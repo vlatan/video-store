@@ -66,12 +66,12 @@ func (s *Service) ValidateYouTubeVideo(video *youtube.Video) error {
 		return errors.New("this video is region-restricted")
 	}
 
-	var language string = strings.ToLower(video.Snippet.DefaultLanguage)
+	language := strings.ToLower(video.Snippet.DefaultLanguage)
 	if language != "" && !strings.HasPrefix(language, "en") {
 		return errors.New("this video's title and/or description is not in English")
 	}
 
-	var broadcast string = video.Snippet.LiveBroadcastContent
+	broadcast := video.Snippet.LiveBroadcastContent
 	if broadcast != "" && broadcast != "none" {
 		return errors.New("this video is not fully broadcasted")
 	}
