@@ -125,7 +125,7 @@ func (s *Service) UploadFile(ctx context.Context, bucketName, objectKey, fileNam
 	// Open the file
 	file, err := os.Open(fileName)
 	if err != nil {
-		return fmt.Errorf("couldn't open file %s to upload: %v", fileName, err)
+		return fmt.Errorf("couldn't open file %s to upload: %w", fileName, err)
 	}
 	defer file.Close()
 
@@ -139,7 +139,7 @@ func (s *Service) UploadFile(ctx context.Context, bucketName, objectKey, fileNam
 		var apiErr smithy.APIError
 		if errors.As(err, &apiErr) && apiErr.ErrorCode() == "EntityTooLarge" {
 			return fmt.Errorf(
-				"error while uploading object to %s; The object is too large: %v",
+				"error while uploading object to %s; The object is too large: %w",
 				bucketName, err,
 			)
 
@@ -162,7 +162,7 @@ func (s *Service) UploadFile(ctx context.Context, bucketName, objectKey, fileNam
 
 	if err != nil {
 		return fmt.Errorf(
-			"failed attempt to wait for object %s to exist: %v",
+			"failed attempt to wait for object %s to exist: %w",
 			objectKey, err,
 		)
 	}

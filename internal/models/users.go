@@ -95,7 +95,7 @@ func (u *User) DownloadAvatar(config *config.Config) (string, error) {
 	// Get remote file
 	response, err := http.Get(u.AvatarURL)
 	if err != nil {
-		return "", fmt.Errorf("can't read the remote file: %v", err)
+		return "", fmt.Errorf("can't read the remote file: %w", err)
 	}
 	defer response.Body.Close()
 
@@ -112,7 +112,7 @@ func (u *User) DownloadAvatar(config *config.Config) (string, error) {
 	destination := filepath.Join(config.DataVolume, u.AnalyticsID+".jpg")
 	file, err := os.Create(destination)
 	if err != nil {
-		return "", fmt.Errorf("couldn't create file '%s': %v", destination, err)
+		return "", fmt.Errorf("couldn't create file '%s': %w", destination, err)
 	}
 
 	// Flag to track if the download was successful
@@ -139,7 +139,7 @@ func (u *User) DownloadAvatar(config *config.Config) (string, error) {
 	// Stream the response body directly into the hasher and the file
 	_, err = io.Copy(multiWriter, response.Body)
 	if err != nil {
-		return "", fmt.Errorf("couldn't hash or write to file '%s': %v", destination, err)
+		return "", fmt.Errorf("couldn't hash or write to file '%s': %w", destination, err)
 	}
 
 	// Get the final hash sum and convert to a hex string

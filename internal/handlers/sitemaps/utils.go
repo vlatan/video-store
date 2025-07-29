@@ -16,7 +16,7 @@ func (s *Service) GetSitemapData(r *http.Request, partSize int) (models.Sitemap,
 	data, err := s.postsRepo.SitemapData(r.Context())
 	if err != nil {
 		return nil, fmt.Errorf(
-			"was unabale to fetch sitemap data on URI '%s': %v",
+			"was unabale to fetch sitemap data on URI '%s': %w",
 			r.RequestURI,
 			err,
 		)

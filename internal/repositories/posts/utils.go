@@ -89,7 +89,7 @@ func (r *Repository) queryTaxonomyPosts(
 		// Unserialize thumbnails
 		var thumbs models.Thumbnails
 		if err = json.Unmarshal(thumbnails, &thumbs); err != nil {
-			return nil, fmt.Errorf("video ID '%s': %v", post.VideoID, err)
+			return nil, fmt.Errorf("video ID '%s': %w", post.VideoID, err)
 		}
 
 		// Craft srcset string

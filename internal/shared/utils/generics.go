@@ -60,7 +60,7 @@ func Retry[T any](
 		}
 	}
 
-	return zero, fmt.Errorf("max retries error: %v", lastError)
+	return zero, fmt.Errorf("max retries error: %w", lastError)
 }
 
 // Extract retry delay from error on Google API.

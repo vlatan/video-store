@@ -126,7 +126,7 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (*models
 	// Unserialize thumbnails
 	var thumbs models.Thumbnails
 	if err = json.Unmarshal(thumbnails, &thumbs); err != nil {
-		return nil, fmt.Errorf("video ID '%s': %v", videoID, err)
+		return nil, fmt.Errorf("video ID '%s': %w", videoID, err)
 	}
 
 	// Assign the biggest thumbnail to post
@@ -232,7 +232,7 @@ func (r *Repository) GetHomePosts(
 		// Unserialize thumbnails
 		var thumbs models.Thumbnails
 		if err = json.Unmarshal(thumbnails, &thumbs); err != nil {
-			return posts, fmt.Errorf("video ID '%s': %v", post.VideoID, err)
+			return posts, fmt.Errorf("video ID '%s': %w", post.VideoID, err)
 		}
 
 		// Craft srcset string
@@ -298,7 +298,7 @@ func (r *Repository) GetRandomPosts(ctx context.Context, title string, limit int
 		// Unserialize thumbnails
 		var thumbs models.Thumbnails
 		if err = json.Unmarshal(thumbnails, &thumbs); err != nil {
-			return nil, fmt.Errorf("video ID '%s': %v", post.VideoID, err)
+			return nil, fmt.Errorf("video ID '%s': %w", post.VideoID, err)
 		}
 
 		// Craft srcset string
@@ -353,7 +353,7 @@ func (r *Repository) GetUserFavedPosts(
 		// Unserialize thumbnails
 		var thumbs models.Thumbnails
 		if err = json.Unmarshal(thumbnails, &thumbs); err != nil {
-			return nil, fmt.Errorf("video ID '%s': %v", post.VideoID, err)
+			return nil, fmt.Errorf("video ID '%s': %w", post.VideoID, err)
 		}
 
 		// Craft srcset string
@@ -404,7 +404,7 @@ func (r *Repository) SearchPosts(ctx context.Context, searchTerm string, limit, 
 		// Unserialize thumbnails
 		var thumbs models.Thumbnails
 		if err = json.Unmarshal(thumbnails, &thumbs); err != nil {
-			return nil, fmt.Errorf("video ID '%s': %v", post.VideoID, err)
+			return nil, fmt.Errorf("video ID '%s': %w", post.VideoID, err)
 		}
 
 		post.Srcset = thumbs.Srcset(480)

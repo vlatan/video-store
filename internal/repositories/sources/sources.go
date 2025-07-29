@@ -115,7 +115,7 @@ func (r *Repository) GetSources(ctx context.Context) ([]models.Source, error) {
 		var channelThumbs models.Thumbnails
 		if err = json.Unmarshal(thumbnails, &channelThumbs); err != nil {
 			msg := "could not ummarshal the channel thumbs on playlist"
-			return nil, fmt.Errorf("%s: '%s': %v", msg, source.PlaylistID, err)
+			return nil, fmt.Errorf("%s: '%s': %w", msg, source.PlaylistID, err)
 		}
 
 		source.ChannelThumbnails = &channelThumbs
