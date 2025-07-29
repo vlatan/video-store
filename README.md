@@ -43,17 +43,27 @@ Put this alias in your `~/.bash_aliases` file too and run `down` to bring down t
 alias down='docker compose down --remove-orphans && docker system prune --force'
 ```
 
-To run the worker use this. Worker binary is being recompiled during each live reload too, so code changes instantly propagate there too.
+**NOTE**: `worker` and `backup` binaries are being recompiled during each live reload too, so code changes instantly propagate there too.
+
+### Run the worker
 ``` bash
-docker compose run --rm worker /src/bin/worker
+docker compose exec worker /src/bin/worker
 ```
 
-To access redis use this:
+### Run the backup
+``` bash
+docker compose exec backup /src/bin/backup
+```
+
+### Access redis
 ``` bash
 docker compose exec -it redis redis-cli
 ```
 
-To access the database use this, where `-U` is the user, and `-d` is the database.
+### Access the database
+
+`-U` is the user, and `-d` is the database.
+
 ``` bash
 docker compose exec -it postgres psql -U xxx -d xxx
 ```
@@ -61,7 +71,7 @@ docker compose exec -it postgres psql -U xxx -d xxx
 
 ## Run the app in production
 
-No really a difference, except the app or the worker will be built and run by the `Dockerfile` so you need the `TARGET` environment variable in production to specify which one you want to run, `app` or the `worker`. That is the host needs to be able to pass this `TARGET` variable as a build argument.
+No really a difference, except the `app`, `worker` or the `backup` will be built and run by the `Dockerfile` so you need the `TARGET` environment variable in production to specify which one you want to run, `app`, `worker` or `backup`. That is the host needs to be able to pass this `TARGET` variable as a build argument.
 
 
 ## Dump/Restore DB data

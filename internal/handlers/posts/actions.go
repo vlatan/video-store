@@ -16,7 +16,7 @@ type bodyData struct {
 func (s *Service) handleLike(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
 	rowsAffected, err := s.postsRepo.Like(r.Context(), userID, videoID)
 	if err != nil {
-		log.Printf("User %d could not like the video %s: %v\n", userID, videoID, err)
+		log.Printf("User %d could not like the video %s: %v", userID, videoID, err)
 		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
 		return
 	}
@@ -31,7 +31,7 @@ func (s *Service) handleLike(w http.ResponseWriter, r *http.Request, userID int,
 func (s *Service) handleUnlike(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
 	rowsAffected, err := s.postsRepo.Unlike(r.Context(), userID, videoID)
 	if err != nil {
-		log.Printf("User %d could not unlike the video %s: %v\n", userID, videoID, err)
+		log.Printf("User %d could not unlike the video %s: %v", userID, videoID, err)
 		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
 		return
 	}
@@ -46,7 +46,7 @@ func (s *Service) handleUnlike(w http.ResponseWriter, r *http.Request, userID in
 func (s *Service) handleFave(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
 	rowsAffected, err := s.postsRepo.Fave(r.Context(), userID, videoID)
 	if err != nil {
-		log.Printf("User %d could not fave the video %s: %v\n", userID, videoID, err)
+		log.Printf("User %d could not fave the video %s: %v", userID, videoID, err)
 		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
 		return
 	}
@@ -61,7 +61,7 @@ func (s *Service) handleFave(w http.ResponseWriter, r *http.Request, userID int,
 func (s *Service) handleUnfave(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
 	rowsAffected, err := s.postsRepo.Unfave(r.Context(), userID, videoID)
 	if err != nil {
-		log.Printf("User %d could not unfave the video %s: %v\n", userID, videoID, err)
+		log.Printf("User %d could not unfave the video %s: %v", userID, videoID, err)
 		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
 		return
 	}
@@ -76,7 +76,7 @@ func (s *Service) handleUnfave(w http.ResponseWriter, r *http.Request, userID in
 func (s *Service) handleUpdateTitle(w http.ResponseWriter, r *http.Request, userID int, videoID, title string) {
 	rowsAffected, err := s.postsRepo.UpdateTitle(r.Context(), videoID, title)
 	if err != nil {
-		log.Printf("User %d could not update the title of the video %s: %v\n", userID, videoID, err)
+		log.Printf("User %d could not update the title of the video %s: %v", userID, videoID, err)
 		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
 		return
 	}
@@ -91,7 +91,7 @@ func (s *Service) handleUpdateTitle(w http.ResponseWriter, r *http.Request, user
 func (s *Service) handleUpdateDesc(w http.ResponseWriter, r *http.Request, userID int, videoID, description string) {
 	rowsAffected, err := s.postsRepo.UpdateDesc(r.Context(), videoID, description)
 	if err != nil {
-		log.Printf("User %d could not update the description of the video %s: %v\n", userID, videoID, err)
+		log.Printf("User %d could not update the description of the video %s: %v", userID, videoID, err)
 		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
 		return
 	}
@@ -106,7 +106,7 @@ func (s *Service) handleUpdateDesc(w http.ResponseWriter, r *http.Request, userI
 func (s *Service) handleBanPost(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
 	rowsAffected, err := s.postsRepo.BanPost(r.Context(), videoID)
 	if err != nil {
-		log.Printf("User %d could not delete the video %s: %v\n", userID, videoID, err)
+		log.Printf("User %d could not delete the video %s: %v", userID, videoID, err)
 		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
 		return
 	}

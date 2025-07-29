@@ -38,6 +38,9 @@ type Config struct {
 	AdSenseAccount string `env:"ADSENSE_ACCOUNT"`
 	AdSlotSidebar  string `env:"AD_SLOT_SIDEBAR"`
 
+	// AWS
+	AwsBucketName string `env:"AWS_BUCKET_NAME"`
+
 	// Redis
 	RedisHost     string        `env:"REDIS_HOST" envDefault:"localhost"`
 	RedisPort     int           `env:"REDIS_PORT" envDefault:"6379"`

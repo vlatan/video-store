@@ -73,7 +73,7 @@ func (s *Service) Run(ctx context.Context) error {
 
 	if err != nil || len(dbSources) == 0 {
 		return fmt.Errorf(
-			"could not fetch the sources from DB; Rows: %v; Error: %v",
+			"could not fetch the sources from DB; Rows: %v; Error: %w",
 			len(dbSources), err,
 		)
 	}
@@ -93,7 +93,7 @@ func (s *Service) Run(ctx context.Context) error {
 	ytSources, err := s.yt.GetSources(ctx, playlistIDs...)
 	if err != nil {
 		return fmt.Errorf(
-			"could not fetch the playlists from YouTube: %v",
+			"could not fetch the playlists from YouTube: %w",
 			err,
 		)
 	}
@@ -110,7 +110,7 @@ func (s *Service) Run(ctx context.Context) error {
 	channels, err := s.yt.GetChannels(ctx, channelIDs...)
 	if err != nil {
 		return fmt.Errorf(
-			"could not fetch the channels from YouTube: %v",
+			"could not fetch the channels from YouTube: %w",
 			err,
 		)
 	}
@@ -140,7 +140,7 @@ func (s *Service) Run(ctx context.Context) error {
 		rowsAffected, err := s.sourcesRepo.UpdateSource(ctx, newSource)
 		if err != nil || rowsAffected == 0 {
 			return fmt.Errorf(
-				"could not update source '%s' in DB: %v",
+				"could not update source '%s' in DB: %w",
 				newSource.PlaylistID, err,
 			)
 		}
@@ -159,7 +159,7 @@ func (s *Service) Run(ctx context.Context) error {
 		sourceItems, err := s.yt.GetSourceItems(ctx, playlistID)
 		if err != nil {
 			return fmt.Errorf(
-				"could not get items from YouTube on source '%s': %v",
+				"could not get items from YouTube on source '%s': %w",
 				playlistID, err,
 			)
 		}
@@ -173,7 +173,7 @@ func (s *Service) Run(ctx context.Context) error {
 		// Get all the videos metadata
 		videosMetadata, err := s.yt.GetVideos(ctx, videoIDs...)
 		if err != nil {
-			return fmt.Errorf("could not get videos from YouTube: %v", err)
+			return fmt.Errorf("could not get videos from YouTube: %w", err)
 		}
 
 		// Keep only the valid videos
@@ -189,7 +189,7 @@ func (s *Service) Run(ctx context.Context) error {
 	allVideos, err := s.postsRepo.GetAllPosts(ctx)
 	if err != nil || len(allVideos) == 0 {
 		return fmt.Errorf(
-			"could not fetch the sourced videos from DB; Rows: %v; Error: %v",
+			"could not fetch the sourced videos from DB; Rows: %v; Error: %w",
 			len(allVideos), err,
 		)
 	}
@@ -230,7 +230,7 @@ func (s *Service) Run(ctx context.Context) error {
 		rowsAffected, err := s.postsRepo.DeletePost(ctx, videoID)
 		if err != nil || rowsAffected == 0 {
 			return fmt.Errorf(
-				"could not delete the video '%s' in DB: %v",
+				"could not delete the video '%s' in DB: %w",
 				videoID, err,
 			)
 		}
@@ -243,7 +243,7 @@ func (s *Service) Run(ctx context.Context) error {
 
 	if err != nil || len(categories) == 0 {
 		return fmt.Errorf(
-			"could not fetch the categories from DB; Rows: %v; Error: %v",
+			"could not fetch the categories from DB; Rows: %v; Error: %w",
 			len(categories), err,
 		)
 	}
@@ -281,7 +281,7 @@ func (s *Service) Run(ctx context.Context) error {
 		rowsAffected, err := s.postsRepo.InsertPost(ctx, ytVideo)
 		if err != nil || rowsAffected == 0 {
 			return fmt.Errorf(
-				"failed to insert video '%s' in DB; Error: %v; Rows: %d",
+				"failed to insert video '%s' in DB; Error: %w; Rows: %d",
 				videoID, err, rowsAffected)
 		}
 
@@ -294,7 +294,7 @@ func (s *Service) Run(ctx context.Context) error {
 	ytOrphanVideos, err := s.yt.GetVideos(ctx, orphanVideoIDs...)
 	if err != nil {
 		return fmt.Errorf(
-			"could not get the orphan videos from YouTube: %v",
+			"could not get the orphan videos from YouTube: %w",
 			err,
 		)
 	}
@@ -318,7 +318,7 @@ func (s *Service) Run(ctx context.Context) error {
 			rowsAffected, err := s.postsRepo.DeletePost(ctx, videoID)
 			if err != nil || rowsAffected == 0 {
 				return fmt.Errorf(
-					"could not delete the video '%s' in DB; Error: %v; Rows: %d",
+					"could not delete the video '%s' in DB; Error: %w; Rows: %d",
 					videoID, err, rowsAffected,
 				)
 			}

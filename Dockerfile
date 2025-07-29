@@ -21,6 +21,14 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o binary ./cmd/${TARGET}
 # Use small image for the final stage
 FROM alpine:3.21
 
+# Redeclare the ARG for this stage
+ARG TARGET="app"
+
+# The backup app will need the postgresql client in order to dump the DB
+RUN if [ "$TARGET" = "backup" ]; then \
+    apk update && apk add postgresql16-client; \
+    fi
+
 # Copy the binary from the build stage
 COPY --from=builder /src/binary /binary
 
