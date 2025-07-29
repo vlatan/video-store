@@ -123,7 +123,10 @@ func (s *Service) UploadFile(ctx context.Context, bucketName, objectKey, fileNam
 	)
 
 	if err != nil {
-		return fmt.Errorf("failed attempt to wait for object %s to exist", objectKey)
+		return fmt.Errorf(
+			"failed attempt to wait for object %s to exist: %v",
+			objectKey, err,
+		)
 	}
 
 	return nil
