@@ -2,10 +2,12 @@ package backup
 
 import (
 	"bytes"
+	"compress/gzip"
 	"context"
 	"errors"
 	"factual-docs/internal/shared/config"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"os/exec"
@@ -39,14 +41,17 @@ func New(ctx context.Context) *Service {
 // Run dumps a database to file and uploads that file to S3
 func (s *Service) Run(ctx context.Context) error {
 
-	fileName := fmt.Sprintf("backup-%v", time.Now().Format("2006-01-02-15:04"))
-	err := s.DumpDatabase(fileName)
-	if err != nil {
+	dbDump := fmt.Sprintf("backup-%v", time.Now().Format("2006-01-02T15-04"))
+	if err := s.DumpDatabase(dbDump); err != nil {
 		return err
 	}
 
-	err = s.UploadFile(ctx, s.config.AwsBucketName, fileName, fileName)
-	if err != nil {
+	cDump := fmt.Sprintf("%s.gz", dbDump)
+	if err := s.CompressFile(dbDump, cDump); err != nil {
+		return err
+	}
+
+	if err := s.UploadFile(ctx, s.config.AwsBucketName, cDump, cDump); err != nil {
 		return err
 	}
 
@@ -81,7 +86,40 @@ func (s *Service) DumpDatabase(outputPath string) error {
 	return nil
 }
 
-// Upload a file to S3 bucket
+// Compress compresses a file
+func (s *Service) CompressFile(filePath, destination string) error {
+
+	// Open the original file for reading
+	file, err := os.Open(filePath)
+	if err != nil {
+		return fmt.Errorf("failed to open the file: %w", err)
+	}
+	defer file.Close()
+
+	// Create the destination gzip file
+	gzipFile, err := os.Create(destination)
+	if err != nil {
+		return fmt.Errorf("failed to create gzip file: %w", err)
+	}
+	defer gzipFile.Close()
+
+	// Create a gzip writer that writes to the destination file
+	gzipWriter, err := gzip.NewWriterLevel(gzipFile, gzip.BestCompression)
+	if err != nil {
+		return fmt.Errorf("failed to create gzip writer: %w", err)
+	}
+	defer gzipWriter.Close()
+
+	// Copy the content from the source file to the gzip writer
+	_, err = io.Copy(gzipWriter, file)
+	if err != nil {
+		return fmt.Errorf("failed to copy data to gzip writer: %w", err)
+	}
+
+	return nil
+}
+
+// UploadFile uploads a file to S3 bucket
 func (s *Service) UploadFile(ctx context.Context, bucketName, objectKey, fileName string) error {
 
 	// Open the file
