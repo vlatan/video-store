@@ -1,5 +1,4 @@
 
-* Get from the backup a db and see how many orphans there were
 * Check for nil dereference in templates
 * Maybe the worker to backup the database?
 
