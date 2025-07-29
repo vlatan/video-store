@@ -67,7 +67,7 @@ services:
   worker:
     image: golang:1.24-alpine
     container_name: worker
-    command: [ "true" ]
+    command: tail -f /dev/null
     env_file: .env
     volumes:
       - /etc/timezone:/etc/timezone:ro
