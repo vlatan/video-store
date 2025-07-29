@@ -59,7 +59,7 @@ func (s *Service) Run(ctx context.Context) error {
 }
 
 // DumpDatabase dumps a database to file
-func (s *Service) DumpDatabase(outputPath string) error {
+func (s *Service) DumpDatabase(dest string) error {
 
 	// Database URL
 	dbUrl := fmt.Sprintf("postgres://%s:%s@%s:%d/%s",
@@ -70,7 +70,7 @@ func (s *Service) DumpDatabase(outputPath string) error {
 		s.config.DBDatabase,
 	)
 
-	cmd := exec.Command("pg_dump", dbUrl, "-f", outputPath)
+	cmd := exec.Command("pg_dump", dbUrl, "-f", dest)
 
 	// Capture both stdout and stderr
 	var stdout, stderr bytes.Buffer
@@ -87,17 +87,17 @@ func (s *Service) DumpDatabase(outputPath string) error {
 }
 
 // Compress compresses a file
-func (s *Service) CompressFile(filePath, destination string) error {
+func (s *Service) CompressFile(src, dest string) error {
 
 	// Open the original file for reading
-	file, err := os.Open(filePath)
+	file, err := os.Open(src)
 	if err != nil {
 		return fmt.Errorf("failed to open the file: %w", err)
 	}
 	defer file.Close()
 
 	// Create the destination gzip file
-	gzipFile, err := os.Create(destination)
+	gzipFile, err := os.Create(dest)
 	if err != nil {
 		return fmt.Errorf("failed to create gzip file: %w", err)
 	}
