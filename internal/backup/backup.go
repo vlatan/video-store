@@ -1,6 +1,7 @@
 package backup
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"factual-docs/internal/shared/config"
@@ -22,15 +23,15 @@ type Service struct {
 }
 
 // New creates a backup service
-func New(cfg *config.Config) *Service {
+func New(ctx context.Context) *Service {
 
-	sdkConfig, err := awsConfig.LoadDefaultConfig(context.TODO())
+	sdkConfig, err := awsConfig.LoadDefaultConfig(ctx)
 	if err != nil {
 		log.Fatalf("failed to load SDK configuration, %v", err)
 	}
 
 	return &Service{
-		config:   cfg,
+		config:   config.New(),
 		s3Client: s3.NewFromConfig(sdkConfig),
 	}
 }
@@ -65,7 +66,19 @@ func (s *Service) DumpDatabase(outputPath string) error {
 	)
 
 	cmd := exec.Command("pg_dump", dbUrl, "-f", outputPath)
-	return cmd.Run()
+
+	// Capture both stdout and stderr
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	err := cmd.Run()
+	if err != nil {
+		return fmt.Errorf("pg_dump failed: %v\nstderr: %s\nstdout: %s",
+			err, stderr.String(), stdout.String())
+	}
+
+	return nil
 }
 
 // Upload a file to S3 bucket

@@ -2,6 +2,7 @@ build:
 	@echo "Building..."	
 	@go build -o ./bin/app ./cmd/app
 	@go build -o ./bin/worker ./cmd/worker
+	@go build -o ./bin/backup ./cmd/backup
 
 # Run the application
 run:
