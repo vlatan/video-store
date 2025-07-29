@@ -39,7 +39,7 @@ func New(ctx context.Context) *Service {
 // Run dumps a database to file and uploads that file to S3
 func (s *Service) Run(ctx context.Context) error {
 
-	fileName := fmt.Sprintf("backup-%v", time.Now())
+	fileName := fmt.Sprintf("backup-%v", time.Now().Format("2006-01-02-15:04"))
 	err := s.DumpDatabase(fileName)
 	if err != nil {
 		return err
