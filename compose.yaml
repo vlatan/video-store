@@ -76,7 +76,18 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      redis:
+
+  backup:
+    image: golang:1.24
+    container_name: backup
+    command: [ "sh", "-c", "apt-get update && apt-get install -y postgresql-client-15 && tail -f /dev/null" ]
+    env_file: .env
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+      - ./bin:/src/bin
+    depends_on:
+      postgres:
         condition: service_healthy
 
 volumes:

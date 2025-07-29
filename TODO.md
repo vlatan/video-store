@@ -1,6 +1,8 @@
 
 * Check for nil dereference in templates
 * Maybe the worker to backup the database?
+  https://docs.aws.amazon.com/sdk-for-go/v2/developer-guide/go_s3_code_examples.html
+  https://github.com/awsdocs/aws-doc-sdk-examples/blob/main/gov2/s3/actions/bucket_basics.go#L126
 
 * Use logger
   https://go.dev/blog/slog
