@@ -151,6 +151,8 @@ func (s *Service) Run(ctx context.Context) error {
 	items = utils.Plural(len(ytSources), "playlist")
 	log.Printf("Fetched %d %s from YouTube", len(ytSources), items)
 
+	// ###################################################################
+
 	// Get valid videos from playlists
 	ytSourcedVideosMap := make(map[string]*models.Post)
 	for _, playlistID := range playlistIDs {
@@ -184,9 +186,6 @@ func (s *Service) Run(ctx context.Context) error {
 		}
 	}
 
-	items = utils.Plural(len(ytSourcedVideosMap), "video")
-	log.Printf("Fetched %d valid %s from YouTube", len(ytSourcedVideosMap), items)
-
 	allVideos, err := s.postsRepo.GetAllPosts(ctx)
 	if err != nil || len(allVideos) == 0 {
 		return fmt.Errorf(
@@ -212,6 +211,9 @@ func (s *Service) Run(ctx context.Context) error {
 
 	items = utils.Plural(len(sourcedDbVideosMap), "video")
 	log.Printf("Fetched %d sourced %s from DB", len(sourcedDbVideosMap), items)
+
+	items = utils.Plural(len(ytSourcedVideosMap), "video")
+	log.Printf("Fetched %d valid %s from YouTube", len(ytSourcedVideosMap), items)
 
 	items = utils.Plural(len(orphanDbVideosMap), "video")
 	log.Printf("Fetched %d orphan %s from DB", len(orphanDbVideosMap), items)
