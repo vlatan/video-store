@@ -21,7 +21,7 @@ type Service interface {
 	// Execute a query (update, insert, delete)
 	Exec(ctx context.Context, query string, args ...any) (int64, error)
 	// A map of health status information.
-	Health(ctx context.Context) map[string]string
+	Health(ctx context.Context) map[string]any
 	// Closes the pool and terminates the database connection.
 	Close()
 }

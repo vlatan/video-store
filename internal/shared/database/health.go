@@ -4,17 +4,18 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strconv"
+	"strings"
 	"time"
 )
 
 // Health checks the health of the database connection.
 // It returns a map with keys indicating various health statistics.
-func (s *service) Health(ctx context.Context) map[string]string {
+func (s *service) Health(ctx context.Context) map[string]any {
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
 
-	stats := make(map[string]string)
+	stats := make(map[string]any)
+	var healthMessages []string
 
 	// Ping the database
 	err := s.db.Ping(ctx)
@@ -27,34 +28,44 @@ func (s *service) Health(ctx context.Context) map[string]string {
 
 	// Database is up, add more statistics
 	stats["status"] = "up"
-	stats["message"] = "The database is healthy"
 
 	// Get database stats (like open connections, in use, idle, etc.)
 	dbStats := s.db.Stat()
-	stats["maximum_connections"] = strconv.Itoa(int(dbStats.MaxConns()))
-	stats["open_connections"] = strconv.Itoa(int(dbStats.NewConnsCount()))
-	stats["in_use"] = strconv.Itoa(int(dbStats.AcquiredConns()))
-	stats["idle"] = strconv.Itoa(int(dbStats.IdleConns()))
-	stats["wait_count"] = strconv.FormatInt(dbStats.EmptyAcquireCount(), 10)
-	stats["wait_duration"] = dbStats.AcquireDuration().String()
-	stats["max_idle_closed"] = strconv.FormatInt(dbStats.MaxIdleDestroyCount(), 10)
-	stats["max_lifetime_closed"] = strconv.FormatInt(dbStats.MaxLifetimeDestroyCount(), 10)
 
-	// Evaluate stats to provide a health message
-	if dbStats.NewConnsCount() > 40 {
-		stats["message"] = "The database is experiencing heavy load."
+	// Connection pool snapshots (raw numbers)
+	stats["maximum_connections"] = dbStats.MaxConns()
+	stats["open_connections"] = dbStats.TotalConns()
+	stats["connections_in_use"] = dbStats.AcquiredConns()
+	stats["idle_connections"] = dbStats.IdleConns()
+	stats["constructing_connections"] = dbStats.ConstructingConns()
+
+	// 2. Stress event counts (cumulative, but valuable as absolute values)
+	stats["cumulative_new_connections"] = dbStats.NewConnsCount()
+	stats["cumulative_waited_acquired"] = dbStats.EmptyAcquireCount()
+	stats["total_acquired_duration"] = dbStats.AcquireDuration()
+	stats["cumulative_max_idle_closed"] = dbStats.MaxIdleDestroyCount()
+	stats["cumulative_max_lifetime_closed"] = dbStats.MaxLifetimeDestroyCount()
+
+	if dbStats.MaxConns() > 0 {
+
+		utilization := float64(dbStats.AcquiredConns()) / float64(dbStats.MaxConns())
+		stats["connection_pool_utilization_percent"] = fmt.Sprintf("%.2f", utilization*100)
+
+		if utilization > 0.85 {
+			healthMessages = append(
+				healthMessages,
+				fmt.Sprintf("Pool highly utilized: %.2f%%", utilization*100),
+			)
+		}
+
+		if dbStats.TotalConns() >= dbStats.MaxConns() {
+			healthMessages = append(healthMessages, "Pool at max capacity")
+		}
 	}
 
-	if dbStats.EmptyAcquireCount() > 1000 {
-		stats["message"] = "The database has a high number of wait events, indicating potential bottlenecks."
-	}
-
-	if dbStats.MaxIdleDestroyCount() > dbStats.NewConnsCount()/2 {
-		stats["message"] = "Many idle connections are being closed, consider revising the connection pool settings."
-	}
-
-	if dbStats.MaxLifetimeDestroyCount() > dbStats.NewConnsCount()/2 {
-		stats["message"] = "Many connections are being closed due to max lifetime, consider increasing max lifetime or revising the connection usage pattern."
+	// Combine messages
+	if len(healthMessages) > 0 {
+		stats["message"] = strings.Join(healthMessages, "; ")
 	}
 
 	return stats
