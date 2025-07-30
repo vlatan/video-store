@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-// Health checks the health of the database connection by pinging the database.
+// Health checks the health of the database connection.
 // It returns a map with keys indicating various health statistics.
 func (s *service) Health(ctx context.Context) map[string]string {
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
@@ -21,13 +21,13 @@ func (s *service) Health(ctx context.Context) map[string]string {
 	if err != nil {
 		stats["status"] = "down"
 		stats["error"] = fmt.Sprintf("db down: %v", err)
-		log.Fatalf("db down: %v", err) // Log the error and terminate the program
+		log.Printf("db down: %v", err)
 		return stats
 	}
 
 	// Database is up, add more statistics
 	stats["status"] = "up"
-	stats["message"] = "It's healthy"
+	stats["message"] = "The database is healthy"
 
 	// Get database stats (like open connections, in use, idle, etc.)
 	dbStats := s.db.Stat()
