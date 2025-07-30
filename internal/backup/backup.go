@@ -1,8 +1,8 @@
 package backup
 
 import (
+	"archive/zip"
 	"bytes"
-	"compress/gzip"
 	"context"
 	"errors"
 	"factual-docs/internal/shared/config"
@@ -50,7 +50,7 @@ func (s *Service) Run(ctx context.Context) error {
 
 	log.Println("Database dumped.")
 
-	cDump := fmt.Sprintf("%s.gz", dbDump)
+	cDump := fmt.Sprintf("%s.zip", dbDump)
 	if err := s.CompressFile(dbDump, cDump); err != nil {
 		return err
 	}
@@ -101,28 +101,28 @@ func (s *Service) CompressFile(src, dest string) error {
 	// Open the original file for reading
 	file, err := os.Open(src)
 	if err != nil {
-		return fmt.Errorf("failed to open the file: %w", err)
+		return fmt.Errorf("failed to open the source file %s: %w", src, err)
 	}
 	defer file.Close()
 
-	// Create the destination gzip file
-	gzipFile, err := os.Create(dest)
+	// Create the destination zip file
+	zipFile, err := os.Create(dest)
 	if err != nil {
-		return fmt.Errorf("failed to create gzip file: %w", err)
+		return fmt.Errorf("failed to create zip destination file %s: %w", dest, err)
 	}
-	defer gzipFile.Close()
+	defer zipFile.Close()
 
-	// Create a gzip writer that writes to the destination file
-	gzipWriter, err := gzip.NewWriterLevel(gzipFile, gzip.BestCompression)
+	// Create a zip writer that writes to the destination file
+	zipWriter := zip.NewWriter(zipFile)
+	defer zipWriter.Close()
+
+	writer, err := zipWriter.Create(dest)
 	if err != nil {
-		return fmt.Errorf("failed to create gzip writer: %w", err)
+		return fmt.Errorf("failed to create zip writer: %w", err)
 	}
-	defer gzipWriter.Close()
 
-	// Copy the content from the source file to the gzip writer
-	_, err = io.Copy(gzipWriter, file)
-	if err != nil {
-		return fmt.Errorf("failed to copy data to gzip writer: %w", err)
+	if _, err := io.Copy(writer, zipFile); err != nil {
+		return fmt.Errorf("failed to zip the file %s: %w", src, err)
 	}
 
 	return nil
