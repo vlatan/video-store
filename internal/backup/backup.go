@@ -114,7 +114,7 @@ func (s *Service) ArchiveFiles(files []string, dest string) error {
 	}
 	defer gzipWriter.Close()
 
-	// Create tar writer
+	// Create tar writer (chained with gzip writer)
 	tarWriter := tar.NewWriter(gzipWriter)
 	defer tarWriter.Close()
 
