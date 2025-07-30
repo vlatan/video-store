@@ -1,8 +1,9 @@
 package backup
 
 import (
-	"archive/zip"
+	"archive/tar"
 	"bytes"
+	"compress/gzip"
 	"context"
 	"errors"
 	"factual-docs/internal/shared/config"
@@ -11,6 +12,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -50,14 +52,14 @@ func (s *Service) Run(ctx context.Context) error {
 
 	log.Println("Database dumped.")
 
-	cDump := fmt.Sprintf("%s.zip", dbDump)
-	if err := s.CompressFile(dbDump, cDump); err != nil {
+	archive := fmt.Sprintf("%s.tar.gz", dbDump)
+	if err := s.ArchiveFiles([]string{dbDump}, archive); err != nil {
 		return err
 	}
 
 	log.Println("Database compressed.")
 
-	if err := s.UploadFile(ctx, s.config.AwsBucketName, cDump, cDump); err != nil {
+	if err := s.UploadFile(ctx, s.config.AwsBucketName, archive, archive); err != nil {
 		return err
 	}
 
@@ -96,33 +98,59 @@ func (s *Service) DumpDatabase(dest string) error {
 }
 
 // Compress compresses a file
-func (s *Service) CompressFile(src, dest string) error {
+func (s *Service) ArchiveFiles(files []string, dest string) error {
 
-	// Open the original file for reading
-	file, err := os.Open(src)
+	// Create destination file
+	destFile, err := os.Create(dest)
 	if err != nil {
-		return fmt.Errorf("failed to open the source file %s: %w", src, err)
+		return fmt.Errorf("failed to create destination file %s: %w", dest, err)
 	}
-	defer file.Close()
+	defer destFile.Close()
 
-	// Create the destination zip file
-	zipFile, err := os.Create(dest)
+	// Create gzip writer with maximum compression
+	gzipWriter, err := gzip.NewWriterLevel(destFile, gzip.BestCompression)
 	if err != nil {
-		return fmt.Errorf("failed to create zip destination file %s: %w", dest, err)
+		return fmt.Errorf("failed to create gzip writer: %w", err)
 	}
-	defer zipFile.Close()
+	defer gzipWriter.Close()
 
-	// Create a zip writer that writes to the destination file
-	zipWriter := zip.NewWriter(zipFile)
-	defer zipWriter.Close()
+	// Create tar writer
+	tarWriter := tar.NewWriter(gzipWriter)
+	defer tarWriter.Close()
 
-	writer, err := zipWriter.Create(dest)
-	if err != nil {
-		return fmt.Errorf("failed to create zip writer: %w", err)
-	}
+	// Go over the files
+	for _, src := range files {
 
-	if _, err := io.Copy(writer, zipFile); err != nil {
-		return fmt.Errorf("failed to zip the file %s: %w", src, err)
+		// Open the source file
+		srcFile, err := os.Open(src)
+		if err != nil {
+			return fmt.Errorf("failed to open source file %s: %w", src, err)
+		}
+		defer srcFile.Close()
+
+		// Get file info for the tar header
+		srcInfo, err := srcFile.Stat()
+		if err != nil {
+			return fmt.Errorf("failed to get file info for %s: %w", src, err)
+		}
+
+		// Create tar header
+		header := &tar.Header{
+			Name:    filepath.Base(src),
+			Size:    srcInfo.Size(),
+			Mode:    int64(srcInfo.Mode()),
+			ModTime: srcInfo.ModTime(),
+		}
+
+		// Write header to tar
+		if err := tarWriter.WriteHeader(header); err != nil {
+			return fmt.Errorf("failed to write tar header for file %s: %w", src, err)
+		}
+
+		// Copy file content
+		if _, err := io.Copy(tarWriter, srcFile); err != nil {
+			return fmt.Errorf("failed to copy file content for file %s: %w", src, err)
+		}
 	}
 
 	return nil
