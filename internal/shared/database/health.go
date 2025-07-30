@@ -49,7 +49,7 @@ func (s *service) Health(ctx context.Context) map[string]any {
 	if dbStats.MaxConns() > 0 {
 
 		utilization := float64(dbStats.AcquiredConns()) / float64(dbStats.MaxConns())
-		stats["connection_pool_utilization_percent"] = fmt.Sprintf("%.2f", utilization*100)
+		stats["connection_pool_utilization"] = fmt.Sprintf("%.2f", utilization*100)
 
 		if utilization > 0.85 {
 			healthMessages = append(
