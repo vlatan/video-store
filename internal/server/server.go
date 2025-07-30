@@ -41,7 +41,7 @@ type Server struct {
 }
 
 // Create new HTTP server
-func NewServer() *http.Server {
+func NewServer() (*http.Server, func() error) {
 
 	// Register types with gob to be able to use them in sessions
 	gob.Register(&models.FlashMessage{})
@@ -98,12 +98,23 @@ func NewServer() *http.Server {
 		mw:       mw,
 	}
 
+	// Reday made func to close the DB pool and Redis connection
+	cleanup := func() error {
+		db.Close()
+		if err := rdb.Close(); err != nil {
+			return err
+		}
+		return nil
+	}
+
 	// Declare Server config
-	return &http.Server{
+	server := &http.Server{
 		Addr:         fmt.Sprintf("%s:%d", cfg.Host, cfg.Port),
 		Handler:      newServer.RegisterRoutes(),
 		IdleTimeout:  time.Minute,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 30 * time.Second,
 	}
+
+	return server, cleanup
 }
