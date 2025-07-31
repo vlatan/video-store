@@ -38,8 +38,8 @@ func gracefulShutdown(appServer *http.Server, cleanup func() error, done chan bo
 	defer cancel()
 
 	// This is a blocking call.
-	// Shutdown will wait connections to finish indefinitely,
-	// but in this caseup to 5 seconds.
+	// Shutdown will wait indefinitely for connections to return to idle,
+	// but in this case up to 5 seconds.
 	if err := appServer.Shutdown(ctx); err != nil {
 		log.Printf("Server forced to shutdown with error: %v", err)
 	}
