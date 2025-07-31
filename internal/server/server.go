@@ -76,35 +76,16 @@ func NewServer() (*http.Server, func() error) {
 		panic(err)
 	}
 
-	// Create domain services
-	mw := middlewares.New(ui, cfg)
-	auth := auth.New(usersRepo, store, rdb, ui, cfg)
-	pages := pages.New(pagesRepo, rdb, ui, cfg)
-	users := users.New(usersRepo, postsRepo, rdb, ui, cfg)
-	posts := posts.New(postsRepo, rdb, ui, cfg, yt, gemini)
-	sources := sources.New(postsRepo, sourcesRepo, rdb, ui, cfg, yt)
-	sitemaps := sitemaps.New(postsRepo, rdb, ui, cfg)
-	misc := misc.New(cfg, db, rdb, ui)
-
-	// Create new Server struct
+	// Create new server struct with domain services/handlers
 	newServer := &Server{
-		auth:     auth,
-		users:    users,
-		posts:    posts,
-		pages:    pages,
-		sources:  sources,
-		sitemaps: sitemaps,
-		misc:     misc,
-		mw:       mw,
-	}
-
-	// Reday made func to close the DB pool and Redis connection
-	cleanup := func() error {
-		db.Close()
-		if err := rdb.Close(); err != nil {
-			return err
-		}
-		return nil
+		auth:     auth.New(usersRepo, store, rdb, ui, cfg),
+		users:    users.New(usersRepo, postsRepo, rdb, ui, cfg),
+		posts:    posts.New(postsRepo, rdb, ui, cfg, yt, gemini),
+		pages:    pages.New(pagesRepo, rdb, ui, cfg),
+		sources:  sources.New(postsRepo, sourcesRepo, rdb, ui, cfg, yt),
+		sitemaps: sitemaps.New(postsRepo, rdb, ui, cfg),
+		misc:     misc.New(cfg, db, rdb, ui),
+		mw:       middlewares.New(ui, cfg),
 	}
 
 	// Declare Server config
@@ -114,6 +95,15 @@ func NewServer() (*http.Server, func() error) {
 		IdleTimeout:  time.Minute,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 30 * time.Second,
+	}
+
+	// Reday made func to close the DB pool and Redis connection
+	cleanup := func() error {
+		db.Close()
+		if err := rdb.Close(); err != nil {
+			return err
+		}
+		return nil
 	}
 
 	return server, cleanup
