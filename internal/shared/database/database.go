@@ -48,7 +48,17 @@ func New(cfg *config.Config) Service {
 			cfg.DBDatabase,
 		)
 
-		db, err := pgxpool.New(context.Background(), connStr)
+		// Parse the config
+		poolConfig, err := pgxpool.ParseConfig(connStr)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// Min 1 iddle connection,
+		// to avoid creating NEW connections on low graffic sites.
+		poolConfig.MinIdleConns = 1
+
+		db, err := pgxpool.NewWithConfig(context.Background(), poolConfig)
 		if err != nil {
 			log.Fatal(err)
 		}
