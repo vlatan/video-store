@@ -4,8 +4,6 @@
     <url>
         <loc>{{ .Location }}</loc>
         <lastmod>{{ .LastModified }}</lastmod>
-        <changefreq>weekly</changefreq>
-		<priority>0.8</priority>
     </url>
     {{ end }}
 </urlset>
