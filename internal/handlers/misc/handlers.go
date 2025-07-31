@@ -14,6 +14,45 @@ import (
 	"time"
 )
 
+var weirdBots = []string{
+	"Nuclei",
+	"WikiDo",
+	"Riddler",
+	"PetalBot",
+	"Zoominfobot",
+	"Go-http-client",
+	"Node/simplecrawler",
+	"CazoodleBot",
+	"dotbot/1.0",
+	"Gigabot",
+	"Barkrowler",
+	"BLEXBot",
+	"magpie-crawler",
+}
+
+// RobotsHandler handles robots.txt page
+func (s *Service) RobotsHandler(w http.ResponseWriter, r *http.Request) {
+
+	content := "# Sitemap\n"
+	content += fmt.Sprintf("# %s\n", strings.Repeat("-", 20))
+	sitemapIndex := utils.AbsoluteURL(utils.GetBaseURL(r), "sitemap.xml")
+	content += fmt.Sprintf("Sitemap: %s\n\n", sitemapIndex)
+
+	content += "# Ban weird bots\n"
+	content += fmt.Sprintf("# %s\n", strings.Repeat("-", 20))
+
+	for _, bot := range weirdBots {
+		content += fmt.Sprintf("User-agent: %s\n", bot)
+	}
+
+	content += "Disallow: /"
+
+	w.Header().Set("Content-Type", "text/plain")
+	if _, err := w.Write([]byte(content)); err != nil {
+		log.Printf("Failed to write response to '/robots.txt': %v", err)
+	}
+}
+
 // Handle ads.txt
 func (s *Service) AdsTextHandler(w http.ResponseWriter, r *http.Request) {
 	if s.config.AdSenseAccount == "" {
@@ -21,8 +60,12 @@ func (s *Service) AdsTextHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	content := fmt.Sprintf(
+		"google.com, pub-%s, DIRECT, f08c47fec0942fa0",
+		s.config.AdSenseAccount,
+	)
+
 	w.Header().Set("Content-Type", "text/plain")
-	content := fmt.Sprintf("google.com, pub-%s, DIRECT, f08c47fec0942fa0", s.config.AdSenseAccount)
 	if _, err := w.Write([]byte(content)); err != nil {
 		log.Printf("Failed to write response to '/ads.txt': %v", err)
 	}

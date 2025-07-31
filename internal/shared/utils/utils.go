@@ -188,7 +188,7 @@ func NeedsCookie(w http.ResponseWriter, r *http.Request) bool {
 		return false
 	}
 
-	if r.URL.Path == "/ads.txt" {
+	if strings.HasSuffix(r.URL.Path, ".txt") {
 		return false
 	}
 
