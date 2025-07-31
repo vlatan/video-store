@@ -62,7 +62,8 @@ func main() {
 	done := make(chan bool, 1)
 
 	// Listen for SIGINT SIGTERM in a separate goroutine
-	// Gracefully shut down the server. If so return ErrServerClosed.
+	// Gracefully shut down the server.
+	// If so ListenAndServe will return ErrServerClosed.
 	go gracefulShutdown(server, cleanup, done)
 
 	fmt.Printf("Server running on http://%s\n", server.Addr)
