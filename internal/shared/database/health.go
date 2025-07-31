@@ -33,11 +33,11 @@ func (s *service) Health(ctx context.Context) map[string]any {
 	dbStats := s.db.Stat()
 
 	// Connection pool snapshots (raw numbers)
-	stats["maximum_connections"] = dbStats.MaxConns()
-	stats["open_connections"] = dbStats.TotalConns()
-	stats["connections_in_use"] = dbStats.AcquiredConns()
-	stats["idle_connections"] = dbStats.IdleConns()
-	stats["constructing_connections"] = dbStats.ConstructingConns()
+	stats["maximum_possible_connections"] = dbStats.MaxConns()
+	stats["current_open_connections"] = dbStats.TotalConns()
+	stats["current_connections_in_use"] = dbStats.AcquiredConns()
+	stats["current_idle_connections"] = dbStats.IdleConns()
+	stats["current_constructing_connections"] = dbStats.ConstructingConns()
 
 	// 2. Stress event counts (cumulative, but valuable as absolute values)
 	stats["cumulative_new_connections"] = dbStats.NewConnsCount()
