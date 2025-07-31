@@ -55,7 +55,7 @@ func New(cfg *config.Config) Service {
 		}
 
 		// Min 1 iddle connection,
-		// to avoid creating NEW connections on low graffic sites.
+		// to avoid creating NEW connections on low traffic sites.
 		poolConfig.MinIdleConns = 1
 
 		db, err := pgxpool.NewWithConfig(context.Background(), poolConfig)
