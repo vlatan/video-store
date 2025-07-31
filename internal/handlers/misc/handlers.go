@@ -35,7 +35,7 @@ func (s *Service) RobotsHandler(w http.ResponseWriter, r *http.Request) {
 
 	content := "# Sitemap\n"
 	content += fmt.Sprintf("# %s\n", strings.Repeat("-", 20))
-	sitemapIndex := utils.AbsoluteURL(utils.GetBaseURL(r), "sitemap.xml")
+	sitemapIndex := utils.AbsoluteURL(utils.GetBaseURL(r, !s.config.Debug), "sitemap.xml")
 	content += fmt.Sprintf("Sitemap: %s\n\n", sitemapIndex)
 
 	content += "# Ban weird bots\n"

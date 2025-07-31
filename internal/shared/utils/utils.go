@@ -45,10 +45,10 @@ func GetDataFromContext(r *http.Request) *models.TemplateData {
 }
 
 // Create base URL object (absolute path only)
-func GetBaseURL(r *http.Request) *url.URL {
+func GetBaseURL(r *http.Request, forceHttps bool) *url.URL {
 	// Determine scheme
 	scheme := "http"
-	if r.TLS != nil {
+	if forceHttps || r.TLS != nil {
 		scheme = "https"
 	}
 
