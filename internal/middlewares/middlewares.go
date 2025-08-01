@@ -202,7 +202,7 @@ func (s *Service) HandleErrors(next http.Handler) http.Handler {
 		// Default data
 		data := utils.GetDataFromContext(r)
 
-		// Server rich HTML error
+		// Serve rich HTML error
 		s.ui.HTMLError(recorder, r, recorder.status, data)
 	})
 }
