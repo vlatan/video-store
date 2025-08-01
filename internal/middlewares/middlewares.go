@@ -124,22 +124,18 @@ func (s *Service) RecoverPanic(next http.Handler) http.Handler {
 func (s *Service) AddHeaders(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		// // Add CF cache control header if user not logged in AND not static file
-		// user := utils.GetUserFromContext(r)
-		// if !user.IsAuthenticated() && !utils.IsStatic(r) {
-		// 	w.Header().Set("CDN-Cache-Control", "14400")
-		// }
-
 		// Prevent MIME type sniffing
 		w.Header().Set("X-Content-Type-Options", "nosniff")
+
 		// XSS Protection
 		w.Header().Set("X-XSS-Protection", "1; mode=block")
+
 		// Prevent clickjacking
 		w.Header().Set("X-Frame-Options", "SAMEORIGIN")
+
 		// HSTS (HTTPS only)
-		w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
-		// Referrer Policy
-		w.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
+		w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload")
+
 		next.ServeHTTP(w, r)
 	})
 }
