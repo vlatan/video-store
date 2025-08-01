@@ -165,7 +165,7 @@ func (s *Service) WWWRedirect(next http.Handler) http.Handler {
 	})
 }
 
-// Record the status code and body and server rich errors if the response is error
+// Record the status code and body and serves rich errors if the response is error
 func (s *Service) HandleErrors(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
