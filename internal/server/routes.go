@@ -37,9 +37,9 @@ func (s *Server) RegisterRoutes() http.Handler {
 	mux.HandleFunc("GET /logout/{provider}", s.mw.IsAuthenticated(s.auth.LogoutHandler))
 
 	// Sitemaps
-	mux.HandleFunc("GET /sitemap.xsl", s.sitemaps.SitemapStyleHandler)
-	mux.HandleFunc("GET /sitemap/{part}/part.xml", s.sitemaps.SitemapPartHandler)
-	mux.HandleFunc("GET /sitemap.xml", s.sitemaps.SitemapIndexHandler)
+	mux.HandleFunc("GET /sitemap.xsl", s.mw.PublicCache(s.sitemaps.SitemapStyleHandler))
+	mux.HandleFunc("GET /sitemap/{part}/part.xml", s.mw.PublicCache(s.sitemaps.SitemapPartHandler))
+	mux.HandleFunc("GET /sitemap.xml", s.mw.PublicCache(s.sitemaps.SitemapIndexHandler))
 
 	// Users
 	mux.HandleFunc("POST /account/delete", s.mw.IsAuthenticated(s.auth.DeleteAccountHandler))
@@ -50,8 +50,8 @@ func (s *Server) RegisterRoutes() http.Handler {
 	mux.HandleFunc("GET /search/{$}", s.posts.SearchPostsHandler)
 	mux.HandleFunc("GET /health/{$}", s.mw.IsAdmin(s.misc.HealthHandler))
 	mux.HandleFunc("GET /static/", s.misc.StaticHandler)
-	mux.HandleFunc("GET /ads.txt", s.misc.AdsTextHandler)
-	mux.HandleFunc("GET /robots.txt", s.misc.RobotsHandler)
+	mux.HandleFunc("GET /ads.txt", s.mw.PublicCache(s.misc.AdsTextHandler))
+	mux.HandleFunc("GET /robots.txt", s.mw.PublicCache(s.misc.RobotsHandler))
 
 	// Register favicons serving from root
 	for _, favicon := range utils.Favicons {

@@ -120,6 +120,17 @@ func (s *Service) RecoverPanic(next http.Handler) http.Handler {
 	})
 }
 
+// PublicCache adds public cache control header for non-admin users
+func (s *Service) PublicCache(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		data := utils.GetDataFromContext(r)
+		if !data.IsCurrentUserAdmin() {
+			w.Header().Set("Cache-Control", "public, max-age=3600")
+		}
+		next(w, r)
+	}
+}
+
 // Add security headers to request
 func (s *Service) AddHeaders(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

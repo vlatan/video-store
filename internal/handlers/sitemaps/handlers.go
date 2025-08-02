@@ -16,7 +16,7 @@ const (
 // Serve the xml style, whixh is xsl
 func (s *Service) SitemapStyleHandler(w http.ResponseWriter, r *http.Request) {
 
-	// create new data struct
+	// Get data from context
 	data := utils.GetDataFromContext(r)
 
 	data.XMLDeclarations = []template.HTML{
@@ -24,17 +24,13 @@ func (s *Service) SitemapStyleHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "text/xsl")
-	if !data.IsCurrentUserAdmin() {
-		w.Header().Set("Cache-Control", "public, max-age=3600")
-	}
-
 	s.ui.RenderHTML(w, r, "sitemap.xsl", data)
 }
 
 // Handle a sitemap part
 func (s *Service) SitemapPartHandler(w http.ResponseWriter, r *http.Request) {
 
-	// create new data struct
+	// Get data from context
 	data := utils.GetDataFromContext(r)
 
 	// Extract the part from URL
@@ -44,8 +40,7 @@ func (s *Service) SitemapPartHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		log.Println(err)
-		status := http.StatusMethodNotAllowed
-		http.Error(w, http.StatusText(status), status)
+		http.NotFound(w, r)
 		return
 	}
 
@@ -57,25 +52,20 @@ func (s *Service) SitemapPartHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "text/xml")
-	if !data.IsCurrentUserAdmin() {
-		w.Header().Set("Cache-Control", "public, max-age=3600")
-	}
-
 	s.ui.RenderHTML(w, r, "sitemap_items.xml", data)
 }
 
 // Handle the sitemap index
 func (s *Service) SitemapIndexHandler(w http.ResponseWriter, r *http.Request) {
 
-	// create new data struct
+	// Get data from context
 	data := utils.GetDataFromContext(r)
 
 	sitemap, err := s.GetSitemap(r, sitemapRedisKey)
 
 	if err != nil {
 		log.Println(err)
-		status := http.StatusMethodNotAllowed
-		http.Error(w, http.StatusText(status), status)
+		http.NotFound(w, r)
 		return
 	}
 
@@ -92,9 +82,5 @@ func (s *Service) SitemapIndexHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "text/xml")
-	if !data.IsCurrentUserAdmin() {
-		w.Header().Set("Cache-Control", "public, max-age=3600")
-	}
-
 	s.ui.RenderHTML(w, r, "sitemap_index.xml", data)
 }
