@@ -1,4 +1,9 @@
 
+* Taller header
+* Better habmurger button (svg)
+  Better placement
+  Better fly-in menu
+
 * Remove hashtag words from titles
 * Remove 4k from titles
 
