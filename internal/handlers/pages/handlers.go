@@ -40,7 +40,6 @@ func (s *Service) SinglePageHandler(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if errors.Is(err, pgx.ErrNoRows) {
-		log.Println("Can't find the page in DB:", pageSlug)
 		http.NotFound(w, r)
 		return
 	}
@@ -79,7 +78,6 @@ func (s *Service) UpdatePageHandler(w http.ResponseWriter, r *http.Request) {
 	// Get the page data straight from DB
 	page, err := s.pagesRepo.GetSinglePage(r.Context(), slug)
 	if errors.Is(err, pgx.ErrNoRows) {
-		log.Println("Can't find the page in DB:", slug)
 		http.NotFound(w, r)
 		return
 	}
@@ -240,12 +238,12 @@ func (s *Service) DeletePageHandler(w http.ResponseWriter, r *http.Request) {
 	rowsAffected, err := s.pagesRepo.DeletePage(r.Context(), pageSlug)
 	if err != nil {
 		log.Printf("User %d could not delete page %s: %v", currentUser.ID, pageSlug, err)
-		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
+		status := http.StatusInternalServerError
+		http.Error(w, http.StatusText(status), status)
 		return
 	}
 
 	if rowsAffected == 0 {
-		log.Printf("No such page %s to delete.\n", pageSlug)
 		http.NotFound(w, r)
 		return
 	}

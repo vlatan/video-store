@@ -43,22 +43,12 @@ func (s *Service) HomeHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		log.Printf("Was unabale to fetch posts on URI '%s': %v", r.RequestURI, err)
-		if page > 1 {
-			status := http.StatusInternalServerError
-			http.Error(w, http.StatusText(status), status)
-			return
-		}
 		status := http.StatusInternalServerError
 		http.Error(w, http.StatusText(status), status)
 		return
 	}
 
 	if len(posts) == 0 {
-		if page > 1 {
-			http.NotFound(w, r)
-			return
-		}
-		log.Printf("Fetched zero posts on URI '%s'", r.RequestURI)
 		http.NotFound(w, r)
 		return
 	}
@@ -108,22 +98,12 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		log.Printf("Was unabale to fetch posts on URI '%s': %v", r.RequestURI, err)
-		if page > 1 {
-			status := http.StatusInternalServerError
-			http.Error(w, http.StatusText(status), status)
-			return
-		}
 		status := http.StatusInternalServerError
 		http.Error(w, http.StatusText(status), status)
 		return
 	}
 
 	if len(posts.Items) == 0 {
-		if page > 1 {
-			http.NotFound(w, r)
-			return
-		}
-		log.Printf("Fetched zero posts on URI '%s'", r.RequestURI)
 		http.NotFound(w, r)
 		return
 	}
@@ -179,17 +159,12 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		log.Printf("Was unabale to fetch posts on URI '%s': %v", r.RequestURI, err)
-		if page > 1 {
-			status := http.StatusInternalServerError
-			http.Error(w, http.StatusText(status), status)
-			return
-		}
 		status := http.StatusInternalServerError
 		http.Error(w, http.StatusText(status), status)
 		return
 	}
 
-	if page > 1 && len(posts.Items) == 0 {
+	if len(posts.Items) == 0 {
 		http.NotFound(w, r)
 		return
 	}
@@ -354,14 +329,13 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if errors.Is(err, pgx.ErrNoRows) {
-		log.Println("Can't find the video in DB:", videoID)
 		http.NotFound(w, r)
 		return
 	}
 
 	if err != nil {
 		log.Printf("Error while getting the video '%s' from DB: %v", videoID, err)
-		status := http.StatusMethodNotAllowed
+		status := http.StatusInternalServerError
 		http.Error(w, http.StatusText(status), status)
 		return
 	}

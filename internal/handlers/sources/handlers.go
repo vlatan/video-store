@@ -29,13 +29,12 @@ func (s *Service) SourcesHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		log.Printf("Was unabale to fetch sources on URI '%s': %v", r.RequestURI, err)
-		status := http.StatusMethodNotAllowed
+		status := http.StatusInternalServerError
 		http.Error(w, http.StatusText(status), status)
 		return
 	}
 
 	if len(sources) == 0 {
-		log.Printf("Fetched zero sources on URI '%s'", r.RequestURI)
 		http.NotFound(w, r)
 		return
 	}
@@ -178,22 +177,12 @@ func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		log.Printf("Was unabale to fetch posts on URI '%s': %v", r.RequestURI, err)
-		if page > 1 {
-			status := http.StatusInternalServerError
-			http.Error(w, http.StatusText(status), status)
-			return
-		}
-		status := http.StatusMethodNotAllowed
+		status := http.StatusInternalServerError
 		http.Error(w, http.StatusText(status), status)
 		return
 	}
 
 	if len(posts.Items) == 0 {
-		if page > 1 {
-			http.NotFound(w, r)
-			return
-		}
-		log.Printf("Fetched zero posts on URI '%s'", r.RequestURI)
 		http.NotFound(w, r)
 		return
 	}

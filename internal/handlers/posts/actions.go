@@ -17,12 +17,12 @@ func (s *Service) handleLike(w http.ResponseWriter, r *http.Request, userID int,
 	rowsAffected, err := s.postsRepo.Like(r.Context(), userID, videoID)
 	if err != nil {
 		log.Printf("User %d could not like the video %s: %v", userID, videoID, err)
-		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
+		status := http.StatusInternalServerError
+		http.Error(w, http.StatusText(status), status)
 		return
 	}
 
 	if rowsAffected == 0 {
-		log.Printf("No such video %s to like.\n", videoID)
 		http.NotFound(w, r)
 	}
 }
@@ -32,12 +32,12 @@ func (s *Service) handleUnlike(w http.ResponseWriter, r *http.Request, userID in
 	rowsAffected, err := s.postsRepo.Unlike(r.Context(), userID, videoID)
 	if err != nil {
 		log.Printf("User %d could not unlike the video %s: %v", userID, videoID, err)
-		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
+		status := http.StatusInternalServerError
+		http.Error(w, http.StatusText(status), status)
 		return
 	}
 
 	if rowsAffected == 0 {
-		log.Printf("No such video %s to unlike.\n", videoID)
 		http.NotFound(w, r)
 	}
 }
@@ -47,12 +47,12 @@ func (s *Service) handleFave(w http.ResponseWriter, r *http.Request, userID int,
 	rowsAffected, err := s.postsRepo.Fave(r.Context(), userID, videoID)
 	if err != nil {
 		log.Printf("User %d could not fave the video %s: %v", userID, videoID, err)
-		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
+		status := http.StatusInternalServerError
+		http.Error(w, http.StatusText(status), status)
 		return
 	}
 
 	if rowsAffected == 0 {
-		log.Printf("No such video %s to fave.\n", videoID)
 		http.NotFound(w, r)
 	}
 }
@@ -62,12 +62,12 @@ func (s *Service) handleUnfave(w http.ResponseWriter, r *http.Request, userID in
 	rowsAffected, err := s.postsRepo.Unfave(r.Context(), userID, videoID)
 	if err != nil {
 		log.Printf("User %d could not unfave the video %s: %v", userID, videoID, err)
-		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
+		status := http.StatusInternalServerError
+		http.Error(w, http.StatusText(status), status)
 		return
 	}
 
 	if rowsAffected == 0 {
-		log.Printf("No such video %s to unfave.\n", videoID)
 		http.NotFound(w, r)
 	}
 }
@@ -77,12 +77,12 @@ func (s *Service) handleUpdateTitle(w http.ResponseWriter, r *http.Request, user
 	rowsAffected, err := s.postsRepo.UpdateTitle(r.Context(), videoID, title)
 	if err != nil {
 		log.Printf("User %d could not update the title of the video %s: %v", userID, videoID, err)
-		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
+		status := http.StatusInternalServerError
+		http.Error(w, http.StatusText(status), status)
 		return
 	}
 
 	if rowsAffected == 0 {
-		log.Printf("No such video %s to update the title of.\n", videoID)
 		http.NotFound(w, r)
 	}
 }
@@ -92,12 +92,12 @@ func (s *Service) handleUpdateDesc(w http.ResponseWriter, r *http.Request, userI
 	rowsAffected, err := s.postsRepo.UpdateDesc(r.Context(), videoID, description)
 	if err != nil {
 		log.Printf("User %d could not update the description of the video %s: %v", userID, videoID, err)
-		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
+		status := http.StatusInternalServerError
+		http.Error(w, http.StatusText(status), status)
 		return
 	}
 
 	if rowsAffected == 0 {
-		log.Printf("No such video %s to update the description of.\n", videoID)
 		http.NotFound(w, r)
 	}
 }
@@ -107,12 +107,12 @@ func (s *Service) handleBanPost(w http.ResponseWriter, r *http.Request, userID i
 	rowsAffected, err := s.postsRepo.BanPost(r.Context(), videoID)
 	if err != nil {
 		log.Printf("User %d could not delete the video %s: %v", userID, videoID, err)
-		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
+		status := http.StatusInternalServerError
+		http.Error(w, http.StatusText(status), status)
 		return
 	}
 
 	if rowsAffected == 0 {
-		log.Printf("No such video %s to delete.\n", videoID)
 		http.NotFound(w, r)
 		return
 	}
