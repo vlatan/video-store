@@ -8,8 +8,8 @@
   --primary-border-color: hsl(0, 0%, 18.82%);
   --content-width: min(90vw, 1600px);
   --main-font-family: system-ui, sans-serif;
-  --content-padding: 24px;
-  --header-hight: 3.5rem;
+  --content-padding: 1.5rem;
+  --header-hight: 4rem;
   --img-hover-filter: brightness(85%);
   --img-hover-transition-duration: 0.3s;
   --img-border-radius: 10px;
@@ -131,7 +131,6 @@ a.logo span:first-child {
   border-top-left-radius: var(--img-border-radius);
   border-bottom-left-radius: var(--img-border-radius);
   padding-right: 0.8em;
-  transition: 0.5s background-color;
 }
 
 a.logo span:last-child {
@@ -140,7 +139,6 @@ a.logo span:last-child {
   border-top-right-radius: var(--img-border-radius);
   border-bottom-right-radius: var(--img-border-radius);
   padding-left: 0.8em;
-  transition: 0.5s background-color;
 }
 
 a.logo:hover span:first-child {
@@ -556,11 +554,10 @@ button.cancel-button {
   align-items: center;
   cursor: pointer;
   border: none;
-  transition: background-color 0.2s;
   height: 50px;
   width: 100%;
   box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.25);
-  transition: box-shadow 0.2s, transform 0.2s;
+  transition: background-color 0.2s, box-shadow 0.2s, transform 0.2s;
   border-radius: 4px;
   font-size: 14px;
   padding: 0;

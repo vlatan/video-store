@@ -1,10 +1,8 @@
 * Maybe use `go generate` for minifying CSS and JS files
   Or on init just save the minfied files on disk/volume
 
-* Do not fade in/out on logo hover
-* Taller header
 * Better habmurger button (svg)
-  Better placement
+  Better placement of the hamburger
   Better fly-in menu
 
 * Remove hashtag words from titles
