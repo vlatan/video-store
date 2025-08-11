@@ -22,17 +22,22 @@ func (s *Service) GetAvatars(ctx context.Context, users []models.User) chan avat
 		go func() {
 			defer wg.Done()
 
-			// semaphore will block if full
-			semaphore <- struct{}{}
-			defer func() {
-				<-semaphore
-			}()
+			// Semaphore will block if full
+			select {
+			case <-ctx.Done():
+				return
+			case semaphore <- struct{}{}:
+				defer func() { <-semaphore }()
+			}
 
-			// Add result to channel
+			// Get local avatar
 			localAvatar := user.GetAvatar(ctx, s.rdb, s.config)
-			avatars <- avatarResult{
-				index:       i,
-				localAvatar: localAvatar,
+
+			// Add result to the avatars channel
+			select {
+			case <-ctx.Done():
+				return
+			case avatars <- avatarResult{index: i, localAvatar: localAvatar}:
 			}
 		}()
 	}
