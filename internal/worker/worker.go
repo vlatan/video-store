@@ -42,13 +42,13 @@ func New() *Service {
 	ctx := context.Background()
 	yt, err := yt.New(ctx, cfg)
 	if err != nil {
-		panic(err)
+		log.Fatalf("couldn't create YouTube service: %v", err)
 	}
 
 	// Create Gemini client
 	gemini, err := gemini.New(ctx, cfg)
 	if err != nil {
-		panic(err)
+		log.Fatalf("couldn't create Gemini service: %v", err)
 	}
 
 	return &Service{

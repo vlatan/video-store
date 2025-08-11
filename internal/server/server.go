@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/gob"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -67,13 +68,13 @@ func NewServer() (*http.Server, func() error) {
 	ctx := context.Background()
 	yt, err := yt.New(ctx, cfg)
 	if err != nil {
-		panic(err)
+		log.Fatalf("couldn't create YouTube service: %v", err)
 	}
 
 	// Create Gemini client
 	gemini, err := gemini.New(ctx, cfg)
 	if err != nil {
-		panic(err)
+		log.Fatalf("couldn't create Gemini service: %v", err)
 	}
 
 	// Create new server struct with domain services/handlers
