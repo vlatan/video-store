@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-// Register routes
+// RegisterRoutes registers routes
 func (s *Server) RegisterRoutes() http.Handler {
 	mux := http.NewServeMux()
 
@@ -58,13 +58,13 @@ func (s *Server) RegisterRoutes() http.Handler {
 		mux.HandleFunc("GET "+favicon, s.misc.StaticHandler)
 	}
 
-	// Chain middlwares that apply to all requests
+	// Chain middlewares that apply to all requests
 	return s.mw.ApplyToAll(
 		s.mw.RecoverPanic,
 		s.mw.CloseBody,
 		s.mw.WWWRedirect,
 		s.mw.LoadUser,
-		s.mw.CSRF,
+		s.mw.CsrfProtection,
 		s.mw.LoadData,
 		s.mw.AddHeaders,
 		s.mw.Compress,

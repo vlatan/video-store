@@ -217,7 +217,7 @@ func (s *Service) HandleErrors(next http.Handler) http.Handler {
 }
 
 // Create CSRF middlware with added plain text option for local development
-func (s *Service) CSRF(next http.Handler) http.Handler {
+func (s *Service) CsrfProtection(next http.Handler) http.Handler {
 
 	// Create the csrf middleware as per the gorilla/csrf documentation
 	csrfMiddleware := csrf.Protect(

@@ -32,7 +32,7 @@ func (s *service) NewData(w http.ResponseWriter, r *http.Request) *models.Templa
 		},
 	)
 
-	// Check if request possibly needs a cookie
+	// Check if the request possibly needs a cookie
 	var flashMessages []*models.FlashMessage
 	if utils.NeedsCookie(w, r) {
 		// Get any flash messages from session and put to data
