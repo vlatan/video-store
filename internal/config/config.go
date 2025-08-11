@@ -63,7 +63,7 @@ type Config struct {
 func New() *Config {
 	var cfg Config
 	if err := env.Parse(&cfg); err != nil {
-		log.Fatal("Failed to parse the config from the env: ", err)
+		log.Fatalf("failed to parse the config from the env: %v", err)
 	}
 	return &cfg
 }
