@@ -32,32 +32,39 @@ func (s *service) NewData(w http.ResponseWriter, r *http.Request) *models.Templa
 		},
 	)
 
-	// Check if the request possibly needs a cookie
+	// Construct the data
+	data := &models.TemplateData{
+		StaticFiles: s.GetStaticFiles(),
+		Config:      s.config,
+		Categories:  categories,
+		CurrentURI:  r.RequestURI,
+		BaseURL:     utils.GetBaseURL(r, !s.config.Debug),
+		CSRFField:   csrf.TemplateField(r),
+	}
+
+	// Check if the path needs flash messages
+	if !utils.PathNeedsCookie(r.URL.Path) {
+		return data
+	}
+
+	// Get any flash messages from session
+	session, _ := s.store.Get(r, s.config.FlashSessionName)
+	flashes := session.Flashes()
+
 	var flashMessages []*models.FlashMessage
-	if utils.NeedsCookie(w, r) {
-		// Get any flash messages from session and put to data
-		session, _ := s.store.Get(r, s.config.FlashSessionName)
-		flashes := session.Flashes()
-		for _, v := range flashes {
-			if flash, ok := v.(*models.FlashMessage); ok && flash != nil {
-				flashMessages = append(flashMessages, flash)
-			}
+	for _, v := range flashes {
+		if flash, ok := v.(*models.FlashMessage); ok && flash != nil {
+			flashMessages = append(flashMessages, flash)
 		}
-
-		// Delete the flash session cookie created with s.store.Get
-		session.Options.MaxAge = -1
-		session.Save(r, w)
 	}
 
-	return &models.TemplateData{
-		StaticFiles:   s.GetStaticFiles(),
-		Config:        s.config,
-		Categories:    categories,
-		CurrentURI:    r.RequestURI,
-		BaseURL:       utils.GetBaseURL(r, !s.config.Debug),
-		FlashMessages: flashMessages,
-		CSRFField:     csrf.TemplateField(r),
-	}
+	// Delete the flash session cookie created with s.store.Get
+	session.Options.MaxAge = -1
+	session.Save(r, w)
+
+	// Put flash messages to data
+	data.FlashMessages = flashMessages
+	return data
 }
 
 // Create new pagination struct that contains all the info about the pagination element

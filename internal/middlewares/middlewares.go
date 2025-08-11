@@ -59,7 +59,7 @@ func (s *Service) LoadUser(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		// Check if request possibly needs a cookie
-		if !utils.NeedsCookie(w, r) {
+		if !utils.PathNeedsCookie(r.URL.Path) {
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -231,7 +231,7 @@ func (s *Service) CsrfProtection(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		// Check if request possibly needs a cookie
-		if !utils.NeedsCookie(w, r) {
+		if !utils.PathNeedsCookie(r.URL.Path) {
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -264,9 +264,9 @@ func (s *Service) Compress(next http.Handler) http.Handler {
 	gzipHandler := gzhttp.GzipHandler(next)
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Check if request serves static files
-		// Those are compressed on startup
-		if utils.IsStatic(r) {
+		// Check if the request serves static files
+		// Skip, because those are compressed on startup
+		if utils.IsStatic(r.URL.Path) {
 			next.ServeHTTP(w, r)
 			return
 		}

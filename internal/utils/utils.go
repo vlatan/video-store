@@ -176,23 +176,23 @@ func ThumbnailEqual(a, b *models.Thumbnail) bool {
 }
 
 // Check if this is a static file
-func IsStatic(r *http.Request) bool {
-	return strings.HasPrefix(r.URL.Path, "/static/") ||
-		slices.Contains(RootFavicons, r.URL.Path)
+func IsStatic(path string) bool {
+	return strings.HasPrefix(path, "/static/") ||
+		slices.Contains(RootFavicons, path)
 }
 
-// Check if a route needs to set a cookie
-func NeedsCookie(w http.ResponseWriter, r *http.Request) bool {
+// PathNeedsCookie checks if a route needs to set a cookie
+func PathNeedsCookie(path string) bool {
 
-	if IsStatic(r) {
+	if IsStatic(path) {
 		return false
 	}
 
-	if strings.HasSuffix(r.URL.Path, ".txt") {
+	if strings.HasSuffix(path, ".txt") {
 		return false
 	}
 
-	if strings.HasPrefix(r.URL.Path, "/sitemap") {
+	if strings.HasPrefix(path, "/sitemap") {
 		return false
 	}
 
