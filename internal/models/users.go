@@ -95,7 +95,7 @@ func (u *User) DownloadAvatar(config *config.Config) (string, error) {
 	// Get remote file
 	response, err := http.Get(u.AvatarURL)
 	if err != nil {
-		return "", fmt.Errorf("can't read the remote file: %w", err)
+		return "", fmt.Errorf("can't read the remote avatar file: %w", err)
 	}
 	defer response.Body.Close()
 
