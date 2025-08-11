@@ -91,6 +91,6 @@ func (s *service) Exec(ctx context.Context, query string, args ...any) (int64, e
 // Close closes the database connection.
 // It logs a message indicating the disconnection from the specific database.
 func (s *service) Close() {
-	log.Printf("Disconnected from database: %s", s.config.DBDatabase)
+	log.Printf("Disconnected from database: %s", s.config.DBHost)
 	s.db.Close()
 }
