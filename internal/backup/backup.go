@@ -6,7 +6,7 @@ import (
 	"compress/gzip"
 	"context"
 	"errors"
-	"factual-docs/internal/shared/config"
+	"factual-docs/internal/config"
 	"fmt"
 	"io"
 	"log"

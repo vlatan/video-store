@@ -1,10 +1,10 @@
 package ui
 
 import (
+	"factual-docs/internal/config"
 	"factual-docs/internal/models"
 	"factual-docs/internal/repositories/categories"
 	"factual-docs/internal/repositories/users"
-	"factual-docs/internal/shared/config"
 	"factual-docs/internal/shared/redis"
 	"net/http"
 	"regexp"

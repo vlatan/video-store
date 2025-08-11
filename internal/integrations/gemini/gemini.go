@@ -3,8 +3,8 @@ package gemini
 import (
 	"context"
 	"encoding/json"
+	"factual-docs/internal/config"
 	"factual-docs/internal/models"
-	"factual-docs/internal/shared/config"
 	"factual-docs/internal/utils"
 	"fmt"
 	"strings"

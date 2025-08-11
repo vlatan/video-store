@@ -2,13 +2,13 @@ package worker
 
 import (
 	"context"
+	"factual-docs/internal/config"
 	"factual-docs/internal/integrations/gemini"
 	"factual-docs/internal/integrations/yt"
 	"factual-docs/internal/models"
 	"factual-docs/internal/repositories/categories"
 	"factual-docs/internal/repositories/posts"
 	"factual-docs/internal/repositories/sources"
-	"factual-docs/internal/shared/config"
 	"factual-docs/internal/shared/database"
 	"factual-docs/internal/utils"
 	"fmt"

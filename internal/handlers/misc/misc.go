@@ -1,7 +1,7 @@
 package misc
 
 import (
-	"factual-docs/internal/shared/config"
+	"factual-docs/internal/config"
 	"factual-docs/internal/shared/database"
 	"factual-docs/internal/shared/redis"
 	"factual-docs/internal/ui"

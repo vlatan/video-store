@@ -1,8 +1,8 @@
 package pages
 
 import (
+	"factual-docs/internal/config"
 	pagesRepo "factual-docs/internal/repositories/pages"
-	"factual-docs/internal/shared/config"
 	"factual-docs/internal/shared/redis"
 	"factual-docs/internal/ui"
 )

@@ -1,7 +1,7 @@
 package models
 
 import (
-	"factual-docs/internal/shared/config"
+	"factual-docs/internal/config"
 	"html/template"
 	"net/url"
 	"strings"

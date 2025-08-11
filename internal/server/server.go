@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"factual-docs/internal/config"
 	"factual-docs/internal/handlers/auth"
 	"factual-docs/internal/handlers/misc"
 	"factual-docs/internal/handlers/pages"
@@ -23,7 +24,6 @@ import (
 	postsRepo "factual-docs/internal/repositories/posts"
 	sourcesRepo "factual-docs/internal/repositories/sources"
 	usersRepo "factual-docs/internal/repositories/users"
-	"factual-docs/internal/shared/config"
 	"factual-docs/internal/shared/database"
 	"factual-docs/internal/shared/redis"
 	"factual-docs/internal/ui"

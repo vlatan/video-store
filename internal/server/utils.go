@@ -1,7 +1,7 @@
 package server
 
 import (
-	"factual-docs/internal/shared/config"
+	"factual-docs/internal/config"
 	"fmt"
 
 	"github.com/gorilla/sessions"

@@ -4,7 +4,7 @@ import (
 	"context"
 	"crypto/md5"
 	"encoding/hex"
-	"factual-docs/internal/shared/config"
+	"factual-docs/internal/config"
 	"factual-docs/internal/shared/redis"
 	"fmt"
 	"io"
