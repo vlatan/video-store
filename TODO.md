@@ -1,4 +1,5 @@
-* Maybe `go generate` utilizaition for minified CSS and JS files
+* Maybe use `go generate` for minifying CSS and JS files
+  Or on init just save the minfied files on disk/volume
 
 * Taller header
 * Better habmurger button (svg)
