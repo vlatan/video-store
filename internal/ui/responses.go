@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"factual-docs/internal/models"
+	"factual-docs/internal/shared/utils"
 	"log"
 	"net/http"
 )
@@ -14,8 +15,7 @@ func (s *service) WriteJSON(w http.ResponseWriter, r *http.Request, data any) {
 	jsonData, err := json.Marshal(data)
 	if err != nil {
 		log.Printf("Failed to encode JSON response on URI '%s': %v", r.RequestURI, err)
-		status := http.StatusInternalServerError
-		http.Error(w, http.StatusText(status), status)
+		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}
 
@@ -35,8 +35,7 @@ func (s *service) RenderHTML(w http.ResponseWriter, r *http.Request, templateNam
 
 	if !exists {
 		log.Printf("Could not find the '%s' template on URI '%s'", templateName, r.RequestURI)
-		status := http.StatusInternalServerError
-		http.Error(w, http.StatusText(status), status)
+		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}
 
@@ -48,8 +47,7 @@ func (s *service) RenderHTML(w http.ResponseWriter, r *http.Request, templateNam
 			r.RequestURI,
 			err,
 		)
-		status := http.StatusInternalServerError
-		http.Error(w, http.StatusText(status), status)
+		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}
 

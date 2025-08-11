@@ -46,16 +46,14 @@ func (s *Service) SinglePageHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		log.Printf("Error while getting the page '%s' from DB: %v", pageSlug, err)
-		status := http.StatusInternalServerError
-		http.Error(w, http.StatusText(status), status)
+		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}
 
 	var buf bytes.Buffer
 	if err := goldmark.Convert([]byte(page.Content), &buf); err != nil {
 		log.Printf("Could not convert markdown to html on '%s': %v", pageSlug, err)
-		status := http.StatusInternalServerError
-		http.Error(w, http.StatusText(status), status)
+		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}
 
@@ -84,8 +82,7 @@ func (s *Service) UpdatePageHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		log.Printf("Error while getting the page '%s' from DB: %v", slug, err)
-		status := http.StatusInternalServerError
-		http.Error(w, http.StatusText(status), status)
+		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}
 
@@ -153,8 +150,7 @@ func (s *Service) UpdatePageHandler(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, redirectTo, http.StatusFound)
 
 	default:
-		status := http.StatusMethodNotAllowed
-		http.Error(w, http.StatusText(status), status)
+		utils.HttpError(w, http.StatusMethodNotAllowed)
 	}
 }
 
@@ -223,8 +219,7 @@ func (s *Service) NewPageHandler(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, redirectTo, http.StatusFound)
 
 	default:
-		status := http.StatusMethodNotAllowed
-		http.Error(w, http.StatusText(status), status)
+		utils.HttpError(w, http.StatusMethodNotAllowed)
 	}
 }
 
@@ -238,8 +233,7 @@ func (s *Service) DeletePageHandler(w http.ResponseWriter, r *http.Request) {
 	rowsAffected, err := s.pagesRepo.DeletePage(r.Context(), pageSlug)
 	if err != nil {
 		log.Printf("User %d could not delete page %s: %v", currentUser.ID, pageSlug, err)
-		status := http.StatusInternalServerError
-		http.Error(w, http.StatusText(status), status)
+		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}
 

@@ -3,6 +3,7 @@ package posts
 import (
 	"encoding/json"
 	"factual-docs/internal/models"
+	"factual-docs/internal/shared/utils"
 	"log"
 	"net/http"
 )
@@ -17,8 +18,7 @@ func (s *Service) handleLike(w http.ResponseWriter, r *http.Request, userID int,
 	rowsAffected, err := s.postsRepo.Like(r.Context(), userID, videoID)
 	if err != nil {
 		log.Printf("User %d could not like the video %s: %v", userID, videoID, err)
-		status := http.StatusInternalServerError
-		http.Error(w, http.StatusText(status), status)
+		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}
 
@@ -32,8 +32,7 @@ func (s *Service) handleUnlike(w http.ResponseWriter, r *http.Request, userID in
 	rowsAffected, err := s.postsRepo.Unlike(r.Context(), userID, videoID)
 	if err != nil {
 		log.Printf("User %d could not unlike the video %s: %v", userID, videoID, err)
-		status := http.StatusInternalServerError
-		http.Error(w, http.StatusText(status), status)
+		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}
 
@@ -47,8 +46,7 @@ func (s *Service) handleFave(w http.ResponseWriter, r *http.Request, userID int,
 	rowsAffected, err := s.postsRepo.Fave(r.Context(), userID, videoID)
 	if err != nil {
 		log.Printf("User %d could not fave the video %s: %v", userID, videoID, err)
-		status := http.StatusInternalServerError
-		http.Error(w, http.StatusText(status), status)
+		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}
 
@@ -62,8 +60,7 @@ func (s *Service) handleUnfave(w http.ResponseWriter, r *http.Request, userID in
 	rowsAffected, err := s.postsRepo.Unfave(r.Context(), userID, videoID)
 	if err != nil {
 		log.Printf("User %d could not unfave the video %s: %v", userID, videoID, err)
-		status := http.StatusInternalServerError
-		http.Error(w, http.StatusText(status), status)
+		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}
 
@@ -77,8 +74,7 @@ func (s *Service) handleUpdateTitle(w http.ResponseWriter, r *http.Request, user
 	rowsAffected, err := s.postsRepo.UpdateTitle(r.Context(), videoID, title)
 	if err != nil {
 		log.Printf("User %d could not update the title of the video %s: %v", userID, videoID, err)
-		status := http.StatusInternalServerError
-		http.Error(w, http.StatusText(status), status)
+		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}
 
@@ -92,8 +88,7 @@ func (s *Service) handleUpdateDesc(w http.ResponseWriter, r *http.Request, userI
 	rowsAffected, err := s.postsRepo.UpdateDesc(r.Context(), videoID, description)
 	if err != nil {
 		log.Printf("User %d could not update the description of the video %s: %v", userID, videoID, err)
-		status := http.StatusInternalServerError
-		http.Error(w, http.StatusText(status), status)
+		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}
 
@@ -107,8 +102,7 @@ func (s *Service) handleBanPost(w http.ResponseWriter, r *http.Request, userID i
 	rowsAffected, err := s.postsRepo.BanPost(r.Context(), videoID)
 	if err != nil {
 		log.Printf("User %d could not delete the video %s: %v", userID, videoID, err)
-		status := http.StatusInternalServerError
-		http.Error(w, http.StatusText(status), status)
+		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}
 
@@ -133,16 +127,14 @@ func (s *Service) handleEdit(w http.ResponseWriter, r *http.Request, videoID str
 	// Deocode JSON
 	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
 		log.Printf("Could not decode the JSON body on path: %s", r.URL.Path)
-		status := http.StatusBadRequest
-		http.Error(w, http.StatusText(status), status)
+		utils.HttpError(w, http.StatusBadRequest)
 		return
 	}
 
 	// Check for title or description
 	if data.Title == "" && data.Description == "" {
 		log.Printf("No title and description in body on path: %s", r.URL.Path)
-		status := http.StatusBadRequest
-		http.Error(w, http.StatusText(status), status)
+		utils.HttpError(w, http.StatusBadRequest)
 		return
 	}
 

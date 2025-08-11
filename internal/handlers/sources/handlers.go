@@ -29,8 +29,7 @@ func (s *Service) SourcesHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		log.Printf("Was unabale to fetch sources on URI '%s': %v", r.RequestURI, err)
-		status := http.StatusInternalServerError
-		http.Error(w, http.StatusText(status), status)
+		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}
 
@@ -139,8 +138,7 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, redirectTo, http.StatusFound)
 
 	default:
-		status := http.StatusMethodNotAllowed
-		http.Error(w, http.StatusText(status), status)
+		utils.HttpError(w, http.StatusMethodNotAllowed)
 	}
 }
 
@@ -177,8 +175,7 @@ func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		log.Printf("Was unabale to fetch posts on URI '%s': %v", r.RequestURI, err)
-		status := http.StatusInternalServerError
-		http.Error(w, http.StatusText(status), status)
+		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}
 

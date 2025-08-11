@@ -198,3 +198,8 @@ func NeedsCookie(w http.ResponseWriter, r *http.Request) bool {
 
 	return true
 }
+
+// HttpError provides shorter handling of http error
+func HttpError(w http.ResponseWriter, status int) {
+	http.Error(w, http.StatusText(status), status)
+}

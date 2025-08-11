@@ -20,8 +20,7 @@ func (s *Service) UserFavoritesHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		log.Printf("Was unabale to fetch posts on URI '%s': %v", r.RequestURI, err)
-		status := http.StatusInternalServerError
-		http.Error(w, http.StatusText(status), status)
+		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}
 
@@ -53,8 +52,7 @@ func (s *Service) UsersHandler(w http.ResponseWriter, r *http.Request) {
 	users, err := s.usersRepo.GetUsers(r.Context(), page)
 	if err != nil {
 		log.Printf("Was unabale to fetch users on URI '%s': %v", r.RequestURI, err)
-		status := http.StatusInternalServerError
-		http.Error(w, http.StatusText(status), status)
+		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}
 

@@ -43,8 +43,7 @@ func (s *Service) HomeHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		log.Printf("Was unabale to fetch posts on URI '%s': %v", r.RequestURI, err)
-		status := http.StatusInternalServerError
-		http.Error(w, http.StatusText(status), status)
+		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}
 
@@ -98,8 +97,7 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		log.Printf("Was unabale to fetch posts on URI '%s': %v", r.RequestURI, err)
-		status := http.StatusInternalServerError
-		http.Error(w, http.StatusText(status), status)
+		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}
 
@@ -159,8 +157,7 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		log.Printf("Was unabale to fetch posts on URI '%s': %v", r.RequestURI, err)
-		status := http.StatusInternalServerError
-		http.Error(w, http.StatusText(status), status)
+		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}
 
@@ -297,8 +294,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, redirectTo, http.StatusFound)
 
 	default:
-		status := http.StatusMethodNotAllowed
-		http.Error(w, http.StatusText(status), status)
+		utils.HttpError(w, http.StatusMethodNotAllowed)
 	}
 }
 
@@ -335,8 +331,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		log.Printf("Error while getting the video '%s' from DB: %v", videoID, err)
-		status := http.StatusInternalServerError
-		http.Error(w, http.StatusText(status), status)
+		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}
 
@@ -397,8 +392,7 @@ func (s *Service) PostActionHandler(w http.ResponseWriter, r *http.Request) {
 	// Check if user is authorized to edit or delete (admin)
 	if (action == "edit" || action == "delete") &&
 		currentUser.UserID != s.config.AdminOpenID {
-		status := http.StatusForbidden
-		http.Error(w, http.StatusText(status), status)
+		utils.HttpError(w, http.StatusForbidden)
 		return
 	}
 
@@ -416,7 +410,6 @@ func (s *Service) PostActionHandler(w http.ResponseWriter, r *http.Request) {
 	case "delete":
 		s.handleBanPost(w, r, currentUser.ID, videoID)
 	default:
-		status := http.StatusBadRequest
-		http.Error(w, http.StatusText(status), status)
+		utils.HttpError(w, http.StatusBadRequest)
 	}
 }
