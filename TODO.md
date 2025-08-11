@@ -1,9 +1,12 @@
+* Leave the app for a week and profile the memory
+
 * Maybe use `go generate` for minifying CSS and JS files
   Or on init just save the minfied files on disk/volume
 
 * Better habmurger button (svg)
-  Better placement of the hamburger
+  Better placement of the hamburger button
   Better fly-in menu
+  Bigger font for small screens?
 
 * Remove hashtag words from titles
 * Remove 4k from titles
