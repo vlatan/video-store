@@ -131,7 +131,10 @@ func (s *Service) logoutUser(w http.ResponseWriter, r *http.Request) error {
 }
 
 // Send revoke request. It will work if the access token is not expired.
-func revokeLogin(user *models.User) (response *http.Response, err error) {
+func revokeLogin(user *models.User) (*http.Response, error) {
+
+	var response *http.Response
+	var err error
 
 	switch user.Provider {
 	case "google":
@@ -144,18 +147,23 @@ func revokeLogin(user *models.User) (response *http.Response, err error) {
 		body := []byte("access_token=" + user.AccessToken)
 		req, reqErr := http.NewRequest("DELETE", url, bytes.NewBuffer(body))
 		if reqErr != nil {
-			return response, reqErr
+			return nil, reqErr
 		}
 		client := &http.Client{}
 		response, err = client.Do(req)
+	default:
+		return nil, fmt.Errorf(
+			"unknown login provider on revoke login: %s",
+			user.Provider,
+		)
 	}
 
 	if err != nil {
-		return response, err
+		return nil, err
 	}
 
 	defer response.Body.Close()
-	return response, err
+	return response, nil
 }
 
 func (s *Service) clearCSRFCookie(w http.ResponseWriter) {
