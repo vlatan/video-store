@@ -92,10 +92,8 @@ func (s *Service) LoadData(next http.Handler) http.Handler {
 // Close the body if POST request
 func (s *Service) CloseBody(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Close request body for POST methods to prevent resource leaks
-		if r.Method == http.MethodPost {
-			defer r.Body.Close()
-		}
+		// Close request body for ALL requests to prevent resource leaks
+		defer r.Body.Close()
 		next.ServeHTTP(w, r)
 	})
 }
