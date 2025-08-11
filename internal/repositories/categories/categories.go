@@ -2,8 +2,8 @@ package categories
 
 import (
 	"context"
+	"factual-docs/internal/drivers/database"
 	"factual-docs/internal/models"
-	"factual-docs/internal/shared/database"
 )
 
 type Repository struct {

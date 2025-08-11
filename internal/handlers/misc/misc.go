@@ -2,8 +2,8 @@ package misc
 
 import (
 	"factual-docs/internal/config"
-	"factual-docs/internal/shared/database"
-	"factual-docs/internal/shared/redis"
+	"factual-docs/internal/drivers/database"
+	"factual-docs/internal/drivers/redis"
 	"factual-docs/internal/ui"
 )
 

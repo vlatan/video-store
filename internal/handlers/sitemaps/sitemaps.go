@@ -2,8 +2,8 @@ package sitemaps
 
 import (
 	"factual-docs/internal/config"
+	"factual-docs/internal/drivers/redis"
 	postsRepo "factual-docs/internal/repositories/posts"
-	"factual-docs/internal/shared/redis"
 	"factual-docs/internal/ui"
 )
 

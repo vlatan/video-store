@@ -2,10 +2,10 @@ package posts
 
 import (
 	"factual-docs/internal/config"
+	"factual-docs/internal/drivers/redis"
 	"factual-docs/internal/integrations/gemini"
 	"factual-docs/internal/integrations/yt"
 	postsRepo "factual-docs/internal/repositories/posts"
-	"factual-docs/internal/shared/redis"
 	"factual-docs/internal/ui"
 )
 

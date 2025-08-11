@@ -2,10 +2,10 @@ package sources
 
 import (
 	"factual-docs/internal/config"
+	"factual-docs/internal/drivers/redis"
 	"factual-docs/internal/integrations/yt"
 	postsRepo "factual-docs/internal/repositories/posts"
 	sourcesRepo "factual-docs/internal/repositories/sources"
-	"factual-docs/internal/shared/redis"
 	"factual-docs/internal/ui"
 )
 

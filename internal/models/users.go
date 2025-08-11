@@ -5,7 +5,7 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"factual-docs/internal/config"
-	"factual-docs/internal/shared/redis"
+	"factual-docs/internal/drivers/redis"
 	"fmt"
 	"io"
 	"log"

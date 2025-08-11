@@ -2,8 +2,8 @@ package auth
 
 import (
 	"factual-docs/internal/config"
+	"factual-docs/internal/drivers/redis"
 	"factual-docs/internal/repositories/users"
-	"factual-docs/internal/shared/redis"
 	"factual-docs/internal/ui"
 
 	"github.com/gorilla/sessions"

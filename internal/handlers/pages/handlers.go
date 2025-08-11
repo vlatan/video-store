@@ -3,8 +3,8 @@ package pages
 import (
 	"bytes"
 	"errors"
+	"factual-docs/internal/drivers/redis"
 	"factual-docs/internal/models"
-	"factual-docs/internal/shared/redis"
 	"factual-docs/internal/utils"
 	"fmt"
 	"html/template"

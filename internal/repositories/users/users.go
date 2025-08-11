@@ -3,8 +3,8 @@ package users
 import (
 	"context"
 	"factual-docs/internal/config"
+	"factual-docs/internal/drivers/database"
 	"factual-docs/internal/models"
-	"factual-docs/internal/shared/database"
 	"factual-docs/internal/utils"
 	"time"
 
