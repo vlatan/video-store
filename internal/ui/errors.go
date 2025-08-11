@@ -29,10 +29,10 @@ func (s *service) HTMLError(w http.ResponseWriter, r *http.Request, statusCode i
 
 	switch statusCode {
 	case 403:
-		data.HTMLErrorData.Heading = "You don't have permission to do that (403)"
+		data.HTMLErrorData.Heading = "Access forbidden (403)"
 		data.HTMLErrorData.Text = "Please check your account and try again."
 	case 404:
-		data.HTMLErrorData.Heading = "Oops. Page not found (404)"
+		data.HTMLErrorData.Heading = "Page not found (404)"
 		data.HTMLErrorData.Text = "That page does not exist. Please try a different location."
 	case 405:
 		data.HTMLErrorData.Heading = "Method not allowed (405)"
