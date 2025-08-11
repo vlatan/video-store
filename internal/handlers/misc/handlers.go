@@ -33,11 +33,13 @@ var weirdBots = []string{
 // RobotsHandler handles robots.txt page
 func (s *Service) RobotsHandler(w http.ResponseWriter, r *http.Request) {
 
+	// Point to sitemap
 	content := "# Sitemap\n"
 	content += fmt.Sprintf("# %s\n", strings.Repeat("-", 20))
 	sitemapIndex := utils.AbsoluteURL(utils.GetBaseURL(r, !s.config.Debug), "sitemap.xml")
 	content += fmt.Sprintf("Sitemap: %s\n\n", sitemapIndex)
 
+	// Ban bad bots
 	content += "# Ban weird bots\n"
 	content += fmt.Sprintf("# %s\n", strings.Repeat("-", 20))
 
@@ -45,7 +47,13 @@ func (s *Service) RobotsHandler(w http.ResponseWriter, r *http.Request) {
 		content += fmt.Sprintf("User-agent: %s\n", bot)
 	}
 
-	content += "Disallow: /"
+	content += "Disallow: /\n\n"
+
+	// Disallow all bots on paths with prefixes
+	content += "# Disallow bots on paths with prefixes\n"
+	content += fmt.Sprintf("# %s\n", strings.Repeat("-", 20))
+	content += "User-agent: *\n"
+	content += "Disallow: /auth"
 
 	w.Header().Set("Content-Type", "text/plain")
 	if _, err := w.Write([]byte(content)); err != nil {
