@@ -101,18 +101,25 @@ func (s *Service) CloseBody(next http.Handler) http.Handler {
 // Do not crash the app on panic, serve 500 error to the client
 func (s *Service) RecoverPanic(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// If in production recover panic
-		if !s.config.Debug {
-			defer func() {
-				if err := recover(); err != nil {
-					// Log the panic with stack trace
-					log.Printf("Panic in %s %s: %#v", r.Method, r.URL.Path, err)
 
-					// Return 500 to client
-					http.Error(w, "Something went wrong", http.StatusInternalServerError)
-				}
-			}()
+		// Skip if in debug mode (developing localy)
+		if s.config.Debug {
+			next.ServeHTTP(w, r)
+			return
 		}
+
+		// Defer panic recovery
+		defer func() {
+			err := recover()
+			if err == nil {
+				return
+			}
+			// Log the panic with stack trace
+			log.Printf("Panic in %s %s: %#v", r.Method, r.URL.Path, err)
+
+			// Write 500 to response
+			utils.HttpError(w, http.StatusInternalServerError)
+		}()
 
 		next.ServeHTTP(w, r)
 	})
