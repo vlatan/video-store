@@ -35,7 +35,7 @@ func (s *Service) IsAuthenticated(next http.HandlerFunc) http.HandlerFunc {
 		}
 
 		// Serve forbidden error
-		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+		utils.HttpError(w, http.StatusForbidden)
 	}
 }
 
@@ -50,7 +50,7 @@ func (s *Service) IsAdmin(next http.HandlerFunc) http.HandlerFunc {
 		}
 
 		// Serve forbidden error
-		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+		utils.HttpError(w, http.StatusForbidden)
 	}
 }
 

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"factual-docs/internal/models"
+	"factual-docs/internal/utils"
 	"log"
 	"net/http"
 	"strconv"
@@ -17,7 +18,7 @@ func (s *service) HTMLError(w http.ResponseWriter, r *http.Request, statusCode i
 
 	if !exists {
 		log.Printf("Could not find the 'error.html' template on URI '%s'", r.RequestURI)
-		http.Error(w, http.StatusText(statusCode), statusCode)
+		utils.HttpError(w, statusCode)
 		return
 	}
 
@@ -45,7 +46,7 @@ func (s *service) HTMLError(w http.ResponseWriter, r *http.Request, statusCode i
 	var buf bytes.Buffer
 	if err := tmpl.ExecuteTemplate(&buf, "error.html", data); err != nil {
 		log.Printf("Failed to execute the HTML template 'error' on URI '%s': %v", r.RequestURI, err)
-		http.Error(w, http.StatusText(statusCode), statusCode)
+		utils.HttpError(w, statusCode)
 		return
 	}
 
@@ -75,7 +76,7 @@ func (s *service) JSONError(w http.ResponseWriter, r *http.Request, statusCode i
 	jsonData, err := json.Marshal(data)
 	if err != nil {
 		log.Printf("Failed to encode JSON 'error' response on URI '%s': %v", r.RequestURI, err)
-		http.Error(w, http.StatusText(statusCode), statusCode)
+		utils.HttpError(w, statusCode)
 		return
 	}
 
