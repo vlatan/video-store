@@ -56,6 +56,11 @@ func (s *Service) UsersHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if len(users.Items) == 0 {
+		http.NotFound(w, r)
+		return
+	}
+
 	avatars := s.GetAvatars(r.Context(), users.Items)
 	for avatar := range avatars {
 		users.Items[avatar.index].LocalAvatarURL = avatar.localAvatar
