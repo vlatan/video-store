@@ -23,7 +23,7 @@ var UserContextKey = contextKey{name: "user"}
 var DataContextKey = contextKey{name: "data"}
 
 // Favicons used in the website
-var Favicons = []string{
+var RootFavicons = []string{
 	"/android-chrome-192x192.png",
 	"/android-chrome-512x512.png",
 	"/apple-touch-icon.png",
@@ -178,7 +178,7 @@ func ThumbnailEqual(a, b *models.Thumbnail) bool {
 // Check if this is a static file
 func IsStatic(r *http.Request) bool {
 	return strings.HasPrefix(r.URL.Path, "/static/") ||
-		slices.Contains(Favicons, r.URL.Path)
+		slices.Contains(RootFavicons, r.URL.Path)
 }
 
 // Check if a route needs to set a cookie

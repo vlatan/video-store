@@ -1,3 +1,4 @@
+* Maybe `go generate` utilizaition for minified CSS and JS files
 
 * Taller header
 * Better habmurger button (svg)

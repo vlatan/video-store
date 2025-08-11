@@ -149,7 +149,7 @@ func (s *Service) StaticHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Serve favicon from the embedded FS if accessed in the root, i.e. /favicon.ico
-	if slices.Contains(utils.Favicons, r.URL.Path) {
+	if slices.Contains(utils.RootFavicons, r.URL.Path) {
 		filePath := filepath.Join("/static/favicons", r.URL.Path)
 		http.ServeFileFS(w, r, web.Files, filePath)
 		return

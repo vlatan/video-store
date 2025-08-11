@@ -54,7 +54,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	mux.HandleFunc("GET /robots.txt", s.mw.PublicCache(s.misc.RobotsHandler))
 
 	// Register favicons serving from root
-	for _, favicon := range utils.Favicons {
+	for _, favicon := range utils.RootFavicons {
 		mux.HandleFunc("GET "+favicon, s.misc.StaticHandler)
 	}
 
