@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"factual-docs/internal/models"
 	"factual-docs/internal/shared/config"
-	"factual-docs/internal/shared/utils"
+	"factual-docs/internal/utils"
 	"fmt"
 	"strings"
 	"time"

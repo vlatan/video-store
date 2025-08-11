@@ -1,7 +1,7 @@
 package server
 
 import (
-	"factual-docs/internal/shared/utils"
+	"factual-docs/internal/utils"
 	"net/http"
 )
 

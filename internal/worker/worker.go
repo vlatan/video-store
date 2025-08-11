@@ -10,7 +10,7 @@ import (
 	"factual-docs/internal/repositories/sources"
 	"factual-docs/internal/shared/config"
 	"factual-docs/internal/shared/database"
-	"factual-docs/internal/shared/utils"
+	"factual-docs/internal/utils"
 	"fmt"
 	"log"
 	"time"

@@ -3,7 +3,7 @@ package ui
 import (
 	"factual-docs/internal/models"
 	"factual-docs/internal/shared/redis"
-	"factual-docs/internal/shared/utils"
+	"factual-docs/internal/utils"
 	"math"
 	"net/http"
 

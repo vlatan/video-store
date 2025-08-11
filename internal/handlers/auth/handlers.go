@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"factual-docs/internal/shared/utils"
+	"factual-docs/internal/utils"
 	"log"
 	"net/http"
 

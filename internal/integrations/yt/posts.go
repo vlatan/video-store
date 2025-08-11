@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"factual-docs/internal/models"
-	"factual-docs/internal/shared/utils"
+	"factual-docs/internal/utils"
 	"strings"
 	"time"
 

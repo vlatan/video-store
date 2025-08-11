@@ -3,7 +3,7 @@ package posts
 import (
 	"encoding/json"
 	"factual-docs/internal/models"
-	"factual-docs/internal/shared/utils"
+	"factual-docs/internal/utils"
 	"log"
 	"net/http"
 )

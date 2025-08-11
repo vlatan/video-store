@@ -2,7 +2,7 @@ package misc
 
 import (
 	"bytes"
-	"factual-docs/internal/shared/utils"
+	"factual-docs/internal/utils"
 	"factual-docs/web"
 	"fmt"
 	"log"
