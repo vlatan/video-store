@@ -111,8 +111,7 @@ func (td *TemplateData) AbsoluteURL(path string) string {
 
 // Check if current user is admin
 func (td *TemplateData) IsCurrentUserAdmin() bool {
-	return td.CurrentUser.IsAuthenticated() &&
-		td.CurrentUser.UserID == td.Config.AdminOpenID
+	return td.CurrentUser.IsAdmin(td.Config.AdminOpenID)
 }
 
 // Add version query string to file
