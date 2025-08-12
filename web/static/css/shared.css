@@ -9,6 +9,7 @@
   --content-width: min(90vw, 1600px);
   --main-font-family: system-ui, sans-serif;
   --content-padding: 1.5rem;
+  --icon-size: 1.5rem;
   --header-hight: 4rem;
   --img-hover-filter: brightness(85%);
   --img-hover-transition-duration: 0.3s;
@@ -78,7 +79,14 @@ a {
   text-decoration: none;
 }
 
+button {
+  border: 1px solid transparent;
+  background-color: transparent;
+}
+
+
 /* ################# Header / Content ################# */
+
 .site-header-wrap {
   background-color: var(--secondary-background-color);
   position: fixed;
@@ -100,11 +108,20 @@ a {
 
 .site-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  column-gap: calc(var(--content-padding) * 7);
+  column-gap: var(--content-padding);
   height: var(--header-hight);
   position: relative;
+}
+
+.dropdown__toggle__icon {
+  fill: none;
+  stroke: var(--primary-font-color);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  width: var(--icon-size);
+  height: var(--icon-size);
 }
 
 a.logo {
@@ -312,8 +329,7 @@ a.nav-item:hover::after {
   font-weight: bold;
 }
 
-.nav-item.username,
-.nav-item.categories {
+.nav-item.username {
   padding-right: 1rem;
   background: inherit;
   border: none;
@@ -323,8 +339,7 @@ a.nav-item:hover::after {
   gap: 0.5rem;
 }
 
-.nav-item.username::after,
-.nav-item.categories::after {
+.nav-item.username::after {
   content: "";
   position: absolute;
   right: 0;
@@ -733,48 +748,11 @@ button.cancel-button {
     column-gap: var(--content-padding);
   }
 
-  .hamburger-icon {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: space-between;
-    width: 20px;
-    gap: 4px;
-  }
-
-  .bar1,
-  .bar2,
-  .bar3 {
-    width: 100%;
-    height: 1px;
-    border-radius: 10px;
-    background-color: #fff;
-    transition: 0.4s transform;
-  }
-
-  .hamburger-icon-change .bar1 {
-    transform: translate(0, 0.38em) rotate(-45deg);
-  }
-
-  .hamburger-icon-change .bar2 {
-    opacity: 0;
-  }
-
-  .hamburger-icon-change .bar3 {
-    transform: translate(0, -0.38em) rotate(45deg);
-  }
-
-  .username-text,
-  .categories-text {
+  .username-text {
     display: none;
   }
 
-  .nav-item.categories::after {
-    content: none;
-  }
-
-  .nav-item.username,
-  .nav-item.categories {
+  .nav-item.username {
     padding: 0;
   }
 

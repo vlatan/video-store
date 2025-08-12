@@ -70,6 +70,27 @@
 <body>
 	<div class="site-header-wrap">
 		<header class="site-header">
+
+			<div class="dropdown">
+				<button aria-label="Drop Categories Menu" class="nav-item categories">
+					<svg role="button" aria-label="Toggle Dropdown Menu" class="dropdown__toggle__icon"
+						xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+						<line x1="3" y1="6" x2="21" y2="6"></line>
+						<line x1="3" y1="12" x2="21" y2="12"></line>
+						<line x1="3" y1="18" x2="21" y2="18"></line>
+					</svg>
+				</button>
+				<ul class="category-dropdown-content">
+					{{ range .Categories }}
+					<li>
+						<a class="nav-item" href="/category/{{ .Slug }}/">
+							{{ .Name }}
+						</a>
+					</li>
+					{{ end }}
+				</ul>
+			</div>
+
 			{{ if .Title }}
 			<a class="logo" href="/">
 				<span>{{ index $app_name_words 0 }}</span>
@@ -109,26 +130,6 @@
 							d="M15.853 16.56c-1.683 1.517-3.911 2.44-6.353 2.44-5.243 0-9.5-4.257-9.5-9.5s4.257-9.5 9.5-9.5 9.5 4.257 9.5 9.5c0 2.442-.923 4.67-2.44 6.353l7.44 7.44-.707.707-7.44-7.44zm-6.353-15.56c4.691 0 8.5 3.809 8.5 8.5s-3.809 8.5-8.5 8.5-8.5-3.809-8.5-8.5 3.809-8.5 8.5-8.5z" />
 					</svg>
 				</button>
-
-				<div class="dropdown">
-					<button aria-label="Drop Categories Menu" class="nav-item categories">
-						<span class="categories-text">Categories</span>
-						<div class="hamburger-icon">
-							<div class="bar1"></div>
-							<div class="bar2"></div>
-							<div class="bar3"></div>
-						</div>
-					</button>
-					<ul class="category-dropdown-content">
-						{{ range .Categories }}
-						<li>
-							<a class="nav-item" href="/category/{{ .Slug }}/">
-								{{ .Name }}
-							</a>
-						</li>
-						{{ end }}
-					</ul>
-				</div>
 
 				{{ if .CurrentUser.IsAuthenticated }}
 				<div class="dropdown">
