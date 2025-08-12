@@ -10,6 +10,11 @@ var bracketedContent = regexp.MustCompile(`[\(\[].*?[\)\]]`)
 var extraSpace = regexp.MustCompile(`\s+`)
 var urls = regexp.MustCompile(`http\S+`)
 
+var unwantedWords = map[string]bool{
+	"documentary": true,
+	"4k":          true,
+}
+
 // Common prepositions
 var preps = map[string]bool{
 	"at":  true,
@@ -72,23 +77,30 @@ func normalizeTitle(title string) string {
 	// Remove extra spaces
 	title = extraSpace.ReplaceAllString(title, " ")
 
-	// Split the title into words and remove the last word if it's 'documentary'
+	// Split the title into words and inspect/mutate/exclude them
 	words := strings.Split(title, " ")
-	if strings.ToLower(words[len(words)-1]) == "documentary" {
-		words = words[:len(words)-1]
-	}
+	var result []string
+	for i, word := range words {
 
-	// Iterate over the words and mutate them
-	for i, w := range words {
+		// Exclude unwanted words
+		if unwantedWords[strings.ToLower(word)] {
+			continue
+		}
+
 		// Convert word to runes slice
-		runes := []rune(w)
+		runes := []rune(word)
+
+		// Exclude hashtag words
+		if runes[0] == '#' {
+			continue
+		}
 
 		// First and last quote
 		var fq string
 		var lq string
 
 		// Remove quotation marks from the word at start/end
-		// and store them for later use
+		// if any and store them for later use
 		if len(runes) > 1 {
 			if quotes[runes[0]] {
 				fq = string(runes[0])
@@ -102,33 +114,34 @@ func normalizeTitle(title string) string {
 			}
 		}
 
-		// Loweracse the current word
+		// Loweracse the resulting current word
 		currentWord := strings.ToLower(string(runes))
+
+		// Take the last rune from the previous word
 		var previousWordLastRune rune
 		if i > 0 {
 			previousWord := []rune(words[i-1])
 			previousWordLastRune = previousWord[len(previousWord)-1]
 		}
 
-		// This is not the first word
-		// The word is a preposition but not after a punctuation
+		// This is not the first word.
+		// The word is a preposition but not after a punctuation.
+		// So it should be lowercase, not capitalized.
 		if i > 0 && preps[currentWord] && !puncts[previousWordLastRune] {
-			words[i] = string(fq) + currentWord + string(lq)
+			word = string(fq) + currentWord + string(lq)
 
-			// The word is already capitalized or an acronym
-		} else if unicode.IsUpper(runes[0]) {
-			words[i] = string(fq) + string(runes) + string(lq)
-
-			// capitalize any other word
-		} else {
-			words[i] = string(fq) +
+			// Capitalize the word if not already capitalized
+		} else if !unicode.IsUpper(runes[0]) {
+			word = string(fq) +
 				string(unicode.ToUpper(runes[0])) +
 				string(runes[1:]) +
 				string(lq)
 		}
+
+		result = append(result, word)
 	}
 
-	return strings.Join(words, " ")
+	return strings.Join(result, " ")
 }
 
 // Normalize tags, remove duplicate words

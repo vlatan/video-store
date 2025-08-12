@@ -8,9 +8,6 @@
   Better fly-in menu
   Bigger font for small screens?
 
-* Remove hashtag words from titles
-* Remove 4k from titles
-
 * Check for nil dereference in templates
 * Add slug input to page
 * Add new category form as well as delete, edit routes
