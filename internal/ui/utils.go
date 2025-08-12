@@ -156,6 +156,14 @@ func parseStaticFiles(m *minify.M, dir string) models.StaticFiles {
 			return nil
 		}
 
+		// Unfortenately, embedded files will have zero mode time.
+		// So all files in the map will have zero mod time.
+		// But I am including it anyway.
+		stat, err := fs.Stat(web.Files, path)
+		if err != nil {
+			return err
+		}
+
 		// Read the file
 		b, err := fs.ReadFile(web.Files, path)
 		if err != nil {
@@ -188,6 +196,7 @@ func parseStaticFiles(m *minify.M, dir string) models.StaticFiles {
 		// Save the current data
 		sf[name] = &models.FileInfo{
 			MediaType: mediaType,
+			ModTime:   stat.ModTime(),
 			Etag:      etag,
 		}
 
@@ -222,7 +231,6 @@ func parseStaticFiles(m *minify.M, dir string) models.StaticFiles {
 
 		// Attach the compressed bytes
 		sf[name].Compressed = buf.Bytes()
-
 		return nil
 	}
 

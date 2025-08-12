@@ -11,7 +11,6 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
-	"time"
 )
 
 var weirdBots = []string{
@@ -126,12 +125,17 @@ func (s *Service) StaticHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", fileInfo.MediaType)
 	}
 
+	// Set last modified time if available
+	if ok && !fileInfo.ModTime.IsZero() {
+		w.Header().Set("Last-Modified", fileInfo.ModTime.UTC().Format(http.TimeFormat))
+	}
+
 	// Check if the client accepts gzip
 	if strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
 		if ok && fileInfo.Compressed != nil && len(fileInfo.Compressed) > 0 {
 			w.Header().Set("Content-Encoding", "gzip")
 			w.Header().Set("Content-Length", fmt.Sprintf("%d", len(fileInfo.Compressed)))
-			http.ServeContent(w, r, r.URL.Path, time.Time{}, bytes.NewReader(fileInfo.Compressed))
+			http.ServeContent(w, r, r.URL.Path, fileInfo.ModTime, bytes.NewReader(fileInfo.Compressed))
 			return
 		}
 	}
@@ -139,7 +143,7 @@ func (s *Service) StaticHandler(w http.ResponseWriter, r *http.Request) {
 	// Serve the file content if we have bytes stored
 	if ok && fileInfo.Bytes != nil && len(fileInfo.Bytes) > 0 {
 		w.Header().Set("Content-Length", fmt.Sprintf("%d", len(fileInfo.Bytes)))
-		http.ServeContent(w, r, r.URL.Path, time.Time{}, bytes.NewReader(fileInfo.Bytes))
+		http.ServeContent(w, r, r.URL.Path, fileInfo.ModTime, bytes.NewReader(fileInfo.Bytes))
 		return
 	}
 
