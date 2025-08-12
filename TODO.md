@@ -4,6 +4,7 @@
   Better placement of the hamburger button
   Better fly-in menu
   Bigger font for small screens?
+  Make the play button SVG
 
 * Check for nil dereference in templates
 * Add slug input to page

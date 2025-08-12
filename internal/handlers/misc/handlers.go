@@ -126,7 +126,7 @@ func (s *Service) StaticHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", fileInfo.MediaType)
 	}
 
-	// Check if client accepts gzip
+	// Check if the client accepts gzip
 	if strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
 		if ok && fileInfo.Compressed != nil && len(fileInfo.Compressed) > 0 {
 			w.Header().Set("Content-Encoding", "gzip")

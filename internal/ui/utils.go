@@ -176,34 +176,6 @@ func parseStaticFiles(m *minify.M, dir string) models.StaticFiles {
 			mediaType = "application/manifest+json"
 		}
 
-		// We can minify and gzip just certain files
-		var cb []byte
-		if mediaType != "" {
-
-			// Minify the content
-			b, err := m.Bytes(mediaType, b)
-			if err != nil {
-				return err
-			}
-
-			// Gzip the content
-			buf := new(bytes.Buffer)
-			gz := gzip.NewWriter(buf)
-			defer gz.Close()
-
-			_, err = gz.Write(b)
-			if err != nil {
-				return err
-			}
-
-			// Close the writer explicitly to flush all bytes
-			if err = gz.Close(); err != nil {
-				return err
-			}
-
-			cb = buf.Bytes()
-		}
-
 		// Create Etag as a hexadecimal md5 hash of the file content
 		etag := fmt.Sprintf("%x", md5.Sum(b))
 
@@ -213,13 +185,43 @@ func parseStaticFiles(m *minify.M, dir string) models.StaticFiles {
 			name = "/" + name
 		}
 
-		// Save all the data in the struct
+		// Save the current data
 		sf[name] = &models.FileInfo{
-			Bytes:      b,
-			Compressed: cb,
-			MediaType:  mediaType,
-			Etag:       etag,
+			MediaType: mediaType,
+			Etag:      etag,
 		}
+
+		// We're done for non CSS, JS, webmanifest files
+		if mediaType == "" {
+			return nil
+		}
+
+		// Attach the regular bytes
+		sf[name].Bytes = b
+
+		// Minify the content
+		mb, err := m.Bytes(mediaType, b)
+		if err != nil {
+			return err
+		}
+
+		// Gzip the content
+		buf := new(bytes.Buffer)
+		gz := gzip.NewWriter(buf)
+		defer gz.Close()
+
+		_, err = gz.Write(mb)
+		if err != nil {
+			return err
+		}
+
+		// Close the writer explicitly to flush all the bytes
+		if err = gz.Close(); err != nil {
+			return err
+		}
+
+		// Attach the compressed bytes
+		sf[name].Compressed = buf.Bytes()
 
 		return nil
 	}
