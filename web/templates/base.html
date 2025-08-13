@@ -70,6 +70,35 @@
 <body>
 	<div class="site-header-wrap">
 		<header class="site-header">
+
+			<div class="categories-dropdown">
+				<svg role="button" aria-label="Drop Categories Menu" class="hamburger-icon"
+					xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+					<line x1="3" y1="6" x2="21" y2="6"></line>
+					<line x1="3" y1="12" x2="21" y2="12"></line>
+					<line x1="3" y1="18" x2="21" y2="18"></line>
+				</svg>
+				<div class="categories-dropdown-content">
+					<div class="categories-dropdown-stripes">
+						<h3>Categories</h3>
+						<svg role="button" aria-label="Close Categories Menu" class="categories-close-icon"
+							xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+							<line x1="18" y1="6" x2="6" y2="18"></line>
+							<line x1="6" y1="6" x2="18" y2="18"></line>
+						</svg>
+					</div>
+					<ul class="categories-dropdown-navigation">
+						{{ range .Categories }}
+						<li>
+							<a class="nav-item" href="/category/{{ .Slug }}/">
+								{{ .Name }}
+							</a>
+						</li>
+						{{ end }}
+					</ul>
+				</div>
+			</div>
+
 			{{ if .Title }}
 			<a class="logo" href="/">
 				<span>{{ index $app_name_words 0 }}</span>
@@ -86,49 +115,23 @@
 
 			<nav class="navbar">
 				<form id="searchForm" class="search-form" method="get" action="/search/">
-					<button type="button" aria-label="Collapse Search Field" class="search-arrow">
-						<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd"
-							clip-rule="evenodd">
-							<path fill="white"
-								d="M2.117 12l7.527 6.235-.644.765-9-7.521 9-7.479.645.764-7.529 6.236h21.884v1h-21.883z" />
-						</svg>
-					</button>
+					<svg role="button" class="search-arrow-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+						<line x1="26" y1="12" x2="3" y2="12"></line>
+						<polyline points="12 18 3 12 12 6"></polyline>
+					</svg>
 					<input id="q" name="q" size="20" value="{{ .SearchQuery }}" class="search-form-input"
 						placeholder="Search" required type="search">
-					<button aria-label=" Search" class="search-button">
-						<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd"
-							clip-rule="evenodd">
-							<path fill="white"
-								d="M15.853 16.56c-1.683 1.517-3.911 2.44-6.353 2.44-5.243 0-9.5-4.257-9.5-9.5s4.257-9.5 9.5-9.5 9.5 4.257 9.5 9.5c0 2.442-.923 4.67-2.44 6.353l7.44 7.44-.707.707-7.44-7.44zm-6.353-15.56c4.691 0 8.5 3.809 8.5 8.5s-3.809 8.5-8.5 8.5-8.5-3.809-8.5-8.5 3.809-8.5 8.5-8.5z" />
+					<button aria-label="Search" class="search-button">
+						<svg role="img" class="search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+							<circle cx="11" cy="11" r="8"></circle>
+							<line x1="21" y1="21" x2="16.65" y2="16.65"></line>
 						</svg>
 					</button>
 				</form>
-				<button aria-label="Show Search Field" class="search-button-mobile">
-					<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd">
-						<path fill="white"
-							d="M15.853 16.56c-1.683 1.517-3.911 2.44-6.353 2.44-5.243 0-9.5-4.257-9.5-9.5s4.257-9.5 9.5-9.5 9.5 4.257 9.5 9.5c0 2.442-.923 4.67-2.44 6.353l7.44 7.44-.707.707-7.44-7.44zm-6.353-15.56c4.691 0 8.5 3.809 8.5 8.5s-3.809 8.5-8.5 8.5-8.5-3.809-8.5-8.5 3.809-8.5 8.5-8.5z" />
-					</svg>
-				</button>
-
-				<div class="dropdown">
-					<button aria-label="Drop Categories Menu" class="nav-item categories">
-						<span class="categories-text">Categories</span>
-						<div class="hamburger-icon">
-							<div class="bar1"></div>
-							<div class="bar2"></div>
-							<div class="bar3"></div>
-						</div>
-					</button>
-					<ul class="category-dropdown-content">
-						{{ range .Categories }}
-						<li>
-							<a class="nav-item" href="/category/{{ .Slug }}/">
-								{{ .Name }}
-							</a>
-						</li>
-						{{ end }}
-					</ul>
-				</div>
+				<svg role="button" class="mobile-search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+					<circle cx="11" cy="11" r="8"></circle>
+					<line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+				</svg>
 
 				{{ if .CurrentUser.IsAuthenticated }}
 				<div class="dropdown">

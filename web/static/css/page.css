@@ -1,5 +1,5 @@
 .page {
-  padding: calc(var(--content-padding) * 1.5);
+  padding: var(--modal-padding);
   background: var(--secondary-background-color);
   border-radius: 1rem;
   margin: 0 auto;

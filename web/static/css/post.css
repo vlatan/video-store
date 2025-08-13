@@ -47,16 +47,15 @@
   border-radius: var(--img-border-radius);
 }
 
-.player .play {
+.player svg.play-icon {
   position: absolute;
-  height: 72px;
-  width: 72px;
+  height: 3.5rem;
+  width: 3.5rem;
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  background: url(/static/images/play-button.png) no-repeat;
-  background-size: contain;
   cursor: pointer;
+  fill: var(--primary-font-color);
 }
 
 @media screen and (max-width: 450px) {

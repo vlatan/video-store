@@ -75,42 +75,43 @@ document.addEventListener('click', event => {
     }
 
     // Categories Dropdown menu
-    const catDropContent = document.querySelector('.category-dropdown-content');
-    const hamburgerIcon = document.querySelector('.hamburger-icon');
+    const catDropContent = document.querySelector('.categories-dropdown-content');
     if (catDropContent) {
-        const catNotDropped = !catDropContent.classList.contains('category-show-dropdown');
-        const categoriesClicked = event.target.closest('.categories');
-        const catMenuNotClicked = !event.target.closest('.category-show-dropdown');
-        if (catNotDropped && categoriesClicked) {
-            catDropContent.classList.add('category-show-dropdown');
-            hamburgerIcon.classList.add('hamburger-icon-change');
-        } else if (catMenuNotClicked) {
-            catDropContent.classList.remove('category-show-dropdown');
-            hamburgerIcon.classList.remove('hamburger-icon-change');
+        const catDropped = catDropContent.classList.contains('categories-show-dropdown');
+        const hamburgrIconClicked = event.target.closest('.hamburger-icon');
+        const closeIconClicked = event.target.closest('.categories-close-icon');
+        const catMenuClicked = event.target.closest('.categories-show-dropdown');
+        if (!catDropped && hamburgrIconClicked) {
+            catDropContent.classList.add('categories-show-dropdown');
+        } else if (!catMenuClicked || closeIconClicked) {
+            catDropContent.classList.remove('categories-show-dropdown');
         }
     }
 
     // Mobile search form
     const searchForm = document.getElementById('searchForm');
     const logo = document.querySelector('a.logo');
-    const searchIcon = document.querySelector('.search-button-mobile');
+    const searchIcon = document.querySelector('.mobile-search-icon');
+    const hamburgerIcon = document.querySelector('.hamburger-icon');
     const dropdowns = document.querySelectorAll('.dropdown');
-    const arrow = document.querySelector('button.search-arrow')
-    const arrowClicked = event.target.closest('button.search-arrow');
-    const outsideFormClicked = !event.target.closest('#searchForm');
-    if (event.target.closest('.search-button-mobile')) {
-        arrow.style.display = "block";
+    const arrow = document.querySelector('.search-arrow-icon')
+    const arrowClicked = event.target.closest('.search-arrow-icon');
+    const searchFormClicked = event.target.closest('#searchForm');
+    if (event.target.closest('.mobile-search-icon')) {
+        arrow.style.display = "flex";
         searchForm.style.display = 'flex'
         logo.style.display = "none";
         searchIcon.style.display = "none";
+        hamburgerIcon.style.display = "none";
         for (const dropdown of dropdowns) {
             dropdown.style.display = "none";
         }
-    } else if (arrowClicked || outsideFormClicked) {
+    } else if (arrowClicked || !searchFormClicked) {
         arrow.removeAttribute('style');
         searchForm.removeAttribute('style');
         logo.removeAttribute('style');
         searchIcon.removeAttribute('style');
+        hamburgerIcon.removeAttribute('style');
         for (const dropdown of dropdowns) {
             dropdown.removeAttribute('style');
         }
