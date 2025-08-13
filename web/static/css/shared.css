@@ -287,8 +287,8 @@ svg.search-arrow-icon {
 	display: none;
 }
 
+/* Slide in to the visible area, make content visible and allow interactions */
 .categories-show-dropdown {
-	/* Slide in to the visible area, make content visible and allow interactions */
 	transform: translateX(0);
 	visibility: visible;
 	pointer-events: auto;
