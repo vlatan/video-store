@@ -13,10 +13,10 @@
 	--modal-padding: calc(var(--content-padding) * 1.5);
 	--icon-size: 1.25rem;
 	--header-height: 4rem;
+	--header-item-height: calc(var(--header-height) * 0.55);
 	--img-hover-filter: brightness(85%);
 	--img-hover-transition-duration: 0.3s;
 	--img-border-radius: 10px;
-	--header-item-height: calc(var(--header-height) * 0.575);
 }
 
 
