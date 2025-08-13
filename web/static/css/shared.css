@@ -314,6 +314,14 @@ button.search-arrow {
   font-size: 0.875rem;
 }
 
+.categories-dropdown-navigation {
+  display: grid;
+  width: 100%;
+  grid-template-columns: repeat(2, 1fr);
+  padding: 0 var(--content-padding);
+  gap: 0.5rem;
+}
+
 .dropdown {
   position: relative;
   display: flex;
@@ -823,11 +831,6 @@ button.cancel-button {
 
 /* ############# Media Queries ############# */
 
-@media screen and (max-width: 1024px) {
-  .site-header {
-    column-gap: calc(var(--content-padding) * 3);
-  }
-}
 
 @media screen and (max-width: 900px) {
   :root {

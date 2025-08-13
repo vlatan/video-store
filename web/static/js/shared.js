@@ -92,6 +92,7 @@ document.addEventListener('click', event => {
     const searchForm = document.getElementById('searchForm');
     const logo = document.querySelector('a.logo');
     const searchIcon = document.querySelector('.search-button-mobile');
+    const hamburgerIcon = document.querySelector('.hamburger-icon');
     const dropdowns = document.querySelectorAll('.dropdown');
     const arrow = document.querySelector('button.search-arrow')
     const arrowClicked = event.target.closest('button.search-arrow');
@@ -101,6 +102,7 @@ document.addEventListener('click', event => {
         searchForm.style.display = 'flex'
         logo.style.display = "none";
         searchIcon.style.display = "none";
+        hamburgerIcon.style.display = "none";
         for (const dropdown of dropdowns) {
             dropdown.style.display = "none";
         }
@@ -109,6 +111,7 @@ document.addEventListener('click', event => {
         searchForm.removeAttribute('style');
         logo.removeAttribute('style');
         searchIcon.removeAttribute('style');
+        hamburgerIcon.removeAttribute('style');
         for (const dropdown of dropdowns) {
             dropdown.removeAttribute('style');
         }

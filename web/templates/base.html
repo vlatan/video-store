@@ -78,7 +78,7 @@
 					<line x1="3" y1="12" x2="21" y2="12"></line>
 					<line x1="3" y1="18" x2="21" y2="18"></line>
 				</svg>
-				<ul class="categories-dropdown-content">
+				<div class="categories-dropdown-content">
 					<div class="categories-dropdown-stripes">
 						<h3>Categories</h3>
 						<svg role="button" aria-label="Close Categories Menu" class="categories-close-icon"
@@ -87,14 +87,16 @@
 							<line x1="6" y1="6" x2="18" y2="18"></line>
 						</svg>
 					</div>
-					{{ range .Categories }}
-					<li>
-						<a class="nav-item" href="/category/{{ .Slug }}/">
-							{{ .Name }}
-						</a>
-					</li>
-					{{ end }}
-				</ul>
+					<ul class="categories-dropdown-navigation">
+						{{ range .Categories }}
+						<li>
+							<a class="nav-item" href="/category/{{ .Slug }}/">
+								{{ .Name }}
+							</a>
+						</li>
+						{{ end }}
+					</ul>
+				</div>
 			</div>
 
 			{{ if .Title }}
