@@ -10,7 +10,7 @@
 	--main-font-family: system-ui, sans-serif;
 	--content-padding: 1.5rem;
 	--modal-padding: calc(var(--content-padding) * 1.5);
-	--icon-size: 1.5rem;
+	--icon-size: 1.25rem;
 	--header-height: 4rem;
 	--img-hover-filter: brightness(85%);
 	--img-hover-transition-duration: 0.3s;
@@ -39,7 +39,7 @@ a {
 }
 
 html {
-	font-size: var(--base-font-size);
+	font-size: calc(var(--base-font-size) * 1.1);
 	line-height: 1.5;
 }
 
@@ -222,11 +222,9 @@ button.search-arrow {
 	cursor: pointer;
 }
 
-button.search-button svg,
-button.search-button-mobile svg,
-button.search-arrow svg {
-	width: calc(var(--icon-size) * 0.75);
-	height: calc(var(--icon-size) * 0.75);
+button.search-button svg {
+	width: calc(var(--icon-size) * 0.90);
+	height: calc(var(--icon-size) * 0.90);
 }
 
 button.search-arrow {
@@ -339,7 +337,10 @@ button.search-arrow {
 	right: 0;
 	padding: var(--content-padding) calc(var(--content-padding) + 0.5rem);
 	background-color: var(--secondary-background-color);
-	box-shadow: 0 3px 5px -1px rgba(0, 0, 0, 0.2), 0 6px 10px 0 rgba(0, 0, 0, 0.14), 0 1px 18px 0 rgba(0, 0, 0, 0.12);
+	box-shadow:
+		0 3px 5px -1px rgba(0, 0, 0, 0.2),
+		0 6px 10px 0 rgba(0, 0, 0, 0.14),
+		0 1px 18px 0 rgba(0, 0, 0, 0.12);
 	outline: 1px solid rgb(210, 211, 215);
 	border-radius: var(--img-border-radius);
 }
@@ -430,6 +431,8 @@ a.nav-item:hover::after {
 
 .nav-item img.username-image {
 	border-radius: 50%;
+	width: var(--icon-size);
+	height: var(--icon-size);
 }
 
 .login-wrap {
@@ -836,10 +839,6 @@ button.cancel-button {
 @media screen and (max-width: 900px) {
 	:root {
 		--content-padding: 1rem;
-	}
-
-	.site-header {
-		column-gap: var(--content-padding);
 	}
 
 	.username-text {
