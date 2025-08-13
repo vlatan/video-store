@@ -278,6 +278,12 @@ func (s *Service) Compress(next http.Handler) http.Handler {
 			return
 		}
 
+		// Skip the memory profiling route
+		if strings.HasPrefix(r.URL.Path, "/debug") {
+			next.ServeHTTP(w, r)
+			return
+		}
+
 		gzipHandler.ServeHTTP(w, r)
 	})
 }

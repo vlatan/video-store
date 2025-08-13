@@ -3,6 +3,8 @@ package server
 import (
 	"factual-docs/internal/utils"
 	"net/http"
+	"runtime"
+	"runtime/pprof"
 )
 
 // RegisterRoutes registers routes
@@ -57,6 +59,14 @@ func (s *Server) RegisterRoutes() http.Handler {
 	for _, favicon := range utils.RootFavicons {
 		mux.HandleFunc("GET "+favicon, s.misc.StaticHandler)
 	}
+
+	// Route for memory profiling
+	mux.HandleFunc("GET /debug/heap", s.mw.IsAdmin(
+		func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/octet-stream")
+			runtime.GC()
+			pprof.WriteHeapProfile(w)
+		}))
 
 	// Chain middlewares that apply to all requests
 	return s.mw.ApplyToAll(
