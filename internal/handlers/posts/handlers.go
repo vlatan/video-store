@@ -161,11 +161,6 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(posts.Items) == 0 {
-		http.NotFound(w, r)
-		return
-	}
-
 	// If not the first page return JSON
 	if page > 1 {
 		time.Sleep(time.Millisecond * 400)
