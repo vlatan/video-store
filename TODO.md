@@ -1,5 +1,7 @@
 * Leave the app for a week and profile the memory
 
+* Do not shoe 404 on serahc page where no results
+
 * Better habmurger button (svg)
   Better placement of the hamburger button
   Better fly-in menu

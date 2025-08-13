@@ -115,28 +115,23 @@
 
 			<nav class="navbar">
 				<form id="searchForm" class="search-form" method="get" action="/search/">
-					<button type="button" aria-label="Collapse Search Field" class="search-arrow">
-						<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd"
-							clip-rule="evenodd">
-							<path fill="white"
-								d="M2.117 12l7.527 6.235-.644.765-9-7.521 9-7.479.645.764-7.529 6.236h21.884v1h-21.883z" />
-						</svg>
-					</button>
+					<svg role="button" class="search-arrow-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+						<line x1="26" y1="12" x2="3" y2="12"></line>
+						<polyline points="12 18 3 12 12 6"></polyline>
+					</svg>
 					<input id="q" name="q" size="20" value="{{ .SearchQuery }}" class="search-form-input"
 						placeholder="Search" required type="search">
-					<button aria-label=" Search" class="search-button">
+					<button aria-label="Search" class="search-button">
 						<svg role="img" class="search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
 							<circle cx="11" cy="11" r="8"></circle>
 							<line x1="21" y1="21" x2="16.65" y2="16.65"></line>
 						</svg>
 					</button>
 				</form>
-				<button aria-label="Show Search Field" class="search-button-mobile">
-					<svg role="img" class="search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-						<circle cx="11" cy="11" r="8"></circle>
-						<line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-					</svg>
-				</button>
+				<svg role="button" class="mobile-search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+					<circle cx="11" cy="11" r="8"></circle>
+					<line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+				</svg>
 
 				{{ if .CurrentUser.IsAuthenticated }}
 				<div class="dropdown">

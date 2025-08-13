@@ -168,6 +168,27 @@ a.logo:hover span:last-child {
 }
 
 
+/* ################# Icons /  Buttons ################# */
+
+svg.hamburger-icon,
+svg.categories-close-icon,
+svg.search-icon,
+svg.mobile-search-icon,
+svg.search-arrow-icon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	fill: none;
+	stroke: var(--primary-font-color);
+	stroke-width: 2;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+	width: var(--icon-size);
+	height: var(--icon-size);
+	cursor: pointer;
+}
+
+
 /* ################# Search Box ################# */
 
 .search-form {
@@ -207,48 +228,30 @@ button.search-button {
 	border-bottom-right-radius: var(--img-border-radius);
 }
 
-button.search-button-mobile,
-button.search-arrow {
+svg.mobile-search-icon,
+svg.search-arrow-icon {
 	display: none;
 	background-color: transparent;
 	border: none;
 }
 
-button.search-button,
-button.search-button-mobile,
-button.search-arrow {
+button.search-button {
 	align-items: center;
 	justify-content: center;
 	cursor: pointer;
 }
 
-button.search-button svg {
+svg.search-icon {
 	width: calc(var(--icon-size) * 0.90);
 	height: calc(var(--icon-size) * 0.90);
 }
 
-button.search-arrow {
+svg.search-arrow-icon {
 	margin-right: 10px;
 }
 
 
 /* ################# Dropdown Menus ################# */
-
-.hamburger-icon,
-.categories-close-icon,
-.search-icon {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	fill: none;
-	stroke: var(--primary-font-color);
-	stroke-width: 2;
-	stroke-linecap: round;
-	stroke-linejoin: round;
-	width: var(--icon-size);
-	height: var(--icon-size);
-	cursor: pointer;
-}
 
 .categories-dropdown {
 	position: relative;
@@ -876,7 +879,7 @@ button.cancel-button {
 		}
 	}
 
-	button.search-button-mobile {
+	svg.mobile-search-icon {
 		display: flex;
 	}
 

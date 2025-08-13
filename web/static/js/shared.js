@@ -91,14 +91,14 @@ document.addEventListener('click', event => {
     // Mobile search form
     const searchForm = document.getElementById('searchForm');
     const logo = document.querySelector('a.logo');
-    const searchIcon = document.querySelector('.search-button-mobile');
+    const searchIcon = document.querySelector('.mobile-search-icon');
     const hamburgerIcon = document.querySelector('.hamburger-icon');
     const dropdowns = document.querySelectorAll('.dropdown');
-    const arrow = document.querySelector('button.search-arrow')
-    const arrowClicked = event.target.closest('button.search-arrow');
-    const outsideFormClicked = !event.target.closest('#searchForm');
-    if (event.target.closest('.search-button-mobile')) {
-        arrow.style.display = "block";
+    const arrow = document.querySelector('.search-arrow-icon')
+    const arrowClicked = event.target.closest('.search-arrow-icon');
+    const searchFormClicked = event.target.closest('#searchForm');
+    if (event.target.closest('.mobile-search-icon')) {
+        arrow.style.display = "flex";
         searchForm.style.display = 'flex'
         logo.style.display = "none";
         searchIcon.style.display = "none";
@@ -106,7 +106,7 @@ document.addEventListener('click', event => {
         for (const dropdown of dropdowns) {
             dropdown.style.display = "none";
         }
-    } else if (arrowClicked || outsideFormClicked) {
+    } else if (arrowClicked || !searchFormClicked) {
         arrow.removeAttribute('style');
         searchForm.removeAttribute('style');
         logo.removeAttribute('style');
