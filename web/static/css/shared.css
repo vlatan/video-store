@@ -9,6 +9,7 @@
   --content-width: min(90vw, 1600px);
   --main-font-family: system-ui, sans-serif;
   --content-padding: 1.5rem;
+  --modal-padding: calc(var(--content-padding) * 1.5);
   --icon-size: 1.5rem;
   --header-height: 4rem;
   --img-hover-filter: brightness(85%);
@@ -257,8 +258,8 @@ button.search-arrow {
 .categories-dropdown-content {
   display: flex;
   flex-direction: column;
-  gap: var(--content-padding);
-  padding-bottom: var(--content-padding);
+  gap: var(--modal-padding);
+  padding-bottom: var(--modal-padding);
   overflow-y: scroll;
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -293,7 +294,7 @@ button.search-arrow {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 var(--content-padding);
+  padding: 0 var(--modal-padding);
   width: 100%;
   background:
     repeating-linear-gradient(45deg,
@@ -318,8 +319,8 @@ button.search-arrow {
   display: grid;
   width: 100%;
   grid-template-columns: repeat(2, 1fr);
-  padding: 0 var(--content-padding);
-  gap: 0.5rem;
+  padding: 0 var(--modal-padding);
+  gap: 0.5rem var(--modal-padding);
 }
 
 .dropdown {
@@ -377,8 +378,7 @@ button.search-arrow {
   text-transform: uppercase;
 }
 
-.dropdown-content .nav-item,
-.nav-item {
+.dropdown-content .nav-item {
   white-space: nowrap;
   font-size: 0.95rem;
   text-transform: unset;
@@ -534,7 +534,7 @@ a.nav-item:hover::after {
   border: 1px solid #888;
   color: black;
   gap: var(--content-padding);
-  padding: calc(var(--content-padding) * 1.5);
+  padding: var(--modal-padding);
   transform: translateX(30%);
   opacity: 0;
   animation: flyInRight 100ms ease-in 200ms forwards;
