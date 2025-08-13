@@ -262,8 +262,8 @@ svg.search-arrow-icon {
 .categories-dropdown-content {
 	display: flex;
 	flex-direction: column;
-	gap: var(--modal-padding);
-	padding-bottom: var(--modal-padding);
+	gap: var(--content-padding);
+	padding-bottom: var(--content-padding);
 	overflow-y: scroll;
 	scrollbar-width: none;
 	-ms-overflow-style: none;
@@ -298,7 +298,7 @@ svg.search-arrow-icon {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	padding: 0 var(--modal-padding);
+	padding: 0 var(--content-padding);
 	width: 100%;
 	background:
 		repeating-linear-gradient(45deg,
@@ -323,9 +323,24 @@ svg.search-arrow-icon {
 	display: grid;
 	width: 100%;
 	grid-template-columns: repeat(2, 1fr);
-	padding: 0 var(--modal-padding);
-	gap: 0.5rem var(--modal-padding);
+	padding: 0 var(--content-padding);
+	gap: 0.5rem;
 }
+
+.categories-dropdown-navigation .nav-item {
+	width: 100%;
+	min-height: var(--header-item-height);
+	background-color: var(--primary-border-color);
+	border-radius: var(--img-border-radius);
+	padding: 0.5rem 1rem;
+	font-size: 0.85rem;
+}
+
+/* No fancy hover link */
+.categories-dropdown-navigation .nav-item::after {
+	display: none
+}
+
 
 .dropdown {
 	position: relative;
