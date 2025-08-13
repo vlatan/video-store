@@ -15,7 +15,7 @@
 	--img-hover-filter: brightness(85%);
 	--img-hover-transition-duration: 0.3s;
 	--img-border-radius: 10px;
-	--header-item-height: 2.3rem;
+	--header-item-height: calc(var(--header-height) * 0.575);
 }
 
 
@@ -241,7 +241,8 @@ button.search-button {
 	cursor: pointer;
 }
 
-svg.search-icon {
+svg.search-icon,
+.nav-item.username img.username-image {
 	width: calc(var(--icon-size) * 0.90);
 	height: calc(var(--icon-size) * 0.90);
 }
@@ -336,15 +337,14 @@ svg.search-arrow-icon {
 	display: none;
 	position: absolute;
 	z-index: 1;
-	top: 154%;
+	top: 120%;
 	right: 0;
 	padding: var(--content-padding) calc(var(--content-padding) + 0.5rem);
-	background-color: var(--secondary-background-color);
+	background-color: var(--primary-border-color);
 	box-shadow:
 		0 3px 5px -1px rgba(0, 0, 0, 0.2),
 		0 6px 10px 0 rgba(0, 0, 0, 0.14),
 		0 1px 18px 0 rgba(0, 0, 0, 0.12);
-	outline: 1px solid rgb(210, 211, 215);
 	border-radius: var(--img-border-radius);
 }
 
@@ -412,35 +412,23 @@ a.nav-item:hover::after {
 }
 
 .nav-item.username {
-	padding-right: 1rem;
-	background: inherit;
-	border: none;
-}
-
-.nav-item.username {
+	display: flex;
+	align-items: center;
+	justify-content: center;
 	gap: 0.5rem;
+	height: var(--header-item-height);
+	padding: 0.4rem 0.80rem;
+	border-radius: var(--img-border-radius);
+	background-color: var(--primary-border-color);
 }
 
-.nav-item.username::after {
-	content: "";
-	position: absolute;
-	right: 0;
-	width: 0;
-	height: 0;
-	border: 6px solid transparent;
-	border-top-color: var(--primary-font-color);
-	border-bottom: 0;
-}
-
-.nav-item img.username-image {
+.nav-item.username img.username-image {
 	border-radius: 50%;
-	width: var(--icon-size);
-	height: var(--icon-size);
 }
 
 .login-wrap {
-	position: relative;
 	display: flex;
+	position: relative;
 	align-items: center;
 }
 
@@ -448,7 +436,7 @@ a.nav-item:hover::after {
 	color: #f26123;
 	font-weight: bold;
 	padding-top: 0.5rem;
-	border-top: 1px solid var(--primary-border-color);
+	border-top: 1px solid var(--primary-background-color);
 }
 
 
@@ -850,14 +838,13 @@ button.cancel-button {
 
 	.nav-item.username {
 		padding: 0;
+		border-radius: 0;
+		background: none;
 	}
 
-	.nav-item.username::after {
-		content: none;
-	}
-
-	.dropdown-content::after {
-		right: 5%;
+	.nav-item.username img.username-image {
+		width: var(--icon-size);
+		height: var(--icon-size);
 	}
 }
 
