@@ -75,18 +75,16 @@ document.addEventListener('click', event => {
     }
 
     // Categories Dropdown menu
-    const catDropContent = document.querySelector('.category-dropdown-content');
-    const hamburgerIcon = document.querySelector('.hamburger-icon');
+    const catDropContent = document.querySelector('.categories-dropdown-content');
     if (catDropContent) {
-        const catNotDropped = !catDropContent.classList.contains('category-show-dropdown');
-        const categoriesClicked = event.target.closest('.categories');
-        const catMenuNotClicked = !event.target.closest('.category-show-dropdown');
-        if (catNotDropped && categoriesClicked) {
-            catDropContent.classList.add('category-show-dropdown');
-            hamburgerIcon.classList.add('hamburger-icon-change');
-        } else if (catMenuNotClicked) {
-            catDropContent.classList.remove('category-show-dropdown');
-            hamburgerIcon.classList.remove('hamburger-icon-change');
+        const catDropped = catDropContent.classList.contains('categories-show-dropdown');
+        const hamburgrIconClicked = event.target.closest('.hamburger-icon');
+        const closeIconClicked = event.target.closest('.categories-close-icon');
+        const catMenuClicked = event.target.closest('.categories-show-dropdown');
+        if (!catDropped && hamburgrIconClicked) {
+            catDropContent.classList.add('categories-show-dropdown');
+        } else if (!catMenuClicked || closeIconClicked) {
+            catDropContent.classList.remove('categories-show-dropdown');
         }
     }
 

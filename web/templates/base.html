@@ -71,16 +71,22 @@
 	<div class="site-header-wrap">
 		<header class="site-header">
 
-			<div class="dropdown">
-				<button aria-label="Drop Categories Menu" class="nav-item categories">
-					<svg role="button" aria-label="Toggle Dropdown Menu" class="dropdown__toggle__icon"
-						xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-						<line x1="3" y1="6" x2="21" y2="6"></line>
-						<line x1="3" y1="12" x2="21" y2="12"></line>
-						<line x1="3" y1="18" x2="21" y2="18"></line>
-					</svg>
-				</button>
-				<ul class="category-dropdown-content">
+			<div class="categories-dropdown">
+				<svg role="button" aria-label="Drop Categories Menu" class="hamburger-icon"
+					xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+					<line x1="3" y1="6" x2="21" y2="6"></line>
+					<line x1="3" y1="12" x2="21" y2="12"></line>
+					<line x1="3" y1="18" x2="21" y2="18"></line>
+				</svg>
+				<ul class="categories-dropdown-content">
+					<div class="categories-dropdown-stripes">
+						<h3>Categories</h3>
+						<svg role="button" aria-label="Close Categories Menu" class="categories-close-icon"
+							xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+							<line x1="18" y1="6" x2="6" y2="18"></line>
+							<line x1="6" y1="6" x2="18" y2="18"></line>
+						</svg>
+					</div>
 					{{ range .Categories }}
 					<li>
 						<a class="nav-item" href="/category/{{ .Slug }}/">
