@@ -6,6 +6,7 @@
 	--primary-font-color: rgb(230, 237, 243);
 	--secondary-font-color: rgb(213, 220, 227);
 	--primary-border-color: hsl(0, 0%, 18.82%);
+	--secondary-border-color: hsl(0, 0%, 21%);
 	--content-width: min(90vw, 1600px);
 	--main-font-family: system-ui, sans-serif;
 	--content-padding: 1.5rem;
@@ -228,6 +229,12 @@ button.search-button {
 	border-bottom-right-radius: var(--img-border-radius);
 }
 
+button.search-button:hover,
+button.search-button:focus {
+	background-color: var(--secondary-border-color);
+}
+
+
 svg.mobile-search-icon,
 svg.search-arrow-icon {
 	display: none;
@@ -332,8 +339,14 @@ svg.search-arrow-icon {
 	min-height: var(--header-item-height);
 	background-color: var(--primary-border-color);
 	border-radius: var(--img-border-radius);
-	padding: 0.5rem 1rem;
-	font-size: 0.85rem;
+	padding: 0.4rem 0.80rem;
+	font-size: 0.75rem;
+	text-transform: uppercase;
+}
+
+.categories-dropdown-navigation .nav-item:hover,
+.categories-dropdown-navigation .nav-item:focus {
+	background-color: var(--secondary-border-color);
 }
 
 /* No fancy hover link */
@@ -435,6 +448,11 @@ a.nav-item:hover::after {
 	padding: 0.4rem 0.80rem;
 	border-radius: var(--img-border-radius);
 	background-color: var(--primary-border-color);
+}
+
+.nav-item.username:hover,
+.nav-item.username:focus {
+	background-color: var(--secondary-border-color);
 }
 
 .nav-item.username img.username-image {
