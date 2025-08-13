@@ -1,7 +1,5 @@
 * Leave the app for a week and profile the memory
 
-* Make the play button SVG
-
 * Check for nil dereference in templates
 * Add slug input to page
 * Add new category form as well as delete, edit routes
