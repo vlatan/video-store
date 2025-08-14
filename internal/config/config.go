@@ -1,16 +1,26 @@
 package config
 
 import (
+	"encoding/base64"
+	"errors"
+	"fmt"
 	"log"
 	"time"
 
 	"github.com/caarlos0/env"
 )
 
+type Secret struct {
+	Base64 string
+	Bytes  []byte
+}
+
 type Config struct {
 	// Running localy or not
 	Debug            bool   `env:"DEBUG" envDefault:"false"`
-	SessionKey       string `env:"SESSION_KEY"`
+	CsrfKey          Secret `env:"CSRF_KEY"`
+	AuthKey          Secret `env:"AUTH_KEY"`
+	EncryptionKey    Secret `env:"ENCRYPTION_KEY"`
 	UserSessionName  string `env:"USER_SESSION_NAME" envDefault:"_app"`
 	FlashSessionName string `env:"FLASH_SESSION_NAME" envDefault:"_app_flash"`
 	CsrfSessionName  string `env:"CSRF_SESSION_NAME" envDefault:"_app_csrf"`
@@ -20,7 +30,6 @@ type Config struct {
 	AppName         string `env:"APP_NAME"`
 	AppDescription  string `env:"APP_DESCRIPTION"`
 	Domain          string `env:"DOMAIN" envDefault:"localhost:5000"`
-	SecretKey       string `env:"SECRET_KEY"`
 	GtagID          string `env:"GTAG_ID"`
 	PostsPerPage    int    `env:"POSTS_PER_PAGE" envDefault:"24"`
 	NumRelatedPosts int    `env:"NUM_RELATED_POSTS" envDefault:"5"`
@@ -66,4 +75,23 @@ func New() *Config {
 		log.Fatalf("failed to parse the config from the env: %v", err)
 	}
 	return &cfg
+}
+
+// UnmarshalText implements the encoding.TextUnmarshaler interface.
+// It's called by the env library to decode the environment variables
+// encoded in base64
+func (s *Secret) UnmarshalText(text []byte) error {
+
+	if len(text) == 0 {
+		return errors.New("empty or no secret key defined in env")
+	}
+
+	s.Base64 = string(text)
+	decoded, err := base64.StdEncoding.DecodeString(s.Base64)
+	if err != nil {
+		return fmt.Errorf("error decoding a secret key: %w", err)
+	}
+
+	s.Bytes = decoded
+	return nil
 }

@@ -26,6 +26,13 @@ Users can login via Google and Facebook. The app doesn't store passwords so natu
 
 Set `DEBUG` to `true` in the `.env` file, as well as populate the entire `.env` file, according to the `example.env`.
 
+One thing to note is that the secret keys (`CSRF_KEY`, `AUTH_KEY`, `ENCRYPTION_KEY`) need to be `base64` encoded. You can use the following recommended snippet from `gorilla/sessions` to generate different keys and encode them to `base64`:
+``` golang
+key := securecookie.GenerateRandomKey(32)
+log.Println(base64.StdEncoding.EncodeToString(key))
+```
+
+
 Put this alias in your `~/.bash_aliases` file and run `build` whenever you want to build and run the app.
 ``` bash
 alias build='docker compose pull && docker compose up --build --detach'

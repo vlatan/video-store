@@ -12,8 +12,9 @@ import (
 
 // Setup Goth library and our own session
 func newCookieStore(cfg *config.Config) *sessions.CookieStore {
+
 	// Create new cookies store
-	store := sessions.NewCookieStore([]byte(cfg.SessionKey))
+	store := sessions.NewCookieStore(cfg.AuthKey.Bytes, cfg.EncryptionKey.Bytes)
 	store.Options = &sessions.Options{
 		Path:     "/",
 		MaxAge:   86400 * 30,
