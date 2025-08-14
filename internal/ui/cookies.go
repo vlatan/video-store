@@ -27,6 +27,11 @@ func (s *service) StoreFlashMessage(
 
 // Get the user from session
 func (s *service) GetUserFromSession(w http.ResponseWriter, r *http.Request) *models.User {
+	// Only get session if the cookie actually exists
+	if _, err := r.Cookie(s.config.UserSessionName); err != nil {
+		return nil
+	}
+
 	// Get session from store
 	session, err := s.store.Get(r, s.config.UserSessionName)
 	if session == nil || err != nil {
@@ -35,7 +40,10 @@ func (s *service) GetUserFromSession(w http.ResponseWriter, r *http.Request) *mo
 
 	// Get user row ID from session
 	id, ok := session.Values["ID"].(int)
-	if id == 0 || !ok {
+	if !ok || id == 0 {
+		// Clean the session this is anonymous user
+		session.Options.MaxAge = -1
+		session.Save(r, w)
 		return nil
 	}
 
