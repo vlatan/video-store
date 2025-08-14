@@ -17,14 +17,16 @@ type Secret struct {
 
 type Config struct {
 	// Running localy or not
-	Debug            bool   `env:"DEBUG" envDefault:"false"`
-	CsrfKey          Secret `env:"CSRF_KEY"`
-	AuthKey          Secret `env:"AUTH_KEY"`
-	EncryptionKey    Secret `env:"ENCRYPTION_KEY"`
+	Debug      bool   `env:"DEBUG" envDefault:"false"`
+	DataVolume string `env:"DATA_VOLUME" envDefault:"/data"`
+
+	// Sessions
+	CsrfKey          Secret `env:"CSRF_KEY,required"`
+	AuthKey          Secret `env:"AUTH_KEY,required"`
+	EncryptionKey    Secret `env:"ENCRYPTION_KEY,required"`
 	UserSessionName  string `env:"USER_SESSION_NAME" envDefault:"_app"`
 	FlashSessionName string `env:"FLASH_SESSION_NAME" envDefault:"_app_flash"`
 	CsrfSessionName  string `env:"CSRF_SESSION_NAME" envDefault:"_app_csrf"`
-	DataVolume       string `env:"DATA_VOLUME" envDefault:"/data"`
 
 	// App settings
 	AppName         string `env:"APP_NAME"`
