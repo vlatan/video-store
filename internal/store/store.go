@@ -90,7 +90,7 @@ func (rs *RedisStore) Get(r *http.Request, name string) (*sessions.Session, erro
 	}
 
 	if err != nil {
-		return session, err
+		return session, fmt.Errorf("could not get the session from Redis: %w", err)
 	}
 
 	// Decode session data
@@ -115,7 +115,7 @@ func (rs *RedisStore) Save(r *http.Request, w http.ResponseWriter, session *sess
 	// Encode session data
 	encoded, err := securecookie.EncodeMulti(session.Name(), session.Values, rs.codecs...)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not encode the session data: %w", err)
 	}
 
 	var sessionID string
@@ -133,7 +133,7 @@ func (rs *RedisStore) Save(r *http.Request, w http.ResponseWriter, session *sess
 	expiration := time.Duration(session.Options.MaxAge) * time.Second
 	err = rs.client.Set(r.Context(), key, encoded, expiration)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not save the session to Redis: %w", err)
 	}
 
 	// Set cookie with session ID
