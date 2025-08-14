@@ -27,7 +27,8 @@ func (s *service) StoreFlashMessage(
 
 // Get the user from session
 func (s *service) GetUserFromSession(w http.ResponseWriter, r *http.Request) *models.User {
-	// Only get session if the cookie actually exists
+
+	// Check for a user cookie
 	if _, err := r.Cookie(s.config.UserSessionName); err != nil {
 		return nil
 	}

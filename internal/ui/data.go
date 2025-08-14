@@ -47,7 +47,7 @@ func (s *service) NewData(w http.ResponseWriter, r *http.Request) *models.Templa
 		return data
 	}
 
-	// Only get session if the cookie actually exists
+	// Check for flash cookie
 	if _, err := r.Cookie(s.config.FlashSessionName); err != nil {
 		return data
 	}

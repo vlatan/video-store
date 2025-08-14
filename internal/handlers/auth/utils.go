@@ -101,7 +101,7 @@ func (s *Service) loginUser(w http.ResponseWriter, r *http.Request, gothUser *go
 // Retrieve the user final redirect value
 func (s *Service) getUserFinalRedirect(w http.ResponseWriter, r *http.Request) string {
 
-	// Only get session if the cookie actually exists
+	// Check for flash cookie
 	if _, err := r.Cookie(s.config.FlashSessionName); err != nil {
 		return "/"
 	}
