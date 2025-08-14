@@ -45,7 +45,7 @@ type service struct {
 	staticFiles models.StaticFiles
 	rdb         redis.Service
 	config      *config.Config
-	store       *sessions.CookieStore
+	store       sessions.Store
 	catsRepo    *categories.Repository
 	usersRepo   *users.Repository
 }
@@ -62,7 +62,7 @@ var (
 func New(
 	rdb redis.Service,
 	config *config.Config,
-	store *sessions.CookieStore,
+	store sessions.Store,
 	catsRepo *categories.Repository,
 	usersRepo *users.Repository,
 ) Service {

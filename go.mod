@@ -9,6 +9,7 @@ require (
 	github.com/aws/smithy-go v1.22.5
 	github.com/caarlos0/env v3.5.0+incompatible
 	github.com/gorilla/csrf v1.7.3
+	github.com/gorilla/securecookie v1.1.2
 	github.com/gorilla/sessions v1.1.1
 	github.com/gosimple/slug v1.15.0
 	github.com/jackc/pgx/v5 v5.7.5
@@ -58,7 +59,6 @@ require (
 	github.com/gorilla/context v1.1.1 // indirect
 	github.com/gorilla/css v1.0.1 // indirect
 	github.com/gorilla/mux v1.6.2 // indirect
-	github.com/gorilla/securecookie v1.1.2 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/gosimple/unidecode v1.0.1 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
