@@ -81,6 +81,24 @@ docker compose exec -it postgres psql -U xxx -d xxx
 No really a difference, except the `app`, `worker` or the `backup` will be built and run by the `Dockerfile` so you need the `TARGET` environment variable in production to specify which one you want to run, `app`, `worker` or `backup`. That is the host needs to be able to pass this `TARGET` variable as a build argument.
 
 
+## Useful information for identifying memory leaks
+
+While logged in as admin visit the `/debug/heap` endpoint and the file will download. Rename it to `heap1`.  
+Stress the app locally by using:
+``` bash
+for i in {1..5000}; do curl -s http://localhost:5000/ > /dev/null; done &
+for i in {1..5000}; do curl -s http://localhost:5000/ > /dev/null; done &
+for i in {1..5000}; do curl -s http://localhost:5000/ > /dev/null; done &
+wait
+```
+Visit the `/debug/heap` endpoint again and download anothe heap profile file. Rename it to `heap2`.  
+Run a profile which will compare the base (`heap1`) and the next profile (`heap2`):
+``` bash
+go tool pprof -base heap1 heap3
+```
+
+Once inside the `pprof` CLI run `top`, or `top20` to see if there's memory increase.
+
 ## Dump/Restore DB data
 
 Run `export HISTCONTROL=ignorespace` so you're able to hide bash commands from the history if they start with empty space. This is probably already set on your system in the `~/.bashrc` file, but to be sure run it, there's no harm.

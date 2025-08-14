@@ -17,6 +17,7 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
+// RedisStore implements sessions.Store (New, Get and Save)
 type RedisStore struct {
 	config    *config.Config
 	client    client.Service
