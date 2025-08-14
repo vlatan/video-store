@@ -66,7 +66,8 @@ func (s *Server) RegisterRoutes() http.Handler {
 			w.Header().Set("Content-Type", "application/octet-stream")
 			runtime.GC()
 			pprof.WriteHeapProfile(w)
-		}))
+		},
+	))
 
 	// Chain middlewares that apply to all requests
 	return s.mw.ApplyToAll(
