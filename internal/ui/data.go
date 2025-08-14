@@ -47,6 +47,11 @@ func (s *service) NewData(w http.ResponseWriter, r *http.Request) *models.Templa
 		return data
 	}
 
+	// Only get session if the cookie actually exists
+	if _, err := r.Cookie(s.config.FlashSessionName); err != nil {
+		return data
+	}
+
 	// Get any flash messages from session
 	session, _ := s.store.Get(r, s.config.FlashSessionName)
 	flashes := session.Flashes()
