@@ -69,7 +69,7 @@ func (s *Service) loginUser(w http.ResponseWriter, r *http.Request, gothUser *go
 
 	// Update or insert user
 	id, err := s.usersRepo.UpsertUser(r.Context(), gothUser, analyticsID)
-	if id == 0 || err != nil {
+	if err != nil {
 		return err
 	}
 
