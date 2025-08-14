@@ -27,6 +27,7 @@ import (
 	postsRepo "factual-docs/internal/repositories/posts"
 	sourcesRepo "factual-docs/internal/repositories/sources"
 	usersRepo "factual-docs/internal/repositories/users"
+	redisStore "factual-docs/internal/store"
 	"factual-docs/internal/ui"
 )
 
@@ -52,7 +53,16 @@ func NewServer() (*http.Server, func() error) {
 	cfg := config.New()
 	db := database.New(cfg)
 	rdb := redis.New(cfg)
-	store := newCookieStore(cfg)
+
+	// Create sessions store
+	store := redisStore.New(
+		cfg,
+		rdb,
+		"session",
+		86400*30,
+		cfg.AuthKey.Bytes,
+		cfg.EncryptionKey.Bytes,
+	)
 
 	// Create DB repositories
 	catsRepo := catsRepo.New(db)

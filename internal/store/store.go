@@ -7,9 +7,13 @@ import (
 	client "factual-docs/internal/drivers/redis"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
+	"github.com/markbates/goth"
+	"github.com/markbates/goth/gothic"
+	"github.com/markbates/goth/providers/google"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -21,19 +25,40 @@ type RedisStore struct {
 	codecs    []securecookie.Codec
 }
 
-func NewRedisStore(
+func New(
 	config *config.Config,
 	client client.Service,
 	keyPrefix string,
 	maxAge int,
 	keyPairs ...[]byte) *RedisStore {
-	return &RedisStore{
+
+	store := &RedisStore{
 		config:    config,
 		client:    client,
 		keyPrefix: keyPrefix,
 		maxAge:    maxAge,
 		codecs:    securecookie.CodecsFromPairs(keyPairs...),
 	}
+
+	// Add this store to gothic
+	gothic.Store = store
+
+	protocol := "https"
+	if config.Debug {
+		protocol = "http"
+	}
+
+	// Add providers to goth
+	goth.UseProviders(
+		google.New(
+			config.GoogleOAuthClientID,
+			config.GoogleOAuthClientSecret,
+			fmt.Sprintf("%s://%s/auth/google/callback", protocol, config.Domain),
+			config.GoogleOAuthScopes...,
+		),
+	)
+
+	return store
 }
 
 // New creates a new session without loading it from the store
@@ -56,7 +81,8 @@ func (rs *RedisStore) Get(r *http.Request, name string) (*sessions.Session, erro
 	}
 
 	// Get from Redis
-	val, err := rs.client.Get(r.Context(), fmt.Sprintf("%s:%s", rs.keyPrefix, cookie.Value))
+	key := fmt.Sprintf("%s:%s", rs.keyPrefix, cookie.Value)
+	val, err := rs.client.Get(r.Context(), key)
 	if err == redis.Nil {
 		session.IsNew = true
 		return session, nil // New session
@@ -77,7 +103,49 @@ func (rs *RedisStore) Get(r *http.Request, name string) (*sessions.Session, erro
 	return session, nil
 }
 
-func (s *RedisStore) Save(r *http.Request, w http.ResponseWriter, session *sessions.Session) error {
+// Save saves a session into Redis and a corresponding session ID in a cookie
+func (rs *RedisStore) Save(r *http.Request, w http.ResponseWriter, session *sessions.Session) error {
+
+	// If MaxAge is negative, delete the session
+	if session.Options.MaxAge < 0 {
+		return rs.deleteSession(r, w, session)
+	}
+
+	// Encode session data
+	encoded, err := securecookie.EncodeMulti(session.Name(), session.Values, rs.codecs...)
+	if err != nil {
+		return err
+	}
+
+	var sessionID string
+
+	// Get existing session ID from cookie if it exists
+	if cookie, err := r.Cookie(session.Name()); err == nil && !session.IsNew {
+		sessionID = cookie.Value
+	} else {
+		// Generate new session ID
+		sessionID = rs.generateSessionID()
+	}
+
+	// Save to Redis
+	key := fmt.Sprintf("%s:%s", rs.keyPrefix, sessionID)
+	expiration := time.Duration(session.Options.MaxAge) * time.Second
+	err = rs.client.Set(r.Context(), key, encoded, expiration)
+	if err != nil {
+		return err
+	}
+
+	// Set cookie with session ID
+	http.SetCookie(w, &http.Cookie{
+		Name:     session.Name(),
+		Value:    sessionID,
+		Path:     session.Options.Path,
+		Domain:   session.Options.Domain,
+		MaxAge:   session.Options.MaxAge,
+		Secure:   session.Options.Secure,
+		HttpOnly: session.Options.HttpOnly,
+	})
+
 	return nil
 }
 
@@ -91,6 +159,31 @@ func (rs *RedisStore) newSession(name string) *sessions.Session {
 		Secure:   !rs.config.Debug,
 	}
 	return session
+}
+
+func (rs *RedisStore) deleteSession(
+	r *http.Request,
+	w http.ResponseWriter,
+	session *sessions.Session) error {
+
+	// Delete from redis
+	if cookie, err := r.Cookie(session.Name()); err == nil {
+		key := fmt.Sprintf("%s:%s", rs.keyPrefix, cookie.Value)
+		rs.client.Delete(r.Context(), key)
+	}
+
+	// Delete cookie
+	http.SetCookie(w, &http.Cookie{
+		Name:     session.Name(),
+		Value:    "",
+		Path:     session.Options.Path,
+		Domain:   session.Options.Domain,
+		MaxAge:   -1,
+		Secure:   session.Options.Secure,
+		HttpOnly: session.Options.HttpOnly,
+	})
+
+	return nil
 }
 
 func (rs *RedisStore) generateSessionID() string {
