@@ -130,18 +130,9 @@ func (rs *redisStore) Save(r *http.Request, w http.ResponseWriter, session *sess
 		sessionID = rs.generateSessionID()
 	}
 
-	// Build the key and expiration of session and cookie
+	// Save to Redis
 	key := rs.buildKey(session.Name(), sessionID)
 	expiration := time.Duration(session.Options.MaxAge) * time.Second
-	cookieMaxAge := session.Options.MaxAge
-
-	// Just a 10 minute validity of the gothic cookie/session
-	if session.Name() == gothicSessionName {
-		expiration = 10 * time.Minute
-		cookieMaxAge = int(10 * time.Minute / time.Second) // 600 seconds
-	}
-
-	// Save to Redis
 	err = rs.client.Set(r.Context(), key, encoded, expiration)
 	if err != nil {
 		return fmt.Errorf("could not save the session to Redis: %w", err)
@@ -153,7 +144,7 @@ func (rs *redisStore) Save(r *http.Request, w http.ResponseWriter, session *sess
 		Value:    sessionID,
 		Path:     session.Options.Path,
 		Domain:   session.Options.Domain,
-		MaxAge:   cookieMaxAge,
+		MaxAge:   session.Options.MaxAge,
 		Secure:   session.Options.Secure,
 		HttpOnly: session.Options.HttpOnly,
 	})
@@ -164,9 +155,16 @@ func (rs *redisStore) Save(r *http.Request, w http.ResponseWriter, session *sess
 // newSession creates a new session object
 func (rs *redisStore) newSession(name string) *sessions.Session {
 	session := sessions.NewSession(rs, name)
+
+	// Small max age for the gothic session
+	maxAge := rs.maxAge
+	if session.Name() == gothicSessionName {
+		maxAge = 600
+	}
+
 	session.Options = &sessions.Options{
 		Path:     "/",
-		MaxAge:   rs.maxAge,
+		MaxAge:   maxAge,
 		HttpOnly: true,
 		Secure:   !rs.config.Debug,
 	}
