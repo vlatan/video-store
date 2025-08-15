@@ -1,5 +1,3 @@
-* Delete gothic session
-
 * Fix hover profile button/icon on mobile
 * Make icons on mobile bigger
 
