@@ -875,6 +875,11 @@ button.cancel-button {
 		background: none;
 	}
 
+	.nav-item.username:hover,
+	.nav-item.username:focus {
+		background: none;
+	}
+
 	.nav-item.username img.username-image {
 		width: var(--icon-size);
 		height: var(--icon-size);
