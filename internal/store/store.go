@@ -17,6 +17,8 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
+const gothicSessionName = "_gothic_session"
+
 // redisStore implements sessions.Store (New, Get and Save)
 type redisStore struct {
 	config    *config.Config
@@ -128,9 +130,18 @@ func (rs *redisStore) Save(r *http.Request, w http.ResponseWriter, session *sess
 		sessionID = rs.generateSessionID()
 	}
 
-	// Save to Redis
+	// Build the key and expiration of session and cookie
 	key := rs.buildKey(session.Name(), sessionID)
 	expiration := time.Duration(session.Options.MaxAge) * time.Second
+	cookieMaxAge := session.Options.MaxAge
+
+	// Just a 10 minute validity of the gothic cookie/session
+	if session.Name() == gothicSessionName {
+		expiration = 10 * time.Minute
+		cookieMaxAge = int(10 * time.Minute / time.Second) // 600 seconds
+	}
+
+	// Save to Redis
 	err = rs.client.Set(r.Context(), key, encoded, expiration)
 	if err != nil {
 		return fmt.Errorf("could not save the session to Redis: %w", err)
@@ -142,7 +153,7 @@ func (rs *redisStore) Save(r *http.Request, w http.ResponseWriter, session *sess
 		Value:    sessionID,
 		Path:     session.Options.Path,
 		Domain:   session.Options.Domain,
-		MaxAge:   session.Options.MaxAge,
+		MaxAge:   cookieMaxAge,
 		Secure:   session.Options.Secure,
 		HttpOnly: session.Options.HttpOnly,
 	})
