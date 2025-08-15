@@ -59,7 +59,7 @@ func (s *Service) LoadUser(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		// Check if request possibly needs a cookie
-		if !utils.PathNeedsCookie(r.URL.Path) {
+		if !utils.NeedsSessionData(r.URL.Path) {
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -237,8 +237,8 @@ func (s *Service) CsrfProtection(next http.Handler) http.Handler {
 	// Return the handler function
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		// Check if request possibly needs a cookie
-		if !utils.PathNeedsCookie(r.URL.Path) {
+		// Check if request possibly needs CSRF protection
+		if !utils.NeedsSessionData(r.URL.Path) {
 			next.ServeHTTP(w, r)
 			return
 		}

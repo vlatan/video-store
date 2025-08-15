@@ -1,5 +1,4 @@
-* Fix session deletion
-* Fix final user redirect afte auth
+* Delete gothic session
 
 * Fix hover profile button/icon on mobile
 * Make icons on mobile bigger

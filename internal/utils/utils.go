@@ -181,8 +181,8 @@ func IsStatic(path string) bool {
 		slices.Contains(RootFavicons, path)
 }
 
-// PathNeedsCookie checks if a route needs to set a cookie
-func PathNeedsCookie(path string) bool {
+// NeedsSessionData checks if a route needs to read the session
+func NeedsSessionData(path string) bool {
 
 	if IsStatic(path) {
 		return false
@@ -193,6 +193,10 @@ func PathNeedsCookie(path string) bool {
 	}
 
 	if strings.HasPrefix(path, "/sitemap") {
+		return false
+	}
+
+	if strings.HasPrefix(path, "/auth/") {
 		return false
 	}
 
