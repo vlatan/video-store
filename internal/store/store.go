@@ -82,7 +82,7 @@ func (rs *RedisStore) Get(r *http.Request, name string) (*sessions.Session, erro
 	}
 
 	// Get from Redis
-	key := fmt.Sprintf("%s:%s:%s", rs.keyPrefix, name, cookie.Value)
+	key := rs.buildKey(session.Name(), cookie.Value)
 	val, err := rs.client.Get(r.Context(), key)
 	if err == redis.Nil {
 		session.IsNew = true
@@ -129,7 +129,7 @@ func (rs *RedisStore) Save(r *http.Request, w http.ResponseWriter, session *sess
 	}
 
 	// Save to Redis
-	key := fmt.Sprintf("%s:%s:%s", rs.keyPrefix, session.Name(), sessionID)
+	key := rs.buildKey(session.Name(), sessionID)
 	expiration := time.Duration(session.Options.MaxAge) * time.Second
 	err = rs.client.Set(r.Context(), key, encoded, expiration)
 	if err != nil {
@@ -170,7 +170,7 @@ func (rs *RedisStore) deleteSession(
 
 	// Delete from redis
 	if cookie, err := r.Cookie(session.Name()); err == nil {
-		key := fmt.Sprintf("%s:%s:%s", rs.keyPrefix, session.Name(), cookie.Value)
+		key := rs.buildKey(session.Name(), cookie.Value)
 		rs.client.Delete(r.Context(), key)
 	}
 
@@ -188,8 +188,14 @@ func (rs *RedisStore) deleteSession(
 	return nil
 }
 
+// generateSessionID generates a random session ID
 func (rs *RedisStore) generateSessionID() string {
 	bytes := make([]byte, 32)
 	rand.Read(bytes)
 	return hex.EncodeToString(bytes)
+}
+
+// buildKey is building a Redis key for the session
+func (rs *RedisStore) buildKey(sessionName, sessionID string) string {
+	return fmt.Sprintf("%s:%s:%s", rs.keyPrefix, sessionName, sessionID)
 }
