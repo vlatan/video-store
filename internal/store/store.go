@@ -17,8 +17,8 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-// RedisStore implements sessions.Store (New, Get and Save)
-type RedisStore struct {
+// redisStore implements sessions.Store (New, Get and Save)
+type redisStore struct {
 	config    *config.Config
 	client    client.Service
 	keyPrefix string
@@ -31,9 +31,9 @@ func New(
 	client client.Service,
 	keyPrefix string,
 	maxAge int,
-	keyPairs ...[]byte) *RedisStore {
+	keyPairs ...[]byte) *redisStore {
 
-	store := &RedisStore{
+	store := &redisStore{
 		config:    config,
 		client:    client,
 		keyPrefix: keyPrefix,
@@ -63,14 +63,14 @@ func New(
 }
 
 // New creates a new session without loading it from the store
-func (rs *RedisStore) New(r *http.Request, name string) (*sessions.Session, error) {
+func (rs *redisStore) New(r *http.Request, name string) (*sessions.Session, error) {
 	session := rs.newSession(name)
 	session.IsNew = true
 	return session, nil
 }
 
 // Get fetches session from Redis or if none creates a new session
-func (rs *RedisStore) Get(r *http.Request, name string) (*sessions.Session, error) {
+func (rs *redisStore) Get(r *http.Request, name string) (*sessions.Session, error) {
 	// Create new session object
 	session := rs.newSession(name)
 
@@ -105,7 +105,7 @@ func (rs *RedisStore) Get(r *http.Request, name string) (*sessions.Session, erro
 }
 
 // Save saves a session into Redis and a corresponding session ID in a cookie
-func (rs *RedisStore) Save(r *http.Request, w http.ResponseWriter, session *sessions.Session) error {
+func (rs *redisStore) Save(r *http.Request, w http.ResponseWriter, session *sessions.Session) error {
 
 	// If MaxAge is negative, delete the session
 	if session.Options.MaxAge < 0 {
@@ -151,7 +151,7 @@ func (rs *RedisStore) Save(r *http.Request, w http.ResponseWriter, session *sess
 }
 
 // newSession creates a new session object
-func (rs *RedisStore) newSession(name string) *sessions.Session {
+func (rs *redisStore) newSession(name string) *sessions.Session {
 	session := sessions.NewSession(rs, name)
 	session.Options = &sessions.Options{
 		Path:     "/",
@@ -163,7 +163,7 @@ func (rs *RedisStore) newSession(name string) *sessions.Session {
 }
 
 // deleteSession deletes a session from Redis and deletes the cookie
-func (rs *RedisStore) deleteSession(
+func (rs *redisStore) deleteSession(
 	r *http.Request,
 	w http.ResponseWriter,
 	session *sessions.Session) error {
@@ -189,13 +189,13 @@ func (rs *RedisStore) deleteSession(
 }
 
 // generateSessionID generates a random session ID
-func (rs *RedisStore) generateSessionID() string {
+func (rs *redisStore) generateSessionID() string {
 	bytes := make([]byte, 32)
 	rand.Read(bytes)
 	return hex.EncodeToString(bytes)
 }
 
 // buildKey is building a Redis key for the session
-func (rs *RedisStore) buildKey(sessionName, sessionID string) string {
+func (rs *redisStore) buildKey(sessionName, sessionID string) string {
 	return fmt.Sprintf("%s:%s:%s", rs.keyPrefix, sessionName, sessionID)
 }
