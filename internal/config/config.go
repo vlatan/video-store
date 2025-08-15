@@ -2,7 +2,6 @@ package config
 
 import (
 	"encoding/base64"
-	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -15,11 +14,19 @@ type Secret struct {
 	Bytes  []byte
 }
 
+type Target string
+
+const (
+	App    Target = "app"
+	Worker Target = "worker"
+	Backup Target = "backup"
+)
+
 type Config struct {
 	// Running localy or not
 	Debug      bool   `env:"DEBUG" envDefault:"false"`
 	DataVolume string `env:"DATA_VOLUME" envDefault:"/data"`
-	Target     string `env:"TARGET envDefault:app"`
+	Target     Target `env:"TARGET envDefault:app"`
 
 	// Sessions
 	CsrfKey          Secret `env:"CSRF_KEY"`
@@ -81,11 +88,11 @@ func New() *Config {
 		log.Fatalf("failed to parse the config from the env: %v", err)
 	}
 
-	if cfg.Target != "app" {
+	if cfg.Target != App {
 		return &cfg
 	}
 
-	// Check if the app has the necessary secrets
+	// Check if the app has all the necessary secrets
 	secrets := []Secret{cfg.CsrfKey, cfg.AuthKey, cfg.EncryptionKey}
 	for _, secret := range secrets {
 		if secret.Base64 == "" {
@@ -100,10 +107,6 @@ func New() *Config {
 // It's called by the env library to decode the environment variables
 // encoded in base64
 func (s *Secret) UnmarshalText(text []byte) error {
-
-	if len(text) == 0 {
-		return errors.New("empty or no secret key defined in env")
-	}
 
 	s.Base64 = string(text)
 	decoded, err := base64.StdEncoding.DecodeString(s.Base64)
