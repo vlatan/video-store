@@ -82,7 +82,7 @@ func (rs *RedisStore) Get(r *http.Request, name string) (*sessions.Session, erro
 	}
 
 	// Get from Redis
-	key := fmt.Sprintf("%s:%s", rs.keyPrefix, cookie.Value)
+	key := fmt.Sprintf("%s:%s:%s", rs.keyPrefix, name, cookie.Value)
 	val, err := rs.client.Get(r.Context(), key)
 	if err == redis.Nil {
 		session.IsNew = true
@@ -121,7 +121,7 @@ func (rs *RedisStore) Save(r *http.Request, w http.ResponseWriter, session *sess
 	var sessionID string
 
 	// Get existing session ID from cookie if it exists
-	if cookie, err := r.Cookie(session.Name()); err == nil && !session.IsNew {
+	if cookie, err := r.Cookie(session.Name()); err == nil {
 		sessionID = cookie.Value
 	} else {
 		// Generate new session ID
@@ -129,7 +129,7 @@ func (rs *RedisStore) Save(r *http.Request, w http.ResponseWriter, session *sess
 	}
 
 	// Save to Redis
-	key := fmt.Sprintf("%s:%s", rs.keyPrefix, sessionID)
+	key := fmt.Sprintf("%s:%s:%s", rs.keyPrefix, session.Name(), sessionID)
 	expiration := time.Duration(session.Options.MaxAge) * time.Second
 	err = rs.client.Set(r.Context(), key, encoded, expiration)
 	if err != nil {
@@ -162,6 +162,7 @@ func (rs *RedisStore) newSession(name string) *sessions.Session {
 	return session
 }
 
+// deleteSession deletes a session from Redis and deletes the cookie
 func (rs *RedisStore) deleteSession(
 	r *http.Request,
 	w http.ResponseWriter,
@@ -169,7 +170,7 @@ func (rs *RedisStore) deleteSession(
 
 	// Delete from redis
 	if cookie, err := r.Cookie(session.Name()); err == nil {
-		key := fmt.Sprintf("%s:%s", rs.keyPrefix, cookie.Value)
+		key := fmt.Sprintf("%s:%s:%s", rs.keyPrefix, session.Name(), cookie.Value)
 		rs.client.Delete(r.Context(), key)
 	}
 
