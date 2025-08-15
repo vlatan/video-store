@@ -122,7 +122,7 @@ func (rs *redisStore) Save(r *http.Request, w http.ResponseWriter, session *sess
 
 	var sessionID string
 
-	// Get existing session ID from cookie if it exists
+	// Get session ID from cookie if it exists
 	if cookie, err := r.Cookie(session.Name()); err == nil {
 		sessionID = cookie.Value
 	} else {
