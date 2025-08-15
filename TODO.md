@@ -1,6 +1,3 @@
-* Fix hover profile button/icon on mobile
-* Make icons on mobile bigger
-
 * Check for nil dereference in templates
 * Add slug input to page
 * Add new category form as well as delete, edit routes

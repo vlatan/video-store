@@ -863,6 +863,7 @@ button.cancel-button {
 @media screen and (max-width: 900px) {
 	:root {
 		--content-padding: 1rem;
+		--icon-size: 1.6rem;
 	}
 
 	.username-text {
