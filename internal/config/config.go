@@ -72,18 +72,24 @@ type Config struct {
 	Port int    `env:"PORT" envDefault:"5000"`
 }
 
+// New creates new config object
 func New() *Config {
+
+	// Parse the config from the environment
 	var cfg Config
 	if err := env.Parse(&cfg); err != nil {
 		log.Fatalf("failed to parse the config from the env: %v", err)
 	}
 
-	if cfg.Target == "app" {
-		secrets := []Secret{cfg.CsrfKey, cfg.AuthKey, cfg.EncryptionKey}
-		for _, secret := range secrets {
-			if secret.Base64 == "" {
-				log.Fatalf("empty or no secret key defined in env: %s", secret)
-			}
+	if cfg.Target != "app" {
+		return &cfg
+	}
+
+	// Check if the app has the necessary secrets
+	secrets := []Secret{cfg.CsrfKey, cfg.AuthKey, cfg.EncryptionKey}
+	for _, secret := range secrets {
+		if secret.Base64 == "" {
+			log.Fatalf("empty or no secret key defined in env: %s", secret)
 		}
 	}
 
