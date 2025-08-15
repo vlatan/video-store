@@ -19,11 +19,12 @@ type Config struct {
 	// Running localy or not
 	Debug      bool   `env:"DEBUG" envDefault:"false"`
 	DataVolume string `env:"DATA_VOLUME" envDefault:"/data"`
+	Target     string `env:"TARGET envDefault:app"`
 
 	// Sessions
-	CsrfKey          Secret `env:"CSRF_KEY,required"`
-	AuthKey          Secret `env:"AUTH_KEY,required"`
-	EncryptionKey    Secret `env:"ENCRYPTION_KEY,required"`
+	CsrfKey          Secret `env:"CSRF_KEY"`
+	AuthKey          Secret `env:"AUTH_KEY"`
+	EncryptionKey    Secret `env:"ENCRYPTION_KEY"`
 	UserSessionName  string `env:"USER_SESSION_NAME" envDefault:"_app"`
 	FlashSessionName string `env:"FLASH_SESSION_NAME" envDefault:"_app_flash"`
 	CsrfSessionName  string `env:"CSRF_SESSION_NAME" envDefault:"_app_csrf"`
@@ -76,6 +77,16 @@ func New() *Config {
 	if err := env.Parse(&cfg); err != nil {
 		log.Fatalf("failed to parse the config from the env: %v", err)
 	}
+
+	if cfg.Target == "app" {
+		secrets := []Secret{cfg.CsrfKey, cfg.AuthKey, cfg.EncryptionKey}
+		for _, secret := range secrets {
+			if secret.Base64 == "" {
+				log.Fatalf("empty or no secret key defined in env: %s", secret)
+			}
+		}
+	}
+
 	return &cfg
 }
 
