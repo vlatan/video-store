@@ -881,9 +881,14 @@ button.cancel-button {
 		background: none;
 	}
 
-	.nav-item.username img.username-image {
-		width: var(--icon-size);
-		height: var(--icon-size);
+	svg.search-icon {
+		width: calc(var(--icon-size) * 0.80);
+		height: calc(var(--icon-size) * 0.80);
+	}
+
+	svg.search-arrow-icon {
+		width: calc(var(--icon-size) * 1.2);
+		height: calc(var(--icon-size) * 1.2);
 	}
 }
 
