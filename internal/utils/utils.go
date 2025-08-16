@@ -196,10 +196,6 @@ func NeedsSessionData(path string) bool {
 		return false
 	}
 
-	if strings.HasPrefix(path, "/auth/") {
-		return false
-	}
-
 	return true
 }
 

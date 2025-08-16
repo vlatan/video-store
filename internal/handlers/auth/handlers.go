@@ -20,8 +20,8 @@ func (s *Service) AuthHandler(w http.ResponseWriter, r *http.Request) {
 	// If unable to re-auth start the auth from the beginning
 	if err != nil {
 		// Store this redirect URL in a flash session
-		session, _ := s.store.Get(r, s.config.FlashSessionName)
-		session.AddFlash(redirectTo, "redirect")
+		session, _ := s.store.Get(r, s.config.RedirectSessionName)
+		session.AddFlash(redirectTo)
 		session.Save(r, w)
 
 		// Begin Provider auth

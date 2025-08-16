@@ -17,8 +17,6 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-const gothicSessionName = "_gothic_session"
-
 // redisStore implements sessions.Store (New, Get and Save)
 type redisStore struct {
 	config    *config.Config
@@ -156,11 +154,11 @@ func (rs *redisStore) Save(r *http.Request, w http.ResponseWriter, session *sess
 func (rs *redisStore) newSession(name string) *sessions.Session {
 	session := sessions.NewSession(rs, name)
 
-	// Small max age for the gothic and flash sessions
-	maxAge := rs.maxAge
-	if session.Name() == gothicSessionName ||
-		session.Name() == rs.config.FlashSessionName {
-		maxAge = 600
+	// Small max age to 10 minutes for all sessions
+	// other than for the user session
+	maxAge := 600
+	if session.Name() == rs.config.UserSessionName {
+		maxAge = rs.maxAge
 	}
 
 	session.Options = &sessions.Options{

@@ -102,18 +102,20 @@ func (s *Service) loginUser(w http.ResponseWriter, r *http.Request, gothUser *go
 func (s *Service) getUserFinalRedirect(w http.ResponseWriter, r *http.Request) string {
 
 	// Check for flash cookie
-	if _, err := r.Cookie(s.config.FlashSessionName); err != nil {
+	if _, err := r.Cookie(s.config.RedirectSessionName); err != nil {
 		return "/"
 	}
 
 	redirectTo := "/"
-	session, _ := s.store.Get(r, s.config.FlashSessionName)
-	if flashes := session.Flashes("redirect"); len(flashes) > 0 {
+	session, _ := s.store.Get(r, s.config.RedirectSessionName)
+	if flashes := session.Flashes(); len(flashes) > 0 {
 		if url, ok := flashes[0].(string); ok {
 			redirectTo = url
 		}
 	}
 
+	// Delete the redirect session cookie created with s.store.Get
+	session.Options.MaxAge = -1
 	session.Save(r, w)
 	return redirectTo
 }

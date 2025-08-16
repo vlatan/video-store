@@ -29,12 +29,13 @@ type Config struct {
 	Target     Target `env:"TARGET envDefault:app"`
 
 	// Sessions
-	CsrfKey          Secret `env:"CSRF_KEY"`
-	AuthKey          Secret `env:"AUTH_KEY"`
-	EncryptionKey    Secret `env:"ENCRYPTION_KEY"`
-	UserSessionName  string `env:"USER_SESSION_NAME" envDefault:"_app"`
-	FlashSessionName string `env:"FLASH_SESSION_NAME" envDefault:"_app_flash"`
-	CsrfSessionName  string `env:"CSRF_SESSION_NAME" envDefault:"_app_csrf"`
+	CsrfKey             Secret `env:"CSRF_KEY"`
+	AuthKey             Secret `env:"AUTH_KEY"`
+	EncryptionKey       Secret `env:"ENCRYPTION_KEY"`
+	UserSessionName     string `env:"USER_SESSION_NAME" envDefault:"_app"`
+	FlashSessionName    string `env:"FLASH_SESSION_NAME" envDefault:"_app_flash"`
+	CsrfSessionName     string `env:"CSRF_SESSION_NAME" envDefault:"_app_csrf"`
+	RedirectSessionName string `env:"REDIRECT_SESSION_NAME" envDefault:"_app_redirect"`
 
 	// App settings
 	AppName         string `env:"APP_NAME"`
