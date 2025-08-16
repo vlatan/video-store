@@ -112,8 +112,9 @@ func (s *Service) getUserFinalRedirect(w http.ResponseWriter, r *http.Request) s
 		redirectTo = url
 	}
 
-	// Delete the redirect session cookie created with s.store.Get
+	// Clear the redirect session created with s.store.Get
 	session.Options.MaxAge = -1
+	session.Values = make(map[any]any)
 	session.Save(r, w)
 	return redirectTo
 }

@@ -42,7 +42,7 @@ func (s *service) GetUserFromSession(w http.ResponseWriter, r *http.Request) *mo
 	// Get user row ID from session
 	id, ok := session.Values["ID"].(int)
 	if !ok || id == 0 {
-		// Clean the session this is anonymous user
+		// Clear the session this is anonymous user
 		session.Options.MaxAge = -1
 		session.Save(r, w)
 		return nil
