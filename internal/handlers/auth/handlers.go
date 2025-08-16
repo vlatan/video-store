@@ -14,6 +14,12 @@ func (s *Service) AuthHandler(w http.ResponseWriter, r *http.Request) {
 	// The origin URL of the user
 	redirectTo := getRedirectPath(r)
 
+	// Check if the user is already logged in
+	if user := utils.GetUserFromContext(r); user.IsAuthenticated() {
+		http.Redirect(w, r, redirectTo, http.StatusSeeOther)
+		return
+	}
+
 	// Auth with gothic, try to get the user without re-authenticating
 	gothUser, err := gothic.CompleteUserAuth(w, r)
 
@@ -47,6 +53,12 @@ func (s *Service) AuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 
 	// The origin URL of the user
 	redirectTo := s.getUserFinalRedirect(w, r)
+
+	// Check if the user is already logged in
+	if user := utils.GetUserFromContext(r); user.IsAuthenticated() {
+		http.Redirect(w, r, redirectTo, http.StatusSeeOther)
+		return
+	}
 
 	// Authenticate the user using gothic
 	gothUser, err := gothic.CompleteUserAuth(w, r)
