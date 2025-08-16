@@ -27,7 +27,7 @@ func (s *Service) AuthHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// Store this redirect URL in a flash session
 		session, _ := s.store.Get(r, s.config.RedirectSessionName)
-		session.AddFlash(redirectTo)
+		session.Values["redirect"] = redirectTo
 		session.Save(r, w)
 
 		// Begin Provider auth

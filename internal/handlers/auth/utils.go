@@ -108,10 +108,8 @@ func (s *Service) getUserFinalRedirect(w http.ResponseWriter, r *http.Request) s
 
 	redirectTo := "/"
 	session, _ := s.store.Get(r, s.config.RedirectSessionName)
-	if flashes := session.Flashes(); len(flashes) > 0 {
-		if url, ok := flashes[0].(string); ok {
-			redirectTo = url
-		}
+	if url, ok := session.Values["redirect"].(string); ok && url != "" {
+		redirectTo = url
 	}
 
 	// Delete the redirect session cookie created with s.store.Get
