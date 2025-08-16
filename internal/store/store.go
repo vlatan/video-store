@@ -156,9 +156,10 @@ func (rs *redisStore) Save(r *http.Request, w http.ResponseWriter, session *sess
 func (rs *redisStore) newSession(name string) *sessions.Session {
 	session := sessions.NewSession(rs, name)
 
-	// Small max age for the gothic session
+	// Small max age for the gothic and flash sessions
 	maxAge := rs.maxAge
-	if session.Name() == gothicSessionName {
+	if session.Name() == gothicSessionName ||
+		session.Name() == rs.config.FlashSessionName {
 		maxAge = 600
 	}
 
