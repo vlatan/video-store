@@ -51,6 +51,7 @@ func (s *service) RenderHTML(w http.ResponseWriter, r *http.Request, templateNam
 		return
 	}
 
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	if _, err := buf.WriteTo(w); err != nil {
 		// Too late for recovery here, just log the error
 		log.Printf(

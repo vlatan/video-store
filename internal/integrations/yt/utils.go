@@ -63,6 +63,13 @@ var quotes = map[rune]bool{
 	'\u2019': true, // U+2019 right single quotation mark
 }
 
+var singleQuotes = map[rune]bool{
+	'\u2018': true, // U+2018 left single quotation mark
+	'\u2019': true, // U+2019 right single quotation mark
+	'\u0060': true, // U+0060 grave accent
+	'\u00B4': true, // U+00B4 acute accent
+}
+
 // Normalize the YouTube video title
 func normalizeTitle(title string) string {
 
@@ -114,6 +121,14 @@ func normalizeTitle(title string) string {
 			}
 		}
 
+		// Replace weird single quotes inside the word
+		// with normal single quotes (apostrophes)
+		for i, r := range runes {
+			if singleQuotes[r] {
+				runes[i] = '\u0027'
+			}
+		}
+
 		// Loweracse the resulting current word
 		currentWord := strings.ToLower(string(runes))
 
@@ -128,14 +143,12 @@ func normalizeTitle(title string) string {
 		// The word is a preposition but not after a punctuation.
 		// So it should be lowercase, not capitalized.
 		if i > 0 && preps[currentWord] && !puncts[previousWordLastRune] {
-			word = string(fq) + currentWord + string(lq)
+			word = fq + currentWord + lq
 
-			// Capitalize the word if not already capitalized
-		} else if !unicode.IsUpper(runes[0]) {
-			word = string(fq) +
-				string(unicode.ToUpper(runes[0])) +
-				string(runes[1:]) +
-				string(lq)
+			// Capitalize the word
+		} else {
+			word = fq + string(unicode.ToUpper(runes[0])) +
+				string(runes[1:]) + lq
 		}
 
 		result = append(result, word)
