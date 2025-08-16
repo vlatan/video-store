@@ -25,7 +25,7 @@ func New(ui ui.Service, config *config.Config) *Service {
 	}
 }
 
-// Check if the user is authenticated
+// IsAuthenticated checks if the user is authenticated
 func (s *Service) IsAuthenticated(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// If the user is authenticated move onto the next handler
@@ -39,7 +39,7 @@ func (s *Service) IsAuthenticated(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-// Check if the user is admin
+// IsAdmin checks if the user is admin
 func (s *Service) IsAdmin(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// If the user is admin move onto the next handler
@@ -54,11 +54,11 @@ func (s *Service) IsAdmin(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-// Get user from session and put it in context
+// LoadUser gets the user from session and stores it in the context
 func (s *Service) LoadUser(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		// Check if request possibly needs a cookie
+		// Check if the request possibly needs the session data
 		if !utils.NeedsSessionData(r.URL.Path) {
 			next.ServeHTTP(w, r)
 			return
@@ -72,7 +72,7 @@ func (s *Service) LoadUser(next http.Handler) http.Handler {
 	})
 }
 
-// Get user from session and put it in context
+// LoadData generates default data and stores it in the context
 func (s *Service) LoadData(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
@@ -89,7 +89,7 @@ func (s *Service) LoadData(next http.Handler) http.Handler {
 	})
 }
 
-// Close the body if POST request
+// CloseBody closes the body after a request
 func (s *Service) CloseBody(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Close request body for ALL requests to prevent resource leaks
@@ -98,7 +98,7 @@ func (s *Service) CloseBody(next http.Handler) http.Handler {
 	})
 }
 
-// Do not crash the app on panic, serve 500 error to the client
+// RecoverPanic prevents app crashing, and serves 500 error to the client
 func (s *Service) RecoverPanic(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
@@ -136,7 +136,7 @@ func (s *Service) PublicCache(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-// Add security headers to request
+// AddHeaders adds  various headers to the response
 func (s *Service) AddHeaders(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
@@ -156,7 +156,7 @@ func (s *Service) AddHeaders(next http.Handler) http.Handler {
 	})
 }
 
-// Redirect WWW to non-WWW
+// WWWRedirect redirects WWW to non-WWW requests
 func (s *Service) WWWRedirect(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Check for 'www.' prefix
@@ -181,7 +181,7 @@ func (s *Service) WWWRedirect(next http.Handler) http.Handler {
 	})
 }
 
-// Record the status code and body and serves rich errors if the response is error
+// HandleErrors records the status code and body and serves rich errors if the response is error
 func (s *Service) HandleErrors(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
@@ -223,7 +223,7 @@ func (s *Service) HandleErrors(next http.Handler) http.Handler {
 	})
 }
 
-// Create CSRF middlware with added plain text option for local development
+// CsrfProtection creates CSRF middlware with added plain text option for local development
 func (s *Service) CsrfProtection(next http.Handler) http.Handler {
 
 	// Create the csrf middleware as per the gorilla/csrf documentation
@@ -288,7 +288,7 @@ func (s *Service) Compress(next http.Handler) http.Handler {
 	})
 }
 
-// Chain middlewares that apply to all handlers
+// ApplyToAll chain middlewares that apply to all handlers
 func (s *Service) ApplyToAll(middlewares ...func(http.Handler) http.Handler) func(http.Handler) http.Handler {
 	return func(final http.Handler) http.Handler {
 		// Apply middlewares in reverse order
