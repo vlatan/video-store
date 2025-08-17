@@ -109,9 +109,8 @@ func normalizeTitle(title string) string {
 			continue
 		}
 
-		// First and last quote
-		var fq string
-		var lq string
+		var firstQuote string
+		var lastQuote string
 
 		// Remove quotation marks from the word at start/end
 		// if any and store them for later use
@@ -125,7 +124,7 @@ func normalizeTitle(title string) string {
 					runes[0] = '"'
 				}
 
-				fq = string(runes[0])
+				firstQuote = string(runes[0])
 				runes = runes[1:]
 			}
 
@@ -139,7 +138,7 @@ func normalizeTitle(title string) string {
 					runes[lastIndex] = '"'
 				}
 
-				lq = string(runes[lastIndex])
+				lastQuote = string(runes[lastIndex])
 				runes = runes[:lastIndex]
 			}
 		}
@@ -166,12 +165,12 @@ func normalizeTitle(title string) string {
 		// The word is a preposition but not after a punctuation.
 		// So it should be lowercase, not capitalized.
 		if i > 0 && preps[currentWord] && !puncts[previousWordLastRune] {
-			word = fq + currentWord + lq
+			word = firstQuote + currentWord + lastQuote
 
 			// Capitalize the word
 		} else {
-			word = fq + string(unicode.ToUpper(runes[0])) +
-				string(runes[1:]) + lq
+			firstLetter := string(unicode.ToUpper(runes[0]))
+			word = firstQuote + firstLetter + string(runes[1:]) + lastQuote
 		}
 
 		result = append(result, word)
