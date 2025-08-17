@@ -55,7 +55,7 @@ func (s *service) GetUserFromSession(w http.ResponseWriter, r *http.Request) *mo
 	// This will be a zero time value (January 1, year 1, 00:00:00 UTC) on fail
 	lastSeenDB := session.Values["LastSeenDB"].(time.Time)
 
-	// Check if the DB update is out of sync for an entire day
+	// Check if the last seen is out of sync for an entire day
 	if !sameDate(lastSeenDB, now) {
 		if _, err := s.usersRepo.UpdateLastUserSeen(r.Context(), id, now); err != nil {
 			log.Printf("Couldn't update the last seen in DB on user '%d': %v", id, err)
