@@ -145,6 +145,7 @@ func (rs *redisStore) Save(r *http.Request, w http.ResponseWriter, session *sess
 		MaxAge:   session.Options.MaxAge,
 		Secure:   session.Options.Secure,
 		HttpOnly: session.Options.HttpOnly,
+		SameSite: http.SameSiteLaxMode,
 	})
 
 	return nil
