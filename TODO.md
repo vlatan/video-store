@@ -1,6 +1,8 @@
 * Check for nil dereference in templates
 * Add slug input to page
-* Add new category form as well as delete, edit routes
+* Add form for new category as well as delete, edit category routes
+* Delete source - should cascade and delete all the videos?
+  Which in turn should cascade and delete all the likes, faves?
 
 * Use logger
   https://go.dev/blog/slog

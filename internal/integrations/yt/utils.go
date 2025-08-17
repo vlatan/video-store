@@ -55,19 +55,26 @@ var puncts = map[rune]bool{
 
 // Usual quotes
 var quotes = map[rune]bool{
-	'"':      true, // U+0022 straight double quote
-	'\'':     true, // U+0027 straight single quote
+	'"':      true, // U+0022 straight double quote (quotation Mark)
+	'\'':     true, // U+0027 straight single quote (apostrophe)
 	'\u201C': true, // U+201C left double quotation mark
 	'\u201D': true, // U+201D right double quotation mark
 	'\u2018': true, // U+2018 left single quotation mark
 	'\u2019': true, // U+2019 right single quotation mark
+	'\u0060': true, // U+0060 grave accent
+	'\u00B4': true, // U+00B4 acute accent
 }
 
-var singleQuotes = map[rune]bool{
+var wierdSingleQuotes = map[rune]bool{
 	'\u2018': true, // U+2018 left single quotation mark
 	'\u2019': true, // U+2019 right single quotation mark
 	'\u0060': true, // U+0060 grave accent
 	'\u00B4': true, // U+00B4 acute accent
+}
+
+var wierdDoubleQuotes = map[rune]bool{
+	'\u201C': true, // U+201C left double quotation mark
+	'\u201D': true, // U+201D right double quotation mark
 }
 
 // Normalize the YouTube video title
@@ -110,22 +117,38 @@ func normalizeTitle(title string) string {
 		// if any and store them for later use
 		if len(runes) > 1 {
 			if quotes[runes[0]] {
+
+				// Use straight quotes
+				if wierdSingleQuotes[runes[0]] {
+					runes[0] = '\''
+				} else if wierdDoubleQuotes[runes[0]] {
+					runes[0] = '"'
+				}
+
 				fq = string(runes[0])
 				runes = runes[1:]
 			}
 
 			lastIndex := len(runes) - 1
 			if quotes[runes[lastIndex]] {
+
+				// Use straight quotes
+				if wierdSingleQuotes[runes[lastIndex]] {
+					runes[lastIndex] = '\''
+				} else if wierdDoubleQuotes[runes[lastIndex]] {
+					runes[lastIndex] = '"'
+				}
+
 				lq = string(runes[lastIndex])
 				runes = runes[:lastIndex]
 			}
 		}
 
 		// Replace weird single quotes inside the word
-		// with normal single quotes (apostrophes)
+		// with straight single quote (apostrophe)
 		for i, r := range runes {
-			if singleQuotes[r] {
-				runes[i] = '\u0027'
+			if wierdSingleQuotes[r] {
+				runes[i] = '\''
 			}
 		}
 
