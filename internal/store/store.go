@@ -23,22 +23,24 @@ type redisStore struct {
 	client    client.Service
 	keyPrefix string
 	maxAge    int
-	codecs    []securecookie.Codec
+	codec     securecookie.Codec
 }
 
 func New(
 	config *config.Config,
 	client client.Service,
 	keyPrefix string,
-	maxAge int,
-	keyPairs ...[]byte) *redisStore {
+	maxAge int) *redisStore {
 
 	store := &redisStore{
 		config:    config,
 		client:    client,
 		keyPrefix: keyPrefix,
 		maxAge:    maxAge,
-		codecs:    securecookie.CodecsFromPairs(keyPairs...),
+		codec: securecookie.New(
+			config.AuthKey.Bytes,
+			config.EncryptionKey.Bytes,
+		),
 	}
 
 	// Add this store to gothic
@@ -94,7 +96,7 @@ func (rs *redisStore) Get(r *http.Request, name string) (*sessions.Session, erro
 	}
 
 	// Decode session data
-	err = securecookie.DecodeMulti(name, val, &session.Values, rs.codecs...)
+	err = rs.codec.Decode(name, val, &session.Values)
 	if err != nil {
 		session.IsNew = true
 		return session, nil // New session
@@ -113,7 +115,7 @@ func (rs *redisStore) Save(r *http.Request, w http.ResponseWriter, session *sess
 	}
 
 	// Encode session data
-	encoded, err := securecookie.EncodeMulti(session.Name(), session.Values, rs.codecs...)
+	encoded, err := rs.codec.Encode(session.Name(), session.Values)
 	if err != nil {
 		return fmt.Errorf("could not encode the session data: %w", err)
 	}

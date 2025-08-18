@@ -53,16 +53,7 @@ func NewServer() (*http.Server, func() error) {
 	cfg := config.New()
 	db := database.New(cfg)
 	rdb := redis.New(cfg)
-
-	// Create sessions store
-	store := redisStore.New(
-		cfg,
-		rdb,
-		"session",
-		86400*30,
-		cfg.AuthKey.Bytes,
-		cfg.EncryptionKey.Bytes,
-	)
+	store := redisStore.New(cfg, rdb, "session", 86400*30)
 
 	// Create DB repositories
 	catsRepo := catsRepo.New(db)
