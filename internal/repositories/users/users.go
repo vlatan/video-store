@@ -26,24 +26,11 @@ func New(db database.Service, config *config.Config) *Repository {
 // Add or update a user
 func (r *Repository) UpsertUser(ctx context.Context, u *goth.User, analyticsID string) (int, error) {
 
-	var (
-		googleID   string
-		facebookID string
-	)
-
-	switch u.Provider {
-	case "google":
-		googleID = u.UserID
-	case "facebook":
-		facebookID = u.UserID
-	}
-
 	var id int
 	err := r.db.QueryRow(
 		ctx,
 		upsertUserQuery,
-		utils.NullString(&googleID),
-		utils.NullString(&facebookID),
+		u.UserID,
 		utils.NullString(&analyticsID),
 		utils.NullString(&u.FirstName),
 		utils.NullString(&u.Email),
@@ -86,22 +73,20 @@ func (r *Repository) GetUsers(ctx context.Context, page int) (*models.Users, err
 
 		// All these are nullable in the DB, so we
 		// temp use pointers to accept NULL values
-		var googleID *string
-		var facebookID *string
 		var name *string
 		var email *string
 		var avatarURL *string
-		var analytics_id *string
+		var analyticsID *string
 		var totalNum int
 
 		// Get user row data to destination
 		if err = rows.Scan(
-			&googleID,
-			&facebookID,
+			&user.AuthID,
+			&user.Provider,
 			&name,
 			&email,
 			&avatarURL,
-			&analytics_id,
+			&analyticsID,
 			&user.LastSeen,
 			&user.CreatedAt,
 			&totalNum,
@@ -109,18 +94,11 @@ func (r *Repository) GetUsers(ctx context.Context, page int) (*models.Users, err
 			return nil, err
 		}
 
-		// Set user provider and user provider ID
-		user.Provider = "google"
-		user.UserID = utils.PtrToString(googleID)
-		if fbID := utils.PtrToString(facebookID); fbID != "" {
-			user.Provider = "facebook"
-			user.UserID = fbID
-		}
-
 		// Convert the pointers back to strings
 		user.Name = utils.PtrToString(name)
 		user.Email = utils.PtrToString(email)
 		user.AvatarURL = utils.PtrToString(avatarURL)
+		user.AnalyticsID = utils.PtrToString(analyticsID)
 
 		// Include the user in the result
 		users.Items = append(users.Items, user)

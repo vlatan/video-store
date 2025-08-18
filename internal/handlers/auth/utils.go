@@ -80,7 +80,7 @@ func (s *Service) loginUser(w http.ResponseWriter, r *http.Request, gothUser *go
 
 	// Store user values in session
 	session.Values["ID"] = id
-	session.Values["UserID"] = gothUser.UserID
+	session.Values["AuthID"] = gothUser.UserID
 	session.Values["Email"] = gothUser.Email
 	session.Values["Name"] = gothUser.FirstName
 	session.Values["Provider"] = gothUser.Provider
@@ -149,7 +149,7 @@ func revokeLogin(user *models.User) (*http.Response, error) {
 		body := []byte("token=" + user.AccessToken)
 		response, err = http.Post(url, contentType, bytes.NewBuffer(body))
 	case "facebook":
-		url := fmt.Sprintf("https://graph.facebook.com/v23.0/%s/permissions", user.UserID)
+		url := fmt.Sprintf("https://graph.facebook.com/v23.0/%s/permissions", user.AuthID)
 		body := []byte("access_token=" + user.AccessToken)
 		req, reqErr := http.NewRequest("DELETE", url, bytes.NewBuffer(body))
 		if reqErr != nil {

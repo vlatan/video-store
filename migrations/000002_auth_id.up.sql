@@ -17,4 +17,5 @@ WHERE facebook_id IS NOT NULL;
 -- This ensures a user can't have the same auth_id for the same provider
 ALTER TABLE app_user
 ALTER COLUMN auth_id SET NOT NULL,
+ALTER COLUMN provider SET NOT NULL,
 ADD CONSTRAINT app_user_auth_id_provider_key UNIQUE (auth_id, provider);

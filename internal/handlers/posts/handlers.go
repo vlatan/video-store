@@ -386,7 +386,7 @@ func (s *Service) PostActionHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Check if user is authorized to edit or delete (admin)
 	if (action == "edit" || action == "delete") &&
-		currentUser.UserID != s.config.AdminOpenID {
+		currentUser.AuthID != s.config.AdminOpenID {
 		utils.HttpError(w, http.StatusForbidden)
 		return
 	}

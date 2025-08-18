@@ -71,7 +71,7 @@ func (s *service) GetUserFromSession(w http.ResponseWriter, r *http.Request) *mo
 
 	user := models.User{
 		ID:          id,
-		UserID:      session.Values["UserID"].(string),
+		AuthID:      session.Values["AuthID"].(string),
 		Email:       session.Values["Email"].(string),
 		Name:        session.Values["Name"].(string),
 		Provider:    session.Values["Provider"].(string),

@@ -3,31 +3,27 @@ package users
 const upsertUserQuery = `
 	WITH existing_user AS (
 		SELECT id FROM app_user 
-		WHERE (google_id = $1 AND $1 IS NOT NULL) 
-			OR (facebook_id = $2 AND $2 IS NOT NULL) 
-			OR (email = $5 AND $5 IS NOT NULL)
+		WHERE auth_id = $1
 	),
 	inserted AS (
 		INSERT INTO app_user (
-			google_id, 
-			facebook_id, 
+			auth_id, 
 			analytics_id, 
 			name, 
 			email, 
 			picture
 		)
-		SELECT $1, $2, $3, $4, $5, $6
+		SELECT $1, $2, $3, $4, $5
 		WHERE NOT EXISTS (SELECT 1 FROM existing_user)
 		RETURNING id
 	),
 	updated AS (
 		UPDATE app_user SET 
-			google_id = COALESCE($1, google_id),
-			facebook_id = COALESCE($2, facebook_id),
-			analytics_id = COALESCE($3, analytics_id),
-			name = $4,
-			email = $5,
-			picture = $6,
+			auth_id = COALESCE($1, auth_id),
+			analytics_id = COALESCE($2, analytics_id),
+			name = $3,
+			email = $4,
+			picture = $5,
 			last_seen = NOW()
 		FROM existing_user
 		WHERE app_user.id = existing_user.id
@@ -44,8 +40,8 @@ const updateLastUserSeenQuery = "UPDATE app_user SET last_seen = $2 WHERE id = $
 
 const getUsersQuery = `
 	SELECT
-		google_id, 
-		facebook_id, 
+		auth_id,
+		provider, 
 		name,
 		email,
 		picture,
