@@ -1,4 +1,6 @@
-* Use authId accross the app
+* Apply the migration in production
+* Add new ENV vars
+* Push the code change
 
 * Check for nil dereference in templates
 * Add slug input to page

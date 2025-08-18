@@ -382,28 +382,28 @@ func (s *Service) PostActionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get the current user
-	currentUser := utils.GetUserFromContext(r)
+	user := utils.GetUserFromContext(r)
 
 	// Check if user is authorized to edit or delete (admin)
 	if (action == "edit" || action == "delete") &&
-		currentUser.AuthID != s.config.AdminOpenID {
+		user.IsAdmin(s.config.AdminAuthId, s.config.AdminProvider) {
 		utils.HttpError(w, http.StatusForbidden)
 		return
 	}
 
 	switch action {
 	case "like":
-		s.handleLike(w, r, currentUser.ID, videoID)
+		s.handleLike(w, r, user.ID, videoID)
 	case "unlike":
-		s.handleUnlike(w, r, currentUser.ID, videoID)
+		s.handleUnlike(w, r, user.ID, videoID)
 	case "fave":
-		s.handleFave(w, r, currentUser.ID, videoID)
+		s.handleFave(w, r, user.ID, videoID)
 	case "unfave":
-		s.handleUnfave(w, r, currentUser.ID, videoID)
+		s.handleUnfave(w, r, user.ID, videoID)
 	case "edit":
-		s.handleEdit(w, r, videoID, currentUser)
+		s.handleEdit(w, r, videoID, user)
 	case "delete":
-		s.handleBanPost(w, r, currentUser.ID, videoID)
+		s.handleBanPost(w, r, user.ID, videoID)
 	default:
 		utils.HttpError(w, http.StatusBadRequest)
 	}

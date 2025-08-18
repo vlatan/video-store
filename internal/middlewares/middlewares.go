@@ -44,7 +44,7 @@ func (s *Service) IsAdmin(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// If the user is admin move onto the next handler
 		if user := utils.GetUserFromContext(r); user.IsAuthenticated() &&
-			user.IsAdmin(s.config.AdminOpenID) {
+			user.IsAdmin(s.config.AdminAuthId, s.config.AdminProvider) {
 			next(w, r)
 			return
 		}

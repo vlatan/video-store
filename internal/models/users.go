@@ -45,8 +45,10 @@ func (u *User) IsAuthenticated() bool {
 }
 
 // Check if the user is Admin
-func (u *User) IsAdmin(adminID string) bool {
-	return u.IsAuthenticated() && u.AuthID == adminID
+func (u *User) IsAdmin(adminID, adminProvider string) bool {
+	return u.IsAuthenticated() &&
+		u.AuthID == adminID &&
+		u.Provider == adminProvider
 }
 
 // Set the user analytics ID

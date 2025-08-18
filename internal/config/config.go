@@ -46,13 +46,16 @@ type Config struct {
 	NumRelatedPosts int    `env:"NUM_RELATED_POSTS" envDefault:"5"`
 
 	// Google APIs settings
-	AdminOpenID             string   `env:"ADMIN_OPENID"`
 	YouTubeAPIKey           string   `env:"YOUTUBE_API_KEY"`
 	GeminiAPIKey            string   `env:"GEMINI_API_KEY"`
 	GeminiModel             string   `env:"GEMINI_MODEL"`
 	GoogleOAuthScopes       []string `env:"GOOGLE_OAUTH_SCOPES" envDefault:"openid"`
 	GoogleOAuthClientID     string   `env:"GOOGLE_OAUTH_CLIENT_ID"`
 	GoogleOAuthClientSecret string   `env:"GOOGLE_OAUTH_CLIENT_SECRET"`
+
+	// Admin settings
+	AdminAuthId   string `env:"ADMIN_AUTH_ID"`
+	AdminProvider string `env:"ADMIN_PROVIDER"`
 
 	// AdSense
 	AdSenseAccount string `env:"ADSENSE_ACCOUNT"`
