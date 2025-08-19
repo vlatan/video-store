@@ -53,6 +53,10 @@ type Config struct {
 	GoogleOAuthClientID     string   `env:"GOOGLE_OAUTH_CLIENT_ID"`
 	GoogleOAuthClientSecret string   `env:"GOOGLE_OAUTH_CLIENT_SECRET"`
 
+	// Github API settings
+	GithubClientId     string `env:"GITHUB_CLIENT_ID"`
+	GithubClientSecret string `env:"GITHUB_CLIENT_SECRET"`
+
 	// Admin settings
 	AdminProviderUserId string `env:"ADMIN_PROVIDER_USER_ID"`
 	AdminProvider       string `env:"ADMIN_PROVIDER"`
