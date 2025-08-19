@@ -66,18 +66,23 @@ func (s *service) GetUserFromSession(w http.ResponseWriter, r *http.Request) *mo
 	// Save the session
 	session.Save(r, w)
 
-	analyticsID := session.Values["AnalyticsID"].(string)
-	avatarURL := session.Values["AvatarURL"].(string)
+	providerUserId, _ := session.Values["ProviderUserId"].(string)
+	email, _ := session.Values["Email"].(string)
+	name, _ := session.Values["Name"].(string)
+	provider, _ := session.Values["Provider"].(string)
+	analyticsID, _ := session.Values["AnalyticsID"].(string)
+	avatarURL, _ := session.Values["AvatarURL"].(string)
+	accessToken, _ := session.Values["AccessToken"].(string)
 
 	user := models.User{
 		ID:             id,
-		ProviderUserId: session.Values["UserID"].(string),
-		Email:          session.Values["Email"].(string),
-		Name:           session.Values["Name"].(string),
-		Provider:       session.Values["Provider"].(string),
+		ProviderUserId: providerUserId,
+		Email:          email,
+		Name:           name,
+		Provider:       provider,
 		AvatarURL:      avatarURL,
 		AnalyticsID:    analyticsID,
-		AccessToken:    session.Values["AccessToken"].(string),
+		AccessToken:    accessToken,
 	}
 
 	user.LocalAvatarURL = user.GetAvatar(r.Context(), s.rdb, s.config)
