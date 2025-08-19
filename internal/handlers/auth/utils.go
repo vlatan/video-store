@@ -2,9 +2,12 @@ package auth
 
 import (
 	"bytes"
+	"context"
 	"crypto/md5"
+	"encoding/json"
 	"factual-docs/internal/models"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -66,6 +69,11 @@ func (s *Service) loginUser(w http.ResponseWriter, r *http.Request, gothUser *go
 	// Generate analytics ID
 	analyticsID := gothUser.UserID + gothUser.Provider + gothUser.Email
 	analyticsID = fmt.Sprintf("%x", md5.Sum([]byte(analyticsID)))
+
+	// Parse the name, save only the first name
+	if gothUser.FirstName == "" {
+		gothUser.FirstName = strings.Split(gothUser.Name, " ")[0]
+	}
 
 	// Update or insert user
 	id, err := s.usersRepo.UpsertUser(r.Context(), gothUser, analyticsID)
@@ -137,39 +145,113 @@ func (s *Service) logoutUser(w http.ResponseWriter, r *http.Request) error {
 }
 
 // Send revoke request. It will work if the access token is not expired.
-func revokeLogin(user *models.User) (*http.Response, error) {
+func (s *Service) revokeLogin(ctx context.Context, user *models.User) error {
 
-	var response *http.Response
+	var req *http.Request
 	var err error
 
 	switch user.Provider {
 	case "google":
-		url := "https://oauth2.googleapis.com/revoke"
-		contentType := "application/x-www-form-urlencoded"
-		body := []byte("token=" + user.AccessToken)
-		response, err = http.Post(url, contentType, bytes.NewBuffer(body))
-	case "facebook":
-		url := fmt.Sprintf("https://graph.facebook.com/v23.0/%s/permissions", user.ProviderUserId)
-		body := []byte("access_token=" + user.AccessToken)
-		req, reqErr := http.NewRequest("DELETE", url, bytes.NewBuffer(body))
-		if reqErr != nil {
-			return nil, reqErr
-		}
-		client := &http.Client{}
-		response, err = client.Do(req)
+		req, err = s.googleRevokeRequest(ctx, user)
+	case "github":
+		req, err = s.githubRevokeRequest(ctx, user)
 	default:
-		return nil, fmt.Errorf(
+		return fmt.Errorf(
 			"unknown login provider on revoke login: %s",
 			user.Provider,
 		)
 	}
 
 	if err != nil {
+		return fmt.Errorf(
+			"failed to create the request on %s revoke: %w",
+			user.Provider, err,
+		)
+	}
+
+	var client = &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf(
+			"failed to return a response on %s revoke: %w",
+			user.Provider, err,
+		)
+	}
+	defer resp.Body.Close()
+
+	// Drain the body so the underlying network connection is returned to the pool
+	_, err = io.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf(
+			"failed to read the response body on %s revoke: %w",
+			user.Provider, err,
+		)
+	}
+
+	// Check the response status
+	if resp.StatusCode >= http.StatusBadRequest {
+		return fmt.Errorf(
+			"unexpected status code on %s revoke: %d",
+			user.Provider, resp.StatusCode,
+		)
+	}
+
+	return nil
+}
+
+// googleRevoke deletes Google OAuth app authorization
+func (s *Service) googleRevokeRequest(
+	ctx context.Context,
+	user *models.User) (*http.Request, error) {
+
+	// Google revoke endpoint
+	url := "https://oauth2.googleapis.com/revoke"
+	body := []byte("token=" + user.AccessToken)
+
+	// Create a new HTTP POST request with the context and body.
+	// We use bytes.NewBuffer to convert the byte slice into an io.Reader.
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(body))
+	if err != nil {
 		return nil, err
 	}
 
-	defer response.Body.Close()
-	return response, nil
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	return req, nil
+}
+
+// githubRevoke deletes GitHub OAuth app authorization
+func (s *Service) githubRevokeRequest(
+	ctx context.Context,
+	user *models.User) (*http.Request, error) {
+
+	// GitHub revoke endpoint
+	url := fmt.Sprintf(
+		"https://api.github.com/applications/%s/grant",
+		s.config.GithubAuthClientId,
+	)
+
+	// Define the JSON payload structure
+	payload := map[string]string{"access_token": user.AccessToken}
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, url, bytes.NewBuffer(body))
+	if err != nil {
+		return nil, err
+	}
+
+	// Add Basic Authentication with the OAuth app's client ID and client secret
+	req.SetBasicAuth(s.config.GithubAuthClientId, s.config.GithubAuthClientSecret)
+
+	// Set required headers
+	req.Header.Set("Accept", "application/vnd.github+json")
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-GitHub-Api-Version", "2022-11-28")
+
+	return req, nil
 }
 
 func (s *Service) clearCSRFCookie(w http.ResponseWriter) {

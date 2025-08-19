@@ -36,11 +36,7 @@
         </div>
         <div class="dashboard-item">{{ $user.Name }}</div>
         <div class="dashboard-item">{{ $user.Email }}</div>
-        {{ if eq $user.Provider "google" }}
-        <div class="dashboard-item">Google</div>
-        {{ else }}
-        <div class="dashboard-item">Facebook</div>
-        {{ end }}
+        <div class="dashboard-item">{{ $user.Provider }}</div>
         <div class="dashboard-item">
             {{ if $user.CreatedAt }}
             {{ $user.CreatedAt.Format "2006-01-02 15:04" }}

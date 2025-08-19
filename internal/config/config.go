@@ -49,9 +49,14 @@ type Config struct {
 	YouTubeAPIKey           string   `env:"YOUTUBE_API_KEY"`
 	GeminiAPIKey            string   `env:"GEMINI_API_KEY"`
 	GeminiModel             string   `env:"GEMINI_MODEL"`
-	GoogleOAuthScopes       []string `env:"GOOGLE_OAUTH_SCOPES" envDefault:"openid"`
+	GoogleOAuthScopes       []string `env:"GOOGLE_OAUTH_SCOPES"`
 	GoogleOAuthClientID     string   `env:"GOOGLE_OAUTH_CLIENT_ID"`
 	GoogleOAuthClientSecret string   `env:"GOOGLE_OAUTH_CLIENT_SECRET"`
+
+	// Github API settings
+	GithubAuthClientId     string   `env:"GITHUB_AUTH_CLIENT_ID"`
+	GithubAuthClientSecret string   `env:"GITHUB_AUTH_CLIENT_SECRET"`
+	GithubAuthScopes       []string `env:"GITHUB_AUTH_SCOPES"`
 
 	// Admin settings
 	AdminProviderUserId string `env:"ADMIN_PROVIDER_USER_ID"`

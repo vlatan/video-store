@@ -13,6 +13,7 @@ import (
 	"github.com/gorilla/sessions"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
+	"github.com/markbates/goth/providers/github"
 	"github.com/markbates/goth/providers/google"
 	"github.com/redis/go-redis/v9"
 )
@@ -58,6 +59,12 @@ func New(
 			config.GoogleOAuthClientSecret,
 			fmt.Sprintf("%s://%s/auth/google/callback", protocol, config.Domain),
 			config.GoogleOAuthScopes...,
+		),
+		github.New(
+			config.GithubAuthClientId,
+			config.GithubAuthClientSecret,
+			fmt.Sprintf("%s://%s/auth/github/callback", protocol, config.Domain),
+			config.GithubAuthScopes...,
 		),
 	)
 

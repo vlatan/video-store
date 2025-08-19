@@ -699,10 +699,6 @@ button.cancel-button {
 	box-shadow: 0 2px 10px 2px rgba(0, 0, 0, 0.35);
 }
 
-.google-login {
-	background-color: #4285f4;
-	border: 1px solid transparent;
-}
 
 .brand-logo {
 	display: flex;
@@ -713,25 +709,30 @@ button.cancel-button {
 	height: 100%;
 }
 
-.google-logo {
+.google-login {
+	background-color: #4285f4;
+	border: 1px solid transparent;
+}
+
+.github-login {
+	background-color: #000;
+	border: 1px solid transparent;
+	color: #fff
+}
+
+.google-logo,
+.github-logo {
 	background-color: #fff;
 }
 
-.google-svg {
+.google-svg,
+.github-svg {
 	width: 24px;
 }
 
 .brand-text {
 	text-align: center;
 	flex: 1 1 auto;
-}
-
-.facebook-login {
-	background-color: #1877F2;
-}
-
-.facebook-svg {
-	width: 35px;
 }
 
 
