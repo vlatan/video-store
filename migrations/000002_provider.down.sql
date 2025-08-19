@@ -1,4 +1,4 @@
--- There's a app code change already DONE.
+-- There's an app code change already DONE.
 -- If you run this expect the app to break.
 -- The app expects to find the `provider` and `provider_user_id` columns.
 
