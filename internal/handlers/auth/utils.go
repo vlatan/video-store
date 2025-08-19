@@ -147,23 +147,63 @@ func (s *Service) logoutUser(w http.ResponseWriter, r *http.Request) error {
 // Send revoke request. It will work if the access token is not expired.
 func (s *Service) revokeLogin(ctx context.Context, user *models.User) error {
 
-	var client = &http.Client{}
+	var req *http.Request
+	var err error
 
 	switch user.Provider {
 	case "google":
-		return s.googleRevoke(ctx, client, user)
+		req, err = s.googleRevokeRequest(ctx, user)
 	case "github":
-		return s.githubRevoke(ctx, client, user)
+		req, err = s.githubRevokeRequest(ctx, user)
 	default:
 		return fmt.Errorf(
 			"unknown login provider on revoke login: %s",
 			user.Provider,
 		)
 	}
+
+	if err != nil {
+		return fmt.Errorf(
+			"failed to create the request on %s revoke: %w",
+			user.Provider, err,
+		)
+	}
+
+	var client = &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf(
+			"failed to return a response on %s revoke: %w",
+			user.Provider, err,
+		)
+	}
+	defer resp.Body.Close()
+
+	// Drain the body so the underlying network connection is returned to the pool
+	_, err = io.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf(
+			"failed to read the response body on %s revoke: %w",
+			user.Provider, err,
+		)
+	}
+
+	// Check the response status
+	if resp.StatusCode >= http.StatusBadRequest {
+		return fmt.Errorf(
+			"unexpected status code on %s revoke: %d",
+			user.Provider, resp.StatusCode,
+		)
+	}
+
+	return nil
 }
 
 // googleRevoke deletes Google OAuth app authorization
-func (s *Service) googleRevoke(ctx context.Context, client *http.Client, user *models.User) error {
+func (s *Service) googleRevokeRequest(
+	ctx context.Context,
+	user *models.User) (*http.Request, error) {
+
 	// Google revoke endpoint
 	url := "https://oauth2.googleapis.com/revoke"
 	body := []byte("token=" + user.AccessToken)
@@ -172,45 +212,35 @@ func (s *Service) googleRevoke(ctx context.Context, client *http.Client, user *m
 	// We use bytes.NewBuffer to convert the byte slice into an io.Reader.
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(body))
 	if err != nil {
-		return fmt.Errorf("failed to create request on Google revoke: %w", err)
+		return nil, err
 	}
 
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	resp, err := client.Do(req)
-	if err != nil {
-		return fmt.Errorf("failed to create request on Google revoke: %w", err)
-	}
-	defer resp.Body.Close()
 
-	// Drain the body so the underlying network connection is returned to the pool
-	_, err = io.ReadAll(resp.Body)
-	if err != nil {
-		return fmt.Errorf("failed to read response body on Google revoke: %w", err)
-	}
-
-	// Check the response status
-	if resp.StatusCode >= http.StatusBadRequest {
-		return fmt.Errorf("unexpected status code on Google revoke: %d", resp.StatusCode)
-	}
-
-	return nil
+	return req, nil
 }
 
 // githubRevoke deletes GitHub OAuth app authorization
-func (s *Service) githubRevoke(ctx context.Context, client *http.Client, user *models.User) error {
+func (s *Service) githubRevokeRequest(
+	ctx context.Context,
+	user *models.User) (*http.Request, error) {
+
 	// GitHub revoke endpoint
-	url := fmt.Sprintf("https://api.github.com/applications/%s/grant", s.config.GithubAuthClientId)
+	url := fmt.Sprintf(
+		"https://api.github.com/applications/%s/grant",
+		s.config.GithubAuthClientId,
+	)
 
 	// Define the JSON payload structure
 	payload := map[string]string{"access_token": user.AccessToken}
 	body, err := json.Marshal(payload)
 	if err != nil {
-		return fmt.Errorf("failed to marshal JSON payload on GitHub revoke: %w", err)
+		return nil, err
 	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, url, bytes.NewBuffer(body))
 	if err != nil {
-		return fmt.Errorf("failed to create request on GitHub revoke: %w", err)
+		return nil, err
 	}
 
 	// Add Basic Authentication with the OAuth app's client ID and client secret
@@ -221,24 +251,7 @@ func (s *Service) githubRevoke(ctx context.Context, client *http.Client, user *m
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("X-GitHub-Api-Version", "2022-11-28")
 
-	resp, err := client.Do(req)
-	if err != nil {
-		return fmt.Errorf("failed to execute request on GitHub revoke: %w", err)
-	}
-	defer resp.Body.Close()
-
-	// Drain the body so the underlying network connection is returned to the pool
-	_, err = io.ReadAll(resp.Body)
-	if err != nil {
-		return fmt.Errorf("failed to read response body on GitHub revoke: %w", err)
-	}
-
-	// Check the response status
-	if resp.StatusCode >= http.StatusBadRequest {
-		return fmt.Errorf("unexpected status code on GitHub revoke: %d", resp.StatusCode)
-	}
-
-	return nil
+	return req, nil
 }
 
 func (s *Service) clearCSRFCookie(w http.ResponseWriter) {
