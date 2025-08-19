@@ -54,8 +54,8 @@ type Config struct {
 	GoogleOAuthClientSecret string   `env:"GOOGLE_OAUTH_CLIENT_SECRET"`
 
 	// Admin settings
-	AdminAuthId   string `env:"ADMIN_AUTH_ID"`
-	AdminProvider string `env:"ADMIN_PROVIDER"`
+	AdminProviderUserId string `env:"ADMIN_PROVIDER_USER_ID"`
+	AdminProvider       string `env:"ADMIN_PROVIDER"`
 
 	// AdSense
 	AdSenseAccount string `env:"ADSENSE_ACCOUNT"`

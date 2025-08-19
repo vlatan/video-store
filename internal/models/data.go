@@ -113,7 +113,7 @@ func (td *TemplateData) AbsoluteURL(path string) string {
 // Check if current user is admin
 func (td *TemplateData) IsCurrentUserAdmin() bool {
 	return td.CurrentUser.IsAdmin(
-		td.Config.AdminAuthId,
+		td.Config.AdminProviderUserId,
 		td.Config.AdminProvider,
 	)
 }

@@ -25,7 +25,7 @@ type Users struct {
 // A simplified version of goth.User
 type User struct {
 	ID             int        `json:"id,omitempty"`
-	AuthID         string     `json:"user_id,omitempty"`
+	ProviderUserId string     `json:"user_id,omitempty"`
 	Email          string     `json:"email,omitempty"`
 	Name           string     `json:"name,omitempty"`
 	Provider       string     `json:"provider"`
@@ -41,19 +41,19 @@ const avatarcacheKey = "avatar:%s"
 
 // Check if the user is authenticated
 func (u *User) IsAuthenticated() bool {
-	return u != nil && u.AuthID != ""
+	return u != nil && u.ProviderUserId != ""
 }
 
 // Check if the user is Admin
 func (u *User) IsAdmin(adminID, adminProvider string) bool {
 	return u.IsAuthenticated() &&
-		u.AuthID == adminID &&
+		u.ProviderUserId == adminID &&
 		u.Provider == adminProvider
 }
 
 // Set the user analytics ID
 func (u *User) SetAnalyticsID() {
-	analyticsID := u.AuthID + u.Provider + u.Email
+	analyticsID := u.ProviderUserId + u.Provider + u.Email
 	u.AnalyticsID = fmt.Sprintf("%x", md5.Sum([]byte(analyticsID)))
 }
 

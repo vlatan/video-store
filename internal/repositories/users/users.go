@@ -31,6 +31,7 @@ func (r *Repository) UpsertUser(ctx context.Context, u *goth.User, analyticsID s
 		ctx,
 		upsertUserQuery,
 		u.UserID,
+		u.Provider,
 		utils.NullString(&analyticsID),
 		utils.NullString(&u.FirstName),
 		utils.NullString(&u.Email),
@@ -81,7 +82,7 @@ func (r *Repository) GetUsers(ctx context.Context, page int) (*models.Users, err
 
 		// Get user row data to destination
 		if err = rows.Scan(
-			&user.AuthID,
+			&user.ProviderUserId,
 			&user.Provider,
 			&name,
 			&email,

@@ -70,14 +70,14 @@ func (s *service) GetUserFromSession(w http.ResponseWriter, r *http.Request) *mo
 	avatarURL := session.Values["AvatarURL"].(string)
 
 	user := models.User{
-		ID:          id,
-		AuthID:      session.Values["AuthID"].(string),
-		Email:       session.Values["Email"].(string),
-		Name:        session.Values["Name"].(string),
-		Provider:    session.Values["Provider"].(string),
-		AvatarURL:   avatarURL,
-		AnalyticsID: analyticsID,
-		AccessToken: session.Values["AccessToken"].(string),
+		ID:             id,
+		ProviderUserId: session.Values["UserID"].(string),
+		Email:          session.Values["Email"].(string),
+		Name:           session.Values["Name"].(string),
+		Provider:       session.Values["Provider"].(string),
+		AvatarURL:      avatarURL,
+		AnalyticsID:    analyticsID,
+		AccessToken:    session.Values["AccessToken"].(string),
 	}
 
 	user.LocalAvatarURL = user.GetAvatar(r.Context(), s.rdb, s.config)
