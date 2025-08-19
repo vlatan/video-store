@@ -161,7 +161,9 @@ func (s *Service) DeleteAccountHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Attempt to send revoke request
 	if currentUser.AccessToken != "" {
-		revokeLogin(currentUser)
+		if err := revokeLogin(r.Context(), currentUser); err != nil {
+			log.Printf("Failed to delete/revoke app authorization: %v", err)
+		}
 	}
 
 	s.ui.StoreFlashMessage(w, r, &successDeleteAccount)
