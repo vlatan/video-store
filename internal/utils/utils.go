@@ -39,6 +39,7 @@ func GetUserFromContext(r *http.Request) *models.User {
 	return user // nil if user not in context
 }
 
+// GetDataFromContext gets the default template data from context
 func GetDataFromContext(r *http.Request) *models.TemplateData {
 	data, _ := r.Context().Value(DataContextKey).(*models.TemplateData)
 	return data // nil if data not in context
