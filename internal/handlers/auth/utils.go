@@ -78,11 +78,18 @@ func (s *Service) loginUser(w http.ResponseWriter, r *http.Request, gothUser *go
 	session, _ := s.store.Get(r, s.config.UserSessionName)
 	now := time.Now()
 
+	// Parse the name, save only the first name
+	name := gothUser.FirstName
+	if name == "" {
+		name = gothUser.Name
+		name = strings.Split(name, " ")[0]
+	}
+
 	// Store user values in session
 	session.Values["ID"] = id
 	session.Values["ProviderUserId"] = gothUser.UserID
 	session.Values["Email"] = gothUser.Email
-	session.Values["Name"] = gothUser.FirstName
+	session.Values["Name"] = name
 	session.Values["Provider"] = gothUser.Provider
 	session.Values["AvatarURL"] = gothUser.AvatarURL
 	session.Values["AnalyticsID"] = analyticsID
