@@ -53,7 +53,7 @@ func (s *service) GetUserFromSession(w http.ResponseWriter, r *http.Request) *mo
 	session.Values["LastSeen"] = now
 
 	// This will be a zero time value (January 1, year 1, 00:00:00 UTC) on fail
-	lastSeenDB := session.Values["LastSeenDB"].(time.Time)
+	lastSeenDB, _ := session.Values["LastSeenDB"].(time.Time)
 
 	// Check if the last seen is out of sync for an entire day
 	if !sameDate(lastSeenDB, now) {
