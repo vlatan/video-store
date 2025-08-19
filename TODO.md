@@ -1,8 +1,8 @@
-* Drop the old colums (create migration)
-* Apply that migration to production too
-
 * Add Github login
 * Add Twitter login
+
+* Drop the old colums (google_id, facebook_id) (create migration)
+* Apply that migration to production too
 
 * Check for nil dereference in templates
 * Add slug input to page
