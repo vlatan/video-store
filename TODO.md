@@ -1,14 +1,8 @@
-* Apply the migration in production
-* Add new ENV vars
-* Push the code change
-
 * Drop the old colums (create migration)
 * Apply that migration to production too
 
-* Decide on whether to make the email unique
-  Drop users with no email
-  On login check for email and overwrite the authID and provider
-  If no email create new account
+* Add Github login
+* Add Twitter login
 
 * Check for nil dereference in templates
 * Add slug input to page
