@@ -207,13 +207,9 @@ func (s *Service) HandleErrors(next http.Handler) http.Handler {
 		// Client probably does not want HTML, serve JSON error
 		acceptHeader := r.Header.Get("Accept")
 		if !strings.Contains(acceptHeader, "text/html") {
-			w.Header().Set("Content-Type", "application/json; charset=utf-8")
 			s.ui.JSONError(recorder, r, recorder.status)
 			return
 		}
-
-		// Client prefers HTML, render the HTML error template
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
 		// Default data
 		data := utils.GetDataFromContext(r)

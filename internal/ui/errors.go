@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"factual-docs/internal/models"
 	"factual-docs/internal/utils"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -27,22 +28,26 @@ func (s *service) HTMLError(w http.ResponseWriter, r *http.Request, statusCode i
 		Title: strconv.Itoa(statusCode),
 	}
 
+	// Provide few errors that should be served via template
 	switch statusCode {
 	case http.StatusBadRequest:
-		data.HTMLErrorData.Heading = "Bad request (400)"
+		data.HTMLErrorData.Heading = fmt.Sprintf("Bad request (%d)", http.StatusBadRequest)
 		data.HTMLErrorData.Text = "Your request was probably malformed."
 	case http.StatusForbidden:
-		data.HTMLErrorData.Heading = "Access forbidden (403)"
+		data.HTMLErrorData.Heading = fmt.Sprintf("Access forbidden (%d)", http.StatusForbidden)
 		data.HTMLErrorData.Text = "Please check your account and try again."
 	case http.StatusNotFound:
-		data.HTMLErrorData.Heading = "Page not found (404)"
+		data.HTMLErrorData.Heading = fmt.Sprintf("Page not found (%d)", http.StatusNotFound)
 		data.HTMLErrorData.Text = "That page does not exist. Please try a different location."
 	case http.StatusMethodNotAllowed:
-		data.HTMLErrorData.Heading = "Method not allowed (405)"
+		data.HTMLErrorData.Heading = fmt.Sprintf("Method not allowed (%d)", http.StatusMethodNotAllowed)
 		data.HTMLErrorData.Text = "Use the appropriate method and try again."
 	case http.StatusInternalServerError:
-		data.HTMLErrorData.Heading = "Something went wrong (500)"
+		data.HTMLErrorData.Heading = fmt.Sprintf("Something went wrong (%d)", http.StatusInternalServerError)
 		data.HTMLErrorData.Text = "Sorry about that. We're working on fixing this."
+	default:
+		utils.HttpError(w, statusCode)
+		return
 	}
 
 	// Write template to buffer
@@ -53,8 +58,9 @@ func (s *service) HTMLError(w http.ResponseWriter, r *http.Request, statusCode i
 		return
 	}
 
-	// Set status code before writing the response
+	// Set status code and content type before writing the response
 	w.WriteHeader(statusCode)
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
 	if _, err := buf.WriteTo(w); err != nil {
 		// Too late for recovery here, just log the error
@@ -83,7 +89,7 @@ func (s *service) JSONError(w http.ResponseWriter, r *http.Request, statusCode i
 		return
 	}
 
-	// Set status code before writing the response
+	// Set status code and content type before writing the response
 	w.WriteHeader(statusCode)
 	w.Header().Set("Content-Type", "application/json")
 
