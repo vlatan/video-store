@@ -196,7 +196,7 @@ func (s *Service) HandleErrors(next http.Handler) http.Handler {
 		next.ServeHTTP(recorder, r)
 
 		// We don't care if this is not an error
-		if recorder.status < 400 {
+		if recorder.status < http.StatusBadRequest {
 			return
 		}
 

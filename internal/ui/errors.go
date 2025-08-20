@@ -28,16 +28,19 @@ func (s *service) HTMLError(w http.ResponseWriter, r *http.Request, statusCode i
 	}
 
 	switch statusCode {
-	case 403:
+	case http.StatusBadRequest:
+		data.HTMLErrorData.Heading = "Bad request (400)"
+		data.HTMLErrorData.Text = "Your request was probably malformed."
+	case http.StatusForbidden:
 		data.HTMLErrorData.Heading = "Access forbidden (403)"
 		data.HTMLErrorData.Text = "Please check your account and try again."
-	case 404:
+	case http.StatusNotFound:
 		data.HTMLErrorData.Heading = "Page not found (404)"
 		data.HTMLErrorData.Text = "That page does not exist. Please try a different location."
-	case 405:
+	case http.StatusMethodNotAllowed:
 		data.HTMLErrorData.Heading = "Method not allowed (405)"
 		data.HTMLErrorData.Text = "Use the appropriate method and try again."
-	case 500:
+	case http.StatusInternalServerError:
 		data.HTMLErrorData.Heading = "Something went wrong (500)"
 		data.HTMLErrorData.Text = "Sorry about that. We're working on fixing this."
 	}
