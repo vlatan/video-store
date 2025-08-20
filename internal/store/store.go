@@ -15,6 +15,7 @@ import (
 	"github.com/markbates/goth/gothic"
 	"github.com/markbates/goth/providers/github"
 	"github.com/markbates/goth/providers/google"
+	"github.com/markbates/goth/providers/twitter"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -61,10 +62,15 @@ func New(
 			config.GoogleOAuthScopes...,
 		),
 		github.New(
-			config.GithubAuthClientId,
-			config.GithubAuthClientSecret,
+			config.GithubOAuthClientId,
+			config.GithubOAuthClientSecret,
 			fmt.Sprintf("%s://%s/auth/github/callback", protocol, config.Domain),
-			config.GithubAuthScopes...,
+			config.GithubOAuthScopes...,
+		),
+		twitter.NewAuthenticate(
+			config.TwitterConsumerKey,
+			config.TwitterConsumerSecret,
+			fmt.Sprintf("%s://%s/auth/twitter/callback", protocol, config.Domain),
 		),
 	)
 
