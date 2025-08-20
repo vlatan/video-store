@@ -656,17 +656,28 @@ button.cancel-button {
 .login-modal-content {
 	max-width: calc(286px + 2 * var(--content-padding));
 	box-shadow: 2px 2px 10px 0 rgba(0, 0, 0, 0.3);
+	gap: calc(var(--content-padding) * 0.75);
 }
 
-.login-text {
+.login-header,
+.login-logo {
+	line-height: 1;
+}
+
+.login-header {
 	font-size: 1.5rem;
 	font-weight: normal;
 }
 
-.logo-text {
+.login-logo {
 	font-size: 1.5rem;
 	font-weight: bold;
 	letter-spacing: -1px;
+}
+
+.login-tagline {
+	font-size: 0.8rem;
+	opacity: 0.75;
 }
 
 .login-buttons {

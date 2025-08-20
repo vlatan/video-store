@@ -1,5 +1,4 @@
 * Add maybe LinkedIn login
-* Make the login dialog more compact
 
 * Check for nil dereference in templates
 * Add slug input to page

@@ -182,12 +182,12 @@
 
 				<div data-body="login" class="modal">
 					<div class="modal-content login-modal-content">
-						<h3 class="login-text">Sign in to</h3>
-						<div class="logo-text">{{ .Config.AppName }}</div>
-						<p>
+						<h3 class="login-header">Sign in to</h3>
+						<div class="login-logo">{{ .Config.AppName }}</div>
+						<div class="login-tagline">
 							Log in to be able to <strong>save</strong> and <strong>like</strong> your favorite
 							documentaries.
-						</p>
+						</div>
 						<div class="login-buttons">
 							<a aria-label="Login via Google" data-close="login" class="brand-login-button google-login"
 								href="/auth/google?redirect={{ .CurrentURI }}">
