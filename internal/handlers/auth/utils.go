@@ -155,6 +155,10 @@ func (s *Service) revokeLogin(ctx context.Context, user *models.User) error {
 		req, err = s.googleRevokeRequest(ctx, user)
 	case "github":
 		req, err = s.githubRevokeRequest(ctx, user)
+	case "twitter":
+		// Revoke is too verbose for Twitter, it uses OAuth1.0.
+		// We're not doing it, not worth the hastle.
+		return nil
 	default:
 		return fmt.Errorf(
 			"unknown login provider on revoke login: %s",
