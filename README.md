@@ -91,10 +91,10 @@ for i in {1..5000}; do curl -s http://localhost:5000/ > /dev/null; done &
 for i in {1..5000}; do curl -s http://localhost:5000/ > /dev/null; done &
 wait
 ```
-Visit the `/debug/heap` endpoint again and download anothe heap profile file. Rename it to `heap2`.  
+Visit the `/debug/heap` endpoint again and download another heap profile file. Rename it to `heap2`.  
 Run a profile which will compare the base (`heap1`) and the next profile (`heap2`):
 ``` bash
-go tool pprof -base heap1 heap3
+go tool pprof -base heap1 heap2
 ```
 
 Once inside the `pprof` CLI run `top`, or `top20` to see if there's memory increase.
