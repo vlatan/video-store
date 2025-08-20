@@ -720,14 +720,26 @@ button.cancel-button {
 	color: #fff
 }
 
+.twitter-login {
+	background-color: #0F1419;
+	border: 1px solid transparent;
+	color: #fff
+}
+
 .google-logo,
-.github-logo {
+.github-logo,
+.twitter-logo {
 	background-color: #fff;
 }
 
 .google-svg,
-.github-svg {
+.github-svg,
+.twitter-svg {
 	width: 24px;
+}
+
+.twitter-svg {
+	fill: #0F1419;
 }
 
 .brand-text {
