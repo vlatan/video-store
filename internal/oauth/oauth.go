@@ -1,6 +1,8 @@
 package oauth
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"factual-docs/internal/config"
 	"fmt"
 
@@ -16,8 +18,10 @@ type OAuthProvider struct {
 	Provider string
 }
 
+type Providers map[string]*OAuthProvider
+
 // New create a new map of OAuth configured providers
-func New(cfg *config.Config) map[string]*OAuthProvider {
+func New(cfg *config.Config) Providers {
 
 	protocol := "https"
 	if cfg.Debug {
@@ -73,4 +77,10 @@ func New(cfg *config.Config) map[string]*OAuthProvider {
 			Provider: "twitter",
 		},
 	}
+}
+
+func (p *Providers) generateState() string {
+	b := make([]byte, 16)
+	rand.Read(b)
+	return hex.EncodeToString(b)
 }
