@@ -11,11 +11,6 @@ import (
 
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
-	"github.com/markbates/goth"
-	"github.com/markbates/goth/gothic"
-	"github.com/markbates/goth/providers/github"
-	"github.com/markbates/goth/providers/google"
-	"github.com/markbates/goth/providers/twitter"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -34,7 +29,7 @@ func New(
 	keyPrefix string,
 	maxAge int) *redisStore {
 
-	store := &redisStore{
+	return &redisStore{
 		config:    config,
 		client:    client,
 		keyPrefix: keyPrefix,
@@ -45,36 +40,6 @@ func New(
 		),
 	}
 
-	// Add this store to gothic
-	gothic.Store = store
-
-	protocol := "https"
-	if config.Debug {
-		protocol = "http"
-	}
-
-	// Add providers to goth
-	goth.UseProviders(
-		google.New(
-			config.GoogleOAuthClientID,
-			config.GoogleOAuthClientSecret,
-			fmt.Sprintf("%s://%s/auth/google/callback", protocol, config.Domain),
-			config.GoogleOAuthScopes...,
-		),
-		github.New(
-			config.GithubOAuthClientId,
-			config.GithubOAuthClientSecret,
-			fmt.Sprintf("%s://%s/auth/github/callback", protocol, config.Domain),
-			config.GithubOAuthScopes...,
-		),
-		twitter.NewAuthenticate(
-			config.TwitterConsumerKey,
-			config.TwitterConsumerSecret,
-			fmt.Sprintf("%s://%s/auth/twitter/callback", protocol, config.Domain),
-		),
-	)
-
-	return store
 }
 
 // New creates a new session without loading it from the store

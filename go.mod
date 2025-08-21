@@ -19,6 +19,7 @@ require (
 	github.com/redis/go-redis/v9 v9.8.0
 	github.com/tdewolff/minify v2.3.6+incompatible
 	github.com/yuin/goldmark v1.7.12
+	golang.org/x/oauth2 v0.30.0
 	google.golang.org/api v0.240.0
 	google.golang.org/genai v1.14.0
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250603155806-513f23925822
@@ -64,7 +65,6 @@ require (
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
-	github.com/mrjones/oauth v0.0.0-20180629183705-f4e24b6d100c // indirect
 	github.com/tdewolff/parse v2.3.4+incompatible // indirect
 	github.com/tdewolff/test v1.0.11 // indirect
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect
@@ -74,7 +74,6 @@ require (
 	go.opentelemetry.io/otel/trace v1.36.0 // indirect
 	golang.org/x/crypto v0.39.0 // indirect
 	golang.org/x/net v0.41.0 // indirect
-	golang.org/x/oauth2 v0.30.0 // indirect
 	golang.org/x/sync v0.15.0 // indirect
 	golang.org/x/sys v0.33.0 // indirect
 	golang.org/x/text v0.26.0 // indirect
