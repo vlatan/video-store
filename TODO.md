@@ -1,4 +1,5 @@
-* Add maybe LinkedIn login
+* Implement my own social login flows
+* Check tme memory leaks
 
 * Check for nil dereference in templates
 * Add slug input to page
