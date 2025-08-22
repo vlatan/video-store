@@ -9,6 +9,7 @@ import (
 	"factual-docs/internal/models"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
@@ -137,6 +138,7 @@ func (p *Providers) FetchUserProfile(
 	case "github":
 		user.ProviderUserId, _ = profileData["node_id"].(string)
 		user.Name, _ = profileData["name"].(string)
+		user.Name = strings.Split(user.Name, " ")[0]
 		user.Email, _ = profileData["email"].(string)
 		if user.Email == "" {
 			user.Email, _ = p.fetchGitHubEmail(client, provider.EmailURL)
