@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/markbates/goth/gothic"
 	"golang.org/x/oauth2"
 )
 
@@ -183,14 +182,6 @@ func (s *Service) DeleteAccountHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Get the current user
 	currentUser := utils.GetUserFromContext(r)
-
-	// Remove gothic session if any
-	if err := gothic.Logout(w, r); err != nil {
-		log.Printf("Error loging out the user with gothic: %v", err)
-		s.ui.StoreFlashMessage(w, r, &failedDeleteAccount)
-		http.Redirect(w, r, redirectTo, http.StatusFound)
-		return
-	}
 
 	// Remove user session
 	if err := s.logoutUser(w, r); err != nil {
