@@ -1,6 +1,8 @@
-* Implement my own social login flows
 
 * Check tme memory leaks
+
+* Store the avatars somwhere else so you can spin more than one instance of the app
+  Volume works only with one instance
 
 * Check for nil dereference in templates
 * Add slug input to page

@@ -62,21 +62,19 @@ func (s *Service) AuthHandler(w http.ResponseWriter, r *http.Request) {
 // Provider Auth callback
 func (s *Service) AuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 
+	// Check if the provider exists
+	providerName := r.PathValue("provider")
+	provider, ok := s.oauth[providerName]
+	if !ok {
+		http.NotFound(w, r)
+		return
+	}
+
 	// The origin URL of the user
 	redirectTo := s.getUserFinalRedirect(w, r)
 
 	// Check if the user is already logged in
 	if user := utils.GetUserFromContext(r); user.IsAuthenticated() {
-		http.Redirect(w, r, redirectTo, http.StatusSeeOther)
-		return
-	}
-
-	// Check if the provider exists
-	providerName := r.PathValue("provider")
-	provider, ok := s.oauth[providerName]
-	if !ok {
-		log.Printf("Unknown provider: %s", providerName)
-		s.ui.StoreFlashMessage(w, r, &failedLogin)
 		http.Redirect(w, r, redirectTo, http.StatusSeeOther)
 		return
 	}
@@ -114,7 +112,7 @@ func (s *Service) AuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Exchange code for token
+	// Exchange the code for token
 	var err error
 	var token *oauth2.Token
 	if providerName == "linkedin" {
