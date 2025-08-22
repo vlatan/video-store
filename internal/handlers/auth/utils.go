@@ -63,6 +63,7 @@ func getRedirectPath(r *http.Request) string {
 
 // Store user info in our own session
 func (s *Service) loginUser(w http.ResponseWriter, r *http.Request, user *models.User) error {
+
 	// Generate analytics ID
 	analyticsID := user.ProviderUserId + user.Provider + user.Email
 	analyticsID = fmt.Sprintf("%x", md5.Sum([]byte(analyticsID)))

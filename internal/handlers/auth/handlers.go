@@ -143,7 +143,7 @@ func (s *Service) AuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	if err = s.loginUser(w, r, user); err != nil {
 		log.Printf("Error logging in the user: %v", err)
 		s.ui.StoreFlashMessage(w, r, &failedLogin)
-		http.Redirect(w, r, redirectTo, http.StatusFound)
+		http.Redirect(w, r, redirectTo, http.StatusSeeOther)
 		return
 	}
 

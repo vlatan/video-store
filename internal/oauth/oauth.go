@@ -19,6 +19,7 @@ import (
 type OAuthProvider struct {
 	Config   *oauth2.Config
 	UserURL  string
+	EmailURL string
 	Provider string
 }
 
@@ -53,6 +54,7 @@ func New(cfg *config.Config) Providers {
 				Endpoint:     github.Endpoint,
 			},
 			UserURL:  "https://api.github.com/user",
+			EmailURL: "https://api.github.com/user/emails",
 			Provider: "github",
 		},
 		"linkedin": {
@@ -100,7 +102,7 @@ func (p *Providers) FetchUserProfile(
 	resp, err := client.Get(provider.UserURL)
 	if err != nil {
 		return nil, fmt.Errorf(
-			"failed to fetch user info from provider %s: %w",
+			"failed to fetch the user info from provider %s: %w",
 			provider.Provider, err,
 		)
 	}
@@ -113,22 +115,63 @@ func (p *Providers) FetchUserProfile(
 		)
 	}
 
-	var user models.User
+	// Unmarshall the user info
 	var profileData map[string]any
+	if err := json.NewDecoder(resp.Body).Decode(&profileData); err != nil {
+		return nil, fmt.Errorf("failed to decode %s user: %w", provider.Provider, err)
+	}
+
+	// log.Printf("%#v", profileData)
+
+	var user models.User
+	user.Provider = provider.Provider
+	user.AccessToken = token.AccessToken
+
 	switch provider.Provider {
 	case "google":
-
-		if err := json.NewDecoder(resp.Body).Decode(&profileData); err != nil {
-			return nil, fmt.Errorf("failed to decode Google user: %w", err)
-		}
-
-		user.Provider = "google"
 		user.ProviderUserId, _ = profileData["id"].(string)
 		user.Name, _ = profileData["given_name"].(string)
 		user.Email, _ = profileData["email"].(string)
 		user.AvatarURL, _ = profileData["picture"].(string)
-		user.AccessToken = token.AccessToken
+
+	case "github":
+		user.ProviderUserId, _ = profileData["node_id"].(string)
+		user.Name, _ = profileData["name"].(string)
+		user.Email, _ = profileData["email"].(string)
+		if user.Email == "" {
+			user.Email, _ = p.fetchGitHubEmail(client, provider.EmailURL)
+		}
+		user.AvatarURL, _ = profileData["avatar_url"].(string)
 	}
 
 	return &user, nil
+}
+
+func (p *Providers) fetchGitHubEmail(client *http.Client, url string) (string, error) {
+	resp, err := client.Get(url)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	var emails []struct {
+		Email   string `json:"email"`
+		Primary bool   `json:"primary"`
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&emails); err != nil {
+		return "", err
+	}
+
+	for _, email := range emails {
+		if email.Primary {
+			return email.Email, nil
+		}
+	}
+
+	if len(emails) > 0 {
+		return emails[0].Email, nil
+	}
+
+	return "", fmt.Errorf("no email found")
 }
