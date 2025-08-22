@@ -22,7 +22,6 @@ type Users struct {
 }
 
 // User struct to store in the USER info in session
-// A simplified version of goth.User
 type User struct {
 	ID             int        `json:"id,omitempty"`
 	ProviderUserId string     `json:"user_id,omitempty"`

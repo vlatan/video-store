@@ -1,10 +1,14 @@
 package oauth
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/hex"
+	"encoding/json"
 	"factual-docs/internal/config"
+	"factual-docs/internal/models"
 	"fmt"
+	"net/http"
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
@@ -79,8 +83,52 @@ func New(cfg *config.Config) Providers {
 	}
 }
 
-func (p *Providers) generateState() string {
+// GenerateState generates new state
+func (p *Providers) GenerateState() string {
 	b := make([]byte, 16)
 	rand.Read(b)
 	return hex.EncodeToString(b)
+}
+
+// FetchUserProfile fetches the user profile from a provider
+func (p *Providers) FetchUserProfile(
+	ctx context.Context,
+	provider *OAuthProvider,
+	token *oauth2.Token) (*models.User, error) {
+
+	client := provider.Config.Client(ctx, token)
+	resp, err := client.Get(provider.UserURL)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"failed to fetch user info from provider %s: %w",
+			provider.Provider, err,
+		)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf(
+			"user info request failed on provider '%s' with status: %d",
+			provider.Provider, resp.StatusCode,
+		)
+	}
+
+	var user models.User
+	var profileData map[string]any
+	switch provider.Provider {
+	case "google":
+
+		if err := json.NewDecoder(resp.Body).Decode(&profileData); err != nil {
+			return nil, fmt.Errorf("failed to decode Google user: %w", err)
+		}
+
+		user.Provider = "google"
+		user.ProviderUserId, _ = profileData["id"].(string)
+		user.Name, _ = profileData["given_name"].(string)
+		user.Email, _ = profileData["email"].(string)
+		user.AvatarURL, _ = profileData["picture"].(string)
+		user.AccessToken = token.AccessToken
+	}
+
+	return &user, nil
 }

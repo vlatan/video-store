@@ -7,13 +7,10 @@ import (
 	"encoding/json"
 	"factual-docs/internal/models"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
-
-	"github.com/markbates/goth"
 )
 
 // Hardcode the static protected routes
@@ -65,18 +62,13 @@ func getRedirectPath(r *http.Request) string {
 }
 
 // Store user info in our own session
-func (s *Service) loginUser(w http.ResponseWriter, r *http.Request, gothUser *goth.User) error {
+func (s *Service) loginUser(w http.ResponseWriter, r *http.Request, user *models.User) error {
 	// Generate analytics ID
-	analyticsID := gothUser.UserID + gothUser.Provider + gothUser.Email
+	analyticsID := user.ProviderUserId + user.Provider + user.Email
 	analyticsID = fmt.Sprintf("%x", md5.Sum([]byte(analyticsID)))
 
-	// Parse the name, save only the first name
-	if gothUser.FirstName == "" {
-		gothUser.FirstName = strings.Split(gothUser.Name, " ")[0]
-	}
-
 	// Update or insert user
-	id, err := s.usersRepo.UpsertUser(r.Context(), gothUser, analyticsID)
+	id, err := s.usersRepo.UpsertUser(r.Context(), user, analyticsID)
 	if err != nil {
 		return err
 	}
@@ -88,13 +80,13 @@ func (s *Service) loginUser(w http.ResponseWriter, r *http.Request, gothUser *go
 
 	// Store user values in session
 	session.Values["ID"] = id
-	session.Values["ProviderUserId"] = gothUser.UserID
-	session.Values["Email"] = gothUser.Email
-	session.Values["Name"] = gothUser.FirstName
-	session.Values["Provider"] = gothUser.Provider
-	session.Values["AvatarURL"] = gothUser.AvatarURL
+	session.Values["ProviderUserId"] = user.ProviderUserId
+	session.Values["Email"] = user.Email
+	session.Values["Name"] = user.Name
+	session.Values["Provider"] = user.Provider
+	session.Values["AvatarURL"] = user.AvatarURL
 	session.Values["AnalyticsID"] = analyticsID
-	session.Values["AccessToken"] = gothUser.AccessToken
+	session.Values["AccessToken"] = user.AccessToken
 	session.Values["LastSeen"] = now
 	session.Values["LastSeenDB"] = now
 
@@ -182,15 +174,6 @@ func (s *Service) revokeLogin(ctx context.Context, user *models.User) error {
 		)
 	}
 	defer resp.Body.Close()
-
-	// Drain the body so the underlying network connection is returned to the pool
-	_, err = io.ReadAll(resp.Body)
-	if err != nil {
-		return fmt.Errorf(
-			"failed to read the response body on %s revoke: %w",
-			user.Provider, err,
-		)
-	}
 
 	// Check the response status
 	if resp.StatusCode >= http.StatusBadRequest {
