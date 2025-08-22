@@ -146,6 +146,13 @@ func (s *Service) AuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if user.ProviderUserId == "" {
+		log.Printf("Failed to get the user ID from provider %s", providerName)
+		s.ui.StoreFlashMessage(w, r, &failedLogin)
+		http.Redirect(w, r, redirectTo, http.StatusSeeOther)
+		return
+	}
+
 	// Save user into our session
 	if err = s.loginUser(w, r, user); err != nil {
 		log.Printf("Error logging in the user: %v", err)

@@ -9,6 +9,7 @@ import (
 	"factual-docs/internal/models"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"golang.org/x/oauth2"
@@ -126,7 +127,9 @@ func (p *Providers) FetchUserProfile(
 		user.AvatarURL, _ = profileData["picture"].(string)
 
 	case "github":
-		user.ProviderUserId, _ = profileData["id"].(string)
+		if idFloat, ok := profileData["id"].(float64); ok {
+			user.ProviderUserId = strconv.FormatInt(int64(idFloat), 10)
+		}
 		user.Name, _ = profileData["name"].(string)
 		user.Name = strings.Split(user.Name, " ")[0]
 		user.Email, _ = profileData["email"].(string)
