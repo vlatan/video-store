@@ -36,6 +36,7 @@ type Config struct {
 	FlashSessionName    string `env:"FLASH_SESSION_NAME" envDefault:"_app_flash"`
 	CsrfSessionName     string `env:"CSRF_SESSION_NAME" envDefault:"_app_csrf"`
 	RedirectSessionName string `env:"REDIRECT_SESSION_NAME" envDefault:"_app_redirect"`
+	OAuthSessionName    string `env:"OAUTH_SESSION_NAME" envDefault:"_app_oauth"`
 
 	// App settings
 	AppName         string `env:"APP_NAME"`

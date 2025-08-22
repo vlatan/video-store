@@ -29,7 +29,7 @@ func (s *Service) AuthHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Generate the state and store it in session
 	state := s.oauth.GenerateState()
-	session, _ := s.store.Get(r, "oauth_session")
+	session, _ := s.store.Get(r, s.config.OAuthSessionName)
 	session.Values["state"] = state
 
 	// URL to OAuth 2.0 provider's consent page
@@ -97,8 +97,8 @@ func (s *Service) AuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get the oauth_session we saved on the start of the flow
-	session, _ := s.store.Get(r, "oauth_session")
+	// Get the oauth session we saved on the start of the flow
+	session, _ := s.store.Get(r, s.config.OAuthSessionName)
 	sessionState, _ := session.Values["state"].(string)
 	sessionVerifier, _ := session.Values["verifier"].(string)
 	session.Options.MaxAge = -1
@@ -119,7 +119,7 @@ func (s *Service) AuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 		token, err = provider.Config.Exchange(r.Context(), code)
 	} else {
 		if sessionVerifier == "" {
-			log.Printf("Invalide PKCE code verifier on provider %s", providerName)
+			log.Printf("Invalid PKCE code verifier on provider %s", providerName)
 			s.ui.StoreFlashMessage(w, r, &failedLogin)
 			http.Redirect(w, r, redirectTo, http.StatusSeeOther)
 			return
