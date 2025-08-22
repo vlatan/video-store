@@ -33,6 +33,7 @@ type User struct {
 	LocalAvatarURL string     `json:"local_avatar_url,omitempty"`
 	AccessToken    string     `json:"access_token,omitempty"`
 	RefreshToken   string     `json:"refresh_token,omitempty"`
+	Expiry         time.Time  `json:"expiry"`
 	LastSeen       *time.Time `json:"last_seen,omitempty"`
 	CreatedAt      *time.Time `json:"created_at,omitempty"`
 }

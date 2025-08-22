@@ -7,10 +7,13 @@ import (
 	"encoding/json"
 	"factual-docs/internal/models"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
+
+	"golang.org/x/oauth2"
 )
 
 // Hardcode the static protected routes
@@ -138,12 +141,34 @@ func (s *Service) logoutUser(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-// Send revoke request. It will work if the access token is not expired.
+// revokeLogin sends a revoke request to the provider API to self-deauthorize
 func (s *Service) revokeLogin(ctx context.Context, user *models.User) error {
 
-	var req *http.Request
-	var err error
+	// Get the provider config
+	provider, exists := s.providers[user.Provider]
+	if !exists {
+		return fmt.Errorf("unexistent provider '%s' on revoke", user.Provider)
+	}
 
+	// Create token from user data
+	token := &oauth2.Token{
+		AccessToken:  user.AccessToken,
+		RefreshToken: user.RefreshToken,
+		Expiry:       user.Expiry,
+	}
+
+	// Get the refreshed token
+	newToken, err := provider.Config.TokenSource(ctx, token).Token()
+	if err != nil {
+		log.Printf("Failed to refresh the token for %s: %v", user.Provider, err)
+		user.AccessToken = newToken.AccessToken
+		user.Expiry = newToken.Expiry
+		if newToken.RefreshToken != "" {
+			user.RefreshToken = newToken.RefreshToken
+		}
+	}
+
+	var req *http.Request
 	switch user.Provider {
 	case "google":
 		req, err = s.googleRevokeRequest(ctx, user)

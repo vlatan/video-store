@@ -116,6 +116,7 @@ func (p *Providers) FetchUserProfile(
 	user.Provider = provider.Provider
 	user.AccessToken = token.AccessToken
 	user.RefreshToken = token.RefreshToken
+	user.Expiry = token.Expiry
 
 	switch provider.Provider {
 	case "google":
