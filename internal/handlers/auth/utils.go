@@ -88,6 +88,7 @@ func (s *Service) loginUser(w http.ResponseWriter, r *http.Request, user *models
 	session.Values["AvatarURL"] = user.AvatarURL
 	session.Values["AnalyticsID"] = analyticsID
 	session.Values["AccessToken"] = user.AccessToken
+	session.Values["RefreshToken"] = user.RefreshToken
 	session.Values["LastSeen"] = now
 	session.Values["LastSeenDB"] = now
 
