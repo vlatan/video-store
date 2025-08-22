@@ -697,6 +697,7 @@ button.cancel-button {
 	width: 100%;
 	box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.25);
 	transition: background-color 0.2s, box-shadow 0.2s, transform 0.2s;
+	border: 1px solid transparent;
 	border-radius: 4px;
 	font-size: 14px;
 	padding: 0;
@@ -718,34 +719,22 @@ button.cancel-button {
 	flex: 0 0 auto;
 	width: 48px;
 	height: 100%;
+	background-color: #fff;
 }
 
 .google-login {
 	background-color: #4285f4;
-	border: 1px solid transparent;
 }
 
 .github-login {
-	background-color: #000;
-	border: 1px solid transparent;
-	color: #fff
+	background-color: #000000;
 }
 
 .linkedin-login {
 	background-color: #0077B5;
-	border: 1px solid transparent;
-	color: #fff
 }
 
-.google-logo,
-.github-logo,
-.linkedin-logo {
-	background-color: #fff;
-}
-
-.google-svg,
-.github-svg,
-.linkedin-svg {
+.brand-svg {
 	width: 24px;
 }
 
