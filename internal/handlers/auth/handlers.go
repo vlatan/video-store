@@ -23,9 +23,7 @@ func (s *Service) AuthHandler(w http.ResponseWriter, r *http.Request) {
 	providerName := r.PathValue("provider")
 	provider, ok := s.oauth[providerName]
 	if !ok {
-		log.Printf("Unknown provider: %s", providerName)
-		s.ui.StoreFlashMessage(w, r, &failedLogin)
-		http.Redirect(w, r, redirectTo, http.StatusSeeOther)
+		http.NotFound(w, r)
 		return
 	}
 
