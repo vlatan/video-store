@@ -36,6 +36,7 @@ type Config struct {
 	FlashSessionName    string `env:"FLASH_SESSION_NAME" envDefault:"_app_flash"`
 	CsrfSessionName     string `env:"CSRF_SESSION_NAME" envDefault:"_app_csrf"`
 	RedirectSessionName string `env:"REDIRECT_SESSION_NAME" envDefault:"_app_redirect"`
+	OAuthSessionName    string `env:"OAUTH_SESSION_NAME" envDefault:"_app_oauth"`
 
 	// App settings
 	AppName         string `env:"APP_NAME"`
@@ -60,9 +61,10 @@ type Config struct {
 	GithubOAuthClientSecret string   `env:"GITHUB_OAUTH_CLIENT_SECRET"`
 	GithubOAuthScopes       []string `env:"GITHUB_OAUTH_SCOPES"`
 
-	// Twitter OAuth settings
-	TwitterConsumerKey    string `env:"TWITTER_CONSUMER_KEY"`
-	TwitterConsumerSecret string `env:"TWITTER_CONSUMER_SECRET"`
+	// LinkedIn OAuth settings
+	LinkedInOAuthClientID     string   `env:"LINKEDIN_OAUTH_CLIENT_ID"`
+	LinkedInOAuthClientSecret string   `env:"LINKEDIN_OAUTH_CLIENT_SECRET"`
+	LinkedInOAuthScopes       []string `env:"LINKEDIN_OAUTH_SCOPES"`
 
 	// Admin settings
 	AdminProviderUserId string `env:"ADMIN_PROVIDER_USER_ID"`

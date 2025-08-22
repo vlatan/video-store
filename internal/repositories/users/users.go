@@ -7,8 +7,6 @@ import (
 	"factual-docs/internal/models"
 	"factual-docs/internal/utils"
 	"time"
-
-	"github.com/markbates/goth"
 )
 
 type Repository struct {
@@ -24,16 +22,16 @@ func New(db database.Service, config *config.Config) *Repository {
 }
 
 // Add or update a user
-func (r *Repository) UpsertUser(ctx context.Context, u *goth.User, analyticsID string) (int, error) {
+func (r *Repository) UpsertUser(ctx context.Context, u *models.User, analyticsID string) (int, error) {
 
 	var id int
 	err := r.db.QueryRow(
 		ctx,
 		upsertUserQuery,
-		u.UserID,
+		u.ProviderUserId,
 		u.Provider,
 		utils.NullString(&analyticsID),
-		utils.NullString(&u.FirstName),
+		utils.NullString(&u.Name),
 		utils.NullString(&u.Email),
 		utils.NullString(&u.AvatarURL),
 	).Scan(&id)

@@ -7,13 +7,13 @@ import (
 	"encoding/json"
 	"factual-docs/internal/models"
 	"fmt"
-	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
 
-	"github.com/markbates/goth"
+	"golang.org/x/oauth2"
 )
 
 // Hardcode the static protected routes
@@ -65,18 +65,14 @@ func getRedirectPath(r *http.Request) string {
 }
 
 // Store user info in our own session
-func (s *Service) loginUser(w http.ResponseWriter, r *http.Request, gothUser *goth.User) error {
+func (s *Service) loginUser(w http.ResponseWriter, r *http.Request, user *models.User) error {
+
 	// Generate analytics ID
-	analyticsID := gothUser.UserID + gothUser.Provider + gothUser.Email
+	analyticsID := user.ProviderUserId + user.Provider + user.Email
 	analyticsID = fmt.Sprintf("%x", md5.Sum([]byte(analyticsID)))
 
-	// Parse the name, save only the first name
-	if gothUser.FirstName == "" {
-		gothUser.FirstName = strings.Split(gothUser.Name, " ")[0]
-	}
-
 	// Update or insert user
-	id, err := s.usersRepo.UpsertUser(r.Context(), gothUser, analyticsID)
+	id, err := s.usersRepo.UpsertUser(r.Context(), user, analyticsID)
 	if err != nil {
 		return err
 	}
@@ -88,13 +84,14 @@ func (s *Service) loginUser(w http.ResponseWriter, r *http.Request, gothUser *go
 
 	// Store user values in session
 	session.Values["ID"] = id
-	session.Values["ProviderUserId"] = gothUser.UserID
-	session.Values["Email"] = gothUser.Email
-	session.Values["Name"] = gothUser.FirstName
-	session.Values["Provider"] = gothUser.Provider
-	session.Values["AvatarURL"] = gothUser.AvatarURL
+	session.Values["ProviderUserId"] = user.ProviderUserId
+	session.Values["Email"] = user.Email
+	session.Values["Name"] = user.Name
+	session.Values["Provider"] = user.Provider
+	session.Values["AvatarURL"] = user.AvatarURL
 	session.Values["AnalyticsID"] = analyticsID
-	session.Values["AccessToken"] = gothUser.AccessToken
+	session.Values["AccessToken"] = user.AccessToken
+	session.Values["RefreshToken"] = user.RefreshToken
 	session.Values["LastSeen"] = now
 	session.Values["LastSeenDB"] = now
 
@@ -144,21 +141,41 @@ func (s *Service) logoutUser(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-// Send revoke request. It will work if the access token is not expired.
+// revokeLogin sends a revoke request to the provider API to self-deauthorize
 func (s *Service) revokeLogin(ctx context.Context, user *models.User) error {
 
-	var req *http.Request
-	var err error
+	// Get the provider config
+	provider, exists := s.providers[user.Provider]
+	if !exists {
+		return fmt.Errorf("unexistent provider '%s' on revoke", user.Provider)
+	}
 
+	// Create token from user data
+	token := &oauth2.Token{
+		AccessToken:  user.AccessToken,
+		RefreshToken: user.RefreshToken,
+		Expiry:       user.Expiry,
+	}
+
+	// Get the refreshed token
+	newToken, err := provider.Config.TokenSource(ctx, token).Token()
+	if err != nil {
+		log.Printf("Failed to refresh the token for %s: %v", user.Provider, err)
+		user.AccessToken = newToken.AccessToken
+		user.Expiry = newToken.Expiry
+		if newToken.RefreshToken != "" {
+			user.RefreshToken = newToken.RefreshToken
+		}
+	}
+
+	var req *http.Request
 	switch user.Provider {
 	case "google":
 		req, err = s.googleRevokeRequest(ctx, user)
 	case "github":
 		req, err = s.githubRevokeRequest(ctx, user)
-	case "twitter":
-		// Revoke is too verbose for Twitter, it uses OAuth1.0.
-		// We're not doing it, not worth the hastle.
-		return nil
+	case "linkedin":
+		return nil // LinkedIn does not have app revoke endpoint
 	default:
 		return fmt.Errorf(
 			"unknown login provider on revoke login: %s",
@@ -182,15 +199,6 @@ func (s *Service) revokeLogin(ctx context.Context, user *models.User) error {
 		)
 	}
 	defer resp.Body.Close()
-
-	// Drain the body so the underlying network connection is returned to the pool
-	_, err = io.ReadAll(resp.Body)
-	if err != nil {
-		return fmt.Errorf(
-			"failed to read the response body on %s revoke: %w",
-			user.Provider, err,
-		)
-	}
 
 	// Check the response status
 	if resp.StatusCode >= http.StatusBadRequest {

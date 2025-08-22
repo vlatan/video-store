@@ -697,6 +697,7 @@ button.cancel-button {
 	width: 100%;
 	box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.25);
 	transition: background-color 0.2s, box-shadow 0.2s, transform 0.2s;
+	border: 1px solid transparent;
 	border-radius: 4px;
 	font-size: 14px;
 	padding: 0;
@@ -718,39 +719,27 @@ button.cancel-button {
 	flex: 0 0 auto;
 	width: 48px;
 	height: 100%;
+	background-color: #fff;
 }
 
 .google-login {
 	background-color: #4285f4;
-	border: 1px solid transparent;
 }
 
 .github-login {
-	background-color: #000;
-	border: 1px solid transparent;
-	color: #fff
+	background-color: #000000;
 }
 
-.twitter-login {
-	background-color: #1DA1F2;
-	border: 1px solid transparent;
-	color: #fff
+.linkedin-login {
+	background-color: #0077B5;
 }
 
-.google-logo,
-.github-logo,
-.twitter-logo {
-	background-color: #fff;
-}
-
-.google-svg,
-.github-svg,
-.twitter-svg {
+.brand-svg {
 	width: 24px;
 }
 
-.twitter-svg {
-	fill: #1DA1F2;
+.linkedin-svg {
+	fill: #0077B5;
 }
 
 .brand-text {

@@ -15,6 +15,7 @@ type Service struct {
 	rdb       redis.Service
 	ui        ui.Service
 	config    *config.Config
+	providers Providers
 }
 
 func New(
@@ -30,5 +31,6 @@ func New(
 		rdb:       rdb,
 		ui:        ui,
 		config:    config,
+		providers: NewProviders(config),
 	}
 }
