@@ -69,20 +69,6 @@ func New(cfg *config.Config) Providers {
 			UserURL:  "https://api.linkedin.com/v2/userinfo",
 			Provider: "linkedin",
 		},
-		"twitter": {
-			Config: &oauth2.Config{
-				ClientID:     cfg.TwitterOAuthClientID,
-				ClientSecret: cfg.TwitterOAuthClientSecret,
-				RedirectURL:  fmt.Sprintf("%s://%s/auth/twitter/callback", protocol, cfg.Domain),
-				Scopes:       cfg.TwitterOAuthScopes,
-				Endpoint: oauth2.Endpoint{
-					AuthURL:  "https://twitter.com/i/oauth2/authorize",
-					TokenURL: "https://api.twitter.com/2/oauth2/token",
-				},
-			},
-			UserURL:  "https://api.twitter.com/2/users/me",
-			Provider: "twitter",
-		},
 	}
 }
 
