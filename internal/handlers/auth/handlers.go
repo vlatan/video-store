@@ -29,21 +29,27 @@ func (s *Service) AuthHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Generate the state and the PKCE code verifier
+	// Generate the state and store it in session
 	state := s.oauth.GenerateState()
-	verifier := oauth2.GenerateVerifier()
-
-	// URL to OAuth 2.0 provider's consent page
-	url := provider.Config.AuthCodeURL(
-		state,
-		oauth2.AccessTypeOffline,
-		oauth2.S256ChallengeOption(verifier),
-	)
-
-	// Store the state and the verifier in an oauth_session
 	session, _ := s.store.Get(r, "oauth_session")
 	session.Values["state"] = state
-	session.Values["verifier"] = verifier
+
+	// URL to OAuth 2.0 provider's consent page
+	var url string
+	if provider.Provider == "linkedin" {
+		url = provider.Config.AuthCodeURL(state, oauth2.AccessTypeOffline)
+	} else {
+		// Can use PKCE code verifier too, store it in the session
+		verifier := oauth2.GenerateVerifier()
+		session.Values["verifier"] = verifier
+		url = provider.Config.AuthCodeURL(
+			state,
+			oauth2.AccessTypeOffline,
+			oauth2.S256ChallengeOption(verifier),
+		)
+	}
+
+	// Save the session
 	session.Save(r, w)
 
 	// Store this redirect URL in a flash session
@@ -110,18 +116,23 @@ func (s *Service) AuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if sessionVerifier == "" {
-		log.Printf("Invalide PKCE code verifier on provider %s", providerName)
-		s.ui.StoreFlashMessage(w, r, &failedLogin)
-		http.Redirect(w, r, redirectTo, http.StatusSeeOther)
-		return
-	}
-
 	// Exchange code for token
+	var err error
 	var token *oauth2.Token
-	token, err := provider.Config.Exchange(
-		r.Context(), code, oauth2.VerifierOption(sessionVerifier),
-	)
+	if providerName == "linkedin" {
+		token, err = provider.Config.Exchange(r.Context(), code)
+	} else {
+		if sessionVerifier == "" {
+			log.Printf("Invalide PKCE code verifier on provider %s", providerName)
+			s.ui.StoreFlashMessage(w, r, &failedLogin)
+			http.Redirect(w, r, redirectTo, http.StatusSeeOther)
+			return
+		}
+
+		token, err = provider.Config.Exchange(
+			r.Context(), code, oauth2.VerifierOption(sessionVerifier),
+		)
+	}
 
 	if err != nil {
 		log.Printf("Token exchange failed on provider %s: %v", providerName, err)

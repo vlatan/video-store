@@ -108,8 +108,6 @@ func (p *Providers) FetchUserProfile(
 		return nil, fmt.Errorf("failed to decode %s user: %w", provider.Provider, err)
 	}
 
-	// log.Printf("%#v", profileData)
-
 	var user models.User
 	user.Provider = provider.Provider
 	user.AccessToken = token.AccessToken
@@ -130,6 +128,12 @@ func (p *Providers) FetchUserProfile(
 			user.Email, _ = p.fetchGitHubEmail(client, provider.EmailURL)
 		}
 		user.AvatarURL, _ = profileData["avatar_url"].(string)
+
+	case "linkedin":
+		user.ProviderUserId, _ = profileData["sub"].(string)
+		user.Name, _ = profileData["given_name"].(string)
+		user.Email, _ = profileData["email"].(string)
+		user.AvatarURL, _ = profileData["picture"].(string)
 	}
 
 	return &user, nil
