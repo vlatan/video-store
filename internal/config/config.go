@@ -60,11 +60,6 @@ type Config struct {
 	GithubOAuthClientSecret string   `env:"GITHUB_OAUTH_CLIENT_SECRET"`
 	GithubOAuthScopes       []string `env:"GITHUB_OAUTH_SCOPES"`
 
-	// Twitter OAuth settings
-	TwitterOAuthClientID     string   `env:"TWITTER_OAUTH_CLIENT_ID"`
-	TwitterOAuthClientSecret string   `env:"TWITTER_AUTH_CLIENT_SECRET"`
-	TwitterOAuthScopes       []string `env:"TWITTER_OAUTH_SCOPES"`
-
 	// LinkedIn OAuth settings
 	LinkedInOAuthClientID     string   `env:"LINKEDIN_OAUTH_CLIENT_ID"`
 	LinkedInOAuthClientSecret string   `env:"LINKEDIN_OAUTH_CLIENT_SECRET"`

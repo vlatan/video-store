@@ -731,26 +731,26 @@ button.cancel-button {
 	color: #fff
 }
 
-.twitter-login {
-	background-color: #1DA1F2;
+.linkedin-login {
+	background-color: #0077B5;
 	border: 1px solid transparent;
 	color: #fff
 }
 
 .google-logo,
 .github-logo,
-.twitter-logo {
+.linkedin-logo {
 	background-color: #fff;
 }
 
 .google-svg,
 .github-svg,
-.twitter-svg {
+.linkedin-svg {
 	width: 24px;
 }
 
-.twitter-svg {
-	fill: #1DA1F2;
+.linkedin-svg {
+	fill: #0077B5;
 }
 
 .brand-text {
