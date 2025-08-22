@@ -34,7 +34,7 @@ func (s *Service) AuthHandler(w http.ResponseWriter, r *http.Request) {
 
 	// URL to OAuth 2.0 provider's consent page
 	var url string
-	if provider.Provider == "linkedin" {
+	if !provider.PKCE {
 		url = provider.Config.AuthCodeURL(state, oauth2.AccessTypeOffline)
 	} else {
 		// Can use PKCE code verifier too, store it in the session
@@ -115,7 +115,7 @@ func (s *Service) AuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	// Exchange the code for token
 	var err error
 	var token *oauth2.Token
-	if providerName == "linkedin" {
+	if !provider.PKCE {
 		token, err = provider.Config.Exchange(r.Context(), code)
 	} else {
 		if sessionVerifier == "" {

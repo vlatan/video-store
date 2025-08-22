@@ -22,6 +22,7 @@ type OAuthProvider struct {
 	UserURL  string
 	EmailURL string
 	Provider string
+	PKCE     bool
 }
 
 type Providers map[string]*OAuthProvider
@@ -45,6 +46,7 @@ func New(cfg *config.Config) Providers {
 			},
 			UserURL:  "https://www.googleapis.com/oauth2/v2/userinfo",
 			Provider: "google",
+			PKCE:     true,
 		},
 		"github": {
 			Config: &oauth2.Config{
@@ -57,6 +59,7 @@ func New(cfg *config.Config) Providers {
 			UserURL:  "https://api.github.com/user",
 			EmailURL: "https://api.github.com/user/emails",
 			Provider: "github",
+			PKCE:     true,
 		},
 		"linkedin": {
 			Config: &oauth2.Config{
@@ -68,6 +71,7 @@ func New(cfg *config.Config) Providers {
 			},
 			UserURL:  "https://api.linkedin.com/v2/userinfo",
 			Provider: "linkedin",
+			PKCE:     false,
 		},
 	}
 }
