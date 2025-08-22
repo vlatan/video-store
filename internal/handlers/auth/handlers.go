@@ -21,14 +21,14 @@ func (s *Service) AuthHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the provider exists
 	providerName := r.PathValue("provider")
-	provider, ok := s.oauth[providerName]
+	provider, ok := s.providers[providerName]
 	if !ok {
 		http.NotFound(w, r)
 		return
 	}
 
 	// Generate the state and store it in session
-	state := s.oauth.GenerateState()
+	state := s.providers.GenerateState()
 	session, _ := s.store.Get(r, s.config.OAuthSessionName)
 	session.Values["state"] = state
 
@@ -64,7 +64,7 @@ func (s *Service) AuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the provider exists
 	providerName := r.PathValue("provider")
-	provider, ok := s.oauth[providerName]
+	provider, ok := s.providers[providerName]
 	if !ok {
 		http.NotFound(w, r)
 		return
@@ -138,7 +138,7 @@ func (s *Service) AuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Fetch user info
-	user, err := s.oauth.FetchUserProfile(r.Context(), provider, token)
+	user, err := s.providers.FetchUserProfile(r.Context(), provider, token)
 	if err != nil {
 		log.Printf("Failed to fetch user profile from provider %s: %v", providerName, err)
 		s.ui.StoreFlashMessage(w, r, &failedLogin)

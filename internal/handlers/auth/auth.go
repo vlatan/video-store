@@ -3,7 +3,6 @@ package auth
 import (
 	"factual-docs/internal/config"
 	"factual-docs/internal/drivers/redis"
-	"factual-docs/internal/oauth"
 	"factual-docs/internal/repositories/users"
 	"factual-docs/internal/ui"
 
@@ -16,7 +15,7 @@ type Service struct {
 	rdb       redis.Service
 	ui        ui.Service
 	config    *config.Config
-	oauth     oauth.Providers
+	providers Providers
 }
 
 func New(
@@ -25,7 +24,6 @@ func New(
 	rdb redis.Service,
 	ui ui.Service,
 	config *config.Config,
-	oAuth oauth.Providers,
 ) *Service {
 	return &Service{
 		usersRepo: usersRepo,
@@ -33,6 +31,6 @@ func New(
 		rdb:       rdb,
 		ui:        ui,
 		config:    config,
-		oauth:     oAuth,
+		providers: NewProviders(config),
 	}
 }

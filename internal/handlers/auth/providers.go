@@ -1,4 +1,4 @@
-package oauth
+package auth
 
 import (
 	"context"
@@ -27,8 +27,8 @@ type OAuthProvider struct {
 
 type Providers map[string]*OAuthProvider
 
-// New create a new map of OAuth configured providers
-func New(cfg *config.Config) Providers {
+// New creates new map of OAuth configured providers
+func NewProviders(cfg *config.Config) Providers {
 
 	protocol := "https"
 	if cfg.Debug {
