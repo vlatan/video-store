@@ -1,4 +1,5 @@
 
+* On revoke refresh the access token
 * Check tme memory leaks
 
 * Store the avatars somwhere else so you can spin more than one instance of the app

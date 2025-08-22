@@ -150,8 +150,7 @@ func (s *Service) revokeLogin(ctx context.Context, user *models.User) error {
 	case "github":
 		req, err = s.githubRevokeRequest(ctx, user)
 	case "linkedin":
-		// TODO
-		return nil
+		return nil // LinkedIn does not have app revoke endpoint
 	default:
 		return fmt.Errorf(
 			"unknown login provider on revoke login: %s",
