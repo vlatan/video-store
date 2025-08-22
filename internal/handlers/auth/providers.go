@@ -126,7 +126,7 @@ func (p *Providers) FetchUserProfile(
 		user.AvatarURL, _ = profileData["picture"].(string)
 
 	case "github":
-		user.ProviderUserId, _ = profileData["node_id"].(string)
+		user.ProviderUserId, _ = profileData["id"].(string)
 		user.Name, _ = profileData["name"].(string)
 		user.Name = strings.Split(user.Name, " ")[0]
 		user.Email, _ = profileData["email"].(string)
