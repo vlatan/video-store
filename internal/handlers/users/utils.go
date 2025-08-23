@@ -31,7 +31,7 @@ func (s *Service) GetAvatars(ctx context.Context, users []models.User) chan avat
 			}
 
 			// Get local avatar
-			localAvatar := user.GetAvatar(ctx, s.rdb, s.config)
+			localAvatar := user.GetAvatar(ctx, s.config, s.rdb, s.r2s)
 
 			// Add result to the avatars channel
 			select {

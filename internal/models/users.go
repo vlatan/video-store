@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"factual-docs/internal/config"
 	"factual-docs/internal/drivers/redis"
+	"factual-docs/internal/r2"
 	"fmt"
 	"io"
 	"log"
@@ -60,7 +61,12 @@ func (u *User) SetAnalyticsID() {
 }
 
 // Get user avatar path, either from redis, or download and store avatar path to redis
-func (u *User) GetAvatar(ctx context.Context, rdb redis.Service, config *config.Config) string {
+func (u *User) GetAvatar(
+	ctx context.Context,
+	config *config.Config,
+	rdb redis.Service,
+	r2s r2.Service) string {
+
 	// Set the anaylytics ID in case it's missing
 	if u.AnalyticsID == "" {
 		u.SetAnalyticsID()
@@ -86,7 +92,7 @@ func (u *User) GetAvatar(ctx context.Context, rdb redis.Service, config *config.
 	}
 
 	// Attempt to download the avatar, set default avatar on fail
-	etag, err := u.DownloadAvatar(config)
+	etag, err := u.DownloadAvatar(config, r2s)
 	if err != nil {
 		rdb.Set(ctx, redisKey, defaultAvatar, 24*7*time.Hour)
 		return defaultAvatar
@@ -99,7 +105,7 @@ func (u *User) GetAvatar(ctx context.Context, rdb redis.Service, config *config.
 }
 
 // Download remote image (user avatar)
-func (u *User) DownloadAvatar(config *config.Config) (string, error) {
+func (u *User) DownloadAvatar(config *config.Config, r2s r2.Service) (string, error) {
 	// Set the anaylytics ID in case it's missing
 	if u.AnalyticsID == "" {
 		u.SetAnalyticsID()

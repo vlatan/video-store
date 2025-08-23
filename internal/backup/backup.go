@@ -18,14 +18,14 @@ import (
 
 type Service struct {
 	config *config.Config
-	r2     *r2.Service
+	r2s    r2.Service
 }
 
 // New creates a backup service
-func New(cfg *config.Config, r2 *r2.Service) *Service {
+func New(cfg *config.Config, r2s r2.Service) *Service {
 	return &Service{
 		config: cfg,
-		r2:     r2,
+		r2s:    r2s,
 	}
 }
 
@@ -48,7 +48,7 @@ func (s *Service) Run(ctx context.Context) error {
 
 	log.Println("Database compressed.")
 
-	if err := s.r2.UploadFile(
+	if err := s.r2s.UploadFile(
 		ctx,
 		s.config.R2BackupBucketName,
 		archive,
