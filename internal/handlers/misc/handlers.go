@@ -27,6 +27,7 @@ var weirdBots = []string{
 	"Barkrowler",
 	"BLEXBot",
 	"magpie-crawler",
+	"Thinkbot",
 }
 
 // RobotsHandler handles robots.txt page
