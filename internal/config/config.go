@@ -74,9 +74,6 @@ type Config struct {
 	AdSenseAccount string `env:"ADSENSE_ACCOUNT"`
 	AdSlotSidebar  string `env:"AD_SLOT_SIDEBAR"`
 
-	// AWS
-	AwsBucketName string `env:"AWS_BUCKET_NAME"`
-
 	// Cloudflare R2
 	R2BucketName      string `env:"R2_BUCKET_NAME"`
 	R2AccountId       string `env:"R2_ACCOUNT_ID"`
