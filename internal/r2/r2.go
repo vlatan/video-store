@@ -76,14 +76,16 @@ func New(ctx context.Context, cfg *config.Config) Service {
 // PutObject puts object to bucket having the content ready
 func (s *service) PutObject(
 	ctx context.Context,
-	content io.Reader,
-	contentType, bucketName, objectKey string,
+	body io.Reader,
+	contentType string,
+	bucketName string,
+	objectKey string,
 ) error {
 
 	_, err := s.client.PutObject(ctx, &s3.PutObjectInput{
 		Bucket:      aws.String(bucketName),
 		Key:         aws.String(objectKey),
-		Body:        content,
+		Body:        body,
 		ContentType: aws.String(contentType),
 	})
 
