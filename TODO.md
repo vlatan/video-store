@@ -1,4 +1,3 @@
-* Implement honeypot
 * Make header svgs smaller on small screens
 * Store the avatars somwhere else so you can spin more than one instance of the app
   Volume works only with one instance
