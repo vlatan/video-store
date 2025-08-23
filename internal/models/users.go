@@ -39,6 +39,7 @@ type User struct {
 }
 
 const avatarcacheKey = "avatar:%s"
+const defaultAvatar = "/static/images/default-avatar.jpg"
 
 // Check if the user is authenticated
 func (u *User) IsAuthenticated() bool {
@@ -69,6 +70,11 @@ func (u *User) GetAvatar(ctx context.Context, rdb redis.Service, config *config.
 	redisKey := fmt.Sprintf(avatarcacheKey, u.AnalyticsID)
 	avatar, err := rdb.Get(ctx, redisKey)
 	if err == nil {
+		// Check if default avatar
+		if avatar == defaultAvatar {
+			return avatar
+		}
+
 		// Quick file existence check
 		destination := filepath.Join(config.DataVolume, u.AnalyticsID+".jpg")
 		if _, err := os.Stat(destination); err == nil {
@@ -82,9 +88,8 @@ func (u *User) GetAvatar(ctx context.Context, rdb redis.Service, config *config.
 	// Attempt to download the avatar, set default avatar on fail
 	etag, err := u.DownloadAvatar(config)
 	if err != nil {
-		avatar = "/static/images/default-avatar.jpg"
-		rdb.Set(ctx, redisKey, avatar, 24*7*time.Hour)
-		return avatar
+		rdb.Set(ctx, redisKey, defaultAvatar, 24*7*time.Hour)
+		return defaultAvatar
 	}
 
 	// Save avatar URL to Redis and return
