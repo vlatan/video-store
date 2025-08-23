@@ -76,7 +76,7 @@ func NewServer() (*http.Server, func() error) {
 		log.Fatalf("couldn't create Gemini service: %v", err)
 	}
 
-	// Create Cloudlfare R2 service
+	// Create Cloudflare R2 service
 	r2s := r2.New(ctx, cfg)
 
 	// Create user interface service
