@@ -5,8 +5,8 @@ import (
 	"bytes"
 	"compress/gzip"
 	"context"
-	"errors"
 	"factual-docs/internal/config"
+	"factual-docs/internal/r2"
 	"fmt"
 	"io"
 	"log"
@@ -14,22 +14,18 @@ import (
 	"os/exec"
 	"path/filepath"
 	"time"
-
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/aws/smithy-go"
 )
 
 type Service struct {
 	config *config.Config
-	client *s3.Client
+	r2     *r2.Service
 }
 
 // New creates a backup service
-func New(cfg *config.Config, client *s3.Client) *Service {
+func New(cfg *config.Config, r2 *r2.Service) *Service {
 	return &Service{
 		config: cfg,
-		client: client,
+		r2:     r2,
 	}
 }
 
@@ -52,7 +48,7 @@ func (s *Service) Run(ctx context.Context) error {
 
 	log.Println("Database compressed.")
 
-	if err := s.UploadFile(
+	if err := s.r2.UploadFile(
 		ctx,
 		s.config.R2BackupBucketName,
 		archive,
@@ -149,57 +145,6 @@ func (s *Service) ArchiveFiles(files []string, dest string) error {
 		if _, err := io.Copy(tarWriter, srcFile); err != nil {
 			return fmt.Errorf("failed to copy file content for file %s: %w", src, err)
 		}
-	}
-
-	return nil
-}
-
-// UploadFile uploads a file to bucket
-func (s *Service) UploadFile(ctx context.Context, bucketName, objectKey, fileName string) error {
-
-	// Open the file
-	file, err := os.Open(fileName)
-	if err != nil {
-		return fmt.Errorf("couldn't open file %s to upload: %w", fileName, err)
-	}
-	defer file.Close()
-
-	_, err = s.client.PutObject(ctx, &s3.PutObjectInput{
-		Bucket: aws.String(bucketName),
-		Key:    aws.String(objectKey),
-		Body:   file,
-	})
-
-	if err != nil {
-		var apiErr smithy.APIError
-		if errors.As(err, &apiErr) && apiErr.ErrorCode() == "EntityTooLarge" {
-			return fmt.Errorf(
-				"error while uploading object to %s; The object is too large: %w",
-				bucketName, err,
-			)
-
-		}
-
-		return fmt.Errorf(
-			"couldn't upload file %s to %s:%s: %v",
-			fileName, bucketName, objectKey, err,
-		)
-	}
-
-	err = s3.NewObjectExistsWaiter(s.client).Wait(
-		ctx,
-		&s3.HeadObjectInput{
-			Bucket: aws.String(bucketName),
-			Key:    aws.String(objectKey),
-		},
-		time.Minute,
-	)
-
-	if err != nil {
-		return fmt.Errorf(
-			"failed attempt to wait for object %s to exist: %w",
-			objectKey, err,
-		)
 	}
 
 	return nil

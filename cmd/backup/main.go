@@ -14,8 +14,8 @@ func main() {
 	defer cancel()
 
 	cfg := config.New()
-	r2Client := r2.New(ctx, cfg)
-	backupService := backup.New(cfg, r2Client)
+	r2Service := r2.New(ctx, cfg)
+	backupService := backup.New(cfg, r2Service)
 	if err := backupService.Run(ctx); err != nil {
 		log.Println(err)
 	}
