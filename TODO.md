@@ -1,7 +1,15 @@
 * Store avatar on R2
-  Practically similar implementation of GetAvatar but disk is replaced with R2
-  And the checking of file existance on disk is replcaed with HEAD request to R2
-  The only difference I upload the default avatar too to R2 where needed
+
+  1. Check Redis "avatar:user:xxxx" 
+  2. If exists: serve R2 URL (assume it's there)
+  3. If expired/missing:
+    - Download from remote source
+    - Upload to R2 (custom or default on failure)  
+    - Set Redis key with 24hrs, 12hrs, 6hrs expiry
+    - Serve R2 URL
+  
+  If someone deletes the avatar from the bucket the user will
+  have a nroken avatar of the redis key expiry time at most. 
 
 * Check the memory leaks
 * Check for nil dereference in templates

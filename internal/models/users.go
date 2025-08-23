@@ -92,7 +92,7 @@ func (u *User) GetAvatar(
 	}
 
 	// Attempt to download the avatar, set default avatar on fail
-	etag, err := u.DownloadAvatar(config, r2s)
+	etag, err := u.DownloadAvatar(ctx, config, r2s)
 	if err != nil {
 		rdb.Set(ctx, redisKey, defaultAvatar, 24*7*time.Hour)
 		return defaultAvatar
@@ -105,25 +105,31 @@ func (u *User) GetAvatar(
 }
 
 // Download remote image (user avatar)
-func (u *User) DownloadAvatar(config *config.Config, r2s r2.Service) (string, error) {
+func (u *User) DownloadAvatar(ctx context.Context, config *config.Config, r2s r2.Service) (string, error) {
 	// Set the anaylytics ID in case it's missing
 	if u.AnalyticsID == "" {
 		u.SetAnalyticsID()
 	}
 
-	// Get remote file
-	response, err := http.Get(u.AvatarURL)
+	// Create a request with context
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.AvatarURL, nil)
 	if err != nil {
-		return "", fmt.Errorf("can't read the remote avatar file: %w", err)
+		return "", fmt.Errorf("couldn't create request for avatar download: %w", err)
 	}
-	defer response.Body.Close()
+
+	// Execute the request
+	var client = &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("failed to download avatar: %w", err)
+	}
+	defer resp.Body.Close()
 
 	// Ensure the HTTP request was successful (status code 2xx)
-	if response.StatusCode < 200 || response.StatusCode >= 300 {
+	if resp.StatusCode != http.StatusOK {
 		return "", fmt.Errorf(
-			"failed to download avatar from %s: received status code %d",
-			u.AvatarURL,
-			response.StatusCode,
+			"failed to download avatar from, received status code %d",
+			resp.StatusCode,
 		)
 	}
 
@@ -156,7 +162,7 @@ func (u *User) DownloadAvatar(config *config.Config, r2s r2.Service) (string, er
 	multiWriter := io.MultiWriter(hasher, file)
 
 	// Stream the response body directly into the hasher and the file
-	_, err = io.Copy(multiWriter, response.Body)
+	_, err = io.Copy(multiWriter, resp.Body)
 	if err != nil {
 		return "", fmt.Errorf("couldn't hash or write to file '%s': %w", destination, err)
 	}
