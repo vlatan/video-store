@@ -21,9 +21,15 @@ import (
 
 type Service interface {
 	// ObjectExists checks if the object exists in the bucket
-	ObjectExists(ctx context.Context, bucketName, objectKey string) error
+	ObjectExists(
+		ctx context.Context,
+		timeout time.Duration,
+		bucketName, objectKey string) error
 	// PutObject puts object to bucket having the content
-	PutObject(ctx context.Context, body io.Reader, contentType, bucketName, objectKey string) error
+	PutObject(
+		ctx context.Context,
+		body io.Reader,
+		contentType, bucketName, objectKey string) error
 	// UploadFile uploads a file to bucket
 	UploadFile(ctx context.Context, bucketName, objectKey, fileName string) error
 }
@@ -73,14 +79,18 @@ func New(ctx context.Context, cfg *config.Config) Service {
 }
 
 // ObjectExists checks if the object exists in the bucket
-func (s *service) ObjectExists(ctx context.Context, bucketName, objectKey string) error {
+func (s *service) ObjectExists(
+	ctx context.Context,
+	timeout time.Duration,
+	bucketName, objectKey string) error {
+
 	return s3.NewObjectExistsWaiter(s.client).Wait(
 		ctx,
 		&s3.HeadObjectInput{
 			Bucket: aws.String(bucketName),
 			Key:    aws.String(objectKey),
 		},
-		time.Minute,
+		timeout,
 	)
 }
 
@@ -116,7 +126,7 @@ func (s *service) PutObject(
 		)
 	}
 
-	if err = s.ObjectExists(ctx, bucketName, objectKey); err != nil {
+	if err = s.ObjectExists(ctx, time.Minute, bucketName, objectKey); err != nil {
 		return fmt.Errorf(
 			"failed attempt to wait for object %s:%s to exist: %w",
 			bucketName, objectKey, err,
