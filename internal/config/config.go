@@ -77,6 +77,12 @@ type Config struct {
 	// AWS
 	AwsBucketName string `env:"AWS_BUCKET_NAME"`
 
+	// Cloudflare R2
+	R2BucketName      string `env:"R2_BUCKET_NAME"`
+	R2AccountId       string `env:"R2_ACCOUNT_ID"`
+	R2AccessKeyId     string `env:"R2_ACCESS_KEY_ID"`
+	R2SecretAccessKey string `env:"R2_SECRET_ACCESS_KEY"`
+
 	// Redis
 	RedisHost     string        `env:"REDIS_HOST" envDefault:"localhost"`
 	RedisPort     int           `env:"REDIS_PORT" envDefault:"6379"`

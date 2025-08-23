@@ -16,31 +16,24 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	awsConfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/smithy-go"
 )
 
 type Service struct {
-	config   *config.Config
-	s3Client *s3.Client
+	config *config.Config
+	client *s3.Client
 }
 
 // New creates a backup service
-func New(ctx context.Context) *Service {
-
-	sdkConfig, err := awsConfig.LoadDefaultConfig(ctx)
-	if err != nil {
-		log.Fatalf("failed to load SDK configuration, %v", err)
-	}
-
+func New(cfg *config.Config, client *s3.Client) *Service {
 	return &Service{
-		config:   config.New(),
-		s3Client: s3.NewFromConfig(sdkConfig),
+		config: cfg,
+		client: client,
 	}
 }
 
-// Run dumps a database to file and uploads that file to S3
+// Run dumps a database to file and uploads that file to a bucket
 func (s *Service) Run(ctx context.Context) error {
 
 	log.Println("Backup service running...")
@@ -59,11 +52,11 @@ func (s *Service) Run(ctx context.Context) error {
 
 	log.Println("Database compressed.")
 
-	if err := s.UploadFile(ctx, s.config.AwsBucketName, archive, archive); err != nil {
+	if err := s.UploadFile(ctx, s.config.R2BucketName, archive, archive); err != nil {
 		return err
 	}
 
-	log.Println("Database uploaded to S3 bucket.")
+	log.Println("Database uploaded to bucket.")
 	log.Println("Backup finished successfully.")
 
 	return nil
@@ -156,7 +149,7 @@ func (s *Service) ArchiveFiles(files []string, dest string) error {
 	return nil
 }
 
-// UploadFile uploads a file to S3 bucket
+// UploadFile uploads a file to bucket
 func (s *Service) UploadFile(ctx context.Context, bucketName, objectKey, fileName string) error {
 
 	// Open the file
@@ -166,7 +159,7 @@ func (s *Service) UploadFile(ctx context.Context, bucketName, objectKey, fileNam
 	}
 	defer file.Close()
 
-	_, err = s.s3Client.PutObject(ctx, &s3.PutObjectInput{
+	_, err = s.client.PutObject(ctx, &s3.PutObjectInput{
 		Bucket: aws.String(bucketName),
 		Key:    aws.String(objectKey),
 		Body:   file,
@@ -188,7 +181,7 @@ func (s *Service) UploadFile(ctx context.Context, bucketName, objectKey, fileNam
 		)
 	}
 
-	err = s3.NewObjectExistsWaiter(s.s3Client).Wait(
+	err = s3.NewObjectExistsWaiter(s.client).Wait(
 		ctx,
 		&s3.HeadObjectInput{
 			Bucket: aws.String(bucketName),
