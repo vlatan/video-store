@@ -52,7 +52,12 @@ func (s *Service) Run(ctx context.Context) error {
 
 	log.Println("Database compressed.")
 
-	if err := s.UploadFile(ctx, s.config.R2BucketName, archive, archive); err != nil {
+	if err := s.UploadFile(
+		ctx,
+		s.config.R2BackupBucketName,
+		archive,
+		archive,
+	); err != nil {
 		return err
 	}
 

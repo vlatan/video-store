@@ -75,10 +75,11 @@ type Config struct {
 	AdSlotSidebar  string `env:"AD_SLOT_SIDEBAR"`
 
 	// Cloudflare R2
-	R2BucketName      string `env:"R2_BUCKET_NAME"`
-	R2AccountId       string `env:"R2_ACCOUNT_ID"`
-	R2AccessKeyId     string `env:"R2_ACCESS_KEY_ID"`
-	R2SecretAccessKey string `env:"R2_SECRET_ACCESS_KEY"`
+	R2AvatarsBucketName string `env:"R2_AVATARS_BUCKET_NAME"`
+	R2BackupBucketName  string `env:"R2_BACKUP_BUCKET_NAME"`
+	R2AccountId         string `env:"R2_ACCOUNT_ID"`
+	R2AccessKeyId       string `env:"R2_ACCESS_KEY_ID"`
+	R2SecretAccessKey   string `env:"R2_SECRET_ACCESS_KEY"`
 
 	// Redis
 	RedisHost     string        `env:"REDIS_HOST" envDefault:"localhost"`
