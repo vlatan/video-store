@@ -1,5 +1,4 @@
-* Make header svgs smaller on small screens
-* Store the avatars somwhere else so you can spin more than one instance of the app
+* Store the avatars somewhere else (AWS S3) so you can spin more than one instance of the app
   Volume works only with one instance
 
 * Check the memory leaks
