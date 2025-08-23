@@ -5,6 +5,7 @@ import (
 	"errors"
 	"factual-docs/internal/config"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"sync"
@@ -20,6 +21,11 @@ import (
 type Service interface {
 	// UploadFile uploads a file to bucket
 	UploadFile(ctx context.Context, bucketName, objectKey, fileName string) error
+	PutObject(
+		ctx context.Context,
+		content io.Reader,
+		contentType, bucketName, objectKey string,
+	) error
 }
 
 type service struct {
@@ -64,6 +70,23 @@ func New(ctx context.Context, cfg *config.Config) Service {
 	})
 
 	return r2Instance
+}
+
+// PutObject puts object to bucket having the content ready
+func (s *service) PutObject(
+	ctx context.Context,
+	content io.Reader,
+	contentType, bucketName, objectKey string,
+) error {
+
+	_, err := s.client.PutObject(ctx, &s3.PutObjectInput{
+		Bucket:      aws.String(bucketName),
+		Key:         aws.String(objectKey),
+		Body:        content,
+		ContentType: aws.String(contentType),
+	})
+
+	return err
 }
 
 // UploadFile uploads a file to bucket
