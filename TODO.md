@@ -1,8 +1,9 @@
-* Check tme memory leaks
-
+* Implement honeypot
+* Make header svgs smaller on small screens
 * Store the avatars somwhere else so you can spin more than one instance of the app
   Volume works only with one instance
 
+* Check the memory leaks
 * Check for nil dereference in templates
 * Add slug input to page
 * Add form for new category as well as delete, edit category routes
