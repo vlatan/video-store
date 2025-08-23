@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net/http"
 	"os"
 	"sync"
 	"time"
@@ -86,25 +87,6 @@ func (s *service) PutObject(
 		ContentType: aws.String(contentType),
 	})
 
-	return err
-}
-
-// UploadFile uploads a file to bucket
-func (s *service) UploadFile(ctx context.Context, bucketName, objectKey, fileName string) error {
-
-	// Open the file
-	file, err := os.Open(fileName)
-	if err != nil {
-		return fmt.Errorf("couldn't open file %s to upload: %w", fileName, err)
-	}
-	defer file.Close()
-
-	_, err = s.client.PutObject(ctx, &s3.PutObjectInput{
-		Bucket: aws.String(bucketName),
-		Key:    aws.String(objectKey),
-		Body:   file,
-	})
-
 	if err != nil {
 		var apiErr smithy.APIError
 		if errors.As(err, &apiErr) && apiErr.ErrorCode() == "EntityTooLarge" {
@@ -116,8 +98,8 @@ func (s *service) UploadFile(ctx context.Context, bucketName, objectKey, fileNam
 		}
 
 		return fmt.Errorf(
-			"couldn't upload file %s to %s:%s: %v",
-			fileName, bucketName, objectKey, err,
+			"couldn't upload object %s:%s: %w",
+			bucketName, objectKey, err,
 		)
 	}
 
@@ -132,10 +114,38 @@ func (s *service) UploadFile(ctx context.Context, bucketName, objectKey, fileNam
 
 	if err != nil {
 		return fmt.Errorf(
-			"failed attempt to wait for object %s to exist: %w",
-			objectKey, err,
+			"failed attempt to wait for object %s:%s to exist: %w",
+			bucketName, objectKey, err,
 		)
 	}
 
 	return nil
+}
+
+// UploadFile uploads a file to bucket
+func (s *service) UploadFile(ctx context.Context, bucketName, objectKey, filePath string) error {
+
+	file, err := os.Open(filePath)
+	if err != nil {
+		return fmt.Errorf("couldn't open the file %s: %w", filePath, err)
+	}
+	defer file.Close()
+
+	// Read the first 512 bytes for content type detection
+	buffer := make([]byte, 512)
+	_, err = file.Read(buffer)
+	if err != nil && !errors.Is(err, io.EOF) { // EOF is expected if file is smaller than 512 bytes
+		return fmt.Errorf("couldn't read the file %s: %w", filePath, err)
+	}
+
+	// Seek back to the beginning for the actual upload
+	_, err = file.Seek(0, io.SeekStart)
+	if err != nil {
+		return fmt.Errorf("couldn't seek to beginning of file %s: %w", filePath, err)
+	}
+
+	contentType := http.DetectContentType(buffer)
+	err = s.PutObject(ctx, file, contentType, bucketName, objectKey)
+
+	return err
 }
