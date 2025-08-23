@@ -1,6 +1,7 @@
-* Store the avatars somewhere else (AWS S3) so you can spin more than one instance of the app
-  Volume works only with one instance
-  Cloudflare R2 is very compelling
+* Store avatar on R2
+  Practically similar implementation of GetAvatar but disk is replaced with R2
+  And the checking of file existance on disk is replcaed with HEAD request to R2
+  The only difference I upload the default avatar too to R2 where needed
 
 * Check the memory leaks
 * Check for nil dereference in templates

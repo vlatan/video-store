@@ -20,13 +20,12 @@ import (
 )
 
 type Service interface {
+	// ObjectExists checks if the object exists in the bucket
+	ObjectExists(ctx context.Context, bucketName, objectKey string) error
+	// PutObject puts object to bucket having the content
+	PutObject(ctx context.Context, body io.Reader, contentType, bucketName, objectKey string) error
 	// UploadFile uploads a file to bucket
 	UploadFile(ctx context.Context, bucketName, objectKey, fileName string) error
-	PutObject(
-		ctx context.Context,
-		content io.Reader,
-		contentType, bucketName, objectKey string,
-	) error
 }
 
 type service struct {
@@ -73,7 +72,19 @@ func New(ctx context.Context, cfg *config.Config) Service {
 	return r2Instance
 }
 
-// PutObject puts object to bucket having the content ready
+// ObjectExists checks if the object exists in the bucket
+func (s *service) ObjectExists(ctx context.Context, bucketName, objectKey string) error {
+	return s3.NewObjectExistsWaiter(s.client).Wait(
+		ctx,
+		&s3.HeadObjectInput{
+			Bucket: aws.String(bucketName),
+			Key:    aws.String(objectKey),
+		},
+		time.Minute,
+	)
+}
+
+// PutObject puts object to bucket having the content
 func (s *service) PutObject(
 	ctx context.Context,
 	body io.Reader,
@@ -105,16 +116,7 @@ func (s *service) PutObject(
 		)
 	}
 
-	err = s3.NewObjectExistsWaiter(s.client).Wait(
-		ctx,
-		&s3.HeadObjectInput{
-			Bucket: aws.String(bucketName),
-			Key:    aws.String(objectKey),
-		},
-		time.Minute,
-	)
-
-	if err != nil {
+	if err = s.ObjectExists(ctx, bucketName, objectKey); err != nil {
 		return fmt.Errorf(
 			"failed attempt to wait for object %s:%s to exist: %w",
 			bucketName, objectKey, err,
