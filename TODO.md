@@ -1,4 +1,7 @@
 * Store avatar on R2
+  https://claude.ai/chat/7799f5c8-e88c-440a-a3f7-aa45ab9338cf
+
+  Separate download and upload avatar.
 
   1. Check Redis "avatar:user:xxxx" 
   2. If exists: serve R2 URL (assume it's there)
@@ -9,7 +12,7 @@
     - Serve R2 URL
   
   If someone deletes the avatar from the bucket the user will
-  have a nroken avatar of the redis key expiry time at most. 
+  have a broken avatar for the duration if of the redis key expiry time at most. 
 
 * Check the memory leaks
 * Check for nil dereference in templates

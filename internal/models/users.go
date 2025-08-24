@@ -1,9 +1,9 @@
 package models
 
 import (
+	"bytes"
 	"context"
 	"crypto/md5"
-	"encoding/hex"
 	"factual-docs/internal/config"
 	"factual-docs/internal/drivers/redis"
 	"factual-docs/internal/r2"
@@ -11,6 +11,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"time"
@@ -41,6 +42,8 @@ type User struct {
 
 const avatarCacheKey = "avatar:%s"
 const defaultAvatar = "/static/images/default-avatar.jpg"
+
+var avatarTimeout time.Duration = 24 * time.Hour
 
 // Check if the user is authenticated
 func (u *User) IsAuthenticated() bool {
@@ -76,31 +79,25 @@ func (u *User) GetAvatar(
 	redisKey := fmt.Sprintf(avatarCacheKey, u.AnalyticsID)
 	avatar, err := rdb.Get(ctx, redisKey)
 	if err == nil {
-		// Check if default avatar
-		if avatar == defaultAvatar {
-			return avatar
-		}
-
-		// Quick file existence check
-		destination := filepath.Join(config.DataVolume, u.AnalyticsID+".jpg")
-		if _, err := os.Stat(destination); err == nil {
-			return avatar
-		}
-
-		// File missing, clear stale cache
-		rdb.Delete(ctx, redisKey)
+		return avatar
 	}
 
 	// Attempt to download the avatar, set default avatar on fail
 	etag, err := u.DownloadAvatar(ctx, config, r2s)
 	if err != nil {
-		rdb.Set(ctx, redisKey, defaultAvatar, 24*7*time.Hour)
+		rdb.Set(ctx, redisKey, defaultAvatar, avatarTimeout)
 		return defaultAvatar
 	}
 
+	avatarURL := &url.URL{
+		Scheme:   "https",
+		Host:     config.R2CdnDomain,
+		Path:     fmt.Sprintf("/avatars/%s.jpg", u.AnalyticsID),
+		RawQuery: "v=" + url.QueryEscape(etag),
+	}
+
 	// Save avatar URL to Redis and return
-	avatar = "/static/images/avatars/" + u.AnalyticsID + ".jpg?v=" + etag
-	rdb.Set(ctx, redisKey, avatar, 24*7*time.Hour)
+	rdb.Set(ctx, redisKey, avatarURL.String(), avatarTimeout)
 	return avatar
 }
 
@@ -133,46 +130,30 @@ func (u *User) DownloadAvatar(ctx context.Context, config *config.Config, r2s r2
 		)
 	}
 
-	// Create a file for writing
-	destination := filepath.Join(config.DataVolume, u.AnalyticsID+".jpg")
-	file, err := os.Create(destination)
+	// Read the body
+	fileData, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return "", fmt.Errorf("couldn't create file '%s': %w", destination, err)
+		return "", fmt.Errorf("failed to read file data: %w", err)
 	}
 
-	// Flag to track if the download was successful
-	valid := false
+	// Determine content type
+	contentType := http.DetectContentType(fileData)
 
-	// Run this clean up function on exit
-	defer func() {
-		if err := file.Close(); err != nil { // Close the file
-			log.Printf("Warning: failed to close file '%s': %v", destination, err)
-		}
-		if !valid { // Remove the file if not successfuly created
-			if err := os.Remove(destination); err != nil {
-				log.Printf("Failed to remove partially created file '%s': %v", destination, err)
-			}
-		}
-	}()
+	// Upload object to bucket
+	err = r2s.PutObject(
+		ctx,
+		bytes.NewReader(fileData),
+		contentType,
+		config.R2CdnBucketName,
+		fmt.Sprintf("/avatars/%s.jpg", u.AnalyticsID),
+	)
 
-	// Init a hasher
-	hasher := md5.New()
-
-	// Create a multiwriter to write to the hasher and to the file
-	multiWriter := io.MultiWriter(hasher, file)
-
-	// Stream the response body directly into the hasher and the file
-	_, err = io.Copy(multiWriter, resp.Body)
 	if err != nil {
-		return "", fmt.Errorf("couldn't hash or write to file '%s': %w", destination, err)
+		return "", fmt.Errorf("failed to upload the object: %w", err)
 	}
 
-	// Get the final hash sum and convert to a hex string
-	hashInBytes := hasher.Sum(nil)
-	hashString := hex.EncodeToString(hashInBytes)
-
-	valid = true
-	return hashString, nil
+	etag := fmt.Sprintf("%x", md5.Sum(fileData))
+	return etag, nil
 }
 
 // Delete local avatar if exists

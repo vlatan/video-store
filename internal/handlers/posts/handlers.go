@@ -303,7 +303,6 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Validate the YT ID
 	if validVideoID.FindStringSubmatch(videoID) == nil {
-		log.Println("Not a valid video ID:", videoID)
 		http.NotFound(w, r)
 		return
 	}
@@ -367,7 +366,6 @@ func (s *Service) PostActionHandler(w http.ResponseWriter, r *http.Request) {
 	// Validate the YT ID
 	videoID := r.PathValue("video")
 	if validVideoID.FindStringSubmatch(videoID) == nil {
-		log.Println("Not a valid video ID:", videoID)
 		http.NotFound(w, r)
 		return
 	}
