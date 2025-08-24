@@ -1,5 +1,3 @@
-* Improve the error message on get/download avatar
-
 * Check the memory leaks
 * Check for nil dereference in templates
 * Add slug input to page

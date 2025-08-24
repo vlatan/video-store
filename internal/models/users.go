@@ -119,42 +119,57 @@ func (u *User) DownloadAvatar(ctx context.Context, config *config.Config, r2s r2
 	// Create a request with context
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.AvatarURL, nil)
 	if err != nil {
-		return "", fmt.Errorf("couldn't create request for avatar download: %w", err)
+		return "", fmt.Errorf(
+			"couldn't create request for avatar %s download: %w",
+			u.AnalyticsID, err,
+		)
 	}
 
 	// Execute the request
 	var client = &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("failed to download avatar: %w", err)
+		return "", fmt.Errorf(
+			"failed to download avatar %s: %w",
+			u.AnalyticsID, err,
+		)
 	}
 	defer resp.Body.Close()
 
 	// Ensure the HTTP request was successful (status code 2xx)
 	if resp.StatusCode != http.StatusOK {
 		return "", fmt.Errorf(
-			"failed to download avatar from, received status code %d",
-			resp.StatusCode,
+			"failed to download avatar %s, received status code %d",
+			u.AnalyticsID, resp.StatusCode,
 		)
 	}
 
 	// Read the body
 	fileData, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return "", fmt.Errorf("failed to read file data: %w", err)
+		return "", fmt.Errorf(
+			"failed to read file data for avatar %s: %w",
+			u.AnalyticsID, err,
+		)
 	}
 
 	// Decode the avatar
 	img, _, err := image.Decode(bytes.NewReader(fileData))
 	if err != nil {
-		return "", fmt.Errorf("failed to decode the file: %w", err)
+		return "", fmt.Errorf(
+			"failed to decode the file for avatar %s: %w",
+			u.AnalyticsID, err,
+		)
 	}
 
 	// Convert to JPEG
 	var buf bytes.Buffer
 	err = jpeg.Encode(&buf, img, &jpeg.Options{Quality: 85})
 	if err != nil {
-		return "", fmt.Errorf("failed to convert the file: %w", err)
+		return "", fmt.Errorf(
+			"failed to convert the avatar %s to JPEG: %w",
+			u.AnalyticsID, err,
+		)
 	}
 
 	// Upload object to bucket
@@ -167,7 +182,10 @@ func (u *User) DownloadAvatar(ctx context.Context, config *config.Config, r2s r2
 	)
 
 	if err != nil {
-		return "", fmt.Errorf("failed to upload the object: %w", err)
+		return "", fmt.Errorf(
+			"failed to upload the avatar %s to bucket: %w",
+			u.AnalyticsID, err,
+		)
 	}
 
 	etag := fmt.Sprintf("%x", md5.Sum(fileData))
