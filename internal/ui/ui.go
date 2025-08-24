@@ -4,6 +4,7 @@ import (
 	"factual-docs/internal/config"
 	"factual-docs/internal/drivers/redis"
 	"factual-docs/internal/models"
+	"factual-docs/internal/r2"
 	"factual-docs/internal/repositories/categories"
 	"factual-docs/internal/repositories/users"
 	"net/http"
@@ -44,6 +45,7 @@ type service struct {
 	templates   models.TemplateMap
 	staticFiles models.StaticFiles
 	rdb         redis.Service
+	r2s         r2.Service
 	config      *config.Config
 	store       sessions.Store
 	catsRepo    *categories.Repository
@@ -60,11 +62,12 @@ var (
 
 // Walk the partials directory and parse the templates.
 func New(
-	rdb redis.Service,
-	config *config.Config,
-	store sessions.Store,
-	catsRepo *categories.Repository,
 	usersRepo *users.Repository,
+	catsRepo *categories.Repository,
+	rdb redis.Service,
+	r2s r2.Service,
+	store sessions.Store,
+	config *config.Config,
 ) Service {
 	once.Do(func() {
 		m := minify.New()
@@ -78,6 +81,7 @@ func New(
 			templates:   parseTemplates(m),
 			staticFiles: parseStaticFiles(m, "static"),
 			rdb:         rdb,
+			r2s:         r2s,
 			config:      config,
 			store:       store,
 			catsRepo:    catsRepo,

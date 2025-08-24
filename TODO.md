@@ -1,7 +1,3 @@
-* Store the avatars somewhere else (AWS S3) so you can spin more than one instance of the app
-  Volume works only with one instance
-  Cloudflare R2 is very compelling
-
 * Check the memory leaks
 * Check for nil dereference in templates
 * Add slug input to page

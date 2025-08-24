@@ -22,6 +22,7 @@ import (
 	"factual-docs/internal/integrations/yt"
 	"factual-docs/internal/middlewares"
 	"factual-docs/internal/models"
+	"factual-docs/internal/r2"
 	catsRepo "factual-docs/internal/repositories/categories"
 	pagesRepo "factual-docs/internal/repositories/pages"
 	postsRepo "factual-docs/internal/repositories/posts"
@@ -62,9 +63,6 @@ func NewServer() (*http.Server, func() error) {
 	pagesRepo := pagesRepo.New(db)
 	sourcesRepo := sourcesRepo.New(db)
 
-	// Create user interface service
-	ui := ui.New(rdb, cfg, store, catsRepo, usersRepo)
-
 	// Create YouTube service
 	ctx := context.Background()
 	yt, err := yt.New(ctx, cfg)
@@ -78,10 +76,16 @@ func NewServer() (*http.Server, func() error) {
 		log.Fatalf("couldn't create Gemini service: %v", err)
 	}
 
+	// Create Cloudflare R2 service
+	r2s := r2.New(ctx, cfg)
+
+	// Create user interface service
+	ui := ui.New(usersRepo, catsRepo, rdb, r2s, store, cfg)
+
 	// Create new server struct with domain services/handlers
 	newServer := &Server{
-		auth:     auth.New(usersRepo, store, rdb, ui, cfg),
-		users:    users.New(usersRepo, postsRepo, rdb, ui, cfg),
+		auth:     auth.New(usersRepo, store, rdb, r2s, ui, cfg),
+		users:    users.New(usersRepo, postsRepo, rdb, r2s, ui, cfg),
 		posts:    posts.New(postsRepo, rdb, ui, cfg, yt, gemini),
 		pages:    pages.New(pagesRepo, rdb, ui, cfg),
 		sources:  sources.New(postsRepo, sourcesRepo, rdb, ui, cfg, yt),

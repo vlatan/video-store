@@ -5,8 +5,11 @@ import (
 	"errors"
 	"factual-docs/internal/config"
 	"fmt"
+	"io"
 	"log"
+	"net/http"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -16,55 +19,90 @@ import (
 	"github.com/aws/smithy-go"
 )
 
-type Service struct {
+type Service interface {
+	// DeleteObject removes an object from bucket
+	DeleteObject(ctx context.Context, bucket, key string) error
+	// ObjectExists checks if the object exists in the bucket
+	ObjectExists(ctx context.Context, timeout time.Duration, bucket, key string) error
+	// PutObject puts object to bucket having the content
+	PutObject(ctx context.Context, body io.Reader, contentType, bucket, key string) error
+	// UploadFile uploads a file to bucket
+	UploadFile(ctx context.Context, bucket, key, filePath string) error
+}
+
+type service struct {
 	client *s3.Client
 }
 
+var (
+	r2Instance *service
+	once       sync.Once
+)
+
 // New creates a new R2 client
-func New(ctx context.Context, cfg *config.Config) *Service {
+func New(ctx context.Context, cfg *config.Config) Service {
 
-	// Create SDK config for an R2 service
-	// An ordinary AWS SDK config would look like:
-	// sdkConfig, err := awsConfig.LoadDefaultConfig(ctx)
-	sdkConfig, err := awsConfig.LoadDefaultConfig(ctx,
-		awsConfig.WithCredentialsProvider(
-			credentials.NewStaticCredentialsProvider(
-				cfg.R2AccessKeyId, cfg.R2SecretAccessKey, ""),
-		),
-		awsConfig.WithRegion("auto"),
-	)
+	once.Do(func() {
+		// Create SDK config for an R2 service
+		// An ordinary AWS SDK config would look like:
+		// sdkConfig, err := awsConfig.LoadDefaultConfig(ctx)
+		sdkConfig, err := awsConfig.LoadDefaultConfig(ctx,
+			awsConfig.WithCredentialsProvider(
+				credentials.NewStaticCredentialsProvider(
+					cfg.R2AccessKeyId, cfg.R2SecretAccessKey, ""),
+			),
+			awsConfig.WithRegion("auto"),
+		)
 
-	if err != nil {
-		log.Fatalf("failed to load AWS/R2 SDK configuration, %v", err)
-	}
+		if err != nil {
+			log.Fatalf("failed to load AWS/R2 SDK configuration, %v", err)
+		}
 
-	// Create the R2 client
-	// An ordinary AWS client would look like:
-	// client := s3.NewFromConfig(sdkConfig)
-	client := s3.NewFromConfig(sdkConfig, func(o *s3.Options) {
-		baseEndpoint := fmt.Sprintf("https://%s.r2.cloudflarestorage.com", cfg.R2AccountId)
-		o.BaseEndpoint = aws.String(baseEndpoint)
+		// Create the R2 client
+		// An ordinary AWS client would look like:
+		// client := s3.NewFromConfig(sdkConfig)
+		client := s3.NewFromConfig(sdkConfig, func(o *s3.Options) {
+			baseEndpoint := fmt.Sprintf("https://%s.r2.cloudflarestorage.com", cfg.R2AccountId)
+			o.BaseEndpoint = aws.String(baseEndpoint)
+		})
+
+		r2Instance = &service{
+			client: client,
+		}
 	})
 
-	return &Service{
-		client: client,
-	}
+	return r2Instance
 }
 
-// UploadFile uploads a file to bucket
-func (s *Service) UploadFile(ctx context.Context, bucketName, objectKey, fileName string) error {
+// DeleteObject removes an object from bucket
+func (s *service) DeleteObject(ctx context.Context, bucket, key string) error {
+	_, err := s.client.DeleteObject(ctx, &s3.DeleteObjectInput{
+		Bucket: &bucket,
+		Key:    &key,
+	})
+	return err
+}
 
-	// Open the file
-	file, err := os.Open(fileName)
-	if err != nil {
-		return fmt.Errorf("couldn't open file %s to upload: %w", fileName, err)
-	}
-	defer file.Close()
+// ObjectExists checks if the object exists in the bucket
+func (s *service) ObjectExists(ctx context.Context, timeout time.Duration, bucket, key string) error {
+	return s3.NewObjectExistsWaiter(s.client).Wait(
+		ctx,
+		&s3.HeadObjectInput{
+			Bucket: aws.String(bucket),
+			Key:    aws.String(key),
+		},
+		timeout,
+	)
+}
 
-	_, err = s.client.PutObject(ctx, &s3.PutObjectInput{
-		Bucket: aws.String(bucketName),
-		Key:    aws.String(objectKey),
-		Body:   file,
+// PutObject puts object to bucket having the content
+func (s *service) PutObject(ctx context.Context, body io.Reader, contentType, bucket, key string) error {
+
+	_, err := s.client.PutObject(ctx, &s3.PutObjectInput{
+		Bucket:      aws.String(bucket),
+		Key:         aws.String(key),
+		Body:        body,
+		ContentType: aws.String(contentType),
 	})
 
 	if err != nil {
@@ -72,32 +110,51 @@ func (s *Service) UploadFile(ctx context.Context, bucketName, objectKey, fileNam
 		if errors.As(err, &apiErr) && apiErr.ErrorCode() == "EntityTooLarge" {
 			return fmt.Errorf(
 				"error while uploading object to %s; The object is too large: %w",
-				bucketName, err,
+				bucket, err,
 			)
 
 		}
 
 		return fmt.Errorf(
-			"couldn't upload file %s to %s:%s: %v",
-			fileName, bucketName, objectKey, err,
+			"couldn't upload object %s:%s: %w",
+			bucket, key, err,
 		)
 	}
 
-	err = s3.NewObjectExistsWaiter(s.client).Wait(
-		ctx,
-		&s3.HeadObjectInput{
-			Bucket: aws.String(bucketName),
-			Key:    aws.String(objectKey),
-		},
-		time.Minute,
-	)
-
-	if err != nil {
+	if err = s.ObjectExists(ctx, time.Minute, bucket, key); err != nil {
 		return fmt.Errorf(
-			"failed attempt to wait for object %s to exist: %w",
-			objectKey, err,
+			"failed attempt to wait for object %s:%s to exist: %w",
+			bucket, key, err,
 		)
 	}
 
 	return nil
+}
+
+// UploadFile uploads a file to bucket
+func (s *service) UploadFile(ctx context.Context, bucket, key, filePath string) error {
+
+	file, err := os.Open(filePath)
+	if err != nil {
+		return fmt.Errorf("couldn't open the file %s: %w", filePath, err)
+	}
+	defer file.Close()
+
+	// Read the first 512 bytes for content type detection
+	buffer := make([]byte, 512)
+	_, err = file.Read(buffer)
+	if err != nil && !errors.Is(err, io.EOF) { // EOF is expected if file is smaller than 512 bytes
+		return fmt.Errorf("couldn't read the file %s: %w", filePath, err)
+	}
+
+	// Seek back to the beginning for the actual upload
+	_, err = file.Seek(0, io.SeekStart)
+	if err != nil {
+		return fmt.Errorf("couldn't seek to beginning of file %s: %w", filePath, err)
+	}
+
+	contentType := http.DetectContentType(buffer)
+	err = s.PutObject(ctx, file, contentType, bucket, key)
+
+	return err
 }

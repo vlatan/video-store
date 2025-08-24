@@ -224,8 +224,8 @@ func (s *Service) DeleteAccountHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Attempt to remove the avatar from disk and redis
-	currentUser.DeleteAvatar(r.Context(), s.rdb, s.config)
+	// Attempt to remove the avatar from R2 and redis
+	currentUser.DeleteAvatar(r.Context(), s.config, s.rdb, s.r2s)
 
 	// Attempt to send revoke request
 	if currentUser.AccessToken != "" {
