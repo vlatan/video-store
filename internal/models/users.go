@@ -95,8 +95,10 @@ func (u *User) GetAvatar(
 		RawQuery: "v=" + url.QueryEscape(etag),
 	}
 
+	avatar = avatarURL.String()
+
 	// Save avatar URL to Redis and return
-	rdb.Set(ctx, redisKey, avatarURL.String(), avatarTimeout)
+	rdb.Set(ctx, redisKey, avatar, avatarTimeout)
 	return avatar
 }
 
