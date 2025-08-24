@@ -19,6 +19,7 @@ require (
 	github.com/redis/go-redis/v9 v9.8.0
 	github.com/tdewolff/minify v2.3.6+incompatible
 	github.com/yuin/goldmark v1.7.12
+	golang.org/x/image v0.30.0
 	golang.org/x/oauth2 v0.30.0
 	google.golang.org/api v0.240.0
 	google.golang.org/genai v1.14.0
@@ -71,8 +72,8 @@ require (
 	go.opentelemetry.io/otel/trace v1.36.0 // indirect
 	golang.org/x/crypto v0.39.0 // indirect
 	golang.org/x/net v0.41.0 // indirect
-	golang.org/x/sync v0.15.0 // indirect
+	golang.org/x/sync v0.16.0 // indirect
 	golang.org/x/sys v0.33.0 // indirect
-	golang.org/x/text v0.26.0 // indirect
+	golang.org/x/text v0.28.0 // indirect
 	google.golang.org/protobuf v1.36.6 // indirect
 )

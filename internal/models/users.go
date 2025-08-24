@@ -8,11 +8,18 @@ import (
 	"factual-docs/internal/drivers/redis"
 	"factual-docs/internal/r2"
 	"fmt"
+	"image"
+	"image/jpeg"
 	"io"
 	"log"
 	"net/http"
 	"net/url"
 	"time"
+
+	_ "image/gif" // Register GIF decoder
+	_ "image/png" // Register PNG decoder
+
+	_ "golang.org/x/image/webp" // Register WebP decoder
 )
 
 // Collection of users
@@ -137,14 +144,24 @@ func (u *User) DownloadAvatar(ctx context.Context, config *config.Config, r2s r2
 		return "", fmt.Errorf("failed to read file data: %w", err)
 	}
 
-	// Determine content type
-	contentType := http.DetectContentType(fileData)
+	// Decode the avatar
+	img, _, err := image.Decode(bytes.NewReader(fileData))
+	if err != nil {
+		return "", fmt.Errorf("failed to decode the file: %w", err)
+	}
+
+	// Convert to JPEG
+	var buf bytes.Buffer
+	err = jpeg.Encode(&buf, img, &jpeg.Options{Quality: 85})
+	if err != nil {
+		return "", fmt.Errorf("failed to convert the file: %w", err)
+	}
 
 	// Upload object to bucket
 	err = r2s.PutObject(
 		ctx,
-		bytes.NewReader(fileData),
-		contentType,
+		bytes.NewReader(buf.Bytes()),
+		"image/jpeg",
 		config.R2CdnBucketName,
 		fmt.Sprintf(avatarPath, u.AnalyticsID),
 	)
