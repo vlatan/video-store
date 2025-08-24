@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"net/url"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -145,19 +144,6 @@ func (s *Service) StaticHandler(w http.ResponseWriter, r *http.Request) {
 	if ok && fileInfo.Bytes != nil && len(fileInfo.Bytes) > 0 {
 		w.Header().Set("Content-Length", fmt.Sprintf("%d", len(fileInfo.Bytes)))
 		http.ServeContent(w, r, r.URL.Path, fileInfo.ModTime, bytes.NewReader(fileInfo.Bytes))
-		return
-	}
-
-	// Serve user avatars from the data volume
-	if strings.HasPrefix(r.URL.Path, "/static/images/avatars/") {
-		parsed, err := url.Parse(r.URL.Path)
-		if err != nil {
-			http.NotFound(w, r)
-			return
-		}
-
-		avatarPath := filepath.Join(s.config.DataVolume, filepath.Base(parsed.Path))
-		http.ServeFile(w, r, avatarPath)
 		return
 	}
 

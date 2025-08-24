@@ -84,7 +84,7 @@ func NewServer() (*http.Server, func() error) {
 
 	// Create new server struct with domain services/handlers
 	newServer := &Server{
-		auth:     auth.New(usersRepo, store, rdb, ui, cfg),
+		auth:     auth.New(usersRepo, store, rdb, r2s, ui, cfg),
 		users:    users.New(usersRepo, postsRepo, rdb, r2s, ui, cfg),
 		posts:    posts.New(postsRepo, rdb, ui, cfg, yt, gemini),
 		pages:    pages.New(pagesRepo, rdb, ui, cfg),

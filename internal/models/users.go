@@ -12,8 +12,6 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"os"
-	"path/filepath"
 	"time"
 )
 
@@ -40,7 +38,7 @@ type User struct {
 	CreatedAt      *time.Time `json:"created_at,omitempty"`
 }
 
-const avatarCacheKey = "avatar:%s"
+const avatarCacheKey = "avatar:r2:%s"
 const defaultAvatar = "/static/images/default-avatar.jpg"
 
 var avatarTimeout time.Duration = 24 * time.Hour
@@ -157,10 +155,12 @@ func (u *User) DownloadAvatar(ctx context.Context, config *config.Config, r2s r2
 }
 
 // Delete local avatar if exists
-func (u *User) DeleteAvatar(ctx context.Context, rdb redis.Service, config *config.Config) {
-	avatarPath := filepath.Join(config.DataVolume, u.AnalyticsID+".jpg")
-	if err := os.Remove(avatarPath); err != nil && err != os.ErrNotExist {
-		log.Printf("Could not remove the local avatar %s: %v", avatarPath, err)
+func (u *User) DeleteAvatar(ctx context.Context, config *config.Config, rdb redis.Service, r2s r2.Service) {
+
+	// Attemp to delete the avatar image from R2
+	objectKey := fmt.Sprintf("/avatars/%s.jpg", u.AnalyticsID)
+	if err := r2s.DeleteObject(ctx, config.R2CdnBucketName, objectKey); err != nil {
+		log.Printf("Could not remove the avatar %s from R2: %v", objectKey, err)
 	}
 
 	redisKey := fmt.Sprintf(avatarCacheKey, u.AnalyticsID)

@@ -20,18 +20,14 @@ import (
 )
 
 type Service interface {
+	// DeleteObject removes an object from bucket
+	DeleteObject(ctx context.Context, bucket, key string) error
 	// ObjectExists checks if the object exists in the bucket
-	ObjectExists(
-		ctx context.Context,
-		timeout time.Duration,
-		bucketName, objectKey string) error
+	ObjectExists(ctx context.Context, timeout time.Duration, bucket, key string) error
 	// PutObject puts object to bucket having the content
-	PutObject(
-		ctx context.Context,
-		body io.Reader,
-		contentType, bucketName, objectKey string) error
+	PutObject(ctx context.Context, body io.Reader, contentType, bucket, key string) error
 	// UploadFile uploads a file to bucket
-	UploadFile(ctx context.Context, bucketName, objectKey, fileName string) error
+	UploadFile(ctx context.Context, bucket, key, filePath string) error
 }
 
 type service struct {
@@ -78,34 +74,33 @@ func New(ctx context.Context, cfg *config.Config) Service {
 	return r2Instance
 }
 
-// ObjectExists checks if the object exists in the bucket
-func (s *service) ObjectExists(
-	ctx context.Context,
-	timeout time.Duration,
-	bucketName, objectKey string) error {
+// DeleteObject removes an object from bucket
+func (s *service) DeleteObject(ctx context.Context, bucket, key string) error {
+	_, err := s.client.DeleteObject(ctx, &s3.DeleteObjectInput{
+		Bucket: &bucket,
+		Key:    &key,
+	})
+	return err
+}
 
+// ObjectExists checks if the object exists in the bucket
+func (s *service) ObjectExists(ctx context.Context, timeout time.Duration, bucket, key string) error {
 	return s3.NewObjectExistsWaiter(s.client).Wait(
 		ctx,
 		&s3.HeadObjectInput{
-			Bucket: aws.String(bucketName),
-			Key:    aws.String(objectKey),
+			Bucket: aws.String(bucket),
+			Key:    aws.String(key),
 		},
 		timeout,
 	)
 }
 
 // PutObject puts object to bucket having the content
-func (s *service) PutObject(
-	ctx context.Context,
-	body io.Reader,
-	contentType string,
-	bucketName string,
-	objectKey string,
-) error {
+func (s *service) PutObject(ctx context.Context, body io.Reader, contentType, bucket, key string) error {
 
 	_, err := s.client.PutObject(ctx, &s3.PutObjectInput{
-		Bucket:      aws.String(bucketName),
-		Key:         aws.String(objectKey),
+		Bucket:      aws.String(bucket),
+		Key:         aws.String(key),
 		Body:        body,
 		ContentType: aws.String(contentType),
 	})
@@ -115,21 +110,21 @@ func (s *service) PutObject(
 		if errors.As(err, &apiErr) && apiErr.ErrorCode() == "EntityTooLarge" {
 			return fmt.Errorf(
 				"error while uploading object to %s; The object is too large: %w",
-				bucketName, err,
+				bucket, err,
 			)
 
 		}
 
 		return fmt.Errorf(
 			"couldn't upload object %s:%s: %w",
-			bucketName, objectKey, err,
+			bucket, key, err,
 		)
 	}
 
-	if err = s.ObjectExists(ctx, time.Minute, bucketName, objectKey); err != nil {
+	if err = s.ObjectExists(ctx, time.Minute, bucket, key); err != nil {
 		return fmt.Errorf(
 			"failed attempt to wait for object %s:%s to exist: %w",
-			bucketName, objectKey, err,
+			bucket, key, err,
 		)
 	}
 
@@ -137,7 +132,7 @@ func (s *service) PutObject(
 }
 
 // UploadFile uploads a file to bucket
-func (s *service) UploadFile(ctx context.Context, bucketName, objectKey, filePath string) error {
+func (s *service) UploadFile(ctx context.Context, bucket, key, filePath string) error {
 
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -159,7 +154,7 @@ func (s *service) UploadFile(ctx context.Context, bucketName, objectKey, filePat
 	}
 
 	contentType := http.DetectContentType(buffer)
-	err = s.PutObject(ctx, file, contentType, bucketName, objectKey)
+	err = s.PutObject(ctx, file, contentType, bucket, key)
 
 	return err
 }
