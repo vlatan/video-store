@@ -873,7 +873,7 @@ button.cancel-button {
 @media screen and (max-width: 900px) {
 	:root {
 		--content-padding: 1rem;
-		--icon-size: 1.5rem;
+		--icon-size: 1.4rem;
 	}
 
 	.username-text {
@@ -892,13 +892,13 @@ button.cancel-button {
 	}
 
 	svg.search-icon {
-		width: calc(var(--icon-size) * 0.80);
-		height: calc(var(--icon-size) * 0.80);
+		width: calc(var(--icon-size) * 0.85);
+		height: calc(var(--icon-size) * 0.85);
 	}
 
 	svg.search-arrow-icon {
-		width: calc(var(--icon-size) * 1.2);
-		height: calc(var(--icon-size) * 1.2);
+		width: calc(var(--icon-size) * 1.25);
+		height: calc(var(--icon-size) * 1.25);
 	}
 }
 
