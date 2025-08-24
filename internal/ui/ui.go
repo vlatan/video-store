@@ -81,6 +81,7 @@ func New(
 			templates:   parseTemplates(m),
 			staticFiles: parseStaticFiles(m, "static"),
 			rdb:         rdb,
+			r2s:         r2s,
 			config:      config,
 			store:       store,
 			catsRepo:    catsRepo,
