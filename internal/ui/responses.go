@@ -1,7 +1,6 @@
 package ui
 
 import (
-	"bytes"
 	"encoding/json"
 	"factual-docs/internal/models"
 	"factual-docs/internal/utils"
@@ -41,18 +40,6 @@ func (s *service) RenderHTML(w http.ResponseWriter, r *http.Request, templateNam
 		return
 	}
 
-	var buf bytes.Buffer
-	if err := tmpl.ExecuteTemplate(&buf, templateName, data); err != nil {
-		log.Printf(
-			"Failed to execute the HTML template '%s' on URI '%s': %v",
-			templateName,
-			r.RequestURI,
-			err,
-		)
-		utils.HttpError(w, http.StatusInternalServerError)
-		return
-	}
-
 	var contentType string
 	switch filepath.Ext(templateName) {
 	case ".xml":
@@ -65,13 +52,18 @@ func (s *service) RenderHTML(w http.ResponseWriter, r *http.Request, templateNam
 
 	header := fmt.Sprintf("%s; charset=utf-8", contentType)
 	w.Header().Set("Content-Type", header)
-	if _, err := buf.WriteTo(w); err != nil {
-		// Too late for recovery here, just log the error
+
+	// Actually the template is written to a recoder, not a real response writer,
+	// because there's a middleware that passes a recorder to the next handler.
+	// Only the headers are written to the real response writer.
+	if err := tmpl.ExecuteTemplate(w, templateName, data); err != nil {
 		log.Printf(
-			"Failed to write the HTML template '%s' to response on URI '%s': %v",
+			"Failed to execute the HTML template '%s' on URI '%s': %v",
 			templateName,
 			r.RequestURI,
 			err,
 		)
+		utils.HttpError(w, http.StatusInternalServerError)
+		return
 	}
 }
