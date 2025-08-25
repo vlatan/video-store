@@ -2,33 +2,33 @@ package ui
 
 import (
 	"encoding/json"
+	"errors"
 	"factual-docs/internal/models"
 	"factual-docs/internal/utils"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"strconv"
 )
 
-// Write HTML error to response
-func (s *service) HTMLError(w http.ResponseWriter, r *http.Request, statusCode int, data *models.TemplateData) {
+// ExecuteErrorTemplate executes error.html template
+// A wrapper around tmpl.ExecuteTemplate
+func (s *service) ExecuteErrorTemplate(w io.Writer, status int, data *models.TemplateData) error {
 
 	// Check for the error template
 	tmpl, exists := s.templates["error.html"]
-
 	if !exists {
-		log.Printf("Could not find the 'error.html' template on URI '%s'", r.RequestURI)
-		utils.HttpError(w, statusCode)
-		return
+		return errors.New("error.html template does not exist")
 	}
 
 	// Craft template data
 	data.HTMLErrorData = &models.HTMLErrorData{
-		Title: strconv.Itoa(statusCode),
+		Title: strconv.Itoa(status),
 	}
 
 	// Provide few errors that should be served via template
-	switch statusCode {
+	switch status {
 	case http.StatusBadRequest:
 		data.HTMLErrorData.Heading = fmt.Sprintf("Bad request (%d)", http.StatusBadRequest)
 		data.HTMLErrorData.Text = "Your request was probably malformed."
@@ -45,22 +45,10 @@ func (s *service) HTMLError(w http.ResponseWriter, r *http.Request, statusCode i
 		data.HTMLErrorData.Heading = fmt.Sprintf("Something went wrong (%d)", http.StatusInternalServerError)
 		data.HTMLErrorData.Text = "Sorry about that. We're working on fixing this."
 	default:
-		utils.HttpError(w, statusCode)
-		return
+		return fmt.Errorf("no error data for %d error template", status)
 	}
 
-	// Set status code and content type before writing the response
-	w.WriteHeader(statusCode)
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-
-	// Actually the body/template and the status code are written to a recoder, not a real response writer,
-	// because there's a middleware that intercepts the request and passes a recoder to next handler.
-	// Only the rest of the headers are written to the real response writer.
-	if err := tmpl.ExecuteTemplate(w, "error.html", data); err != nil {
-		log.Printf("Failed to execute the HTML template 'error.html' on URI '%s': %v", r.RequestURI, err)
-		utils.HttpError(w, statusCode)
-		return
-	}
+	return tmpl.ExecuteTemplate(w, "error.html", data)
 }
 
 // Write JSON error to response

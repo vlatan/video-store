@@ -216,8 +216,16 @@ func (s *Service) HandleErrors(next http.Handler) http.Handler {
 		// Default data
 		data := utils.GetDataFromContext(r)
 
-		// Serve rich HTML error
-		s.ui.HTMLError(recorder, r, recorder.status, data)
+		// Set headers
+		recorder.Header().Set("Content-Type", "text/html; charset=utf-8")
+
+		// Try to render error template
+		if err := s.ui.ExecuteErrorTemplate(recorder, recorder.status, data); err != nil {
+			// Template failed, reset body in case it was written to
+			// and use plain text fallback
+			recorder.body.Reset()
+			utils.HttpError(recorder, recorder.status)
+		}
 	})
 }
 

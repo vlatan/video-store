@@ -7,6 +7,7 @@ import (
 	"factual-docs/internal/r2"
 	"factual-docs/internal/repositories/categories"
 	"factual-docs/internal/repositories/users"
+	"io"
 	"net/http"
 	"regexp"
 	"sync"
@@ -37,8 +38,8 @@ type Service interface {
 	RenderHTML(w http.ResponseWriter, r *http.Request, templateName string, data *models.TemplateData)
 	// Write JSON error to response
 	JSONError(w http.ResponseWriter, r *http.Request, statusCode int)
-	// Write HTML error to response
-	HTMLError(w http.ResponseWriter, r *http.Request, statusCode int, data *models.TemplateData)
+	// ExecuteErrorTemplate executes error.html template
+	ExecuteErrorTemplate(w io.Writer, status int, data *models.TemplateData) error
 }
 
 type service struct {
