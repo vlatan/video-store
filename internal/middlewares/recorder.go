@@ -37,11 +37,12 @@ func (r *responseRecorder) Write(b []byte) (int, error) {
 // flush sends the captured response (or a modified one) to the client.
 func (r *responseRecorder) flush() {
 	r.ResponseWriter.WriteHeader(r.status)
-	if r.body.Len() > 0 {
-		_, err := r.ResponseWriter.Write(r.body.Bytes())
-		if err != nil {
-			// Too late for recovery here, just log the error
-			log.Printf("Error writing response body: %v", err)
-		}
+	if r.body.Len() == 0 {
+		return
+	}
+	_, err := r.ResponseWriter.Write(r.body.Bytes())
+	if err != nil {
+		// Too late for recovery here, just log the error
+		log.Printf("Error writing response body: %v", err)
 	}
 }
