@@ -23,7 +23,6 @@ func (s *Service) SitemapStyleHandler(w http.ResponseWriter, r *http.Request) {
 		template.HTML(`<?xml version="1.0" encoding="UTF-8"?>`),
 	}
 
-	w.Header().Set("Content-Type", "text/xsl; charset=utf-8")
 	s.ui.RenderHTML(w, r, "sitemap.xsl", data)
 }
 
@@ -51,7 +50,6 @@ func (s *Service) SitemapPartHandler(w http.ResponseWriter, r *http.Request) {
 		template.HTML(`<?xml-stylesheet type="text/xsl" href="/sitemap.xsl"?>`),
 	}
 
-	w.Header().Set("Content-Type", "text/xml; charset=utf-8")
 	s.ui.RenderHTML(w, r, "sitemap_items.xml", data)
 }
 
@@ -81,6 +79,5 @@ func (s *Service) SitemapIndexHandler(w http.ResponseWriter, r *http.Request) {
 		template.HTML(`<?xml-stylesheet type="text/xsl" href="/sitemap.xsl"?>`),
 	}
 
-	w.Header().Set("Content-Type", "text/xml; charset=utf-8")
 	s.ui.RenderHTML(w, r, "sitemap_index.xml", data)
 }

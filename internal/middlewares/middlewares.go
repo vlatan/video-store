@@ -192,10 +192,12 @@ func (s *Service) HandleErrors(next http.Handler) http.Handler {
 		// This ensures that either the original response or the error response is written.
 		defer recorder.flush()
 
-		// Call the next handler in the chain
+		// Call the next handler in the chain,
+		// but write the response to the recorder,
+		// not to the actual response writer
 		next.ServeHTTP(recorder, r)
 
-		// We don't care if this is not an error
+		// We don't care if this is NOT an error
 		if recorder.status < http.StatusBadRequest {
 			return
 		}

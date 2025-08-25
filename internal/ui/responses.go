@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"factual-docs/internal/models"
 	"factual-docs/internal/utils"
+	"fmt"
 	"log"
 	"net/http"
+	"path/filepath"
 )
 
 // Write JSON to buffer first and then if succesfull to the response writer
@@ -51,7 +53,18 @@ func (s *service) RenderHTML(w http.ResponseWriter, r *http.Request, templateNam
 		return
 	}
 
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	var contentType string
+	switch filepath.Ext(templateName) {
+	case ".xml":
+		contentType = "text/xml"
+	case ".xsl":
+		contentType = "text/xsl"
+	default:
+		contentType = "text/html"
+	}
+
+	header := fmt.Sprintf("%s; charset=utf-8", contentType)
+	w.Header().Set("Content-Type", header)
 	if _, err := buf.WriteTo(w); err != nil {
 		// Too late for recovery here, just log the error
 		log.Printf(
