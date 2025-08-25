@@ -1,7 +1,6 @@
 package ui
 
 import (
-	"bytes"
 	"encoding/json"
 	"factual-docs/internal/models"
 	"factual-docs/internal/utils"
@@ -50,25 +49,17 @@ func (s *service) HTMLError(w http.ResponseWriter, r *http.Request, statusCode i
 		return
 	}
 
-	// Write template to buffer
-	var buf bytes.Buffer
-	if err := tmpl.ExecuteTemplate(&buf, "error.html", data); err != nil {
-		log.Printf("Failed to execute the HTML template 'error' on URI '%s': %v", r.RequestURI, err)
-		utils.HttpError(w, statusCode)
-		return
-	}
-
 	// Set status code and content type before writing the response
 	w.WriteHeader(statusCode)
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
-	if _, err := buf.WriteTo(w); err != nil {
-		// Too late for recovery here, just log the error
-		log.Printf(
-			"Failed to write the HTML template 'error' to response on URI '%s': %v",
-			r.RequestURI,
-			err,
-		)
+	// Actually the body/template and the status code are written to a recoder, not a real response writer,
+	// because there's a middleware that intercepts the request and passes a recoder to next handler.
+	// Only the rest of the headers are written to the real response writer.
+	if err := tmpl.ExecuteTemplate(w, "error.html", data); err != nil {
+		log.Printf("Failed to execute the HTML template 'error.html' on URI '%s': %v", r.RequestURI, err)
+		utils.HttpError(w, statusCode)
+		return
 	}
 }
 

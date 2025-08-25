@@ -53,9 +53,9 @@ func (s *service) RenderHTML(w http.ResponseWriter, r *http.Request, templateNam
 	header := fmt.Sprintf("%s; charset=utf-8", contentType)
 	w.Header().Set("Content-Type", header)
 
-	// Actually the template is written to a recoder, not a real response writer,
-	// because there's a middleware that passes a recorder to the next handler.
-	// Only the headers are written to the real response writer.
+	// Actually the body/template and the status code are written to a recoder, not a real response writer,
+	// because there's a middleware that intercepts the request and passes a recoder to next handler.
+	// Only the rest of the headers are written to the real response writer.
 	if err := tmpl.ExecuteTemplate(w, templateName, data); err != nil {
 		log.Printf(
 			"Failed to execute the HTML template '%s' on URI '%s': %v",
