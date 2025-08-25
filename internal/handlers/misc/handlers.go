@@ -54,7 +54,7 @@ func (s *Service) RobotsHandler(w http.ResponseWriter, r *http.Request) {
 	content += "User-agent: *\n"
 	content += "Disallow: /auth"
 
-	w.Header().Set("Content-Type", "text/plain")
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	if _, err := w.Write([]byte(content)); err != nil {
 		log.Printf("Failed to write response to '/robots.txt': %v", err)
 	}
@@ -72,7 +72,7 @@ func (s *Service) AdsTextHandler(w http.ResponseWriter, r *http.Request) {
 		s.config.AdSenseAccount,
 	)
 
-	w.Header().Set("Content-Type", "text/plain")
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	if _, err := w.Write([]byte(content)); err != nil {
 		log.Printf("Failed to write response to '/ads.txt': %v", err)
 	}
