@@ -89,7 +89,8 @@ func (rs *redisStore) Save(r *http.Request, w http.ResponseWriter, session *sess
 
 	// If MaxAge is negative, delete the session
 	if session.Options.MaxAge < 0 {
-		return rs.deleteSession(r, w, session)
+		rs.deleteSession(r, w, session)
+		return nil
 	}
 
 	// Encode session data
@@ -155,15 +156,19 @@ func (rs *redisStore) newSession(name string) *sessions.Session {
 func (rs *redisStore) deleteSession(
 	r *http.Request,
 	w http.ResponseWriter,
-	session *sessions.Session) error {
+	session *sessions.Session) {
 
-	// Delete from redis
-	if cookie, err := r.Cookie(session.Name()); err == nil {
-		key := rs.buildKey(session.Name(), cookie.Value)
-		rs.client.Delete(r.Context(), key)
+	// Check if the cookie exists
+	cookie, err := r.Cookie(session.Name())
+	if err != nil {
+		return
 	}
 
-	// Delete cookie
+	// Delete from redis
+	key := rs.buildKey(session.Name(), cookie.Value)
+	rs.client.Delete(r.Context(), key)
+
+	// Delete the cookie
 	http.SetCookie(w, &http.Cookie{
 		Name:     session.Name(),
 		Value:    "",
@@ -172,9 +177,8 @@ func (rs *redisStore) deleteSession(
 		MaxAge:   -1,
 		Secure:   session.Options.Secure,
 		HttpOnly: session.Options.HttpOnly,
+		SameSite: http.SameSiteLaxMode,
 	})
-
-	return nil
 }
 
 // generateSessionID generates a random session ID
