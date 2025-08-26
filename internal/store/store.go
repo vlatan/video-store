@@ -75,8 +75,7 @@ func (rs *redisStore) Get(r *http.Request, name string) (*sessions.Session, erro
 	}
 
 	// Decode session data
-	err = rs.codec.Decode(name, val, &session.Values)
-	if err != nil {
+	if err = rs.codec.Decode(name, val, &session.Values); err != nil {
 		session.IsNew = true
 		return session, fmt.Errorf("could not decode the session from Redis: %w", err)
 	}
