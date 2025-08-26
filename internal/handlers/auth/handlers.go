@@ -11,19 +11,20 @@ import (
 // AuthHandler handles the entry point of the user authentication
 func (s *Service) AuthHandler(w http.ResponseWriter, r *http.Request) {
 
-	// Where we should redirect the user when the login finishes
-	redirectTo := getRedirectPath(r)
-	// Check if the user is already logged in
-	if user := utils.GetUserFromContext(r); user.IsAuthenticated() {
-		http.Redirect(w, r, redirectTo, http.StatusSeeOther)
-		return
-	}
-
 	// Check if the provider exists
 	providerName := r.PathValue("provider")
 	provider, ok := s.providers[providerName]
 	if !ok {
 		http.NotFound(w, r)
+		return
+	}
+
+	// Where we should redirect the user when the login finishes
+	redirectTo := getRedirectPath(r)
+
+	// Check if the user is already logged in
+	if user := utils.GetUserFromContext(r); user.IsAuthenticated() {
+		http.Redirect(w, r, redirectTo, http.StatusSeeOther)
 		return
 	}
 
@@ -34,9 +35,10 @@ func (s *Service) AuthHandler(w http.ResponseWriter, r *http.Request) {
 
 	// URL to OAuth 2.0 provider's consent page
 	var url string
-	if !provider.PKCE {
+	switch provider.PKCE {
+	case false:
 		url = provider.Config.AuthCodeURL(state, oauth2.AccessTypeOffline)
-	} else {
+	default:
 		// Can use PKCE code verifier too, store it in the session
 		verifier := oauth2.GenerateVerifier()
 		session.Values["verifier"] = verifier
@@ -115,16 +117,10 @@ func (s *Service) AuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	// Exchange the code for token
 	var err error
 	var token *oauth2.Token
-	if !provider.PKCE {
+	switch provider.PKCE {
+	case false:
 		token, err = provider.Config.Exchange(r.Context(), code)
-	} else {
-		if sessionVerifier == "" {
-			log.Printf("Invalid PKCE code verifier on provider %s", providerName)
-			s.ui.StoreFlashMessage(w, r, &failedLogin)
-			http.Redirect(w, r, redirectTo, http.StatusSeeOther)
-			return
-		}
-
+	default:
 		token, err = provider.Config.Exchange(
 			r.Context(), code, oauth2.VerifierOption(sessionVerifier),
 		)
