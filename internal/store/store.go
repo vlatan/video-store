@@ -58,7 +58,7 @@ func (rs *redisStore) Get(r *http.Request, name string) (*sessions.Session, erro
 	cookie, err := r.Cookie(name)
 	if err != nil {
 		session.IsNew = true
-		return session, nil // New session
+		return session, nil
 	}
 
 	// Get from Redis
@@ -66,10 +66,11 @@ func (rs *redisStore) Get(r *http.Request, name string) (*sessions.Session, erro
 	val, err := rs.client.Get(r.Context(), key)
 	if err == redis.Nil {
 		session.IsNew = true
-		return session, nil // New session
+		return session, nil
 	}
 
 	if err != nil {
+		session.IsNew = true
 		return session, fmt.Errorf("could not get the session from Redis: %w", err)
 	}
 
@@ -77,7 +78,7 @@ func (rs *redisStore) Get(r *http.Request, name string) (*sessions.Session, erro
 	err = rs.codec.Decode(name, val, &session.Values)
 	if err != nil {
 		session.IsNew = true
-		return session, nil // New session
+		return session, fmt.Errorf("could not decode the session from Redis: %w", err)
 	}
 
 	session.IsNew = false
