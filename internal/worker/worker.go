@@ -253,7 +253,7 @@ func (s *Service) Run(ctx context.Context) error {
 
 		// Attemp update if the video exists in DB
 		if dbVideo, exists := sourcedDbVideosMap[videoID]; exists {
-			if s.UpdateData(ctx, dbVideo, categories) {
+			if s.UpdateGeneratedData(ctx, dbVideo, categories) {
 				updated++
 			}
 			continue
@@ -326,13 +326,23 @@ func (s *Service) Run(ctx context.Context) error {
 			continue
 		}
 
-		// Set playlist ID if any (to unorphane the video)
+		// Orpahn video already is found in the YT videos with a source.
+		// Update its playlist (unorphan it).
 		if _, exists := ytSourcedVideosMap[videoID]; exists {
-			video.PlaylistID = ytSourcedVideosMap[videoID].PlaylistID
+			playlistID := ytSourcedVideosMap[videoID].PlaylistID
+			rowsAffected, err := s.postsRepo.UpdatePlaylist(ctx, videoID, playlistID)
+			if err != nil || rowsAffected == 0 {
+				log.Printf(
+					"Failed to update the playlist on video '%s'. Rows affected: %d, Error: %v",
+					videoID, rowsAffected, err,
+				)
+			} else {
+				updated++
+			}
 		}
 
 		// Attempt video update
-		if s.UpdateData(ctx, video, categories) {
+		if s.UpdateGeneratedData(ctx, video, categories) {
 			updated++
 		}
 	}

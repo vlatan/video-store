@@ -7,7 +7,7 @@ import (
 )
 
 // Update generated gemini data on a video
-func (s *Service) UpdateData(
+func (s *Service) UpdateGeneratedData(
 	ctx context.Context,
 	video *models.Post,
 	categories []models.Category,
@@ -50,7 +50,10 @@ func (s *Service) UpdateData(
 	// Update the db video
 	rowsAffected, err := s.postsRepo.UpdateGeneratedData(ctx, video)
 	if err != nil || rowsAffected == 0 {
-		log.Printf("Failed to update video '%s': %v", video.VideoID, err)
+		log.Printf(
+			"Failed to update generated data on video '%s'. Rows affected: %d, Error: %v",
+			video.VideoID, rowsAffected, err,
+		)
 		return false
 	}
 
