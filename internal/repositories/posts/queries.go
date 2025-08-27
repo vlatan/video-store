@@ -231,6 +231,14 @@ const updateDescQuery = `
 	WHERE video_id = $1
 `
 
+const updatePlaylistQuery = `
+	UPDATE post
+	SET 
+		playlist_id = $2,
+		playlist_db_id = (SELECT id FROM playlist WHERE playlist_id = $2)
+	WHERE video_id = $1
+`
+
 const updateGeneretedDataQuery = `
 	UPDATE post
 	SET

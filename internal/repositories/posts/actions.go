@@ -43,6 +43,11 @@ func (r *Repository) UpdateDesc(ctx context.Context, videoID, description string
 	return r.db.Exec(ctx, updateDescQuery, videoID, description)
 }
 
+// Update a playlist
+func (r *Repository) UpdatePlaylist(ctx context.Context, videoID, playlistID string) (int64, error) {
+	return r.db.Exec(ctx, updatePlaylistQuery, videoID, playlistID)
+}
+
 // Update post description
 func (r *Repository) UpdateGeneratedData(ctx context.Context, post *models.Post) (int64, error) {
 	return r.db.Exec(ctx, updateGeneretedDataQuery, post.VideoID, post.Category.Name, post.ShortDesc)
