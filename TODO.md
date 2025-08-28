@@ -1,3 +1,4 @@
+* Try cursor pagination for the infinite scroll
 * Check the memory leaks
 * Check for nil dereference in templates
 * Add slug input to page
