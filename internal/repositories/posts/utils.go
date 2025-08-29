@@ -2,10 +2,13 @@ package posts
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"factual-docs/internal/models"
 	"factual-docs/internal/utils"
 	"fmt"
+	"strings"
 )
 
 // Query the DB for posts based on variadic arguments
@@ -96,4 +99,14 @@ func (r *Repository) GetRelatedPosts(ctx context.Context, title string) (posts [
 	}
 
 	return posts, err
+}
+
+// decodeCursor decodes base64 string, splits the string on comma
+// and returns a slice of strings
+func decodeCursor(cursor string) ([]string, error) {
+	decodedCursor, err := base64.StdEncoding.DecodeString(cursor)
+	if err != nil {
+		return nil, errors.New("invalid cursor format")
+	}
+	return strings.Split(string(decodedCursor), ","), nil
 }

@@ -201,13 +201,13 @@ func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (
 	order := "upload_date DESC, post.id DESC"
 	var where string
 
-	// Decode and split the cursor
+	// Compose custom SQL parts
 	if cursor != "" {
-		decodedCursor, err := base64.StdEncoding.DecodeString(cursor)
+
+		cursorParts, err := decodeCursor(cursor)
 		if err != nil {
-			return nil, errors.New("invalid cursor format")
+			return nil, err
 		}
-		cursorParts := strings.Split(string(decodedCursor), ",")
 
 		switch orderBy {
 		case "likes":
@@ -315,13 +315,13 @@ func (r *Repository) GetCategoryPosts(
 	order := "post.upload_date DESC, post.id DESC"
 	var and string
 
-	// Decode and split the cursor
+	// Compose custom SQL parts
 	if cursor != "" {
-		decodedCursor, err := base64.StdEncoding.DecodeString(cursor)
+
+		cursorParts, err := decodeCursor(cursor)
 		if err != nil {
-			return nil, errors.New("invalid cursor format")
+			return nil, err
 		}
-		cursorParts := strings.Split(string(decodedCursor), ",")
 
 		switch orderBy {
 		case "likes":
