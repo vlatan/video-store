@@ -64,6 +64,7 @@ const loadItems = (url, cursor) => {
         })
 
     } catch (error) {
+        state.hasMore = false;
         sentinel.innerHTML = "Something went wrong";
         console.error("Failed to fetch items:", error);
     } finally {
@@ -75,7 +76,7 @@ if ('IntersectionObserver' in window) {
     // Create a new IntersectionObserver instance
     let intersectionObserver = new IntersectionObserver(([entry]) => {
         // If there is next page and the entry is intersecting
-        if (entry.isIntersecting) {
+        if (state.hasMore && entry.isIntersecting) {
 
             // Call the loadItems function
             loadItems(`${window.location.href}`, state.nextCursor);
