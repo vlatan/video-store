@@ -191,16 +191,12 @@ func (r *Repository) GetAllPosts(ctx context.Context) (posts []models.Post, err 
 }
 
 // Get a limited number of posts with offset
-func (r *Repository) GetHomePosts(
-	ctx context.Context,
-	cursor string,
-	orderBy string,
-) (*models.Posts, error) {
+func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (*models.Posts, error) {
 
 	var posts models.Posts
 
 	// Construct the WHERE and ORDER BY sql parts as well as the arguments
-	// The limit is always the first $1 argument
+	// The limit is always the first argument ($1)
 	args := []any{r.config.PostsPerPage}
 	order := "upload_date DESC, post.id DESC"
 	var where string
@@ -309,10 +305,73 @@ func (r *Repository) GetHomePosts(
 func (r *Repository) GetCategoryPosts(
 	ctx context.Context,
 	categorySlug,
+	cursor,
 	orderBy string,
-	page int,
 ) (*models.Posts, error) {
-	return r.queryTaxonomyPosts(ctx, getCategoryPostsQuery, categorySlug, orderBy, page)
+
+	// Construct the AND and ORDER BY sql parts as well as the arguments
+	// The category slug and limit are always the first two arguments ($1 and $2)
+	args := []any{categorySlug, r.config.PostsPerPage}
+	order := "post.upload_date DESC, post.id DESC"
+	var and string
+
+	// Decode and split the cursor
+	if cursor != "" {
+		decodedCursor, err := base64.StdEncoding.DecodeString(cursor)
+		if err != nil {
+			return nil, errors.New("invalid cursor format")
+		}
+		cursorParts := strings.Split(string(decodedCursor), ",")
+
+		switch orderBy {
+		case "likes":
+			if len(cursorParts) != 3 {
+				return nil, errors.New("invalid cursor components")
+			}
+			args = append(args, cursorParts[0], cursorParts[1], cursorParts[2])
+			and = "AND (likes, post.upload_date, post.id) < ($3, $4, $5)"
+			order = "likes DESC, post.upload_date DESC, post.id DESC"
+		default:
+			if len(cursorParts) != 2 {
+				return nil, fmt.Errorf("invalid cursor components")
+			}
+			args = append(args, cursorParts[0], cursorParts[1])
+			and = "AND (post.upload_date, post.id) < ($3, $4)"
+		}
+	}
+
+	query := fmt.Sprintf(getCategoryPostsQuery, and, order)
+	posts, err := r.queryTaxonomyPosts(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	// This the last page, the result is less than the limit
+	if len(posts.Items) < r.config.PostsPerPage {
+		return posts, err
+	}
+
+	// Determine the next cursor
+	lastPost := posts.Items[len(posts.Items)-1]
+	switch orderBy {
+	case "likes":
+		cursorStr := fmt.Sprintf(
+			"%d,%s,%d",
+			lastPost.Likes,
+			lastPost.UploadDate.Format(time.RFC3339Nano),
+			lastPost.ID,
+		)
+		posts.NextCursor = base64.StdEncoding.EncodeToString([]byte(cursorStr))
+	default:
+		cursorStr := fmt.Sprintf(
+			"%s,%d",
+			lastPost.UploadDate.Format(time.RFC3339Nano),
+			lastPost.ID,
+		)
+		posts.NextCursor = base64.StdEncoding.EncodeToString([]byte(cursorStr))
+	}
+
+	return posts, err
 }
 
 // Get a limited number of posts from one category with offset

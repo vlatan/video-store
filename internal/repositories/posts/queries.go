@@ -81,18 +81,21 @@ const getHomePostsQuery = `
 
 const getCategoryPostsQuery = `
 	SELECT 
-		c.name AS category_title, 
+		c.name AS category_title,
+		post.id,
 		post.video_id, 
 		post.title, 
 		post.thumbnails,
-		COUNT(pl.id) AS likes
+		COUNT(pl.id) AS likes,
+		post.upload_date
 	FROM post
 	JOIN category AS c ON c.id = post.category_id 
 	LEFT JOIN post_like AS pl ON pl.post_id = post.id
 	WHERE c.slug = $1
+	%s -- the AND clause
 	GROUP BY c.id, post.id
 	ORDER BY %s
-	LIMIT $2 OFFSET $3
+	LIMIT $2
 `
 
 const getSourcePostsQuery = `

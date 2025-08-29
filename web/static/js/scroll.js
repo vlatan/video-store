@@ -11,7 +11,7 @@ let state = {
 };
 
 // Function to request new items and render to the dom
-const loadItems = (url, cursor) => {
+const loadItems = async (url, cursor) => {
 
     // Prevent multiple simultaneous fetches
     if (state.isLoading || !state.hasMore) {
@@ -22,51 +22,49 @@ const loadItems = (url, cursor) => {
     spinner.setAttribute("id", "spinner");
 
     try {
-        getData(url, cursor).then(response => {
 
-            // If bad response exit the function
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+        const response = await getData(url, cursor);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        state.nextCursor = data.next_cursor || null;
+        state.hasMore = !!data.next_cursor;
+
+
+        // Iterate over the items in the response
+        for (const item of data.items) {
+
+            // Clone the HTML template
+            const template_clone = template.content.cloneNode(true);
+
+            // Query & update the template content
+            template_clone.querySelector('.video-link').href = `/video/${item.video_id}/`;
+            const thumb = template_clone.querySelector('.video-img');
+            thumb.src = item.thumbnail.url;
+            thumb.alt = item.title;
+            thumb.srcset = item.srcset;
+            template_clone.querySelector('.video-title').innerHTML = item.title;
+            const remove = template_clone.querySelector('.remove-option');
+            if (remove) {
+                remove.setAttribute('data-id', `${item.id}`)
             }
 
-            // Unserialize the data
-            response.json().then(data => {
+            // Append template to dom
+            scroller.appendChild(template_clone);
+        }
 
-                state.nextCursor = data.next_cursor || null;
-                state.hasMore = !!data.next_cursor;
-
-                // Iterate over the items in the response
-                for (const item of data.items) {
-
-                    // Clone the HTML template
-                    const template_clone = template.content.cloneNode(true);
-
-                    // Query & update the template content
-                    template_clone.querySelector('.video-link').href = `/video/${item.video_id}/`;
-                    const thumb = template_clone.querySelector('.video-img');
-                    thumb.src = item.thumbnail.url;
-                    thumb.alt = item.title;
-                    thumb.srcset = item.srcset;
-                    template_clone.querySelector('.video-title').innerHTML = item.title;
-                    const remove = template_clone.querySelector('.remove-option');
-                    if (remove) {
-                        remove.setAttribute('data-id', `${item.id}`)
-                    }
-
-                    // Append template to dom
-                    scroller.appendChild(template_clone);
-                }
-            })
-
-            if (!state.hasMore) {
-                sentinel.innerHTML = "No more videos";
-            }
-        })
+        if (!state.hasMore) {
+            sentinel.innerHTML = "No more videos";
+        }
 
     } catch (error) {
         state.hasMore = false;
         sentinel.innerHTML = "Something went wrong";
         console.error("Failed to fetch items:", error);
+
     } finally {
         state.isLoading = false;
     }
