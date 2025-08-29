@@ -267,7 +267,15 @@
 	<a href="?v=ymarncqvsthoprvenygihg" rel="nofollow" class="hide visuallyhidden" aria-hidden="true">Ad</a>
 
 	{{ block "scripts" . }}
+
+	{{ with .Posts }}
+	<script>
+		let initialCursor = "{{ .NextCursor }}";
+	</script>
+	{{ end }}
+
 	<script defer src='{{ .AddVersion "/static/js/shared.js" }}'></script>
+
 	{{ end }}
 
 	{{ block "extra_scripts" . }}{{ end }}

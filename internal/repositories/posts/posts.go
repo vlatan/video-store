@@ -2,7 +2,9 @@ package posts
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"factual-docs/internal/config"
 	"factual-docs/internal/drivers/database"
 	"factual-docs/internal/models"
@@ -191,22 +193,47 @@ func (r *Repository) GetAllPosts(ctx context.Context) (posts []models.Post, err 
 // Get a limited number of posts with offset
 func (r *Repository) GetHomePosts(
 	ctx context.Context,
-	page int,
+	cursor string,
 	orderBy string,
-) (posts []models.Post, err error) {
+) (*models.Posts, error) {
 
-	limit := r.config.PostsPerPage
-	offset := (page - 1) * limit
+	var posts models.Posts
 
-	order := "upload_date DESC"
-	if orderBy == "likes" {
-		order = "likes DESC, " + order
+	// Construct the WHERE and ORDER BY sql parts as well as the arguments
+	// The limit is always the first $1 argument
+	args := []any{r.config.PostsPerPage}
+	order := "upload_date DESC, post.id DESC"
+	var where string
+
+	// Decode and split the cursor
+	if cursor != "" {
+		decodedCursor, err := base64.StdEncoding.DecodeString(cursor)
+		if err != nil {
+			return nil, errors.New("invalid cursor format")
+		}
+		cursorParts := strings.Split(string(decodedCursor), ",")
+
+		switch orderBy {
+		case "likes":
+			if len(cursorParts) != 3 {
+				return nil, errors.New("invalid cursor components")
+			}
+			args = append(args, cursorParts[0], cursorParts[1], cursorParts[2])
+			where = "WHERE (likes, upload_date, post.id) < ($2, $3, $4)"
+			order = "likes DESC, upload_date DESC, post.id DESC"
+		default:
+			if len(cursorParts) != 2 {
+				return nil, fmt.Errorf("invalid cursor components")
+			}
+			args = append(args, cursorParts[0], cursorParts[1])
+			where = "WHERE (upload_date, post.id) < ($2, $3)"
+		}
 	}
 
-	query := fmt.Sprintf(getHomePostsQuery, order)
+	query := fmt.Sprintf(getHomePostsQuery, where, order)
 
 	// Get rows from DB
-	rows, err := r.db.Query(ctx, query, limit, offset)
+	rows, err := r.db.Query(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -221,10 +248,12 @@ func (r *Repository) GetHomePosts(
 
 		// Paste post from row to struct, thumbnails in a separate var
 		if err = rows.Scan(
+			&post.ID,
 			&post.VideoID,
 			&post.Title,
 			&thumbnails,
 			&post.Likes,
+			&post.UploadDate,
 		); err != nil {
 			return nil, err
 		}
@@ -232,7 +261,7 @@ func (r *Repository) GetHomePosts(
 		// Unserialize thumbnails
 		var thumbs models.Thumbnails
 		if err = json.Unmarshal(thumbnails, &thumbs); err != nil {
-			return posts, fmt.Errorf("video ID '%s': %w", post.VideoID, err)
+			return nil, fmt.Errorf("video ID '%s': %w", post.VideoID, err)
 		}
 
 		// Craft srcset string
@@ -240,7 +269,7 @@ func (r *Repository) GetHomePosts(
 		post.Thumbnail = thumbs.Medium
 
 		// Include the processed post in the result
-		posts = append(posts, post)
+		posts.Items = append(posts.Items, post)
 	}
 
 	// If error during iteration
@@ -248,7 +277,32 @@ func (r *Repository) GetHomePosts(
 		return nil, err
 	}
 
-	return posts, err
+	// This the last page, the result is less than the limit
+	if len(posts.Items) < r.config.PostsPerPage {
+		return &posts, err
+	}
+
+	// Determine the next cursor
+	lastPost := posts.Items[len(posts.Items)-1]
+	switch orderBy {
+	case "likes":
+		cursorStr := fmt.Sprintf(
+			"%d,%s,%d",
+			lastPost.Likes,
+			lastPost.UploadDate.Format(time.RFC3339Nano),
+			lastPost.ID,
+		)
+		posts.NextCursor = base64.StdEncoding.EncodeToString([]byte(cursorStr))
+	default:
+		cursorStr := fmt.Sprintf(
+			"%s,%d",
+			lastPost.UploadDate.Format(time.RFC3339Nano),
+			lastPost.ID,
+		)
+		posts.NextCursor = base64.StdEncoding.EncodeToString([]byte(cursorStr))
+	}
+
+	return &posts, err
 }
 
 // Get a limited number of posts from one category with offset
@@ -318,11 +372,7 @@ func (r *Repository) GetRandomPosts(ctx context.Context, title string, limit int
 }
 
 // Get user's favorited posts
-func (r *Repository) GetUserFavedPosts(
-	ctx context.Context,
-	userID,
-	page int,
-) (*models.Posts, error) {
+func (r *Repository) GetUserFavedPosts(ctx context.Context, userID, page int) (*models.Posts, error) {
 
 	var posts models.Posts
 

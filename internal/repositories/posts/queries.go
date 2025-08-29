@@ -54,15 +54,18 @@ const getSinglePostQuery = `
 
 const getHomePostsQuery = `
 	SELECT
+		post.id,
 		video_id, 
 		title, 
 		thumbnails,
-		COUNT(pl.id) AS likes
+		COUNT(pl.id) AS likes,
+		upload_date
 	FROM post
 	LEFT JOIN post_like AS pl ON pl.post_id = post.id
+	%s -- the WHERE clause
 	GROUP BY post.id
 	ORDER BY %s
-	LIMIT $1 OFFSET $2
+	LIMIT $1
 `
 
 const getAllPostsQuery = `

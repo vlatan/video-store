@@ -56,10 +56,11 @@ type Post struct {
 }
 
 type Posts struct {
-	Title    string
-	Items    []Post
-	TotalNum int
-	TimeTook string
+	Title      string `json:"title,omitempty"`
+	Items      []Post `json:"items"`
+	NextCursor string `json:"next_cursor"`
+	TotalNum   int    `json:"total_num,omitempty"`
+	TimeTook   string `json:"time_took,omitempty"`
 }
 
 // Create a srcset string from a struct of thumbnails
