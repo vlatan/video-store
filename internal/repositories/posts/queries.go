@@ -52,6 +52,17 @@ const getSinglePostQuery = `
 	GROUP BY post.id, category.id
 `
 
+const getAllPostsQuery = `
+	SELECT
+		video_id,
+		playlist_id,
+		title, 
+		short_description,
+		cat.name AS category_name
+	FROM post
+	LEFT JOIN category AS cat ON cat.id = post.category_id
+`
+
 const getHomePostsQuery = `
 	SELECT
 		post.id,
@@ -66,17 +77,6 @@ const getHomePostsQuery = `
 	GROUP BY post.id
 	ORDER BY %s
 	LIMIT $1
-`
-
-const getAllPostsQuery = `
-	SELECT
-		video_id,
-		playlist_id,
-		title, 
-		short_description,
-		cat.name AS category_name
-	FROM post
-	LEFT JOIN category AS cat ON cat.id = post.category_id
 `
 
 const getCategoryPostsQuery = `
