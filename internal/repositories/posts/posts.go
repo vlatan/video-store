@@ -197,7 +197,8 @@ func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (
 
 	// Construct the WHERE and ORDER BY sql parts as well as the arguments
 	// The limit is always the first argument ($1)
-	args := []any{r.config.PostsPerPage}
+	// Peek for one post beoynd the limit
+	args := []any{r.config.PostsPerPage + 1}
 	order := "upload_date DESC, post.id DESC"
 	var where string
 
@@ -273,10 +274,13 @@ func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (
 		return nil, err
 	}
 
-	// This the last page, the result is less than the limit
-	if len(posts.Items) < r.config.PostsPerPage {
+	// This is the last page
+	if len(posts.Items) <= r.config.PostsPerPage {
 		return &posts, err
 	}
+
+	// Exclude the last post
+	posts.Items = posts.Items[:len(posts.Items)-1]
 
 	// Determine the next cursor
 	lastPost := posts.Items[len(posts.Items)-1]
@@ -311,7 +315,8 @@ func (r *Repository) GetCategoryPosts(
 
 	// Construct the AND and ORDER BY sql parts as well as the arguments
 	// The category slug and limit are always the first two arguments ($1 and $2)
-	args := []any{categorySlug, r.config.PostsPerPage}
+	// Peek for one post beoynd the limit
+	args := []any{categorySlug, r.config.PostsPerPage + 1}
 	order := "post.upload_date DESC, post.id DESC"
 	var and string
 
@@ -346,10 +351,13 @@ func (r *Repository) GetCategoryPosts(
 		return nil, err
 	}
 
-	// This the last page, the result is less than the limit
-	if len(posts.Items) < r.config.PostsPerPage {
+	// This is the last page
+	if len(posts.Items) <= r.config.PostsPerPage {
 		return posts, err
 	}
+
+	// Exclude the last post
+	posts.Items = posts.Items[:len(posts.Items)-1]
 
 	// Determine the next cursor
 	lastPost := posts.Items[len(posts.Items)-1]
