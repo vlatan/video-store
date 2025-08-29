@@ -190,7 +190,7 @@ func (r *Repository) GetAllPosts(ctx context.Context) (posts []models.Post, err 
 	return posts, err
 }
 
-// Get a limited number of posts with offset
+// Get a limited number of posts with cursor
 func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (*models.Posts, error) {
 
 	var posts models.Posts
@@ -305,7 +305,7 @@ func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (
 	return &posts, err
 }
 
-// Get a limited number of posts from one category with offset
+// Get a limited number of posts from one category with cursor
 func (r *Repository) GetCategoryPosts(
 	ctx context.Context,
 	categorySlug,
@@ -382,7 +382,7 @@ func (r *Repository) GetCategoryPosts(
 	return posts, err
 }
 
-// Get a limited number of posts from one category with offset
+// Get a limited number of posts from one category with cursor
 func (r *Repository) GetSourcePosts(
 	ctx context.Context,
 	playlistID,
