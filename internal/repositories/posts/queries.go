@@ -102,11 +102,13 @@ const getCategoryPostsQuery = `
 
 const getSourcePostsQuery = `
 	SELECT 
-		p.title AS playlist_title, 
+		p.title AS playlist_title,
+		post.id,
 		post.video_id, 
 		post.title, 
 		post.thumbnails,
-		COUNT(pl.id) AS likes
+		COUNT(pl.id) AS likes,
+		post.upload_date
 	FROM post
 	LEFT JOIN playlist AS p ON post.playlist_db_id = p.id
 	LEFT JOIN post_like AS pl ON pl.post_id = post.id
@@ -116,9 +118,11 @@ const getSourcePostsQuery = `
 			THEN (p.playlist_id IS NULL OR p.playlist_id = '')
     		ELSE p.playlist_id = $1
   		END
+	%s -- the AND clause
 	GROUP BY p.id, post.id
+	%s -- the HAVING clause
 	ORDER BY %s
-	LIMIT $2 OFFSET $3
+	LIMIT $2
 `
 
 const searchPostsQuery = `

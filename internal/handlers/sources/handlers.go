@@ -145,21 +145,20 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 // Handle posts in a certain source
 func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
 
-	// Get category slug from URL
 	sourceID := r.PathValue("source")
+	cursor := r.URL.Query().Get("cursor")
+	orderBy := r.URL.Query().Get("order_by")
 
-	// Generate template data (it gets all the categories too)
-	// This is probably wasteful for non-existing category
+	// Generate template data
 	data := utils.GetDataFromContext(r)
 
-	// Get page number from a query param
-	page := utils.GetPageNum(r)
-	redisKey := fmt.Sprintf("source:%s:posts:page:%d", sourceID, page)
-
-	// Get the order_by query param if any
-	orderBy := r.URL.Query().Get("order_by")
+	// Construct the Redis key
+	redisKey := fmt.Sprintf("source:%s:posts", sourceID)
 	if orderBy == "likes" {
 		redisKey += ":likes"
+	}
+	if cursor != "" {
+		redisKey += fmt.Sprintf(":cursor:%s", cursor)
 	}
 
 	posts, err := redis.GetItems(
@@ -169,7 +168,7 @@ func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
 		redisKey,
 		s.config.CacheTimeout,
 		func() (*models.Posts, error) {
-			return s.postsRepo.GetSourcePosts(r.Context(), sourceID, orderBy, page)
+			return s.postsRepo.GetSourcePosts(r.Context(), sourceID, cursor, orderBy)
 		},
 	)
 
@@ -179,15 +178,10 @@ func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(posts.Items) == 0 {
-		http.NotFound(w, r)
-		return
-	}
-
-	// If not the first page return JSON
-	if page > 1 {
+	// If there's a cursor this is not the first page, return JSON
+	if cursor != "" {
 		time.Sleep(time.Millisecond * 400)
-		s.ui.WriteJSON(w, r, posts.Items)
+		s.ui.WriteJSON(w, r, posts)
 		return
 	}
 
