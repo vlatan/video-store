@@ -10,6 +10,7 @@ import (
 	"factual-docs/internal/models"
 	"factual-docs/internal/utils"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -457,6 +458,8 @@ func (r *Repository) SearchPosts(
 
 	// Build args and SQL parts
 	if cursor != "" {
+
+		// SQL parts
 		total = "0"
 		where = "WHERE (score, likes, upload_date, id) < ($3, $4, $5, $6)"
 
@@ -469,7 +472,12 @@ func (r *Repository) SearchPosts(
 			return nil, errors.New("invalid cursor components")
 		}
 
-		args = append(args, cursorParts[0], cursorParts[1], cursorParts[2], cursorParts[3])
+		score, err := strconv.ParseFloat(cursorParts[0], 64)
+		if err != nil {
+			return nil, err
+		}
+
+		args = append(args, score, cursorParts[1], cursorParts[2], cursorParts[3])
 	}
 
 	query := fmt.Sprintf(searchPostsQuery, total, where)
@@ -536,8 +544,8 @@ func (r *Repository) SearchPosts(
 	// Determine the next cursor
 	lastPost := posts.Items[len(posts.Items)-1]
 	uploadDate := lastPost.UploadDate.Format(time.RFC3339Nano)
-	cursorStr := fmt.Sprintf("%s,%d,%s,%d", lastPost.Score, lastPost.Likes, uploadDate, lastPost.ID)
-
+	// Preserve the full precision of the score float, %.17g
+	cursorStr := fmt.Sprintf("%.17g,%d,%s,%d", lastPost.Score, lastPost.Likes, uploadDate, lastPost.ID)
 	posts.NextCursor = base64.StdEncoding.EncodeToString([]byte(cursorStr))
 
 	return &posts, nil
