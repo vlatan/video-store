@@ -120,29 +120,30 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get the page number from the request query param
-	page := utils.GetPageNum(r)
+	// Get the cursor if any
+	cursor := r.URL.Query().Get("cursor")
 
 	// Generate the default data
 	data := utils.GetDataFromContext(r)
 	data.SearchQuery = searchQuery
 
-	limit := s.config.PostsPerPage
-	offset := (page - 1) * limit
-
 	start := time.Now()
 	encodedSearchQuery := utils.EscapeTrancateString(searchQuery, 100)
 
-	// For search posts we are using the database.Posts struct,
-	// so we can add total results and time took
+	// Construct the Redis key
+	redisKey := fmt.Sprintf("posts:search:%s", encodedSearchQuery)
+	if cursor != "" {
+		redisKey += fmt.Sprintf(":cursor:%s", cursor)
+	}
+
 	posts, err := redis.GetItems(
 		!data.IsCurrentUserAdmin(),
 		r.Context(),
 		s.rdb,
-		fmt.Sprintf("posts:search:page:%d:%s", page, encodedSearchQuery),
+		redisKey,
 		s.config.CacheTimeout,
 		func() (*models.Posts, error) {
-			return s.postsRepo.SearchPosts(r.Context(), searchQuery, limit, offset)
+			return s.postsRepo.SearchPosts(r.Context(), searchQuery, s.config.PostsPerPage, cursor)
 		},
 	)
 
@@ -154,10 +155,10 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// If not the first page return JSON
-	if page > 1 {
+	// If there's a cursor this is not the first page, return JSON
+	if cursor != "" {
 		time.Sleep(time.Millisecond * 400)
-		s.ui.WriteJSON(w, r, posts.Items)
+		s.ui.WriteJSON(w, r, posts)
 		return
 	}
 

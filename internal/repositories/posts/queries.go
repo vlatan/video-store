@@ -134,26 +134,22 @@ const searchPostsQuery = `
 		FROM plainto_tsquery('english', $1) AS lexeme
 	)
 	SELECT
+		p.id,
 		p.video_id,
 		p.title,
 		p.thumbnails,
 		COUNT(pl.id) AS likes,
-		CASE 
-			WHEN $3 = 0 THEN COUNT(*) OVER()
-			ELSE 0
-		END AS total_results
+		%s -- the total_results clause
+		p.upload_date,
+		%s AS score -- the scoring formula
 	FROM post AS p
 	CROSS JOIN search_terms AS st
 	LEFT JOIN post_like AS pl ON pl.post_id = p.id
 	WHERE p.search_vector @@ st.and_query OR p.search_vector @@ st.or_query
 	GROUP BY p.id, st.and_query, st.or_query, st.raw_query
-	ORDER BY 
-		(ts_rank(p.search_vector, st.and_query, 32) * 2) + 
-		ts_rank(p.search_vector, st.or_query, 32) +
-		(similarity(p.title, st.raw_query) * 0.5) DESC,
-		likes DESC,
-		p.upload_date DESC
-	LIMIT $2 OFFSET $3
+	%s -- the HAVING clause
+	ORDER BY score DESC, likes DESC, p.upload_date DESC, p.id DESC
+	LIMIT $2
 `
 
 const getUserFavedPostsQuery = `

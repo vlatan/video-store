@@ -193,8 +193,6 @@ func (r *Repository) GetAllPosts(ctx context.Context) (posts []models.Post, err 
 // Get a limited number of posts with cursor
 func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (*models.Posts, error) {
 
-	var posts models.Posts
-
 	// Construct the SQL parts as well as the arguments
 	// The limit is the first argument ($1)
 	// Peek for one post beoynd the limit
@@ -241,6 +239,7 @@ func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (
 	defer rows.Close()
 
 	// Iterate over the rows
+	var posts models.Posts
 	for rows.Next() {
 		var post models.Post
 		var thumbnails []byte
@@ -439,7 +438,120 @@ func (r *Repository) GetSourcePosts(
 	posts.NextCursor = base64.StdEncoding.EncodeToString([]byte(cursorStr))
 
 	return posts, err
+}
 
+// Get posts based on a user search query
+// Transform the user query into two queries with words separated by '&' and '|'
+func (r *Repository) SearchPosts(
+	ctx context.Context,
+	searchTerm string,
+	limit int,
+	cursor string) (*models.Posts, error) {
+
+	// Construct the SQL parts as well as the arguments
+	// The search term and limit are the first two arguments ($1 and $2)
+	// Peek for one post beoynd the limit
+	var having string
+	total := "COUNT(*) OVER() AS total_results,"
+
+	const scoringFormula = `
+		ROUND(((ts_rank(p.search_vector, st.and_query, 32) * 2) + 
+		ts_rank(p.search_vector, st.or_query, 32) +
+		(similarity(p.title, st.raw_query) * 0.5))::numeric, 4)
+	`
+
+	args := []any{searchTerm, limit + 1}
+
+	// Build args and SQL parts
+	if cursor != "" {
+
+		cursorParts, err := decodeCursor(cursor)
+		if err != nil {
+			return nil, err
+		}
+
+		if len(cursorParts) != 4 {
+			return nil, errors.New("invalid cursor components")
+		}
+
+		args = append(args, cursorParts[0], cursorParts[1], cursorParts[2], cursorParts[3])
+
+		total = "0 AS total_results,"
+		having = fmt.Sprintf(
+			"HAVING (%s, COUNT(pl.id), p.upload_date, p.id) < ($3, $4, $5, $6)",
+			scoringFormula,
+		)
+	}
+
+	query := fmt.Sprintf(searchPostsQuery, total, scoringFormula, having)
+
+	// Get rows from DB
+	rows, err := r.db.Query(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	// Close rows on exit
+	defer rows.Close()
+
+	// Iterate over the rows
+	var posts models.Posts
+	for rows.Next() {
+		var post models.Post
+		var thumbnails []byte
+		var totalNum int
+
+		// Paste post from row to struct, thumbnails in a separate var
+		if err = rows.Scan(
+			&post.ID,
+			&post.VideoID,
+			&post.Title,
+			&thumbnails,
+			&post.Likes,
+			&totalNum,
+			&post.UploadDate,
+			&post.Score,
+		); err != nil {
+			return nil, err
+		}
+
+		// Unserialize thumbnails
+		var thumbs models.Thumbnails
+		if err = json.Unmarshal(thumbnails, &thumbs); err != nil {
+			return nil, fmt.Errorf("video ID '%s': %w", post.VideoID, err)
+		}
+
+		post.Srcset = thumbs.Srcset(480)
+		post.Thumbnail = thumbs.Medium
+
+		// Include the processed post in the result
+		posts.Items = append(posts.Items, post)
+		if totalNum != 0 {
+			posts.TotalNum = totalNum
+		}
+	}
+
+	// If error during iteration
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	// This is the last page
+	if len(posts.Items) <= limit {
+		return &posts, err
+	}
+
+	// Exclude the last post
+	posts.Items = posts.Items[:len(posts.Items)-1]
+
+	// Determine the next cursor
+	lastPost := posts.Items[len(posts.Items)-1]
+	uploadDate := lastPost.UploadDate.Format(time.RFC3339Nano)
+	cursorStr := fmt.Sprintf("%f,%d,%s,%d", lastPost.Score, lastPost.Likes, uploadDate, lastPost.ID)
+
+	posts.NextCursor = base64.StdEncoding.EncodeToString([]byte(cursorStr))
+
+	return &posts, nil
 }
 
 // Get user's favorited posts
@@ -524,56 +636,6 @@ func (r *Repository) GetUserFavedPosts(ctx context.Context, userID, page int) (*
 		}
 
 		// Craft srcset string
-		post.Srcset = thumbs.Srcset(480)
-		post.Thumbnail = thumbs.Medium
-
-		// Include the processed post in the result
-		posts.Items = append(posts.Items, post)
-		if totalNum != 0 {
-			posts.TotalNum = totalNum
-		}
-	}
-
-	// If error during iteration
-	if err = rows.Err(); err != nil {
-		return nil, err
-	}
-
-	return &posts, nil
-}
-
-// Get posts based on a user search query
-// Transform the user query into two queries with words separated by '&' and '|'
-func (r *Repository) SearchPosts(ctx context.Context, searchTerm string, limit, offset int) (*models.Posts, error) {
-
-	var posts models.Posts
-
-	// Get rows from DB
-	rows, err := r.db.Query(ctx, searchPostsQuery, searchTerm, limit, offset)
-	if err != nil {
-		return nil, err
-	}
-
-	// Close rows on exit
-	defer rows.Close()
-
-	// Iterate over the rows
-	for rows.Next() {
-		var post models.Post
-		var thumbnails []byte
-		var totalNum int
-
-		// Paste post from row to struct, thumbnails in a separate var
-		if err = rows.Scan(&post.VideoID, &post.Title, &thumbnails, &post.Likes, &totalNum); err != nil {
-			return nil, err
-		}
-
-		// Unserialize thumbnails
-		var thumbs models.Thumbnails
-		if err = json.Unmarshal(thumbnails, &thumbs); err != nil {
-			return nil, fmt.Errorf("video ID '%s': %w", post.VideoID, err)
-		}
-
 		post.Srcset = thumbs.Srcset(480)
 		post.Thumbnail = thumbs.Medium
 

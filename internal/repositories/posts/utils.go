@@ -75,7 +75,7 @@ func (r *Repository) queryTaxonomyPosts(
 // Get post's related posts based on provided title as search query
 func (r *Repository) GetRelatedPosts(ctx context.Context, title string) (posts []models.Post, err error) {
 	// Search the DB for posts
-	searchedPosts, err := r.SearchPosts(ctx, title, r.config.NumRelatedPosts+1, 0)
+	searchedPosts, err := r.SearchPosts(ctx, title, r.config.NumRelatedPosts+1, "")
 
 	if err != nil {
 		return nil, err
