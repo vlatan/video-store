@@ -198,11 +198,14 @@ func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (
 	// Construct the WHERE and ORDER BY sql parts as well as the arguments
 	// The limit is always the first argument ($1)
 	// Peek for one post beoynd the limit
+	var where string
 	args := []any{r.config.PostsPerPage + 1}
 	order := "upload_date DESC, post.id DESC"
-	var where string
+	if orderBy == "likes" {
+		order = "likes DESC, " + order
+	}
 
-	// Build args and SQL parts
+	// Build args and WHERE/AND SQL parts
 	if cursor != "" {
 
 		cursorParts, err := decodeCursor(cursor)
@@ -217,7 +220,6 @@ func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (
 			}
 			args = append(args, cursorParts[0], cursorParts[1], cursorParts[2])
 			where = "WHERE (likes, upload_date, post.id) < ($2, $3, $4)"
-			order = "likes DESC, upload_date DESC, post.id DESC"
 		default:
 			if len(cursorParts) != 2 {
 				return nil, fmt.Errorf("invalid cursor components")
@@ -308,11 +310,14 @@ func (r *Repository) GetCategoryPosts(
 	// Construct the AND and ORDER BY sql parts as well as the arguments
 	// The category slug and limit are always the first two arguments ($1 and $2)
 	// Peek for one post beoynd the limit
+	var and string
 	args := []any{categorySlug, r.config.PostsPerPage + 1}
 	order := "post.upload_date DESC, post.id DESC"
-	var and string
+	if orderBy == "likes" {
+		order = "likes DESC, " + order
+	}
 
-	// Build args and SQL parts
+	// Build args and WHERE/AND SQL parts
 	if cursor != "" {
 
 		cursorParts, err := decodeCursor(cursor)
@@ -327,7 +332,6 @@ func (r *Repository) GetCategoryPosts(
 			}
 			args = append(args, cursorParts[0], cursorParts[1], cursorParts[2])
 			and = "AND (likes, post.upload_date, post.id) < ($3, $4, $5)"
-			order = "likes DESC, post.upload_date DESC, post.id DESC"
 		default:
 			if len(cursorParts) != 2 {
 				return nil, fmt.Errorf("invalid cursor components")
