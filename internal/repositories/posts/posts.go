@@ -198,7 +198,7 @@ func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (
 	// Construct the WHERE and ORDER BY sql parts as well as the arguments
 	// The limit is always the first argument ($1)
 	// Peek for one post beoynd the limit
-	var where string
+	var where, having string
 	args := []any{r.config.PostsPerPage + 1}
 	order := "upload_date DESC, post.id DESC"
 	if orderBy == "likes" {
@@ -219,7 +219,7 @@ func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (
 				return nil, errors.New("invalid cursor components")
 			}
 			args = append(args, cursorParts[0], cursorParts[1], cursorParts[2])
-			where = "WHERE (likes, upload_date, post.id) < ($2, $3, $4)"
+			having = "HAVING (COUNT(pl.id), upload_date, post.id) < ($2, $3, $4)"
 		default:
 			if len(cursorParts) != 2 {
 				return nil, fmt.Errorf("invalid cursor components")
@@ -229,7 +229,7 @@ func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (
 		}
 	}
 
-	query := fmt.Sprintf(getHomePostsQuery, where, order)
+	query := fmt.Sprintf(getHomePostsQuery, where, having, order)
 
 	// Get rows from DB
 	rows, err := r.db.Query(ctx, query, args...)
@@ -310,7 +310,7 @@ func (r *Repository) GetCategoryPosts(
 	// Construct the AND and ORDER BY sql parts as well as the arguments
 	// The category slug and limit are always the first two arguments ($1 and $2)
 	// Peek for one post beoynd the limit
-	var and string
+	var and, having string
 	args := []any{categorySlug, r.config.PostsPerPage + 1}
 	order := "post.upload_date DESC, post.id DESC"
 	if orderBy == "likes" {
@@ -331,7 +331,7 @@ func (r *Repository) GetCategoryPosts(
 				return nil, errors.New("invalid cursor components")
 			}
 			args = append(args, cursorParts[0], cursorParts[1], cursorParts[2])
-			and = "AND (likes, post.upload_date, post.id) < ($3, $4, $5)"
+			having = "HAVING (COUNT(pl.id), post.upload_date, post.id) < ($3, $4, $5)"
 		default:
 			if len(cursorParts) != 2 {
 				return nil, fmt.Errorf("invalid cursor components")
@@ -341,7 +341,7 @@ func (r *Repository) GetCategoryPosts(
 		}
 	}
 
-	query := fmt.Sprintf(getCategoryPostsQuery, and, order)
+	query := fmt.Sprintf(getCategoryPostsQuery, and, having, order)
 	posts, err := r.queryTaxonomyPosts(ctx, query, args...)
 	if err != nil {
 		return nil, err

@@ -75,6 +75,7 @@ const getHomePostsQuery = `
 	LEFT JOIN post_like AS pl ON pl.post_id = post.id
 	%s -- the WHERE clause
 	GROUP BY post.id
+	%s -- the HAVING clause
 	ORDER BY %s
 	LIMIT $1
 `
@@ -94,6 +95,7 @@ const getCategoryPostsQuery = `
 	WHERE c.slug = $1
 	%s -- the AND clause
 	GROUP BY c.id, post.id
+	%s -- the HAVING clause
 	ORDER BY %s
 	LIMIT $2
 `
