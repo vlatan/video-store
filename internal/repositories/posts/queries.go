@@ -132,24 +132,38 @@ const searchPostsQuery = `
 			to_tsquery('english', replace(lexeme::text, ' & ', ' | ')) AS or_query,
 			replace(lexeme::text, ' & ', ' ') AS raw_query
 		FROM plainto_tsquery('english', $1) AS lexeme
+	),
+	scored_posts AS (
+		SELECT
+			p.id,
+			p.video_id,
+			p.title,
+			p.thumbnails,
+			COUNT(pl.id) AS likes,
+			%s AS total_results,
+			p.upload_date,
+			ROUND(((ts_rank(p.search_vector, st.and_query, 32) * 2) + 
+			ts_rank(p.search_vector, st.or_query, 32) +
+			(similarity(p.title, st.raw_query) * 0.5))::numeric, 4) AS score
+		FROM post AS p
+		CROSS JOIN search_terms AS st
+		LEFT JOIN post_like AS pl ON pl.post_id = p.id
+		WHERE p.search_vector @@ st.and_query OR p.search_vector @@ st.or_query
+		GROUP BY p.id, st.and_query, st.or_query, st.raw_query
 	)
 	SELECT
-		p.id,
-		p.video_id,
-		p.title,
-		p.thumbnails,
-		COUNT(pl.id) AS likes,
-		%s -- the total_results clause
-		p.upload_date,
-		%s AS score -- the scoring formula
-	FROM post AS p
-	CROSS JOIN search_terms AS st
-	LEFT JOIN post_like AS pl ON pl.post_id = p.id
-	WHERE p.search_vector @@ st.and_query OR p.search_vector @@ st.or_query
-	GROUP BY p.id, st.and_query, st.or_query, st.raw_query
-	%s -- the HAVING clause
-	ORDER BY score DESC, likes DESC, p.upload_date DESC, p.id DESC
-	LIMIT $2
+		id,
+		video_id,
+		title,
+		thumbnails,
+		likes,
+		total_results,
+		upload_date,
+		score
+	FROM scored_posts
+	%s --- the WHERE clause
+	ORDER BY score DESC, likes DESC, upload_date DESC, id DESC
+	LIMIT $2;
 `
 
 const getUserFavedPostsQuery = `

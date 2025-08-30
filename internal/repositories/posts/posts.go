@@ -451,19 +451,14 @@ func (r *Repository) SearchPosts(
 	// Construct the SQL parts as well as the arguments
 	// The search term and limit are the first two arguments ($1 and $2)
 	// Peek for one post beoynd the limit
-	var having string
-	total := "COUNT(*) OVER() AS total_results,"
-
-	const scoringFormula = `
-		ROUND(((ts_rank(p.search_vector, st.and_query, 32) * 2) + 
-		ts_rank(p.search_vector, st.or_query, 32) +
-		(similarity(p.title, st.raw_query) * 0.5))::numeric, 4)
-	`
-
+	var where string
+	total := "COUNT(*) OVER()"
 	args := []any{searchTerm, limit + 1}
 
 	// Build args and SQL parts
 	if cursor != "" {
+		total = "0"
+		where = "WHERE (score, likes, upload_date, id) < ($3, $4, $5, $6)"
 
 		cursorParts, err := decodeCursor(cursor)
 		if err != nil {
@@ -475,15 +470,9 @@ func (r *Repository) SearchPosts(
 		}
 
 		args = append(args, cursorParts[0], cursorParts[1], cursorParts[2], cursorParts[3])
-
-		total = "0 AS total_results,"
-		having = fmt.Sprintf(
-			"HAVING (%s, COUNT(pl.id), p.upload_date, p.id) < ($3, $4, $5, $6)",
-			scoringFormula,
-		)
 	}
 
-	query := fmt.Sprintf(searchPostsQuery, total, scoringFormula, having)
+	query := fmt.Sprintf(searchPostsQuery, total, where)
 
 	// Get rows from DB
 	rows, err := r.db.Query(ctx, query, args...)
