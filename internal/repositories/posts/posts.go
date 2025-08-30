@@ -202,7 +202,7 @@ func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (
 	order := "upload_date DESC, post.id DESC"
 	var where string
 
-	// Compose custom SQL parts
+	// Build args and SQL parts
 	if cursor != "" {
 
 		cursorParts, err := decodeCursor(cursor)
@@ -284,23 +284,15 @@ func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (
 
 	// Determine the next cursor
 	lastPost := posts.Items[len(posts.Items)-1]
-	switch orderBy {
-	case "likes":
-		cursorStr := fmt.Sprintf(
-			"%d,%s,%d",
-			lastPost.Likes,
-			lastPost.UploadDate.Format(time.RFC3339Nano),
-			lastPost.ID,
-		)
-		posts.NextCursor = base64.StdEncoding.EncodeToString([]byte(cursorStr))
-	default:
-		cursorStr := fmt.Sprintf(
-			"%s,%d",
-			lastPost.UploadDate.Format(time.RFC3339Nano),
-			lastPost.ID,
-		)
-		posts.NextCursor = base64.StdEncoding.EncodeToString([]byte(cursorStr))
+	uploadDate := lastPost.UploadDate.Format(time.RFC3339Nano)
+	cursorStr := fmt.Sprintf("%s,%d", uploadDate, lastPost.ID)
+
+	// If ordering is by likes
+	if orderBy == "likes" {
+		cursorStr = fmt.Sprintf("%d,%s", lastPost.Likes, cursorStr)
 	}
+
+	posts.NextCursor = base64.StdEncoding.EncodeToString([]byte(cursorStr))
 
 	return &posts, err
 }
@@ -320,7 +312,7 @@ func (r *Repository) GetCategoryPosts(
 	order := "post.upload_date DESC, post.id DESC"
 	var and string
 
-	// Compose custom SQL parts
+	// Build args and SQL parts
 	if cursor != "" {
 
 		cursorParts, err := decodeCursor(cursor)
@@ -361,23 +353,15 @@ func (r *Repository) GetCategoryPosts(
 
 	// Determine the next cursor
 	lastPost := posts.Items[len(posts.Items)-1]
-	switch orderBy {
-	case "likes":
-		cursorStr := fmt.Sprintf(
-			"%d,%s,%d",
-			lastPost.Likes,
-			lastPost.UploadDate.Format(time.RFC3339Nano),
-			lastPost.ID,
-		)
-		posts.NextCursor = base64.StdEncoding.EncodeToString([]byte(cursorStr))
-	default:
-		cursorStr := fmt.Sprintf(
-			"%s,%d",
-			lastPost.UploadDate.Format(time.RFC3339Nano),
-			lastPost.ID,
-		)
-		posts.NextCursor = base64.StdEncoding.EncodeToString([]byte(cursorStr))
+	uploadDate := lastPost.UploadDate.Format(time.RFC3339Nano)
+	cursorStr := fmt.Sprintf("%s,%d", uploadDate, lastPost.ID)
+
+	// If ordering is by likes
+	if orderBy == "likes" {
+		cursorStr = fmt.Sprintf("%d,%s", lastPost.Likes, cursorStr)
 	}
+
+	posts.NextCursor = base64.StdEncoding.EncodeToString([]byte(cursorStr))
 
 	return posts, err
 }
