@@ -381,9 +381,9 @@ func (r *Repository) GetSourcePosts(
 	// Construct the SQL parts as well as the arguments
 	// The playlist ID and limit are the first two arguments ($1 and $2)
 	// Peek for one post beoynd the limit
-	var and, having string
+	var where string
 	args := []any{playlistID, r.config.PostsPerPage + 1}
-	order := "post.upload_date DESC, post.id DESC"
+	order := "upload_date DESC, id DESC"
 	if orderBy == "likes" {
 		order = "likes DESC, " + order
 	}
@@ -402,17 +402,17 @@ func (r *Repository) GetSourcePosts(
 				return nil, errors.New("invalid cursor components")
 			}
 			args = append(args, cursorParts[0], cursorParts[1], cursorParts[2])
-			having = "HAVING (COUNT(pl.id), post.upload_date, post.id) < ($3, $4, $5)"
+			where = "WHERE (likes, upload_date, id) < ($3, $4, $5)"
 		default:
 			if len(cursorParts) != 2 {
 				return nil, fmt.Errorf("invalid cursor components")
 			}
 			args = append(args, cursorParts[0], cursorParts[1])
-			and = "AND (post.upload_date, post.id) < ($3, $4)"
+			where = "WHERE (upload_date, id) < ($3, $4)"
 		}
 	}
 
-	query := fmt.Sprintf(getSourcePostsQuery, and, having, order)
+	query := fmt.Sprintf(getSourcePostsQuery, where, order)
 	posts, err := r.queryTaxonomyPosts(ctx, query, args...)
 	if err != nil {
 		return nil, err

@@ -101,26 +101,36 @@ const getCategoryPostsQuery = `
 `
 
 const getSourcePostsQuery = `
-	SELECT 
-		p.title AS playlist_title,
-		post.id,
-		post.video_id, 
-		post.title, 
-		post.thumbnails,
-		COUNT(pl.id) AS likes,
-		post.upload_date
-	FROM post
-	LEFT JOIN playlist AS p ON post.playlist_db_id = p.id
-	LEFT JOIN post_like AS pl ON pl.post_id = post.id
-	WHERE
-		CASE 
-    		WHEN $1 = 'other'
-			THEN (p.playlist_id IS NULL OR p.playlist_id = '')
-    		ELSE p.playlist_id = $1
-  		END
-	%s -- the AND clause
-	GROUP BY p.id, post.id
-	%s -- the HAVING clause
+	WITH posts_with_likes AS (
+		SELECT 
+			p.title AS playlist_title,
+			post.id,
+			post.video_id, 
+			post.title, 
+			post.thumbnails,
+			COUNT(pl.id) AS likes,
+			post.upload_date
+		FROM post
+		LEFT JOIN playlist AS p ON post.playlist_db_id = p.id
+		LEFT JOIN post_like AS pl ON pl.post_id = post.id
+		WHERE
+			CASE 
+				WHEN $1 = 'other'
+				THEN (p.playlist_id IS NULL OR p.playlist_id = '')
+				ELSE p.playlist_id = $1
+			END
+		GROUP BY p.id, post.id
+	)
+	SELECT
+		playlist_title,
+		id,
+		video_id,
+		title,
+		thumbnails,
+		likes,
+		upload_date
+	FROM posts_with_likes
+	%s --- the WHERE clause
 	ORDER BY %s
 	LIMIT $2
 `
