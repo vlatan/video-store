@@ -536,7 +536,7 @@ func (r *Repository) SearchPosts(
 	// Determine the next cursor
 	lastPost := posts.Items[len(posts.Items)-1]
 	uploadDate := lastPost.UploadDate.Format(time.RFC3339Nano)
-	cursorStr := fmt.Sprintf("%f,%d,%s,%d", lastPost.Score, lastPost.Likes, uploadDate, lastPost.ID)
+	cursorStr := fmt.Sprintf("%s,%d,%s,%d", lastPost.Score, lastPost.Likes, uploadDate, lastPost.ID)
 
 	posts.NextCursor = base64.StdEncoding.EncodeToString([]byte(cursorStr))
 

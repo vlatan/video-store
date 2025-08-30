@@ -142,9 +142,9 @@ const searchPostsQuery = `
 			COUNT(pl.id) AS likes,
 			%s AS total_results,
 			p.upload_date,
-			ROUND(((ts_rank(p.search_vector, st.and_query, 32) * 2) + 
+			(ts_rank(p.search_vector, st.and_query, 32) * 2) + 
 			ts_rank(p.search_vector, st.or_query, 32) +
-			(similarity(p.title, st.raw_query) * 0.5))::numeric, 4) AS score
+			(similarity(p.title, st.raw_query) * 0.5) AS score
 		FROM post AS p
 		CROSS JOIN search_terms AS st
 		LEFT JOIN post_like AS pl ON pl.post_id = p.id
