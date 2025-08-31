@@ -81,21 +81,23 @@ const getHomePostsQuery = `
 `
 
 const getCategoryPostsQuery = `
-	SELECT 
-		c.name AS category_title,
-		post.id,
-		post.video_id, 
-		post.title, 
-		post.thumbnails,
-		COUNT(pl.id) AS likes,
-		post.upload_date
-	FROM post
-	JOIN category AS c ON c.id = post.category_id 
-	LEFT JOIN post_like AS pl ON pl.post_id = post.id
-	WHERE c.slug = $1
-	%s -- the AND clause
-	GROUP BY c.id, post.id
-	%s -- the HAVING clause
+	WITH posts_with_likes AS (
+		SELECT 
+			c.name AS category_title,
+			post.id,
+			post.video_id, 
+			post.title, 
+			post.thumbnails,
+			COUNT(pl.id) AS likes,
+			post.upload_date
+		FROM post
+		JOIN category AS c ON c.id = post.category_id 
+		LEFT JOIN post_like AS pl ON pl.post_id = post.id
+		WHERE c.slug = $1
+		GROUP BY c.id, post.id
+	)
+	SELECT * FROM posts_with_likes
+	%s --- the WHERE clause
 	ORDER BY %s
 	LIMIT $2
 `
@@ -111,7 +113,7 @@ const getSourcePostsQuery = `
 			COUNT(pl.id) AS likes,
 			post.upload_date
 		FROM post
-		LEFT JOIN playlist AS p ON post.playlist_db_id = p.id
+		LEFT JOIN playlist AS p ON p.id = post.playlist_db_id 
 		LEFT JOIN post_like AS pl ON pl.post_id = post.id
 		WHERE
 			CASE 
@@ -121,15 +123,7 @@ const getSourcePostsQuery = `
 			END
 		GROUP BY p.id, post.id
 	)
-	SELECT
-		playlist_title,
-		id,
-		video_id,
-		title,
-		thumbnails,
-		likes,
-		upload_date
-	FROM posts_with_likes
+	SELECT * FROM posts_with_likes
 	%s --- the WHERE clause
 	ORDER BY %s
 	LIMIT $2
@@ -161,16 +155,7 @@ const searchPostsQuery = `
 		WHERE p.search_vector @@ st.and_query OR p.search_vector @@ st.or_query
 		GROUP BY p.id, st.and_query, st.or_query, st.raw_query
 	)
-	SELECT
-		id,
-		video_id,
-		title,
-		thumbnails,
-		likes,
-		total_results,
-		upload_date,
-		score
-	FROM scored_posts
+	SELECT * FROM scored_posts
 	%s --- the WHERE clause
 	ORDER BY score DESC, likes DESC, upload_date DESC, id DESC
 	LIMIT $2;
