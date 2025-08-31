@@ -6,57 +6,68 @@ import (
 	"encoding/json"
 	"errors"
 	"factual-docs/internal/models"
-	"factual-docs/internal/utils"
 	"fmt"
-	"strings"
 	"time"
 )
 
-// Query the DB for posts based on variadic arguments
-func (r *Repository) queryTaxonomyPosts(
+const getUserFavedPostsQuery = `
+	WITH faved_posts AS (
+		SELECT
+			p.id,
+			p.video_id,
+			p.title,
+			p.thumbnails,
+			COUNT(pl.id) AS likes,
+			%s AS total_results,
+			p.upload_date,
+			pf.created_at AS when_faved
+		FROM post AS p
+		LEFT JOIN post_like AS pl ON pl.post_id = p.id
+		LEFT JOIN post_fave AS pf ON pf.post_id = p.id
+		WHERE pf.user_id = $1
+		GROUP BY p.id, pf.id
+	)
+	SELECT * FROM faved_posts
+	%s --- the WHERE clause
+	ORDER BY when_faved DESC, likes DESC, upload_date DESC, id DESC
+	LIMIT $2
+`
+
+// Get user's favorited posts
+func (r *Repository) GetUserFavedPosts(
 	ctx context.Context,
-	query,
-	taxonomyID,
-	cursor,
-	orderBy string,
-) (*models.Posts, error) {
+	userID int,
+	cursor string) (*models.Posts, error) {
 
 	// Construct the SQL parts as well as the arguments
-	// The category slug and limit are the first two arguments ($1 and $2)
+	// The user ID and the limit are the first two arguments ($1 and $2)
 	// Peek for one post beoynd the limit
 	var where string
-	args := []any{taxonomyID, r.config.PostsPerPage + 1}
-	order := "upload_date DESC, id DESC"
-	if orderBy == "likes" {
-		order = "likes DESC, " + order
-	}
+	total := "COUNT(*) OVER()"
+	args := []any{userID, r.config.PostsPerPage + 1}
 
 	// Build args and SQL parts
 	if cursor != "" {
+
+		// SQL parts
+		total = "0"
+		where = "WHERE (when_faved, likes, upload_date, id) < ($3, $4, $5, $6)"
 
 		cursorParts, err := decodeCursor(cursor)
 		if err != nil {
 			return nil, err
 		}
 
-		switch orderBy {
-		case "likes":
-			if len(cursorParts) != 3 {
-				return nil, errors.New("invalid cursor components")
-			}
-			args = append(args, cursorParts[0], cursorParts[1], cursorParts[2])
-			where = "WHERE (likes, upload_date, id) < ($3, $4, $5)"
-		default:
-			if len(cursorParts) != 2 {
-				return nil, fmt.Errorf("invalid cursor components")
-			}
-			args = append(args, cursorParts[0], cursorParts[1])
-			where = "WHERE (upload_date, id) < ($3, $4)"
+		if len(cursorParts) != 4 {
+			return nil, errors.New("invalid cursor components")
 		}
+
+		args = append(args, cursorParts[0], cursorParts[1], cursorParts[2], cursorParts[3])
 	}
 
+	query := fmt.Sprintf(getUserFavedPostsQuery, total, where)
+
 	// Get rows from DB
-	query = fmt.Sprintf(query, where, order)
 	rows, err := r.db.Query(ctx, query, args...)
 	if err != nil {
 		return nil, err
@@ -70,22 +81,21 @@ func (r *Repository) queryTaxonomyPosts(
 	for rows.Next() {
 		var post models.Post
 		var thumbnails []byte
-		var playlistTitle *string
+		var totalNum int
 
 		// Paste post from row to struct, thumbnails in a separate var
 		if err = rows.Scan(
-			&playlistTitle,
 			&post.ID,
 			&post.VideoID,
 			&post.Title,
 			&thumbnails,
 			&post.Likes,
+			&totalNum,
 			&post.UploadDate,
+			&post.WhenUserFaved,
 		); err != nil {
 			return nil, err
 		}
-
-		posts.Title = utils.PtrToString(playlistTitle)
 
 		// Unserialize thumbnails
 		var thumbs models.Thumbnails
@@ -99,6 +109,9 @@ func (r *Repository) queryTaxonomyPosts(
 
 		// Include the processed post in the result
 		posts.Items = append(posts.Items, post)
+		if totalNum != 0 {
+			posts.TotalNum = totalNum
+		}
 	}
 
 	// If error during iteration
@@ -117,24 +130,9 @@ func (r *Repository) queryTaxonomyPosts(
 	// Determine the next cursor
 	lastPost := posts.Items[len(posts.Items)-1]
 	uploadDate := lastPost.UploadDate.Format(time.RFC3339Nano)
-	cursorStr := fmt.Sprintf("%s,%d", uploadDate, lastPost.ID)
-
-	// If ordering is by likes
-	if orderBy == "likes" {
-		cursorStr = fmt.Sprintf("%d,%s", lastPost.Likes, cursorStr)
-	}
-
+	whenFaved := lastPost.WhenUserFaved.Format(time.RFC3339Nano)
+	cursorStr := fmt.Sprintf("%s,%d,%s,%d", whenFaved, lastPost.Likes, uploadDate, lastPost.ID)
 	posts.NextCursor = base64.StdEncoding.EncodeToString([]byte(cursorStr))
 
 	return &posts, nil
-}
-
-// decodeCursor decodes base64 string, splits the string on comma
-// and returns a slice of strings
-func decodeCursor(cursor string) ([]string, error) {
-	decodedCursor, err := base64.StdEncoding.DecodeString(cursor)
-	if err != nil {
-		return nil, errors.New("invalid cursor format")
-	}
-	return strings.Split(string(decodedCursor), ","), nil
 }

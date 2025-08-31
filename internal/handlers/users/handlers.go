@@ -4,19 +4,18 @@ import (
 	"factual-docs/internal/utils"
 	"log"
 	"net/http"
-	"time"
 )
 
 // Handle the user favorites page
 func (s *Service) UserFavoritesHandler(w http.ResponseWriter, r *http.Request) {
 
-	// Get the page number from the request query param
-	page := utils.GetPageNum(r)
+	// Get the cursor if any
+	cursor := r.URL.Query().Get("cursor")
 
 	// Generate template data
 	data := utils.GetDataFromContext(r)
 
-	posts, err := s.postsRepo.GetUserFavedPosts(r.Context(), data.CurrentUser.ID, page)
+	posts, err := s.postsRepo.GetUserFavedPosts(r.Context(), data.CurrentUser.ID, cursor)
 
 	if err != nil {
 		log.Printf("Was unabale to fetch posts on URI '%s': %v", r.RequestURI, err)
@@ -24,10 +23,9 @@ func (s *Service) UserFavoritesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// If not the first page return JSON
-	if page > 1 {
-		time.Sleep(time.Millisecond * 400)
-		s.ui.WriteJSON(w, r, posts.Items)
+	// If there's a cursor this is not the first page, return JSON
+	if cursor != "" {
+		s.ui.WriteJSON(w, r, posts)
 		return
 	}
 

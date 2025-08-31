@@ -20,68 +20,18 @@ func (s *Service) HomeHandler(w http.ResponseWriter, r *http.Request) {
 	// Generate template data
 	data := utils.GetDataFromContext(r)
 
-	// Get page number from a query param
-	page := utils.GetPageNum(r)
-	redisKey := fmt.Sprintf("posts:page:%d", page)
-
+	// Get the cursor from a query param
+	cursor := r.URL.Query().Get("cursor")
 	// Get the order_by query param if any
 	orderBy := r.URL.Query().Get("order_by")
+
+	// Construct the redis key
+	redisKey := "posts"
 	if orderBy == "likes" {
 		redisKey += ":likes"
 	}
-
-	posts, err := redis.GetItems(
-		!data.IsCurrentUserAdmin(),
-		r.Context(),
-		s.rdb,
-		redisKey,
-		s.config.CacheTimeout,
-		func() ([]models.Post, error) {
-			return s.postsRepo.GetHomePosts(r.Context(), page, orderBy)
-		},
-	)
-
-	if err != nil {
-		log.Printf("Was unabale to fetch posts on URI '%s': %v", r.RequestURI, err)
-		utils.HttpError(w, http.StatusInternalServerError)
-		return
-	}
-
-	if len(posts) == 0 {
-		http.NotFound(w, r)
-		return
-	}
-
-	// If not the first page return JSON
-	if page > 1 {
-		time.Sleep(time.Millisecond * 400)
-		s.ui.WriteJSON(w, r, posts)
-		return
-	}
-
-	data.Posts = &models.Posts{}
-	data.Posts.Items = posts
-	s.ui.RenderHTML(w, r, "home.html", data)
-}
-
-// Handle posts in a certain category
-func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
-
-	// Get category slug from URL
-	slug := r.PathValue("category")
-
-	// Generate template data (it gets all the categories too)
-	// This is probably wasteful for non-existing category
-	data := utils.GetDataFromContext(r)
-
-	// Get page number from a query param
-	page := utils.GetPageNum(r)
-	redisKey := fmt.Sprintf("category:%s:posts:page:%d", slug, page)
-
-	// Get the order_by query param if any
-	orderBy := r.URL.Query().Get("order_by")
-	if orderBy == "likes" {
-		redisKey += ":likes"
+	if cursor != "" {
+		redisKey += fmt.Sprintf(":cursor:%s", cursor)
 	}
 
 	posts, err := redis.GetItems(
@@ -91,7 +41,7 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 		redisKey,
 		s.config.CacheTimeout,
 		func() (*models.Posts, error) {
-			return s.postsRepo.GetCategoryPosts(r.Context(), slug, orderBy, page)
+			return s.postsRepo.GetHomePosts(r.Context(), cursor, orderBy)
 		},
 	)
 
@@ -101,15 +51,56 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(posts.Items) == 0 {
-		http.NotFound(w, r)
+	// If there's a cursor this is not the first page, return JSON
+	if cursor != "" {
+		s.ui.WriteJSON(w, r, posts)
 		return
 	}
 
-	// if not the first page return JSON
-	if page > 1 {
-		time.Sleep(time.Millisecond * 400)
-		s.ui.WriteJSON(w, r, posts.Items)
+	data.Posts = posts
+	s.ui.RenderHTML(w, r, "home.html", data)
+}
+
+// Handle posts in a certain category
+func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
+
+	slug := r.PathValue("category")
+	cursor := r.URL.Query().Get("cursor")
+	orderBy := r.URL.Query().Get("order_by")
+
+	// Generate template data (it gets all the categories too)
+	// This is probably wasteful for non-existing category
+	data := utils.GetDataFromContext(r)
+
+	// Construct the Redis key
+	redisKey := fmt.Sprintf("category:%s:posts", slug)
+	if orderBy == "likes" {
+		redisKey += ":likes"
+	}
+	if cursor != "" {
+		redisKey += fmt.Sprintf(":cursor:%s", cursor)
+	}
+
+	posts, err := redis.GetItems(
+		!data.IsCurrentUserAdmin(),
+		r.Context(),
+		s.rdb,
+		redisKey,
+		s.config.CacheTimeout,
+		func() (*models.Posts, error) {
+			return s.postsRepo.GetCategoryPosts(r.Context(), slug, cursor, orderBy)
+		},
+	)
+
+	if err != nil {
+		log.Printf("Was unabale to fetch posts on URI '%s': %v", r.RequestURI, err)
+		utils.HttpError(w, http.StatusInternalServerError)
+		return
+	}
+
+	// If there's a cursor this is not the first page, return JSON
+	if cursor != "" {
+		s.ui.WriteJSON(w, r, posts)
 		return
 	}
 
@@ -127,29 +118,30 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get the page number from the request query param
-	page := utils.GetPageNum(r)
+	// Get the cursor if any
+	cursor := r.URL.Query().Get("cursor")
 
 	// Generate the default data
 	data := utils.GetDataFromContext(r)
 	data.SearchQuery = searchQuery
 
-	limit := s.config.PostsPerPage
-	offset := (page - 1) * limit
-
 	start := time.Now()
 	encodedSearchQuery := utils.EscapeTrancateString(searchQuery, 100)
 
-	// For search posts we are using the database.Posts struct,
-	// so we can add total results and time took
+	// Construct the Redis key
+	redisKey := fmt.Sprintf("posts:search:%s", encodedSearchQuery)
+	if cursor != "" {
+		redisKey += fmt.Sprintf(":cursor:%s", cursor)
+	}
+
 	posts, err := redis.GetItems(
 		!data.IsCurrentUserAdmin(),
 		r.Context(),
 		s.rdb,
-		fmt.Sprintf("posts:search:page:%d:%s", page, encodedSearchQuery),
+		redisKey,
 		s.config.CacheTimeout,
 		func() (*models.Posts, error) {
-			return s.postsRepo.SearchPosts(r.Context(), searchQuery, limit, offset)
+			return s.postsRepo.SearchPosts(r.Context(), searchQuery, s.config.PostsPerPage, cursor)
 		},
 	)
 
@@ -161,10 +153,9 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// If not the first page return JSON
-	if page > 1 {
-		time.Sleep(time.Millisecond * 400)
-		s.ui.WriteJSON(w, r, posts.Items)
+	// If there's a cursor this is not the first page, return JSON
+	if cursor != "" {
+		s.ui.WriteJSON(w, r, posts)
 		return
 	}
 
@@ -340,8 +331,8 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 			data.CurrentUser.ID,
 			data.CurrentPost.ID,
 		)
-		data.CurrentPost.CurrentUserLiked = userActions.Liked
-		data.CurrentPost.CurrentUserFaved = userActions.Faved
+		data.CurrentPost.UserLiked = userActions.Liked
+		data.CurrentPost.UserFaved = userActions.Faved
 	}
 
 	// Ignore the error on related posts, no posts will be shown

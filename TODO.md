@@ -1,5 +1,4 @@
-* Check the memory leaks
-* Check for nil dereference in templates
+* Add indexes to the cursor columns
 * Add slug input to page
 * Add form for new category as well as delete, edit category routes
 * Delete source - should cascade and delete all the videos?

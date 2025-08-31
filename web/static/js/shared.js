@@ -25,12 +25,16 @@ const postData = async (url = '', data = {}) => {
 };
 
 // Send GET request to backend
-const getData = async (url = "", page = 2) => {
-    // set page query param to url
+const getData = async (url, cursor = "") => {
+    if (!cursor) {
+        return await fetch(url);
+    }
+
+    // set cursor query param to url
     // https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams/set
     const currenURL = new URL(url);
     const params = new URLSearchParams(currenURL.search);
-    params.set("page", page);
+    params.set("cursor", cursor);
     currenURL.search = params.toString();
     return await fetch(currenURL.toString());
 };

@@ -3,77 +3,81 @@ const scroller = document.getElementById("scroller");
 const template = document.getElementById("post_template");
 const sentinel = document.getElementById("sentinel");
 const spinner = sentinel.querySelector('div');
-const postsPerPage = 24; // should correspond with POSTS_PER_PAGE on backend
-let page = 2; // Use infinite scroll from the second page onwards
-let nextPage = true; // Assume there is next page to load
 
-
-const noMoreScroll = () => {
-    // Replace the spinner with "No more videos"
-    sentinel.innerHTML = "No more videos";
-    nextPage = false;
-    return;
+let state = {
+    nextCursor: initialCursor,
+    isLoading: false,
+    hasMore: !!initialCursor,
 };
 
 // Function to request new items and render to the dom
-const loadItems = (url = '', pageValue = 2) => {
+const loadItems = async (url, cursor) => {
 
-    getData(url, pageValue).then(response => {
+    // Prevent multiple simultaneous fetches
+    if (state.isLoading || !state.hasMore) {
+        return;
+    }
 
-        // If bad response exit the function
+    state.isLoading = true;
+    spinner.setAttribute("id", "spinner");
+
+    try {
+
+        const response = await getData(url, cursor);
         if (!response.ok) {
-            return noMoreScroll();
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        // Convert the response data to JSON
-        response.json().then(data => {
+        const data = await response.json();
 
-            // Iterate over the items in the response
-            for (const item of data) {
+        state.nextCursor = data.next_cursor || null;
+        state.hasMore = !!data.next_cursor;
 
-                // Clone the HTML template
-                const template_clone = template.content.cloneNode(true);
 
-                // Query & update the template content
-                template_clone.querySelector('.video-link').href = `/video/${item.video_id}/`;
-                const thumb = template_clone.querySelector('.video-img');
-                thumb.src = item.thumbnail.url;
-                thumb.alt = item.title;
-                thumb.srcset = item.srcset;
-                template_clone.querySelector('.video-title').innerHTML = item.title;
-                const remove = template_clone.querySelector('.remove-option');
-                if (remove) {
-                    remove.setAttribute('data-id', `${item.id}`)
-                }
+        // Iterate over the items in the response
+        for (const item of data.items) {
 
-                // Append template to dom
-                scroller.appendChild(template_clone);
+            // Clone the HTML template
+            const template_clone = template.content.cloneNode(true);
+
+            // Query & update the template content
+            template_clone.querySelector('.video-link').href = `/video/${item.video_id}/`;
+            const thumb = template_clone.querySelector('.video-img');
+            thumb.src = item.thumbnail.url;
+            thumb.alt = item.title;
+            thumb.srcset = item.srcset;
+            template_clone.querySelector('.video-title').innerHTML = item.title;
+            const remove = template_clone.querySelector('.remove-option');
+            if (remove) {
+                remove.setAttribute('data-id', `${item.id}`)
             }
 
-            // If data.length < posts_per_page there is no next page
-            if (data.length < postsPerPage) {
-                return noMoreScroll();
-            }
+            // Append template to dom
+            scroller.appendChild(template_clone);
+        }
 
-            // Increment the page counter
-            page += 1;
-        })
-    })
+        if (!state.hasMore) {
+            sentinel.innerHTML = "No more videos";
+        }
+
+    } catch (error) {
+        state.hasMore = false;
+        sentinel.innerHTML = "Something went wrong";
+        console.error("Failed to fetch items:", error);
+
+    } finally {
+        state.isLoading = false;
+    }
 };
 
 if ('IntersectionObserver' in window) {
     // Create a new IntersectionObserver instance
     let intersectionObserver = new IntersectionObserver(([entry]) => {
         // If there is next page and the entry is intersecting
-        if (nextPage === true && entry.isIntersecting) {
-
-            spinner.setAttribute("id", "spinner");
+        if (state.hasMore && entry.isIntersecting) {
 
             // Call the loadItems function
-            loadItems(`${window.location.href}`, page);
-
-            // Unobserve the entry
-            // intersectionObserver.unobserve(entry);
+            loadItems(`${window.location.href}`, state.nextCursor);
         }
         // add root margin for earlier intersection detecetion
     }, { rootMargin: "100px 0px" });
