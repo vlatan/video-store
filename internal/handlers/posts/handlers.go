@@ -53,7 +53,6 @@ func (s *Service) HomeHandler(w http.ResponseWriter, r *http.Request) {
 
 	// If there's a cursor this is not the first page, return JSON
 	if cursor != "" {
-		time.Sleep(time.Millisecond * 400)
 		s.ui.WriteJSON(w, r, posts)
 		return
 	}
@@ -101,7 +100,6 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	// If there's a cursor this is not the first page, return JSON
 	if cursor != "" {
-		time.Sleep(time.Millisecond * 400)
 		s.ui.WriteJSON(w, r, posts)
 		return
 	}
@@ -157,7 +155,6 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	// If there's a cursor this is not the first page, return JSON
 	if cursor != "" {
-		time.Sleep(time.Millisecond * 400)
 		s.ui.WriteJSON(w, r, posts)
 		return
 	}

@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"time"
 )
 
 // Handle all sources page
@@ -180,7 +179,6 @@ func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	// If there's a cursor this is not the first page, return JSON
 	if cursor != "" {
-		time.Sleep(time.Millisecond * 400)
 		s.ui.WriteJSON(w, r, posts)
 		return
 	}
