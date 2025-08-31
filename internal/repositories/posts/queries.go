@@ -52,17 +52,6 @@ const getSinglePostQuery = `
 	GROUP BY post.id, category.id
 `
 
-const getAllPostsQuery = `
-	SELECT
-		video_id,
-		playlist_id,
-		title, 
-		short_description,
-		cat.name AS category_name
-	FROM post
-	LEFT JOIN category AS cat ON cat.id = post.category_id
-`
-
 const getCategoryPostsQuery = `
 	WITH posts_with_likes AS (
 		SELECT 
@@ -109,39 +98,6 @@ const getSourcePostsQuery = `
 	SELECT * FROM posts_with_likes
 	%s --- the WHERE clause
 	ORDER BY %s
-	LIMIT $2
-`
-
-const getUserFavedPostsQuery = `
-	SELECT
-		p.video_id,
-		p.title,
-		p.thumbnails,
-		COUNT(pl.id) AS likes,
-		CASE 
-			WHEN $3 = 0 THEN COUNT(*) OVER()
-			ELSE 0
-		END AS total_results
-	FROM post AS p
-	LEFT JOIN post_like AS pl ON pl.post_id = p.id
-	LEFT JOIN post_fave AS pf ON pf.post_id = p.id
-	WHERE pf.user_id = $1
-	GROUP BY p.id, pf.id
-	ORDER BY pf.created_at, p.upload_date
-	LIMIT $2 OFFSET $3
-`
-
-const getRandomPostsQuery = `
-	SELECT
-		p.video_id,
-		p.title,
-		p.thumbnails,
-		COUNT(pl.id) AS likes
-	FROM post AS p
-	LEFT JOIN post_like AS pl ON pl.post_id = p.id
-	WHERE p.title != $1
-	GROUP BY p.id
-	ORDER BY RANDOM()
 	LIMIT $2
 `
 
