@@ -43,7 +43,7 @@ const searchPostsQuery = `
 	LIMIT $2;
 `
 
-// Get posts based on a user search query
+// Get posts based on a user search query using a cursor
 // Transform the user query into two queries with words separated by '&' and '|'
 func (r *Repository) SearchPosts(
 	ctx context.Context,
