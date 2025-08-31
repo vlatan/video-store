@@ -20,7 +20,8 @@ func New(db database.Service, config *config.Config) *Repository {
 }
 
 // Get post's related posts based on provided title as search query
-func (r *Repository) GetRelatedPosts(ctx context.Context, title string) (posts []models.Post, err error) {
+func (r *Repository) GetRelatedPosts(ctx context.Context, title string) ([]models.Post, error) {
+
 	// Search the DB for posts
 	searchedPosts, err := r.SearchPosts(ctx, title, r.config.NumRelatedPosts+1, "")
 
@@ -28,10 +29,19 @@ func (r *Repository) GetRelatedPosts(ctx context.Context, title string) (posts [
 		return nil, err
 	}
 
+	var posts []models.Post
 	for _, sp := range searchedPosts.Items {
 		if sp.Title != title {
 			posts = append(posts, sp)
 		}
+	}
+
+	if len(posts) > r.config.NumRelatedPosts {
+		return posts[:r.config.NumRelatedPosts], nil
+	}
+
+	if len(posts) == r.config.NumRelatedPosts {
+		return posts, nil
 	}
 
 	// Get some random posts if not enough related posts
