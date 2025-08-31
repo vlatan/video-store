@@ -131,38 +131,6 @@ const getSourcePostsQuery = `
 	LIMIT $2
 `
 
-const searchPostsQuery = `
-	WITH search_terms AS (
-		SELECT
-			lexeme AS and_query,
-			to_tsquery('english', replace(lexeme::text, ' & ', ' | ')) AS or_query,
-			replace(lexeme::text, ' & ', ' ') AS raw_query
-		FROM plainto_tsquery('english', $1) AS lexeme
-	),
-	scored_posts AS (
-		SELECT
-			p.id,
-			p.video_id,
-			p.title,
-			p.thumbnails,
-			COUNT(pl.id) AS likes,
-			%s AS total_results,
-			p.upload_date,
-			(ts_rank(p.search_vector, st.and_query, 32) * 2) + 
-			ts_rank(p.search_vector, st.or_query, 32) +
-			(similarity(p.title, st.raw_query) * 0.5) AS score
-		FROM post AS p
-		CROSS JOIN search_terms AS st
-		LEFT JOIN post_like AS pl ON pl.post_id = p.id
-		WHERE p.search_vector @@ st.and_query OR p.search_vector @@ st.or_query
-		GROUP BY p.id, st.and_query, st.or_query, st.raw_query
-	)
-	SELECT * FROM scored_posts
-	%s --- the WHERE clause
-	ORDER BY score DESC, likes DESC, upload_date DESC, id DESC
-	LIMIT $2;
-`
-
 const getUserFavedPostsQuery = `
 	SELECT
 		p.video_id,
@@ -284,72 +252,4 @@ const isPostBanneddQuery = `
 const deletePostQuery = `
 	DELETE FROM post
 	WHERE video_id = $1
-`
-
-const sitemapDataQuery = `
-	-- Posts (last modified = last updated_at)
-	SELECT
-		'post' as type,
-		CONCAT('/video/', video_id, '/') AS url,
-		updated_at
-	FROM post
-
-	UNION ALL
-
-	-- Pages (last modified = last updated_at)
-	SELECT
-		'page' AS type,
-		CONCAT('/page/', slug, '/') AS url,
-		updated_at
-	FROM page
-
-	UNION ALL
-
-	-- Playlists (last modified = latest upload date post in playlist)
-	SELECT
-		'source' AS type, 
-		CONCAT('/source/', p.playlist_id, '/') AS url, 
-		MAX(post.upload_date) AS updated_at
-	FROM playlist AS p
-	LEFT JOIN post ON post.playlist_db_id = p.id
-	GROUP BY p.id
-
-	UNION ALL
-
-	-- Orphans (last modified = latest upload date post without playlist)
-	SELECT
-		'source' AS type,
-		'/source/other/' AS url,
-		MAX(post.upload_date) AS updated_at
-	FROM post
-	WHERE playlist_id IS NULL OR playlist_id = ''
-
-	UNION ALL
-
-	-- Categories (last modified = latest upload date post in category)
-	SELECT
-		'category' AS type,
-		CONCAT('/category/', c.slug, '/') AS url,
-		MAX(post.upload_date) AS updated_at
-	FROM category AS c
-	LEFT JOIN post ON post.category_id = c.id
-	GROUP BY c.id
-
-	UNION ALL
-
-	-- Homepage (last modified = latest upload date post in DB)
-	SELECT
-		'misc' AS type,
-		'/' AS url,
-		MAX(upload_date) AS updated_at
-	FROM post
-
-	UNION ALL
-
-	-- Playlists page (last modified = newest playlist in DB)
-	SELECT 
-		'misc' AS type,
-		'/sources/' AS url, 
-		MAX(created_at) AS updated_at
-	FROM playlist
 `
