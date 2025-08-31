@@ -2,41 +2,73 @@ package posts
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"factual-docs/internal/models"
 	"fmt"
+	"time"
 )
 
 const getUserFavedPostsQuery = `
-	SELECT
-		p.video_id,
-		p.title,
-		p.thumbnails,
-		COUNT(pl.id) AS likes,
-		CASE 
-			WHEN $3 = 0 THEN COUNT(*) OVER()
-			ELSE 0
-		END AS total_results
-	FROM post AS p
-	LEFT JOIN post_like AS pl ON pl.post_id = p.id
-	LEFT JOIN post_fave AS pf ON pf.post_id = p.id
-	WHERE pf.user_id = $1
-	GROUP BY p.id, pf.id
-	ORDER BY pf.created_at, p.upload_date
-	LIMIT $2 OFFSET $3
+	WITH faved_posts AS (
+		SELECT
+			p.id,
+			p.video_id,
+			p.title,
+			p.thumbnails,
+			COUNT(pl.id) AS likes,
+			%s AS total_results,
+			p.upload_date,
+			pf.created_at AS when_faved
+		FROM post AS p
+		LEFT JOIN post_like AS pl ON pl.post_id = p.id
+		LEFT JOIN post_fave AS pf ON pf.post_id = p.id
+		WHERE pf.user_id = $1
+		GROUP BY p.id, pf.id
+	)
+	SELECT * FROM faved_posts
+	%s --- the WHERE clause
+	ORDER BY when_faved DESC, likes DESC, upload_date DESC, id DESC
+	LIMIT $2
 `
 
 // Get user's favorited posts
-func (r *Repository) GetUserFavedPosts(ctx context.Context, userID, page int) (*models.Posts, error) {
+func (r *Repository) GetUserFavedPosts(
+	ctx context.Context,
+	userID int,
+	cursor string) (*models.Posts, error) {
 
-	var posts models.Posts
+	// Construct the SQL parts as well as the arguments
+	// The user ID and the limit are the first two arguments ($1 and $2)
+	// Peek for one post beoynd the limit
+	var where string
+	total := "COUNT(*) OVER()"
+	args := []any{userID, r.config.PostsPerPage + 1}
 
-	// Construct the limit and offset
-	limit := r.config.PostsPerPage
-	offset := (page - 1) * limit
+	// Build args and SQL parts
+	if cursor != "" {
+
+		// SQL parts
+		total = "0"
+		where = "WHERE (when_faved, likes, upload_date, id) < ($3, $4, $5, $6)"
+
+		cursorParts, err := decodeCursor(cursor)
+		if err != nil {
+			return nil, err
+		}
+
+		if len(cursorParts) != 4 {
+			return nil, errors.New("invalid cursor components")
+		}
+
+		args = append(args, cursorParts[0], cursorParts[1], cursorParts[2], cursorParts[3])
+	}
+
+	query := fmt.Sprintf(getUserFavedPostsQuery, total, where)
 
 	// Get rows from DB
-	rows, err := r.db.Query(ctx, getUserFavedPostsQuery, userID, limit, offset)
+	rows, err := r.db.Query(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -45,13 +77,23 @@ func (r *Repository) GetUserFavedPosts(ctx context.Context, userID, page int) (*
 	defer rows.Close()
 
 	// Iterate over the rows
+	var posts models.Posts
 	for rows.Next() {
 		var post models.Post
 		var thumbnails []byte
 		var totalNum int
 
 		// Paste post from row to struct, thumbnails in a separate var
-		if err = rows.Scan(&post.VideoID, &post.Title, &thumbnails, &post.Likes, &totalNum); err != nil {
+		if err = rows.Scan(
+			&post.ID,
+			&post.VideoID,
+			&post.Title,
+			&thumbnails,
+			&post.Likes,
+			&totalNum,
+			&post.UploadDate,
+			&post.WhenUserFaved,
+		); err != nil {
 			return nil, err
 		}
 
@@ -76,6 +118,21 @@ func (r *Repository) GetUserFavedPosts(ctx context.Context, userID, page int) (*
 	if err = rows.Err(); err != nil {
 		return nil, err
 	}
+
+	// This is the last page
+	if len(posts.Items) <= r.config.PostsPerPage {
+		return &posts, err
+	}
+
+	// Exclude the last post
+	posts.Items = posts.Items[:len(posts.Items)-1]
+
+	// Determine the next cursor
+	lastPost := posts.Items[len(posts.Items)-1]
+	uploadDate := lastPost.UploadDate.Format(time.RFC3339Nano)
+	whenFaved := lastPost.WhenUserFaved.Format(time.RFC3339Nano)
+	cursorStr := fmt.Sprintf("%s,%d,%s,%d", whenFaved, lastPost.Likes, uploadDate, lastPost.ID)
+	posts.NextCursor = base64.StdEncoding.EncodeToString([]byte(cursorStr))
 
 	return &posts, nil
 }

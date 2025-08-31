@@ -64,7 +64,7 @@
 				<h1 class="video-title" itemprop="name">{{ .CurrentPost.Title }}</h1>
 				<div class="social">
 					{{ if .CurrentUser.IsAuthenticated }}
-					{{ if .CurrentPost.CurrentUserLiked }}
+					{{ if .CurrentPost.UserLiked }}
 					<button class="like like-yes">
 						<span data-liked>&#10003;</span>
 						<span data-likes>{{ .CurrentPost.LikeButtonText }}</span>
@@ -81,7 +81,7 @@
 					{{ end }}
 
 					{{ if .CurrentUser.IsAuthenticated }}
-					{{ if .CurrentPost.CurrentUserFaved }}
+					{{ if .CurrentPost.UserFaved }}
 					<button data-status class="fave fave-yes">&#10003; Saved</button>
 					{{ else }}
 					<button data-status class="fave fave-no">Save</button>

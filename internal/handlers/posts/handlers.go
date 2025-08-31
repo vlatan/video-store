@@ -334,8 +334,8 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 			data.CurrentUser.ID,
 			data.CurrentPost.ID,
 		)
-		data.CurrentPost.CurrentUserLiked = userActions.Liked
-		data.CurrentPost.CurrentUserFaved = userActions.Faved
+		data.CurrentPost.UserLiked = userActions.Liked
+		data.CurrentPost.UserFaved = userActions.Faved
 	}
 
 	// Ignore the error on related posts, no posts will be shown
