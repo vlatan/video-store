@@ -72,35 +72,6 @@ func (r *Repository) queryTaxonomyPosts(
 	return &posts, nil
 }
 
-// Get post's related posts based on provided title as search query
-func (r *Repository) GetRelatedPosts(ctx context.Context, title string) (posts []models.Post, err error) {
-	// Search the DB for posts
-	searchedPosts, err := r.SearchPosts(ctx, title, r.config.NumRelatedPosts+1, "")
-
-	if err != nil {
-		return nil, err
-	}
-
-	for _, sp := range searchedPosts.Items {
-		if sp.Title != title {
-			posts = append(posts, sp)
-		}
-	}
-
-	// Get some random posts if not enough related posts
-	if len(posts) < r.config.NumRelatedPosts {
-		limit := r.config.NumRelatedPosts - len(posts)
-		randomPosts, err := r.GetRandomPosts(ctx, title, limit)
-		if err != nil {
-			return nil, err
-		}
-
-		posts = append(posts, randomPosts...)
-	}
-
-	return posts, err
-}
-
 // decodeCursor decodes base64 string, splits the string on comma
 // and returns a slice of strings
 func decodeCursor(cursor string) ([]string, error) {
