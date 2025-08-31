@@ -63,25 +63,6 @@ const getAllPostsQuery = `
 	LEFT JOIN category AS cat ON cat.id = post.category_id
 `
 
-const getHomePostsQuery = `
-	WITH posts_with_likes AS (
-		SELECT
-			post.id,
-			video_id, 
-			title, 
-			thumbnails,
-			COUNT(pl.id) AS likes,
-			upload_date
-		FROM post
-		LEFT JOIN post_like AS pl ON pl.post_id = post.id
-		GROUP BY post.id
-	)
-	SELECT * FROM posts_with_likes
-	%s --- the WHERE clause
-	ORDER BY %s
-	LIMIT $1
-`
-
 const getCategoryPostsQuery = `
 	WITH posts_with_likes AS (
 		SELECT 
