@@ -53,7 +53,7 @@ type Post struct {
 	Duration       *Duration   `json:"duration,omitempty"`
 
 	// Fields used when the current user is creating, faving or liking a post.
-	// Or listing the current user faved posts.
+	// Or when listing the current user faved posts.
 	UserID        int        `json:"user_id,omitempty"`
 	UserLiked     bool       `json:"current_user_liked,omitempty"`
 	UserFaved     bool       `json:"current_user_faved,omitempty"`
