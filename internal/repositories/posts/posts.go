@@ -197,9 +197,9 @@ func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (
 	// Construct the SQL parts as well as the arguments
 	// The limit is the first argument ($1)
 	// Peek for one post beoynd the limit
-	var where, having string
+	var where string
 	args := []any{r.config.PostsPerPage + 1}
-	order := "upload_date DESC, post.id DESC"
+	order := "upload_date DESC, id DESC"
 	if orderBy == "likes" {
 		order = "likes DESC, " + order
 	}
@@ -218,17 +218,17 @@ func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (
 				return nil, errors.New("invalid cursor components")
 			}
 			args = append(args, cursorParts[0], cursorParts[1], cursorParts[2])
-			having = "HAVING (COUNT(pl.id), upload_date, post.id) < ($2, $3, $4)"
+			where = "WHERE (likes, upload_date, id) < ($2, $3, $4)"
 		default:
 			if len(cursorParts) != 2 {
 				return nil, fmt.Errorf("invalid cursor components")
 			}
 			args = append(args, cursorParts[0], cursorParts[1])
-			where = "WHERE (upload_date, post.id) < ($2, $3)"
+			where = "WHERE (upload_date, id) < ($2, $3)"
 		}
 	}
 
-	query := fmt.Sprintf(getHomePostsQuery, where, having, order)
+	query := fmt.Sprintf(getHomePostsQuery, where, order)
 
 	// Get rows from DB
 	rows, err := r.db.Query(ctx, query, args...)

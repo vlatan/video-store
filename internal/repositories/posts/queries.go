@@ -64,18 +64,20 @@ const getAllPostsQuery = `
 `
 
 const getHomePostsQuery = `
-	SELECT
-		post.id,
-		video_id, 
-		title, 
-		thumbnails,
-		COUNT(pl.id) AS likes,
-		upload_date
-	FROM post
-	LEFT JOIN post_like AS pl ON pl.post_id = post.id
-	%s -- the WHERE clause
-	GROUP BY post.id
-	%s -- the HAVING clause
+	WITH posts_with_likes AS (
+		SELECT
+			post.id,
+			video_id, 
+			title, 
+			thumbnails,
+			COUNT(pl.id) AS likes,
+			upload_date
+		FROM post
+		LEFT JOIN post_like AS pl ON pl.post_id = post.id
+		GROUP BY post.id
+	)
+	SELECT * FROM posts_with_likes
+	%s --- the WHERE clause
 	ORDER BY %s
 	LIMIT $1
 `
