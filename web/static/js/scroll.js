@@ -80,7 +80,7 @@ if ('IntersectionObserver' in window) {
             loadItems(`${window.location.href}`, state.nextCursor);
         }
         // add root margin for earlier intersection detecetion
-    }, { rootMargin: "100px 0px" });
+    }, { rootMargin: "200px 0px" });
 
     // Instruct the IntersectionObserver to watch the sentinel
     intersectionObserver.observe(sentinel);
