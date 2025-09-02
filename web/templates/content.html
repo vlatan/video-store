@@ -3,7 +3,7 @@
     {{ range $index, $item := .Posts.Items }}
     <a class="video-link" href="/video/{{ $item.VideoID }}/">
         <span class="video-img-wrap">
-            <img {{ if gt $index 3 }} loading="lazy" {{ end }} class="video-img" alt="{{ $item.Title }}"
+            <img {{ if gt $index 7 }} loading="lazy" {{ end }} class="video-img" alt="{{ $item.Title }}"
                 src="{{ $item.Thumbnail.Url  }}" srcset="{{ $item.Srcset }}">
         </span>
         <h2 class="video-title">{{ $item.Title }}</h2>
