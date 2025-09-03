@@ -43,10 +43,11 @@ func (s *Service) GetAvatars(ctx context.Context, users []models.User) chan avat
 	}
 
 	// Wait for the goroutines to finish in a separate goroutine
-	// And once done close the channel
+	// And once done close the channels
 	go func() {
 		wg.Wait()
 		close(avatars)
+		close(semaphore)
 	}()
 
 	return avatars
