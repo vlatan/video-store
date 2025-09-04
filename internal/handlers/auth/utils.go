@@ -69,10 +69,10 @@ func (s *Service) loginUser(w http.ResponseWriter, r *http.Request, user *models
 
 	// Generate analytics ID
 	analyticsID := user.ProviderUserId + user.Provider + user.Email
-	analyticsID = fmt.Sprintf("%x", md5.Sum([]byte(analyticsID)))
+	user.AnalyticsID = fmt.Sprintf("%x", md5.Sum([]byte(analyticsID)))
 
 	// Update or insert user
-	id, err := s.usersRepo.UpsertUser(r.Context(), user, analyticsID)
+	id, err := s.usersRepo.UpsertUser(r.Context(), user)
 	if err != nil {
 		return err
 	}

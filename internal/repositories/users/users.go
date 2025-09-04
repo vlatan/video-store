@@ -22,7 +22,7 @@ func New(db database.Service, config *config.Config) *Repository {
 }
 
 // Add or update a user
-func (r *Repository) UpsertUser(ctx context.Context, u *models.User, analyticsID string) (int, error) {
+func (r *Repository) UpsertUser(ctx context.Context, u *models.User) (int, error) {
 
 	var id int
 	err := r.db.QueryRow(
@@ -30,10 +30,10 @@ func (r *Repository) UpsertUser(ctx context.Context, u *models.User, analyticsID
 		upsertUserQuery,
 		u.ProviderUserId,
 		u.Provider,
-		utils.NullString(&analyticsID),
-		utils.NullString(&u.Name),
-		utils.NullString(&u.Email),
-		utils.NullString(&u.AvatarURL),
+		utils.NullString(u.AnalyticsID),
+		utils.NullString(u.Name),
+		utils.NullString(u.Email),
+		utils.NullString(u.AvatarURL),
 	).Scan(&id)
 
 	return id, err

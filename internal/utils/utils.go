@@ -124,11 +124,11 @@ func Capitalize(s string) string {
 }
 
 // Helper function to convert string pointer or empty string to sql.NullString
-func NullString(s *string) sql.NullString {
-	if s == nil || *s == "" {
+func NullString(s string) sql.NullString {
+	if s == "" {
 		return sql.NullString{Valid: false}
 	}
-	return sql.NullString{String: *s, Valid: true}
+	return sql.NullString{String: s, Valid: true}
 }
 
 func PtrToString(s *string) string {

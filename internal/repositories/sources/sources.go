@@ -47,11 +47,11 @@ func (r *Repository) InsertSource(ctx context.Context, source *models.Source) (i
 		source.PlaylistID,
 		source.ChannelID,
 		source.Title,
-		utils.NullString(&source.ChannelTitle),
+		utils.NullString(source.ChannelTitle),
 		thumbnails,
 		chThumbnails,
-		utils.NullString(&source.Description),
-		utils.NullString(&source.ChannelDescription),
+		utils.NullString(source.Description),
+		utils.NullString(source.ChannelDescription),
 		source.UserID,
 	)
 }
@@ -77,11 +77,11 @@ func (r *Repository) UpdateSource(ctx context.Context, source *models.Source) (i
 		source.PlaylistID,
 		source.ChannelID,
 		source.Title,
-		utils.NullString(&source.ChannelTitle),
+		utils.NullString(source.ChannelTitle),
 		thumbnails,
 		chThumbnails,
-		utils.NullString(&source.Description),
-		utils.NullString(&source.ChannelDescription),
+		utils.NullString(source.Description),
+		utils.NullString(source.ChannelDescription),
 	)
 }
 
