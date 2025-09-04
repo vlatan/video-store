@@ -2,6 +2,7 @@ package posts
 
 import (
 	"context"
+	"database/sql"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -70,7 +71,7 @@ func (r *Repository) queryTaxonomyPosts(
 	for rows.Next() {
 		var post models.Post
 		var thumbnails []byte
-		var playlistTitle *string
+		var playlistTitle sql.NullString
 
 		// Paste post from row to struct, thumbnails in a separate var
 		if err = rows.Scan(
@@ -85,7 +86,7 @@ func (r *Repository) queryTaxonomyPosts(
 			return nil, err
 		}
 
-		posts.Title = utils.PtrToString(playlistTitle)
+		posts.Title = utils.FromNullString(playlistTitle)
 
 		// Unserialize thumbnails
 		var thumbs models.Thumbnails

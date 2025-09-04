@@ -123,7 +123,7 @@ func Capitalize(s string) string {
 	return strings.ToUpper(s[:1]) + s[1:]
 }
 
-// NullString is a helper function to convert
+// ToNullString is a helper function to convert
 // a string to sql.NullString on db UPDATE/INSERT
 func ToNullString(s string) sql.NullString {
 	if s == "" {
@@ -132,20 +132,13 @@ func ToNullString(s string) sql.NullString {
 	return sql.NullString{String: s, Valid: true}
 }
 
-// StringFromNull is a helper function to convert
+// FromNullString is a helper function to convert
 // an sql.NullString to a string on db SELECT
-func StringFromNull(ns sql.NullString) string {
+func FromNullString(ns sql.NullString) string {
 	if !ns.Valid {
 		return ""
 	}
 	return ns.String
-}
-
-func PtrToString(s *string) string {
-	if s == nil {
-		return ""
-	}
-	return *s
 }
 
 func Plural(num int, word string) string {

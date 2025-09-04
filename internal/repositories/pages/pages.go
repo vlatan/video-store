@@ -2,6 +2,7 @@ package pages
 
 import (
 	"context"
+	"database/sql"
 	"factual-docs/internal/drivers/database"
 	"factual-docs/internal/models"
 	"factual-docs/internal/utils"
@@ -23,7 +24,7 @@ func (r *Repository) GetSinglePage(ctx context.Context, slug string) (*models.Pa
 	var page models.Page
 
 	// Nullable string
-	var content *string
+	var content sql.NullString
 
 	// Get single row from DB
 	err := r.db.QueryRow(ctx, getSinglePageQuery, slug).Scan(
@@ -36,7 +37,7 @@ func (r *Repository) GetSinglePage(ctx context.Context, slug string) (*models.Pa
 		return nil, err
 	}
 
-	page.Content = utils.PtrToString(content)
+	page.Content = utils.FromNullString(content)
 	return &page, err
 }
 

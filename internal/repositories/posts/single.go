@@ -2,6 +2,7 @@ package posts
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"factual-docs/internal/models"
 	"factual-docs/internal/utils"
@@ -117,12 +118,8 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (*models
 	var post models.Post
 	post.Duration = &models.Duration{}
 
-	var ( // Nullable strings in the DB need pointers for the scan
-		thumbnails []byte
-		shortDesc  *string
-		slug       *string
-		name       *string
-	)
+	var thumbnails []byte
+	var shortDesc, slug, name sql.NullString
 
 	// Get single row from DB
 	err := r.db.QueryRow(ctx, getSinglePostQuery, videoID).Scan(
@@ -143,15 +140,15 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (*models
 		return nil, err
 	}
 
-	// Define category if not nil
-	if slug != nil && name != nil {
+	// Define category if valid
+	if slug.Valid && name.Valid {
 		post.Category = &models.Category{}
-		post.Category.Slug = utils.PtrToString(slug)
-		post.Category.Name = utils.PtrToString(name)
+		post.Category.Slug = utils.FromNullString(slug)
+		post.Category.Name = utils.FromNullString(name)
 	}
 
 	// Define short desc
-	post.ShortDesc = utils.PtrToString(shortDesc)
+	post.ShortDesc = utils.FromNullString(shortDesc)
 
 	// Provide humand readable video duration
 	humanDuration, _ := post.Duration.ISO.Human()

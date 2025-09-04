@@ -2,6 +2,7 @@ package posts
 
 import (
 	"context"
+	"database/sql"
 	"factual-docs/internal/models"
 	"factual-docs/internal/utils"
 )
@@ -32,9 +33,7 @@ func (r *Repository) GetAllPosts(ctx context.Context) (posts []models.Post, err 
 	// Iterate over the rows
 	for rows.Next() {
 		var post models.Post
-		var playlistID *string
-		var shortDesc *string
-		var categoryName *string
+		var playlistID, shortDesc, categoryName sql.NullString
 
 		// Paste post from row to struct, thumbnails in a separate var
 		if err = rows.Scan(
@@ -47,9 +46,9 @@ func (r *Repository) GetAllPosts(ctx context.Context) (posts []models.Post, err 
 			return nil, err
 		}
 
-		post.PlaylistID = utils.PtrToString(playlistID)
-		post.ShortDesc = utils.PtrToString(shortDesc)
-		post.Category = &models.Category{Name: utils.PtrToString(categoryName)}
+		post.PlaylistID = utils.FromNullString(playlistID)
+		post.ShortDesc = utils.FromNullString(shortDesc)
+		post.Category = &models.Category{Name: utils.FromNullString(categoryName)}
 
 		// Include the processed post in the result
 		posts = append(posts, post)
