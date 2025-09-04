@@ -14,7 +14,7 @@ type avatarResult struct {
 // Get users avatars in parallel
 func (s *Service) GetAvatars(ctx context.Context, users []models.User) chan avatarResult {
 	var wg sync.WaitGroup
-	avatars := make(chan avatarResult, s.config.PostsPerPage)
+	avatars := make(chan avatarResult, len(users))
 	semaphore := make(chan struct{}, 10) // max 10 paralel calls
 
 	for i, user := range users {
@@ -43,11 +43,10 @@ func (s *Service) GetAvatars(ctx context.Context, users []models.User) chan avat
 	}
 
 	// Wait for the goroutines to finish in a separate goroutine
-	// And once done close the channels
+	// And once done close the channel
 	go func() {
 		wg.Wait()
 		close(avatars)
-		close(semaphore)
 	}()
 
 	return avatars
