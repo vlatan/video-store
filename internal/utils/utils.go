@@ -123,12 +123,22 @@ func Capitalize(s string) string {
 	return strings.ToUpper(s[:1]) + s[1:]
 }
 
-// Helper function to convert string pointer or empty string to sql.NullString
-func NullString(s string) sql.NullString {
+// NullString is a helper function to convert
+// a string to sql.NullString on db UPDATE/INSERT
+func ToNullString(s string) sql.NullString {
 	if s == "" {
 		return sql.NullString{Valid: false}
 	}
 	return sql.NullString{String: s, Valid: true}
+}
+
+// StringFromNull is a helper function to convert
+// an sql.NullString to a string on db SELECT
+func StringFromNull(ns sql.NullString) string {
+	if !ns.Valid {
+		return ""
+	}
+	return ns.String
 }
 
 func PtrToString(s *string) string {

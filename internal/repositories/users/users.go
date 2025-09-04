@@ -30,10 +30,10 @@ func (r *Repository) UpsertUser(ctx context.Context, u *models.User) (int, error
 		upsertUserQuery,
 		u.ProviderUserId,
 		u.Provider,
-		utils.NullString(u.AnalyticsID),
-		utils.NullString(u.Name),
-		utils.NullString(u.Email),
-		utils.NullString(u.AvatarURL),
+		utils.ToNullString(u.AnalyticsID),
+		utils.ToNullString(u.Name),
+		utils.ToNullString(u.Email),
+		utils.ToNullString(u.AvatarURL),
 	).Scan(&id)
 
 	return id, err

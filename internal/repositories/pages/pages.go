@@ -42,12 +42,12 @@ func (r *Repository) GetSinglePage(ctx context.Context, slug string) (*models.Pa
 
 // Update page
 func (r *Repository) UpdatePage(ctx context.Context, slug, title, content string) (int64, error) {
-	return r.db.Exec(ctx, updatePageQuery, slug, title, utils.NullString(content))
+	return r.db.Exec(ctx, updatePageQuery, slug, title, utils.ToNullString(content))
 }
 
 // Update page
 func (r *Repository) InsertPage(ctx context.Context, slug, title, content string) (int64, error) {
-	return r.db.Exec(ctx, insertPageQuery, slug, title, utils.NullString(content))
+	return r.db.Exec(ctx, insertPageQuery, slug, title, utils.ToNullString(content))
 }
 
 // Delete page
