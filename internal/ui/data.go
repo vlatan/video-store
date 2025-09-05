@@ -1,11 +1,12 @@
 package ui
 
 import (
-	"factual-docs/internal/drivers/redis"
-	"factual-docs/internal/models"
-	"factual-docs/internal/utils"
 	"math"
 	"net/http"
+
+	"github.com/vlatan/video-store/internal/drivers/redis"
+	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/utils"
 
 	"github.com/gorilla/csrf"
 )

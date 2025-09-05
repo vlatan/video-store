@@ -2,11 +2,12 @@ package main
 
 import (
 	"context"
-	"factual-docs/internal/backup"
-	"factual-docs/internal/config"
-	"factual-docs/internal/r2"
 	"log"
 	"time"
+
+	"github.com/vlatan/video-store/internal/backup"
+	"github.com/vlatan/video-store/internal/config"
+	"github.com/vlatan/video-store/internal/r2"
 )
 
 func main() {

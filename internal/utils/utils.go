@@ -2,7 +2,6 @@ package utils
 
 import (
 	"database/sql"
-	"factual-docs/internal/models"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -10,6 +9,8 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+
+	"github.com/vlatan/video-store/internal/models"
 )
 
 type contextKey struct {

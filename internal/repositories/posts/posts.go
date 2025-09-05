@@ -2,9 +2,10 @@ package posts
 
 import (
 	"context"
-	"factual-docs/internal/config"
-	"factual-docs/internal/drivers/database"
-	"factual-docs/internal/models"
+
+	"github.com/vlatan/video-store/internal/config"
+	"github.com/vlatan/video-store/internal/drivers/database"
+	"github.com/vlatan/video-store/internal/models"
 )
 
 type Repository struct {

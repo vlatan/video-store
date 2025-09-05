@@ -1,11 +1,12 @@
 package models
 
 import (
-	"factual-docs/internal/config"
 	"html/template"
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/vlatan/video-store/internal/config"
 )
 
 type StaticFiles map[string]*FileInfo

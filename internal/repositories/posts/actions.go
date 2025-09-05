@@ -2,7 +2,8 @@ package posts
 
 import (
 	"context"
-	"factual-docs/internal/models"
+
+	"github.com/vlatan/video-store/internal/models"
 )
 
 const userActionsQuery = `

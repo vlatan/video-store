@@ -3,13 +3,14 @@ package pages
 import (
 	"bytes"
 	"errors"
-	"factual-docs/internal/drivers/redis"
-	"factual-docs/internal/models"
-	"factual-docs/internal/utils"
 	"fmt"
 	"html/template"
 	"log"
 	"net/http"
+
+	"github.com/vlatan/video-store/internal/drivers/redis"
+	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/utils"
 
 	slugify "github.com/gosimple/slug"
 	"github.com/jackc/pgx/v5"

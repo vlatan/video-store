@@ -1,9 +1,10 @@
 package auth
 
 import (
-	"factual-docs/internal/utils"
 	"log"
 	"net/http"
+
+	"github.com/vlatan/video-store/internal/utils"
 
 	"golang.org/x/oauth2"
 )

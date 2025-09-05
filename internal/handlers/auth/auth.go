@@ -1,11 +1,11 @@
 package auth
 
 import (
-	"factual-docs/internal/config"
-	"factual-docs/internal/drivers/redis"
-	"factual-docs/internal/r2"
-	"factual-docs/internal/repositories/users"
-	"factual-docs/internal/ui"
+	"github.com/vlatan/video-store/internal/config"
+	"github.com/vlatan/video-store/internal/drivers/redis"
+	"github.com/vlatan/video-store/internal/r2"
+	"github.com/vlatan/video-store/internal/repositories/users"
+	"github.com/vlatan/video-store/internal/ui"
 
 	"github.com/gorilla/sessions"
 )

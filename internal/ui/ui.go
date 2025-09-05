@@ -1,16 +1,17 @@
 package ui
 
 import (
-	"factual-docs/internal/config"
-	"factual-docs/internal/drivers/redis"
-	"factual-docs/internal/models"
-	"factual-docs/internal/r2"
-	"factual-docs/internal/repositories/categories"
-	"factual-docs/internal/repositories/users"
 	"io"
 	"net/http"
 	"regexp"
 	"sync"
+
+	"github.com/vlatan/video-store/internal/config"
+	"github.com/vlatan/video-store/internal/drivers/redis"
+	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/r2"
+	"github.com/vlatan/video-store/internal/repositories/categories"
+	"github.com/vlatan/video-store/internal/repositories/users"
 
 	"github.com/gorilla/sessions"
 	"github.com/tdewolff/minify"

@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"compress/gzip"
 	"crypto/md5"
-	"factual-docs/internal/models"
-	"factual-docs/web"
 	"fmt"
 	"html/template"
 	"io/fs"
@@ -13,6 +11,9 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
+
+	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/web"
 
 	"github.com/tdewolff/minify"
 )

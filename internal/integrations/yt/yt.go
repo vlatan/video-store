@@ -2,7 +2,8 @@ package yt
 
 import (
 	"context"
-	"factual-docs/internal/config"
+
+	"github.com/vlatan/video-store/internal/config"
 
 	"google.golang.org/api/option"
 	"google.golang.org/api/youtube/v3"

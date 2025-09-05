@@ -2,8 +2,9 @@ package users
 
 import (
 	"context"
-	"factual-docs/internal/models"
 	"sync"
+
+	"github.com/vlatan/video-store/internal/models"
 )
 
 type avatarResult struct {

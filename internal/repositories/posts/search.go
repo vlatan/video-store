@@ -5,10 +5,11 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"factual-docs/internal/models"
 	"fmt"
 	"strconv"
 	"time"
+
+	"github.com/vlatan/video-store/internal/models"
 )
 
 const searchPostsQuery = `

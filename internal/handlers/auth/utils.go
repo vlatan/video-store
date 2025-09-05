@@ -5,13 +5,14 @@ import (
 	"context"
 	"crypto/md5"
 	"encoding/json"
-	"factual-docs/internal/models"
 	"fmt"
 	"log"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/vlatan/video-store/internal/models"
 
 	"golang.org/x/oauth2"
 )

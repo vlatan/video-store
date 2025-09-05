@@ -4,10 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"factual-docs/internal/models"
-	"factual-docs/internal/utils"
 	"fmt"
 	"strings"
+
+	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/utils"
 )
 
 const postExistsQuery = `

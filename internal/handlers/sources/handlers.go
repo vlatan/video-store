@@ -1,12 +1,13 @@
 package sources
 
 import (
-	"factual-docs/internal/drivers/redis"
-	"factual-docs/internal/models"
-	"factual-docs/internal/utils"
 	"fmt"
 	"log"
 	"net/http"
+
+	"github.com/vlatan/video-store/internal/drivers/redis"
+	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/utils"
 )
 
 // Handle all sources page

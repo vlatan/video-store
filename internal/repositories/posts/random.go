@@ -3,8 +3,9 @@ package posts
 import (
 	"context"
 	"encoding/json"
-	"factual-docs/internal/models"
 	"fmt"
+
+	"github.com/vlatan/video-store/internal/models"
 )
 
 const getRandomPostsQuery = `

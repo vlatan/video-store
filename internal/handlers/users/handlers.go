@@ -1,9 +1,10 @@
 package users
 
 import (
-	"factual-docs/internal/utils"
 	"log"
 	"net/http"
+
+	"github.com/vlatan/video-store/internal/utils"
 )
 
 // Handle the user favorites page

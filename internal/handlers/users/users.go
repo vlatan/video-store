@@ -1,12 +1,12 @@
 package users
 
 import (
-	"factual-docs/internal/config"
-	"factual-docs/internal/drivers/redis"
-	"factual-docs/internal/r2"
-	postsRepo "factual-docs/internal/repositories/posts"
-	usersRepo "factual-docs/internal/repositories/users"
-	"factual-docs/internal/ui"
+	"github.com/vlatan/video-store/internal/config"
+	"github.com/vlatan/video-store/internal/drivers/redis"
+	"github.com/vlatan/video-store/internal/r2"
+	postsRepo "github.com/vlatan/video-store/internal/repositories/posts"
+	usersRepo "github.com/vlatan/video-store/internal/repositories/users"
+	"github.com/vlatan/video-store/internal/ui"
 )
 
 type Service struct {

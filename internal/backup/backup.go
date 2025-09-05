@@ -5,8 +5,6 @@ import (
 	"bytes"
 	"compress/gzip"
 	"context"
-	"factual-docs/internal/config"
-	"factual-docs/internal/r2"
 	"fmt"
 	"io"
 	"log"
@@ -14,6 +12,9 @@ import (
 	"os/exec"
 	"path/filepath"
 	"time"
+
+	"github.com/vlatan/video-store/internal/config"
+	"github.com/vlatan/video-store/internal/r2"
 )
 
 type Service struct {

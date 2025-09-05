@@ -1,10 +1,10 @@
 package misc
 
 import (
-	"factual-docs/internal/config"
-	"factual-docs/internal/drivers/database"
-	"factual-docs/internal/drivers/redis"
-	"factual-docs/internal/ui"
+	"github.com/vlatan/video-store/internal/config"
+	"github.com/vlatan/video-store/internal/drivers/database"
+	"github.com/vlatan/video-store/internal/drivers/redis"
+	"github.com/vlatan/video-store/internal/ui"
 )
 
 type Service struct {

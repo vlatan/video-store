@@ -3,11 +3,12 @@ package store
 import (
 	"crypto/rand"
 	"encoding/hex"
-	"factual-docs/internal/config"
-	client "factual-docs/internal/drivers/redis"
 	"fmt"
 	"net/http"
 	"time"
+
+	"github.com/vlatan/video-store/internal/config"
+	client "github.com/vlatan/video-store/internal/drivers/redis"
 
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"

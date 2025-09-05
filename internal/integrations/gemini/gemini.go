@@ -3,12 +3,13 @@ package gemini
 import (
 	"context"
 	"encoding/json"
-	"factual-docs/internal/config"
-	"factual-docs/internal/models"
-	"factual-docs/internal/utils"
 	"fmt"
 	"strings"
 	"time"
+
+	"github.com/vlatan/video-store/internal/config"
+	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/utils"
 
 	"google.golang.org/genai"
 )

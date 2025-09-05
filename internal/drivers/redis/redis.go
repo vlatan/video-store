@@ -3,11 +3,12 @@ package redis
 import (
 	"context"
 	"encoding/json"
-	"factual-docs/internal/config"
 	"fmt"
 	"log"
 	"sync"
 	"time"
+
+	"github.com/vlatan/video-store/internal/config"
 
 	"github.com/redis/go-redis/v9"
 )

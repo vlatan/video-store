@@ -2,11 +2,12 @@ package sitemaps
 
 import (
 	"encoding/json"
-	"factual-docs/internal/models"
-	"factual-docs/internal/utils"
 	"fmt"
 	"net/http"
 	"time"
+
+	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/utils"
 )
 
 // Get sitemap data from DB and split it in smaller parts

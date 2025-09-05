@@ -2,8 +2,9 @@ package main
 
 import (
 	"context"
-	"factual-docs/internal/worker"
 	"log"
+
+	"github.com/vlatan/video-store/internal/worker"
 )
 
 func main() {

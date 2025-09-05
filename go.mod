@@ -1,4 +1,4 @@
-module factual-docs
+module github.com/vlatan/video-store
 
 go 1.25.1
 

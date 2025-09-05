@@ -5,12 +5,13 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
-	"factual-docs/internal/config"
-	"factual-docs/internal/models"
 	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/vlatan/video-store/internal/config"
+	"github.com/vlatan/video-store/internal/models"
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"

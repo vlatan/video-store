@@ -2,12 +2,13 @@ package ui
 
 import (
 	"encoding/json"
-	"factual-docs/internal/models"
-	"factual-docs/internal/utils"
 	"fmt"
 	"log"
 	"net/http"
 	"path/filepath"
+
+	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/utils"
 )
 
 // Write JSON to buffer first and then if succesfull to the response writer

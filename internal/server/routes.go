@@ -1,10 +1,11 @@
 package server
 
 import (
-	"factual-docs/internal/utils"
 	"net/http"
 	"runtime"
 	"runtime/pprof"
+
+	"github.com/vlatan/video-store/internal/utils"
 )
 
 // RegisterRoutes registers routes

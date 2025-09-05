@@ -3,8 +3,9 @@ package posts
 import (
 	"context"
 	"database/sql"
-	"factual-docs/internal/models"
-	"factual-docs/internal/utils"
+
+	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/utils"
 )
 
 const getAllPostsQuery = `

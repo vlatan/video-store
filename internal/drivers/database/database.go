@@ -2,10 +2,11 @@ package database
 
 import (
 	"context"
-	"factual-docs/internal/config"
 	"fmt"
 	"log"
 	"sync"
+
+	"github.com/vlatan/video-store/internal/config"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"

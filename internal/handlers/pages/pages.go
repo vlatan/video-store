@@ -1,10 +1,10 @@
 package pages
 
 import (
-	"factual-docs/internal/config"
-	"factual-docs/internal/drivers/redis"
-	pagesRepo "factual-docs/internal/repositories/pages"
-	"factual-docs/internal/ui"
+	"github.com/vlatan/video-store/internal/config"
+	"github.com/vlatan/video-store/internal/drivers/redis"
+	pagesRepo "github.com/vlatan/video-store/internal/repositories/pages"
+	"github.com/vlatan/video-store/internal/ui"
 )
 
 type Service struct {

@@ -1,10 +1,11 @@
 package ui
 
 import (
-	"factual-docs/internal/models"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/vlatan/video-store/internal/models"
 )
 
 // Store flash message in a session

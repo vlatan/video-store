@@ -6,11 +6,12 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"factual-docs/internal/models"
-	"factual-docs/internal/utils"
 	"fmt"
 	"strings"
 	"time"
+
+	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/utils"
 )
 
 // Query the DB for posts based on variadic arguments

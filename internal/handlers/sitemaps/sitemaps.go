@@ -1,10 +1,10 @@
 package sitemaps
 
 import (
-	"factual-docs/internal/config"
-	"factual-docs/internal/drivers/redis"
-	postsRepo "factual-docs/internal/repositories/posts"
-	"factual-docs/internal/ui"
+	"github.com/vlatan/video-store/internal/config"
+	"github.com/vlatan/video-store/internal/drivers/redis"
+	postsRepo "github.com/vlatan/video-store/internal/repositories/posts"
+	"github.com/vlatan/video-store/internal/ui"
 )
 
 type Service struct {

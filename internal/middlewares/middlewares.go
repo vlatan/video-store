@@ -2,12 +2,13 @@ package middlewares
 
 import (
 	"context"
-	"factual-docs/internal/config"
-	"factual-docs/internal/ui"
-	"factual-docs/internal/utils"
 	"log"
 	"net/http"
 	"strings"
+
+	"github.com/vlatan/video-store/internal/config"
+	"github.com/vlatan/video-store/internal/ui"
+	"github.com/vlatan/video-store/internal/utils"
 
 	"github.com/gorilla/csrf"
 	"github.com/klauspost/compress/gzhttp"

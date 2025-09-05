@@ -2,18 +2,19 @@ package worker
 
 import (
 	"context"
-	"factual-docs/internal/config"
-	"factual-docs/internal/drivers/database"
-	"factual-docs/internal/integrations/gemini"
-	"factual-docs/internal/integrations/yt"
-	"factual-docs/internal/models"
-	"factual-docs/internal/repositories/categories"
-	"factual-docs/internal/repositories/posts"
-	"factual-docs/internal/repositories/sources"
-	"factual-docs/internal/utils"
 	"fmt"
 	"log"
 	"time"
+
+	"github.com/vlatan/video-store/internal/config"
+	"github.com/vlatan/video-store/internal/drivers/database"
+	"github.com/vlatan/video-store/internal/integrations/gemini"
+	"github.com/vlatan/video-store/internal/integrations/yt"
+	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/repositories/categories"
+	"github.com/vlatan/video-store/internal/repositories/posts"
+	"github.com/vlatan/video-store/internal/repositories/sources"
+	"github.com/vlatan/video-store/internal/utils"
 
 	"google.golang.org/api/youtube/v3"
 )

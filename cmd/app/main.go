@@ -9,7 +9,7 @@ import (
 	"syscall"
 	"time"
 
-	"factual-docs/internal/server"
+	"github.com/vlatan/video-store/internal/server"
 )
 
 type Closer interface {

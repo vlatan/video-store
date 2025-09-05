@@ -3,11 +3,12 @@ package users
 import (
 	"context"
 	"database/sql"
-	"factual-docs/internal/config"
-	"factual-docs/internal/drivers/database"
-	"factual-docs/internal/models"
-	"factual-docs/internal/utils"
 	"time"
+
+	"github.com/vlatan/video-store/internal/config"
+	"github.com/vlatan/video-store/internal/drivers/database"
+	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/utils"
 )
 
 type Repository struct {

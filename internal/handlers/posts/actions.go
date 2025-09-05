@@ -2,10 +2,11 @@ package posts
 
 import (
 	"encoding/json"
-	"factual-docs/internal/models"
-	"factual-docs/internal/utils"
 	"log"
 	"net/http"
+
+	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/utils"
 )
 
 type bodyData struct {

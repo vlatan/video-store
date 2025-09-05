@@ -1,11 +1,12 @@
 package sitemaps
 
 import (
-	"factual-docs/internal/models"
-	"factual-docs/internal/utils"
 	"html/template"
 	"log"
 	"net/http"
+
+	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/utils"
 )
 
 const (

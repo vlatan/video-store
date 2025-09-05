@@ -3,10 +3,11 @@ package sources
 import (
 	"context"
 	"encoding/json"
-	"factual-docs/internal/drivers/database"
-	"factual-docs/internal/models"
-	"factual-docs/internal/utils"
 	"fmt"
+
+	"github.com/vlatan/video-store/internal/drivers/database"
+	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/utils"
 )
 
 type Repository struct {

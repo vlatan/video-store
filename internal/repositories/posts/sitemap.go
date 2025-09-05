@@ -2,8 +2,9 @@ package posts
 
 import (
 	"context"
-	"factual-docs/internal/models"
 	"time"
+
+	"github.com/vlatan/video-store/internal/models"
 )
 
 const sitemapDataQuery = `

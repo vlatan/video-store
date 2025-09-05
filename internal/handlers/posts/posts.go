@@ -1,12 +1,12 @@
 package posts
 
 import (
-	"factual-docs/internal/config"
-	"factual-docs/internal/drivers/redis"
-	"factual-docs/internal/integrations/gemini"
-	"factual-docs/internal/integrations/yt"
-	postsRepo "factual-docs/internal/repositories/posts"
-	"factual-docs/internal/ui"
+	"github.com/vlatan/video-store/internal/config"
+	"github.com/vlatan/video-store/internal/drivers/redis"
+	"github.com/vlatan/video-store/internal/integrations/gemini"
+	"github.com/vlatan/video-store/internal/integrations/yt"
+	postsRepo "github.com/vlatan/video-store/internal/repositories/posts"
+	"github.com/vlatan/video-store/internal/ui"
 )
 
 type Service struct {

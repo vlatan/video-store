@@ -2,14 +2,15 @@ package misc
 
 import (
 	"bytes"
-	"factual-docs/internal/utils"
-	"factual-docs/web"
 	"fmt"
 	"log"
 	"net/http"
 	"path/filepath"
 	"slices"
 	"strings"
+
+	"github.com/vlatan/video-store/internal/utils"
+	"github.com/vlatan/video-store/web"
 )
 
 var weirdBots = []string{

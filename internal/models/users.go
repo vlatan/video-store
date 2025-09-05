@@ -4,9 +4,6 @@ import (
 	"bytes"
 	"context"
 	"crypto/md5"
-	"factual-docs/internal/config"
-	"factual-docs/internal/drivers/redis"
-	"factual-docs/internal/r2"
 	"fmt"
 	"image"
 	"image/jpeg"
@@ -15,6 +12,10 @@ import (
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/vlatan/video-store/internal/config"
+	"github.com/vlatan/video-store/internal/drivers/redis"
+	"github.com/vlatan/video-store/internal/r2"
 
 	_ "image/gif" // Register GIF decoder
 	_ "image/png" // Register PNG decoder

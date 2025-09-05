@@ -1,6 +1,6 @@
 package auth
 
-import "factual-docs/internal/models"
+import "github.com/vlatan/video-store/internal/models"
 
 var successLogin = models.FlashMessage{
 	Message:  "You've been logged in!",

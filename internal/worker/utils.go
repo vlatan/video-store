@@ -2,8 +2,9 @@ package worker
 
 import (
 	"context"
-	"factual-docs/internal/models"
 	"log"
+
+	"github.com/vlatan/video-store/internal/models"
 )
 
 // Update generated gemini data on a video
