@@ -47,6 +47,9 @@ services:
     ports:
       - $PORT:$PORT
     env_file: .env
+    environment:
+      # Use Go version specified in the go.mod, not the local one
+      - GOTOOLCHAIN=auto
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
@@ -65,7 +68,7 @@ services:
         condition: service_healthy
 
   worker:
-    image: golang:1.24-alpine
+    image: golang:1.25.1-alpine
     container_name: worker
     command: tail -f /dev/null
     env_file: .env
@@ -78,7 +81,7 @@ services:
         condition: service_healthy
 
   backup:
-    image: golang:1.24-alpine
+    image: golang:1.25.1-alpine
     container_name: backup
     command: [ "sh", "-c", "apk update && apk add postgresql16-client && tail -f /dev/null" ]
     env_file: .env

@@ -1,4 +1,4 @@
-FROM golang:1.24-alpine AS builder
+FROM golang:1.25.1-alpine AS builder
 
 # Build argument to determine which service to build
 ARG TARGET="app"
