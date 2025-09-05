@@ -9,3 +9,4 @@
   Calculate just etags on compile or on the fly in the route
 
 * Refactor JS in functions and classes
+  Use TypeScript
