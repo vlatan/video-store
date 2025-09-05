@@ -103,6 +103,7 @@ func (t *Thumbnails) MaxThumb() (result *Thumbnail) {
 	for _, thumb := range thumbs {
 		if thumb != nil && thumb.Width != 0 && thumb.Width > maxWidth {
 			result = thumb
+			maxWidth = thumb.Width
 		}
 	}
 
