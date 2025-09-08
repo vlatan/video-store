@@ -1,4 +1,6 @@
-* Generalize the app. Eliminate the documentary usage.
+* Generalize the app.
+  Eliminate the documentary usage.
+  
 * Add slug input to page
 * Add form for new category as well as delete, edit category routes
 * Delete source - should cascade and delete all the videos?
