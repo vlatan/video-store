@@ -2,7 +2,7 @@
 
 [https://factualdocs.com](https://factualdocs.com)
 
-This web app is made using Golang, HTML, CSS, JavaScript, PostgreSQL and Redis. It is basically a documentary library that automatically fetches and posts videos (documentaries) from predetermined sources (YouTube playlists) therefore it heavily utilizes the [YouTube API](https://developers.google.com/youtube/v3/docs).
+This web app is made using Golang, HTML, CSS, JavaScript, PostgreSQL and Redis. It is basically a video library that automatically fetches and posts videos from predetermined sources (YouTube playlists) therefore it heavily utilizes the [YouTube API](https://developers.google.com/youtube/v3/docs).
 
 It validates the videos against multiple criteria such as:
 
@@ -99,6 +99,7 @@ go tool pprof -base heap1 heap2
 
 Once inside the `pprof` CLI run `top`, or `top20` to see if there's memory increase.
 
+
 ## Dump/Restore DB data
 
 Run `export HISTCONTROL=ignorespace` so you're able to hide bash commands from the history if they start with empty space. This is probably already set on your system in the `~/.bashrc` file, but to be sure run it, there's no harm.
@@ -139,7 +140,6 @@ pg_restore -F t -d $PROD_DB_URL /db.local.dump
 ```
 
 When we need tto access the local running postgres server we use `exec`, and when we want to reach the production we use `run` on our own temporary `postgres:16.3` container. The postgres versions need to match though.
-
 
 Confirm the data is there. This will land you at `psql` in the docker container from where you can see the tables, query the data, etc.
 ```
