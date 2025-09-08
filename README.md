@@ -1,4 +1,4 @@
-# Factual Docs
+# Video Store
 
 [https://factualdocs.com](https://factualdocs.com)
 
