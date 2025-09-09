@@ -1,5 +1,7 @@
 * Generalize the app.
   Eliminate the documentary usage.
+
+* Write tests
   
 * Add slug input to page
 * Add form for new category as well as delete, edit category routes
