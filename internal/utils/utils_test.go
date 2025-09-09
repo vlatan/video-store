@@ -2,6 +2,7 @@ package utils
 
 import (
 	"context"
+	"net/http"
 	"net/http/httptest"
 	"testing"
 
@@ -61,5 +62,37 @@ func TestValidateFilePath(t *testing.T) {
 			}
 		})
 
+	}
+}
+
+func TestHttpError(t *testing.T) {
+	tests := []struct {
+		name   string
+		status int
+	}{
+		{"Bad Request", http.StatusBadRequest},
+		{"Not Found", http.StatusNotFound},
+		{"Internal Server Error", http.StatusInternalServerError},
+		{"Forbidden", http.StatusForbidden},
+		{"Unauthorized", http.StatusUnauthorized},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			recorder := httptest.NewRecorder()
+
+			HttpError(recorder, tt.status)
+
+			// Check status code
+			if recorder.Code != tt.status {
+				t.Errorf("got %d, want %d", recorder.Code, tt.status)
+			}
+
+			// Check if the body contains the status text + newline
+			expectedBody := http.StatusText(tt.status) + "\n\n"
+			if recorder.Body.String() != expectedBody {
+				t.Errorf("got %q, want %q", recorder.Body.String(), expectedBody)
+			}
+		})
 	}
 }
