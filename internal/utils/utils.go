@@ -76,7 +76,7 @@ func ValidateFilePath(p string) error {
 
 	cleaned := path.Clean(p)
 	if cleaned != p {
-		return fmt.Errorf("invalid path '%s'", p)
+		return fmt.Errorf("invalid path %s", p)
 	}
 
 	return nil
