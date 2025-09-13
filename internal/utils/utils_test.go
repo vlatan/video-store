@@ -2,6 +2,7 @@ package utils
 
 import (
 	"context"
+	"crypto/tls"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -69,6 +70,45 @@ func TestGetDataFromContext(t *testing.T) {
 	}
 }
 
+func TestGetBaseURL(t *testing.T) {
+
+	mockTLS := &tls.ConnectionState{Version: tls.VersionTLS13}
+	tests := []struct {
+		name  string
+		https bool
+		tls   *tls.ConnectionState
+	}{
+		{"force https", true, mockTLS},
+		{"force https", true, nil},
+		{"don't force https", false, mockTLS},
+		{"don't force https", false, nil},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := httptest.NewRequest("GET", "/", nil)
+			req.TLS = tt.tls
+
+			url := GetBaseURL(req, tt.https)
+			if tt.https && url.Scheme != "https" {
+				t.Errorf("got %q scheme, want 'https' scheme", url.Scheme)
+			}
+
+			if !tt.https && req.TLS != nil && url.Scheme != "https" {
+				t.Errorf("got %q scheme, want 'https' scheme", url.Scheme)
+			}
+
+			if url.Host != req.Host {
+				t.Errorf("got %q host, want %q host", url.Host, req.Host)
+			}
+
+			if url.Path != req.URL.Path {
+				t.Errorf("got %q path, want %q path", url.Path, req.URL.Path)
+			}
+		})
+	}
+}
+
 func TestValidateFilePath(t *testing.T) {
 
 	tests := []struct {
@@ -111,6 +151,7 @@ func TestHttpError(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			recorder := httptest.NewRecorder()
 
+			// Test the functions
 			HttpError(recorder, tt.status)
 
 			// Check status code
