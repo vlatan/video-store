@@ -249,6 +249,48 @@ func TestToNullString(t *testing.T) {
 	}
 }
 
+func TestFromNullString(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    sql.NullString
+		expected string
+	}{
+		{"invalid NullString", sql.NullString{Valid: false}, ""},
+		{"valid NullString", sql.NullString{String: "foo", Valid: true}, "foo"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := FromNullString(tt.input)
+			if got != tt.expected {
+				t.Errorf("got %+v, want %+v", got, tt.expected)
+			}
+		})
+	}
+}
+
+func TestPlural(t *testing.T) {
+	tests := []struct {
+		name     string
+		num      int
+		word     string
+		expected string
+	}{
+		{"empty string", 1, "", ""},
+		{"single", 1, "foo", "foo"},
+		{"multiple", 2, "foo", "foos"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := Plural(tt.num, tt.word)
+			if got != tt.expected {
+				t.Errorf("got %q, want %q", got, tt.expected)
+			}
+		})
+	}
+}
+
 func TestHttpError(t *testing.T) {
 	tests := []struct {
 		name   string

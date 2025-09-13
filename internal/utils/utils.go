@@ -146,10 +146,25 @@ func FromNullString(ns sql.NullString) string {
 }
 
 func Plural(num int, word string) string {
-	if num == 1 {
+	if word == "" || num <= 1 {
 		return word
 	}
+
 	return word + "s"
+}
+
+// Check one thumbnail equality
+func ThumbnailEqual(a, b *models.Thumbnail) bool {
+	if a == nil && b == nil {
+		return true
+	}
+
+	if a == nil || b == nil {
+		return false
+	}
+
+	// Only compare the actual data fields we care about
+	return a.Height == b.Height && a.Url == b.Url && a.Width == b.Width
 }
 
 // Check thumbnails equality
@@ -167,20 +182,6 @@ func ThumbnailsEqual(a, b *models.Thumbnails) bool {
 		ThumbnailEqual(a.High, b.High) &&
 		ThumbnailEqual(a.Standard, b.Standard) &&
 		ThumbnailEqual(a.Maxres, b.Maxres)
-}
-
-// Check one thumbnail equality
-func ThumbnailEqual(a, b *models.Thumbnail) bool {
-	if a == nil && b == nil {
-		return true
-	}
-
-	if a == nil || b == nil {
-		return false
-	}
-
-	// Only compare the actual data fields we care about
-	return a.Height == b.Height && a.Url == b.Url && a.Width == b.Width
 }
 
 // Check if this is a static file
