@@ -291,6 +291,34 @@ func TestPlural(t *testing.T) {
 	}
 }
 
+func TestThumbnailEqual(t *testing.T) {
+
+	a := &models.Thumbnail{Width: 10, Height: 5, Url: "foo"}
+	b := &models.Thumbnail{Width: 10, Height: 5, Url: "bar"}
+
+	tests := []struct {
+		name     string
+		a        *models.Thumbnail
+		b        *models.Thumbnail
+		expected bool
+	}{
+		{"nil structs", nil, nil, true},
+		{"first nil struct", nil, a, false},
+		{"second nil struct", a, nil, false},
+		{"different structs", a, b, false},
+		{"identical structs", a, a, true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := ThumbnailEqual(tt.a, tt.b)
+			if got != tt.expected {
+				t.Errorf("got %t, want %t", got, tt.expected)
+			}
+		})
+	}
+}
+
 func TestHttpError(t *testing.T) {
 	tests := []struct {
 		name   string
