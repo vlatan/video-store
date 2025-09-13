@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 
 	"github.com/vlatan/video-store/internal/models"
@@ -107,6 +108,41 @@ func TestGetBaseURL(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestAbsoluteURL(t *testing.T) {
+
+	baseURL := &url.URL{
+		Scheme: "https",
+		Host:   "localhost",
+		Path:   "/home",
+	}
+
+	tests := []struct {
+		name    string
+		baseURL *url.URL
+		path    string
+	}{
+		{"empty path", baseURL, ""},
+		{"ordinary path", baseURL, "/test"},
+		{"nill base url", nil, "/test"},
+		{"nill base url, empty path", nil, ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			absURL := AbsoluteURL(tt.baseURL, tt.path)
+			want := tt.path
+			if tt.baseURL != nil {
+				want, _ = url.JoinPath("https://localhost", tt.path)
+			}
+
+			if absURL != want {
+				t.Errorf("got %q, want %q", absURL, want)
+			}
+		})
+	}
+
 }
 
 func TestValidateFilePath(t *testing.T) {

@@ -63,7 +63,10 @@ func GetBaseURL(r *http.Request, forceHttps bool) *url.URL {
 
 // Construct an absolute url given a base url and path
 func AbsoluteURL(baseURL *url.URL, path string) string {
-	u := *baseURL // Copy the URL
+	var u url.URL
+	if baseURL != nil {
+		u = *baseURL // Copy the URL
+	}
 	u.Path = path
 	return u.String()
 }
