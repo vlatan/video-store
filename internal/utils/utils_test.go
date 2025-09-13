@@ -185,13 +185,19 @@ func TestHttpError(t *testing.T) {
 
 			// Check status code
 			if recorder.Code != tt.status {
-				t.Errorf("got %d, want %d", recorder.Code, tt.status)
+				t.Errorf(
+					"got %d status code, want %d status code",
+					recorder.Code, tt.status,
+				)
 			}
 
 			// Check if the body contains the status text + newline
 			expectedBody := http.StatusText(tt.status) + "\n"
 			if recorder.Body.String() != expectedBody {
-				t.Errorf("got %q, want %q", recorder.Body.String(), expectedBody)
+				t.Errorf(
+					"got %q body, want %q body",
+					recorder.Body.String(), expectedBody,
+				)
 			}
 		})
 	}
