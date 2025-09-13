@@ -319,6 +319,33 @@ func TestThumbnailEqual(t *testing.T) {
 	}
 }
 
+func TestIsStatic(t *testing.T) {
+
+	type test struct {
+		name, path string
+		expected   bool
+	}
+
+	tests := []test{
+		{"empty path", "", false},
+		{"non static path", "/foo/bar", false},
+		{"static path", "/static/foo", true},
+	}
+
+	for _, path := range RootFavicons {
+		tests = append(tests, test{"favicon path", path, true})
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := IsStatic(tt.path)
+			if got != tt.expected {
+				t.Errorf("got %t, want %t", got, tt.expected)
+			}
+		})
+	}
+}
+
 func TestHttpError(t *testing.T) {
 	tests := []struct {
 		name   string
