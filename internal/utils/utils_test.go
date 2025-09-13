@@ -3,12 +3,14 @@ package utils
 import (
 	"context"
 	"crypto/tls"
+	"database/sql"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/vlatan/video-store/internal/models"
 )
 
@@ -223,6 +225,25 @@ func TestCapitalize(t *testing.T) {
 			got := Capitalize(tt.input)
 			if got != tt.expected {
 				t.Errorf("got %q, want %q", got, tt.expected)
+			}
+		})
+	}
+}
+
+func TestToNullString(t *testing.T) {
+	tests := []struct {
+		name, input string
+		expected    sql.NullString
+	}{
+		{"empty string", "", sql.NullString{Valid: false}},
+		{"valid string", "foo", sql.NullString{String: "foo", Valid: true}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := ToNullString(tt.input)
+			if !cmp.Equal(got, tt.expected) {
+				t.Errorf("got %+v, want %+v", got, tt.expected)
 			}
 		})
 	}
