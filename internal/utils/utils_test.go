@@ -164,6 +164,29 @@ func TestValidateFilePath(t *testing.T) {
 	}
 }
 
+func TestEscapeTrancateString(t *testing.T) {
+	tests := []struct {
+		name     string
+		query    string
+		maxLen   int
+		expected string
+	}{
+		{"empty query", "", 10, ""},
+		{"short query", "#test", 10, "%23test"},
+		{"long query", "!make?test+", 10, "%21make%3F"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := EscapeTrancateString(tt.query, tt.maxLen)
+			if got != tt.expected {
+				t.Errorf("got %q, want %q", got, tt.expected)
+			}
+		})
+	}
+
+}
+
 func TestHttpError(t *testing.T) {
 	tests := []struct {
 		name   string

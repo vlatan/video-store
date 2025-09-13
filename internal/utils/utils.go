@@ -88,12 +88,12 @@ func ValidateFilePath(p string) error {
 // Takes a query and a max length,
 // then returns an escaped and truncated string.
 // If maxLenght <= 0 returns the original query.
-func EscapeTrancateString(query string, maxLength int) string {
+func EscapeTrancateString(query string, maxLen int) string {
 	// Escape the string
 	escapedQuery := url.QueryEscape(query)
 
 	// Check if max length makes sense
-	if maxLength <= 0 {
+	if maxLen <= 0 {
 		return escapedQuery
 	}
 
@@ -101,8 +101,8 @@ func EscapeTrancateString(query string, maxLength int) string {
 	// Note: We're truncating bytes, which is fine for ASCII/URL-encoded strings.
 	// If you were truncating arbitrary UTF-8, you'd need to convert to runes first
 	// to avoid splitting multi-byte characters. For URL-encoded strings, this is generally safe.
-	if len(escapedQuery) > maxLength {
-		escapedQuery = escapedQuery[:maxLength]
+	if len(escapedQuery) > maxLen {
+		escapedQuery = escapedQuery[:maxLen]
 	}
 
 	return escapedQuery
