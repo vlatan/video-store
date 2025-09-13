@@ -119,26 +119,22 @@ func TestAbsoluteURL(t *testing.T) {
 	}
 
 	tests := []struct {
-		name    string
-		baseURL *url.URL
-		path    string
+		name     string
+		baseURL  *url.URL
+		path     string
+		expected string
 	}{
-		{"empty path", baseURL, ""},
-		{"ordinary path", baseURL, "/test"},
-		{"nill base url", nil, "/test"},
-		{"nill base url, empty path", nil, ""},
+		{"empty path", baseURL, "", "https://localhost"},
+		{"ordinary path", baseURL, "/test", "https://localhost/test"},
+		{"nil base url", nil, "/test", "/test"},
+		{"nil base url, empty path", nil, "", ""},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			absURL := AbsoluteURL(tt.baseURL, tt.path)
-			want := tt.path
-			if tt.baseURL != nil {
-				want, _ = url.JoinPath("https://localhost", tt.path)
-			}
-
-			if absURL != want {
-				t.Errorf("got %q, want %q", absURL, want)
+			got := AbsoluteURL(tt.baseURL, tt.path)
+			if got != tt.expected {
+				t.Errorf("got %q, want %q", got, tt.expected)
 			}
 		})
 	}
