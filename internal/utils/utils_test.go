@@ -209,6 +209,25 @@ func TestGetPageNum(t *testing.T) {
 	}
 }
 
+func TestCapitalize(t *testing.T) {
+	tests := []struct {
+		name, input, expected string
+	}{
+		{"empty string", "", ""},
+		{"valid string", "foo", "Foo"},
+		{"capitalized string", "Bar", "Bar"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := Capitalize(tt.input)
+			if got != tt.expected {
+				t.Errorf("got %q, want %q", got, tt.expected)
+			}
+		})
+	}
+}
+
 func TestHttpError(t *testing.T) {
 	tests := []struct {
 		name   string
