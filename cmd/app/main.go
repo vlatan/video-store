@@ -12,10 +12,6 @@ import (
 	"github.com/vlatan/video-store/internal/server"
 )
 
-type Closer interface {
-	Close() error
-}
-
 func gracefulShutdown(appServer *http.Server, cleanup func() error, done chan bool) {
 	// Create context that listens for the interrupt signal from the OS.
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
