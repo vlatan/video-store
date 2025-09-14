@@ -177,6 +177,7 @@ func TestEscapeTrancateString(t *testing.T) {
 		{"empty query", "", 10, ""},
 		{"short query", "#test", 10, "%23test"},
 		{"long query", "!make?test+", 10, "%21make%3F"},
+		{"negative length", "!make?test+", -2, "%21make%3Ftest%2B"},
 	}
 
 	for _, tt := range tests {
@@ -293,8 +294,9 @@ func TestPlural(t *testing.T) {
 
 func TestThumbnailEqual(t *testing.T) {
 
-	a := &models.Thumbnail{Width: 10, Height: 5, Url: "foo"}
-	b := &models.Thumbnail{Width: 10, Height: 5, Url: "bar"}
+	a := models.Thumbnail{Width: 10, Height: 5, Url: "foo"}
+	b := a
+	b.Url = "bar"
 
 	tests := []struct {
 		name     string
@@ -303,15 +305,111 @@ func TestThumbnailEqual(t *testing.T) {
 		expected bool
 	}{
 		{"nil structs", nil, nil, true},
-		{"first nil struct", nil, a, false},
-		{"second nil struct", a, nil, false},
-		{"different structs", a, b, false},
-		{"identical structs", a, a, true},
+		{"first nil struct", nil, &a, false},
+		{"second nil struct", &a, nil, false},
+		{"different structs", &a, &b, false},
+		{"identical structs", &a, &a, true},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := ThumbnailEqual(tt.a, tt.b)
+			if got != tt.expected {
+				t.Errorf("got %t, want %t", got, tt.expected)
+			}
+		})
+	}
+}
+
+func TestThumbnailsEqual(t *testing.T) {
+
+	a := models.Thumbnail{Width: 10, Height: 5, Url: "foo"}
+	b := a
+	b.Url = "bar"
+
+	thumbsA := models.Thumbnails{
+		Default:  &a,
+		Medium:   &b,
+		High:     &a,
+		Standard: &b,
+		Maxres:   &a,
+	}
+
+	thumbsB := thumbsA
+	thumbsB.Maxres = &b
+
+	tests := []struct {
+		name     string
+		thumbsA  *models.Thumbnails
+		thumbsB  *models.Thumbnails
+		expected bool
+	}{
+		{"nil structs", nil, nil, true},
+		{"first nil struct", nil, &thumbsA, false},
+		{"second nil struct", &thumbsA, nil, false},
+		{"different structs", &thumbsA, &thumbsB, false},
+		{"identical structs", &thumbsA, &thumbsA, true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := ThumbnailsEqual(tt.thumbsA, tt.thumbsB)
+			if got != tt.expected {
+				t.Errorf("got %t, want %t", got, tt.expected)
+			}
+		})
+	}
+}
+
+func TestIsStatic(t *testing.T) {
+
+	type test struct {
+		name, path string
+		expected   bool
+	}
+
+	tests := []test{
+		{"empty path", "", false},
+		{"non static path", "/foo/bar", false},
+		{"static path", "/static/foo", true},
+	}
+
+	for _, path := range RootFavicons {
+		tests = append(tests, test{"favicon path", path, true})
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := IsStatic(tt.path)
+			if got != tt.expected {
+				t.Errorf("got %t, want %t", got, tt.expected)
+			}
+		})
+	}
+}
+
+func TestNeedsSessionData(t *testing.T) {
+
+	type test struct {
+		name, path string
+		expected   bool
+	}
+
+	tests := []test{
+		{"empty path", "", true},
+		{"non static path", "/foo/bar", true},
+		{"static path", "/static/foo", false},
+		{"text file", "/foo/bar.txt", false},
+		{"sitemap file", "/sitemap/bar.xml", false},
+	}
+
+	for _, path := range RootFavicons {
+		tests = append(tests, test{"favicon path", path, false})
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := NeedsSessionData(tt.path)
 			if got != tt.expected {
 				t.Errorf("got %t, want %t", got, tt.expected)
 			}
