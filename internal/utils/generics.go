@@ -12,57 +12,6 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// Retry a function
-func Retry[T any](
-	ctx context.Context,
-	initialDelay time.Duration,
-	maxRetries int,
-	Func func() (T, error),
-) (T, error) {
-
-	var zero T
-	var lastError error
-	delay := initialDelay
-
-	// Perform retries
-	for i := range maxRetries {
-
-		// Call the function
-		data, err := Func()
-		if err == nil {
-			return data, err
-		}
-
-		// If this is the last iteration, exit
-		lastError = err
-		if i == maxRetries-1 {
-			continue
-		}
-
-		if retryDelay, ok := extractRetryDelay(lastError); ok {
-			delay = retryDelay
-		}
-
-		// Exponentialy increase the delay
-		if i > 0 {
-			delay *= 2
-		}
-
-		// Add jitter to the delay
-		jitter := time.Duration(rand.Float64())
-		delay += jitter
-
-		// Wait for the delay or context end
-		select {
-		case <-ctx.Done():
-			return zero, errors.Join(ctx.Err(), lastError)
-		case <-time.After(delay):
-		}
-	}
-
-	return zero, fmt.Errorf("max retries error: %w", lastError)
-}
-
 // Extract retry delay from error on Google API.
 func extractRetryDelay(err error) (time.Duration, bool) {
 
@@ -90,4 +39,56 @@ func extractRetryDelay(err error) (time.Duration, bool) {
 	}
 
 	return 0, false
+}
+
+// Retry a function
+func Retry[T any](
+	ctx context.Context,
+	initialDelay time.Duration,
+	maxRetries int,
+	Func func() (T, error),
+) (T, error) {
+
+	var zero T
+	var lastError error
+	delay := initialDelay
+
+	// Perform retries
+	for i := range maxRetries {
+
+		// Call the function
+		data, err := Func()
+		if err == nil {
+			return data, err
+		}
+
+		// If this is the last iteration, exit
+		lastError = err
+		if i == maxRetries-1 {
+			continue
+		}
+
+		// Try to extract a delay value from the error
+		if retryDelay, ok := extractRetryDelay(lastError); ok {
+			delay = retryDelay
+		} else {
+			// Exponentialy increase the delay
+			if i > 0 {
+				delay *= 2
+			}
+
+			// Add jitter to the delay
+			jitter := time.Duration(rand.Float64())
+			delay += jitter
+		}
+
+		// Wait for either the delay or context to end
+		select {
+		case <-ctx.Done():
+			return zero, errors.Join(ctx.Err(), lastError)
+		case <-time.After(delay):
+		}
+	}
+
+	return zero, fmt.Errorf("max retries error: %w", lastError)
 }
