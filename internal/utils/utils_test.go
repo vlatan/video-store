@@ -177,6 +177,7 @@ func TestEscapeTrancateString(t *testing.T) {
 		{"empty query", "", 10, ""},
 		{"short query", "#test", 10, "%23test"},
 		{"long query", "!make?test+", 10, "%21make%3F"},
+		{"negative length", "!make?test+", -2, "%21make%3Ftest%2B"},
 	}
 
 	for _, tt := range tests {
