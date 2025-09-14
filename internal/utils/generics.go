@@ -72,14 +72,12 @@ func Retry[T any](
 		if retryDelay, ok := extractRetryDelay(lastError); ok {
 			delay = retryDelay
 		} else {
-			// Exponentialy increase the delay
-			if i > 0 {
+			if i > 0 { // Exponentially increase the delay
 				delay *= 2
 			}
 
 			// Add jitter to the delay
-			jitter := time.Duration(rand.Float64())
-			delay += jitter
+			delay += time.Duration(rand.Float64())
 		}
 
 		// Wait for either the delay or context to end
