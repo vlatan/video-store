@@ -16,3 +16,7 @@
 
 # avatars
 web/avatars/
+
+# tests
+coverage.out
+coverage.html

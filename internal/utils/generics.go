@@ -52,6 +52,7 @@ func Retry[T any](
 	var zero T
 	var lastError error
 	delay := initialDelay
+	maxRetries = max(maxRetries, 1)
 
 	// Perform retries
 	for i := range maxRetries {
