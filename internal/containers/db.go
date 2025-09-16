@@ -26,12 +26,7 @@ type dbContainer struct {
 }
 
 // SetupTestDB creates a PostgreSQL container, runs migrations, and seeds data
-func SetupTestDB(ctx context.Context, cfg *config.Config) (Container, error) {
-
-	projectRoot, err := getProjectRoot()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get project root: %v", err)
-	}
+func SetupTestDB(ctx context.Context, cfg *config.Config, projectRoot string) (Container, error) {
 
 	// Construct the absolute path to the migrations folder
 	migrationsDir := filepath.Join(projectRoot, "migrations")
@@ -41,10 +36,6 @@ func SetupTestDB(ctx context.Context, cfg *config.Config) (Container, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	cfg.DBDatabase = "postgres"
-	cfg.DBUsername = "postgres"
-	cfg.DBPassword = "postgres"
 
 	// Create PostgreSQL container
 	postgresContainer, err := postgres.Run(ctx, "postgres:16.3",
@@ -162,7 +153,7 @@ func getMigrationFiles(migrationsDir string) ([]string, error) {
 
 // getProjectRoot returns the absolute path to the project root.
 // It works by finding the current file's directory and navigating up.
-func getProjectRoot() (string, error) {
+func GetProjectRoot() (string, error) {
 	_, filename, _, ok := runtime.Caller(0)
 	if !ok {
 		return "", errors.New("failed to get caller information")
