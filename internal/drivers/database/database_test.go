@@ -8,6 +8,8 @@ import (
 
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/containers"
+
+	_ "github.com/caarlos0/env"
 )
 
 func TestMain(m *testing.M) {

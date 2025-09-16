@@ -42,6 +42,10 @@ func SetupTestDB(ctx context.Context, cfg *config.Config) (Container, error) {
 		return nil, err
 	}
 
+	cfg.DBDatabase = "postgres"
+	cfg.DBUsername = "postgres"
+	cfg.DBPassword = "postgres"
+
 	// Create PostgreSQL container
 	postgresContainer, err := postgres.Run(ctx, "postgres:16.3",
 		postgres.WithSQLDriver("pgx"),
@@ -51,6 +55,7 @@ func SetupTestDB(ctx context.Context, cfg *config.Config) (Container, error) {
 		postgres.WithPassword(cfg.DBPassword),
 		postgres.BasicWaitStrategies(),
 	)
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to start postgres container: %w", err)
 	}
@@ -109,17 +114,17 @@ func setupDatabase(ctx context.Context, cfg *config.Config) error {
 func seedTestData(ctx context.Context, pool *pgxpool.Pool) error {
 	// Example seed data - customize as needed
 	queries := []string{
-		`INSERT INTO users (id, email, name, created_at) VALUES 
-			(1, 'test1@example.com', 'Test User 1', NOW()),
-			(2, 'test2@example.com', 'Test User 2', NOW())`,
+		`INSERT INTO app_user (id, provider, provider_user_id, name, email, created_at) VALUES 
+			(1, 'google', 'test1', 'Test User 1', 'test1@example.com', NOW()),
+			(2, 'google', 'test2', 'Test User 2', 'test2@example.com', NOW())`,
 
-		`INSERT INTO categories (id, name, description, created_at) VALUES 
-			(1, 'Technology', 'Tech related posts', NOW()),
-			(2, 'Sports', 'Sports related posts', NOW())`,
+		`INSERT INTO category (id, name, slug, created_at) VALUES 
+			(1, 'Technology', 'technology', NOW()),
+			(2, 'Sports', 'sports', NOW())`,
 
-		`INSERT INTO posts (id, user_id, category_id, title, content, created_at) VALUES 
-			(1, 1, 1, 'First Post', 'This is the first test post', NOW()),
-			(2, 2, 2, 'Second Post', 'This is the second test post', NOW())`,
+		`INSERT INTO post (id, video_id, title, thumbnails, duration, upload_date, created_at) VALUES 
+			(1, 'test1', 'First Post', '{"a": {"ab": "ba"}}', 'PT60', NOW(), NOW()),
+			(2, 'test2', 'Second Post', '{"s": {"ab": "ba"}}', 'PT60', NOW(), NOW())`,
 	}
 
 	for _, query := range queries {
