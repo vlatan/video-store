@@ -27,10 +27,12 @@ func TestMain(m *testing.M) {
 
 	ctx := context.Background()
 	cfg := config.New()
+
 	container, err := containers.SetupTestDB(ctx, cfg, projectRoot)
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	defer func() {
 		if err := container.Terminate(ctx); err != nil {
 			log.Printf("failed to terminate container: %v", err)
