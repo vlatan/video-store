@@ -11,7 +11,6 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -23,7 +22,7 @@ type Container interface {
 }
 
 type dbContainer struct {
-	container testcontainers.Container
+	container *postgres.PostgresContainer
 }
 
 // SetupTestDB creates a PostgreSQL container, runs migrations, and seeds data
@@ -37,7 +36,7 @@ func SetupTestDB(ctx context.Context, cfg *config.Config) (Container, error) {
 	// Construct the absolute path to the migrations folder
 	migrationsDir := filepath.Join(projectRoot, "migrations")
 
-	// get the appropriate scripts
+	// get the appropriate init scripts
 	initScripts, err := getMigrationFiles(migrationsDir)
 	if err != nil {
 		return nil, err
@@ -164,7 +163,8 @@ func getProjectRoot() (string, error) {
 		return "", errors.New("failed to get caller information")
 	}
 
-	// This assumes the `db_test.go` file is at `/internal/containers`.
-	// The first `..` goes to `internal`, the second `..` goes to the root.
+	// This assumes this file is in the dir `/internal/containers`.
+	// The first `..` goes to `internal`,
+	// the second `..` goes to the root of this project
 	return filepath.Join(filepath.Dir(filename), "..", ".."), nil
 }

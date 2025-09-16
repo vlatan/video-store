@@ -19,7 +19,6 @@ require (
 	github.com/microcosm-cc/bluemonday v1.0.27
 	github.com/redis/go-redis/v9 v9.8.0
 	github.com/tdewolff/minify v2.3.6+incompatible
-	github.com/testcontainers/testcontainers-go v0.38.0
 	github.com/testcontainers/testcontainers-go/modules/postgres v0.38.0
 	github.com/yuin/goldmark v1.7.12
 	golang.org/x/image v0.30.0
@@ -103,6 +102,7 @@ require (
 	github.com/stretchr/testify v1.11.1 // indirect
 	github.com/tdewolff/parse v2.3.4+incompatible // indirect
 	github.com/tdewolff/test v1.0.11 // indirect
+	github.com/testcontainers/testcontainers-go v0.38.0 // indirect
 	github.com/tklauser/go-sysconf v0.3.12 // indirect
 	github.com/tklauser/numcpus v0.6.1 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
