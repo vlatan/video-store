@@ -34,11 +34,10 @@ func SetupTestDB(ctx context.Context, cfg *config.Config) (Container, error) {
 		return nil, fmt.Errorf("failed to get project root: %v", err)
 	}
 
-	// Construct the absolute path to the migrations folder.
+	// Construct the absolute path to the migrations folder
 	migrationsDir := filepath.Join(projectRoot, "migrations")
 
-	log.Println(migrationsDir)
-
+	// get the appropriate scripts
 	initScripts, err := getMigrationFiles(migrationsDir)
 	if err != nil {
 		return nil, err
