@@ -31,7 +31,11 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer container.Terminate(ctx)
+	defer func() {
+		if err := container.Terminate(ctx); err != nil {
+			log.Printf("failed to terminate container: %v", err)
+		}
+	}()
 
 	// Run all tests in the package
 	exitCode := m.Run()
