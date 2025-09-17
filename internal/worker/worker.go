@@ -32,7 +32,11 @@ func New() *Service {
 
 	// Create essential services
 	cfg := config.New()
-	db := database.New(cfg)
+
+	db, err := database.New(cfg)
+	if err != nil {
+		log.Fatalf("couldn't create DB service; %v", err)
+	}
 
 	// Create DB repositories
 	postsRepo := posts.New(db, cfg)

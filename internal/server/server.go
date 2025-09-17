@@ -52,7 +52,12 @@ func NewServer() (*http.Server, func() error) {
 
 	// Create essential services
 	cfg := config.New()
-	db := database.New(cfg)
+
+	db, err := database.New(cfg)
+	if err != nil {
+		log.Fatalf("couldn't create DB service; %v", err)
+	}
+
 	rdb := redis.New(cfg)
 	store := redisStore.New(cfg, rdb, "session", 86400*30)
 

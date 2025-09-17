@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"sync"
@@ -33,12 +34,20 @@ type service struct {
 
 var (
 	dbInstance *service
+	serviceErr error
 	once       sync.Once
 )
 
 // Produce new singleton reddatabaseis service
-func New(cfg *config.Config) Service {
+func New(cfg *config.Config) (Service, error) {
+
 	once.Do(func() {
+
+		if cfg == nil {
+			serviceErr = errors.New("unable to create DB service with nil config")
+			return
+		}
+
 		// Database URL
 		connStr := fmt.Sprintf("postgres://%s:%s@%s:%d/%s",
 			cfg.DBUsername,
@@ -51,7 +60,8 @@ func New(cfg *config.Config) Service {
 		// Parse the config
 		poolConfig, err := pgxpool.ParseConfig(connStr)
 		if err != nil {
-			log.Fatal(err)
+			serviceErr = err
+			return
 		}
 
 		// Min 1 iddle connection,
@@ -60,7 +70,8 @@ func New(cfg *config.Config) Service {
 
 		db, err := pgxpool.NewWithConfig(context.Background(), poolConfig)
 		if err != nil {
-			log.Fatal(err)
+			serviceErr = err
+			return
 		}
 
 		dbInstance = &service{
@@ -69,7 +80,14 @@ func New(cfg *config.Config) Service {
 		}
 	})
 
-	return dbInstance
+	// If the singleton produced an error
+	// we need to return nil, or Service(nil) for dbInstance
+	// so the Service's underlying dynamic type and value are both nil
+	if serviceErr != nil {
+		return nil, serviceErr
+	}
+
+	return dbInstance, nil
 }
 
 // Query many rows

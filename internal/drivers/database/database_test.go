@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/containers"
 
@@ -44,4 +45,29 @@ func TestMain(m *testing.M) {
 
 	// Exit with the appropriate code
 	os.Exit(exitCode)
+}
+
+func TestNew(t *testing.T) {
+	tests := []struct {
+		name     string
+		cfg      *config.Config
+		expected Service
+		wantErr  bool
+	}{
+		{"nil config", nil, nil, true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db, err := New(tt.cfg)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("got error = %v, want error = %t", err, tt.wantErr)
+			}
+
+			if !cmp.Equal(db, tt.expected) {
+				t.Errorf("got %+v, want %+v", db, tt.expected)
+			}
+
+		})
+	}
 }
