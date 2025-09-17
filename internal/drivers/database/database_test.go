@@ -58,7 +58,6 @@ func TestNew(t *testing.T) {
 	}{
 		{"nil config", nil, true},
 		{"valid config", testCfg, false},
-		{"valid singleton", testCfg, false},
 	}
 
 	for _, tt := range tests {
@@ -83,11 +82,9 @@ func TestNew(t *testing.T) {
 			}
 
 			// Run the singleton again to see if the service is the same
-			if !tt.wantErr {
-				dbs, _ := New(tt.cfg)
-				if db != dbs {
-					t.Errorf("singleton values not the same %v != %v", db, dbs)
-				}
+			dbAgain, _ := New(tt.cfg)
+			if db != dbAgain {
+				t.Errorf("singleton values not the same %v != %v", db, dbAgain)
 			}
 		})
 	}
