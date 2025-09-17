@@ -18,24 +18,29 @@ var testCfg *config.Config
 
 func TestMain(m *testing.M) {
 
+	// Get the project root
 	projectRoot, err := containers.GetProjectRoot()
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	// Get the path to project's .env file and load the env vars
 	envPath := filepath.Join(projectRoot, ".env")
 	if err := godotenv.Load(envPath); err != nil {
 		log.Fatal(err)
 	}
 
+	// Create the test config - globaly available for package's tests
 	ctx := context.Background()
 	testCfg = config.New()
 
+	// Spin up PostrgeSQL container and seed it with test data
 	container, err := containers.SetupTestDB(ctx, testCfg, projectRoot)
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	// Terminate the container on exit
 	defer func() {
 		if err := container.Terminate(ctx); err != nil {
 			log.Printf("failed to terminate container: %v", err)
