@@ -14,6 +14,8 @@ import (
 	"github.com/joho/godotenv"
 )
 
+var testCfg *config.Config
+
 func TestMain(m *testing.M) {
 
 	projectRoot, err := containers.GetProjectRoot()
@@ -27,9 +29,9 @@ func TestMain(m *testing.M) {
 	}
 
 	ctx := context.Background()
-	cfg := config.New()
+	testCfg = config.New()
 
-	container, err := containers.SetupTestDB(ctx, cfg, projectRoot)
+	container, err := containers.SetupTestDB(ctx, testCfg, projectRoot)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -49,7 +51,8 @@ func TestMain(m *testing.M) {
 
 func TestNew(t *testing.T) {
 
-	testCfg := config.New()
+	invalidConnStr := *testCfg
+	invalidConnStr.DBHost = "::invalid"
 
 	tests := []struct {
 		name    string
@@ -57,6 +60,7 @@ func TestNew(t *testing.T) {
 		wantErr bool
 	}{
 		{"nil config", nil, true},
+		{"invalid connString", &invalidConnStr, true},
 		{"valid config", testCfg, false},
 	}
 
