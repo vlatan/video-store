@@ -1,3 +1,7 @@
+* Fix GetProjectRoot 
+  It will work only if the file from where it's run
+  is two dirs down from the project root
+
 * Generalize the app.
   Eliminate the documentary usage.
 
