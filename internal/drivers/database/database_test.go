@@ -5,9 +5,9 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sync"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/containers"
 
@@ -48,26 +48,47 @@ func TestMain(m *testing.M) {
 }
 
 func TestNew(t *testing.T) {
+
+	testCfg := config.New()
+
 	tests := []struct {
-		name     string
-		cfg      *config.Config
-		expected Service
-		wantErr  bool
+		name    string
+		cfg     *config.Config
+		wantErr bool
 	}{
-		{"nil config", nil, nil, true},
+		{"nil config", nil, true},
+		{"valid config", testCfg, false},
+		{"valid singleton", testCfg, false},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+
+			defer func() { // Reset the singleton state for each test case
+				dbInstance = nil
+				serviceErr = nil
+				once = sync.Once{}
+			}()
+
 			db, err := New(tt.cfg)
+
+			// Check error cases
 			if (err != nil) != tt.wantErr {
 				t.Errorf("got error = %v, want error = %t", err, tt.wantErr)
 			}
 
-			if !cmp.Equal(db, tt.expected) {
-				t.Errorf("got %+v, want %+v", db, tt.expected)
+			// For successful cases, verify we got a non-nil service
+			if !tt.wantErr && db == nil {
+				t.Errorf("got %+v, want non-nil", db)
 			}
 
+			// Run the singleton again to see if the service is the same
+			if !tt.wantErr {
+				dbs, _ := New(tt.cfg)
+				if db != dbs {
+					t.Errorf("singleton values not the same %v != %v", db, dbs)
+				}
+			}
 		})
 	}
 }
