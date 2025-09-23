@@ -1,3 +1,8 @@
+* Make CF cache pages for logged-out users
+  Send headers
+  Also create a cache rule to skip caching requests with session cookies
+  Maybe you'll need to NOT clear the flash cookie immediately
+
 * Generalize the app.
   Eliminate the documentary usage.
 
