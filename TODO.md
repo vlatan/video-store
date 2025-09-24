@@ -1,5 +1,5 @@
-* Make CF cache pages for logged-out users
-  Send headers
+* Make CF cache pages for non-anonymous users
+  Send headers no-cache or cache depending on the user
   Also create a cache rule to skip caching requests with session cookies
   Maybe you'll need to NOT clear the flash cookie immediately
 
