@@ -18,7 +18,7 @@ import (
 )
 
 type Container interface {
-	Terminate(ctx context.Context) error
+	Terminate(ctx context.Context)
 }
 
 type dbContainer struct {
@@ -38,7 +38,7 @@ func SetupTestDB(ctx context.Context, cfg *config.Config, projectRoot string) (C
 	}
 
 	// Create PostgreSQL container
-	postgresContainer, err := postgres.Run(ctx, "postgres:16.3",
+	container, err := postgres.Run(ctx, "postgres:16.3",
 		postgres.WithSQLDriver("pgx"),
 		postgres.WithInitScripts(initScripts...),
 		postgres.WithDatabase(cfg.DBDatabase),
@@ -52,15 +52,19 @@ func SetupTestDB(ctx context.Context, cfg *config.Config, projectRoot string) (C
 	}
 
 	// Get container details for connection
-	host, err := postgresContainer.Host(ctx)
+	host, err := container.Host(ctx)
 	if err != nil {
-		postgresContainer.Terminate(ctx)
+		if cErr := container.Terminate(ctx); cErr != nil {
+			log.Printf("failed to terminate container: %v", cErr)
+		}
 		return nil, fmt.Errorf("failed to get container host: %w", err)
 	}
 
-	port, err := postgresContainer.MappedPort(ctx, "5432")
+	port, err := container.MappedPort(ctx, "5432")
 	if err != nil {
-		postgresContainer.Terminate(ctx)
+		if cErr := container.Terminate(ctx); cErr != nil {
+			log.Printf("failed to terminate container: %v", cErr)
+		}
 		return nil, fmt.Errorf("failed to get container port: %w", err)
 	}
 
@@ -70,16 +74,20 @@ func SetupTestDB(ctx context.Context, cfg *config.Config, projectRoot string) (C
 
 	// Setup database (migrations + seeding)
 	if err := setupDatabase(ctx, cfg); err != nil {
-		postgresContainer.Terminate(ctx)
+		if cErr := container.Terminate(ctx); cErr != nil {
+			log.Printf("failed to terminate container: %v", cErr)
+		}
 		return nil, fmt.Errorf("failed to setup database: %w", err)
 	}
 
-	return &dbContainer{container: postgresContainer}, nil
+	return &dbContainer{container}, nil
 }
 
 // Terminate stops and removes the container
-func (db *dbContainer) Terminate(ctx context.Context) error {
-	return db.container.Terminate(ctx)
+func (db *dbContainer) Terminate(ctx context.Context) {
+	if err := db.container.Terminate(ctx); err != nil {
+		log.Printf("failed to terminate container: %v", err)
+	}
 }
 
 func setupDatabase(ctx context.Context, cfg *config.Config) error {
