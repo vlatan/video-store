@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/vlatan/video-store/internal/config"
-	"github.com/vlatan/video-store/internal/r2"
+	"github.com/vlatan/video-store/internal/integrations/r2"
 )
 
 type Service struct {
