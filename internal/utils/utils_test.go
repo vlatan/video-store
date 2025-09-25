@@ -388,7 +388,7 @@ func TestIsStatic(t *testing.T) {
 	}
 }
 
-func TestNeedsSessionData(t *testing.T) {
+func TestNeedsSession(t *testing.T) {
 
 	type test struct {
 		name, path string
@@ -409,7 +409,7 @@ func TestNeedsSessionData(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := NeedsSessionData(tt.path)
+			got := NeedsSession(tt.path)
 			if got != tt.expected {
 				t.Errorf("got %t, want %t", got, tt.expected)
 			}

@@ -60,7 +60,7 @@ func (s *Service) LoadUser(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		// Check if the request possibly needs the session data
-		if !utils.NeedsSessionData(r.URL.Path) {
+		if !utils.NeedsSession(r.URL.Path) {
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -126,7 +126,7 @@ func (s *Service) RecoverPanic(next http.Handler) http.Handler {
 	})
 }
 
-// PublicCache adds public cache control header for non-admin users
+// PublicCache adds cache control header for non-admin users
 func (s *Service) PublicCache(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		data := utils.GetDataFromContext(r)
@@ -135,6 +135,26 @@ func (s *Service) PublicCache(next http.HandlerFunc) http.HandlerFunc {
 		}
 		next(w, r)
 	}
+}
+
+// NoCache adds no-cache headers for authenticated users
+func (s *Service) NoCache(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !utils.NeedsSession(r.URL.Path) {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		if user := utils.GetUserFromContext(r); !user.IsAuthenticated() {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+		w.Header().Set("Pragma", "no-cache")
+		w.Header().Set("Expires", "0")
+		next.ServeHTTP(w, r)
+	})
 }
 
 // AddHeaders adds  various headers to the response
@@ -245,7 +265,7 @@ func (s *Service) CsrfProtection(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		// Check if request possibly needs CSRF protection
-		if !utils.NeedsSessionData(r.URL.Path) {
+		if !utils.NeedsSession(r.URL.Path) {
 			next.ServeHTTP(w, r)
 			return
 		}

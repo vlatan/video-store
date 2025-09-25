@@ -1,6 +1,3 @@
-* Send headers no-cache for logged in users
-  Keep in mind the static files
-
 * Generalize the app.
   Eliminate the documentary usage.
 

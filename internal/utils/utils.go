@@ -190,8 +190,8 @@ func IsStatic(path string) bool {
 		slices.Contains(RootFavicons, path)
 }
 
-// NeedsSessionData checks if a route needs to read the session
-func NeedsSessionData(path string) bool {
+// NeedsSession checks if a route needs to read the session
+func NeedsSession(path string) bool {
 
 	if IsStatic(path) {
 		return false
