@@ -1,5 +1,4 @@
-* Make CF cache pages for non-anonymous users
-  Send headers no-cache or cache depending on the user
+* Send headers no-cache for logged in users
   Keep in mind the static files
 
 * Generalize the app.
