@@ -153,23 +153,12 @@ func (s *Service) AddHeaders(next http.Handler) http.Handler {
 		// HSTS (HTTPS only)
 		w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload")
 
-		// Exit if the path doesn't need session:
-		// static file, text file, or sitemap path
-		if !utils.NeedsSession(r.URL.Path) {
-			next.ServeHTTP(w, r)
-			return
+		// Add no cache headers if necessary
+		if utils.NeedsSession(r.URL.Path) && utils.GetUserFromContext(r).IsAuthenticated() {
+			w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+			w.Header().Set("Pragma", "no-cache")
+			w.Header().Set("Expires", "0")
 		}
-
-		// Also exit if the user is not authenticated
-		if user := utils.GetUserFromContext(r); !user.IsAuthenticated() {
-			next.ServeHTTP(w, r)
-			return
-		}
-
-		// Add no cache headers
-		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
-		w.Header().Set("Pragma", "no-cache")
-		w.Header().Set("Expires", "0")
 
 		next.ServeHTTP(w, r)
 	})
