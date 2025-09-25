@@ -1,3 +1,6 @@
+* For PublicCache middleware the user is NOT loaded
+  so the check for IsAdmin will always fail
+
 * Generalize the app.
   Eliminate the documentary usage.
 
