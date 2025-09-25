@@ -137,26 +137,6 @@ func (s *Service) PublicCache(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-// NoCache adds no-cache headers for authenticated users
-func (s *Service) NoCache(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if !utils.NeedsSession(r.URL.Path) {
-			next.ServeHTTP(w, r)
-			return
-		}
-
-		if user := utils.GetUserFromContext(r); !user.IsAuthenticated() {
-			next.ServeHTTP(w, r)
-			return
-		}
-
-		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
-		w.Header().Set("Pragma", "no-cache")
-		w.Header().Set("Expires", "0")
-		next.ServeHTTP(w, r)
-	})
-}
-
 // AddHeaders adds  various headers to the response
 func (s *Service) AddHeaders(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -172,6 +152,24 @@ func (s *Service) AddHeaders(next http.Handler) http.Handler {
 
 		// HSTS (HTTPS only)
 		w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload")
+
+		// Exit if the path doesn't need session:
+		// static file, text file, or sitemap path
+		if !utils.NeedsSession(r.URL.Path) {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// Also exit if the user is not authenticated
+		if user := utils.GetUserFromContext(r); !user.IsAuthenticated() {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// Add no cache headers
+		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+		w.Header().Set("Pragma", "no-cache")
+		w.Header().Set("Expires", "0")
 
 		next.ServeHTTP(w, r)
 	})

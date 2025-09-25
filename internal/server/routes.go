@@ -79,7 +79,6 @@ func (s *Server) RegisterRoutes() http.Handler {
 		s.mw.CsrfProtection,
 		s.mw.LoadData,
 		s.mw.AddHeaders,
-		s.mw.NoCache,
 		s.mw.Compress,
 		s.mw.HandleErrors,
 	)(mux)
