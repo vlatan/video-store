@@ -1,6 +1,7 @@
 # extensions
 *.log
 *.db
+*.out
 
 
 # directories
@@ -18,5 +19,5 @@
 web/avatars/
 
 # tests
-coverage.out
+cover.html
 coverage.html
