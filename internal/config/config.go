@@ -95,7 +95,7 @@ type Config struct {
 	DBDatabase string `env:"DB_DATABASE"`
 	DBUsername string `env:"DB_USERNAME"`
 	DBPassword string `env:"DB_PASSWORD"`
-	DBMaxConns int    `env:"DB_MAX_CONNS" envDefault:"10"`
+	DBMaxConns int    `env:"DB_MAX_CONNS" envDefault:"4"`
 
 	// Local app host and port
 	Host string `env:"HOST" envDefault:"localhost"`
