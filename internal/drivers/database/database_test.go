@@ -82,14 +82,13 @@ func TestNew(t *testing.T) {
 			}()
 
 			db1, err := New(tt.cfg)
+			if err == nil {
+				defer db1.Close()
+			}
 
 			// Check error cases
 			if (err != nil) != tt.wantErr {
 				t.Errorf("got error = %v, want error = %t", err, tt.wantErr)
-			}
-
-			if err == nil {
-				defer db1.Close()
 			}
 
 			// For successful cases, verify we got a non-nil service
@@ -97,14 +96,15 @@ func TestNew(t *testing.T) {
 				t.Errorf("got %+v, want non-nil", db1)
 			}
 
-			// Run the singleton again
+			// Run the singleton again,
+			// we should get exactly the same object
 			db2, err := New(tt.cfg)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("got error = %v, want error = %t", err, tt.wantErr)
-			}
-
 			if err == nil {
 				defer db2.Close()
+			}
+
+			if (err != nil) != tt.wantErr {
+				t.Errorf("got error = %v, want error = %t", err, tt.wantErr)
 			}
 
 			if db1 != db2 {
