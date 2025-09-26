@@ -43,7 +43,7 @@ func TestMain(m *testing.M) {
 	// Terminate the container on exit
 	defer container.Terminate(ctx)
 
-	// Run all tests in the package
+	// Run all the tests in the package
 	exitCode := m.Run()
 
 	// Exit with the appropriate code
@@ -67,7 +67,7 @@ func TestNew(t *testing.T) {
 	}{
 		{"nil config", nil, true},
 		{"invalid connString", &invalidConnStr, true},
-		{"invalid minConn", &invalidMaxConns, true},
+		{"invalid DBMaxConns", &invalidMaxConns, true},
 		{"valid config", testCfg, false},
 	}
 
