@@ -59,8 +59,8 @@ func (s *Service) IsAdmin(next http.HandlerFunc) http.HandlerFunc {
 func (s *Service) LoadUser(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		// Check if the request possibly needs the session data
-		if !utils.NeedsSessionData(r.URL.Path) {
+		// Check if the request path is just a file
+		if utils.IsFilePath(r.URL.Path) {
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -76,6 +76,12 @@ func (s *Service) LoadUser(next http.Handler) http.Handler {
 // LoadData generates default data and stores it in the context
 func (s *Service) LoadData(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		// Check if the request path is just a file
+		if utils.IsFilePath(r.URL.Path) {
+			next.ServeHTTP(w, r)
+			return
+		}
 
 		// Get user from context
 		user := utils.GetUserFromContext(r)
@@ -126,7 +132,7 @@ func (s *Service) RecoverPanic(next http.Handler) http.Handler {
 	})
 }
 
-// PublicCache adds public cache control header for non-admin users
+// PublicCache adds cache control header for non-admin users
 func (s *Service) PublicCache(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		data := utils.GetDataFromContext(r)
@@ -152,6 +158,13 @@ func (s *Service) AddHeaders(next http.Handler) http.Handler {
 
 		// HSTS (HTTPS only)
 		w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload")
+
+		// Add no cache headers if necessary
+		if !utils.IsFilePath(r.URL.Path) && utils.GetUserFromContext(r).IsAuthenticated() {
+			w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+			w.Header().Set("Pragma", "no-cache")
+			w.Header().Set("Expires", "0")
+		}
 
 		next.ServeHTTP(w, r)
 	})
@@ -245,7 +258,7 @@ func (s *Service) CsrfProtection(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		// Check if request possibly needs CSRF protection
-		if !utils.NeedsSessionData(r.URL.Path) {
+		if utils.IsFilePath(r.URL.Path) {
 			next.ServeHTTP(w, r)
 			return
 		}
