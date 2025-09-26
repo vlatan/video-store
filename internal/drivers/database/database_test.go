@@ -81,22 +81,34 @@ func TestNew(t *testing.T) {
 				once = sync.Once{}
 			}()
 
-			db, err := New(tt.cfg)
+			db1, err := New(tt.cfg)
 
 			// Check error cases
 			if (err != nil) != tt.wantErr {
 				t.Errorf("got error = %v, want error = %t", err, tt.wantErr)
 			}
 
-			// For successful cases, verify we got a non-nil service
-			if !tt.wantErr && db == nil {
-				t.Errorf("got %+v, want non-nil", db)
+			if err == nil {
+				defer db1.Close()
 			}
 
-			// Run the singleton again to see if the service is the same
-			dbAgain, _ := New(tt.cfg)
-			if db != dbAgain {
-				t.Errorf("singleton values not the same %v != %v", db, dbAgain)
+			// For successful cases, verify we got a non-nil service
+			if !tt.wantErr && db1 == nil {
+				t.Errorf("got %+v, want non-nil", db1)
+			}
+
+			// Run the singleton again
+			db2, err := New(tt.cfg)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("got error = %v, want error = %t", err, tt.wantErr)
+			}
+
+			if err == nil {
+				defer db2.Close()
+			}
+
+			if db1 != db2 {
+				t.Errorf("singleton values not the same %v != %v", db1, db2)
 			}
 		})
 	}
