@@ -68,6 +68,9 @@ func New(cfg *config.Config) (Service, error) {
 		// to avoid creating NEW connections on low traffic sites.
 		poolConfig.MinIdleConns = 1
 
+		// Get MaxConns from the Config
+		poolConfig.MaxConns = int32(cfg.DBMaxConns)
+
 		db, err := pgxpool.NewWithConfig(context.Background(), poolConfig)
 		if err != nil {
 			serviceErr = err

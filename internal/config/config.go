@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"log"
+	"runtime"
 	"time"
 
 	"github.com/caarlos0/env"
@@ -94,6 +95,7 @@ type Config struct {
 	DBDatabase string `env:"DB_DATABASE"`
 	DBUsername string `env:"DB_USERNAME"`
 	DBPassword string `env:"DB_PASSWORD"`
+	DBMaxConns int    `env:"DB_MAX_CONNS" envDefault:"10"`
 
 	// Local app host and port
 	Host string `env:"HOST" envDefault:"localhost"`
@@ -108,6 +110,9 @@ func New() *Config {
 	if err := env.Parse(&cfg); err != nil {
 		log.Fatalf("failed to parse the config from the env: %v", err)
 	}
+
+	// Cap the DBMaxConns to the number of cores
+	cfg.DBMaxConns = max(cfg.DBMaxConns, runtime.NumCPU())
 
 	if cfg.Target != App {
 		return &cfg

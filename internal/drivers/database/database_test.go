@@ -55,6 +55,9 @@ func TestNew(t *testing.T) {
 	invalidConnStr := *testCfg
 	invalidConnStr.DBHost = "::invalid"
 
+	invalidMaxConns := *testCfg
+	invalidMaxConns.DBMaxConns = 0
+
 	tests := []struct {
 		name    string
 		cfg     *config.Config
@@ -62,6 +65,7 @@ func TestNew(t *testing.T) {
 	}{
 		{"nil config", nil, true},
 		{"invalid connString", &invalidConnStr, true},
+		{"invalid minConn", &invalidMaxConns, true},
 		{"valid config", testCfg, false},
 	}
 
