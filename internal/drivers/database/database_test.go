@@ -52,9 +52,11 @@ func TestMain(m *testing.M) {
 
 func TestNew(t *testing.T) {
 
+	// Invalid connection string
 	invalidConnStr := *testCfg
 	invalidConnStr.DBHost = "::invalid"
 
+	// Invalid max connections
 	invalidMaxConns := *testCfg
 	invalidMaxConns.DBMaxConns = 0
 
