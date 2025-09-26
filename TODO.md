@@ -1,3 +1,6 @@
+* Improve Query tests by adding an expected result
+  Scan the results and see if the expected result is correct
+
 * Fix GetProjectRoot 
   It will work only if the file from where it's run
   is two dirs down from the project root

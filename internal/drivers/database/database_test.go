@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/containers"
@@ -98,5 +99,51 @@ func TestNew(t *testing.T) {
 				t.Errorf("singleton values not the same %v != %v", db, dbAgain)
 			}
 		})
+	}
+}
+
+func TestQuery(t *testing.T) {
+
+	ctx := context.TODO()
+	timeoutCtx, cancel := context.WithTimeout(ctx, time.Nanosecond)
+	defer cancel()
+
+	db, err := New(testCfg)
+	if err != nil {
+		t.Fatalf("failed to create db pool; %v", err)
+	}
+
+	defer db.Close()
+
+	tests := []struct {
+		name    string
+		ctx     context.Context
+		query   string
+		args    []any
+		wantErr bool
+	}{
+		{
+			"invalid query", ctx,
+			"SELECT 1 FROM foo",
+			[]any{}, true,
+		},
+		{
+			"context timeout", timeoutCtx,
+			"SELECT * FROM app_user WHERE provider = $1",
+			[]any{"google"}, true,
+		},
+		{
+			"valid query", ctx,
+			"SELECT * FROM app_user WHERE provider = $1",
+			[]any{"google"}, false,
+		},
+	}
+
+	for _, tt := range tests {
+		rows, err := db.Query(tt.ctx, tt.query, tt.args...)
+		if (err != nil) != tt.wantErr {
+			t.Errorf("got error = %v, want error = %t", err, tt.wantErr)
+		}
+		defer rows.Close()
 	}
 }
