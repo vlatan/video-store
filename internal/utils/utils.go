@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"path/filepath"
 	"slices"
 	"strconv"
 	"strings"
@@ -190,22 +191,9 @@ func IsStatic(path string) bool {
 		slices.Contains(RootFavicons, path)
 }
 
-// NeedsSessionData checks if a route needs to read the session
-func NeedsSessionData(path string) bool {
-
-	if IsStatic(path) {
-		return false
-	}
-
-	if strings.HasSuffix(path, ".txt") {
-		return false
-	}
-
-	if strings.HasPrefix(path, "/sitemap") {
-		return false
-	}
-
-	return true
+// NeedsSession checks if a route needs to read the session
+func IsFilePath(path string) bool {
+	return !slices.Contains([]string{"", ".xml", ".xsl"}, filepath.Ext(path))
 }
 
 // HttpError provides shorter handling of http error

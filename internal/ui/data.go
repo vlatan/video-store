@@ -44,7 +44,7 @@ func (s *service) NewData(w http.ResponseWriter, r *http.Request) *models.Templa
 	}
 
 	// Check if the path needs flash messages
-	if !utils.NeedsSessionData(r.URL.Path) {
+	if utils.IsFilePath(r.URL.Path) {
 		return data
 	}
 
