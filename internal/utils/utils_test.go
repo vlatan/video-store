@@ -388,7 +388,7 @@ func TestIsStatic(t *testing.T) {
 	}
 }
 
-func TestNeedsSession(t *testing.T) {
+func TestIsFilePath(t *testing.T) {
 
 	type test struct {
 		name, path string
@@ -396,20 +396,20 @@ func TestNeedsSession(t *testing.T) {
 	}
 
 	tests := []test{
-		{"empty path", "", true},
-		{"non static path", "/foo/bar", true},
-		{"static path", "/static/foo", false},
-		{"text file", "/foo/bar.txt", false},
+		{"empty path", "", false},
+		{"non static path", "/foo/bar", false},
+		{"static path", "/static/foo.bar", true},
+		{"text file", "/foo/bar.txt", true},
 		{"sitemap file", "/sitemap/bar.xml", false},
 	}
 
 	for _, path := range RootFavicons {
-		tests = append(tests, test{"favicon path", path, false})
+		tests = append(tests, test{"favicon path", path, true})
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := NeedsSession(tt.path)
+			got := IsFilePath(tt.path)
 			if got != tt.expected {
 				t.Errorf("got %t, want %t", got, tt.expected)
 			}
