@@ -1,5 +1,3 @@
-* Try to reset just sync.Once{}.
-
 * Fix GetProjectRoot 
   It will work only if the file from where it's run
   is two dirs down from the project root
