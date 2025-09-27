@@ -115,6 +115,12 @@ func TestNew(t *testing.T) {
 
 func TestQuery(t *testing.T) {
 
+	defer func() { // Reset the singleton state for each test case
+		dbInstance = nil
+		serviceErr = nil
+		once = sync.Once{}
+	}()
+
 	type result struct {
 		id   int
 		name string
@@ -159,6 +165,7 @@ func TestQuery(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+
 			rows, err := db.Query(tt.ctx, tt.query, tt.args...)
 			if gotErr := err != nil; gotErr {
 				if gotErr != tt.wantErr {
@@ -198,6 +205,83 @@ func TestQuery(t *testing.T) {
 					)
 				}
 			}
+		})
+	}
+}
+
+func TestQueryRow(t *testing.T) {
+
+	defer func() { // Reset the singleton state for each test case
+		dbInstance = nil
+		serviceErr = nil
+		once = sync.Once{}
+	}()
+
+	type result struct {
+		id   int
+		name string
+	}
+
+	ctx := context.TODO()
+	timeoutCtx, cancel := context.WithTimeout(ctx, time.Nanosecond)
+	defer cancel()
+
+	db, err := New(testCfg)
+	if err != nil {
+		t.Fatalf("failed to create db pool; %v", err)
+	}
+
+	defer db.Close()
+
+	tests := []struct {
+		name    string
+		ctx     context.Context
+		query   string
+		args    []any
+		wantErr bool
+		want    result
+	}{
+		{
+			"invalid query", ctx,
+			"SELECT 1 FROM foo",
+			[]any{}, true, result{},
+		},
+		{
+			"context timeout", timeoutCtx,
+			"SELECT * FROM app_user WHERE provider = $1",
+			[]any{"google"}, true, result{},
+		},
+		{
+			"valid query", ctx,
+			"SELECT id, name FROM app_user WHERE provider = $1 ORDER BY id",
+			[]any{"google"}, false,
+			result{1, "Test User 1"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			var got result
+			err := db.QueryRow(tt.ctx, tt.query, tt.args...).Scan(
+				&got.id,
+				&got.name,
+			)
+
+			if gotErr := err != nil; gotErr {
+				if gotErr != tt.wantErr {
+					t.Fatalf("got error = %v, want error = %t", err, tt.wantErr)
+				}
+				return
+			}
+
+			if got.id != tt.want.id || got.name != tt.want.name {
+				t.Errorf(
+					"row content mismatch;\ngot %+v, want %+v",
+					got, tt.want,
+				)
+			}
+
 		})
 	}
 }
