@@ -116,6 +116,11 @@ func TestNew(t *testing.T) {
 
 func TestQuery(t *testing.T) {
 
+	type result struct {
+		id   int
+		name string
+	}
+
 	ctx := context.TODO()
 	timeoutCtx, cancel := context.WithTimeout(ctx, time.Nanosecond)
 	defer cancel()
@@ -128,36 +133,72 @@ func TestQuery(t *testing.T) {
 	defer db.Close()
 
 	tests := []struct {
-		name    string
-		ctx     context.Context
-		query   string
-		args    []any
-		wantErr bool
+		name        string
+		ctx         context.Context
+		query       string
+		args        []any
+		wantErr     bool
+		wantResults []result
 	}{
 		{
 			"invalid query", ctx,
 			"SELECT 1 FROM foo",
-			[]any{}, true,
+			[]any{}, true, nil,
 		},
 		{
 			"context timeout", timeoutCtx,
 			"SELECT * FROM app_user WHERE provider = $1",
-			[]any{"google"}, true,
+			[]any{"google"}, true, nil,
 		},
 		{
 			"valid query", ctx,
-			"SELECT * FROM app_user WHERE provider = $1",
+			"SELECT id, name FROM app_user WHERE provider = $1 ORDER BY id",
 			[]any{"google"}, false,
+			[]result{{1, "Test User 1"}, {2, "Test User 2"}},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			rows, err := db.Query(tt.ctx, tt.query, tt.args...)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("got error = %v, want error = %t", err, tt.wantErr)
+			if gotErr := err != nil; gotErr {
+				if gotErr != tt.wantErr {
+					t.Fatalf("got error = %v, want error = %t", err, tt.wantErr)
+				}
+				return
 			}
+
 			defer rows.Close()
+
+			var gotResults []result
+			for rows.Next() {
+				var r result
+				if err := rows.Scan(&r.id, &r.name); err != nil {
+					t.Fatalf("Error scanning row: %v", err)
+				}
+				gotResults = append(gotResults, r)
+			}
+
+			if err := rows.Err(); err != nil {
+				t.Fatalf("error during iterating through rows: %v", err)
+			}
+
+			if len(gotResults) != len(tt.wantResults) {
+				t.Fatalf(
+					"mismatched row count. Got %d rows, want %d rows",
+					len(gotResults), len(tt.wantResults),
+				)
+			}
+
+			for i, want := range tt.wantResults {
+				got := gotResults[i]
+				if got.id != want.id || got.name != want.name {
+					t.Errorf(
+						"row content mismatch at index %d;\ngot: %+v;\nwant: %+v",
+						i, got, want,
+					)
+				}
+			}
 		})
 	}
 }
