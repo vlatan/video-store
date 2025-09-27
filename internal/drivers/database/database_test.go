@@ -97,11 +97,12 @@ func TestNew(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			defer func() { // Reset the singleton state for each test case
+			// Reset the singleton state for each test case
+			t.Cleanup(func() {
 				dbInstance = nil
 				serviceErr = nil
 				once = sync.Once{}
-			}()
+			})
 
 			db1 := testPool(tt.cfg, tt.wantErr)
 			db2 := testPool(tt.cfg, tt.wantErr)
@@ -115,11 +116,12 @@ func TestNew(t *testing.T) {
 
 func TestQuery(t *testing.T) {
 
-	defer func() { // Reset the singleton state for this test
+	// Reset the singleton state for this test
+	t.Cleanup(func() {
 		dbInstance = nil
 		serviceErr = nil
 		once = sync.Once{}
-	}()
+	})
 
 	type result struct {
 		id   int
@@ -211,11 +213,12 @@ func TestQuery(t *testing.T) {
 
 func TestQueryRow(t *testing.T) {
 
-	defer func() { // Reset the singleton state for this test
+	// Reset the singleton state for this test
+	t.Cleanup(func() {
 		dbInstance = nil
 		serviceErr = nil
 		once = sync.Once{}
-	}()
+	})
 
 	type result struct {
 		id   int
@@ -288,11 +291,12 @@ func TestQueryRow(t *testing.T) {
 
 func TestExec(t *testing.T) {
 
-	defer func() { // Reset the singleton state for this test
+	// Reset the singleton state for this test
+	t.Cleanup(func() {
 		dbInstance = nil
 		serviceErr = nil
 		once = sync.Once{}
-	}()
+	})
 
 	ctx := context.TODO()
 	timeoutCtx, cancel := context.WithTimeout(ctx, time.Nanosecond)
