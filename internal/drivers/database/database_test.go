@@ -285,3 +285,81 @@ func TestQueryRow(t *testing.T) {
 		})
 	}
 }
+
+func TestExec(t *testing.T) {
+
+	defer func() { // Reset the singleton state for this test
+		dbInstance = nil
+		serviceErr = nil
+		once = sync.Once{}
+	}()
+
+	ctx := context.TODO()
+	timeoutCtx, cancel := context.WithTimeout(ctx, time.Nanosecond)
+	defer cancel()
+
+	db, err := New(testCfg)
+	if err != nil {
+		t.Fatalf("failed to create db pool; %v", err)
+	}
+
+	defer db.Close()
+
+	tests := []struct {
+		name    string
+		ctx     context.Context
+		query   string
+		args    []any
+		wantErr bool
+		want    int64
+	}{
+		{
+			"invalid query", ctx,
+			"UPDATE foo SET bar = 0",
+			[]any{}, true, 0,
+		},
+		{
+			"context timeout", timeoutCtx,
+			"INSERT INTO category (id, name, slug) VALUES ($1, $2, $3)",
+			[]any{3, "foo", "foo"}, true, 0,
+		},
+		{
+			"valid query", ctx,
+			"INSERT INTO category (id, name, slug) VALUES ($1, $2, $3)",
+			[]any{3, "foo", "foo"}, false, 1,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			got, err := db.Exec(tt.ctx, tt.query, tt.args...)
+
+			if gotErr := err != nil; gotErr {
+				if gotErr != tt.wantErr {
+					t.Fatalf("got error = %v, want error = %t", err, tt.wantErr)
+				}
+				return
+			}
+
+			t.Cleanup(func() {
+				_, err := db.Exec(
+					context.Background(),
+					"DELETE FROM category WHERE id = $1 AND name = $2 AND slug = $3 ",
+					tt.args...,
+				)
+
+				if err != nil {
+					t.Fatalf("failed to drop the inserted row; %v", err)
+				}
+			})
+
+			if got != tt.want {
+				t.Errorf(
+					"rows affected mismatch; got %d, want %d",
+					got, tt.want,
+				)
+			}
+		})
+	}
+}

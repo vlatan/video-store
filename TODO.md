@@ -1,5 +1,4 @@
-* Improve Query tests by adding an expected result
-  Scan the results and see if the expected result is correct
+* Try to reset just sync.Once{}.
 
 * Fix GetProjectRoot 
   It will work only if the file from where it's run
