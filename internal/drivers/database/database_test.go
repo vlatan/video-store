@@ -73,17 +73,18 @@ func TestNew(t *testing.T) {
 	}
 
 	testPool := func(cfg *config.Config, wantErr bool) Service {
+		// Create db pool
 		db, err := New(cfg)
 
 		// Check error cases
-		if gotErr := err != nil; gotErr {
+		switch gotErr := err != nil; gotErr {
+		case true:
 			if gotErr != wantErr {
 				t.Errorf("got error = %v, want error = %t", err, wantErr)
 			}
-			return db
+		default:
+			defer db.Close()
 		}
-
-		defer db.Close()
 
 		// For successful cases, verify we got a non-nil service
 		if !wantErr && db == nil {
