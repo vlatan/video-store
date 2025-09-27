@@ -397,10 +397,10 @@ func TestIsFilePath(t *testing.T) {
 
 	tests := []test{
 		{"empty path", "", false},
-		{"non static path", "/foo/bar", false},
-		{"static path", "/static/foo.bar", true},
-		{"text file", "/foo/bar.txt", true},
+		{"non file path", "/foo/bar", false},
+		{"text file", "/foo/bar.txt", false},
 		{"sitemap file", "/sitemap/bar.xml", false},
+		{"static path", "/static/foo.bar", true},
 	}
 
 	for _, path := range RootFavicons {
