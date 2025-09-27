@@ -152,10 +152,12 @@ func TestQuery(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		rows, err := db.Query(tt.ctx, tt.query, tt.args...)
-		if (err != nil) != tt.wantErr {
-			t.Errorf("got error = %v, want error = %t", err, tt.wantErr)
-		}
-		defer rows.Close()
+		t.Run(tt.name, func(t *testing.T) {
+			rows, err := db.Query(tt.ctx, tt.query, tt.args...)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("got error = %v, want error = %t", err, tt.wantErr)
+			}
+			defer rows.Close()
+		})
 	}
 }
