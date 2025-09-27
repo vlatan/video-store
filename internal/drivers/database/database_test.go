@@ -72,6 +72,27 @@ func TestNew(t *testing.T) {
 		{"valid config", testCfg, false},
 	}
 
+	testPool := func(cfg *config.Config, wantErr bool) Service {
+		db, err := New(cfg)
+
+		// Check error cases
+		if gotErr := err != nil; gotErr {
+			if gotErr != wantErr {
+				t.Errorf("got error = %v, want error = %t", err, wantErr)
+			}
+			return db
+		}
+
+		defer db.Close()
+
+		// For successful cases, verify we got a non-nil service
+		if !wantErr && db == nil {
+			t.Errorf("got %+v, want non-nil", db)
+		}
+
+		return db
+	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
@@ -81,31 +102,8 @@ func TestNew(t *testing.T) {
 				once = sync.Once{}
 			}()
 
-			db1, err := New(tt.cfg)
-			if err == nil {
-				defer db1.Close()
-			}
-
-			// Check error cases
-			if (err != nil) != tt.wantErr {
-				t.Errorf("got error = %v, want error = %t", err, tt.wantErr)
-			}
-
-			// For successful cases, verify we got a non-nil service
-			if !tt.wantErr && db1 == nil {
-				t.Errorf("got %+v, want non-nil", db1)
-			}
-
-			// Run the singleton again,
-			// we should get exactly the same object
-			db2, err := New(tt.cfg)
-			if err == nil {
-				defer db2.Close()
-			}
-
-			if (err != nil) != tt.wantErr {
-				t.Errorf("got error = %v, want error = %t", err, tt.wantErr)
-			}
+			db1 := testPool(tt.cfg, tt.wantErr)
+			db2 := testPool(tt.cfg, tt.wantErr)
 
 			if db1 != db2 {
 				t.Errorf("singleton values not the same %v != %v", db1, db2)
