@@ -193,7 +193,8 @@ func IsStatic(path string) bool {
 
 // NeedsSession checks if a route needs to read the session
 func IsFilePath(path string) bool {
-	return !slices.Contains([]string{"", ".xml", ".xsl"}, filepath.Ext(path))
+	notFiles := []string{"", ".txt", ".xml", ".xsl"}
+	return !slices.Contains(notFiles, filepath.Ext(path))
 }
 
 // HttpError provides shorter handling of http error
