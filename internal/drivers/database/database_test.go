@@ -115,7 +115,7 @@ func TestNew(t *testing.T) {
 
 func TestQuery(t *testing.T) {
 
-	defer func() { // Reset the singleton state for each test case
+	defer func() { // Reset the singleton state for this test
 		dbInstance = nil
 		serviceErr = nil
 		once = sync.Once{}
@@ -211,7 +211,7 @@ func TestQuery(t *testing.T) {
 
 func TestQueryRow(t *testing.T) {
 
-	defer func() { // Reset the singleton state for each test case
+	defer func() { // Reset the singleton state for this test
 		dbInstance = nil
 		serviceErr = nil
 		once = sync.Once{}
