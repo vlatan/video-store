@@ -174,18 +174,18 @@ func TestQuery(t *testing.T) {
 			for rows.Next() {
 				var r result
 				if err := rows.Scan(&r.id, &r.name); err != nil {
-					t.Fatalf("Error scanning row: %v", err)
+					t.Fatalf("error scanning row; %v", err)
 				}
 				gotResults = append(gotResults, r)
 			}
 
 			if err := rows.Err(); err != nil {
-				t.Fatalf("error during iterating through rows: %v", err)
+				t.Fatalf("error during iterating through rows; %v", err)
 			}
 
 			if len(gotResults) != len(tt.wantResults) {
 				t.Fatalf(
-					"mismatched row count. Got %d rows, want %d rows",
+					"mismatched row count; got %d rows, want %d rows",
 					len(gotResults), len(tt.wantResults),
 				)
 			}
@@ -194,7 +194,7 @@ func TestQuery(t *testing.T) {
 				got := gotResults[i]
 				if got.id != want.id || got.name != want.name {
 					t.Errorf(
-						"row content mismatch at index %d;\ngot: %+v;\nwant: %+v",
+						"row content mismatch at index %d;\ngot %+v, want %+v",
 						i, got, want,
 					)
 				}
