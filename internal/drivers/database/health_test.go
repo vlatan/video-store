@@ -8,6 +8,7 @@ import (
 )
 
 func TestHealth(t *testing.T) {
+
 	// Reset the singleton state for this test
 	t.Cleanup(func() {
 		dbInstance = nil
@@ -26,13 +27,6 @@ func TestHealth(t *testing.T) {
 
 	t.Cleanup(db.Close)
 
-	checkIfDown := func(stats map[string]any) bool {
-		if down, ok := stats["status"]; ok {
-			return down == "down"
-		}
-		return false
-	}
-
 	tests := []struct {
 		name string
 		ctx  context.Context
@@ -45,7 +39,7 @@ func TestHealth(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			stats := db.Health(tt.ctx)
-			down := checkIfDown(stats)
+			down := stats["status"] == "down"
 			if down != tt.down {
 				t.Errorf("got down = %t, want down = %t", down, tt.down)
 			}
