@@ -21,6 +21,8 @@ type Service interface {
 	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
 	// Execute a query (update, insert, delete)
 	Exec(ctx context.Context, query string, args ...any) (int64, error)
+	// Acquire returns a connection from the Pool
+	Acquire(ctx context.Context) (*pgxpool.Conn, error)
 	// A map of health status information.
 	Health(ctx context.Context) map[string]any
 	// Closes the pool and terminates the database connection.
@@ -107,6 +109,11 @@ func (s *service) QueryRow(ctx context.Context, query string, args ...any) pgx.R
 func (s *service) Exec(ctx context.Context, query string, args ...any) (int64, error) {
 	result, err := s.db.Exec(ctx, query, args...)
 	return result.RowsAffected(), err
+}
+
+// Acquire returns a connection (*Conn) from the Pool
+func (s *service) Acquire(ctx context.Context) (*pgxpool.Conn, error) {
+	return s.db.Acquire(ctx)
 }
 
 // Close closes the database connection.
