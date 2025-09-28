@@ -2,10 +2,6 @@
 * Fix loading the env vars for tests locally
   Add env vars in GitHub for usage in CI
 
-* Fix GetProjectRoot 
-  It will work only if the file from where it's run
-  is two dirs down from the project root
-
 * Testing packages in parallel will probably
   create race conditions, when resetting the singleton db service.
   Ditch the singleton usage where multiple instances are required

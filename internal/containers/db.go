@@ -160,15 +160,28 @@ func getMigrationFiles(migrationsDir string) ([]string, error) {
 }
 
 // getProjectRoot returns the absolute path to the project root.
-// It works by finding the current file's directory and navigating up.
+// It works by finding the current file's directory and navigating up
+// until it finds the go.mod file.
 func GetProjectRoot() (string, error) {
-	_, filename, _, ok := runtime.Caller(0)
+	_, filename, _, ok := runtime.Caller(1)
 	if !ok {
 		return "", errors.New("failed to get caller information")
 	}
 
-	// This assumes this file is in the dir `/internal/containers`.
-	// The first `..` goes to `internal`,
-	// the second `..` goes to the root of this project
-	return filepath.Join(filepath.Dir(filename), "..", ".."), nil
+	// Start directory for traversal
+	dir := filepath.Dir(filename)
+
+	for {
+		modFile := filepath.Join(dir, "go.mod")
+		if _, err := os.Stat(modFile); err == nil {
+			return dir, nil // Found the project root!
+		}
+
+		parentDir := filepath.Dir(dir)
+		if parentDir == dir {
+			return "", errors.New("reached root without finding go.mod")
+		}
+
+		dir = parentDir
+	}
 }
