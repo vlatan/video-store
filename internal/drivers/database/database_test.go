@@ -83,7 +83,7 @@ func TestNew(t *testing.T) {
 				t.Errorf("got error = %v, want error = %t", err, wantErr)
 			}
 		default:
-			defer db.Close()
+			t.Cleanup(db.Close)
 		}
 
 		// For successful cases, verify we got a non-nil service
@@ -130,14 +130,14 @@ func TestQuery(t *testing.T) {
 
 	ctx := context.TODO()
 	timeoutCtx, cancel := context.WithTimeout(ctx, time.Nanosecond)
-	defer cancel()
+	t.Cleanup(cancel)
 
 	db, err := New(testCfg)
 	if err != nil {
 		t.Fatalf("failed to create db pool; %v", err)
 	}
 
-	defer db.Close()
+	t.Cleanup(db.Close)
 
 	tests := []struct {
 		name        string
@@ -176,7 +176,7 @@ func TestQuery(t *testing.T) {
 				return
 			}
 
-			defer rows.Close()
+			t.Cleanup(rows.Close)
 
 			var gotResults []result
 			for rows.Next() {
@@ -227,14 +227,14 @@ func TestQueryRow(t *testing.T) {
 
 	ctx := context.TODO()
 	timeoutCtx, cancel := context.WithTimeout(ctx, time.Nanosecond)
-	defer cancel()
+	t.Cleanup(cancel)
 
 	db, err := New(testCfg)
 	if err != nil {
 		t.Fatalf("failed to create db pool; %v", err)
 	}
 
-	defer db.Close()
+	t.Cleanup(db.Close)
 
 	tests := []struct {
 		name    string
@@ -300,14 +300,14 @@ func TestExec(t *testing.T) {
 
 	ctx := context.TODO()
 	timeoutCtx, cancel := context.WithTimeout(ctx, time.Nanosecond)
-	defer cancel()
+	t.Cleanup(cancel)
 
 	db, err := New(testCfg)
 	if err != nil {
 		t.Fatalf("failed to create db pool; %v", err)
 	}
 
-	defer db.Close()
+	t.Cleanup(db.Close)
 
 	tests := []struct {
 		name    string

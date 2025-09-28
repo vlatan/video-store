@@ -17,14 +17,14 @@ func TestHealth(t *testing.T) {
 
 	ctx := context.TODO()
 	timeoutCtx, cancel := context.WithTimeout(ctx, time.Nanosecond)
-	defer cancel()
+	t.Cleanup(cancel)
 
 	db, err := New(testCfg)
 	if err != nil {
 		t.Fatalf("failed to create db pool; %v", err)
 	}
 
-	defer db.Close()
+	t.Cleanup(db.Close)
 
 	checkIfDown := func(stats map[string]any) bool {
 		if down, ok := stats["status"]; ok {
