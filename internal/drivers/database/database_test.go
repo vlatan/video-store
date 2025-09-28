@@ -325,12 +325,12 @@ func TestExec(t *testing.T) {
 		{
 			"context timeout", timeoutCtx,
 			"INSERT INTO category (id, name, slug) VALUES ($1, $2, $3)",
-			[]any{3, "foo", "foo"}, true, 0,
+			[]any{3, "foo", "bar"}, true, 0,
 		},
 		{
 			"valid query", ctx,
 			"INSERT INTO category (id, name, slug) VALUES ($1, $2, $3)",
-			[]any{3, "foo", "foo"}, false, 1,
+			[]any{3, "foo", "bar"}, false, 1,
 		},
 	}
 
