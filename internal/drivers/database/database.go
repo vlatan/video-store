@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"sync"
@@ -20,6 +21,8 @@ type Service interface {
 	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
 	// Execute a query (update, insert, delete)
 	Exec(ctx context.Context, query string, args ...any) (int64, error)
+	// Acquire returns a connection from the Pool
+	Acquire(ctx context.Context) (*pgxpool.Conn, error)
 	// A map of health status information.
 	Health(ctx context.Context) map[string]any
 	// Closes the pool and terminates the database connection.
@@ -33,12 +36,20 @@ type service struct {
 
 var (
 	dbInstance *service
+	serviceErr error
 	once       sync.Once
 )
 
 // Produce new singleton reddatabaseis service
-func New(cfg *config.Config) Service {
+func New(cfg *config.Config) (Service, error) {
+
 	once.Do(func() {
+
+		if cfg == nil {
+			serviceErr = errors.New("unable to create DB service with nil config")
+			return
+		}
+
 		// Database URL
 		connStr := fmt.Sprintf("postgres://%s:%s@%s:%d/%s",
 			cfg.DBUsername,
@@ -51,16 +62,21 @@ func New(cfg *config.Config) Service {
 		// Parse the config
 		poolConfig, err := pgxpool.ParseConfig(connStr)
 		if err != nil {
-			log.Fatal(err)
+			serviceErr = err
+			return
 		}
 
 		// Min 1 iddle connection,
 		// to avoid creating NEW connections on low traffic sites.
 		poolConfig.MinIdleConns = 1
 
+		// Get MaxConns from the Config
+		poolConfig.MaxConns = int32(cfg.DBMaxConns)
+
 		db, err := pgxpool.NewWithConfig(context.Background(), poolConfig)
 		if err != nil {
-			log.Fatal(err)
+			serviceErr = err
+			return
 		}
 
 		dbInstance = &service{
@@ -69,7 +85,14 @@ func New(cfg *config.Config) Service {
 		}
 	})
 
-	return dbInstance
+	// If the singleton produced an error
+	// we need to return nil, or Service(nil) for dbInstance
+	// so the Service's underlying dynamic type and value are both nil
+	if serviceErr != nil {
+		return nil, serviceErr
+	}
+
+	return dbInstance, nil
 }
 
 // Query many rows
@@ -86,6 +109,11 @@ func (s *service) QueryRow(ctx context.Context, query string, args ...any) pgx.R
 func (s *service) Exec(ctx context.Context, query string, args ...any) (int64, error) {
 	result, err := s.db.Exec(ctx, query, args...)
 	return result.RowsAffected(), err
+}
+
+// Acquire returns a connection (*Conn) from the Pool
+func (s *service) Acquire(ctx context.Context) (*pgxpool.Conn, error) {
+	return s.db.Acquire(ctx)
 }
 
 // Close closes the database connection.

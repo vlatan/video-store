@@ -101,7 +101,7 @@ func TestRetry(t *testing.T) {
 
 	ctx := context.TODO()
 	timeoutCtx, cancel := context.WithTimeout(ctx, time.Nanosecond)
-	defer cancel()
+	t.Cleanup(cancel)
 
 	tests := []test{
 		{

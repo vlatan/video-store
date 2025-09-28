@@ -3,7 +3,7 @@ package auth
 import (
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/drivers/redis"
-	"github.com/vlatan/video-store/internal/r2"
+	"github.com/vlatan/video-store/internal/integrations/r2"
 	"github.com/vlatan/video-store/internal/repositories/users"
 	"github.com/vlatan/video-store/internal/ui"
 

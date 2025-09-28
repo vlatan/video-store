@@ -19,10 +19,10 @@ import (
 	"github.com/vlatan/video-store/internal/handlers/sources"
 	"github.com/vlatan/video-store/internal/handlers/users"
 	"github.com/vlatan/video-store/internal/integrations/gemini"
+	"github.com/vlatan/video-store/internal/integrations/r2"
 	"github.com/vlatan/video-store/internal/integrations/yt"
 	"github.com/vlatan/video-store/internal/middlewares"
 	"github.com/vlatan/video-store/internal/models"
-	"github.com/vlatan/video-store/internal/r2"
 	catsRepo "github.com/vlatan/video-store/internal/repositories/categories"
 	pagesRepo "github.com/vlatan/video-store/internal/repositories/pages"
 	postsRepo "github.com/vlatan/video-store/internal/repositories/posts"
@@ -52,7 +52,12 @@ func NewServer() (*http.Server, func() error) {
 
 	// Create essential services
 	cfg := config.New()
-	db := database.New(cfg)
+
+	db, err := database.New(cfg)
+	if err != nil {
+		log.Fatalf("couldn't create DB service; %v", err)
+	}
+
 	rdb := redis.New(cfg)
 	store := redisStore.New(cfg, rdb, "session", 86400*30)
 

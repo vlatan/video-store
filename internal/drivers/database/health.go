@@ -11,8 +11,8 @@ import (
 // Health checks the health of the database connection.
 // It returns a map with keys indicating various health statistics.
 func (s *service) Health(ctx context.Context) map[string]any {
-	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
-	defer cancel()
+
+	start := time.Now()
 
 	stats := make(map[string]any)
 	var healthMessages []string
@@ -67,6 +67,8 @@ func (s *service) Health(ctx context.Context) map[string]any {
 	if len(healthMessages) > 0 {
 		stats["message"] = strings.Join(healthMessages, "; ")
 	}
+
+	stats["time_took"] = time.Since(start)
 
 	return stats
 }
