@@ -26,9 +26,10 @@ func TestMain(m *testing.M) {
 	}
 
 	// Get the path to project's .env file and load the env vars
+	// This is valid only for local test runs
 	envPath := filepath.Join(projectRoot, ".env")
 	if err := godotenv.Load(envPath); err != nil {
-		log.Fatal(err)
+		log.Printf("failed to load .env file from %s; %v", envPath, err)
 	}
 
 	// Create the test config - globaly available for package's tests

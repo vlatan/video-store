@@ -159,13 +159,13 @@ func getMigrationFiles(migrationsDir string) ([]string, error) {
 	return migrations, nil
 }
 
-// getProjectRoot returns the absolute path to the project root.
-// It works by finding the current file's directory and navigating up
+// GetProjectRoot returns the absolute path to the project root.
+// It works by finding the directory of the caller of this func and navigating up
 // until it finds the go.mod file.
 func GetProjectRoot() (string, error) {
 	_, filename, _, ok := runtime.Caller(1)
 	if !ok {
-		return "", errors.New("failed to get caller information")
+		return "", errors.New("failed to get the caller information")
 	}
 
 	// Start directory for traversal
