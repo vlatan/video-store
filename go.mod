@@ -8,7 +8,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.18.0
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.85.0
 	github.com/aws/smithy-go v1.22.5
-	github.com/caarlos0/env v3.5.0+incompatible
+	github.com/caarlos0/env/v11 v11.3.1
 	github.com/google/go-cmp v0.7.0
 	github.com/gorilla/csrf v1.7.3
 	github.com/gorilla/securecookie v1.1.2

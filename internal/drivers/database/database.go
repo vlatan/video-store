@@ -60,7 +60,7 @@ func New(cfg *config.Config) (Service, error) {
 	poolConfig.MinIdleConns = 1
 
 	// Get MaxConns from the Config
-	poolConfig.MaxConns = int32(cfg.DBMaxConns)
+	poolConfig.MaxConns = cfg.DBMaxConns
 
 	pool, err := pgxpool.NewWithConfig(context.Background(), poolConfig)
 	if err != nil {
