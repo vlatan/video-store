@@ -1,11 +1,5 @@
 
-* Fix loading the env vars for tests locally
-  Add env vars in GitHub for usage in CI
-
-* Testing packages in parallel will probably
-  create race conditions, when resetting the singleton db service.
-  Ditch the singleton usage where multiple instances are required
-  for parallel tests.
+* Implement gosec suggestions
 
 * Generalize the app.
   Eliminate the documentary usage.

@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"sync"
 	"testing"
 	"time"
 
@@ -73,56 +72,29 @@ func TestNew(t *testing.T) {
 		{"valid config", testCfg, false},
 	}
 
-	testPool := func(cfg *config.Config, wantErr bool) Service {
-		// Create db pool
-		db, err := New(cfg)
-
-		// Check error cases
-		switch gotErr := err != nil; gotErr {
-		case true:
-			if gotErr != wantErr {
-				t.Errorf("got error = %v, want error = %t", err, wantErr)
-			}
-		default:
-			t.Cleanup(db.Close)
-		}
-
-		// For successful cases, verify we got a non-nil service
-		if !wantErr && db == nil {
-			t.Errorf("got %+v, want non-nil", db)
-		}
-
-		return db
-	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			// Reset the singleton state for each test case
-			t.Cleanup(func() {
-				dbInstance = nil
-				serviceErr = nil
-				once = sync.Once{}
-			})
+			// Create db pool
+			db, err := New(tt.cfg)
 
-			db1 := testPool(tt.cfg, tt.wantErr)
-			db2 := testPool(tt.cfg, tt.wantErr)
+			// Check error cases
+			if gotErr := err != nil; gotErr {
+				if gotErr != tt.wantErr {
+					t.Errorf("got error = %v, want error = %t", err, tt.wantErr)
+				}
+				return
+			}
 
-			if db1 != db2 {
-				t.Errorf("singleton values not the same %v != %v", db1, db2)
+			// For successful cases, verify we got a non-nil service
+			if !tt.wantErr && db == nil {
+				t.Errorf("got %+v, want non-nil", db)
 			}
 		})
 	}
 }
 
 func TestQuery(t *testing.T) {
-
-	// Reset the singleton state for this test
-	t.Cleanup(func() {
-		dbInstance = nil
-		serviceErr = nil
-		once = sync.Once{}
-	})
 
 	type result struct {
 		id   int
@@ -214,13 +186,6 @@ func TestQuery(t *testing.T) {
 
 func TestQueryRow(t *testing.T) {
 
-	// Reset the singleton state for this test
-	t.Cleanup(func() {
-		dbInstance = nil
-		serviceErr = nil
-		once = sync.Once{}
-	})
-
 	type result struct {
 		id   int
 		name string
@@ -291,13 +256,6 @@ func TestQueryRow(t *testing.T) {
 }
 
 func TestExec(t *testing.T) {
-
-	// Reset the singleton state for this test
-	t.Cleanup(func() {
-		dbInstance = nil
-		serviceErr = nil
-		once = sync.Once{}
-	})
 
 	ctx := context.TODO()
 	timeoutCtx, cancel := context.WithTimeout(ctx, time.Nanosecond)

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"sync"
 	"time"
 
 	"github.com/vlatan/video-store/internal/config"
@@ -42,28 +41,15 @@ type service struct {
 	config *config.Config
 }
 
-var (
-	rdbInstance *service
-	once        sync.Once
-)
-
-// Produce new singleton redis service
+// Produce new redis service
 func New(cfg *config.Config) Service {
-	once.Do(func() {
-		// Instantiate redis client
-		rdb := redis.NewClient(&redis.Options{
-			Addr:     fmt.Sprintf("%s:%d", cfg.RedisHost, cfg.RedisPort),
-			Password: cfg.RedisPassword,
-			DB:       0, // use default DB
-		})
-
-		rdbInstance = &service{
-			rdb:    rdb,
-			config: cfg,
-		}
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     fmt.Sprintf("%s:%d", cfg.RedisHost, cfg.RedisPort),
+		Password: cfg.RedisPassword,
+		DB:       0, // use default DB
 	})
 
-	return rdbInstance
+	return &service{rdb, cfg}
 }
 
 // Get a value from Redis by key. Returns redis.Nil error if key does not exist.

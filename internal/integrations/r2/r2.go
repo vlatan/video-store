@@ -8,7 +8,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"sync"
 	"time"
 
 	"github.com/vlatan/video-store/internal/config"
@@ -35,44 +34,33 @@ type service struct {
 	client *s3.Client
 }
 
-var (
-	r2Instance *service
-	once       sync.Once
-)
-
 // New creates a new R2 client
 func New(ctx context.Context, cfg *config.Config) Service {
 
-	once.Do(func() {
-		// Create SDK config for an R2 service
-		// An ordinary AWS SDK config would look like:
-		// sdkConfig, err := awsConfig.LoadDefaultConfig(ctx)
-		sdkConfig, err := awsConfig.LoadDefaultConfig(ctx,
-			awsConfig.WithCredentialsProvider(
-				credentials.NewStaticCredentialsProvider(
-					cfg.R2AccessKeyId, cfg.R2SecretAccessKey, ""),
-			),
-			awsConfig.WithRegion("auto"),
-		)
+	// Create SDK config for an R2 service
+	// An ordinary AWS SDK config would look like:
+	// sdkConfig, err := awsConfig.LoadDefaultConfig(ctx)
+	sdkConfig, err := awsConfig.LoadDefaultConfig(ctx,
+		awsConfig.WithCredentialsProvider(
+			credentials.NewStaticCredentialsProvider(
+				cfg.R2AccessKeyId, cfg.R2SecretAccessKey, ""),
+		),
+		awsConfig.WithRegion("auto"),
+	)
 
-		if err != nil {
-			log.Fatalf("failed to load AWS/R2 SDK configuration, %v", err)
-		}
+	if err != nil {
+		log.Fatalf("failed to load AWS/R2 SDK configuration, %v", err)
+	}
 
-		// Create the R2 client
-		// An ordinary AWS client would look like:
-		// client := s3.NewFromConfig(sdkConfig)
-		client := s3.NewFromConfig(sdkConfig, func(o *s3.Options) {
-			baseEndpoint := fmt.Sprintf("https://%s.r2.cloudflarestorage.com", cfg.R2AccountId)
-			o.BaseEndpoint = aws.String(baseEndpoint)
-		})
-
-		r2Instance = &service{
-			client: client,
-		}
+	// Create the R2 client
+	// An ordinary AWS client would look like:
+	// client := s3.NewFromConfig(sdkConfig)
+	client := s3.NewFromConfig(sdkConfig, func(o *s3.Options) {
+		baseEndpoint := fmt.Sprintf("https://%s.r2.cloudflarestorage.com", cfg.R2AccountId)
+		o.BaseEndpoint = aws.String(baseEndpoint)
 	})
 
-	return r2Instance
+	return &service{client}
 }
 
 // DeleteObject removes an object from bucket
