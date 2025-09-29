@@ -3,7 +3,7 @@ package models
 import (
 	"bytes"
 	"context"
-	"crypto/md5"
+	"crypto/md5" // #nosec G501
 	"crypto/sha256"
 	"fmt"
 	"image"

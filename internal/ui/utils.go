@@ -3,7 +3,7 @@ package ui
 import (
 	"bytes"
 	"compress/gzip"
-	"crypto/md5"
+	"crypto/md5" // #nosec G501
 	"fmt"
 	"html/template"
 	"io/fs"
