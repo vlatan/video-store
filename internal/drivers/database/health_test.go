@@ -2,7 +2,6 @@ package database
 
 import (
 	"context"
-	"sync"
 	"testing"
 	"time"
 
@@ -10,13 +9,6 @@ import (
 )
 
 func TestHealth(t *testing.T) {
-
-	// Reset the singleton state for this test
-	t.Cleanup(func() {
-		dbInstance = nil
-		serviceErr = nil
-		once = sync.Once{}
-	})
 
 	// Long context
 	ctx := context.TODO()
