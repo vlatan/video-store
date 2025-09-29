@@ -76,7 +76,7 @@ func (s *Service) DumpDatabase(dest string) error {
 		s.config.DBDatabase,
 	)
 
-	cmd := exec.Command("pg_dump", dbUrl, "-f", dest) // nosec G204
+	cmd := exec.Command("pg_dump", dbUrl, "-f", dest) // #nosec G204
 
 	// Capture both stdout and stderr
 	var stdout, stderr bytes.Buffer
