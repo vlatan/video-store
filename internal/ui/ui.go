@@ -4,7 +4,6 @@ import (
 	"io"
 	"net/http"
 	"regexp"
-	"sync"
 
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/drivers/redis"
@@ -57,11 +56,6 @@ type service struct {
 var validJS = regexp.MustCompile("^(application|text)/(x-)?(java|ecma)script$")
 var validXML = regexp.MustCompile("[/+]xml$")
 
-var (
-	tmInstance *service
-	once       sync.Once
-)
-
 // Walk the partials directory and parse the templates.
 func New(
 	usersRepo *users.Repository,
@@ -71,26 +65,21 @@ func New(
 	store sessions.Store,
 	config *config.Config,
 ) Service {
-	once.Do(func() {
-		m := minify.New()
-		m.AddFunc("text/css", css.Minify)
-		m.AddFunc("text/html", html.Minify)
-		m.AddFuncRegexp(validJS, js.Minify)
-		m.AddFuncRegexp(validXML, xml.Minify)
-		m.AddFunc("application/manifest+json", json.Minify)
+	m := minify.New()
+	m.AddFunc("text/css", css.Minify)
+	m.AddFunc("text/html", html.Minify)
+	m.AddFuncRegexp(validJS, js.Minify)
+	m.AddFuncRegexp(validXML, xml.Minify)
+	m.AddFunc("application/manifest+json", json.Minify)
 
-		tmInstance = &service{
-			templates:   parseTemplates(m),
-			staticFiles: parseStaticFiles(m, "static"),
-			rdb:         rdb,
-			r2s:         r2s,
-			config:      config,
-			store:       store,
-			catsRepo:    catsRepo,
-			usersRepo:   usersRepo,
-		}
-
-	})
-
-	return tmInstance
+	return &service{
+		templates:   parseTemplates(m),
+		staticFiles: parseStaticFiles(m, "static"),
+		rdb:         rdb,
+		r2s:         r2s,
+		config:      config,
+		store:       store,
+		catsRepo:    catsRepo,
+		usersRepo:   usersRepo,
+	}
 }
