@@ -3,7 +3,7 @@ package auth
 import (
 	"bytes"
 	"context"
-	"crypto/md5"
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -70,7 +70,8 @@ func (s *Service) loginUser(w http.ResponseWriter, r *http.Request, user *models
 
 	// Generate analytics ID
 	analyticsID := user.ProviderUserId + user.Provider + user.Email
-	user.AnalyticsID = fmt.Sprintf("%x", md5.Sum([]byte(analyticsID)))
+	hashBytes := sha256.Sum256([]byte(analyticsID))
+	user.AnalyticsID = fmt.Sprintf("%x", hashBytes)[:32]
 
 	// Update or insert user
 	id, err := s.usersRepo.UpsertUser(r.Context(), user)
