@@ -22,6 +22,17 @@ type Service struct {
 	r2s    r2.Service
 }
 
+// For your backup use case
+var backupRoot string
+
+func init() {
+	var err error
+	backupRoot, err = os.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
 // New creates a backup service
 func New(cfg *config.Config, r2s r2.Service) *Service {
 	return &Service{
@@ -52,6 +63,7 @@ func (s *Service) Run(ctx context.Context) error {
 	if err := s.r2s.UploadFile(
 		ctx,
 		s.config.R2BackupBucketName,
+		backupRoot,
 		archive,
 		archive,
 	); err != nil {
@@ -96,7 +108,7 @@ func (s *Service) DumpDatabase(dest string) error {
 func (s *Service) ArchiveFiles(files []string, dest string) error {
 
 	// Create destination file
-	destFile, err := os.Create(dest)
+	destFile, err := r2.SecureCreate(backupRoot, dest)
 	if err != nil {
 		return fmt.Errorf("failed to create destination file %s: %w", dest, err)
 	}
@@ -117,7 +129,7 @@ func (s *Service) ArchiveFiles(files []string, dest string) error {
 	for _, src := range files {
 
 		// Open the source file
-		srcFile, err := os.Open(src)
+		srcFile, err := r2.SecureOpen(backupRoot, src)
 		if err != nil {
 			return fmt.Errorf("failed to open source file %s: %w", src, err)
 		}
