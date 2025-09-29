@@ -67,8 +67,7 @@ func (s *service) NewData(w http.ResponseWriter, r *http.Request) *models.Templa
 
 	// Clear the flash session created with s.store.Get
 	session.Options.MaxAge = -1
-	err := session.Save(r, w)
-	if err != nil {
+	if err := session.Save(r, w); err != nil {
 		log.Printf("unable to clear/save the flash session; %v", err)
 	}
 
