@@ -22,3 +22,4 @@ web/avatars/
 # tests
 cover.html
 coverage.html
+results.json
