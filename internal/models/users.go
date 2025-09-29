@@ -68,7 +68,8 @@ func (u *User) IsAdmin(adminID, adminProvider string) bool {
 // Set the user analytics ID
 func (u *User) SetAnalyticsID() {
 	analyticsID := u.ProviderUserId + u.Provider + u.Email
-	u.AnalyticsID = fmt.Sprintf("%x", sha256.Sum256([]byte(analyticsID)))
+	hashBytes := sha256.Sum256([]byte(analyticsID))
+	u.AnalyticsID = fmt.Sprintf("%x", hashBytes)[:32]
 }
 
 // Get user avatar path, either from redis, or download and store avatar path to redis
