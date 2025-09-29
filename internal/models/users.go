@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/md5"
+	"crypto/sha256"
 	"fmt"
 	"image"
 	"image/jpeg"
@@ -67,7 +68,7 @@ func (u *User) IsAdmin(adminID, adminProvider string) bool {
 // Set the user analytics ID
 func (u *User) SetAnalyticsID() {
 	analyticsID := u.ProviderUserId + u.Provider + u.Email
-	u.AnalyticsID = fmt.Sprintf("%x", md5.Sum([]byte(analyticsID)))
+	u.AnalyticsID = fmt.Sprintf("%x", sha256.Sum256([]byte(analyticsID)))
 }
 
 // Get user avatar path, either from redis, or download and store avatar path to redis
@@ -189,7 +190,7 @@ func (u *User) DownloadAvatar(ctx context.Context, config *config.Config, r2s r2
 		)
 	}
 
-	etag := fmt.Sprintf("%x", md5.Sum(fileData))
+	etag := fmt.Sprintf("%x", md5.Sum(fileData)) // #nosec G401
 	return etag, nil
 }
 

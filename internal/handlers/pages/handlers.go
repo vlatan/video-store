@@ -59,7 +59,7 @@ func (s *Service) SinglePageHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	html := bluemonday.UGCPolicy().SanitizeBytes(buf.Bytes())
-	page.HTMLContent = template.HTML(html)
+	page.HTMLContent = template.HTML(html) // #nosec G203
 
 	// Assign the page to data
 	data.CurrentPage = page

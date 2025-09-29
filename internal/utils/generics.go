@@ -78,7 +78,7 @@ func Retry[T any](
 			}
 
 			// Add jitter to the delay
-			delay += time.Duration(rand.Float64())
+			delay += time.Duration(rand.Float64()) // #nosec G404
 		}
 
 		// Wait for either the delay or context to end
