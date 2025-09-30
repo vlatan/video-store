@@ -1,6 +1,9 @@
 package r2
 
-import "os"
+import (
+	"errors"
+	"os"
+)
 
 type SecureFile struct {
 	*os.File
@@ -10,11 +13,7 @@ type SecureFile struct {
 func (sf *SecureFile) Close() error {
 	fileErr := sf.File.Close()
 	rootErr := sf.root.Close()
-
-	if fileErr != nil {
-		return fileErr
-	}
-	return rootErr
+	return errors.Join(fileErr, rootErr)
 }
 
 // SecureOpen opens a file with a given root
@@ -26,8 +25,8 @@ func SecureOpen(rootPath, filename string) (*SecureFile, error) {
 
 	file, err := root.Open(filename)
 	if err != nil {
-		root.Close() // Clean up root if file open fails
-		return nil, err
+		rootErr := root.Close() // Close the root if file open fails
+		return nil, errors.Join(err, rootErr)
 	}
 
 	return &SecureFile{file, root}, nil
@@ -41,8 +40,8 @@ func SecureCreate(rootPath, filename string) (*SecureFile, error) {
 
 	file, err := root.Create(filename)
 	if err != nil {
-		root.Close() // Clean up root if file open fails
-		return nil, err
+		rootErr := root.Close() // Close the root if file open fails
+		return nil, errors.Join(err, rootErr)
 	}
 
 	return &SecureFile{file, root}, nil
