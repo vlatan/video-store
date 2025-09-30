@@ -45,7 +45,9 @@ func (s *service) GetUserFromSession(w http.ResponseWriter, r *http.Request) *mo
 	if !ok || id == 0 {
 		// Clear the session this is anonymous user
 		session.Options.MaxAge = -1
-		session.Save(r, w)
+		if err = session.Save(r, w); err != nil {
+			log.Printf("couldn't clear the session for anonymous user; %v", err)
+		}
 		return nil
 	}
 
@@ -65,7 +67,9 @@ func (s *service) GetUserFromSession(w http.ResponseWriter, r *http.Request) *mo
 	}
 
 	// Save the session
-	session.Save(r, w)
+	if err = session.Save(r, w); err != nil {
+		log.Printf("couldn't save session for updating user last seen; %v", err)
+	}
 
 	providerUserId, _ := session.Values["ProviderUserId"].(string)
 	email, _ := session.Values["Email"].(string)

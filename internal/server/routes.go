@@ -66,7 +66,9 @@ func (s *Server) RegisterRoutes() http.Handler {
 		func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/octet-stream")
 			runtime.GC()
-			pprof.WriteHeapProfile(w)
+			if err := pprof.WriteHeapProfile(w); err != nil {
+				utils.HttpError(w, http.StatusInternalServerError)
+			}
 		},
 	))
 

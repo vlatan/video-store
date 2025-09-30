@@ -1,6 +1,5 @@
 
-* Implement gosec suggestions
-  Add gosec to CI
+* Add gosec to CI
 
 * Generalize the app.
   Eliminate the documentary usage.

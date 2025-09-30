@@ -90,7 +90,9 @@ func (rs *redisStore) Save(r *http.Request, w http.ResponseWriter, session *sess
 
 	// If MaxAge is negative, delete the session
 	if session.Options.MaxAge < 0 {
-		rs.deleteSession(r, w, session)
+		if err := rs.deleteSession(r, w, session); err != nil {
+			return fmt.Errorf("could not delete the session: %w", err)
+		}
 		return nil
 	}
 
@@ -107,7 +109,10 @@ func (rs *redisStore) Save(r *http.Request, w http.ResponseWriter, session *sess
 		sessionID = cookie.Value
 	} else {
 		// Generate new session ID
-		sessionID = rs.generateSessionID()
+		sessionID, err = rs.generateSessionID()
+		if err != nil {
+			return fmt.Errorf("could not generate session ID: %w", err)
+		}
 	}
 
 	// Save to Redis
@@ -157,17 +162,19 @@ func (rs *redisStore) newSession(name string) *sessions.Session {
 func (rs *redisStore) deleteSession(
 	r *http.Request,
 	w http.ResponseWriter,
-	session *sessions.Session) {
+	session *sessions.Session) error {
 
 	// Check if the cookie exists
 	cookie, err := r.Cookie(session.Name())
 	if err != nil {
-		return
+		return err
 	}
 
 	// Delete from redis
 	key := rs.buildKey(session.Name(), cookie.Value)
-	rs.client.Delete(r.Context(), key)
+	if err = rs.client.Delete(r.Context(), key); err != nil {
+		return err
+	}
 
 	// Delete the cookie
 	http.SetCookie(w, &http.Cookie{
@@ -180,13 +187,17 @@ func (rs *redisStore) deleteSession(
 		HttpOnly: session.Options.HttpOnly,
 		SameSite: http.SameSiteLaxMode,
 	})
+
+	return nil
 }
 
 // generateSessionID generates a random session ID
-func (rs *redisStore) generateSessionID() string {
+func (rs *redisStore) generateSessionID() (string, error) {
 	bytes := make([]byte, 32)
-	rand.Read(bytes)
-	return hex.EncodeToString(bytes)
+	if _, err := rand.Read(bytes); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(bytes), nil
 }
 
 // buildKey is building a Redis key for the session
