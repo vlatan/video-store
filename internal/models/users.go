@@ -3,7 +3,8 @@ package models
 import (
 	"bytes"
 	"context"
-	"crypto/md5"
+	"crypto/md5" // #nosec G501
+	"crypto/sha256"
 	"fmt"
 	"image"
 	"image/jpeg"
@@ -67,7 +68,8 @@ func (u *User) IsAdmin(adminID, adminProvider string) bool {
 // Set the user analytics ID
 func (u *User) SetAnalyticsID() {
 	analyticsID := u.ProviderUserId + u.Provider + u.Email
-	u.AnalyticsID = fmt.Sprintf("%x", md5.Sum([]byte(analyticsID)))
+	hashBytes := sha256.Sum256([]byte(analyticsID))
+	u.AnalyticsID = fmt.Sprintf("%x", hashBytes)[:32]
 }
 
 // Get user avatar path, either from redis, or download and store avatar path to redis
@@ -92,7 +94,9 @@ func (u *User) GetAvatar(
 	// Attempt to download the avatar, set default avatar on fail
 	etag, err := u.DownloadAvatar(ctx, config, r2s)
 	if err != nil {
-		rdb.Set(ctx, redisKey, defaultAvatar, avatarTimeout)
+		if err = rdb.Set(ctx, redisKey, defaultAvatar, avatarTimeout); err != nil {
+			log.Printf("failed to save the default avatar URL to Redis; %v", err)
+		}
 		return defaultAvatar
 	}
 
@@ -106,7 +110,10 @@ func (u *User) GetAvatar(
 	avatar = avatarURL.String()
 
 	// Save avatar URL to Redis and return
-	rdb.Set(ctx, redisKey, avatar, avatarTimeout)
+	if err = rdb.Set(ctx, redisKey, avatar, avatarTimeout); err != nil {
+		log.Printf("failed to save the downloaded avatar URL to Redis; %v", err)
+	}
+
 	return avatar
 }
 
@@ -189,7 +196,7 @@ func (u *User) DownloadAvatar(ctx context.Context, config *config.Config, r2s r2
 		)
 	}
 
-	etag := fmt.Sprintf("%x", md5.Sum(fileData))
+	etag := fmt.Sprintf("%x", md5.Sum(fileData)) // #nosec G401
 	return etag, nil
 }
 

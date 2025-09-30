@@ -3,7 +3,6 @@ package auth
 import (
 	"bytes"
 	"context"
-	"crypto/md5"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -68,9 +67,8 @@ func getRedirectPath(r *http.Request) string {
 // Store user info in our own session
 func (s *Service) loginUser(w http.ResponseWriter, r *http.Request, user *models.User) error {
 
-	// Generate analytics ID
-	analyticsID := user.ProviderUserId + user.Provider + user.Email
-	user.AnalyticsID = fmt.Sprintf("%x", md5.Sum([]byte(analyticsID)))
+	// Set user analytics ID
+	user.SetAnalyticsID()
 
 	// Update or insert user
 	id, err := s.usersRepo.UpsertUser(r.Context(), user)
@@ -90,7 +88,7 @@ func (s *Service) loginUser(w http.ResponseWriter, r *http.Request, user *models
 	session.Values["Name"] = user.Name
 	session.Values["Provider"] = user.Provider
 	session.Values["AvatarURL"] = user.AvatarURL
-	session.Values["AnalyticsID"] = analyticsID
+	session.Values["AnalyticsID"] = user.AnalyticsID
 	session.Values["AccessToken"] = user.AccessToken
 	session.Values["RefreshToken"] = user.RefreshToken
 	session.Values["LastSeen"] = now
@@ -121,7 +119,9 @@ func (s *Service) getUserFinalRedirect(w http.ResponseWriter, r *http.Request) s
 	// Clear the redirect session created with s.store.Get
 	session.Options.MaxAge = -1
 	session.Values = make(map[any]any)
-	session.Save(r, w)
+	if err := session.Save(r, w); err != nil {
+		log.Printf("failed to delete the redirect session; %v", err)
+	}
 	return redirectTo
 }
 

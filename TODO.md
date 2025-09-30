@@ -1,6 +1,4 @@
 
-* Implement gosec suggestions
-
 * Generalize the app.
   Eliminate the documentary usage.
 

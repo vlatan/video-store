@@ -59,7 +59,7 @@ func (s *Service) SinglePageHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	html := bluemonday.UGCPolicy().SanitizeBytes(buf.Bytes())
-	page.HTMLContent = template.HTML(html)
+	page.HTMLContent = template.HTML(html) // #nosec G203
 
 	// Assign the page to data
 	data.CurrentPage = page
@@ -144,7 +144,14 @@ func (s *Service) UpdatePageHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Delete the redis cache, ignore the error
-		s.rdb.Delete(r.Context(), fmt.Sprintf(pageCacheKey, slug))
+		redisKey := fmt.Sprintf(pageCacheKey, slug)
+		if err = s.rdb.Delete(r.Context(), redisKey); err != nil {
+			log.Printf("could not delete the cache on page '%s'; %v", slug, err)
+			formError.Message = "Could not delete the cache on page"
+			data.Form.Error = &formError
+			s.ui.RenderHTML(w, r, "form.html", data)
+			return
+		}
 
 		// Check out the updated page
 		redirectTo := fmt.Sprintf("/page/%s/", slug)

@@ -79,10 +79,12 @@ func NewProviders(cfg *config.Config) Providers {
 }
 
 // GenerateState generates new state
-func (p *Providers) GenerateState() string {
+func (p *Providers) GenerateState() (string, error) {
 	b := make([]byte, 16)
-	rand.Read(b)
-	return hex.EncodeToString(b)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(b), nil
 }
 
 // FetchUserProfile fetches the user profile from a provider

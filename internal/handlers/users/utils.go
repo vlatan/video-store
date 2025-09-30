@@ -19,10 +19,7 @@ func (s *Service) GetAvatars(ctx context.Context, users []models.User) chan avat
 	semaphore := make(chan struct{}, 10) // max 10 paralel calls
 
 	for i, user := range users {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-
+		wg.Go(func() {
 			// Semaphore will block if full
 			select {
 			case <-ctx.Done():
@@ -40,7 +37,7 @@ func (s *Service) GetAvatars(ctx context.Context, users []models.User) chan avat
 				return
 			case avatars <- avatarResult{index: i, localAvatar: localAvatar}:
 			}
-		}()
+		})
 	}
 
 	// Wait for the goroutines to finish in a separate goroutine

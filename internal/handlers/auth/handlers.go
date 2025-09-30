@@ -29,8 +29,15 @@ func (s *Service) AuthHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Generate the state and store it in session
-	state := s.providers.GenerateState()
+	// Generate the state
+	state, err := s.providers.GenerateState()
+	if err != nil {
+		log.Printf("failed to generate an oauth state; %v", err)
+		utils.HttpError(w, http.StatusInternalServerError)
+		return
+	}
+
+	// Store the state in session
 	session, _ := s.store.Get(r, s.config.OAuthSessionName)
 	session.Values["state"] = state
 
@@ -51,12 +58,18 @@ func (s *Service) AuthHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Save the session
-	session.Save(r, w)
+	if err = session.Save(r, w); err != nil {
+		log.Printf("failed to save the state/verifier session; %v", err)
+		utils.HttpError(w, http.StatusInternalServerError)
+		return
+	}
 
 	// Store this redirect URL in a flash session
 	redirectSession, _ := s.store.Get(r, s.config.RedirectSessionName)
 	redirectSession.Values["redirect"] = redirectTo
-	redirectSession.Save(r, w)
+	if err = redirectSession.Save(r, w); err != nil {
+		log.Printf("failed to save the redirect session; %v", err)
+	}
 
 	// Redirect the user to the Provider consent page
 	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
@@ -100,12 +113,16 @@ func (s *Service) AuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get the oauth session we saved on the start of the flow
+	// Get the state/verifier oauth session we saved on the start of the flow
 	session, _ := s.store.Get(r, s.config.OAuthSessionName)
 	sessionState, _ := session.Values["state"].(string)
 	sessionVerifier, _ := session.Values["verifier"].(string)
+
+	// Delete the session
 	session.Options.MaxAge = -1
-	session.Save(r, w)
+	if err := session.Save(r, w); err != nil {
+		log.Printf("failed to delete the oauth state/verifier sesssion; %v", err)
+	}
 
 	// Check the state parameter
 	if sessionState != state {

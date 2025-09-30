@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	"github.com/vlatan/video-store/internal/config"
@@ -20,6 +21,17 @@ import (
 type Service struct {
 	config *config.Config
 	r2s    r2.Service
+}
+
+// For your backup use case
+var backupRoot string
+
+func init() {
+	var err error
+	backupRoot, err = os.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 // New creates a backup service
@@ -52,6 +64,7 @@ func (s *Service) Run(ctx context.Context) error {
 	if err := s.r2s.UploadFile(
 		ctx,
 		s.config.R2BackupBucketName,
+		backupRoot,
 		archive,
 		archive,
 	); err != nil {
@@ -67,26 +80,27 @@ func (s *Service) Run(ctx context.Context) error {
 // DumpDatabase dumps a database to file
 func (s *Service) DumpDatabase(dest string) error {
 
-	// Database URL
-	dbUrl := fmt.Sprintf("postgres://%s:%s@%s:%d/%s",
-		s.config.DBUsername,
-		s.config.DBPassword,
-		s.config.DBHost,
-		s.config.DBPort,
-		s.config.DBDatabase,
-	)
+	// The dump command
+	cmd := exec.Command("pg_dump",
+		"-h", s.config.DBHost,
+		"-p", strconv.Itoa(s.config.DBPort),
+		"-U", s.config.DBUsername,
+		"-d", s.config.DBDatabase,
+		"-f", dest,
+	) // #nosec G204
 
-	cmd := exec.Command("pg_dump", dbUrl, "-f", dest)
+	// Set password via environment variable
+	cmd.Env = append(os.Environ(), fmt.Sprintf("PGPASSWORD=%s", s.config.DBPassword))
 
-	// Capture both stdout and stderr
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 
-	err := cmd.Run()
-	if err != nil {
-		return fmt.Errorf("pg_dump failed: %v\nstderr: %s\nstdout: %s",
-			err, stderr.String(), stdout.String())
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf(
+			"pg_dump failed: %v\nstderr: %s\nstdout: %s",
+			err, stderr.String(), stdout.String(),
+		)
 	}
 
 	return nil
@@ -96,7 +110,7 @@ func (s *Service) DumpDatabase(dest string) error {
 func (s *Service) ArchiveFiles(files []string, dest string) error {
 
 	// Create destination file
-	destFile, err := os.Create(dest)
+	destFile, err := r2.SecureCreate(backupRoot, dest)
 	if err != nil {
 		return fmt.Errorf("failed to create destination file %s: %w", dest, err)
 	}
@@ -117,7 +131,7 @@ func (s *Service) ArchiveFiles(files []string, dest string) error {
 	for _, src := range files {
 
 		// Open the source file
-		srcFile, err := os.Open(src)
+		srcFile, err := r2.SecureOpen(backupRoot, src)
 		if err != nil {
 			return fmt.Errorf("failed to open source file %s: %w", src, err)
 		}

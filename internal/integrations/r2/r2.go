@@ -7,7 +7,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/vlatan/video-store/internal/config"
@@ -27,7 +26,7 @@ type Service interface {
 	// PutObject puts object to bucket having the content
 	PutObject(ctx context.Context, body io.Reader, contentType, bucket, key string) error
 	// UploadFile uploads a file to bucket
-	UploadFile(ctx context.Context, bucket, key, filePath string) error
+	UploadFile(ctx context.Context, bucket, rootPath, key, filePath string) error
 }
 
 type service struct {
@@ -121,9 +120,9 @@ func (s *service) PutObject(ctx context.Context, body io.Reader, contentType, bu
 }
 
 // UploadFile uploads a file to bucket
-func (s *service) UploadFile(ctx context.Context, bucket, key, filePath string) error {
+func (s *service) UploadFile(ctx context.Context, bucket, rootPath, key, filePath string) error {
 
-	file, err := os.Open(filePath)
+	file, err := SecureOpen(rootPath, filePath)
 	if err != nil {
 		return fmt.Errorf("couldn't open the file %s: %w", filePath, err)
 	}

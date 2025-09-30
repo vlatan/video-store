@@ -4,10 +4,11 @@ import (
 	"encoding/base64"
 	"fmt"
 	"log"
+	"math"
 	"runtime"
 	"time"
 
-	"github.com/caarlos0/env"
+	"github.com/caarlos0/env/v11"
 )
 
 type Secret struct {
@@ -95,7 +96,7 @@ type Config struct {
 	DBDatabase string `env:"DB_DATABASE"`
 	DBUsername string `env:"DB_USERNAME"`
 	DBPassword string `env:"DB_PASSWORD"`
-	DBMaxConns int    `env:"DB_MAX_CONNS" envDefault:"4"`
+	DBMaxConns int32  `env:"DB_MAX_CONNS" envDefault:"4"`
 
 	// Local app host and port
 	Host string `env:"HOST" envDefault:"localhost"`
@@ -111,8 +112,13 @@ func New() *Config {
 		log.Fatalf("failed to parse the config from the env: %v", err)
 	}
 
+	numCPU := runtime.NumCPU()
+	if numCPU > math.MaxInt32 || numCPU < math.MinInt32 {
+		log.Fatalf("failed to get proper CPU cores count: %d", numCPU)
+	}
+
 	// Cap the DBMaxConns to the number of cores
-	cfg.DBMaxConns = max(cfg.DBMaxConns, runtime.NumCPU())
+	cfg.DBMaxConns = max(cfg.DBMaxConns, int32(numCPU))
 
 	if cfg.Target != App {
 		return &cfg

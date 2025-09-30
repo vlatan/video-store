@@ -3,7 +3,7 @@ package ui
 import (
 	"bytes"
 	"compress/gzip"
-	"crypto/md5"
+	"crypto/md5" // #nosec G501
 	"fmt"
 	"html/template"
 	"io/fs"
@@ -186,7 +186,7 @@ func parseStaticFiles(m *minify.M, dir string) models.StaticFiles {
 		}
 
 		// Create Etag as a hexadecimal md5 hash of the file content
-		etag := fmt.Sprintf("%x", md5.Sum(b))
+		etag := fmt.Sprintf("%x", md5.Sum(b)) // #nosec G401
 
 		// Ensure the name starts with "/"
 		name := path
