@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	"github.com/vlatan/video-store/internal/config"
@@ -79,26 +80,27 @@ func (s *Service) Run(ctx context.Context) error {
 // DumpDatabase dumps a database to file
 func (s *Service) DumpDatabase(dest string) error {
 
-	// Database URL
-	dbUrl := fmt.Sprintf("postgres://%s:%s@%s:%d/%s",
-		s.config.DBUsername,
-		s.config.DBPassword,
-		s.config.DBHost,
-		s.config.DBPort,
-		s.config.DBDatabase,
-	)
+	// The dump command
+	cmd := exec.Command("pg_dump",
+		"-h", s.config.DBHost,
+		"-p", strconv.Itoa(s.config.DBPort),
+		"-U", s.config.DBUsername,
+		"-d", s.config.DBDatabase,
+		"-f", dest,
+	) // #nosec G204
 
-	cmd := exec.Command("pg_dump", dbUrl, "-f", dest) // #nosec G204
+	// Set password via environment variable
+	cmd.Env = append(os.Environ(), fmt.Sprintf("PGPASSWORD=%s", s.config.DBPassword))
 
-	// Capture both stdout and stderr
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 
-	err := cmd.Run()
-	if err != nil {
-		return fmt.Errorf("pg_dump failed: %v\nstderr: %s\nstdout: %s",
-			err, stderr.String(), stdout.String())
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf(
+			"pg_dump failed: %v\nstderr: %s\nstdout: %s",
+			err, stderr.String(), stdout.String(),
+		)
 	}
 
 	return nil
