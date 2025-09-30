@@ -5,23 +5,38 @@ on:
     branches: [ main ]
 
 jobs:
-  go-tests:
+  tests:
     runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@v5
+    - name: Checkout Source
+      uses: actions/checkout@v5
     
     - name: Set up Go
       uses: actions/setup-go@v6
       with:
         go-version: '1.25.1'
     
-    - name: Run tests
+    - name: Run Tests
       env:
           DB_DATABASE: ${{ secrets.DB_DATABASE }}
           DB_USERNAME: ${{ secrets.DB_USERNAME }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
       run: go test -race -coverprofile=coverage.out ./...
     
-    - name: Display coverage
+    - name: Display Coverage
       run: go tool cover -func=coverage.out
+  
+  sast:
+    runs-on: ubuntu-latest
+    env:
+      GO111MODULE: on
+
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v5
+
+      - name: Run Gosec Security Scanner
+        uses: securego/gosec@master
+        with:
+          args: ./...
