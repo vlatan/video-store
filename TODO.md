@@ -1,4 +1,6 @@
 
+* Log the client IP if behind proxy
+
 * Generalize the app.
   Eliminate the documentary usage.
 
