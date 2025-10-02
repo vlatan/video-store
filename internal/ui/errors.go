@@ -23,7 +23,6 @@ func (s *service) ExecuteErrorTemplate(w io.Writer, status int, data *models.Tem
 		return errors.New("error.html template does not exist")
 	}
 
-	// Craft template data
 	data.HTMLErrorData = &models.HTMLErrorData{
 		Title: strconv.Itoa(status),
 	}
