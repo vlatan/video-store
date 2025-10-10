@@ -5,6 +5,7 @@ services:
     image: "traefik:v3.4"
     container_name: traefik
     restart: unless-stopped
+    depends_on: [ app ]
     security_opt:
       - no-new-privileges:true
     command:
