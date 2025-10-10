@@ -1,6 +1,8 @@
 
 * Setup traefik in compose.yaml for local use
-  Possibly use mkcert
+  Use mkcert
+  https://doc.traefik.io/traefik/expose/docker/
+  https://gemini.google.com/app/3538d2ba0535a575
  
 * Log the client IP if behind proxy
 
