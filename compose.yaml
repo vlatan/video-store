@@ -1,6 +1,22 @@
 name: fd
 
 services:
+  traefik:
+    image: "traefik:v3.4"
+    container_name: traefik
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entryPoints.web.address=:80"
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+
   redis:
     restart: always
     image: redis:8.0.3
@@ -43,9 +59,12 @@ services:
   app:
     image: cosmtrek/air
     container_name: app
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.app.rule=Host(`${DOMAIN}`)"
+      - "traefik.http.routers.whoami.entrypoints=web"
+      - "traefik.http.services.app.loadbalancer.server.port=${PORT}"
     working_dir: /src
-    ports:
-      - $PORT:$PORT
     env_file: .env
     environment:
       # Use Go version specified in the go.mod, not the local one

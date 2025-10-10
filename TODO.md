@@ -1,4 +1,7 @@
 
+* Setup traefik in compose.yaml for local use
+  Possibly use mkcert
+ 
 * Log the client IP if behind proxy
 
 * Generalize the app.
