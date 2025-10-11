@@ -17,17 +17,11 @@ type Secret struct {
 }
 
 type Target string
-type Protocol string
 
 const (
 	App    Target = "app"
 	Worker Target = "worker"
 	Backup Target = "backup"
-)
-
-const (
-	HTTP  Protocol = "http"
-	HTTPS Protocol = "https"
 )
 
 type Config struct {
