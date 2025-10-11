@@ -1,6 +1,7 @@
 package server
 
 import (
+	"log"
 	"net/http"
 	"runtime"
 	"runtime/pprof"
@@ -76,7 +77,9 @@ func (s *Server) RegisterRoutes() http.Handler {
 	mux.HandleFunc("GET /healthcheck", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-Robots-Tag", "noindex")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("OK"))
+		if _, err := w.Write([]byte("OK")); err != nil {
+			log.Printf("Failed to write response on '/healthcheck'; %v", err)
+		}
 	})
 
 	// Chain middlewares that apply to all requests
