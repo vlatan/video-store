@@ -147,6 +147,11 @@ func (s *Service) AddHeaders(next http.Handler) http.Handler {
 		// HSTS (HTTPS only)
 		w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload")
 
+		// For no-files vary the browser cache for cookies
+		if !utils.IsFilePath(r.URL.Path) {
+			w.Header().Set("Vary", "Cookie")
+		}
+
 		// Add no cache headers if necessary
 		if !utils.IsFilePath(r.URL.Path) &&
 			utils.GetUserFromContext(r).IsAuthenticated() {
