@@ -176,9 +176,7 @@ func (s *Service) WWWRedirect(next http.Handler) http.Handler {
 		u.Host = strings.TrimPrefix(r.Host, "www.")
 
 		// Modify the scheme
-		if !s.config.Debug {
-			u.Scheme = "https"
-		}
+		u.Scheme = s.config.Protocol
 
 		// Redirect
 		http.Redirect(w, r, u.String(), http.StatusMovedPermanently)
@@ -240,7 +238,7 @@ func (s *Service) CsrfProtection(next http.Handler) http.Handler {
 	csrfMiddleware := csrf.Protect(
 		s.config.CsrfKey.Bytes,
 		csrf.CookieName(s.config.CsrfSessionName),
-		csrf.Secure(!s.config.Debug),
+		csrf.Secure(s.config.Protocol == "https"),
 		csrf.Path("/"),
 	)
 
@@ -258,8 +256,8 @@ func (s *Service) CsrfProtection(next http.Handler) http.Handler {
 			return
 		}
 
-		// If debug set plain text (HTTP) schema
-		if s.config.Debug {
+		// Set plain text (HTTP) schema if necessary
+		if s.config.Protocol != "https" {
 			r = csrf.PlaintextHTTPRequest(r)
 		}
 

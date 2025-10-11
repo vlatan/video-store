@@ -36,16 +36,26 @@ go install filippo.io/mkcert@latest
 mkcert -install
 ```
 
-Generate a private key and certificate for the same **DOMAIN** defined in your `.env` file. Make sure the domain is a `localhost` subdomain, in this case `foobar.localhost`. The snippet below generates a certificate for `foobar.localhost` as well as for `"*.foobar.localhost"`. The traefik dashboard in this example can be accessed at `dashboard.foobar.localhost`.
+Generate a private key and certificate for the same **DOMAIN** defined in your `.env` file. The snippet below generates a certificate for `dev.domain.com` as well as for `"*.dev.domain.com"`.
 
 ```
-DOMAIN=foobar.localhost && \
+DOMAIN=dev.domain.com && \
 DIR=certs && \
 mkdir -p $DIR && \
 mkcert -key-file $DIR/local.key \
 -cert-file $DIR/local.crt \
 $DOMAIN "*.${DOMAIN}"
 ```
+
+Also edit your local `/etc/hosts` and map `127.0.0.1` to `dev.domain.com` and `dash.dev.domain.com`.
+
+```
+# /etc/hosts
+127.0.0.1       dev.domain.com
+127.0.0.1       dash.dev.domain.com
+```
+
+In this example the app can be accessed at `https://dev.domain.com` and the traefik dashboard at `https://dash.dev.domain.com`.
 
 One thing to note is that the secret keys (`CSRF_KEY`, `AUTH_KEY`, `ENCRYPTION_KEY`) need to be `base64` encoded. You can use the following recommended snippet from `gorilla/sessions` to generate different keys and encode them to `base64`:
 ``` golang

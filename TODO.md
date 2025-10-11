@@ -1,7 +1,5 @@
 
 * Use app healthcheck
-  Eliminate the http checks with .Debug in the golang app
-  Probably introduce another cfg var .Protocol
 
 * Add public health check to app
   So docker compose can use that as health check

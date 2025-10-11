@@ -40,7 +40,7 @@ func (s *service) NewData(w http.ResponseWriter, r *http.Request) *models.Templa
 		Config:      s.config,
 		Categories:  categories,
 		CurrentURI:  r.RequestURI,
-		BaseURL:     utils.GetBaseURL(r, !s.config.Debug),
+		BaseURL:     utils.GetBaseURL(r, s.config.Protocol),
 		CSRFField:   csrf.TemplateField(r),
 	}
 
