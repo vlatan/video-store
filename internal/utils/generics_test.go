@@ -134,7 +134,7 @@ func TestRetry(t *testing.T) {
 		{
 			name:         "error (context timeout)",
 			ctx:          timeoutCtx,
-			initialDelay: 2 * time.Nanosecond,
+			initialDelay: time.Second, // High initial delay so the context is surely timed out
 			maxRetries:   3,
 			Func:         func() (string, error) { return "", errors.New("error") },
 			expectedData: "",
@@ -152,7 +152,7 @@ func TestRetry(t *testing.T) {
 		{
 			name:         "gRPC error (context timeout)",
 			ctx:          timeoutCtx,
-			initialDelay: 2 * time.Nanosecond,
+			initialDelay: time.Second, // High initial delay so the context is surely timed out
 			maxRetries:   3,
 			Func:         func() (string, error) { return "", makeGRPCError(time.Nanosecond) },
 			expectedData: "",
