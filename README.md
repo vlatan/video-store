@@ -26,6 +26,27 @@ Users can login via Google and Facebook. The app doesn't store passwords so natu
 
 Set `DEBUG` to `true` in the `.env` file, as well as populate the entire `.env` file, according to the `example.env`.
 
+The quickest way to mimic locally-trusted HTTPS access is to install a CA (Certificate Authority) and generate certificates signed with that authority. There are several tools that can do this very easy but we'll use `mkcert`.
+
+Install `mkcert` and create and install a local CA in the system root store.
+
+```
+sudo apt install libnss3-tools
+go install filippo.io/mkcert@latest
+mkcert -install
+```
+
+Generate a private key and certificate for the same **DOMAIN** defined in your `.env` file. Make sure the domain is a `localhost` subdomain, in this case `foobar.localhost`. The snippet below generates a certificate for `foobar.localhost` as well as for `"*.foobar.localhost"`. The traefik dashboard in this example can be accessed at `dashboard.foobar.localhost`.
+
+```
+DOMAIN=foobar.localhost && \
+DIR=certs && \
+mkdir -p $DIR && \
+mkcert -key-file $DIR/local.key \
+-cert-file $DIR/local.crt \
+$DOMAIN "*.${DOMAIN}"
+```
+
 One thing to note is that the secret keys (`CSRF_KEY`, `AUTH_KEY`, `ENCRYPTION_KEY`) need to be `base64` encoded. You can use the following recommended snippet from `gorilla/sessions` to generate different keys and encode them to `base64`:
 ``` golang
 key := securecookie.GenerateRandomKey(32)
