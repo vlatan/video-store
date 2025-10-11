@@ -1,6 +1,55 @@
 name: fd
 
 services:
+  traefik:
+    image: "traefik:v3.5"
+    container_name: traefik
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    
+    depends_on:
+      app:
+        condition: service_healthy
+    
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./certs:/certs:ro
+      - ./dynamic:/dynamic:ro
+
+
+    command:
+      # EntryPoints
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.websecure.http.tls=true"
+
+      # Providers 
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.file.directory=/dynamic" 
+
+      # API & Dashboard 
+      - "--api.dashboard=true"
+      - "--api.insecure=false"
+
+    labels:
+      # Enable self‑routing
+      - "traefik.enable=true"
+
+      # Dashboard router
+      - "traefik.http.routers.dashboard.rule=Host(`dash.${DOMAIN}`)"
+      - "traefik.http.routers.dashboard.entrypoints=websecure"
+      - "traefik.http.routers.dashboard.service=api@internal"
+      - "traefik.http.routers.dashboard.tls=true"
+
   redis:
     restart: always
     image: redis:8.0.3
@@ -15,6 +64,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 3
+      start_period: 10s
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
@@ -35,6 +85,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 3
+      start_period: 10s
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
@@ -43,9 +94,14 @@ services:
   app:
     image: cosmtrek/air
     container_name: app
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.app.rule=Host(`${DOMAIN}`)"
+      - "traefik.http.routers.app.entrypoints=websecure"
+      - "traefik.http.routers.app.tls=true"
+      - "traefik.http.services.app.loadbalancer.server.port=${PORT}"
+
     working_dir: /src
-    ports:
-      - $PORT:$PORT
     env_file: .env
     environment:
       # Use Go version specified in the go.mod, not the local one
@@ -61,6 +117,14 @@ services:
       - ./go.sum:/src/go.sum
       - ./Makefile:/src/Makefile
       - ./.air.toml:/src/.air.toml
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${PORT}/healthcheck"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 45s
+
     depends_on:
       postgres:
         condition: service_healthy

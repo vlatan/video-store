@@ -28,7 +28,7 @@ func (s *Service) GetSitemapData(r *http.Request, partSize int) (models.Sitemap,
 	}
 
 	// Get base absolute URL
-	baseURL := utils.GetBaseURL(r, !s.config.Debug)
+	baseURL := utils.GetBaseURL(r, s.config.Protocol)
 
 	// Additional processing to get the last modified time for each part
 	result := make(models.Sitemap)

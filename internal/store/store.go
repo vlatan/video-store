@@ -153,7 +153,7 @@ func (rs *redisStore) newSession(name string) *sessions.Session {
 		Path:     "/",
 		MaxAge:   maxAge,
 		HttpOnly: true,
-		Secure:   !rs.config.Debug,
+		Secure:   rs.config.Protocol == "https",
 	}
 	return session
 }

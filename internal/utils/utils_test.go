@@ -79,14 +79,14 @@ func TestGetBaseURL(t *testing.T) {
 	mockTLS := &tls.ConnectionState{Version: tls.VersionTLS13}
 	tests := []struct {
 		name           string
-		https          bool
+		protocol       string
 		tls            *tls.ConnectionState
 		expectedScheme string
 	}{
-		{"force https, with TLS", true, mockTLS, "https"},
-		{"force https, no TLS", true, nil, "https"},
-		{"don't force https, with TLS", false, mockTLS, "https"},
-		{"don't force https, no TLS", false, nil, "http"},
+		{"force https, with TLS", "https", mockTLS, "https"},
+		{"force https, no TLS", "https", nil, "https"},
+		{"don't force https, with TLS", "http", mockTLS, "https"},
+		{"don't force https, no TLS", "http", nil, "http"},
 	}
 
 	for _, tt := range tests {
@@ -94,7 +94,7 @@ func TestGetBaseURL(t *testing.T) {
 			req := httptest.NewRequest("GET", "/", nil)
 			req.TLS = tt.tls
 
-			url := GetBaseURL(req, tt.https)
+			url := GetBaseURL(req, tt.protocol)
 			if url.Scheme != tt.expectedScheme {
 				t.Errorf("got %q scheme, want %q scheme", url.Scheme, tt.expectedScheme)
 			}

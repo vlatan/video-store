@@ -26,8 +26,9 @@ const (
 
 type Config struct {
 	// Running localy or not
-	Debug  bool   `env:"DEBUG" envDefault:"false"`
-	Target Target `env:"TARGET envDefault:app"`
+	Debug    bool   `env:"DEBUG" envDefault:"false"`
+	Protocol string `env:"PROTOCOL" envDefault:"https"`
+	Target   Target `env:"TARGET envDefault:app"`
 
 	// Sessions
 	CsrfKey             Secret `env:"CSRF_KEY"`

@@ -32,17 +32,12 @@ type Providers map[string]*OAuthProvider
 // New creates new map of OAuth configured providers
 func NewProviders(cfg *config.Config) Providers {
 
-	protocol := "https"
-	if cfg.Debug {
-		protocol = "http"
-	}
-
 	return map[string]*OAuthProvider{
 		"google": {
 			Config: &oauth2.Config{
 				ClientID:     cfg.GoogleOAuthClientID,
 				ClientSecret: cfg.GoogleOAuthClientSecret,
-				RedirectURL:  fmt.Sprintf("%s://%s/auth/google/callback", protocol, cfg.Domain),
+				RedirectURL:  fmt.Sprintf("%s://%s/auth/google/callback", cfg.Protocol, cfg.Domain),
 				Scopes:       cfg.GoogleOAuthScopes,
 				Endpoint:     google.Endpoint,
 			},
@@ -54,7 +49,7 @@ func NewProviders(cfg *config.Config) Providers {
 			Config: &oauth2.Config{
 				ClientID:     cfg.GithubOAuthClientId,
 				ClientSecret: cfg.GithubOAuthClientSecret,
-				RedirectURL:  fmt.Sprintf("%s://%s/auth/github/callback", protocol, cfg.Domain),
+				RedirectURL:  fmt.Sprintf("%s://%s/auth/github/callback", cfg.Protocol, cfg.Domain),
 				Scopes:       cfg.GithubOAuthScopes,
 				Endpoint:     github.Endpoint,
 			},
@@ -67,7 +62,7 @@ func NewProviders(cfg *config.Config) Providers {
 			Config: &oauth2.Config{
 				ClientID:     cfg.LinkedInOAuthClientID,
 				ClientSecret: cfg.LinkedInOAuthClientSecret,
-				RedirectURL:  fmt.Sprintf("%s://%s/auth/linkedin/callback", protocol, cfg.Domain),
+				RedirectURL:  fmt.Sprintf("%s://%s/auth/linkedin/callback", cfg.Protocol, cfg.Domain),
 				Scopes:       cfg.LinkedInOAuthScopes,
 				Endpoint:     linkedin.Endpoint,
 			},
