@@ -1,9 +1,4 @@
 
-* Use app healthcheck
-
-* Add public health check to app
-  So docker compose can use that as health check
- 
 * Log the client IP if behind proxy
 
 * Generalize the app.
