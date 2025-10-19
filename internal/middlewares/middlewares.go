@@ -311,13 +311,6 @@ func (s *Service) Compress(next http.Handler) http.Handler {
 func (s *Service) Logging(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		args := []any{
-			"method", r.Method,
-			"path", r.URL.Path,
-			"host", r.Host,
-			"clientUa", r.Header.Get("User-Agent"),
-		}
-
 		// Prioritize CF-Connecting-IP as recommended by Cloudflare
 		srcIp := r.Header.Get("CF-Connecting-IP")
 
@@ -338,8 +331,16 @@ func (s *Service) Logging(next http.Handler) http.Handler {
 			srcIp = r.RemoteAddr
 		}
 
-		args = append(args, "srcIp", srcIp)
-		slog.InfoContext(r.Context(), "Request Info", args...)
+		slog.InfoContext(
+			r.Context(),
+			"Request Info",
+			"method", r.Method,
+			"path", r.URL.Path,
+			"host", r.Host,
+			"clientUa", r.Header.Get("User-Agent"),
+			"srcIp", srcIp,
+		)
+
 		next.ServeHTTP(w, r)
 	})
 }
