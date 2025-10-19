@@ -3,7 +3,9 @@ package middlewares
 import (
 	"context"
 	"log"
+	"log/slog"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/vlatan/video-store/internal/config"
@@ -20,6 +22,16 @@ type Service struct {
 }
 
 func New(ui ui.Service, config *config.Config) *Service {
+
+	var opts *slog.HandlerOptions
+	if config.Debug {
+		opts = &slog.HandlerOptions{Level: slog.LevelDebug}
+	}
+
+	handler := slog.NewJSONHandler(os.Stdout, opts)
+	logger := slog.New(handler)
+	slog.SetDefault(logger)
+
 	return &Service{
 		ui:     ui,
 		config: config,
@@ -292,6 +304,43 @@ func (s *Service) Compress(next http.Handler) http.Handler {
 		}
 
 		gzipHandler.ServeHTTP(w, r)
+	})
+}
+
+// ClientIP gets real client IP if behind a CF proxy
+func (s *Service) Logging(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		args := []any{
+			"method", r.Method,
+			"path", r.URL.Path,
+			"host", r.Host,
+			"clientUa", r.Header.Get("User-Agent"),
+		}
+
+		// Prioritize CF-Connecting-IP as recommended by Cloudflare
+		srcIp := r.Header.Get("CF-Connecting-IP")
+
+		// Fallback to True-Client-IP
+		if srcIp == "" {
+			srcIp = r.Header.Get("True-Client-IP")
+		}
+
+		// Fallback to X-Forwarded-For
+		if srcIp == "" {
+			xForwardedFor := r.Header.Get("X-Forwarded-For")
+			parts := strings.Split(xForwardedFor, ",")
+			srcIp = strings.TrimSpace(parts[0])
+		}
+
+		// Fallback to RemoteAddr
+		if srcIp == "" {
+			srcIp = r.RemoteAddr
+		}
+
+		args = append(args, "srcIp", srcIp)
+		slog.InfoContext(r.Context(), "Request Info", args...)
+		next.ServeHTTP(w, r)
 	})
 }
 
