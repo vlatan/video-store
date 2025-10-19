@@ -21,6 +21,7 @@ type Service struct {
 	config *config.Config
 }
 
+// New creates new middlewares service
 func New(ui ui.Service, config *config.Config) *Service {
 
 	var opts *slog.HandlerOptions
@@ -109,7 +110,8 @@ func (s *Service) CloseBody(next http.Handler) http.Handler {
 func (s *Service) RecoverPanic(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		// Skip if in debug mode (developing localy)
+		// Skip if in debug mode (developing localy).
+		// We actually want the panic when developing.
 		if s.config.Debug {
 			next.ServeHTTP(w, r)
 			return
@@ -307,7 +309,7 @@ func (s *Service) Compress(next http.Handler) http.Handler {
 	})
 }
 
-// ClientIP gets real client IP if behind a CF proxy
+// Logging logs basic data about the request
 func (s *Service) Logging(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
