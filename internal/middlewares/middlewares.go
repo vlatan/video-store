@@ -311,6 +311,12 @@ func (s *Service) Compress(next http.Handler) http.Handler {
 func (s *Service) Logging(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
+		// Skip logging for local request to /healthcheck
+		if r.URL.Path == "/healthcheck" && s.config.Debug {
+			next.ServeHTTP(w, r)
+			return
+		}
+
 		// Prioritize CF-Connecting-IP as recommended by Cloudflare
 		srcIp := r.Header.Get("CF-Connecting-IP")
 
