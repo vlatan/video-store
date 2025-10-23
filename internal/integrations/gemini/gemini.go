@@ -58,12 +58,12 @@ func New(ctx context.Context, config *config.Config) (*Service, error) {
 }
 
 // Generate content given a prompt
-func (s *Service) GenerateContent(ctx context.Context, prompt string) (*models.GenaiResponse, error) {
+func (s *Service) GenerateContent(ctx context.Context, contents []*genai.Content) (*models.GenaiResponse, error) {
 
 	result, err := s.gemini.Models.GenerateContent(
 		ctx,
 		s.config.GeminiModel,
-		genai.Text(prompt),
+		contents,
 		&genai.GenerateContentConfig{
 			ResponseMIMEType: "application/json",
 			SafetySettings:   safetySettings,
@@ -86,9 +86,13 @@ func (s *Service) GenerateContent(ctx context.Context, prompt string) (*models.G
 // Create the prompt and generate content using Gemini
 func (s *Service) GenerateInfo(
 	ctx context.Context,
-	title string,
+	post *models.Post,
 	categories []models.Category,
 ) (*models.GenaiResponse, error) {
+
+	// Shorten the context
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
 
 	var catString string
 	for _, cat := range categories {
@@ -96,21 +100,35 @@ func (s *Service) GenerateInfo(
 	}
 	catString = strings.TrimSuffix(catString, ", ")
 
-	prompt := fmt.Sprintf("Write one short paragraph synopsis for the documentary '%s'\n\n", title) +
-		"When writing the synopsis:\n" +
-		"	- Do not include timestamps.\n" +
-		"	- Do not include meta comments about the documentary itself, " +
-		"e.g., 'The film provides,' 'This production offers', " +
-		"'The narrative charts', 'This documentary explores'.\n" +
-		"	- Do not use concluding remarks, e.g., 'Ultimately', 'In conclusion'.\n" +
-		"	- Do not repeat the documentary title inside the synopsis.\n\n" +
-		fmt.Sprintf("Also select one category for the documentary '%s' ", title) +
-		fmt.Sprintf("from these categories: %s.", catString)
+	parts := []*genai.Part{
+
+		genai.NewPartFromText(
+			"Write a non-academic essay that is specifically about the subject of the documentary, " +
+				"using the details from it, but without framing it as a review or summary of the film itself. " +
+				"Do not include timestamps. Make it around 350 words long.",
+		),
+
+		genai.NewPartFromText(
+			fmt.Sprintf(
+				"Also select one category for the documentary from these categories: %s.",
+				catString,
+			),
+		),
+
+		genai.NewPartFromURI(
+			fmt.Sprintf("https://www.youtube.com/watch?v=%s", post.VideoID),
+			"video/mp4",
+		),
+	}
+
+	contents := []*genai.Content{
+		genai.NewContentFromParts(parts, genai.RoleUser),
+	}
 
 	return utils.Retry(
 		ctx, time.Second, 5,
 		func() (*models.GenaiResponse, error) {
-			return s.GenerateContent(ctx, prompt)
+			return s.GenerateContent(ctx, contents)
 		},
 	)
 }

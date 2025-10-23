@@ -25,7 +25,7 @@ func (s *Service) UpdateGeneratedData(
 
 	// Generate content using Gemini
 	genaiResponse, err := s.gemini.GenerateInfo(
-		ctx, video.Title, categories,
+		ctx, video, categories,
 	)
 
 	if err != nil || genaiResponse == nil {
