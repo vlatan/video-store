@@ -90,10 +90,6 @@ func (s *Service) GenerateInfo(
 	categories []models.Category,
 ) (*models.GenaiResponse, error) {
 
-	// Shorten the context
-	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
-	defer cancel()
-
 	var catString string
 	for _, cat := range categories {
 		catString += cat.Name + ", "
