@@ -104,7 +104,11 @@ func (s *Service) GenerateInfo(
 		genai.NewPartFromText(
 			"Write a non-academic essay that is specifically about the subject of the documentary, " +
 				"using the details from it, but without framing it as a review or summary of the film itself. " +
-				"Do not include timestamps. Make it around 350 words long.",
+				"Do not include timestamps. Make it around 350 words long. " +
+				"Crucially, format the entire essay using valid HTML paragraph tags. " +
+				"The essay must begin with the <p> tag, end with the </p> tag, " +
+				"and use </p><p> to separate all internal paragraphs. " +
+				"Do not use newlines or markdown for paragraph separation; use only the specified HTML tags.",
 		),
 
 		genai.NewPartFromText(

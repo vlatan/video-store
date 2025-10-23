@@ -1,5 +1,5 @@
 
-* Log the client IP if behind proxy
+* Solve bad gateway error on new post
 
 * Generalize the app.
   Eliminate the documentary usage.

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"strings"
 
 	"github.com/vlatan/video-store/internal/models"
@@ -150,6 +151,7 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (*models
 
 	// Define short desc
 	post.ShortDesc = utils.FromNullString(shortDesc)
+	post.HTMLShortDesc = template.HTML(post.ShortDesc)
 
 	// Provide humand readable video duration
 	humanDuration, _ := post.Duration.ISO.Human()
