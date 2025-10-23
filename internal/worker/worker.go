@@ -266,7 +266,7 @@ func (s *Service) Run(ctx context.Context) error {
 
 		// Generate content using Gemini
 		genaiResponse, err := s.gemini.GenerateInfo(
-			ctx, ytVideo, categories,
+			ctx, ytVideo, categories, time.Second, 3,
 		)
 
 		if err != nil {

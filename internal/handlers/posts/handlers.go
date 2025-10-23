@@ -253,7 +253,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Generate content using Gemini
 		genaiResponse, err := s.gemini.GenerateInfo(
-			r.Context(), post, data.Categories,
+			r.Context(), post, data.Categories, time.Second, 1,
 		)
 
 		if err != nil {

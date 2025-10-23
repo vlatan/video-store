@@ -3,6 +3,7 @@ package worker
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/vlatan/video-store/internal/models"
 )
@@ -25,7 +26,7 @@ func (s *Service) UpdateGeneratedData(
 
 	// Generate content using Gemini
 	genaiResponse, err := s.gemini.GenerateInfo(
-		ctx, video, categories,
+		ctx, video, categories, time.Second, 3,
 	)
 
 	if err != nil || genaiResponse == nil {

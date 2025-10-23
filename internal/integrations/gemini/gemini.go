@@ -88,6 +88,8 @@ func (s *Service) GenerateInfo(
 	ctx context.Context,
 	post *models.Post,
 	categories []models.Category,
+	delay time.Duration,
+	maxRetries int,
 ) (*models.GenaiResponse, error) {
 
 	var catString string
@@ -122,7 +124,7 @@ func (s *Service) GenerateInfo(
 	}
 
 	return utils.Retry(
-		ctx, time.Second, 5,
+		ctx, delay, maxRetries,
 		func() (*models.GenaiResponse, error) {
 			return s.GenerateContent(ctx, contents)
 		},
