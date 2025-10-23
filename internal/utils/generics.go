@@ -37,14 +37,13 @@ func extractRetryDelay(err error) (time.Duration, bool) {
 // Retry a function
 func Retry[T any](
 	ctx context.Context,
-	initialDelay time.Duration,
+	delay time.Duration,
 	maxRetries int,
 	Func func() (T, error),
 ) (T, error) {
 
 	var zero T
 	var lastError error
-	delay := initialDelay
 	maxRetries = max(maxRetries, 1)
 
 	// Perform retries
