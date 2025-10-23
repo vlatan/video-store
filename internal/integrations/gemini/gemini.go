@@ -84,6 +84,7 @@ func (s *Service) GenerateContent(ctx context.Context, contents []*genai.Content
 }
 
 // Create the prompt and generate content using Gemini
+// https://ai.google.dev/gemini-api/docs/video-understanding#youtube
 func (s *Service) GenerateInfo(
 	ctx context.Context,
 	post *models.Post,
