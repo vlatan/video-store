@@ -1,4 +1,7 @@
 
+* Gradualy update post descriptions in worker
+  Several per day maybe?
+
 * Solve bad gateway error on new post
 
 * Generalize the app.
