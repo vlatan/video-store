@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
-	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
@@ -18,11 +17,6 @@ func extractRetryDelay(err error) (time.Duration, bool) {
 	// status.FromError converts a regular Go error to a gRPC Status
 	st, ok := status.FromError(err)
 	if !ok {
-		return 0, false
-	}
-
-	// Check if it's a RESOURCE_EXHAUSTED error (maps to HTTP 429)
-	if st.Code() != codes.ResourceExhausted {
 		return 0, false
 	}
 
