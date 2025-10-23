@@ -51,7 +51,7 @@ type Config struct {
 	// Google APIs settings
 	YouTubeAPIKey string `env:"YOUTUBE_API_KEY"`
 	GeminiAPIKey  string `env:"GEMINI_API_KEY"`
-	GeminiModel   string `env:"GEMINI_MODEL"`
+	GeminiModel   string `env:"GEMINI_MODEL" envDefault:"gemini-2.5-flash"`
 
 	// Google OAuth settings
 	GoogleOAuthClientID     string   `env:"GOOGLE_OAUTH_CLIENT_ID"`
