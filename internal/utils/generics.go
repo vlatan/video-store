@@ -14,7 +14,6 @@ import (
 // Extract retry delay from error on Google API.
 func extractRetryDelay(err error) (time.Duration, bool) {
 
-	// status.FromError converts a regular Go error to a gRPC Status
 	st, ok := status.FromError(err)
 	if !ok {
 		return 0, false
@@ -26,7 +25,7 @@ func extractRetryDelay(err error) (time.Duration, bool) {
 		// Look for RetryInfo specifically
 		if retryInfo, ok := detail.(*errdetails.RetryInfo); ok {
 			if retryInfo.RetryDelay != nil {
-				delay := retryInfo.RetryDelay.AsDuration()
+				delay := retryInfo.RetryDelay.AsDuration() + time.Second
 				return delay, true
 			}
 		}
