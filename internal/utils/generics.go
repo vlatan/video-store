@@ -50,6 +50,8 @@ func Retry[T any](
 	// Perform retries
 	for i := range maxRetries {
 
+		start := time.Now()
+
 		// Call the function
 		data, err := Func()
 		if err == nil {
@@ -62,6 +64,12 @@ func Retry[T any](
 			continue
 		}
 
+		// Exit if method took too long to respond
+		// We're not going to retry it anymore
+		if time.Since(start) > 10*time.Second {
+			return zero, lastError
+		}
+
 		// Try to extract a delay value from the error
 		if retryDelay, ok := extractRetryDelay(lastError); ok {
 			delay = retryDelay
@@ -71,7 +79,7 @@ func Retry[T any](
 			}
 
 			// Add jitter to the delay
-			delay += time.Duration(rand.Float64()) // #nosec G404
+			delay += time.Duration(rand.Float64() * float64(time.Second)) // #nosec G404
 		}
 
 		// Wait for either the delay or context to end
