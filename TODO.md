@@ -1,6 +1,6 @@
 
-* Gradualy update post descriptions in worker
-  Several per day maybe?
+* Remove code in `internal/worker/worker.go`
+* Uncomment and remove code in `internal/worker/utils.go`
 
 * Solve bad gateway error on new post
 

@@ -258,6 +258,13 @@ func (s *Service) Run(ctx context.Context) error {
 
 		// Attemp update if the video exists in DB
 		if dbVideo, exists := sourcedDbVideosMap[videoID]; exists {
+
+			// REMOVE
+			// Temporarily limit updates to 300 posts per worker run
+			if updated > 300 {
+				continue
+			}
+
 			if s.UpdateGeneratedData(ctx, dbVideo, categories) {
 				updated++
 			}
@@ -344,6 +351,12 @@ func (s *Service) Run(ctx context.Context) error {
 			} else {
 				updated++
 			}
+		}
+
+		// REMOVE
+		// Temporarily limit updates to 300 posts per worker run
+		if updated > 300 {
+			continue
 		}
 
 		// Attempt video update

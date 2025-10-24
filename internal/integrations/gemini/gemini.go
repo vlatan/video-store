@@ -62,7 +62,10 @@ func New(ctx context.Context, config *config.Config) (*Service, error) {
 }
 
 // Generate content given a prompt
-func (s *Service) GenerateContent(ctx context.Context, contents []*genai.Content) (*models.GenaiResponse, error) {
+func (s *Service) GenerateContent(
+	ctx context.Context,
+	contents []*genai.Content,
+) (*models.GenaiResponse, error) {
 
 	result, err := s.gemini.Models.GenerateContent(
 		ctx,
