@@ -25,7 +25,7 @@ func extractRetryDelay(err error) (time.Duration, bool) {
 		// Look for RetryInfo specifically
 		if retryInfo, ok := detail.(*errdetails.RetryInfo); ok {
 			if retryInfo.RetryDelay != nil {
-				delay := retryInfo.RetryDelay.AsDuration() + time.Second
+				delay := retryInfo.RetryDelay.AsDuration()
 				return delay, true
 			}
 		}
@@ -63,15 +63,13 @@ func Retry[T any](
 
 		// Try to extract a delay value from the error
 		if retryDelay, ok := extractRetryDelay(lastError); ok {
-			delay = retryDelay
-		} else {
-			if i > 0 { // Exponentially increase the delay
-				delay *= 2
-			}
-
-			// Add jitter to the delay
-			delay += time.Duration(rand.Float64() * float64(time.Second)) // #nosec G404
+			delay = max(delay, retryDelay)
+		} else if i > 0 {
+			delay *= 2 // Exponentially increase the delay
 		}
+
+		// Add jitter to the delay
+		delay += time.Duration(rand.Float64() * float64(time.Second)) // #nosec G404
 
 		// Wait for either the delay or context to end
 		select {
