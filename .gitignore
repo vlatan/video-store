@@ -20,6 +20,10 @@ certs/
 web/avatars/
 
 
+# genai prompt
+prompt.json
+
+
 # tests
 cover.html
 coverage.html

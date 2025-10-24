@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/microcosm-cc/bluemonday"
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/utils"
@@ -19,6 +20,9 @@ type Service struct {
 	config *config.Config
 	gemini *genai.Client
 }
+
+const categoriesPlaceholder = "{{ CATEGORIES }}"
+const videoIdPlaceholder = "{{ VIDEO_ID }}"
 
 // Configure safety settings to block none
 var blockNone = genai.HarmBlockThresholdBlockNone
@@ -58,12 +62,15 @@ func New(ctx context.Context, config *config.Config) (*Service, error) {
 }
 
 // Generate content given a prompt
-func (s *Service) GenerateContent(ctx context.Context, prompt string) (*models.GenaiResponse, error) {
+func (s *Service) GenerateContent(
+	ctx context.Context,
+	contents []*genai.Content,
+) (*models.GenaiResponse, error) {
 
 	result, err := s.gemini.Models.GenerateContent(
 		ctx,
 		s.config.GeminiModel,
-		genai.Text(prompt),
+		contents,
 		&genai.GenerateContentConfig{
 			ResponseMIMEType: "application/json",
 			SafetySettings:   safetySettings,
@@ -84,10 +91,13 @@ func (s *Service) GenerateContent(ctx context.Context, prompt string) (*models.G
 }
 
 // Create the prompt and generate content using Gemini
+// https://ai.google.dev/gemini-api/docs/video-understanding#youtube
 func (s *Service) GenerateInfo(
 	ctx context.Context,
-	title string,
+	post *models.Post,
 	categories []models.Category,
+	delay time.Duration,
+	maxRetries int,
 ) (*models.GenaiResponse, error) {
 
 	var catString string
@@ -96,21 +106,32 @@ func (s *Service) GenerateInfo(
 	}
 	catString = strings.TrimSuffix(catString, ", ")
 
-	prompt := fmt.Sprintf("Write one short paragraph synopsis for the documentary '%s'\n\n", title) +
-		"When writing the synopsis:\n" +
-		"	- Do not include timestamps.\n" +
-		"	- Do not include meta comments about the documentary itself, " +
-		"e.g., 'The film provides,' 'This production offers', " +
-		"'The narrative charts', 'This documentary explores'.\n" +
-		"	- Do not use concluding remarks, e.g., 'Ultimately', 'In conclusion'.\n" +
-		"	- Do not repeat the documentary title inside the synopsis.\n\n" +
-		fmt.Sprintf("Also select one category for the documentary '%s' ", title) +
-		fmt.Sprintf("from these categories: %s.", catString)
+	parts := make([]*genai.Part, len(s.config.GeminiPrompt.Parts))
+	for i, part := range s.config.GeminiPrompt.Parts {
+		if part.Text != "" {
+			text := strings.ReplaceAll(part.Text, categoriesPlaceholder, catString)
+			parts[i] = genai.NewPartFromText(text)
+		} else if part.URL != "" {
+			url := strings.ReplaceAll(part.URL, videoIdPlaceholder, post.VideoID)
+			parts[i] = genai.NewPartFromURI(url, part.MimeType)
+		}
+	}
 
-	return utils.Retry(
-		ctx, time.Second, 5,
+	contents := []*genai.Content{
+		genai.NewContentFromParts(parts, genai.RoleUser),
+	}
+
+	response, err := utils.Retry(
+		ctx, delay, maxRetries,
 		func() (*models.GenaiResponse, error) {
-			return s.GenerateContent(ctx, prompt)
+			return s.GenerateContent(ctx, contents)
 		},
 	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	response.Description = bluemonday.StrictPolicy().AllowElements("p").Sanitize(response.Description)
+	return response, nil
 }

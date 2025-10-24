@@ -1,5 +1,8 @@
 
-* Log the client IP if behind proxy
+* Remove code in `internal/worker/worker.go`
+* Uncomment and remove code in `internal/worker/utils.go`
+
+* Solve bad gateway error on new post
 
 * Generalize the app.
   Eliminate the documentary usage.

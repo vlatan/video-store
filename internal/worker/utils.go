@@ -3,6 +3,8 @@ package worker
 import (
 	"context"
 	"log"
+	"strings"
+	"time"
 
 	"github.com/vlatan/video-store/internal/models"
 )
@@ -18,14 +20,21 @@ func (s *Service) UpdateGeneratedData(
 		return false
 	}
 
+	// UNCOMMENT
 	// Nothing to update short desc and category are populated
-	if video.ShortDesc != "" && video.Category.Name != "" {
+	// if video.ShortDesc != "" && video.Category.Name != "" {
+	// 	return false
+	// }
+
+	// REMOVE
+	// Update the desc if it's not long (does not contain paragraphs)
+	if strings.Contains(video.ShortDesc, "<p>") && video.Category.Name != "" {
 		return false
 	}
 
 	// Generate content using Gemini
 	genaiResponse, err := s.gemini.GenerateInfo(
-		ctx, video.Title, categories,
+		ctx, video, categories, time.Second, 3,
 	)
 
 	if err != nil || genaiResponse == nil {

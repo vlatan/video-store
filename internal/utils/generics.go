@@ -8,21 +8,14 @@ import (
 	"time"
 
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
-	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 // Extract retry delay from error on Google API.
 func extractRetryDelay(err error) (time.Duration, bool) {
 
-	// status.FromError converts a regular Go error to a gRPC Status
 	st, ok := status.FromError(err)
 	if !ok {
-		return 0, false
-	}
-
-	// Check if it's a RESOURCE_EXHAUSTED error (maps to HTTP 429)
-	if st.Code() != codes.ResourceExhausted {
 		return 0, false
 	}
 
@@ -44,14 +37,13 @@ func extractRetryDelay(err error) (time.Duration, bool) {
 // Retry a function
 func Retry[T any](
 	ctx context.Context,
-	initialDelay time.Duration,
+	delay time.Duration,
 	maxRetries int,
 	Func func() (T, error),
 ) (T, error) {
 
 	var zero T
 	var lastError error
-	delay := initialDelay
 	maxRetries = max(maxRetries, 1)
 
 	// Perform retries
@@ -71,15 +63,13 @@ func Retry[T any](
 
 		// Try to extract a delay value from the error
 		if retryDelay, ok := extractRetryDelay(lastError); ok {
-			delay = retryDelay
-		} else {
-			if i > 0 { // Exponentially increase the delay
-				delay *= 2
-			}
-
-			// Add jitter to the delay
-			delay += time.Duration(rand.Float64()) // #nosec G404
+			delay = max(delay, retryDelay)
+		} else if i > 0 {
+			delay *= 2 // Exponentially increase the delay
 		}
+
+		// Add jitter to the delay
+		delay += time.Duration(rand.Float64() * float64(time.Second)) // #nosec G404
 
 		// Wait for either the delay or context to end
 		select {
@@ -89,5 +79,5 @@ func Retry[T any](
 		}
 	}
 
-	return zero, fmt.Errorf("max retries error: %w", lastError)
+	return zero, fmt.Errorf("%d max retries error: %w", maxRetries, lastError)
 }

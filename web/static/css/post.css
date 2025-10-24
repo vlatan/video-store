@@ -114,6 +114,18 @@ h1.video-title {
   padding-bottom: calc(var(--content-padding) / 2);
 }
 
+.video-description p {
+  margin: 1.25rem 0;
+}
+
+.video-description p:first-child {
+  margin-top: 0;
+}
+
+.video-description p:last-child {
+  margin-bottom: 0;
+}
+
 .description_discliamer {
   color: gray;
   font-size: 0.85rem;
