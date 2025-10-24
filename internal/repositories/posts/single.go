@@ -8,6 +8,7 @@ import (
 	"html/template"
 	"strings"
 
+	"github.com/microcosm-cc/bluemonday"
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/utils"
 )
@@ -151,7 +152,8 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (*models
 
 	// Define short desc
 	post.ShortDesc = utils.FromNullString(shortDesc)
-	post.HTMLShortDesc = template.HTML(post.ShortDesc)
+	desc := bluemonday.StrictPolicy().AllowElements("p").Sanitize(post.ShortDesc)
+	post.HTMLShortDesc = template.HTML(desc) // #nosec G203
 
 	// Provide humand readable video duration
 	humanDuration, _ := post.Duration.ISO.Human()
