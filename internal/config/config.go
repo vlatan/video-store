@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"log"
 	"math"
@@ -12,8 +13,17 @@ import (
 )
 
 type Secret struct {
-	Base64 string
-	Bytes  []byte
+	Bytes []byte
+}
+
+type Part struct {
+	Text     string `json:"text,omitempty"`
+	URL      string `json:"url,omitempty"`
+	MimeType string `json:"mime_type,omitempty"`
+}
+
+type Prompt struct {
+	Parts []Part `json:"parts,omitempty"`
 }
 
 type Target string
@@ -52,6 +62,7 @@ type Config struct {
 	YouTubeAPIKey string `env:"YOUTUBE_API_KEY"`
 	GeminiAPIKey  string `env:"GEMINI_API_KEY"`
 	GeminiModel   string `env:"GEMINI_MODEL" envDefault:"gemini-2.5-flash"`
+	GeminiPrompt  Prompt `env:"GEMINI_PROMPT"`
 
 	// Google OAuth settings
 	GoogleOAuthClientID     string   `env:"GOOGLE_OAUTH_CLIENT_ID"`
@@ -110,7 +121,7 @@ func New() *Config {
 	// Parse the config from the environment
 	var cfg Config
 	if err := env.Parse(&cfg); err != nil {
-		log.Fatalf("failed to parse the config from the env: %v", err)
+		log.Fatalf("failed to parse the config; %v", err)
 	}
 
 	numCPU := runtime.NumCPU()
@@ -128,7 +139,7 @@ func New() *Config {
 	// Check if the app has all the necessary secrets
 	secrets := []Secret{cfg.CsrfKey, cfg.AuthKey, cfg.EncryptionKey}
 	for _, secret := range secrets {
-		if secret.Base64 == "" {
+		if len(secret.Bytes) == 0 {
 			log.Fatalf("empty or no secret key defined in env: %s", secret)
 		}
 	}
@@ -137,16 +148,32 @@ func New() *Config {
 }
 
 // UnmarshalText implements the encoding.TextUnmarshaler interface.
-// It's called by the env library to decode the environment variables
-// encoded in base64
+// It's called by the env library to decode the Secret,
 func (s *Secret) UnmarshalText(text []byte) error {
 
-	s.Base64 = string(text)
-	decoded, err := base64.StdEncoding.DecodeString(s.Base64)
+	s.Bytes = make([]byte, base64.StdEncoding.DecodedLen(len(text)))
+	n, err := base64.StdEncoding.Decode(s.Bytes, text)
 	if err != nil {
-		return fmt.Errorf("error decoding a secret key: %w", err)
+		return fmt.Errorf("error decoding a secret key; %w", err)
 	}
 
-	s.Bytes = decoded
+	s.Bytes = s.Bytes[:n]
+	return nil
+}
+
+// UnmarshalText implements the encoding.TextUnmarshaler interface.
+// It's called by the env library to decode the Prompt,
+func (p *Prompt) UnmarshalText(text []byte) error {
+
+	promptBytes := make([]byte, base64.StdEncoding.DecodedLen(len(text)))
+	n, err := base64.StdEncoding.Decode(promptBytes, text)
+	if err != nil {
+		return fmt.Errorf("error decoding the prompt; %w", err)
+	}
+
+	if err = json.Unmarshal(promptBytes[:n], &p.Parts); err != nil {
+		return fmt.Errorf("error decoding the prompt; %w", err)
+	}
+
 	return nil
 }

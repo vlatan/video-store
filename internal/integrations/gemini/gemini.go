@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/microcosm-cc/bluemonday"
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/utils"
@@ -19,6 +20,9 @@ type Service struct {
 	config *config.Config
 	gemini *genai.Client
 }
+
+const categoriesPlaceholder = "{{ CATEGORIES }}"
+const videoIdPlaceholder = "{{ VIDEO_ID }}"
 
 // Configure safety settings to block none
 var blockNone = genai.HarmBlockThresholdBlockNone
@@ -99,39 +103,32 @@ func (s *Service) GenerateInfo(
 	}
 	catString = strings.TrimSuffix(catString, ", ")
 
-	parts := []*genai.Part{
-
-		genai.NewPartFromText(
-			"Write a non-academic essay that is specifically about the subject of the documentary, " +
-				"using the details from it, but without framing it as a review or summary of the film itself. " +
-				"Do not include timestamps. Make it around 400 words long. " +
-				"Crucially, format the entire essay using valid HTML paragraph tags. " +
-				"The essay must begin with the <p> tag, end with the </p> tag, " +
-				"and use </p><p> to separate all internal paragraphs. " +
-				"Do not use newlines or markdown for paragraph separation; use only the specified HTML tags.",
-		),
-
-		genai.NewPartFromText(
-			fmt.Sprintf(
-				"Also select one category for the documentary from these categories: %s.",
-				catString,
-			),
-		),
-
-		genai.NewPartFromURI(
-			fmt.Sprintf("https://www.youtube.com/watch?v=%s", post.VideoID),
-			"video/mp4",
-		),
+	parts := make([]*genai.Part, len(s.config.GeminiPrompt.Parts))
+	for i, part := range s.config.GeminiPrompt.Parts {
+		if part.Text != "" {
+			text := strings.ReplaceAll(part.Text, categoriesPlaceholder, catString)
+			parts[i] = genai.NewPartFromText(text)
+		} else if part.URL != "" {
+			url := strings.ReplaceAll(part.URL, videoIdPlaceholder, post.VideoID)
+			parts[i] = genai.NewPartFromURI(url, part.MimeType)
+		}
 	}
 
 	contents := []*genai.Content{
 		genai.NewContentFromParts(parts, genai.RoleUser),
 	}
 
-	return utils.Retry(
+	response, err := utils.Retry(
 		ctx, delay, maxRetries,
 		func() (*models.GenaiResponse, error) {
 			return s.GenerateContent(ctx, contents)
 		},
 	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	response.Description = bluemonday.StrictPolicy().AllowElements("p").Sanitize(response.Description)
+	return response, nil
 }
