@@ -28,6 +28,8 @@ type Service struct {
 	gemini      *gemini.Service
 }
 
+// REMOVE
+// Update limit per worker run
 const updateLimit = 120
 
 func New() *Service {
