@@ -28,6 +28,8 @@ type Service struct {
 	gemini      *gemini.Service
 }
 
+const updateLimit = 120
+
 func New() *Service {
 
 	// Create essential services
@@ -260,8 +262,8 @@ func (s *Service) Run(ctx context.Context) error {
 		if dbVideo, exists := sourcedDbVideosMap[videoID]; exists {
 
 			// REMOVE
-			// Temporarily limit updates to 300 posts per worker run
-			if updated > 300 {
+			// Temporarily limit updates per worker run
+			if updated > updateLimit {
 				continue
 			}
 
@@ -354,8 +356,8 @@ func (s *Service) Run(ctx context.Context) error {
 		}
 
 		// REMOVE
-		// Temporarily limit updates to 300 posts per worker run
-		if updated > 300 {
+		// Temporarily limit updates per worker run
+		if updated > updateLimit {
 			continue
 		}
 
