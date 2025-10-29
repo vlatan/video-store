@@ -75,6 +75,7 @@ func (s *Service) GenerateContent(
 			ResponseMIMEType: "application/json",
 			SafetySettings:   safetySettings,
 			ResponseSchema:   schema,
+			MediaResolution:  genai.MediaResolutionLow,
 		},
 	)
 
