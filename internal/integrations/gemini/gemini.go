@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -17,8 +18,9 @@ import (
 
 // Gemini service
 type Service struct {
-	config *config.Config
-	gemini *genai.Client
+	config          *config.Config
+	gemini          *genai.Client
+	inputTokenLimit int32
 }
 
 const categoriesPlaceholder = "{{ CATEGORIES }}"
@@ -56,9 +58,20 @@ var schema = &genai.Schema{
 
 // Create new Gemini service
 func New(ctx context.Context, config *config.Config) (*Service, error) {
+
 	// Configure new client
-	gemini, err := genai.NewClient(ctx, &genai.ClientConfig{APIKey: config.GeminiAPIKey})
-	return &Service{gemini: gemini, config: config}, err
+	client, err := genai.NewClient(ctx, &genai.ClientConfig{APIKey: config.GeminiAPIKey})
+	if err != nil {
+		return nil, err
+	}
+
+	// Get the model info
+	model, err := client.Models.Get(ctx, config.GeminiModel, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Service{config, client, model.InputTokenLimit}, nil
 }
 
 // Generate content given a prompt
@@ -107,6 +120,7 @@ func (s *Service) GenerateInfo(
 	}
 	catString = strings.TrimSuffix(catString, ", ")
 
+	uriIndex, uriExists := 0, false
 	parts := make([]*genai.Part, len(s.config.GeminiPrompt.Parts))
 	for i, part := range s.config.GeminiPrompt.Parts {
 		if part.Text != "" {
@@ -115,11 +129,33 @@ func (s *Service) GenerateInfo(
 		} else if part.URL != "" {
 			url := strings.ReplaceAll(part.URL, videoIdPlaceholder, post.VideoID)
 			parts[i] = genai.NewPartFromURI(url, part.MimeType)
+			uriIndex, uriExists = i, true
 		}
 	}
 
 	contents := []*genai.Content{
 		genai.NewContentFromParts(parts, genai.RoleUser),
+	}
+
+	inputTokens, err := s.gemini.Models.CountTokens(
+		ctx,
+		s.config.GeminiModel,
+		contents,
+		nil,
+	)
+
+	switch err {
+	case nil:
+		// If the video is very large use just its title
+		if (inputTokens.TotalTokens >= s.inputTokenLimit) && uriExists {
+			title := fmt.Sprintf("Title: %s", post.Title)
+			parts[uriIndex] = genai.NewPartFromText(title)
+			contents = []*genai.Content{
+				genai.NewContentFromParts(parts, genai.RoleUser),
+			}
+		}
+	default:
+		log.Printf("failed to count input tokens for video: %s", post.VideoID)
 	}
 
 	response, err := utils.Retry(
