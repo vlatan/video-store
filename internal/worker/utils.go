@@ -28,7 +28,9 @@ func (s *Service) UpdateGeneratedData(
 
 	// REMOVE
 	// Update the desc if it's not long (does not contain paragraphs)
-	if strings.Contains(video.ShortDesc, "<p>") && video.Category.Name != "" {
+	if len(strings.Fields(video.ShortDesc)) > 400 &&
+		strings.Contains(video.ShortDesc, "<p>") &&
+		video.Category.Name != "" {
 		return false
 	}
 
