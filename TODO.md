@@ -1,6 +1,5 @@
 
-* Remove code in `internal/worker/worker.go`
-* Uncomment and remove code in `internal/worker/utils.go`
+* Uncomment and remove code in `internal/worker/worker.go` and `internal/worker/utils.go`
 
 * Solve bad gateway error on new post
 

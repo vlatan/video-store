@@ -9,6 +9,10 @@ import (
 	"github.com/vlatan/video-store/internal/models"
 )
 
+// REMOVE
+// Set update marker
+var updateMarker = "<!-- v2 -->"
+
 // Update generated gemini data on a video
 func (s *Service) UpdateGeneratedData(
 	ctx context.Context,
@@ -28,9 +32,7 @@ func (s *Service) UpdateGeneratedData(
 
 	// REMOVE
 	// Update the desc if it's not long (does not contain paragraphs)
-	if len(strings.Fields(video.ShortDesc)) > 400 &&
-		strings.Contains(video.ShortDesc, "<p>") &&
-		video.Category.Name != "" {
+	if strings.Contains(video.ShortDesc, updateMarker) && video.Category.Name != "" {
 		return false
 	}
 
@@ -47,9 +49,13 @@ func (s *Service) UpdateGeneratedData(
 		return false
 	}
 
-	if video.ShortDesc == "" {
-		video.ShortDesc = genaiResponse.Description
-	}
+	// UNCOMMENT
+	// if video.ShortDesc == "" {
+	// 	video.ShortDesc = genaiResponse.Description
+	// }
+
+	// REMOVE
+	video.ShortDesc = genaiResponse.Description + updateMarker
 
 	if video.Category == nil {
 		video.Category = &models.Category{}

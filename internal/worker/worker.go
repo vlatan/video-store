@@ -289,7 +289,12 @@ func (s *Service) Run(ctx context.Context) error {
 
 		ytVideo.Category = &models.Category{}
 		if err == nil && genaiResponse != nil {
-			ytVideo.ShortDesc = genaiResponse.Description
+			// UNCOMMENT
+			// ytVideo.ShortDesc = genaiResponse.Description
+
+			// REMOVE
+			ytVideo.ShortDesc = genaiResponse.Description + updateMarker
+
 			ytVideo.Category.Name = genaiResponse.Category
 		}
 
