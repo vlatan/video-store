@@ -10,6 +10,7 @@ import (
 
 const getAllPostsQuery = `
 	SELECT
+		post.id,
 		video_id,
 		playlist_id,
 		title, 
@@ -17,6 +18,7 @@ const getAllPostsQuery = `
 		cat.name AS category_name
 	FROM post
 	LEFT JOIN category AS cat ON cat.id = post.category_id
+	ORDER BY post.id DESC
 `
 
 // Get all the posts from DB
@@ -38,6 +40,7 @@ func (r *Repository) GetAllPosts(ctx context.Context) (posts []models.Post, err 
 
 		// Paste post from row to struct, thumbnails in a separate var
 		if err = rows.Scan(
+			&post.ID,
 			&post.VideoID,
 			&playlistID,
 			&post.Title,
