@@ -33,6 +33,7 @@ func (s *Service) UpdateGeneratedData(
 	// REMOVE
 	// Update the desc if it's not long (does not contain paragraphs)
 	if strings.Contains(video.ShortDesc, updateMarker) && video.Category.Name != "" {
+		log.Println("Already updated:", video.ID, video.Title)
 		return false
 	}
 

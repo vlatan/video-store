@@ -30,7 +30,7 @@ type Service struct {
 
 // REMOVE
 // Update limit per worker run
-const updateLimit = 120
+const updateLimit = 60
 
 func New() *Service {
 
