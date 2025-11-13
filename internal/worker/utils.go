@@ -37,6 +37,9 @@ func (s *Service) UpdateGeneratedData(
 		return false
 	}
 
+	// REMOVE
+	log.Println("Updating...", video.VideoID, video.Title)
+
 	// Generate content using Gemini
 	genaiResponse, err := s.gemini.GenerateInfo(
 		ctx, video, categories, time.Second, 3,
