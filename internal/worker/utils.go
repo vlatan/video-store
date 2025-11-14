@@ -33,12 +33,8 @@ func (s *Service) UpdateGeneratedData(
 	// REMOVE
 	// Update the desc if it's not long (does not contain paragraphs)
 	if strings.Contains(video.ShortDesc, updateMarker) && video.Category.Name != "" {
-		log.Println("Already updated:", video.VideoID, video.Title)
 		return false
 	}
-
-	// REMOVE
-	log.Println("Updating...", video.VideoID, video.Title)
 
 	// Generate content using Gemini
 	genaiResponse, err := s.gemini.GenerateInfo(
