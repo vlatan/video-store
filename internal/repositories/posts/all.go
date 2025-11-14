@@ -12,13 +12,11 @@ const getAllPostsQuery = `
 	SELECT
 		video_id,
 		playlist_id,
-		title, 
+		title,
 		short_description,
-		upload_date,
 		cat.name AS category_name
 	FROM post
 	LEFT JOIN category AS cat ON cat.id = post.category_id
-	ORDER BY upload_date DESC
 `
 
 // Get all the posts from DB
