@@ -23,7 +23,7 @@ const getAllPostsQuery = `
 `
 
 // Get all the posts from DB
-func (r *Repository) GetAllPosts(ctx context.Context) (posts []models.Post, err error) {
+func (r *Repository) GetAllPosts(ctx context.Context) (posts []*models.Post, err error) {
 
 	// Get rows from DB
 	rows, err := r.db.Query(ctx, getAllPostsQuery)
@@ -57,7 +57,7 @@ func (r *Repository) GetAllPosts(ctx context.Context) (posts []models.Post, err 
 		post.Category = &models.Category{Name: utils.FromNullString(categoryName)}
 
 		// Include the processed post in the result
-		posts = append(posts, post)
+		posts = append(posts, &post)
 	}
 
 	// If error during iteration
