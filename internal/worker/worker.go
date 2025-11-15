@@ -252,8 +252,8 @@ func (s *Service) Run(ctx context.Context) error {
 			rowsAffected, err := s.postsRepo.DeletePost(ctx, video.VideoID)
 			if err != nil || rowsAffected == 0 {
 				return fmt.Errorf(
-					"could not delete the video '%s' in DB; Error: %w; Rows: %d",
-					video.VideoID, err, rowsAffected,
+					"could not delete the video '%s' in DB; Rows: %d; %w",
+					video.VideoID, rowsAffected, err,
 				)
 			}
 			deleted++
@@ -265,7 +265,7 @@ func (s *Service) Run(ctx context.Context) error {
 			rowsAffected, err := s.postsRepo.UpdatePlaylist(ctx, video.VideoID, plID)
 			if err != nil || rowsAffected == 0 {
 				log.Printf(
-					"Failed to update the playlist on video '%s'. Rows affected: %d, Error: %v",
+					"Failed to update the playlist on video '%s'; Rows: %d; %v",
 					video.VideoID, rowsAffected, err,
 				)
 			} else {
@@ -287,7 +287,7 @@ func (s *Service) Run(ctx context.Context) error {
 
 	if err != nil || len(categories) == 0 {
 		return fmt.Errorf(
-			"could not fetch the categories from DB; Rows: %v; Error: %w",
+			"could not fetch the categories from DB; Rows: %v; %w",
 			len(categories), err,
 		)
 	}
@@ -306,7 +306,7 @@ func (s *Service) Run(ctx context.Context) error {
 
 		if err != nil {
 			log.Printf(
-				"Gemini content generation on video '%s' failed: %v",
+				"Gemini content generation on video '%s' failed; %v",
 				videoID, err,
 			)
 		}
@@ -326,8 +326,8 @@ func (s *Service) Run(ctx context.Context) error {
 		rowsAffected, err := s.postsRepo.InsertPost(ctx, newVideo)
 		if err != nil || rowsAffected == 0 {
 			return fmt.Errorf(
-				"failed to insert video '%s' in DB; Error: %w; Rows: %d",
-				videoID, err, rowsAffected)
+				"failed to insert video '%s' in DB; Rows: %d; %w",
+				videoID, rowsAffected, err)
 		}
 
 		inserted++
