@@ -82,7 +82,7 @@ func (s *Service) Run(ctx context.Context) error {
 	dbVideos, err := s.postsRepo.GetAllPosts(ctx)
 	if err != nil || len(dbVideos) == 0 {
 		return fmt.Errorf(
-			"could not fetch the sourced videos from DB; Rows: %v; Error: %w",
+			"could not fetch the videos from DB; Rows: %v; %w",
 			len(dbVideos), err,
 		)
 	}
