@@ -10,7 +10,7 @@ import (
 
 const getAllPostsQuery = `
 	SELECT
-		post.id
+		post.id,
 		video_id,
 		playlist_id,
 		title,
