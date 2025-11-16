@@ -92,33 +92,6 @@ func (s *Service) Run(ctx context.Context) error {
 
 	// ###################################################################
 
-	// Collect the orphans video IDs
-	var orphanVideoIDs []string
-	for _, video := range dbVideos {
-		if video.PlaylistID == "" {
-			orphanVideoIDs = append(orphanVideoIDs, video.VideoID)
-		}
-	}
-
-	// Get orphans metadata from YT, start forming valid YT videos map
-	ytVideosMap := make(map[string]*models.Post)
-	ytOrphanVideos, err := s.yt.GetVideos(ctx, orphanVideoIDs...)
-	if err != nil {
-		return fmt.Errorf(
-			"could not get the orphan videos from YouTube: %w",
-			err,
-		)
-	}
-
-	// Add valid orphan videos to YT map
-	for _, video := range ytOrphanVideos {
-		if err := s.yt.ValidateYouTubeVideo(video); err == nil {
-			ytVideosMap[video.Id] = s.yt.NewYouTubePost(video, "")
-		}
-	}
-
-	// ###################################################################
-
 	// Fetch all the playlists from DB
 	dbSources, err := s.sourcesRepo.GetSources(ctx)
 
@@ -131,6 +104,8 @@ func (s *Service) Run(ctx context.Context) error {
 
 	items = utils.Plural(len(dbSources), "playlist")
 	log.Printf("Fetched %d %s from DB", len(dbSources), items)
+
+	// ###################################################################
 
 	// Extract playlist IDs and create DB sources map
 	dbSourcesMap := make(map[string]*models.Source, len(dbSources))
@@ -148,6 +123,11 @@ func (s *Service) Run(ctx context.Context) error {
 			err,
 		)
 	}
+
+	items = utils.Plural(len(ytSources), "playlist")
+	log.Printf("Fetched %d %s from YouTube", len(ytSources), items)
+
+	// ###################################################################
 
 	// Extract channel IDs and create YT sources map
 	ytSourcesMap := make(map[string]*youtube.Playlist, len(ytSources))
@@ -199,8 +179,35 @@ func (s *Service) Run(ctx context.Context) error {
 		updatedPlaylists++
 	}
 
-	items = utils.Plural(len(ytSources), "playlist")
-	log.Printf("Fetched %d %s from YouTube", len(ytSources), items)
+	items = utils.Plural(updatedPlaylists, "playlist")
+	log.Printf("Updated %d %s", updatedPlaylists, items)
+
+	// ###################################################################
+
+	// Collect the orphans video IDs
+	var orphanVideoIDs []string
+	for _, video := range dbVideos {
+		if video.PlaylistID == "" {
+			orphanVideoIDs = append(orphanVideoIDs, video.VideoID)
+		}
+	}
+
+	// Get orphans metadata from YT, start forming valid YT videos map
+	ytVideosMap := make(map[string]*models.Post)
+	ytOrphanVideos, err := s.yt.GetVideos(ctx, orphanVideoIDs...)
+	if err != nil {
+		return fmt.Errorf(
+			"could not get the orphan videos from YouTube: %w",
+			err,
+		)
+	}
+
+	// Add valid orphan videos to YT map
+	for _, video := range ytOrphanVideos {
+		if err := s.yt.ValidateYouTubeVideo(video); err == nil {
+			ytVideosMap[video.Id] = s.yt.NewYouTubePost(video, "")
+		}
+	}
 
 	// ###################################################################
 
@@ -280,6 +287,8 @@ func (s *Service) Run(ctx context.Context) error {
 		delete(ytVideosMap, video.VideoID)
 	}
 
+	log.Printf("Deleted %d %s", deleted, utils.Plural(deleted, "video"))
+
 	// ###################################################################
 
 	// Get the categories
@@ -295,7 +304,7 @@ func (s *Service) Run(ctx context.Context) error {
 	// ###################################################################
 
 	// Insert new videos in DB,
-	// ytVideosMap shoult now contain only new videos
+	// ytVideosMap should now contain only new videos
 	var inserted int
 	for videoID, newVideo := range ytVideosMap {
 
@@ -333,6 +342,8 @@ func (s *Service) Run(ctx context.Context) error {
 		inserted++
 	}
 
+	log.Printf("Added %d %s", inserted, utils.Plural(inserted, "video"))
+
 	// ###################################################################
 
 	// Update the existing DB videos if necessary
@@ -349,13 +360,9 @@ func (s *Service) Run(ctx context.Context) error {
 		}
 	}
 
-	// ###################################################################
-
-	items = utils.Plural(updatedPlaylists, "playlist")
-	log.Printf("Updated %d %s", updatedPlaylists, items)
-	log.Printf("Deleted %d %s", deleted, utils.Plural(deleted, "video"))
-	log.Printf("Added %d %s", inserted, utils.Plural(inserted, "video"))
 	log.Printf("Updated %d %s", updated, utils.Plural(updated, "video"))
+
+	// ###################################################################
 
 	elapsed := time.Since(start)
 	log.Printf("Time took: %s", elapsed)
