@@ -97,7 +97,7 @@ func (s *Service) Run(ctx context.Context) error {
 
 	if err != nil || len(dbSources) == 0 {
 		return fmt.Errorf(
-			"could not fetch the sources from DB; Rows: %v; Error: %w",
+			"could not fetch the sources from DB; Rows: %v; %w",
 			len(dbSources), err,
 		)
 	}
