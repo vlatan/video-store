@@ -2,7 +2,8 @@ package worker
 
 import (
 	"context"
-	"log"
+	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -18,22 +19,22 @@ func (s *Service) UpdateGeneratedData(
 	ctx context.Context,
 	video *models.Post,
 	categories []models.Category,
-) bool {
+) error {
 
 	if video == nil {
-		return false
+		return errors.New("no video provided")
 	}
 
 	// UNCOMMENT
 	// Nothing to update short desc and category are populated
 	// if video.ShortDesc != "" && video.Category.Name != "" {
-	// 	return false
+	// 	return fmt.Errorf("video '%s' already has desc/category", video.VideoID)
 	// }
 
 	// REMOVE
 	// Update the desc if it's not long (does not contain paragraphs)
 	if strings.Contains(video.ShortDesc, updateMarker) && video.Category.Name != "" {
-		return false
+		return fmt.Errorf("video '%s' already has desc/category", video.VideoID)
 	}
 
 	// Generate content using Gemini
@@ -41,12 +42,11 @@ func (s *Service) UpdateGeneratedData(
 		ctx, video, categories, time.Second, 3,
 	)
 
-	if err != nil || genaiResponse == nil {
-		log.Printf(
-			"Gemini content generation on video '%s' failed: %v",
+	if err != nil {
+		return fmt.Errorf(
+			"gemini content generation on video '%s' failed; %v",
 			video.VideoID, err,
 		)
-		return false
 	}
 
 	// UNCOMMENT
@@ -66,14 +66,13 @@ func (s *Service) UpdateGeneratedData(
 	}
 
 	// Update the db video
-	rowsAffected, err := s.postsRepo.UpdateGeneratedData(ctx, video)
-	if err != nil || rowsAffected == 0 {
-		log.Printf(
-			"Failed to update generated data on video '%s'. Rows affected: %d, Error: %v",
-			video.VideoID, rowsAffected, err,
+	_, err = s.postsRepo.UpdateGeneratedData(ctx, video)
+	if err != nil {
+		return fmt.Errorf(
+			"failed to update generated data on video '%s'; %v",
+			video.VideoID, err,
 		)
-		return false
 	}
 
-	return true
+	return nil
 }

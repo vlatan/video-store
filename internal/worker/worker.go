@@ -2,6 +2,7 @@ package worker
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -17,6 +18,7 @@ import (
 	"github.com/vlatan/video-store/internal/utils"
 
 	"google.golang.org/api/youtube/v3"
+	"google.golang.org/genai"
 )
 
 type Service struct {
@@ -119,7 +121,7 @@ func (s *Service) Run(ctx context.Context) error {
 	ytSources, err := s.yt.GetSources(ctx, playlistIDs...)
 	if err != nil {
 		return fmt.Errorf(
-			"could not fetch the playlists from YouTube: %w",
+			"could not fetch the playlists from YouTube; %w",
 			err,
 		)
 	}
@@ -141,7 +143,7 @@ func (s *Service) Run(ctx context.Context) error {
 	channels, err := s.yt.GetChannels(ctx, channelIDs...)
 	if err != nil {
 		return fmt.Errorf(
-			"could not fetch the channels from YouTube: %w",
+			"could not fetch the channels from YouTube; %w",
 			err,
 		)
 	}
@@ -168,10 +170,10 @@ func (s *Service) Run(ctx context.Context) error {
 			continue
 		}
 
-		rowsAffected, err := s.sourcesRepo.UpdateSource(ctx, newSource)
-		if err != nil || rowsAffected == 0 {
+		_, err = s.sourcesRepo.UpdateSource(ctx, newSource)
+		if err != nil {
 			return fmt.Errorf(
-				"could not update source '%s' in DB: %w",
+				"could not update source '%s' in DB; %w",
 				newSource.PlaylistID, err,
 			)
 		}
@@ -197,7 +199,7 @@ func (s *Service) Run(ctx context.Context) error {
 	ytOrphanVideos, err := s.yt.GetVideos(ctx, orphanVideoIDs...)
 	if err != nil {
 		return fmt.Errorf(
-			"could not get the orphan videos from YouTube: %w",
+			"could not get the orphan videos from YouTube; %w",
 			err,
 		)
 	}
@@ -216,7 +218,7 @@ func (s *Service) Run(ctx context.Context) error {
 		sourceItems, err := s.yt.GetSourceItems(ctx, playlistID)
 		if err != nil {
 			return fmt.Errorf(
-				"could not get items from YouTube on source '%s': %w",
+				"could not get items from YouTube on source '%s'; %w",
 				playlistID, err,
 			)
 		}
@@ -250,17 +252,17 @@ func (s *Service) Run(ctx context.Context) error {
 	// ###################################################################
 
 	// Delete and update videos in DB
-	var updated, deleted int
+	var adopted, deleted int
 	var validDBVideos []*models.Post
 	for _, video := range dbVideos {
 
 		// If the video doesn't exist on YT, delete it from DB
 		if _, exists := ytVideosMap[video.VideoID]; !exists {
-			rowsAffected, err := s.postsRepo.DeletePost(ctx, video.VideoID)
-			if err != nil || rowsAffected == 0 {
+			_, err = s.postsRepo.DeletePost(ctx, video.VideoID)
+			if err != nil {
 				return fmt.Errorf(
-					"could not delete the video '%s' in DB; Rows: %d; %w",
-					video.VideoID, rowsAffected, err,
+					"could not delete the video '%s' in DB; %w",
+					video.VideoID, err,
 				)
 			}
 			deleted++
@@ -269,14 +271,14 @@ func (s *Service) Run(ctx context.Context) error {
 
 		// Update the video playlist, if necessary
 		if plID := ytVideosMap[video.VideoID].PlaylistID; video.PlaylistID != plID {
-			rowsAffected, err := s.postsRepo.UpdatePlaylist(ctx, video.VideoID, plID)
-			if err != nil || rowsAffected == 0 {
+			_, err = s.postsRepo.UpdatePlaylist(ctx, video.VideoID, plID)
+			if err != nil {
 				log.Printf(
-					"Failed to update the playlist on video '%s'; Rows: %d; %v",
-					video.VideoID, rowsAffected, err,
+					"Failed to update the playlist on video '%s'; %v",
+					video.VideoID, err,
 				)
 			} else {
-				updated++
+				adopted++
 			}
 		}
 
@@ -288,6 +290,7 @@ func (s *Service) Run(ctx context.Context) error {
 	}
 
 	log.Printf("Deleted %d %s", deleted, utils.Plural(deleted, "video"))
+	log.Printf("Adopted %d %s", adopted, utils.Plural(adopted, "video"))
 
 	// ###################################################################
 
@@ -332,11 +335,11 @@ func (s *Service) Run(ctx context.Context) error {
 		}
 
 		// Insert the video
-		rowsAffected, err := s.postsRepo.InsertPost(ctx, newVideo)
-		if err != nil || rowsAffected == 0 {
+		_, err = s.postsRepo.InsertPost(ctx, newVideo)
+		if err != nil {
 			return fmt.Errorf(
-				"failed to insert video '%s' in DB; Rows: %d; %w",
-				videoID, rowsAffected, err)
+				"failed to insert video '%s' in DB; %w",
+				videoID, err)
 		}
 
 		inserted++
@@ -347,19 +350,28 @@ func (s *Service) Run(ctx context.Context) error {
 	// ###################################################################
 
 	// Update the existing DB videos if necessary
+	var updated, failed int
+	var genaiErr *genai.APIError
 	for _, video := range validDBVideos {
 
 		// REMOVE
 		// Temporarily limit updates per worker run
-		if updated > updateLimit {
+		if updated+failed > updateLimit {
 			continue
 		}
 
-		if s.UpdateGeneratedData(ctx, video, categories) {
-			updated++
+		if err = s.UpdateGeneratedData(ctx, video, categories); err != nil {
+			if errors.As(err, &genaiErr) {
+				log.Println(err)
+				failed++
+			}
+			continue
 		}
+
+		updated++
 	}
 
+	log.Printf("Failed to update %d %s", failed, utils.Plural(failed, "video"))
 	log.Printf("Updated %d %s", updated, utils.Plural(updated, "video"))
 
 	// ###################################################################
