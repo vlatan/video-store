@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/vlatan/video-store/internal/config"
@@ -170,8 +171,7 @@ func (s *Service) Run(ctx context.Context) error {
 			continue
 		}
 
-		_, err = s.sourcesRepo.UpdateSource(ctx, newSource)
-		if err != nil {
+		if _, err = s.sourcesRepo.UpdateSource(ctx, newSource); err != nil {
 			return fmt.Errorf(
 				"could not update source '%s' in DB; %w",
 				newSource.PlaylistID, err,
@@ -206,7 +206,7 @@ func (s *Service) Run(ctx context.Context) error {
 
 	// Add valid orphan videos to YT map
 	for _, video := range ytOrphanVideos {
-		if err := s.yt.ValidateYouTubeVideo(video); err == nil {
+		if err = s.yt.ValidateYouTubeVideo(video); err == nil {
 			ytVideosMap[video.Id] = s.yt.NewYouTubePost(video, "")
 		}
 	}
@@ -237,7 +237,7 @@ func (s *Service) Run(ctx context.Context) error {
 
 		// Keep only the valid videos
 		for _, video := range videosMetadata {
-			err := s.yt.ValidateYouTubeVideo(video)
+			err = s.yt.ValidateYouTubeVideo(video)
 			if err == nil && !s.postsRepo.IsPostBanned(ctx, video.Id) {
 				// If the video is already in ytVideosMap as an orphaned video
 				// we overwrite it, associate it with a YT playlist
@@ -258,8 +258,7 @@ func (s *Service) Run(ctx context.Context) error {
 
 		// If the video doesn't exist on YT, delete it from DB
 		if _, exists := ytVideosMap[video.VideoID]; !exists {
-			_, err = s.postsRepo.DeletePost(ctx, video.VideoID)
-			if err != nil {
+			if _, err = s.postsRepo.DeletePost(ctx, video.VideoID); err != nil {
 				return fmt.Errorf(
 					"could not delete the video '%s' in DB; %w",
 					video.VideoID, err,
@@ -271,8 +270,7 @@ func (s *Service) Run(ctx context.Context) error {
 
 		// Update the video playlist, if necessary
 		if plID := ytVideosMap[video.VideoID].PlaylistID; video.PlaylistID != plID {
-			_, err = s.postsRepo.UpdatePlaylist(ctx, video.VideoID, plID)
-			if err != nil {
+			if _, err = s.postsRepo.UpdatePlaylist(ctx, video.VideoID, plID); err != nil {
 				log.Printf(
 					"Failed to update the playlist on video '%s'; %v",
 					video.VideoID, err,
@@ -335,8 +333,7 @@ func (s *Service) Run(ctx context.Context) error {
 		}
 
 		// Insert the video
-		_, err = s.postsRepo.InsertPost(ctx, newVideo)
-		if err != nil {
+		if _, err = s.postsRepo.InsertPost(ctx, newVideo); err != nil {
 			return fmt.Errorf(
 				"failed to insert video '%s' in DB; %w",
 				videoID, err)
@@ -360,15 +357,31 @@ func (s *Service) Run(ctx context.Context) error {
 			continue
 		}
 
-		if err = s.UpdateGeneratedData(ctx, video, categories); err != nil {
-			if errors.As(err, &genaiErr) {
-				log.Println(err)
-				failed++
-			}
+		// UNCOMMENT
+		// Nothing to update, short desc and category are populated
+		// if video.ShortDesc != "" &&
+		// 	video.Category != nil &&
+		// 	video.Category.Name != "" {
+		// 	continue
+		// }
+
+		// REMOVE
+		// Nothing to update, short desc and category are populated
+		if strings.Contains(video.ShortDesc, updateMarker) &&
+			video.Category != nil &&
+			video.Category.Name != "" {
 			continue
 		}
 
-		updated++
+		if err = s.UpdateGeneratedData(ctx, video, categories); err == nil {
+			updated++
+			continue
+		}
+
+		if errors.As(err, &genaiErr) {
+			log.Println(err)
+			failed++
+		}
 	}
 
 	log.Printf("Failed to update %d %s", failed, utils.Plural(failed, "video"))

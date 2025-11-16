@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/vlatan/video-store/internal/models"
@@ -25,18 +24,6 @@ func (s *Service) UpdateGeneratedData(
 		return errors.New("no video provided")
 	}
 
-	// UNCOMMENT
-	// Nothing to update short desc and category are populated
-	// if video.ShortDesc != "" && video.Category.Name != "" {
-	// 	return fmt.Errorf("video '%s' already has desc/category", video.VideoID)
-	// }
-
-	// REMOVE
-	// Update the desc if it's not long (does not contain paragraphs)
-	if strings.Contains(video.ShortDesc, updateMarker) && video.Category.Name != "" {
-		return fmt.Errorf("video '%s' already has desc/category", video.VideoID)
-	}
-
 	// Generate content using Gemini
 	genaiResponse, err := s.gemini.GenerateInfo(
 		ctx, video, categories, time.Second, 3,
@@ -50,9 +37,7 @@ func (s *Service) UpdateGeneratedData(
 	}
 
 	// UNCOMMENT
-	// if video.ShortDesc == "" {
 	// 	video.ShortDesc = genaiResponse.Description
-	// }
 
 	// REMOVE
 	video.ShortDesc = genaiResponse.Description + updateMarker
@@ -61,13 +46,10 @@ func (s *Service) UpdateGeneratedData(
 		video.Category = &models.Category{}
 	}
 
-	if video.Category.Name == "" {
-		video.Category.Name = genaiResponse.Category
-	}
+	video.Category.Name = genaiResponse.Category
 
 	// Update the db video
-	_, err = s.postsRepo.UpdateGeneratedData(ctx, video)
-	if err != nil {
+	if _, err = s.postsRepo.UpdateGeneratedData(ctx, video); err != nil {
 		return fmt.Errorf(
 			"failed to update generated data on video '%s'; %v",
 			video.VideoID, err,
