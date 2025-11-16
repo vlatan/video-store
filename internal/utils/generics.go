@@ -79,6 +79,5 @@ func Retry[T any](
 		}
 	}
 
-	maxRetriesErr := fmt.Errorf("%d max retries error", maxRetries)
-	return zero, errors.Join(maxRetriesErr, lastError)
+	return zero, fmt.Errorf("%d max retries error; %w", maxRetries, lastError)
 }
