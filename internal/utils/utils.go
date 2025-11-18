@@ -145,12 +145,13 @@ func FromNullString(ns sql.NullString) string {
 	return ns.String
 }
 
+// Return plural of word if num > 1
 func Plural(num int, word string) string {
-	if word == "" || num <= 1 {
-		return word
+	if word != "" && num > 1 {
+		return word + "s"
 	}
 
-	return word + "s"
+	return word
 }
 
 // Check one thumbnail equality

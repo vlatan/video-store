@@ -81,20 +81,6 @@ func (s *Service) Run(ctx context.Context) error {
 
 	// ###################################################################
 
-	// Get ALL videos from DB, should be ordered by upload date
-	dbVideos, err := s.postsRepo.GetAllPosts(ctx)
-	if err != nil || len(dbVideos) == 0 {
-		return fmt.Errorf(
-			"could not fetch the videos from DB; Rows: %v; %w",
-			len(dbVideos), err,
-		)
-	}
-
-	items := utils.Plural(len(dbVideos), "video")
-	log.Printf("Fetched %d %s from DB", len(dbVideos), items)
-
-	// ###################################################################
-
 	// Fetch all the playlists from DB
 	dbSources, err := s.sourcesRepo.GetSources(ctx)
 
@@ -105,7 +91,7 @@ func (s *Service) Run(ctx context.Context) error {
 		)
 	}
 
-	items = utils.Plural(len(dbSources), "playlist")
+	items := utils.Plural(len(dbSources), "playlist")
 	log.Printf("Fetched %d %s from DB", len(dbSources), items)
 
 	// ###################################################################
@@ -181,8 +167,24 @@ func (s *Service) Run(ctx context.Context) error {
 		updatedPlaylists++
 	}
 
-	items = utils.Plural(updatedPlaylists, "playlist")
-	log.Printf("Updated %d %s", updatedPlaylists, items)
+	if updatedPlaylists > 0 {
+		items = utils.Plural(updatedPlaylists, "playlist")
+		log.Printf("Updated %d %s", updatedPlaylists, items)
+	}
+
+	// ###################################################################
+
+	// Get ALL videos from DB, should be ordered by upload date
+	dbVideos, err := s.postsRepo.GetAllPosts(ctx)
+	if err != nil || len(dbVideos) == 0 {
+		return fmt.Errorf(
+			"could not fetch the videos from DB; Rows: %v; %w",
+			len(dbVideos), err,
+		)
+	}
+
+	items = utils.Plural(len(dbVideos), "video")
+	log.Printf("Fetched %d %s from DB", len(dbVideos), items)
 
 	// ###################################################################
 
@@ -287,8 +289,15 @@ func (s *Service) Run(ctx context.Context) error {
 		delete(ytVideosMap, video.VideoID)
 	}
 
-	log.Printf("Deleted %d %s", deleted, utils.Plural(deleted, "video"))
-	log.Printf("Adopted %d %s", adopted, utils.Plural(adopted, "video"))
+	if deleted > 0 {
+		items = utils.Plural(deleted, "video")
+		log.Printf("Deleted %d %s", deleted, items)
+	}
+
+	if adopted > 0 {
+		items = utils.Plural(adopted, "video")
+		log.Printf("Adopted %d %s", adopted, items)
+	}
 
 	// ###################################################################
 
@@ -342,7 +351,10 @@ func (s *Service) Run(ctx context.Context) error {
 		inserted++
 	}
 
-	log.Printf("Added %d %s", inserted, utils.Plural(inserted, "video"))
+	if inserted > 0 {
+		items = utils.Plural(inserted, "video")
+		log.Printf("Added %d %s", inserted, items)
+	}
 
 	// ###################################################################
 
@@ -384,8 +396,15 @@ func (s *Service) Run(ctx context.Context) error {
 		}
 	}
 
-	log.Printf("Failed to update %d %s", failed, utils.Plural(failed, "video"))
-	log.Printf("Updated %d %s", updated, utils.Plural(updated, "video"))
+	if failed > 0 {
+		items = utils.Plural(failed, "video")
+		log.Printf("Failed to update %d %s", failed, items)
+	}
+
+	if updated > 0 {
+		items = utils.Plural(updated, "video")
+		log.Printf("Updated %d %s", updated, items)
+	}
 
 	// ###################################################################
 
