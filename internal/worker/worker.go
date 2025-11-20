@@ -408,7 +408,7 @@ func (s *Service) Run(ctx context.Context) error {
 
 	// ###################################################################
 
-	elapsed := time.Since(start)
+	elapsed := time.Since(start).Round(time.Second)
 	log.Printf("Time took: %s", elapsed)
 
 	return nil
