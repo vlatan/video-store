@@ -365,7 +365,7 @@ func (s *Service) Run(ctx context.Context) error {
 
 		// REMOVE
 		// Temporarily limit updates per worker run
-		if updated+failed > updateLimit {
+		if updated+failed+inserted > updateLimit {
 			continue
 		}
 
