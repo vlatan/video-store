@@ -65,6 +65,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	// Route for memory profiling
 	mux.HandleFunc("GET /debug/heap", s.mw.IsAdmin(
 		func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("X-Robots-Tag", "noindex")
 			w.Header().Set("Content-Type", "application/octet-stream")
 			runtime.GC()
 			if err := pprof.WriteHeapProfile(w); err != nil {
@@ -78,7 +79,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 		w.Header().Set("X-Robots-Tag", "noindex")
 		w.WriteHeader(http.StatusOK)
 		if _, err := w.Write([]byte("OK")); err != nil {
-			log.Printf("Failed to write response on '/healthcheck'; %v", err)
+			log.Printf("Failed to write response on '%s'; %v", r.URL.Path, err)
 		}
 	})
 
