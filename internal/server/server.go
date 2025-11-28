@@ -44,7 +44,7 @@ type Server struct {
 }
 
 // Create new HTTP server
-func NewServer() (*http.Server, func() error) {
+func NewServer() (*http.Server, string, func() error) {
 
 	// Register types with gob to be able to use them in sessions
 	gob.Register(&models.FlashMessage{})
@@ -117,5 +117,5 @@ func NewServer() (*http.Server, func() error) {
 		return nil
 	}
 
-	return server, cleanup
+	return server, cfg.Domain, cleanup
 }

@@ -12,7 +12,7 @@ import (
 	"github.com/vlatan/video-store/internal/server"
 )
 
-func gracefulShutdown(appServer *http.Server, cleanup func() error, done chan bool) {
+func gracefulShutdown(appServer *http.Server, cleanup func() error, done chan<- struct{}) {
 	// Create context that listens for the interrupt signal from the OS.
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
@@ -48,21 +48,25 @@ func gracefulShutdown(appServer *http.Server, cleanup func() error, done chan bo
 	log.Println("Server exiting...")
 
 	// Notify the main goroutine that the shutdown is complete
-	done <- true
+	done <- struct{}{}
 }
 
 func main() {
-	server, cleanup := server.NewServer()
+	server, domain, cleanup := server.NewServer()
 
-	// Create a done channel to signal when the shutdown is complete
-	done := make(chan bool, 1)
+	// Create a notification channel to signal when the shutdown is complete
+	done := make(chan struct{})
 
 	// Listen for SIGINT SIGTERM in a separate goroutine
 	// Gracefully shut down the server.
 	// If so ListenAndServe will return ErrServerClosed.
 	go gracefulShutdown(server, cleanup, done)
 
-	fmt.Printf("Server running on http://%s\n", server.Addr)
+	fmt.Printf("Server running on: http://%s\n", server.Addr)
+	if domain != "" {
+		fmt.Printf("Website available at: https://%s\n", domain)
+	}
+
 	err := server.ListenAndServe()
 	if err != nil && err != http.ErrServerClosed {
 		log.Fatalf("http server error: %v", err)
