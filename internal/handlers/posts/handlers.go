@@ -1,6 +1,7 @@
 package posts
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -251,21 +252,6 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 		post := s.yt.NewYouTubePost(metadata[0], "")
 		post.UserID = data.CurrentUser.ID
 
-		// Generate content using Gemini
-		genaiResponse, err := s.gemini.GenerateInfo(
-			r.Context(), post, data.Categories, time.Second, 1,
-		)
-
-		if err != nil {
-			log.Printf("Content generation using Gemini failed: %v", err)
-		}
-
-		post.Category = &models.Category{}
-		if err == nil && genaiResponse != nil {
-			post.ShortDesc = genaiResponse.Description
-			post.Category.Name = genaiResponse.Category
-		}
-
 		// Insert the video
 		rowsAffected, err := s.postsRepo.InsertPost(r.Context(), post)
 		if err != nil || rowsAffected == 0 {
@@ -275,6 +261,32 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 			s.ui.RenderHTML(w, r, "form.html", data)
 			return
 		}
+
+		// Generate content in the background using Gemini
+		go func() {
+
+			detachedCtx := context.WithoutCancel(r.Context())
+			ctx, cancel := context.WithTimeout(detachedCtx, 5*time.Minute)
+			defer cancel()
+
+			genaiResponse, err := s.gemini.GenerateInfo(
+				ctx, post, data.Categories, time.Second, 1,
+			)
+
+			if err != nil {
+				log.Printf("Content generation using Gemini failed: %v", err)
+				return
+			}
+
+			post.ShortDesc = genaiResponse.Description
+			post.Category = &models.Category{Name: genaiResponse.Category}
+
+			_, err = s.postsRepo.UpdateGeneratedData(ctx, post)
+			if err != nil {
+				log.Printf("failed to update generated data on video '%s'; %v",
+					post.VideoID, err)
+			}
+		}()
 
 		// Check out the video
 		redirectTo := fmt.Sprintf("/video/%s/", videoID)

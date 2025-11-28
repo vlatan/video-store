@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"strings"
 	"time"
 
@@ -144,18 +143,20 @@ func (s *Service) GenerateInfo(
 		nil,
 	)
 
-	switch err {
-	case nil:
-		// If the video is very large use just its title
-		if (inputTokens.TotalTokens >= s.inputTokenLimit) && uriExists {
-			title := fmt.Sprintf("Title: %s", post.Title)
-			parts[uriIndex] = genai.NewPartFromText(title)
-			contents = []*genai.Content{
-				genai.NewContentFromParts(parts, genai.RoleUser),
-			}
+	if err != nil {
+		return nil, fmt.Errorf(
+			"failed to count input tokens for video '%s'; %w",
+			post.VideoID, err,
+		)
+	}
+
+	// If the video is very large use just its title
+	if (inputTokens.TotalTokens >= s.inputTokenLimit) && uriExists {
+		title := fmt.Sprintf("Title: %s", post.Title)
+		parts[uriIndex] = genai.NewPartFromText(title)
+		contents = []*genai.Content{
+			genai.NewContentFromParts(parts, genai.RoleUser),
 		}
-	default:
-		log.Printf("failed to count input tokens for video: %s", post.VideoID)
 	}
 
 	response, err := utils.Retry(

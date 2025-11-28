@@ -1,7 +1,7 @@
 
-* Uncomment and remove code in `internal/worker/worker.go` and `internal/worker/utils.go`
-
-* Solve bad gateway error on new post
+* Uncomment and remove code in:
+  - `internal/worker/utils.go`
+  - `internal/worker/worker.go`
 
 * Generalize the app.
   Eliminate the documentary usage.
