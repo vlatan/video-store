@@ -1,4 +1,7 @@
 
+* Order promot so the URL part comes last
+* Include the update marker in manualy posted videos too
+
 * Uncomment and remove code in:
   - `internal/worker/utils.go`
   - `internal/worker/worker.go`
