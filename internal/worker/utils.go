@@ -7,11 +7,8 @@ import (
 	"time"
 
 	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/utils"
 )
-
-// REMOVE
-// Set update marker
-var updateMarker = "<!-- v2 -->"
 
 // Update generated gemini data on a video
 func (s *Service) UpdateGeneratedData(
@@ -40,7 +37,7 @@ func (s *Service) UpdateGeneratedData(
 	// 	video.ShortDesc = genaiResponse.Description
 
 	// REMOVE
-	video.ShortDesc = genaiResponse.Description + updateMarker
+	video.ShortDesc = genaiResponse.Description + utils.UpdateMarker
 
 	if video.Category == nil {
 		video.Category = &models.Category{}

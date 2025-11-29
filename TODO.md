@@ -5,6 +5,7 @@
 * Uncomment and remove code in:
   - `internal/worker/utils.go`
   - `internal/worker/worker.go`
+  - `internal/utils/utils.go`
 
 * Generalize the app.
   Eliminate the documentary usage.

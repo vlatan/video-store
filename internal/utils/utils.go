@@ -35,6 +35,10 @@ var RootFavicons = []string{
 	"/site.webmanifest",
 }
 
+// REMOVE
+// Set update marker
+var UpdateMarker = "<!-- v2 -->"
+
 // Get the user from context
 func GetUserFromContext(r *http.Request) *models.User {
 	user, _ := r.Context().Value(UserContextKey).(*models.User)

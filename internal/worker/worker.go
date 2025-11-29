@@ -336,7 +336,7 @@ func (s *Service) Run(ctx context.Context) error {
 			// ytVideo.ShortDesc = genaiResponse.Description
 
 			// REMOVE
-			newVideo.ShortDesc = genaiResponse.Description + updateMarker
+			newVideo.ShortDesc = genaiResponse.Description + utils.UpdateMarker
 
 			newVideo.Category.Name = genaiResponse.Category
 		}
@@ -379,7 +379,7 @@ func (s *Service) Run(ctx context.Context) error {
 
 		// REMOVE
 		// Nothing to update, short desc and category are populated
-		if strings.Contains(video.ShortDesc, updateMarker) &&
+		if strings.Contains(video.ShortDesc, utils.UpdateMarker) &&
 			video.Category != nil &&
 			video.Category.Name != "" {
 			continue
