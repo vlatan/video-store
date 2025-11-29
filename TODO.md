@@ -1,9 +1,8 @@
 
-* Order prompt so the URL part comes last
+* Order prompt correctly
 
 * Uncomment and remove code in:
   - `internal/handlers/posts/handlers.go`
-  - `internal/worker/utils.go`
   - `internal/worker/worker.go`
   - `internal/utils/utils.go`
 

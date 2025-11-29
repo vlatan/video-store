@@ -2,7 +2,6 @@ package worker
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -19,7 +18,6 @@ import (
 	"github.com/vlatan/video-store/internal/utils"
 
 	"google.golang.org/api/youtube/v3"
-	"google.golang.org/genai"
 )
 
 type Service struct {
@@ -355,7 +353,6 @@ func (s *Service) Run(ctx context.Context) error {
 
 	// Update the existing DB videos if necessary
 	var updated, failed int
-	var genaiErr *genai.APIError
 	for _, video := range validDBVideos {
 
 		// Limit updates per worker run
@@ -379,13 +376,35 @@ func (s *Service) Run(ctx context.Context) error {
 			continue
 		}
 
-		if err = s.UpdateGeneratedData(ctx, video, categories); err == nil {
-			updated++
+		// Generate content using Gemini
+		genaiResponse, err := s.gemini.GenerateInfo(
+			ctx, video, categories, time.Second, 3,
+		)
+
+		if err != nil {
+			log.Printf(
+				"gemini content generation on video '%s' failed; %v",
+				video.VideoID, err,
+			)
+			failed++
 			continue
 		}
 
-		if errors.As(err, &genaiErr) {
-			log.Println(err)
+		video.ShortDesc = genaiResponse.Description
+		video.ShortDesc += utils.UpdateMarker // REMOVE
+
+		if video.Category == nil {
+			video.Category = &models.Category{}
+		}
+
+		video.Category.Name = genaiResponse.Category
+
+		// Update the db video
+		if _, err = s.postsRepo.UpdateGeneratedData(ctx, video); err != nil {
+			log.Printf(
+				"failed to update generated data on video '%s'; %v",
+				video.VideoID, err,
+			)
 			failed++
 		}
 	}
