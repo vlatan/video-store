@@ -1,8 +1,8 @@
 
-* Order promot so the URL part comes last
-* Include the update marker in manualy posted videos too
+* Order prompt so the URL part comes last
 
 * Uncomment and remove code in:
+  - `internal/handlers/posts/handlers.go`
   - `internal/worker/utils.go`
   - `internal/worker/worker.go`
   - `internal/utils/utils.go`

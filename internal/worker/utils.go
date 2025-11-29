@@ -33,11 +33,8 @@ func (s *Service) UpdateGeneratedData(
 		)
 	}
 
-	// UNCOMMENT
-	// 	video.ShortDesc = genaiResponse.Description
-
-	// REMOVE
-	video.ShortDesc = genaiResponse.Description + utils.UpdateMarker
+	video.ShortDesc = genaiResponse.Description
+	video.ShortDesc += utils.UpdateMarker // REMOVE
 
 	if video.Category == nil {
 		video.Category = &models.Category{}

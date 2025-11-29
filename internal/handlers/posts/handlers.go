@@ -265,6 +265,8 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 		// Generate content in the background using Gemini
 		go func() {
 
+			// Detach the request context and
+			// give this goroutine 5 minutes to finish
 			detachedCtx := context.WithoutCancel(r.Context())
 			ctx, cancel := context.WithTimeout(detachedCtx, 5*time.Minute)
 			defer cancel()
@@ -280,6 +282,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 
 			post.ShortDesc = genaiResponse.Description
 			post.Category = &models.Category{Name: genaiResponse.Category}
+			post.ShortDesc += utils.UpdateMarker // REMOVE
 
 			_, err = s.postsRepo.UpdateGeneratedData(ctx, post)
 			if err != nil {

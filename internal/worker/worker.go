@@ -31,7 +31,6 @@ type Service struct {
 	gemini      *gemini.Service
 }
 
-// REMOVE
 // Update limit per worker run
 const updateLimit = 60
 
@@ -332,13 +331,9 @@ func (s *Service) Run(ctx context.Context) error {
 
 		newVideo.Category = &models.Category{}
 		if err == nil && genaiResponse != nil {
-			// UNCOMMENT
-			// ytVideo.ShortDesc = genaiResponse.Description
-
-			// REMOVE
-			newVideo.ShortDesc = genaiResponse.Description + utils.UpdateMarker
-
+			newVideo.ShortDesc = genaiResponse.Description
 			newVideo.Category.Name = genaiResponse.Category
+			newVideo.ShortDesc += utils.UpdateMarker // REMOVE
 		}
 
 		// Insert the video
@@ -363,8 +358,7 @@ func (s *Service) Run(ctx context.Context) error {
 	var genaiErr *genai.APIError
 	for _, video := range validDBVideos {
 
-		// REMOVE
-		// Temporarily limit updates per worker run
+		// Limit updates per worker run
 		if updated+failed+inserted > updateLimit {
 			continue
 		}
