@@ -170,6 +170,10 @@ func (s *Service) GenerateInfo(
 		return nil, err
 	}
 
-	response.Description = bluemonday.StrictPolicy().AllowElements("p").Sanitize(response.Description)
+	response.Description = bluemonday.
+		StrictPolicy().
+		AllowElements("p").
+		Sanitize(response.Description)
+
 	return response, nil
 }

@@ -1,6 +1,4 @@
 
-* Order prompt correctly
-
 * Uncomment and remove code in:
   - `internal/handlers/posts/handlers.go`
   - `internal/worker/worker.go`
