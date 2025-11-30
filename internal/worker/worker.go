@@ -357,7 +357,7 @@ func (s *Service) Run(ctx context.Context) error {
 
 		// Limit updates per worker run
 		if updated+failed+inserted > updateLimit {
-			continue
+			break
 		}
 
 		// UNCOMMENT
@@ -407,6 +407,8 @@ func (s *Service) Run(ctx context.Context) error {
 			)
 			failed++
 		}
+
+		updated++
 	}
 
 	if failed > 0 {
