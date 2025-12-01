@@ -3,28 +3,29 @@ package users
 import (
 	"context"
 	"runtime"
-	"sync"
 
 	"github.com/vlatan/video-store/internal/models"
+	"golang.org/x/sync/errgroup"
 )
 
 // Get users avatars in parallel
-func (s *Service) SetAvatars(ctx context.Context, users []models.User) {
+func (s *Service) SetAvatars(ctx context.Context, users []models.User) error {
 
-	var wg sync.WaitGroup
+	g := new(errgroup.Group)
 	semaphore := make(chan struct{}, runtime.GOMAXPROCS(0))
 	for i, user := range users {
-		wg.Go(func() {
+		g.Go(func() error {
 			select {
 			case <-ctx.Done():
-				return
+				return ctx.Err()
 			case semaphore <- struct{}{}: // Semaphore will block if full
 				defer func() { <-semaphore }()
 				user.SetAvatar(ctx, s.config, s.rdb, s.r2s)
 				users[i] = user
+				return nil
 			}
 		})
 	}
 
-	wg.Wait()
+	return g.Wait()
 }

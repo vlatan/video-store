@@ -24,6 +24,7 @@ require (
 	github.com/yuin/goldmark v1.7.12
 	golang.org/x/image v0.30.0
 	golang.org/x/oauth2 v0.30.0
+	golang.org/x/sync v0.16.0
 	google.golang.org/api v0.240.0
 	google.golang.org/genai v1.14.0
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250825161204-c5933d9347a5
@@ -118,7 +119,6 @@ require (
 	go.opentelemetry.io/proto/otlp v1.8.0 // indirect
 	golang.org/x/crypto v0.41.0 // indirect
 	golang.org/x/net v0.43.0 // indirect
-	golang.org/x/sync v0.16.0 // indirect
 	golang.org/x/sys v0.35.0 // indirect
 	golang.org/x/text v0.28.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20250825161204-c5933d9347a5 // indirect

@@ -101,7 +101,9 @@ func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (
 	}
 
 	// Post-process the posts, prepare the thumbnail
-	postProcessPosts(ctx, posts.Items)
+	if err = postProcessPosts(ctx, posts.Items); err != nil {
+		return nil, err
+	}
 
 	// This is the last page
 	if len(posts.Items) <= r.config.PostsPerPage {

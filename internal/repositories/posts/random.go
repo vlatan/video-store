@@ -58,7 +58,9 @@ func (r *Repository) GetRandomPosts(ctx context.Context, title string, limit int
 	}
 
 	// Post-process the posts, prepare the thumbnail
-	postProcessPosts(ctx, posts)
+	if err = postProcessPosts(ctx, posts); err != nil {
+		return nil, err
+	}
 
 	return posts, nil
 }

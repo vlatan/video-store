@@ -9,11 +9,11 @@ import (
 	"fmt"
 	"runtime"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/utils"
+	"golang.org/x/sync/errgroup"
 )
 
 // Query the DB for posts based on variadic arguments
@@ -100,7 +100,9 @@ func (r *Repository) queryTaxonomyPosts(
 	}
 
 	// Post-process the posts, prepare the thumbnail
-	postProcessPosts(ctx, posts.Items)
+	if err = postProcessPosts(ctx, posts.Items); err != nil {
+		return nil, err
+	}
 
 	// This is the last page
 	if len(posts.Items) <= r.config.PostsPerPage {
@@ -137,32 +139,30 @@ func decodeCursor(cursor string) ([]string, error) {
 
 // Concurrently unserialize the thumbnails on posts.
 // Prepare the srcset value and the appropriate thumbnail.
-func postProcessPosts(ctx context.Context, posts []models.Post) {
+func postProcessPosts(ctx context.Context, posts []models.Post) error {
 
-	var wg sync.WaitGroup
+	g := new(errgroup.Group)
 	semaphore := make(chan struct{}, runtime.GOMAXPROCS(0))
 	for i, post := range posts {
 
-		wg.Go(func() {
+		g.Go(func() error {
 			select {
 			case <-ctx.Done():
-				posts[i].Thumbnail = &models.Thumbnail{}
-				break
+				return ctx.Err()
 			case semaphore <- struct{}{}: // Semaphore will block if full
 				defer func() { <-semaphore }()
 				var thumbs models.Thumbnails
 				if err := json.Unmarshal(post.RawThumbs, &thumbs); err != nil {
-					posts[i].Thumbnail = &models.Thumbnail{}
-					break
+					return err
 				}
 
 				posts[i].Srcset = thumbs.Srcset(480)
 				posts[i].Thumbnail = thumbs.Medium
+				posts[i].RawThumbs = nil
+				return nil
 			}
-
-			posts[i].RawThumbs = nil
 		})
 	}
 
-	wg.Wait()
+	return g.Wait()
 }

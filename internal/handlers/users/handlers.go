@@ -56,7 +56,11 @@ func (s *Service) UsersHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Assign local avatars to users
-	s.SetAvatars(r.Context(), users.Items)
+	if err = s.SetAvatars(r.Context(), users.Items); err != nil {
+		log.Printf("Was unabale to set users avatars on URI '%s': %v", r.RequestURI, err)
+		utils.HttpError(w, http.StatusInternalServerError)
+		return
+	}
 
 	data.PaginationInfo = s.ui.NewPagination(
 		page,
