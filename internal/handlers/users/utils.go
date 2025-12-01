@@ -2,6 +2,7 @@ package users
 
 import (
 	"context"
+	"runtime"
 	"sync"
 
 	"github.com/vlatan/video-store/internal/models"
@@ -16,7 +17,7 @@ type avatarResult struct {
 func (s *Service) GetAvatars(ctx context.Context, users []models.User) chan avatarResult {
 	var wg sync.WaitGroup
 	avatars := make(chan avatarResult, len(users))
-	semaphore := make(chan struct{}, 10) // max 10 paralel calls
+	semaphore := make(chan struct{}, runtime.GOMAXPROCS(0))
 
 	for i, user := range users {
 		wg.Go(func() {
