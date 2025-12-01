@@ -99,7 +99,7 @@ func (u *User) SetAvatar(
 	// Attempt to download the avatar, set default avatar on fail
 	etag, err := u.DownloadAvatar(ctx, config, r2s)
 	if err != nil {
-		log.Printf("failed to download the avatar URL to Redis; %v", err)
+		log.Printf("failed to download the avatar URL; %v", err)
 		if err = rdb.Set(ctx, redisKey, defaultAvatar, avatarTimeout); err != nil {
 			log.Printf("failed to save the default avatar URL to Redis; %v", err)
 		}
