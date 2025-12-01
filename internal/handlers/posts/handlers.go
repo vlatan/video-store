@@ -282,7 +282,6 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 
 			post.ShortDesc = genaiResponse.Description
 			post.Category = &models.Category{Name: genaiResponse.Category}
-			post.ShortDesc += utils.UpdateMarker // REMOVE
 
 			_, err = s.postsRepo.UpdateGeneratedData(ctx, post)
 			if err != nil {

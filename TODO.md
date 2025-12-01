@@ -1,6 +1,6 @@
 
 * Uncomment and remove code in:
-  - `internal/handlers/posts/handlers.go`
+  - `internal/integrations/gemini/gemini.go`
   - `internal/worker/worker.go`
   - `internal/utils/utils.go`
 

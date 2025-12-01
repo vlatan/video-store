@@ -175,5 +175,7 @@ func (s *Service) GenerateInfo(
 		AllowElements("p").
 		Sanitize(response.Description)
 
+	response.Description += utils.UpdateMarker // REMOVE
+
 	return response, nil
 }

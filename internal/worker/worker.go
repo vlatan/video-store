@@ -331,7 +331,6 @@ func (s *Service) Run(ctx context.Context) error {
 		if err == nil && genaiResponse != nil {
 			newVideo.ShortDesc = genaiResponse.Description
 			newVideo.Category.Name = genaiResponse.Category
-			newVideo.ShortDesc += utils.UpdateMarker // REMOVE
 		}
 
 		// Insert the video
@@ -391,7 +390,6 @@ func (s *Service) Run(ctx context.Context) error {
 		}
 
 		video.ShortDesc = genaiResponse.Description
-		video.ShortDesc += utils.UpdateMarker // REMOVE
 
 		if video.Category == nil {
 			video.Category = &models.Category{}
