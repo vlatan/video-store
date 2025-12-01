@@ -58,7 +58,7 @@ func (r *Repository) GetRandomPosts(ctx context.Context, title string, limit int
 	}
 
 	// Post-process the posts, prepare the thumbnail
-	postProcessPosts(posts)
+	postProcessPosts(ctx, posts)
 
 	return posts, nil
 }

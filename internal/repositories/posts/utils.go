@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -99,7 +100,7 @@ func (r *Repository) queryTaxonomyPosts(
 	}
 
 	// Post-process the posts, prepare the thumbnail
-	postProcessPosts(posts.Items)
+	postProcessPosts(ctx, posts.Items)
 
 	// This is the last page
 	if len(posts.Items) <= r.config.PostsPerPage {
@@ -136,22 +137,34 @@ func decodeCursor(cursor string) ([]string, error) {
 
 // Concurrently unserialize the thumbnails on posts.
 // Prepare the srcset value and the appropriate thumbnail.
-func postProcessPosts(posts []models.Post) {
+func postProcessPosts(ctx context.Context, posts []models.Post) {
 
 	var wg sync.WaitGroup
+	semaphore := make(chan struct{}, runtime.GOMAXPROCS(0))
 	for i, post := range posts {
-		wg.Go(func() {
 
-			var thumbs models.Thumbnails
-			if err := json.Unmarshal(post.RawThumbs, &thumbs); err != nil {
-				posts[i].Thumbnail = &models.Thumbnail{}
-				posts[i].RawThumbs = nil
-				return
-			}
-
-			posts[i].Srcset = thumbs.Srcset(480)
-			posts[i].Thumbnail = thumbs.Medium
+		noThumb := func() {
+			posts[i].Thumbnail = &models.Thumbnail{}
 			posts[i].RawThumbs = nil
+		}
+
+		wg.Go(func() {
+			select {
+			case <-ctx.Done():
+				noThumb()
+				return
+			case semaphore <- struct{}{}: // Semaphore will block if full
+				defer func() { <-semaphore }()
+				var thumbs models.Thumbnails
+				if err := json.Unmarshal(post.RawThumbs, &thumbs); err != nil {
+					noThumb()
+					return
+				}
+
+				posts[i].Srcset = thumbs.Srcset(480)
+				posts[i].Thumbnail = thumbs.Medium
+				posts[i].RawThumbs = nil
+			}
 		})
 	}
 

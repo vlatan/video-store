@@ -126,7 +126,7 @@ func (r *Repository) SearchPosts(
 	}
 
 	// Post-process the posts, prepare the thumbnail
-	postProcessPosts(posts.Items)
+	postProcessPosts(ctx, posts.Items)
 
 	// This is the last page
 	if len(posts.Items) <= limit {
