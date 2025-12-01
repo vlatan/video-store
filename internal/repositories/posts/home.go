@@ -3,7 +3,6 @@ package posts
 import (
 	"context"
 	"encoding/base64"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -81,32 +80,18 @@ func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (
 	// Iterate over the rows
 	var posts models.Posts
 	for rows.Next() {
-		var post models.Post
-		var thumbnails []byte
 
-		// Paste post from row to struct, thumbnails in a separate var
+		var post models.Post
 		if err = rows.Scan(
 			&post.ID,
 			&post.VideoID,
 			&post.Title,
-			&thumbnails,
+			&post.RawThumbs,
 			&post.Likes,
 			&post.UploadDate,
 		); err != nil {
 			return nil, err
 		}
-
-		// Unserialize thumbnails
-		var thumbs models.Thumbnails
-		if err = json.Unmarshal(thumbnails, &thumbs); err != nil {
-			return nil, fmt.Errorf("video ID '%s': %w", post.VideoID, err)
-		}
-
-		// Craft srcset string
-		post.Srcset = thumbs.Srcset(480)
-		post.Thumbnail = thumbs.Medium
-
-		// Include the processed post in the result
 		posts.Items = append(posts.Items, post)
 	}
 
@@ -114,6 +99,9 @@ func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (
 	if err = rows.Err(); err != nil {
 		return nil, err
 	}
+
+	// Post-process the posts, prepare the thumbnail
+	postProcessPosts(ctx, posts.Items)
 
 	// This is the last page
 	if len(posts.Items) <= r.config.PostsPerPage {

@@ -7,7 +7,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"runtime"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/vlatan/video-store/internal/models"
@@ -71,7 +73,6 @@ func (r *Repository) queryTaxonomyPosts(
 	var posts models.Posts
 	for rows.Next() {
 		var post models.Post
-		var thumbnails []byte
 		var playlistTitle sql.NullString
 
 		// Paste post from row to struct, thumbnails in a separate var
@@ -80,7 +81,7 @@ func (r *Repository) queryTaxonomyPosts(
 			&post.ID,
 			&post.VideoID,
 			&post.Title,
-			&thumbnails,
+			&post.RawThumbs,
 			&post.Likes,
 			&post.UploadDate,
 		); err != nil {
@@ -88,16 +89,6 @@ func (r *Repository) queryTaxonomyPosts(
 		}
 
 		posts.Title = utils.FromNullString(playlistTitle)
-
-		// Unserialize thumbnails
-		var thumbs models.Thumbnails
-		if err = json.Unmarshal(thumbnails, &thumbs); err != nil {
-			return nil, fmt.Errorf("video ID '%s': %w", post.VideoID, err)
-		}
-
-		// Craft srcset string
-		post.Srcset = thumbs.Srcset(480)
-		post.Thumbnail = thumbs.Medium
 
 		// Include the processed post in the result
 		posts.Items = append(posts.Items, post)
@@ -107,6 +98,9 @@ func (r *Repository) queryTaxonomyPosts(
 	if err = rows.Err(); err != nil {
 		return nil, err
 	}
+
+	// Post-process the posts, prepare the thumbnail
+	postProcessPosts(ctx, posts.Items)
 
 	// This is the last page
 	if len(posts.Items) <= r.config.PostsPerPage {
@@ -139,4 +133,36 @@ func decodeCursor(cursor string) ([]string, error) {
 		return nil, errors.New("invalid cursor format")
 	}
 	return strings.Split(string(decodedCursor), ","), nil
+}
+
+// Concurrently unserialize the thumbnails on posts.
+// Prepare the srcset value and the appropriate thumbnail.
+func postProcessPosts(ctx context.Context, posts []models.Post) {
+
+	var wg sync.WaitGroup
+	semaphore := make(chan struct{}, runtime.GOMAXPROCS(0))
+	for i, post := range posts {
+
+		wg.Go(func() {
+			select {
+			case <-ctx.Done():
+				posts[i].Thumbnail = &models.Thumbnail{}
+				break
+			case semaphore <- struct{}{}: // Semaphore will block if full
+				defer func() { <-semaphore }()
+				var thumbs models.Thumbnails
+				if err := json.Unmarshal(post.RawThumbs, &thumbs); err != nil {
+					posts[i].Thumbnail = &models.Thumbnail{}
+					break
+				}
+
+				posts[i].Srcset = thumbs.Srcset(480)
+				posts[i].Thumbnail = thumbs.Medium
+			}
+
+			posts[i].RawThumbs = nil
+		})
+	}
+
+	wg.Wait()
 }

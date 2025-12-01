@@ -73,11 +73,11 @@ func (u *User) SetAnalyticsID() {
 }
 
 // Get user avatar path, either from redis, or download and store avatar path to redis
-func (u *User) GetAvatar(
+func (u *User) SetAvatar(
 	ctx context.Context,
 	config *config.Config,
 	rdb redis.Service,
-	r2s r2.Service) string {
+	r2s r2.Service) {
 
 	// Set the anaylytics ID in case it's missing
 	if u.AnalyticsID == "" {
@@ -88,7 +88,8 @@ func (u *User) GetAvatar(
 	redisKey := fmt.Sprintf(avatarCacheKey, u.AnalyticsID)
 	avatar, err := rdb.Get(ctx, redisKey)
 	if err == nil {
-		return avatar
+		u.LocalAvatarURL = avatar
+		return
 	}
 
 	// Attempt to download the avatar, set default avatar on fail
@@ -97,7 +98,8 @@ func (u *User) GetAvatar(
 		if err = rdb.Set(ctx, redisKey, defaultAvatar, avatarTimeout); err != nil {
 			log.Printf("failed to save the default avatar URL to Redis; %v", err)
 		}
-		return defaultAvatar
+		u.LocalAvatarURL = defaultAvatar
+		return
 	}
 
 	avatarURL := &url.URL{
@@ -114,7 +116,7 @@ func (u *User) GetAvatar(
 		log.Printf("failed to save the downloaded avatar URL to Redis; %v", err)
 	}
 
-	return avatar
+	u.LocalAvatarURL = avatar
 }
 
 // Download remote image (user avatar)

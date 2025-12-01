@@ -36,6 +36,7 @@ type Post struct {
 	VideoID        string        `json:"video_id,omitempty"`
 	Title          string        `json:"title,omitempty"`
 	Srcset         string        `json:"srcset,omitempty"`
+	RawThumbs      []byte        `json:"-"`
 	Thumbnails     *Thumbnails   `json:"thumbnails,omitempty"`
 	Thumbnail      *Thumbnail    `json:"thumbnail,omitempty"`
 	Category       *Category     `json:"category,omitempty"`
