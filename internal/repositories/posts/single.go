@@ -177,6 +177,8 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (*models
 
 	// Get the first sentence of the short description to be used as meta description
 	post.MetaDesc = strings.Split(post.ShortDesc, ".")[0]
+	post.MetaDesc = strings.ReplaceAll(post.MetaDesc, "<p>", "")
+	post.MetaDesc = strings.ReplaceAll(post.MetaDesc, "</p>", "")
 
 	// Make srcset string
 	post.Srcset = thumbs.Srcset(maxThumb.Width)
