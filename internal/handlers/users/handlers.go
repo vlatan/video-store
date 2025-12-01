@@ -55,10 +55,8 @@ func (s *Service) UsersHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	avatars := s.GetAvatars(r.Context(), users.Items)
-	for avatar := range avatars {
-		users.Items[avatar.index].LocalAvatarURL = avatar.localAvatar
-	}
+	// Assign local avatars to users
+	s.SetAvatars(r.Context(), users.Items)
 
 	data.PaginationInfo = s.ui.NewPagination(
 		page,

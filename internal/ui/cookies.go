@@ -90,8 +90,7 @@ func (s *service) GetUserFromSession(w http.ResponseWriter, r *http.Request) *mo
 		AccessToken:    accessToken,
 	}
 
-	user.LocalAvatarURL = user.GetAvatar(r.Context(), s.config, s.rdb, s.r2s)
-
+	user.SetAvatar(r.Context(), s.config, s.rdb, s.r2s)
 	return &user
 }
 
