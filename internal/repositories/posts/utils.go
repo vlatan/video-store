@@ -143,28 +143,24 @@ func postProcessPosts(ctx context.Context, posts []models.Post) {
 	semaphore := make(chan struct{}, runtime.GOMAXPROCS(0))
 	for i, post := range posts {
 
-		noThumb := func() {
-			posts[i].Thumbnail = &models.Thumbnail{}
-			posts[i].RawThumbs = nil
-		}
-
 		wg.Go(func() {
 			select {
 			case <-ctx.Done():
-				noThumb()
-				return
+				posts[i].Thumbnail = &models.Thumbnail{}
+				break
 			case semaphore <- struct{}{}: // Semaphore will block if full
 				defer func() { <-semaphore }()
 				var thumbs models.Thumbnails
 				if err := json.Unmarshal(post.RawThumbs, &thumbs); err != nil {
-					noThumb()
-					return
+					posts[i].Thumbnail = &models.Thumbnail{}
+					break
 				}
 
 				posts[i].Srcset = thumbs.Srcset(480)
 				posts[i].Thumbnail = thumbs.Medium
-				posts[i].RawThumbs = nil
 			}
+
+			posts[i].RawThumbs = nil
 		})
 	}
 
