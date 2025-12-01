@@ -4,6 +4,7 @@
   - `internal/worker/worker.go`
   - `internal/utils/utils.go`
 
+* Return ctx.Err() from funcs when context ends
 * Write tests
   
 * Add slug input to page
