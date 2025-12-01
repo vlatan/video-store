@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/md5" // #nosec G501
 	"crypto/sha256"
+	"errors"
 	"fmt"
 	"image"
 	"image/jpeg"
@@ -14,8 +15,9 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/redis/go-redis/v9"
 	"github.com/vlatan/video-store/internal/config"
-	"github.com/vlatan/video-store/internal/drivers/redis"
+	redisDriver "github.com/vlatan/video-store/internal/drivers/redis"
 	"github.com/vlatan/video-store/internal/integrations/r2"
 
 	_ "image/gif" // Register GIF decoder
@@ -76,7 +78,7 @@ func (u *User) SetAnalyticsID() {
 func (u *User) SetAvatar(
 	ctx context.Context,
 	config *config.Config,
-	rdb redis.Service,
+	rdb redisDriver.Service,
 	r2s r2.Service) {
 
 	// Set the anaylytics ID in case it's missing
@@ -90,11 +92,14 @@ func (u *User) SetAvatar(
 	if err == nil {
 		u.LocalAvatarURL = avatar
 		return
+	} else if !errors.Is(err, redis.Nil) {
+		log.Printf("failed to get the avatar URL from Redis; %v", err)
 	}
 
 	// Attempt to download the avatar, set default avatar on fail
 	etag, err := u.DownloadAvatar(ctx, config, r2s)
 	if err != nil {
+		log.Printf("failed to download the avatar URL to Redis; %v", err)
 		if err = rdb.Set(ctx, redisKey, defaultAvatar, avatarTimeout); err != nil {
 			log.Printf("failed to save the default avatar URL to Redis; %v", err)
 		}
@@ -203,7 +208,7 @@ func (u *User) DownloadAvatar(ctx context.Context, config *config.Config, r2s r2
 }
 
 // Delete local avatar if exists
-func (u *User) DeleteAvatar(ctx context.Context, config *config.Config, rdb redis.Service, r2s r2.Service) {
+func (u *User) DeleteAvatar(ctx context.Context, config *config.Config, rdb redisDriver.Service, r2s r2.Service) {
 
 	// Attemp to delete the avatar image from R2
 	objectKey := fmt.Sprintf(avatarPath, u.AnalyticsID)
