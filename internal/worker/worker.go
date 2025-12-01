@@ -315,22 +315,22 @@ func (s *Service) Run(ctx context.Context) error {
 	var inserted int
 	for videoID, newVideo := range ytVideosMap {
 
-		// Generate content using Gemini
-		genaiResponse, err := s.gemini.GenerateInfo(
-			ctx, newVideo, categories, time.Second, 3,
-		)
+		if inserted <= updateLimit {
 
-		if err != nil {
-			log.Printf(
-				"Gemini content generation on video '%s' failed; %v",
-				videoID, err,
+			// Generate content using Gemini
+			genaiResponse, err := s.gemini.GenerateInfo(
+				ctx, newVideo, categories, time.Second, 3,
 			)
-		}
 
-		newVideo.Category = &models.Category{}
-		if err == nil && genaiResponse != nil {
-			newVideo.ShortDesc = genaiResponse.Description
-			newVideo.Category.Name = genaiResponse.Category
+			if err != nil {
+				log.Printf(
+					"Gemini content generation on video '%s' failed; %v",
+					videoID, err,
+				)
+			} else {
+				newVideo.ShortDesc = genaiResponse.Description
+				newVideo.Category = &models.Category{Name: genaiResponse.Category}
+			}
 		}
 
 		// Insert the video
