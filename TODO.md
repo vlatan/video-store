@@ -4,6 +4,7 @@
   - `internal/worker/worker.go`
   - `internal/utils/utils.go`
 
+* Post process posts in parallel
 * Write tests
   
 * Add slug input to page

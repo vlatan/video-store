@@ -248,12 +248,10 @@
 	</main>
 
 	<div id="footer" class="site-footer-wrap">
-		{{ if .FlashMessages }}
 		{{ range .FlashMessages }}
 		<div class="alert alert-{{ .Category }}">
 			{{ .Message }}
 		</div>
-		{{ end }}
 		{{ end }}
 
 		<footer class="site-footer">

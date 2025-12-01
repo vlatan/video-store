@@ -18,11 +18,11 @@
         {{ .CSRFField }}
         <fieldset class="form-group">
             <legend class="form-legend">{{ .Form.Legend }}</legend>
-            {{ if .Form.Title }}
+            {{ with .Form.Title }}
             <div class="form-group">
-                <label class="form-label" for="title">{{ .Form.Title.Label }}</label>
-                <input class="form-input" id="title" name="title" placeholder="{{ .Form.Title.Placeholder }}" required
-                    value="{{ .Form.Title.Value }}" type="text">
+                <label class="form-label" for="title">{{ .Label }}</label>
+                <input class="form-input" id="title" name="title" placeholder="{{ .Placeholder }}" required
+                    value="{{ .Value }}" type="text">
             </div>
             {{ end }}
             <div class="form-group">
@@ -39,9 +39,9 @@
         <div class="form-group button-group">
             <input class="form-button" id="submit" name="submit" type="submit" value="Submit">
             <div class="submit-spinner"></div>
-            {{ if .Form.Error }}
+            {{ with .Form.Error }}
             <div class="form-invalid-feedback">
-                <span>{{ .Form.Error.Message }}.</span>
+                <span>{{ .Message }}.</span>
             </div>
             {{ end }}
         </div>

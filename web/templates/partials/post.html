@@ -19,10 +19,10 @@
 <meta property="twitter:url" content="{{ .CanonicalURL }}">
 <meta name="twitter:image" content="{{ .CurrentPost.Thumbnail.Url  }}">
 
-{{ if .CurrentPost.MetaDesc }}
-<meta name='description' content='{{ .CurrentPost.MetaDesc }}.'>
-<meta property='og:description' content='{{ .CurrentPost.MetaDesc }}.'>
-<meta name="twitter:description" content="{{ .CurrentPost.MetaDesc }}">
+{{ with .CurrentPost.MetaDesc }}
+<meta name='description' content='{{ . }}.'>
+<meta property='og:description' content='{{ . }}.'>
+<meta name="twitter:description" content="{{ . }}">
 {{ end }}
 {{ end }}
 
@@ -41,8 +41,8 @@
 			<meta itemprop="name" content="{{ .CurrentPost.Title }}">
 			<meta itemprop="thumbnailUrl" content="{{ .CurrentPost.Thumbnail.Url  }}">
 			<meta itemprop="embedUrl" content="https://www.youtube-nocookie.com/embed/{{ .CurrentPost.VideoID }}">
-			{{ if .CurrentPost.MetaDesc }}
-			<meta itemprop="description" content="{{ .CurrentPost.MetaDesc }}.">
+			{{ with .CurrentPost.MetaDesc }}
+			<meta itemprop="description" content="{{ . }}.">
 			{{ end }}
 			<meta itemprop="uploadDate" content='{{ .CurrentPost.UploadDate.Format "2006-01-02T15:04:05Z07:00" }}'>
 			<div class="player-content" id="{{ .CurrentPost.VideoID }}">
@@ -99,9 +99,9 @@
 						Duration: <time itemprop="duration" datetime="{{ .CurrentPost.Duration.ISO }}">
 							{{ .CurrentPost.Duration.Human }}
 						</time>
-						{{ if .CurrentPost.Category }}
-						| Category: <a class="nav-item" href="/category/{{ .CurrentPost.Category.Slug }}/">
-							{{ .CurrentPost.Category.Name }}</a>
+						{{ with .CurrentPost.Category }}
+						| Category: <a class="nav-item" href="/category/{{ .Slug }}/">
+							{{ .Name }}</a>
 						{{ end }}
 					</div>
 					{{ if .IsCurrentUserAdmin }}
