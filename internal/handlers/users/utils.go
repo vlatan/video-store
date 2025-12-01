@@ -14,7 +14,7 @@ type avatarResult struct {
 }
 
 // Get users avatars in parallel
-func (s *Service) GetAvatars(ctx context.Context, users []models.User) chan avatarResult {
+func (s *Service) GetAvatars(ctx context.Context, users []models.User) <-chan avatarResult {
 	var wg sync.WaitGroup
 	avatars := make(chan avatarResult, len(users))
 	semaphore := make(chan struct{}, runtime.GOMAXPROCS(0))
@@ -37,7 +37,7 @@ func (s *Service) GetAvatars(ctx context.Context, users []models.User) chan avat
 			select {
 			case <-ctx.Done():
 				return
-			case avatars <- avatarResult{index: i, localAvatar: localAvatar}:
+			case avatars <- avatarResult{i, localAvatar}:
 			}
 		})
 	}
