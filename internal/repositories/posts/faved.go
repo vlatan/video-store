@@ -3,7 +3,6 @@ package posts
 import (
 	"context"
 	"encoding/base64"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -81,7 +80,6 @@ func (r *Repository) GetUserFavedPosts(
 	var posts models.Posts
 	for rows.Next() {
 		var post models.Post
-		var thumbnails []byte
 		var totalNum int
 
 		// Paste post from row to struct, thumbnails in a separate var
@@ -89,7 +87,7 @@ func (r *Repository) GetUserFavedPosts(
 			&post.ID,
 			&post.VideoID,
 			&post.Title,
-			&thumbnails,
+			&post.RawThumbs,
 			&post.Likes,
 			&totalNum,
 			&post.UploadDate,
@@ -97,16 +95,6 @@ func (r *Repository) GetUserFavedPosts(
 		); err != nil {
 			return nil, err
 		}
-
-		// Unserialize thumbnails
-		var thumbs models.Thumbnails
-		if err = json.Unmarshal(thumbnails, &thumbs); err != nil {
-			return nil, fmt.Errorf("video ID '%s': %w", post.VideoID, err)
-		}
-
-		// Craft srcset string
-		post.Srcset = thumbs.Srcset(480)
-		post.Thumbnail = thumbs.Medium
 
 		// Include the processed post in the result
 		posts.Items = append(posts.Items, post)
@@ -119,6 +107,9 @@ func (r *Repository) GetUserFavedPosts(
 	if err = rows.Err(); err != nil {
 		return nil, err
 	}
+
+	// Post-process the posts, prepare the thumbnail
+	postProcessPosts(posts.Items)
 
 	// This is the last page
 	if len(posts.Items) <= r.config.PostsPerPage {

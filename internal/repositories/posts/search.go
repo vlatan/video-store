@@ -3,7 +3,6 @@ package posts
 import (
 	"context"
 	"encoding/base64"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"strconv"
@@ -98,7 +97,6 @@ func (r *Repository) SearchPosts(
 	var posts models.Posts
 	for rows.Next() {
 		var post models.Post
-		var thumbnails []byte
 		var totalNum int
 
 		// Paste post from row to struct, thumbnails in a separate var
@@ -106,7 +104,7 @@ func (r *Repository) SearchPosts(
 			&post.ID,
 			&post.VideoID,
 			&post.Title,
-			&thumbnails,
+			&post.RawThumbs,
 			&post.Likes,
 			&totalNum,
 			&post.UploadDate,
@@ -114,15 +112,6 @@ func (r *Repository) SearchPosts(
 		); err != nil {
 			return nil, err
 		}
-
-		// Unserialize thumbnails
-		var thumbs models.Thumbnails
-		if err = json.Unmarshal(thumbnails, &thumbs); err != nil {
-			return nil, fmt.Errorf("video ID '%s': %w", post.VideoID, err)
-		}
-
-		post.Srcset = thumbs.Srcset(480)
-		post.Thumbnail = thumbs.Medium
 
 		// Include the processed post in the result
 		posts.Items = append(posts.Items, post)
@@ -136,6 +125,9 @@ func (r *Repository) SearchPosts(
 		return nil, err
 	}
 
+	// Post-process the posts, prepare the thumbnail
+	postProcessPosts(posts.Items)
+
 	// This is the last page
 	if len(posts.Items) <= limit {
 		return &posts, err
@@ -147,6 +139,7 @@ func (r *Repository) SearchPosts(
 	// Determine the next cursor
 	lastPost := posts.Items[len(posts.Items)-1]
 	uploadDate := lastPost.UploadDate.Format(time.RFC3339Nano)
+
 	// Preserve the full precision of the score float, %.17g
 	cursorStr := fmt.Sprintf("%.17g,%d,%s,%d", lastPost.Score, lastPost.Likes, uploadDate, lastPost.ID)
 	posts.NextCursor = base64.StdEncoding.EncodeToString([]byte(cursorStr))

@@ -2,8 +2,6 @@ package posts
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 
 	"github.com/vlatan/video-store/internal/models"
 )
@@ -39,22 +37,16 @@ func (r *Repository) GetRandomPosts(ctx context.Context, title string, limit int
 	// Iterate over the rows
 	for rows.Next() {
 		var post models.Post
-		var thumbnails []byte
 
 		// Paste post from row to struct, thumbnails in a separate var
-		if err = rows.Scan(&post.VideoID, &post.Title, &thumbnails, &post.Likes); err != nil {
+		if err = rows.Scan(
+			&post.VideoID,
+			&post.Title,
+			&post.RawThumbs,
+			&post.Likes,
+		); err != nil {
 			return nil, err
 		}
-
-		// Unserialize thumbnails
-		var thumbs models.Thumbnails
-		if err = json.Unmarshal(thumbnails, &thumbs); err != nil {
-			return nil, fmt.Errorf("video ID '%s': %w", post.VideoID, err)
-		}
-
-		// Craft srcset string
-		post.Srcset = thumbs.Srcset(480)
-		post.Thumbnail = thumbs.Medium
 
 		// Include the processed post in the result
 		posts = append(posts, post)
@@ -64,6 +56,9 @@ func (r *Repository) GetRandomPosts(ctx context.Context, title string, limit int
 	if err = rows.Err(); err != nil {
 		return nil, err
 	}
+
+	// Post-process the posts, prepare the thumbnail
+	postProcessPosts(posts)
 
 	return posts, nil
 }
