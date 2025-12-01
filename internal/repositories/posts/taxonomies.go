@@ -48,7 +48,7 @@ func (r *Repository) GetCategoryPosts(
 		return nil, err
 	}
 
-	return posts, err
+	return posts, nil
 }
 
 const getSourcePostsQuery = `
@@ -98,5 +98,5 @@ func (r *Repository) GetSourcePosts(
 		return nil, err
 	}
 
-	return posts, err
+	return posts, nil
 }

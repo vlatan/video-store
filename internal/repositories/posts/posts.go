@@ -56,5 +56,5 @@ func (r *Repository) GetRelatedPosts(ctx context.Context, title string) ([]model
 		posts = append(posts, randomPosts...)
 	}
 
-	return posts, err
+	return posts, nil
 }

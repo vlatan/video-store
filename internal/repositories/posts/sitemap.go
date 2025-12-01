@@ -75,7 +75,7 @@ const sitemapDataQuery = `
 	FROM playlist
 `
 
-func (r *Repository) SitemapData(ctx context.Context) (data []*models.SitemapItem, err error) {
+func (r *Repository) SitemapData(ctx context.Context) ([]*models.SitemapItem, error) {
 
 	// Get rows from DB
 	rows, err := r.db.Query(ctx, sitemapDataQuery)
@@ -87,13 +87,14 @@ func (r *Repository) SitemapData(ctx context.Context) (data []*models.SitemapIte
 	defer rows.Close()
 
 	// Iterate over the rows
+	var data []*models.SitemapItem
 	for rows.Next() {
 		var item models.SitemapItem
 		var lastModified *time.Time
 
 		// Paste post from row to struct, thumbnails in a separate var
 		if err = rows.Scan(&item.Type, &item.Location, &lastModified); err != nil {
-			return data, err
+			return nil, err
 		}
 
 		item.LastModified = lastModified.Format("2006-01-02")
@@ -107,5 +108,5 @@ func (r *Repository) SitemapData(ctx context.Context) (data []*models.SitemapIte
 		return nil, err
 	}
 
-	return data, err
+	return data, nil
 }

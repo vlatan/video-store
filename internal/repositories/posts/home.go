@@ -105,7 +105,7 @@ func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (
 
 	// This is the last page
 	if len(posts.Items) <= r.config.PostsPerPage {
-		return &posts, err
+		return &posts, nil
 	}
 
 	// Exclude the last post

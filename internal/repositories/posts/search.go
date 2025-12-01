@@ -130,7 +130,7 @@ func (r *Repository) SearchPosts(
 
 	// This is the last page
 	if len(posts.Items) <= limit {
-		return &posts, err
+		return &posts, nil
 	}
 
 	// Exclude the last post

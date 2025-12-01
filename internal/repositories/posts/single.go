@@ -183,5 +183,5 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (*models
 	// Make srcset string
 	post.Srcset = thumbs.Srcset(maxThumb.Width)
 
-	return &post, err
+	return &post, nil
 }

@@ -39,7 +39,7 @@ func (r *Repository) GetSinglePage(ctx context.Context, slug string) (*models.Pa
 	}
 
 	page.Content = utils.FromNullString(content)
-	return &page, err
+	return &page, nil
 }
 
 // Update page

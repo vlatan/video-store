@@ -23,7 +23,7 @@ const getAllPostsQuery = `
 `
 
 // Get all the posts from DB
-func (r *Repository) GetAllPosts(ctx context.Context) (posts []*models.Post, err error) {
+func (r *Repository) GetAllPosts(ctx context.Context) ([]*models.Post, error) {
 
 	// Get rows from DB
 	rows, err := r.db.Query(ctx, getAllPostsQuery)
@@ -35,6 +35,7 @@ func (r *Repository) GetAllPosts(ctx context.Context) (posts []*models.Post, err
 	defer rows.Close()
 
 	// Iterate over the rows
+	var posts []*models.Post
 	for rows.Next() {
 		var post models.Post
 		var playlistID, shortDesc, categoryName sql.NullString
@@ -65,5 +66,5 @@ func (r *Repository) GetAllPosts(ctx context.Context) (posts []*models.Post, err
 		return nil, err
 	}
 
-	return posts, err
+	return posts, nil
 }
