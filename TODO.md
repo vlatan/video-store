@@ -4,9 +4,6 @@
   - `internal/worker/worker.go`
   - `internal/utils/utils.go`
 
-* Generalize the app.
-  Eliminate the documentary usage.
-
 * Write tests
   
 * Add slug input to page

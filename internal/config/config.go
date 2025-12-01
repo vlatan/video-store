@@ -51,7 +51,9 @@ type Config struct {
 	OAuthSessionName    string `env:"OAUTH_SESSION_NAME" envDefault:"_app_oauth"`
 
 	// App settings
-	AppName         string `env:"APP_NAME"`
+	AppName         string `env:"APP_NAME" envDefault:"My Video App"`
+	AppGenre        string `env:"APP_GENRE"`
+	AppTagline      string `env:"APP_TAGLINE" envDefault:"Video Library"`
 	AppDescription  string `env:"APP_DESCRIPTION"`
 	Domain          string `env:"DOMAIN" envDefault:"localhost:5000"`
 	GtagID          string `env:"GTAG_ID"`

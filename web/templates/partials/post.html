@@ -33,7 +33,9 @@
 {{ define "content" }}
 <article class="media-content" itemscope itemtype="https://schema.org/Movie">
 	<meta itemprop="image" content="{{ .CurrentPost.Thumbnail.Url  }}">
-	<meta itemprop="genre" content="Documentary">
+	{{ with .Config.AppGenre }}
+	<meta itemprop="genre" content="{{ . }}">
+	{{ end }}
 	<div class="video-content">
 		<div class="player" itemprop="video" itemscope itemtype="https://schema.org/VideoObject">
 			<meta itemprop="name" content="{{ .CurrentPost.Title }}">
