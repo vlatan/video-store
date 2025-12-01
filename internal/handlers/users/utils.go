@@ -21,10 +21,11 @@ func (s *Service) GetAvatars(ctx context.Context, users []models.User) chan avat
 
 	for i, user := range users {
 		wg.Go(func() {
-			// Semaphore will block if full
+
 			select {
 			case <-ctx.Done():
 				return
+			// Semaphore will block if full
 			case semaphore <- struct{}{}:
 				defer func() { <-semaphore }()
 			}
