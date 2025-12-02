@@ -74,7 +74,9 @@ func (u *User) SetAnalyticsID() {
 	u.AnalyticsID = fmt.Sprintf("%x", hashBytes)[:32]
 }
 
-// Get user avatar path, either from redis, or download and store avatar path to redis
+// SetAvatar gets user avatar path, either from redis,
+// or downloads and stores avatar path to redis.
+// If the function returns an error the default avatar might be set.
 func (u *User) SetAvatar(
 	ctx context.Context,
 	config *config.Config,
