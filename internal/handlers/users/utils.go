@@ -2,6 +2,7 @@ package users
 
 import (
 	"context"
+	"log"
 	"runtime"
 
 	"github.com/vlatan/video-store/internal/models"
@@ -20,9 +21,21 @@ func (s *Service) SetAvatars(ctx context.Context, users []models.User) error {
 				return ctx.Err()
 			case semaphore <- struct{}{}: // Semaphore will block if full
 				defer func() { <-semaphore }()
-				if err := user.SetAvatar(ctx, s.config, s.rdb, s.r2s); err != nil {
+				err := user.SetAvatar(ctx, s.config, s.rdb, s.r2s)
+
+				// Return the error if contex ended
+				if user.IsContextErr(err) {
 					return err
 				}
+
+				// Just log a non-breaking error
+				if err != nil {
+					log.Printf(
+						"couldn't set avatar on user %v while iterating users; %v",
+						user.Email, err,
+					)
+				}
+
 				users[i] = user
 				return nil
 			}

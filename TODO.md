@@ -4,7 +4,6 @@
   - `internal/worker/worker.go`
   - `internal/utils/utils.go`
 
-* Maybe distinguish on SetAvatar(s) for context error
 * Write tests
   
 * Add slug input to page

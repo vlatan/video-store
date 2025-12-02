@@ -95,23 +95,30 @@ func (u *User) SetAvatar(
 		return nil
 	}
 
-	if IsContextErr(err) {
+	// Return early if context error
+	if u.IsContextErr(err) {
 		return err
 	}
 
+	// Set a slice of errors to acumulate non-breaking errors
+	var errs []error
+
+	// Save the error if not Redis nil error
 	if !errors.Is(err, redis.Nil) {
-		log.Printf("failed to get the avatar from Redis; %v", err)
+		errs = append(errs, err)
 	}
 
 	// Attempt to download the avatar
 	etag, err := u.DownloadAvatar(ctx, config, r2s)
 
-	if IsContextErr(err) {
+	// Return early if context error
+	if u.IsContextErr(err) {
 		return err
 	}
 
+	// Save non-nil error
 	if err != nil {
-		log.Println(err)
+		errs = append(errs, err)
 		avatar = defaultAvatar
 	} else {
 		avatarURL := &url.URL{
@@ -128,15 +135,17 @@ func (u *User) SetAvatar(
 	u.LocalAvatarURL = avatar
 	err = rdb.Set(ctx, redisKey, avatar, avatarTimeout)
 
-	if IsContextErr(err) {
+	// Return early if context error
+	if u.IsContextErr(err) {
 		return err
 	}
 
+	// Save non-nil error
 	if err != nil {
-		log.Printf("failed to save the avatar %s to Redis; %v", avatar, err)
+		errs = append(errs, err)
 	}
 
-	return nil
+	return errors.Join(errs...)
 }
 
 // Download remote image (user avatar)
@@ -237,7 +246,7 @@ func (u *User) DeleteAvatar(ctx context.Context, config *config.Config, rdb redi
 	}
 }
 
-func IsContextErr(err error) bool {
+func (u *User) IsContextErr(err error) bool {
 	return errors.Is(err, context.Canceled) ||
 		errors.Is(err, context.DeadlineExceeded)
 }
