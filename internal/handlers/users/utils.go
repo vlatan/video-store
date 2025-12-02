@@ -20,7 +20,9 @@ func (s *Service) SetAvatars(ctx context.Context, users []models.User) error {
 				return ctx.Err()
 			case semaphore <- struct{}{}: // Semaphore will block if full
 				defer func() { <-semaphore }()
-				user.SetAvatar(ctx, s.config, s.rdb, s.r2s)
+				if err := user.SetAvatar(ctx, s.config, s.rdb, s.r2s); err != nil {
+					return err
+				}
 				users[i] = user
 				return nil
 			}

@@ -45,7 +45,7 @@ func (s *Service) UsersHandler(w http.ResponseWriter, r *http.Request) {
 
 	users, err := s.usersRepo.GetUsers(r.Context(), page)
 	if err != nil {
-		log.Printf("Was unabale to fetch users on URI '%s': %v", r.RequestURI, err)
+		log.Printf("was unabale to fetch users on URI '%s': %v", r.RequestURI, err)
 		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}
@@ -57,7 +57,7 @@ func (s *Service) UsersHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Assign local avatars to users
 	if err = s.SetAvatars(r.Context(), users.Items); err != nil {
-		log.Printf("Was unabale to set users avatars on URI '%s': %v", r.RequestURI, err)
+		log.Printf("was unabale to set users avatars on URI '%s': %v", r.RequestURI, err)
 		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}

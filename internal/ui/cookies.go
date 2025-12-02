@@ -61,7 +61,7 @@ func (s *service) GetUserFromSession(w http.ResponseWriter, r *http.Request) *mo
 	// Check if the last seen is out of sync for an entire day
 	if !sameDate(lastSeenDB, now) {
 		if _, err := s.usersRepo.UpdateLastUserSeen(r.Context(), id, now); err != nil {
-			log.Printf("Couldn't update the last seen in DB on user '%d': %v", id, err)
+			log.Printf("couldn't update the last seen in DB on user '%d': %v", id, err)
 		}
 		session.Values["LastSeenDB"] = now
 	}
@@ -90,7 +90,10 @@ func (s *service) GetUserFromSession(w http.ResponseWriter, r *http.Request) *mo
 		AccessToken:    accessToken,
 	}
 
-	user.SetAvatar(r.Context(), s.config, s.rdb, s.r2s)
+	if err = user.SetAvatar(r.Context(), s.config, s.rdb, s.r2s); err != nil {
+		log.Printf("couldn't set local avatar for user; %v", err)
+	}
+
 	return &user
 }
 

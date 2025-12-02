@@ -79,7 +79,7 @@ func (u *User) SetAvatar(
 	ctx context.Context,
 	config *config.Config,
 	rdb redisDriver.Service,
-	r2s r2.Service) {
+	r2s r2.Service) error {
 
 	// Set the anaylytics ID in case it's missing
 	if u.AnalyticsID == "" {
@@ -89,39 +89,54 @@ func (u *User) SetAvatar(
 	// Get avatar URL from Redis
 	redisKey := fmt.Sprintf(avatarCacheKey, u.AnalyticsID)
 	avatar, err := rdb.Get(ctx, redisKey)
+
 	if err == nil {
 		u.LocalAvatarURL = avatar
-		return
-	} else if !errors.Is(err, redis.Nil) {
-		log.Printf("failed to get the avatar URL from Redis; %v", err)
+		return nil
 	}
 
-	// Attempt to download the avatar, set default avatar on fail
+	if IsContextErr(err) {
+		return err
+	}
+
+	if !errors.Is(err, redis.Nil) {
+		log.Printf("failed to get the avatar from Redis; %v", err)
+	}
+
+	// Attempt to download the avatar
 	etag, err := u.DownloadAvatar(ctx, config, r2s)
+
+	if IsContextErr(err) {
+		return err
+	}
+
 	if err != nil {
-		log.Printf("failed to download the avatar URL; %v", err)
-		if err = rdb.Set(ctx, redisKey, defaultAvatar, avatarTimeout); err != nil {
-			log.Printf("failed to save the default avatar URL to Redis; %v", err)
+		log.Println(err)
+		avatar = defaultAvatar
+	} else {
+		avatarURL := &url.URL{
+			Scheme:   "https",
+			Host:     config.R2CdnDomain,
+			Path:     fmt.Sprintf(avatarPath, u.AnalyticsID),
+			RawQuery: "v=" + url.QueryEscape(etag),
 		}
-		u.LocalAvatarURL = defaultAvatar
-		return
+
+		avatar = avatarURL.String()
 	}
 
-	avatarURL := &url.URL{
-		Scheme:   "https",
-		Host:     config.R2CdnDomain,
-		Path:     fmt.Sprintf(avatarPath, u.AnalyticsID),
-		RawQuery: "v=" + url.QueryEscape(etag),
-	}
-
-	avatar = avatarURL.String()
-
-	// Save avatar URL to Redis and return
-	if err = rdb.Set(ctx, redisKey, avatar, avatarTimeout); err != nil {
-		log.Printf("failed to save the downloaded avatar URL to Redis; %v", err)
-	}
-
+	// Set avatar
 	u.LocalAvatarURL = avatar
+	err = rdb.Set(ctx, redisKey, avatar, avatarTimeout)
+
+	if IsContextErr(err) {
+		return err
+	}
+
+	if err != nil {
+		log.Printf("failed to save the avatar %s to Redis; %v", avatar, err)
+	}
+
+	return nil
 }
 
 // Download remote image (user avatar)
@@ -136,7 +151,7 @@ func (u *User) DownloadAvatar(ctx context.Context, config *config.Config, r2s r2
 	if err != nil {
 		return "", fmt.Errorf(
 			"couldn't create request for avatar %s download: %w",
-			u.AnalyticsID, err,
+			u.AvatarURL, err,
 		)
 	}
 
@@ -146,7 +161,7 @@ func (u *User) DownloadAvatar(ctx context.Context, config *config.Config, r2s r2
 	if err != nil {
 		return "", fmt.Errorf(
 			"failed to download avatar %s: %w",
-			u.AnalyticsID, err,
+			u.AvatarURL, err,
 		)
 	}
 	defer resp.Body.Close()
@@ -155,7 +170,7 @@ func (u *User) DownloadAvatar(ctx context.Context, config *config.Config, r2s r2
 	if resp.StatusCode != http.StatusOK {
 		return "", fmt.Errorf(
 			"failed to download avatar %s, received status code %d",
-			u.AnalyticsID, resp.StatusCode,
+			u.AvatarURL, resp.StatusCode,
 		)
 	}
 
@@ -164,7 +179,7 @@ func (u *User) DownloadAvatar(ctx context.Context, config *config.Config, r2s r2
 	if err != nil {
 		return "", fmt.Errorf(
 			"failed to read file data for avatar %s: %w",
-			u.AnalyticsID, err,
+			u.AvatarURL, err,
 		)
 	}
 
@@ -173,7 +188,7 @@ func (u *User) DownloadAvatar(ctx context.Context, config *config.Config, r2s r2
 	if err != nil {
 		return "", fmt.Errorf(
 			"failed to decode the file for avatar %s: %w",
-			u.AnalyticsID, err,
+			u.AvatarURL, err,
 		)
 	}
 
@@ -183,7 +198,7 @@ func (u *User) DownloadAvatar(ctx context.Context, config *config.Config, r2s r2
 	if err != nil {
 		return "", fmt.Errorf(
 			"failed to convert the avatar %s to JPEG: %w",
-			u.AnalyticsID, err,
+			u.AvatarURL, err,
 		)
 	}
 
@@ -220,4 +235,9 @@ func (u *User) DeleteAvatar(ctx context.Context, config *config.Config, rdb redi
 	if err := rdb.Delete(ctx, redisKey); err != nil {
 		log.Printf("Could not remove the avatar %s from Redis: %v", redisKey, err)
 	}
+}
+
+func IsContextErr(err error) bool {
+	return errors.Is(err, context.Canceled) ||
+		errors.Is(err, context.DeadlineExceeded)
 }
