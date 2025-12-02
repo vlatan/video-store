@@ -31,7 +31,7 @@ func (s *Service) SetAvatars(ctx context.Context, users []models.User) error {
 				// Just log a non-breaking error
 				if err != nil {
 					log.Printf(
-						"couldn't set avatar on user %v while iterating users; %v",
+						"couldn't set avatar on user %s while iterating users; %v",
 						user.Email, err,
 					)
 				}

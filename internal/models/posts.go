@@ -111,7 +111,6 @@ func (t *Thumbnails) MaxThumb() (result *Thumbnail) {
 	}
 
 	return result
-
 }
 
 // Valid ISO time format

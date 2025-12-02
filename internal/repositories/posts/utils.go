@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"runtime"
 	"strings"
 	"time"
@@ -151,13 +152,25 @@ func postProcessPosts(ctx context.Context, posts []models.Post) error {
 				return ctx.Err()
 			case semaphore <- struct{}{}: // Semaphore will block if full
 				defer func() { <-semaphore }()
+
+				// Unmarshal the post thumbnails
 				var thumbs models.Thumbnails
-				if err := json.Unmarshal(post.RawThumbs, &thumbs); err != nil {
-					return err
+				err := json.Unmarshal(post.RawThumbs, &thumbs)
+
+				if err == nil {
+					posts[i].Thumbnail = thumbs.Medium
+					posts[i].Srcset = thumbs.Srcset(480)
+					posts[i].RawThumbs = nil
+					return nil
 				}
 
-				posts[i].Srcset = thumbs.Srcset(480)
-				posts[i].Thumbnail = thumbs.Medium
+				log.Printf( // Just log the non-breaking error
+					"couldn't unmarshal the thumbs for post %s; %v",
+					post.VideoID, err,
+				)
+
+				// Set empty Thumbnail so the HTML templates don't break
+				posts[i].Thumbnail = &models.Thumbnail{}
 				posts[i].RawThumbs = nil
 				return nil
 			}
