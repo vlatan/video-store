@@ -132,7 +132,7 @@ func (r *Repository) queryTaxonomyPosts(
 func decodeCursor(cursor string) ([]string, error) {
 	decodedCursor, err := base64.StdEncoding.DecodeString(cursor)
 	if err != nil {
-		return nil, errors.New("invalid cursor format")
+		return nil, fmt.Errorf("could not decode the cursor; %w", err)
 	}
 	return strings.Split(string(decodedCursor), ","), nil
 }
