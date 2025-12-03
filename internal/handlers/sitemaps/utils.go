@@ -11,7 +11,7 @@ import (
 )
 
 // Get sitemap data from DB and split it in smaller parts
-func (s *Service) GetSitemapData(r *http.Request, partSize int) (models.Sitemap, error) {
+func (s *Service) GetSitemapData(r *http.Request, partSize int) (models.SitemapIndex, error) {
 
 	// Fetch the entire sitemap data from DB
 	data, err := s.postsRepo.SitemapData(r.Context())
@@ -31,7 +31,7 @@ func (s *Service) GetSitemapData(r *http.Request, partSize int) (models.Sitemap,
 	baseURL := utils.GetBaseURL(r, s.config.Protocol)
 
 	// Additional processing to get the last modified time for each part
-	result := make(models.Sitemap)
+	result := make(models.SitemapIndex)
 	for i := 0; i < len(data); i += partSize {
 
 		end := min(i+partSize, len(data))
@@ -65,22 +65,22 @@ func (s *Service) GetSitemapData(r *http.Request, partSize int) (models.Sitemap,
 }
 
 // Get the entire sitemap either from Redis or DB
-func (s *Service) GetSitemap(r *http.Request, sitemapKey string) (models.Sitemap, error) {
+func (s *Service) GetSitemapIndex(r *http.Request, sitemapKey string) (models.SitemapIndex, error) {
 
 	// Try to get the sitemap from Redis
 	allParts, err := s.rdb.HGetAll(r.Context(), sitemapKey)
 	if err == nil && len(allParts) > 0 {
 		// Unmarshal the parts we got from redis
-		sitemap := make(models.Sitemap)
+		sitemapIndex := make(models.SitemapIndex)
 		for partKey, partJson := range allParts {
 			var part models.SitemapPart
 			if err := json.Unmarshal([]byte(partJson), &part); err != nil {
 				return nil, fmt.Errorf("failed to unmarshal part %s: %w", partKey, err)
 			}
-			sitemap[partKey] = part
+			sitemapIndex[partKey] = part
 		}
 
-		return sitemap, nil
+		return sitemapIndex, nil
 	}
 
 	// Get data from DB and construct a sitemap

@@ -60,7 +60,7 @@ func (s *Service) SitemapIndexHandler(w http.ResponseWriter, r *http.Request) {
 	// Get data from context
 	data := utils.GetDataFromContext(r)
 
-	sitemap, err := s.GetSitemap(r, sitemapRedisKey)
+	sitemap, err := s.GetSitemapIndex(r, sitemapRedisKey)
 
 	if err != nil {
 		log.Println(err)
