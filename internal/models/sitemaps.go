@@ -12,4 +12,4 @@ type SitemapPart struct {
 	LastModified string
 }
 
-type SitemapIndex map[string]SitemapPart
+type SitemapIndex map[string]*SitemapPart

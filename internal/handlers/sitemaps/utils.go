@@ -10,7 +10,8 @@ import (
 	"github.com/vlatan/video-store/internal/utils"
 )
 
-// Get sitemap data from DB and split it in smaller parts
+// Get sitemap data from DB and split it in smaller parts.
+// Return a map of sitemap parts with 01, 02, 03, etc. keys.
 func (s *Service) GetSitemapData(r *http.Request, partSize int) (models.SitemapIndex, error) {
 
 	// Fetch the entire sitemap data from DB
@@ -38,7 +39,7 @@ func (s *Service) GetSitemapData(r *http.Request, partSize int) (models.SitemapI
 		entries := data[i:end]
 
 		var maxTime time.Time
-		for i, entry := range entries {
+		for j, entry := range entries {
 
 			currentTime, err := time.Parse("2006-01-02", entry.LastModified)
 			if err != nil {
@@ -49,12 +50,13 @@ func (s *Service) GetSitemapData(r *http.Request, partSize int) (models.SitemapI
 				maxTime = currentTime
 			}
 
-			entries[i].Location = utils.AbsoluteURL(baseURL, entry.Location)
+			// Provide absolute URL for an item location
+			entries[j].Location = utils.AbsoluteURL(baseURL, entry.Location)
 		}
 
 		key := fmt.Sprintf("%02d", (i/partSize)+1)
 		path := fmt.Sprintf("/sitemap/%s/part.xml", key)
-		result[key] = models.SitemapPart{
+		result[key] = &models.SitemapPart{
 			Entries:      entries,
 			Location:     utils.AbsoluteURL(baseURL, path),
 			LastModified: maxTime.Format("2006-01-02"),
@@ -77,21 +79,21 @@ func (s *Service) GetSitemapIndex(r *http.Request, sitemapKey string) (models.Si
 			if err := json.Unmarshal([]byte(partJson), &part); err != nil {
 				return nil, fmt.Errorf("failed to unmarshal part %s: %w", partKey, err)
 			}
-			sitemapIndex[partKey] = part
+			sitemapIndex[partKey] = &part
 		}
 
 		return sitemapIndex, nil
 	}
 
 	// Get data from DB and construct a sitemap
-	sitemap, err := s.GetSitemapData(r, sitemapPartSize)
+	sitemapIndex, err := s.GetSitemapData(r, sitemapPartSize)
 	if err != nil {
 		return nil, err
 	}
 
 	// Prepare hset values (key, field pairs) in a slice
 	var hsetValues []any
-	for key, value := range sitemap {
+	for key, value := range sitemapIndex {
 		partJson, err := json.Marshal(value)
 		if err != nil {
 			return nil, err
@@ -106,33 +108,33 @@ func (s *Service) GetSitemapIndex(r *http.Request, sitemapKey string) (models.Si
 		return nil, err
 	}
 
-	return sitemap, nil
+	return sitemapIndex, nil
 }
 
 // Get sitemap part either from Redis or DB
-func (s *Service) GetSitemapPart(r *http.Request, sitemapKey, partKey string) (models.SitemapPart, error) {
+func (s *Service) GetSitemapPart(r *http.Request, sitemapKey, partKey string) (*models.SitemapPart, error) {
 
 	var part models.SitemapPart
 	jsonPart, err := s.rdb.HGet(r.Context(), sitemapKey, partKey)
 	if err == nil {
 		err = json.Unmarshal([]byte(jsonPart), &part)
 		if err == nil {
-			return part, nil
+			return &part, nil
 		}
 	}
 
 	// Get data from DB and construct a sitemap
-	sitemap, err := s.GetSitemapData(r, sitemapPartSize)
+	sitemapIndex, err := s.GetSitemapData(r, sitemapPartSize)
 	if err != nil {
-		return part, err
+		return nil, err
 	}
 
 	// Prepare hset values (key, field pairs) in a slice
 	var hsetValues []any
-	for key, value := range sitemap {
+	for key, value := range sitemapIndex {
 		partJson, err := json.Marshal(value)
 		if err != nil {
-			return part, err
+			return nil, err
 		}
 		hsetValues = append(hsetValues, key, partJson)
 	}
@@ -140,8 +142,8 @@ func (s *Service) GetSitemapPart(r *http.Request, sitemapKey, partKey string) (m
 	// Set the sitemap to Redis
 	err = s.rdb.Hset(r.Context(), s.config.CacheTimeout, sitemapKey, hsetValues...)
 	if err != nil {
-		return part, err
+		return nil, err
 	}
 
-	return sitemap[partKey], nil
+	return sitemapIndex[partKey], nil
 }
