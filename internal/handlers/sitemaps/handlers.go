@@ -4,6 +4,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"sort"
 
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/utils"
@@ -74,6 +75,11 @@ func (s *Service) SitemapIndexHandler(w http.ResponseWriter, r *http.Request) {
 			LastModified: value.LastModified,
 		})
 	}
+
+	// Sort the parts so they appear in the template in order
+	sort.Slice(data.SitemapItems, func(i, j int) bool {
+		return data.SitemapItems[i].Location < data.SitemapItems[j].Location
+	})
 
 	data.XMLDeclarations = []template.HTML{
 		template.HTML(`<?xml version="1.0" encoding="UTF-8"?>`),
