@@ -4,7 +4,6 @@ import (
 	"html/template"
 	"log"
 	"net/http"
-	"regexp"
 	"sort"
 
 	"github.com/vlatan/video-store/internal/models"
@@ -16,9 +15,7 @@ const (
 	sitemapRedisKey = "sitemap:data"
 )
 
-var validSitemapPart = regexp.MustCompile(`^/sitemap-(\d+)\.xml$`)
-
-// Serve the xml style, which is xsl
+// Serve the xml style, whixh is xsl
 func (s *Service) SitemapStyleHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Get data from context
@@ -34,18 +31,12 @@ func (s *Service) SitemapStyleHandler(w http.ResponseWriter, r *http.Request) {
 // Handle a sitemap part
 func (s *Service) SitemapPartHandler(w http.ResponseWriter, r *http.Request) {
 
-	if r.Method != "GET" {
-		utils.HttpError(w, http.StatusMethodNotAllowed)
-		return
-	}
+	// Get data from context
+	data := utils.GetDataFromContext(r)
 
-	matches := validSitemapPart.FindStringSubmatch(r.URL.Path)
-	if len(matches) < 2 {
-		http.NotFound(w, r)
-		return
-	}
+	// Extract the part from URL
+	partKey := r.PathValue("part")
 
-	partKey := matches[1]
 	sitemapPart, err := s.GetSitemapPart(r, sitemapRedisKey, partKey)
 
 	if err != nil {
@@ -54,9 +45,8 @@ func (s *Service) SitemapPartHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get data from context and amend it with the sitemap data
-	data := utils.GetDataFromContext(r)
 	data.SitemapItems = sitemapPart.Entries
+
 	data.XMLDeclarations = []template.HTML{
 		template.HTML(`<?xml version="1.0" encoding="UTF-8"?>`),
 		template.HTML(`<?xml-stylesheet type="text/xsl" href="/sitemap.xsl"?>`),
