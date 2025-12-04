@@ -56,7 +56,7 @@ func (s *Service) getSitemapIndexFromDB(r *http.Request, partSize int) (models.S
 		}
 
 		key := fmt.Sprintf("%02d", (i/partSize)+1)
-		path := fmt.Sprintf("/sitemap/%s/part.xml", key)
+		path := fmt.Sprintf("/sitemap-%s.xml", key)
 		result[key] = &models.SitemapPart{
 			Entries:      entries,
 			Location:     utils.AbsoluteURL(baseURL, path),
