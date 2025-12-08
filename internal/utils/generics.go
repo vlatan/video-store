@@ -64,11 +64,11 @@ func Retry[T any](
 		// Try to extract a delay value from the error
 		if retryDelay, ok := extractRetryDelay(lastError); ok {
 			delay = max(delay, retryDelay)
-		} else if i > 0 {
-			delay *= 2 // Exponentially increase the delay
+		} else if i > 0 { // If not the first function call
+			delay *= 2 // exponentially increase the delay
 		}
 
-		// Add jitter to the delay
+		// Add jitter to the delay from 0 to 1 seconds
 		delay += time.Duration(rand.Float64() * float64(time.Second)) // #nosec G404
 
 		// Wait for either the delay or context to end

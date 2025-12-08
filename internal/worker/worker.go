@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/horiagug/youtube-transcript-api-go/pkg/yt_transcript"
+	"github.com/horiagug/youtube-transcript-api-go/pkg/yt_transcript_formatters"
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/drivers/database"
 	"github.com/vlatan/video-store/internal/integrations/gemini"
@@ -30,7 +32,7 @@ type Service struct {
 }
 
 // Update limit per worker run
-const updateLimit = 60
+const updateLimit = 20
 
 func New() *Service {
 
@@ -310,6 +312,16 @@ func (s *Service) Run(ctx context.Context) error {
 
 	// ###################################################################
 
+	textFormatter := yt_transcript_formatters.NewTextFormatter(
+		yt_transcript_formatters.WithTimestamps(false),
+	)
+
+	// Create a new client with JSON formatter
+	client := yt_transcript.NewClient(yt_transcript.WithFormatter(textFormatter))
+	languages := []string{"en"}
+
+	// ###################################################################
+
 	// Insert new videos in DB,
 	// ytVideosMap should now contain only new videos
 	var inserted int
@@ -317,19 +329,30 @@ func (s *Service) Run(ctx context.Context) error {
 
 		if inserted <= updateLimit {
 
-			// Generate content using Gemini
-			genaiResponse, err := s.gemini.GenerateInfo(
-				ctx, newVideo, categories, time.Second, 3,
-			)
+			// Get the video transcript
+			transcript, err := client.GetFormattedTranscripts(videoID, languages, true)
 
 			if err != nil {
 				log.Printf(
-					"Gemini content generation on video '%s' failed; %v",
+					"Error getting the video %s transcript; %v",
 					videoID, err,
 				)
 			} else {
-				newVideo.ShortDesc = genaiResponse.Description
-				newVideo.Category = &models.Category{Name: genaiResponse.Category}
+
+				// Generate content using Gemini
+				genaiResponse, err := s.gemini.GenerateInfo(
+					ctx, newVideo, categories, transcript, 90*time.Second, 3,
+				)
+
+				if err != nil {
+					log.Printf(
+						"Gemini content generation on video '%s' failed; %v",
+						videoID, err,
+					)
+				} else {
+					newVideo.ShortDesc = genaiResponse.Description
+					newVideo.Category = &models.Category{Name: genaiResponse.Category}
+				}
 			}
 		}
 
@@ -341,6 +364,7 @@ func (s *Service) Run(ctx context.Context) error {
 		}
 
 		inserted++
+		time.Sleep(90 * time.Second)
 	}
 
 	if inserted > 0 {
@@ -375,9 +399,18 @@ func (s *Service) Run(ctx context.Context) error {
 			continue
 		}
 
+		transcript, err := client.GetFormattedTranscripts(video.VideoID, languages, true)
+
+		if err != nil {
+			log.Printf("Error getting video %s transcript; %v", video.VideoID, err)
+			failed++
+			time.Sleep(90 * time.Second)
+			continue
+		}
+
 		// Generate content using Gemini
 		genaiResponse, err := s.gemini.GenerateInfo(
-			ctx, video, categories, time.Second, 3,
+			ctx, video, categories, transcript, 90*time.Second, 3,
 		)
 
 		if err != nil {
@@ -386,6 +419,7 @@ func (s *Service) Run(ctx context.Context) error {
 				video.VideoID, err,
 			)
 			failed++
+			time.Sleep(90 * time.Second)
 			continue
 		}
 
@@ -407,6 +441,7 @@ func (s *Service) Run(ctx context.Context) error {
 		}
 
 		updated++
+		time.Sleep(90 * time.Second)
 	}
 
 	if failed > 0 {
