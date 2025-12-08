@@ -17,13 +17,12 @@ import (
 
 // Gemini service
 type Service struct {
-	config          *config.Config
-	gemini          *genai.Client
-	inputTokenLimit int32
+	config *config.Config
+	gemini *genai.Client
 }
 
 const categoriesPlaceholder = "{{ CATEGORIES }}"
-const videoIdPlaceholder = "{{ VIDEO_ID }}"
+const transcriptPlaceholder = "{{ TRANSCRIPT }}"
 
 // Configure safety settings to block none
 var blockNone = genai.HarmBlockThresholdBlockNone
@@ -64,13 +63,7 @@ func New(ctx context.Context, config *config.Config) (*Service, error) {
 		return nil, err
 	}
 
-	// Get the model info
-	model, err := client.Models.Get(ctx, config.GeminiModel, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return &Service{config, client, model.InputTokenLimit}, nil
+	return &Service{config, client}, nil
 }
 
 // Generate content given a prompt
@@ -109,6 +102,7 @@ func (s *Service) GenerateInfo(
 	ctx context.Context,
 	post *models.Post,
 	categories []models.Category,
+	transcript string,
 	delay time.Duration,
 	maxRetries int,
 ) (*models.GenaiResponse, error) {
@@ -119,44 +113,15 @@ func (s *Service) GenerateInfo(
 	}
 	catString = strings.TrimSuffix(catString, ", ")
 
-	uriIndex, uriExists := 0, false
 	parts := make([]*genai.Part, len(s.config.GeminiPrompt.Parts))
 	for i, part := range s.config.GeminiPrompt.Parts {
-		if part.Text != "" {
-			text := strings.ReplaceAll(part.Text, categoriesPlaceholder, catString)
-			parts[i] = genai.NewPartFromText(text)
-		} else if part.URL != "" {
-			url := strings.ReplaceAll(part.URL, videoIdPlaceholder, post.VideoID)
-			parts[i] = genai.NewPartFromURI(url, part.MimeType)
-			uriIndex, uriExists = i, true
-		}
+		text := strings.ReplaceAll(part.Text, categoriesPlaceholder, catString)
+		text = strings.ReplaceAll(text, transcriptPlaceholder, transcript)
+		parts[i] = genai.NewPartFromText(text)
 	}
 
 	contents := []*genai.Content{
 		genai.NewContentFromParts(parts, genai.RoleUser),
-	}
-
-	inputTokens, err := s.gemini.Models.CountTokens(
-		ctx,
-		s.config.GeminiModel,
-		contents,
-		nil,
-	)
-
-	if err != nil {
-		return nil, fmt.Errorf(
-			"failed to count input tokens for video '%s'; %w",
-			post.VideoID, err,
-		)
-	}
-
-	// If the video is very large use just its title
-	if (inputTokens.TotalTokens >= s.inputTokenLimit) && uriExists {
-		title := fmt.Sprintf("Title: %s", post.Title)
-		parts[uriIndex] = genai.NewPartFromText(title)
-		contents = []*genai.Content{
-			genai.NewContentFromParts(parts, genai.RoleUser),
-		}
 	}
 
 	response, err := utils.Retry(

@@ -9,6 +9,8 @@ import (
 	"slices"
 	"time"
 
+	"github.com/horiagug/youtube-transcript-api-go/pkg/yt_transcript"
+	"github.com/horiagug/youtube-transcript-api-go/pkg/yt_transcript_formatters"
 	"github.com/vlatan/video-store/internal/drivers/redis"
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/utils"
@@ -271,8 +273,22 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 			ctx, cancel := context.WithTimeout(detachedCtx, 5*time.Minute)
 			defer cancel()
 
+			textFormatter := yt_transcript_formatters.NewTextFormatter(
+				yt_transcript_formatters.WithTimestamps(false),
+			)
+
+			// Create a new client text formatter
+			client := yt_transcript.NewClient(yt_transcript.WithFormatter(textFormatter))
+			languages := []string{"en"}
+
+			transcript, err := client.GetFormattedTranscripts(videoID, languages, true)
+			if err != nil {
+				log.Printf("Error getting the video %s transcript; %v", videoID, err)
+				return
+			}
+
 			genaiResponse, err := s.gemini.GenerateInfo(
-				ctx, post, data.Categories, time.Second, 1,
+				ctx, post, data.Categories, transcript, 90*time.Second, 1,
 			)
 
 			if err != nil {
