@@ -7,8 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/horiagug/youtube-transcript-api-go/pkg/yt_transcript"
-	"github.com/horiagug/youtube-transcript-api-go/pkg/yt_transcript_formatters"
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/drivers/database"
 	"github.com/vlatan/video-store/internal/integrations/gemini"
@@ -312,16 +310,6 @@ func (s *Service) Run(ctx context.Context) error {
 
 	// ###################################################################
 
-	textFormatter := yt_transcript_formatters.NewTextFormatter(
-		yt_transcript_formatters.WithTimestamps(false),
-	)
-
-	// Create a new client with JSON formatter
-	client := yt_transcript.NewClient(yt_transcript.WithFormatter(textFormatter))
-	languages := []string{"en"}
-
-	// ###################################################################
-
 	// Insert new videos in DB,
 	// ytVideosMap should now contain only new videos
 	var inserted int
@@ -330,7 +318,7 @@ func (s *Service) Run(ctx context.Context) error {
 		if inserted <= updateLimit {
 
 			// Get the video transcript
-			transcript, err := client.GetFormattedTranscripts(videoID, languages, true)
+			transcript, err := s.yt.GetVideoTranscript(videoID)
 
 			if err != nil {
 				log.Printf(
@@ -399,7 +387,7 @@ func (s *Service) Run(ctx context.Context) error {
 			continue
 		}
 
-		transcript, err := client.GetFormattedTranscripts(video.VideoID, languages, true)
+		transcript, err := s.yt.GetVideoTranscript(video.VideoID)
 
 		if err != nil {
 			log.Printf("Error getting video %s transcript; %v", video.VideoID, err)
