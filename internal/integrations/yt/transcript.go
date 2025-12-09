@@ -11,8 +11,10 @@ func (s *Service) GetVideoTranscript(ctx context.Context, videoID string) (strin
 
 	resultCh := make(chan result, 1)
 
-	// Run the third-party call in a goroutine
-	// Note: GetFormattedTranscripts has an internal 30s timeout
+	// Run the third-party call in a goroutine.
+	// Note: GetFormattedTranscripts has an internal 30s timeout.
+	// However, this is a potential memory leak if this third-party
+	// function removes their internal timeout.
 	go func() {
 		tr, err := s.transcripter.client.GetFormattedTranscripts(
 			videoID,
