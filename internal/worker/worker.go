@@ -318,7 +318,7 @@ func (s *Service) Run(ctx context.Context) error {
 		if inserted <= updateLimit {
 
 			// Get the video transcript
-			transcript, err := s.yt.GetVideoTranscript(videoID)
+			transcript, err := s.yt.GetVideoTranscript(ctx, videoID)
 
 			if err != nil {
 				log.Printf(
@@ -387,8 +387,7 @@ func (s *Service) Run(ctx context.Context) error {
 			continue
 		}
 
-		transcript, err := s.yt.GetVideoTranscript(video.VideoID)
-
+		transcript, err := s.yt.GetVideoTranscript(ctx, video.VideoID)
 		if err != nil {
 			log.Printf("Error getting video %s transcript; %v", video.VideoID, err)
 			failed++

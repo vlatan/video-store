@@ -1,17 +1,33 @@
 package yt
 
-func (s *Service) GetVideoTranscript(videoID string) (string, error) {
+import "context"
 
-	// Get the video transcript
-	tr, err := s.transcripter.client.GetFormattedTranscripts(
-		videoID,
-		s.transcripter.languages,
-		s.transcripter.preserveFormatting,
-	)
+func (s *Service) GetVideoTranscript(ctx context.Context, videoID string) (string, error) {
 
-	if err != nil {
-		return "", err
+	type result struct {
+		transcript string
+		err        error
 	}
 
-	return tr, nil
+	resultCh := make(chan result, 1)
+
+	// Run the third-party call in a goroutine
+	// Note: GetFormattedTranscripts has an internal 30s timeout
+	go func() {
+		tr, err := s.transcripter.client.GetFormattedTranscripts(
+			videoID,
+			s.transcripter.languages,
+			s.transcripter.preserveFormatting,
+		)
+
+		resultCh <- result{tr, err}
+	}()
+
+	// Race the context against the operation
+	select {
+	case <-ctx.Done():
+		return "", ctx.Err()
+	case res := <-resultCh:
+		return res.transcript, res.err
+	}
 }

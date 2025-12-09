@@ -271,7 +271,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 			ctx, cancel := context.WithTimeout(detachedCtx, 5*time.Minute)
 			defer cancel()
 
-			transcript, err := s.yt.GetVideoTranscript(videoID)
+			transcript, err := s.yt.GetVideoTranscript(ctx, videoID)
 			if err != nil {
 				log.Printf("Error getting the video %s transcript; %v", videoID, err)
 				return
