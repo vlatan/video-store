@@ -44,7 +44,7 @@ func New(ctx context.Context, config *config.Config) (*Service, error) {
 		youtube: youtube,
 		transcripter: &Transcripter{
 			client:             trClient,
-			languages:          []string{"en", "en-us", "en-gb", "en-ca"},
+			languages:          []string{"en", "en-US", "en-GB", "en-CA"},
 			preserveFormatting: true,
 		},
 	}, nil
