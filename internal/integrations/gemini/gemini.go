@@ -100,19 +100,20 @@ func (s *Service) GenerateContent(
 // https://ai.google.dev/gemini-api/docs/video-understanding#youtube
 func (s *Service) GenerateInfo(
 	ctx context.Context,
-	post *models.Post,
 	categories []models.Category,
 	transcript string,
 	delay time.Duration,
 	maxRetries int,
 ) (*models.GenaiResponse, error) {
 
+	// Create categories string
 	var catString string
 	for _, cat := range categories {
 		catString += cat.Name + ", "
 	}
 	catString = strings.TrimSuffix(catString, ", ")
 
+	// Create genai parts
 	parts := make([]*genai.Part, len(s.config.GeminiPrompt.Parts))
 	for i, part := range s.config.GeminiPrompt.Parts {
 		text := strings.ReplaceAll(part.Text, categoriesPlaceholder, catString)

@@ -273,12 +273,17 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 
 			transcript, err := s.yt.GetVideoTranscript(ctx, videoID)
 			if err != nil {
-				log.Printf("Error getting the video %s transcript; %v", videoID, err)
-				return
+				log.Printf(
+					"Error getting the video %s transcript; %v",
+					videoID, err,
+				)
+
+				// If no transcript use the post title and description
+				transcript = post.Title + "\n" + post.Description
 			}
 
 			genaiResponse, err := s.gemini.GenerateInfo(
-				ctx, post, data.Categories, transcript, 90*time.Second, 1,
+				ctx, data.Categories, transcript, 90*time.Second, 1,
 			)
 
 			if err != nil {

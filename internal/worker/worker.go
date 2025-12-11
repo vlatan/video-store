@@ -319,28 +319,29 @@ func (s *Service) Run(ctx context.Context) error {
 
 			// Get the video transcript
 			transcript, err := s.yt.GetVideoTranscript(ctx, videoID)
-
 			if err != nil {
 				log.Printf(
 					"Error getting the video %s transcript; %v",
 					videoID, err,
 				)
-			} else {
 
-				// Generate content using Gemini
-				genaiResponse, err := s.gemini.GenerateInfo(
-					ctx, newVideo, categories, transcript, 90*time.Second, 3,
+				// If no transcript use the post title and description
+				transcript = newVideo.Title + "\n" + newVideo.Description
+			}
+
+			// Generate content using Gemini
+			genaiResponse, err := s.gemini.GenerateInfo(
+				ctx, categories, transcript, 90*time.Second, 3,
+			)
+
+			if err != nil {
+				log.Printf(
+					"Gemini content generation on video '%s' failed; %v",
+					videoID, err,
 				)
-
-				if err != nil {
-					log.Printf(
-						"Gemini content generation on video '%s' failed; %v",
-						videoID, err,
-					)
-				} else {
-					newVideo.ShortDesc = genaiResponse.Description
-					newVideo.Category = &models.Category{Name: genaiResponse.Category}
-				}
+			} else {
+				newVideo.ShortDesc = genaiResponse.Description
+				newVideo.Category = &models.Category{Name: genaiResponse.Category}
 			}
 		}
 
@@ -389,15 +390,18 @@ func (s *Service) Run(ctx context.Context) error {
 
 		transcript, err := s.yt.GetVideoTranscript(ctx, video.VideoID)
 		if err != nil {
-			log.Printf("Error getting video %s transcript; %v", video.VideoID, err)
-			failed++
-			time.Sleep(90 * time.Second)
-			continue
+			log.Printf(
+				"Error getting video %s transcript; %v",
+				video.VideoID, err,
+			)
+
+			// If no transcript use the post title and description
+			transcript = video.Title + "\n" + video.Description
 		}
 
 		// Generate content using Gemini
 		genaiResponse, err := s.gemini.GenerateInfo(
-			ctx, video, categories, transcript, 90*time.Second, 3,
+			ctx, categories, transcript, 90*time.Second, 3,
 		)
 
 		if err != nil {
