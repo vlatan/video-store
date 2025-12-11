@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/utils"
 )
 
@@ -14,7 +15,7 @@ func (s *Service) UserFavoritesHandler(w http.ResponseWriter, r *http.Request) {
 	cursor := r.URL.Query().Get("cursor")
 
 	// Generate template data
-	data := utils.GetDataFromContext(r)
+	data := models.GetDataFromContext(r)
 
 	posts, err := s.postsRepo.GetUserFavedPosts(r.Context(), data.CurrentUser.ID, cursor)
 
@@ -41,7 +42,7 @@ func (s *Service) UsersHandler(w http.ResponseWriter, r *http.Request) {
 	page := utils.GetPageNum(r)
 
 	// Generate template data
-	data := utils.GetDataFromContext(r)
+	data := models.GetDataFromContext(r)
 
 	users, err := s.usersRepo.GetUsers(r.Context(), page)
 	if err != nil {

@@ -20,7 +20,7 @@ import (
 func (s *Service) HomeHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Generate template data
-	data := utils.GetDataFromContext(r)
+	data := models.GetDataFromContext(r)
 
 	// Get the cursor from a query param
 	cursor := r.URL.Query().Get("cursor")
@@ -72,7 +72,7 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Generate template data (it gets all the categories too)
 	// This is probably wasteful for non-existing category
-	data := utils.GetDataFromContext(r)
+	data := models.GetDataFromContext(r)
 
 	// Construct the Redis key
 	redisKey := fmt.Sprintf("category:%s:posts", slug)
@@ -124,7 +124,7 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 	cursor := r.URL.Query().Get("cursor")
 
 	// Generate the default data
-	data := utils.GetDataFromContext(r)
+	data := models.GetDataFromContext(r)
 	data.SearchQuery = searchQuery
 
 	start := time.Now()
@@ -171,7 +171,7 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Compose data object
-	data := utils.GetDataFromContext(r)
+	data := models.GetDataFromContext(r)
 
 	// Populate needed data for an empty form
 	data.Form = &models.Form{
@@ -316,7 +316,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 	videoID := r.PathValue("video")
 
 	// Generate the default data
-	data := utils.GetDataFromContext(r)
+	data := models.GetDataFromContext(r)
 
 	// Validate the YT ID
 	if validVideoID.FindStringSubmatch(videoID) == nil {
@@ -397,7 +397,7 @@ func (s *Service) PostActionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get the current user
-	user := utils.GetUserFromContext(r)
+	user := models.GetUserFromContext(r)
 
 	// Check if user is authorized to edit or delete (admin)
 	if (action == "edit" || action == "delete") &&

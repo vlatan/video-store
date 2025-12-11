@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/utils"
 
 	"golang.org/x/oauth2"
@@ -24,7 +25,7 @@ func (s *Service) AuthHandler(w http.ResponseWriter, r *http.Request) {
 	redirectTo := getRedirectPath(r)
 
 	// Check if the user is already logged in
-	if user := utils.GetUserFromContext(r); user.IsAuthenticated() {
+	if user := models.GetUserFromContext(r); user.IsAuthenticated() {
 		http.Redirect(w, r, redirectTo, http.StatusSeeOther)
 		return
 	}
@@ -90,7 +91,7 @@ func (s *Service) AuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	redirectTo := s.getUserFinalRedirect(w, r)
 
 	// Check if the user is already logged in
-	if user := utils.GetUserFromContext(r); user.IsAuthenticated() {
+	if user := models.GetUserFromContext(r); user.IsAuthenticated() {
 		http.Redirect(w, r, redirectTo, http.StatusSeeOther)
 		return
 	}
@@ -209,7 +210,7 @@ func (s *Service) DeleteAccountHandler(w http.ResponseWriter, r *http.Request) {
 	redirectTo := getRedirectPath(r)
 
 	// Get the current user
-	currentUser := utils.GetUserFromContext(r)
+	currentUser := models.GetUserFromContext(r)
 
 	// Remove user session
 	if err := s.logoutUser(w, r); err != nil {

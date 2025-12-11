@@ -27,7 +27,7 @@ func (s *Service) SinglePageHandler(w http.ResponseWriter, r *http.Request) {
 	pageSlug := r.PathValue("slug")
 
 	// Default data
-	data := utils.GetDataFromContext(r)
+	data := models.GetDataFromContext(r)
 
 	page, err := redis.GetItems(
 		!data.IsCurrentUserAdmin(),
@@ -88,7 +88,7 @@ func (s *Service) UpdatePageHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Default data
-	data := utils.GetDataFromContext(r)
+	data := models.GetDataFromContext(r)
 
 	// Populate needed data for the page form
 	data.Form = &models.Form{
@@ -166,7 +166,7 @@ func (s *Service) UpdatePageHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Service) NewPageHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Compose data object
-	data := utils.GetDataFromContext(r)
+	data := models.GetDataFromContext(r)
 
 	// Populate needed data for an empty form
 	data.Form = &models.Form{
@@ -236,7 +236,7 @@ func (s *Service) DeletePageHandler(w http.ResponseWriter, r *http.Request) {
 	pageSlug := r.PathValue("slug")
 
 	// Get the current user
-	currentUser := utils.GetUserFromContext(r)
+	currentUser := models.GetUserFromContext(r)
 
 	rowsAffected, err := s.pagesRepo.DeletePage(r.Context(), pageSlug)
 	if err != nil {

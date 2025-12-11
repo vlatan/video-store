@@ -14,16 +14,6 @@ import (
 	"github.com/vlatan/video-store/internal/models"
 )
 
-type contextKey struct {
-	name string
-}
-
-// Universal context key to get the user from context
-var UserContextKey = contextKey{name: "user"}
-
-// Universal context key to get the page data from context
-var DataContextKey = contextKey{name: "data"}
-
 // Favicons used in the website
 var RootFavicons = []string{
 	"/android-chrome-192x192.png",
@@ -36,18 +26,6 @@ var RootFavicons = []string{
 }
 
 const UpdateMarker = "<!-- v2 -->" // REMOVE
-
-// Get the user from context
-func GetUserFromContext(r *http.Request) *models.User {
-	user, _ := r.Context().Value(UserContextKey).(*models.User)
-	return user // nil if user not in context
-}
-
-// GetDataFromContext gets the default template data from context
-func GetDataFromContext(r *http.Request) *models.TemplateData {
-	data, _ := r.Context().Value(DataContextKey).(*models.TemplateData)
-	return data // nil if data not in context
-}
 
 // Create base URL object (absolute path only)
 func GetBaseURL(r *http.Request, protocol string) *url.URL {

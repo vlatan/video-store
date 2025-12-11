@@ -13,7 +13,7 @@ import (
 // Handle all sources page
 func (s *Service) SourcesHandler(w http.ResponseWriter, r *http.Request) {
 	// Generate template data
-	data := utils.GetDataFromContext(r)
+	data := models.GetDataFromContext(r)
 
 	// Get sources from redis or DB
 	sources, err := redis.GetItems(
@@ -48,7 +48,7 @@ func (s *Service) SourcesHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Compose data object
-	data := utils.GetDataFromContext(r)
+	data := models.GetDataFromContext(r)
 
 	// Populate needed data for an empty form
 	data.Form = &models.Form{
@@ -150,7 +150,7 @@ func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
 	orderBy := r.URL.Query().Get("order_by")
 
 	// Generate template data
-	data := utils.GetDataFromContext(r)
+	data := models.GetDataFromContext(r)
 
 	// Construct the Redis key
 	redisKey := fmt.Sprintf("source:%s:posts", sourceID)

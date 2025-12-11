@@ -7,7 +7,6 @@ import (
 	"sort"
 
 	"github.com/vlatan/video-store/internal/models"
-	"github.com/vlatan/video-store/internal/utils"
 )
 
 const (
@@ -19,7 +18,7 @@ const (
 func (s *Service) SitemapStyleHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Get data from context
-	data := utils.GetDataFromContext(r)
+	data := models.GetDataFromContext(r)
 
 	data.XMLDeclarations = []template.HTML{
 		template.HTML(`<?xml version="1.0" encoding="UTF-8"?>`),
@@ -32,7 +31,7 @@ func (s *Service) SitemapStyleHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Service) SitemapPartHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Get data from context
-	data := utils.GetDataFromContext(r)
+	data := models.GetDataFromContext(r)
 
 	// Extract the part from URL
 	partKey := r.PathValue("part")
@@ -59,7 +58,7 @@ func (s *Service) SitemapPartHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Service) SitemapIndexHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Get data from context
-	data := utils.GetDataFromContext(r)
+	data := models.GetDataFromContext(r)
 
 	sitemap, err := s.GetSitemapIndex(r, sitemapRedisKey)
 

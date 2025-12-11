@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/vlatan/video-store/internal/config"
+	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/ui"
 	"github.com/vlatan/video-store/internal/utils"
 
@@ -43,7 +44,7 @@ func New(ui ui.Service, config *config.Config) *Service {
 func (s *Service) IsAuthenticated(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// If the user is authenticated move onto the next handler
-		if user := utils.GetUserFromContext(r); user.IsAuthenticated() {
+		if user := models.GetUserFromContext(r); user.IsAuthenticated() {
 			next(w, r)
 			return
 		}
@@ -57,7 +58,7 @@ func (s *Service) IsAuthenticated(next http.HandlerFunc) http.HandlerFunc {
 func (s *Service) IsAdmin(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// If the user is admin move onto the next handler
-		if user := utils.GetUserFromContext(r); user.IsAuthenticated() &&
+		if user := models.GetUserFromContext(r); user.IsAuthenticated() &&
 			user.IsAdmin(s.config.AdminProviderUserId, s.config.AdminProvider) {
 			next(w, r)
 			return
@@ -74,7 +75,7 @@ func (s *Service) LoadUser(next http.Handler) http.Handler {
 
 		// Get user from session and store in context
 		user := s.ui.GetUserFromSession(w, r) // Can be nil
-		ctx := context.WithValue(r.Context(), utils.UserContextKey, user)
+		ctx := context.WithValue(r.Context(), models.UserContextKey, user)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
@@ -85,13 +86,13 @@ func (s *Service) LoadData(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		// Get user from context
-		user := utils.GetUserFromContext(r)
+		user := models.GetUserFromContext(r)
 		// Generate the default data
 		data := s.ui.NewData(w, r)
 		// Attach the user to be able to be accessed from data too
 		data.CurrentUser = user
 		// Store data to context
-		ctx := context.WithValue(r.Context(), utils.DataContextKey, data)
+		ctx := context.WithValue(r.Context(), models.DataContextKey, data)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
@@ -137,7 +138,7 @@ func (s *Service) RecoverPanic(next http.Handler) http.Handler {
 // PublicCache adds cache control header for non-admin users
 func (s *Service) PublicCache(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		data := utils.GetDataFromContext(r)
+		data := models.GetDataFromContext(r)
 		if !data.IsCurrentUserAdmin() {
 			w.Header().Set("Cache-Control", "public, max-age=3600")
 		}
@@ -168,7 +169,7 @@ func (s *Service) AddHeaders(next http.Handler) http.Handler {
 
 		// Add no cache headers if necessary
 		if !utils.IsFilePath(r.URL.Path) &&
-			utils.GetUserFromContext(r).IsAuthenticated() {
+			models.GetUserFromContext(r).IsAuthenticated() {
 
 			w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 			w.Header().Set("Pragma", "no-cache")
@@ -235,7 +236,7 @@ func (s *Service) HandleErrors(next http.Handler) http.Handler {
 		}
 
 		// Default data
-		data := utils.GetDataFromContext(r)
+		data := models.GetDataFromContext(r)
 
 		// Set headers
 		recorder.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -269,7 +270,7 @@ func (s *Service) CsrfProtection(next http.Handler) http.Handler {
 		// gorilla/csrf sets Vary: Cookie header
 		// and we don't want that for anonimous requests,
 		// because we want to cache those.
-		user := utils.GetUserFromContext(r)
+		user := models.GetUserFromContext(r)
 		if !user.IsAuthenticated() {
 			next.ServeHTTP(w, r)
 			return

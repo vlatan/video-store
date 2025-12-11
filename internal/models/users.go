@@ -53,6 +53,7 @@ const avatarCacheKey = "avatar:r2:%s"
 const avatarPath = "avatars/%s.jpg"
 const defaultAvatar = "/static/images/default-avatar.jpg"
 
+// Time interval to recheck the user avatar
 var avatarTimeout time.Duration = 24 * time.Hour
 
 // Check if the user is authenticated
