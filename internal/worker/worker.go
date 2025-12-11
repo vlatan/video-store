@@ -236,12 +236,24 @@ func (s *Service) Run(ctx context.Context) error {
 
 		// Keep only the valid videos
 		for _, video := range videosMetadata {
-			err = s.yt.ValidateYouTubeVideo(video)
-			if err == nil && !s.postsRepo.IsPostBanned(ctx, video.Id) {
-				// If the video is already in ytVideosMap as an orphaned video
-				// we overwrite it, associate it with a YT playlist
-				ytVideosMap[video.Id] = s.yt.NewYouTubePost(video, playlistID)
+
+			if err = s.yt.ValidateYouTubeVideo(video); err != nil {
+				continue
 			}
+
+			if err = s.postsRepo.IsPostBanned(ctx, video.Id); err != nil {
+
+				// Exit early if context ended
+				if utils.IsContextErr(err) {
+					return err
+				}
+
+				continue
+			}
+
+			// If the video is already in ytVideosMap as an orphaned video
+			// we overwrite it, associate it with a YT playlist
+			ytVideosMap[video.Id] = s.yt.NewYouTubePost(video, playlistID)
 		}
 	}
 

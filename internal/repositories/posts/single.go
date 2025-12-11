@@ -30,10 +30,9 @@ const isPostBanneddQuery = `
 `
 
 // Check if the post is deleted
-func (r *Repository) IsPostBanned(ctx context.Context, videoID string) bool {
+func (r *Repository) IsPostBanned(ctx context.Context, videoID string) error {
 	var result int
-	err := r.db.QueryRow(ctx, isPostBanneddQuery, videoID).Scan(&result)
-	return err == nil
+	return r.db.QueryRow(ctx, isPostBanneddQuery, videoID).Scan(&result)
 }
 
 const insertPostQuery = `
