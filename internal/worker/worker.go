@@ -270,6 +270,12 @@ func (s *Service) Run(ctx context.Context) error {
 		// Update the video playlist, if necessary
 		if plID := ytVideosMap[video.VideoID].PlaylistID; video.PlaylistID != plID {
 			if _, err = s.postsRepo.UpdatePlaylist(ctx, video.VideoID, plID); err != nil {
+
+				// Exit early if context ended
+				if utils.IsContextErr(err) {
+					return err
+				}
+
 				log.Printf(
 					"Failed to update the playlist on video '%s'; %v",
 					video.VideoID, err,
@@ -319,6 +325,12 @@ func (s *Service) Run(ctx context.Context) error {
 
 			// Get the video transcript
 			transcript, err := s.yt.GetVideoTranscript(ctx, videoID)
+
+			// Exit early if context ended
+			if utils.IsContextErr(err) {
+				return err
+			}
+
 			if err != nil {
 				log.Printf(
 					"Error getting the video %s transcript; %v",
@@ -333,6 +345,11 @@ func (s *Service) Run(ctx context.Context) error {
 			genaiResponse, err := s.gemini.GenerateInfo(
 				ctx, categories, transcript, 90*time.Second, 3,
 			)
+
+			// Exit early if context ended
+			if utils.IsContextErr(err) {
+				return err
+			}
 
 			if err != nil {
 				log.Printf(
@@ -389,6 +406,12 @@ func (s *Service) Run(ctx context.Context) error {
 		}
 
 		transcript, err := s.yt.GetVideoTranscript(ctx, video.VideoID)
+
+		// Exit early if context ended
+		if utils.IsContextErr(err) {
+			return err
+		}
+
 		if err != nil {
 			log.Printf(
 				"Error getting video %s transcript; %v",
@@ -403,6 +426,11 @@ func (s *Service) Run(ctx context.Context) error {
 		genaiResponse, err := s.gemini.GenerateInfo(
 			ctx, categories, transcript, 90*time.Second, 3,
 		)
+
+		// Exit early if context ended
+		if utils.IsContextErr(err) {
+			return err
+		}
 
 		if err != nil {
 			log.Printf(
@@ -424,10 +452,17 @@ func (s *Service) Run(ctx context.Context) error {
 
 		// Update the db video
 		if _, err = s.postsRepo.UpdateGeneratedData(ctx, video); err != nil {
+
+			// Exit early if context ended
+			if utils.IsContextErr(err) {
+				return err
+			}
+
 			log.Printf(
 				"failed to update generated data on video '%s'; %v",
 				video.VideoID, err,
 			)
+
 			failed++
 		}
 

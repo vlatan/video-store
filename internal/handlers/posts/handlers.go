@@ -272,6 +272,12 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 			defer cancel()
 
 			transcript, err := s.yt.GetVideoTranscript(ctx, videoID)
+
+			// Exit early if context ended
+			if utils.IsContextErr(err) {
+				return
+			}
+
 			if err != nil {
 				log.Printf(
 					"Error getting the video %s transcript; %v",
