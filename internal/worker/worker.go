@@ -147,7 +147,7 @@ func (s *Service) Run(ctx context.Context) error {
 		)
 
 		// Check if channel thumbnails have changed
-		if utils.ThumbnailsEqual(
+		if models.ThumbnailsEqual(
 			dbSourcesMap[playlistID].ChannelThumbnails,
 			newSource.ChannelThumbnails,
 		) {

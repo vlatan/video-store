@@ -7,19 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"google.golang.org/api/youtube/v3"
 )
-
-type Thumbnail = youtube.Thumbnail
-
-type Thumbnails struct {
-	Default  *Thumbnail `json:"default,omitempty"`
-	Medium   *Thumbnail `json:"medium,omitempty"`
-	High     *Thumbnail `json:"high,omitempty"`
-	Standard *Thumbnail `json:"standard,omitempty"`
-	Maxres   *Thumbnail `json:"maxres,omitempty"`
-}
 
 // Custom string type used to convert string duration to desirable format
 type ISO8601Duration string

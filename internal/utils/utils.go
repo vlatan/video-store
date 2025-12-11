@@ -10,8 +10,6 @@ import (
 	"slices"
 	"strconv"
 	"strings"
-
-	"github.com/vlatan/video-store/internal/models"
 )
 
 // Favicons used in the website
@@ -132,37 +130,6 @@ func Plural(num int, word string) string {
 	}
 
 	return word
-}
-
-// Check one thumbnail equality
-func ThumbnailEqual(a, b *models.Thumbnail) bool {
-	if a == nil && b == nil {
-		return true
-	}
-
-	if a == nil || b == nil {
-		return false
-	}
-
-	// Only compare the actual data fields we care about
-	return a.Height == b.Height && a.Url == b.Url && a.Width == b.Width
-}
-
-// Check thumbnails equality
-func ThumbnailsEqual(a, b *models.Thumbnails) bool {
-	if a == nil && b == nil {
-		return true
-	}
-
-	if a == nil || b == nil {
-		return false
-	}
-
-	return ThumbnailEqual(a.Default, b.Default) &&
-		ThumbnailEqual(a.Medium, b.Medium) &&
-		ThumbnailEqual(a.High, b.High) &&
-		ThumbnailEqual(a.Standard, b.Standard) &&
-		ThumbnailEqual(a.Maxres, b.Maxres)
 }
 
 // Check if this is a static file
