@@ -1,8 +1,10 @@
 package utils
 
 import (
+	"context"
 	"crypto/tls"
 	"database/sql"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -320,6 +322,28 @@ func TestHttpError(t *testing.T) {
 					"got %q body, want %q body",
 					recorder.Body.String(), expectedBody,
 				)
+			}
+		})
+	}
+}
+
+func TestIsContextErr(t *testing.T) {
+
+	tests := []struct {
+		name     string
+		err      error
+		expected bool
+	}{
+		{"no context error", errors.New("test error"), false},
+		{"context canceled error", context.Canceled, true},
+		{"context deadline exceeded error", context.DeadlineExceeded, true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := IsContextErr(tt.err)
+			if got != tt.expected {
+				t.Errorf("got %t, want %t", got, tt.expected)
 			}
 		})
 	}
