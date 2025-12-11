@@ -19,6 +19,7 @@ import (
 	"github.com/vlatan/video-store/internal/config"
 	redisDriver "github.com/vlatan/video-store/internal/drivers/redis"
 	"github.com/vlatan/video-store/internal/integrations/r2"
+	"github.com/vlatan/video-store/internal/utils"
 
 	_ "image/gif" // Register GIF decoder
 	_ "image/png" // Register PNG decoder
@@ -99,7 +100,7 @@ func (u *User) SetAvatar(
 	}
 
 	// Return early if context error
-	if u.IsContextErr(err) {
+	if utils.IsContextErr(err) {
 		return err
 	}
 
@@ -115,7 +116,7 @@ func (u *User) SetAvatar(
 	etag, err := u.DownloadAvatar(ctx, config, r2s)
 
 	// Return early if context error
-	if u.IsContextErr(err) {
+	if utils.IsContextErr(err) {
 		return err
 	}
 
@@ -139,7 +140,7 @@ func (u *User) SetAvatar(
 	err = rdb.Set(ctx, redisKey, avatar, avatarTimeout)
 
 	// Return early if context error
-	if u.IsContextErr(err) {
+	if utils.IsContextErr(err) {
 		return err
 	}
 
@@ -247,9 +248,4 @@ func (u *User) DeleteAvatar(ctx context.Context, config *config.Config, rdb redi
 	if err := rdb.Delete(ctx, redisKey); err != nil {
 		log.Printf("Could not remove the avatar %s from Redis: %v", redisKey, err)
 	}
-}
-
-func (u *User) IsContextErr(err error) bool {
-	return errors.Is(err, context.Canceled) ||
-		errors.Is(err, context.DeadlineExceeded)
 }

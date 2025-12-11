@@ -6,6 +6,7 @@ import (
 	"runtime"
 
 	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/utils"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -24,7 +25,7 @@ func (s *Service) SetAvatars(ctx context.Context, users []models.User) error {
 				err := user.SetAvatar(ctx, s.config, s.rdb, s.r2s)
 
 				// Return the error if contex ended
-				if user.IsContextErr(err) {
+				if utils.IsContextErr(err) {
 					return err
 				}
 
