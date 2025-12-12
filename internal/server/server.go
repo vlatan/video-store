@@ -108,7 +108,7 @@ func NewServer() (*http.Server, string, func() error) {
 		WriteTimeout: 30 * time.Second,
 	}
 
-	// Ready made func to close the DB pool and Redis connection
+	// func to close the DB pool and Redis connection
 	cleanup := func() error {
 		db.Close()
 		if err := rdb.Close(); err != nil {
