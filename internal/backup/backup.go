@@ -47,7 +47,7 @@ func (s *Service) Run(ctx context.Context) error {
 
 	log.Println("Backup service running...")
 
-	dbDump := fmt.Sprintf("backup-%v", time.Now().Format("2006-01-02T15-04"))
+	dbDump := fmt.Sprintf("backup-%v.bak", time.Now().Format("2006-01-02T15-04"))
 	if err := s.DumpDatabase(dbDump); err != nil {
 		return err
 	}
