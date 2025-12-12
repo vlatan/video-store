@@ -222,7 +222,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Check if the video is already posted
-		if s.postsRepo.PostExists(r.Context(), videoID) {
+		if err = s.postsRepo.PostExists(r.Context(), videoID); err == nil {
 			formError.Message = "Video already posted"
 			data.Form.Error = &formError
 			s.ui.RenderHTML(w, r, "form.html", data)

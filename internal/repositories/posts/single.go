@@ -18,10 +18,9 @@ const postExistsQuery = `
 `
 
 // Check if the post exists
-func (r *Repository) PostExists(ctx context.Context, videoID string) bool {
+func (r *Repository) PostExists(ctx context.Context, videoID string) error {
 	var result int
-	err := r.db.QueryRow(ctx, postExistsQuery, videoID).Scan(&result)
-	return err == nil
+	return r.db.QueryRow(ctx, postExistsQuery, videoID).Scan(&result)
 }
 
 const isPostBanneddQuery = `
