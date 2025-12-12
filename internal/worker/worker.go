@@ -265,12 +265,19 @@ func (s *Service) Run(ctx context.Context) error {
 	// ###################################################################
 
 	// Delete and update videos in DB
+	const maxDeletion = 5
 	var adopted, deleted int
 	var validDBVideos []*models.Post
 	for _, video := range dbVideos {
 
 		// If the video doesn't exist on YT, delete it from DB
 		if _, exists := ytVideosMap[video.VideoID]; !exists {
+
+			// Do not delete any more videos if max deletion was reached
+			if deleted >= maxDeletion {
+				continue
+			}
+
 			if _, err = s.postsRepo.DeletePost(ctx, video.VideoID); err != nil {
 				return fmt.Errorf(
 					"could not delete the video '%s' in DB; %w",
@@ -309,6 +316,12 @@ func (s *Service) Run(ctx context.Context) error {
 	if deleted > 0 {
 		items = utils.Plural(deleted, "video")
 		log.Printf("Deleted %d %s", deleted, items)
+
+		if deleted >= maxDeletion {
+			msg := "WARNING: HIT MAX DELETION LIMIT. "
+			msg += "If this persists investigate for bugs"
+			log.Println(msg)
+		}
 	}
 
 	if adopted > 0 {

@@ -1,3 +1,4 @@
+* Error getting the video VVjMP2DPDBo transcript; failed to extract list of transcripts: failed to extract video details: captions not found in response
 
 * Uncomment and remove code in:
   - `internal/integrations/gemini/gemini.go`
