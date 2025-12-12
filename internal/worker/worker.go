@@ -237,18 +237,20 @@ func (s *Service) Run(ctx context.Context) error {
 		// Keep only the valid videos
 		for _, video := range videosMetadata {
 
+			// Skip if invalid video
 			if err = s.yt.ValidateYouTubeVideo(video); err != nil {
 				continue
 			}
 
-			if err = s.postsRepo.IsPostBanned(ctx, video.Id); err != nil {
-
-				// Exit early if context ended
-				if utils.IsContextErr(err) {
-					return err
-				}
-
+			// Skip if the video is banned (manually deleted).
+			// If error is nil the post is IN the deleted_post table.
+			if err = s.postsRepo.IsPostBanned(ctx, video.Id); err == nil {
 				continue
+			}
+
+			// Exit early if context ended
+			if utils.IsContextErr(err) {
+				return err
 			}
 
 			// If the video is already in ytVideosMap as an orphaned video
