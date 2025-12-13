@@ -91,7 +91,7 @@ func TestNew(t *testing.T) {
 			_, err = redisClient.Ping(ctx)
 			if gotErr := err != nil; gotErr {
 				if gotErr != tt.wantErr {
-					t.Errorf("got error = %v, want error = %v", err, tt.wantErr)
+					t.Errorf("got error = %v, want error = %t", err, tt.wantErr)
 				}
 			}
 		})
@@ -123,7 +123,7 @@ func TestSet(t *testing.T) {
 		{
 			"primitive data",
 			ctx,
-			"test_1",
+			"testset1",
 			"test",
 			time.Second,
 			false,
@@ -131,7 +131,7 @@ func TestSet(t *testing.T) {
 		{
 			"json data",
 			ctx,
-			"test_2",
+			"testset2",
 			[]int{1, 2, 3},
 			time.Second,
 			false,
@@ -139,7 +139,7 @@ func TestSet(t *testing.T) {
 		{
 			"invalid json data",
 			ctx,
-			"test_3",
+			"testset3",
 			make(chan int),
 			time.Second,
 			true,
@@ -147,7 +147,7 @@ func TestSet(t *testing.T) {
 		{
 			"cancelled context",
 			cancelledCtx,
-			"test_4",
+			"testset4",
 			"test",
 			time.Second,
 			true,
@@ -164,4 +164,82 @@ func TestSet(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestGet(t *testing.T) {
+
+	// Create Redis client
+	redisClient, err := New(testCfg)
+	if err != nil {
+		t.Fatalf("failed to create Redis client; %v", err)
+	}
+
+	t.Cleanup(func() { redisClient.Close() })
+
+	ctx := context.TODO()
+	cancelledCtx, cancel := context.WithCancel(ctx)
+	cancel()
+
+	tests := []struct {
+		name    string
+		ctx     context.Context
+		key     string
+		value   any
+		wantErr bool
+	}{
+		{
+			"valid key",
+			ctx,
+			"testget1",
+			"test",
+			false,
+		},
+		{
+			"invalid key",
+			ctx,
+			"testget2",
+			"test",
+			true,
+		},
+		{
+			"cancelled context",
+			cancelledCtx,
+			"testget3",
+			"test",
+			true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			key := tt.key
+			if tt.name == "invalid key" {
+				key += ":invalid"
+			}
+
+			// Set value to redis, always with valid context
+			err = redisClient.Set(ctx, key, tt.value, 10*time.Second)
+			if err != nil {
+				t.Fatalf("failed to set value; %v", err)
+			}
+
+			// Get value from Redis
+			value, err := redisClient.Get(tt.ctx, tt.key)
+
+			// Check for wanted error
+			if gotErr := err != nil; gotErr {
+				if gotErr != tt.wantErr {
+					t.Errorf("got error = %v, want error = %t", err, tt.wantErr)
+				}
+				return
+			}
+
+			// Check for correct value
+			if value != tt.value {
+				t.Errorf("got value = %v, want value = %t", value, tt.value)
+			}
+		})
+	}
+
 }
