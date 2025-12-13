@@ -17,10 +17,15 @@ func TestHealth(t *testing.T) {
 	timeoutCtx, cancel := context.WithTimeout(ctx, time.Nanosecond)
 	t.Cleanup(cancel)
 
-	db, err := New(testCfg)
+	// Allow more max connections to properly measure 85% utilization
+	maxConnCfg := *testCfg
+	maxConnCfg.DBMaxConns = 10
+
+	db, err := New(&maxConnCfg)
 	if err != nil {
 		t.Fatalf("failed to create db pool; %v", err)
 	}
+
 	t.Cleanup(db.Close)
 
 	tests := []struct {

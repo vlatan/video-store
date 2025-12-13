@@ -27,7 +27,6 @@ jobs:
           DB_DATABASE: ${{ secrets.DB_DATABASE }}
           DB_USERNAME: ${{ secrets.DB_USERNAME }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_MAX_CONNS: ${{ secrets.DB_MAX_CONNS }}
           REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
       run: go test -race -coverprofile=coverage.out ./...
     
