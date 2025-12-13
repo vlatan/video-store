@@ -84,6 +84,8 @@ func TestNew(t *testing.T) {
 				return
 			}
 
+			t.Cleanup(func() { redisClient.Close() })
+
 			// Check for error on ping
 			_, err = redisClient.Ping(ctx)
 			if gotErr := err != nil; gotErr {

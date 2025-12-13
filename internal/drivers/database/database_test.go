@@ -87,6 +87,8 @@ func TestNew(t *testing.T) {
 				return
 			}
 
+			t.Cleanup(db.Close)
+
 			// For successful cases, verify we got a non-nil service
 			if !tt.wantErr && db == nil {
 				t.Errorf("got %+v, want non-nil", db)
