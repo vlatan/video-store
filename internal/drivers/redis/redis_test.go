@@ -237,7 +237,7 @@ func TestGet(t *testing.T) {
 
 			// Check for correct value
 			if value != tt.value {
-				t.Errorf("got value = %v, want value = %t", value, tt.value)
+				t.Errorf("got value = %v, want value = %v", value, tt.value)
 			}
 		})
 	}
