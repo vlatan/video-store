@@ -19,13 +19,16 @@ jobs:
       with:
         go-version: '1.25.1'
     
+    - name: Clean Test Cache
+      run: go clean -testcache
+    
     - name: Run Tests
       env:
           DB_DATABASE: ${{ secrets.DB_DATABASE }}
           DB_USERNAME: ${{ secrets.DB_USERNAME }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
-      run: go test -count=1 -race -coverprofile=coverage.out ./...
+      run: go test -race -coverprofile=coverage.out ./...
     
     - name: Display Coverage
       run: go tool cover -func=coverage.out
