@@ -8,7 +8,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
@@ -17,15 +16,19 @@ import (
 	"github.com/vlatan/video-store/internal/config"
 )
 
-type Container interface {
-	Terminate(ctx context.Context)
-}
-
 type dbContainer struct {
 	container *postgres.PostgresContainer
 }
 
-// SetupTestDB creates a PostgreSQL container, runs migrations, and seeds data
+// Terminate stops and removes the container
+func (db *dbContainer) Terminate(ctx context.Context) {
+	if err := db.container.Terminate(ctx); err != nil {
+		log.Printf("failed to terminate container: %v", err)
+	}
+}
+
+// SetupTestDB creates a PostgreSQL container, runs migrations, seeds data,
+// updates DB host and port of the supplied config
 func SetupTestDB(ctx context.Context, cfg *config.Config, projectRoot string) (Container, error) {
 
 	// Construct the absolute path to the migrations folder
@@ -55,7 +58,7 @@ func SetupTestDB(ctx context.Context, cfg *config.Config, projectRoot string) (C
 	host, err := container.Host(ctx)
 	if err != nil {
 		if cErr := container.Terminate(ctx); cErr != nil {
-			log.Printf("failed to terminate container: %v", cErr)
+			err = errors.Join(err, cErr)
 		}
 		return nil, fmt.Errorf("failed to get container host: %w", err)
 	}
@@ -63,7 +66,7 @@ func SetupTestDB(ctx context.Context, cfg *config.Config, projectRoot string) (C
 	port, err := container.MappedPort(ctx, "5432")
 	if err != nil {
 		if cErr := container.Terminate(ctx); cErr != nil {
-			log.Printf("failed to terminate container: %v", cErr)
+			err = errors.Join(err, cErr)
 		}
 		return nil, fmt.Errorf("failed to get container port: %w", err)
 	}
@@ -75,19 +78,12 @@ func SetupTestDB(ctx context.Context, cfg *config.Config, projectRoot string) (C
 	// Setup database (migrations + seeding)
 	if err := setupDatabase(ctx, cfg); err != nil {
 		if cErr := container.Terminate(ctx); cErr != nil {
-			log.Printf("failed to terminate container: %v", cErr)
+			err = errors.Join(err, cErr)
 		}
 		return nil, fmt.Errorf("failed to setup database: %w", err)
 	}
 
 	return &dbContainer{container}, nil
-}
-
-// Terminate stops and removes the container
-func (db *dbContainer) Terminate(ctx context.Context) {
-	if err := db.container.Terminate(ctx); err != nil {
-		log.Printf("failed to terminate container: %v", err)
-	}
 }
 
 func setupDatabase(ctx context.Context, cfg *config.Config) error {
@@ -157,31 +153,4 @@ func getMigrationFiles(migrationsDir string) ([]string, error) {
 	}
 
 	return migrations, nil
-}
-
-// GetProjectRoot returns the absolute path to the project root.
-// It works by finding the directory of the caller of this func and navigating up
-// until it finds the go.mod file.
-func GetProjectRoot() (string, error) {
-	_, filename, _, ok := runtime.Caller(1)
-	if !ok {
-		return "", errors.New("failed to get the caller information")
-	}
-
-	// Start directory for traversal
-	dir := filepath.Dir(filename)
-
-	for {
-		modFile := filepath.Join(dir, "go.mod")
-		if _, err := os.Stat(modFile); err == nil {
-			return dir, nil // Found the project root!
-		}
-
-		parentDir := filepath.Dir(dir)
-		if parentDir == dir {
-			return "", errors.New("reached root without finding go.mod")
-		}
-
-		dir = parentDir
-	}
 }

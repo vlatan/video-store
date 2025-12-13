@@ -16,6 +16,7 @@ import (
 
 var testCfg *config.Config
 
+// Sets ups a Postgres container for all tests in this package to use
 func TestMain(m *testing.M) {
 
 	// Get the project root

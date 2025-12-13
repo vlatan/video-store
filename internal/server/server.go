@@ -58,7 +58,11 @@ func NewServer() (*http.Server, string, func() error) {
 		log.Fatalf("couldn't create DB service; %v", err)
 	}
 
-	rdb := redis.New(cfg)
+	rdb, err := redis.New(cfg)
+	if err != nil {
+		log.Fatalf("couldn't create Redis service; %v", err)
+	}
+
 	store := redisStore.New(cfg, rdb, "session", 86400*30)
 
 	// Create DB repositories

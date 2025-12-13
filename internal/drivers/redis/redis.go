@@ -3,6 +3,7 @@ package redis
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -14,6 +15,8 @@ import (
 
 // Service represents a service that interacts with a redis client.
 type Service interface {
+	// Ping the redis server
+	Ping(ctx context.Context) (string, error)
 	// Set a key-value pair in Redis with an expiration duration.
 	Set(ctx context.Context, key string, value any, expiration time.Duration) error
 	// Get a value from Redis by key. Returns the value as a string.
@@ -42,14 +45,24 @@ type service struct {
 }
 
 // Produce new redis service
-func New(cfg *config.Config) Service {
+func New(cfg *config.Config) (Service, error) {
+
+	if cfg == nil {
+		return nil, errors.New("unable to create Redis service with nil config")
+	}
+
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     fmt.Sprintf("%s:%d", cfg.RedisHost, cfg.RedisPort),
 		Password: cfg.RedisPassword,
 		DB:       0, // use default DB
 	})
 
-	return &service{rdb, cfg}
+	return &service{rdb, cfg}, nil
+}
+
+// Ping pings the redis server
+func (s *service) Ping(ctx context.Context) (string, error) {
+	return s.rdb.Ping(ctx).Result()
 }
 
 // Get a value from Redis by key. Returns redis.Nil error if key does not exist.
