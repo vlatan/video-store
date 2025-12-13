@@ -45,8 +45,8 @@ func TestHealth(t *testing.T) {
 			// Stress the pool if needed
 			if tt.stress {
 
-				heldConnections := make([]*pgxpool.Conn, 0, testCfg.DBMaxConns)
-				for i := range testCfg.DBMaxConns {
+				heldConnections := make([]*pgxpool.Conn, 0, maxConnCfg.DBMaxConns)
+				for i := range maxConnCfg.DBMaxConns {
 					conn, err := db.Acquire(tt.ctx)
 
 					if err != nil {
