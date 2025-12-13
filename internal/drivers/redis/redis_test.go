@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/vlatan/video-store/internal/config"
@@ -91,6 +92,74 @@ func TestNew(t *testing.T) {
 			if gotErr := err != nil; gotErr {
 				if gotErr != tt.wantErr {
 					t.Errorf("got error = %v, want error = %v", err, tt.wantErr)
+				}
+			}
+		})
+	}
+}
+
+func TestSet(t *testing.T) {
+
+	// Create Redis client
+	redisClient, err := New(testCfg)
+	if err != nil {
+		t.Fatalf("failed to create Redis client; %v", err)
+	}
+
+	t.Cleanup(func() { redisClient.Close() })
+
+	ctx := context.TODO()
+	cancelledCtx, cancel := context.WithCancel(ctx)
+	cancel()
+
+	tests := []struct {
+		name    string
+		ctx     context.Context
+		key     string
+		value   any
+		ttl     time.Duration
+		wantErr bool
+	}{
+		{
+			"primitive data",
+			ctx,
+			"test_1",
+			"test",
+			time.Second,
+			false,
+		},
+		{
+			"json data",
+			ctx,
+			"test_2",
+			[]int{1, 2, 3},
+			time.Second,
+			false,
+		},
+		{
+			"invalid json data",
+			ctx,
+			"test_3",
+			make(chan int),
+			time.Second,
+			true,
+		},
+		{
+			"cancelled context",
+			cancelledCtx,
+			"test_4",
+			"test",
+			time.Second,
+			true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err = redisClient.Set(tt.ctx, tt.key, tt.value, tt.ttl)
+			if gotErr := err != nil; gotErr {
+				if gotErr != tt.wantErr {
+					t.Errorf("got error = %v, want error = %t", err, tt.wantErr)
 				}
 			}
 		})

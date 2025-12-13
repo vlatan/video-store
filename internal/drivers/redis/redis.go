@@ -73,7 +73,7 @@ func (s *service) Get(ctx context.Context, key string) (string, error) {
 // Set a key-value pair in Redis with an expiration duration.
 func (s *service) Set(ctx context.Context, key string, value any, ttl time.Duration) error {
 	switch v := value.(type) {
-	case string, []byte:
+	case string, []byte, int:
 		return s.rdb.Set(ctx, key, v, ttl).Err()
 	default:
 		jsonData, err := json.Marshal(value)
