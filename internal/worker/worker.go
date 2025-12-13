@@ -32,6 +32,9 @@ type Service struct {
 // Update limit per worker run
 const updateLimit = 20
 
+// Maximum videos to delete per run
+const deleteLimit = 5
+
 func New() *Service {
 
 	// Create essential services
@@ -265,7 +268,6 @@ func (s *Service) Run(ctx context.Context) error {
 	// ###################################################################
 
 	// Delete and update videos in DB
-	const maxDeletion = 5
 	var adopted, deleted int
 	var validDBVideos []*models.Post
 	for _, video := range dbVideos {
@@ -274,7 +276,7 @@ func (s *Service) Run(ctx context.Context) error {
 		if _, exists := ytVideosMap[video.VideoID]; !exists {
 
 			// Do not delete any more videos if max deletion was reached
-			if deleted >= maxDeletion {
+			if deleted >= deleteLimit {
 				continue
 			}
 
@@ -317,7 +319,7 @@ func (s *Service) Run(ctx context.Context) error {
 		items = utils.Plural(deleted, "video")
 		log.Printf("Deleted %d %s", deleted, items)
 
-		if deleted >= maxDeletion {
+		if deleted >= deleteLimit {
 			msg := "WARNING: HIT MAX DELETION LIMIT. "
 			msg += "If this persists investigate for bugs"
 			log.Println(msg)
