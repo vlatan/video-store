@@ -32,6 +32,15 @@ jobs:
     
     - name: Display Coverage
       run: go tool cover -func=coverage.out
+
+    - name: Generate Coverage HTML
+      run: go tool cover -html=coverage.out -o coverage.html
+
+    - name: Upload Coverage Report
+      uses: actions/upload-artifact@v6
+      with:
+        name: coverage-report
+        path: coverage.html
   
   sast:
     runs-on: ubuntu-latest
