@@ -8,7 +8,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/vlatan/video-store/internal/drivers/redis"
+	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/utils"
 
@@ -29,13 +29,13 @@ func (s *Service) SinglePageHandler(w http.ResponseWriter, r *http.Request) {
 	// Default data
 	data := models.GetDataFromContext(r)
 
-	page, err := redis.GetItems(
+	page, err := rdb.GetItems(
 		!data.IsCurrentUserAdmin(),
 		r.Context(),
 		s.rdb,
 		fmt.Sprintf(pageCacheKey, pageSlug),
 		s.config.CacheTimeout,
-		func() (*models.Page, error) {
+		func() (models.Page, error) {
 			return s.pagesRepo.GetSinglePage(r.Context(), pageSlug)
 		},
 	)
@@ -62,7 +62,7 @@ func (s *Service) SinglePageHandler(w http.ResponseWriter, r *http.Request) {
 	page.HTMLContent = template.HTML(html) // #nosec G203
 
 	// Assign the page to data
-	data.CurrentPage = page
+	data.CurrentPage = &page
 	data.Title = page.Title
 
 	s.ui.RenderHTML(w, r, "page.html", data)

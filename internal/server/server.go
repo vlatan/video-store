@@ -10,7 +10,7 @@ import (
 
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/drivers/database"
-	"github.com/vlatan/video-store/internal/drivers/redis"
+	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/handlers/auth"
 	"github.com/vlatan/video-store/internal/handlers/misc"
 	"github.com/vlatan/video-store/internal/handlers/pages"
@@ -58,7 +58,7 @@ func NewServer() (*http.Server, string, func() error) {
 		log.Fatalf("couldn't create DB service; %v", err)
 	}
 
-	rdb, err := redis.New(cfg)
+	rdb, err := rdb.New(cfg)
 	if err != nil {
 		log.Fatalf("couldn't create Redis service; %v", err)
 	}

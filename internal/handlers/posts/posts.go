@@ -2,7 +2,7 @@ package posts
 
 import (
 	"github.com/vlatan/video-store/internal/config"
-	"github.com/vlatan/video-store/internal/drivers/redis"
+	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/integrations/gemini"
 	"github.com/vlatan/video-store/internal/integrations/yt"
 	postsRepo "github.com/vlatan/video-store/internal/repositories/posts"
@@ -11,7 +11,7 @@ import (
 
 type Service struct {
 	postsRepo *postsRepo.Repository
-	rdb       *redis.RedisService
+	rdb       *rdb.Service
 	ui        ui.Service
 	config    *config.Config
 	yt        *yt.Service
@@ -20,7 +20,7 @@ type Service struct {
 
 func New(
 	postsRepo *postsRepo.Repository,
-	rdb *redis.RedisService,
+	rdb *rdb.Service,
 	ui ui.Service,
 	config *config.Config,
 	yt *yt.Service,

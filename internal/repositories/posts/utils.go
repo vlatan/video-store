@@ -24,7 +24,9 @@ func (r *Repository) queryTaxonomyPosts(
 	taxonomyID,
 	cursor,
 	orderBy string,
-) (*models.Posts, error) {
+) (models.Posts, error) {
+
+	var zero models.Posts
 
 	// Construct the SQL parts as well as the arguments
 	// The category slug and limit are the first two arguments ($1 and $2)
@@ -41,19 +43,19 @@ func (r *Repository) queryTaxonomyPosts(
 
 		cursorParts, err := decodeCursor(cursor)
 		if err != nil {
-			return nil, err
+			return zero, err
 		}
 
 		switch orderBy {
 		case "likes":
 			if len(cursorParts) != 3 {
-				return nil, errors.New("invalid cursor components")
+				return zero, errors.New("invalid cursor components")
 			}
 			args = append(args, cursorParts[0], cursorParts[1], cursorParts[2])
 			where = "WHERE (likes, upload_date, id) < ($3, $4, $5)"
 		default:
 			if len(cursorParts) != 2 {
-				return nil, fmt.Errorf("invalid cursor components")
+				return zero, fmt.Errorf("invalid cursor components")
 			}
 			args = append(args, cursorParts[0], cursorParts[1])
 			where = "WHERE (upload_date, id) < ($3, $4)"
@@ -64,7 +66,7 @@ func (r *Repository) queryTaxonomyPosts(
 	query = fmt.Sprintf(query, where, order)
 	rows, err := r.db.Query(ctx, query, args...)
 	if err != nil {
-		return nil, err
+		return zero, err
 	}
 
 	// Close rows on exit
@@ -86,7 +88,7 @@ func (r *Repository) queryTaxonomyPosts(
 			&post.Likes,
 			&post.UploadDate,
 		); err != nil {
-			return nil, err
+			return zero, err
 		}
 
 		posts.Title = utils.FromNullString(playlistTitle)
@@ -97,17 +99,17 @@ func (r *Repository) queryTaxonomyPosts(
 
 	// If error during iteration
 	if err = rows.Err(); err != nil {
-		return nil, err
+		return zero, err
 	}
 
 	// Post-process the posts, prepare the thumbnail
-	if err = postProcessPosts(ctx, posts.Items); err != nil {
-		return nil, err
+	if err = postProcessPosts(ctx, posts); err != nil {
+		return zero, err
 	}
 
 	// This is the last page
 	if len(posts.Items) <= r.config.PostsPerPage {
-		return &posts, nil
+		return posts, nil
 	}
 
 	// Exclude the last post
@@ -125,7 +127,7 @@ func (r *Repository) queryTaxonomyPosts(
 
 	posts.NextCursor = base64.StdEncoding.EncodeToString([]byte(cursorStr))
 
-	return &posts, nil
+	return posts, nil
 }
 
 // decodeCursor decodes base64 string, splits the string on comma
@@ -140,11 +142,11 @@ func decodeCursor(cursor string) ([]string, error) {
 
 // Concurrently unserialize the thumbnails on posts.
 // Prepare the srcset value and the appropriate thumbnail.
-func postProcessPosts(ctx context.Context, posts []models.Post) error {
+func postProcessPosts(ctx context.Context, posts models.Posts) error {
 
 	g := new(errgroup.Group)
 	semaphore := make(chan struct{}, runtime.GOMAXPROCS(0))
-	for i, post := range posts {
+	for i, post := range posts.Items {
 
 		g.Go(func() error {
 			select {
@@ -158,9 +160,9 @@ func postProcessPosts(ctx context.Context, posts []models.Post) error {
 				err := json.Unmarshal(post.RawThumbs, &thumbs)
 
 				if err == nil {
-					posts[i].Thumbnail = thumbs.Medium
-					posts[i].Srcset = thumbs.Srcset(480)
-					posts[i].RawThumbs = nil
+					posts.Items[i].Thumbnail = thumbs.Medium
+					posts.Items[i].Srcset = thumbs.Srcset(480)
+					posts.Items[i].RawThumbs = nil
 					return nil
 				}
 
@@ -170,8 +172,8 @@ func postProcessPosts(ctx context.Context, posts []models.Post) error {
 				)
 
 				// Set empty Thumbnail so the HTML templates don't break
-				posts[i].Thumbnail = &models.Thumbnail{}
-				posts[i].RawThumbs = nil
+				posts.Items[i].Thumbnail = &models.Thumbnail{}
+				posts.Items[i].RawThumbs = nil
 				return nil
 			}
 		})

@@ -1,12 +1,27 @@
 package models
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 type Category struct {
 	Name      string     `json:"name,omitempty"`
 	Slug      string     `json:"slug,omitempty"`
 	CreatedAt *time.Time `json:"created_at,omitempty"`
 	UpdatedAt *time.Time `json:"updated_at,omitempty"`
+}
+
+type Categories []Category
+
+// MarshalBinary implements the encoding.BinaryMarshaler interface
+func (cats Categories) MarshalBinary() (data []byte, err error) {
+	return json.Marshal(cats)
+}
+
+// UnmarshalBinary implements the encoding.BinaryUnmarshaler interface
+func (cats *Categories) UnmarshalBinary(data []byte) error {
+	return json.Unmarshal(data, cats)
 }
 
 type Source struct {
@@ -22,4 +37,16 @@ type Source struct {
 	ChannelDescription string      `json:"channel_description,omitempty"`
 	CreatedAt          *time.Time  `json:"created_at,omitempty"`
 	UpdatedAt          *time.Time  `json:"updated_at,omitempty"`
+}
+
+type Sources []Source
+
+// MarshalBinary implements the encoding.BinaryMarshaler interface
+func (s Sources) MarshalBinary() (data []byte, err error) {
+	return json.Marshal(s)
+}
+
+// UnmarshalBinary implements the encoding.BinaryUnmarshaler interface
+func (s *Sources) UnmarshalBinary(data []byte) error {
+	return json.Unmarshal(data, s)
 }

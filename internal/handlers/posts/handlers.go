@@ -9,7 +9,7 @@ import (
 	"slices"
 	"time"
 
-	"github.com/vlatan/video-store/internal/drivers/redis"
+	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/utils"
 
@@ -36,13 +36,13 @@ func (s *Service) HomeHandler(w http.ResponseWriter, r *http.Request) {
 		redisKey += fmt.Sprintf(":cursor:%s", cursor)
 	}
 
-	posts, err := redis.GetItems(
+	posts, err := rdb.GetItems(
 		!data.IsCurrentUserAdmin(),
 		r.Context(),
 		s.rdb,
 		redisKey,
 		s.config.CacheTimeout,
-		func() (*models.Posts, error) {
+		func() (models.Posts, error) {
 			return s.postsRepo.GetHomePosts(r.Context(), cursor, orderBy)
 		},
 	)
@@ -59,7 +59,7 @@ func (s *Service) HomeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data.Posts = posts
+	data.Posts = &posts
 	s.ui.RenderHTML(w, r, "home.html", data)
 }
 
@@ -83,13 +83,13 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 		redisKey += fmt.Sprintf(":cursor:%s", cursor)
 	}
 
-	posts, err := redis.GetItems(
+	posts, err := rdb.GetItems(
 		!data.IsCurrentUserAdmin(),
 		r.Context(),
 		s.rdb,
 		redisKey,
 		s.config.CacheTimeout,
-		func() (*models.Posts, error) {
+		func() (models.Posts, error) {
 			return s.postsRepo.GetCategoryPosts(r.Context(), slug, cursor, orderBy)
 		},
 	)
@@ -106,7 +106,7 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data.Posts = posts
+	data.Posts = &posts
 	data.Title = data.Posts.Title
 	s.ui.RenderHTML(w, r, "category.html", data)
 }
@@ -136,13 +136,13 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 		redisKey += fmt.Sprintf(":cursor:%s", cursor)
 	}
 
-	posts, err := redis.GetItems(
+	posts, err := rdb.GetItems(
 		!data.IsCurrentUserAdmin(),
 		r.Context(),
 		s.rdb,
 		redisKey,
 		s.config.CacheTimeout,
-		func() (*models.Posts, error) {
+		func() (models.Posts, error) {
 			return s.postsRepo.SearchPosts(r.Context(), searchQuery, s.config.PostsPerPage, cursor)
 		},
 	)
@@ -161,7 +161,7 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data.Posts = posts
+	data.Posts = &posts
 	data.Posts.TimeTook = fmt.Sprintf("%.2f", end.Seconds())
 	data.Title = "Search"
 	s.ui.RenderHTML(w, r, "search.html", data)
@@ -330,13 +330,13 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	post, err := redis.GetItems(
+	post, err := rdb.GetItems(
 		!data.CurrentUser.IsAuthenticated(),
 		r.Context(),
 		s.rdb,
 		fmt.Sprintf("post:%s", videoID),
 		s.config.CacheTimeout,
-		func() (*models.Post, error) {
+		func() (models.Post, error) {
 			return s.postsRepo.GetSinglePost(r.Context(), videoID)
 		},
 	)
@@ -353,7 +353,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Assign the post to data
-	data.CurrentPost = post
+	data.CurrentPost = &post
 	data.Title = post.Title
 
 	// Check whether the current user liked and/or faved the post
@@ -368,18 +368,18 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Ignore the error on related posts, no posts will be shown
-	relatedPosts, _ := redis.GetItems(
+	relatedPosts, _ := rdb.GetItems(
 		!data.CurrentUser.IsAuthenticated(),
 		r.Context(),
 		s.rdb,
 		fmt.Sprintf("post:%s:related_posts", videoID),
 		s.config.CacheTimeout,
-		func() ([]models.Post, error) {
+		func() (models.Posts, error) {
 			return s.postsRepo.GetRelatedPosts(r.Context(), post.Title)
 		},
 	)
 
-	data.CurrentPost.RelatedPosts = relatedPosts
+	data.CurrentPost.RelatedPosts = relatedPosts.Items
 	s.ui.RenderHTML(w, r, "post.html", data)
 }
 

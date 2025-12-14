@@ -20,11 +20,9 @@ func New(db *pgxpool.Pool) *Repository {
 }
 
 // Get single page from DB
-func (r *Repository) GetSinglePage(ctx context.Context, slug string) (*models.Page, error) {
+func (r *Repository) GetSinglePage(ctx context.Context, slug string) (models.Page, error) {
 
 	var page models.Page
-
-	// Nullable string
 	var content sql.NullString
 
 	// Get single row from DB
@@ -35,11 +33,11 @@ func (r *Repository) GetSinglePage(ctx context.Context, slug string) (*models.Pa
 	)
 
 	if err != nil {
-		return nil, err
+		return models.Page{}, err
 	}
 
 	page.Content = utils.FromNullString(content)
-	return &page, nil
+	return page, nil
 }
 
 // Update page

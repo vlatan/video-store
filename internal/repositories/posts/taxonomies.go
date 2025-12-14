@@ -34,7 +34,7 @@ func (r *Repository) GetCategoryPosts(
 	categorySlug,
 	cursor,
 	orderBy string,
-) (*models.Posts, error) {
+) (models.Posts, error) {
 
 	posts, err := r.queryTaxonomyPosts(
 		ctx,
@@ -45,7 +45,7 @@ func (r *Repository) GetCategoryPosts(
 	)
 
 	if err != nil {
-		return nil, err
+		return models.Posts{}, err
 	}
 
 	return posts, nil
@@ -84,7 +84,7 @@ func (r *Repository) GetSourcePosts(
 	playlistID,
 	cursor,
 	orderBy string,
-) (*models.Posts, error) {
+) (models.Posts, error) {
 
 	posts, err := r.queryTaxonomyPosts(
 		ctx,
@@ -95,7 +95,7 @@ func (r *Repository) GetSourcePosts(
 	)
 
 	if err != nil {
-		return nil, err
+		return models.Posts{}, err
 	}
 
 	return posts, nil

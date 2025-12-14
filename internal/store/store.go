@@ -11,13 +11,13 @@ import (
 	"github.com/gorilla/sessions"
 	"github.com/redis/go-redis/v9"
 	"github.com/vlatan/video-store/internal/config"
-	rs "github.com/vlatan/video-store/internal/drivers/redis"
+	"github.com/vlatan/video-store/internal/drivers/rdb"
 )
 
 // redisStore implements sessions.Store (New, Get and Save)
 type redisStore struct {
 	config    *config.Config
-	rdb       *rs.RedisService
+	rdb       *rdb.Service
 	keyPrefix string
 	maxAge    int
 	codec     securecookie.Codec
@@ -25,7 +25,7 @@ type redisStore struct {
 
 func New(
 	config *config.Config,
-	rdb *rs.RedisService,
+	rdb *rdb.Service,
 	keyPrefix string,
 	maxAge int) *redisStore {
 

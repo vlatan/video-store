@@ -115,9 +115,9 @@ const getSinglePostQuery = `
 `
 
 // Get single post from DB based on a video ID
-func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (*models.Post, error) {
+func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.Post, error) {
 
-	var post models.Post
+	var zero, post models.Post
 	post.Duration = &models.Duration{}
 
 	var thumbnails []byte
@@ -139,7 +139,7 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (*models
 	)
 
 	if err != nil {
-		return nil, err
+		return zero, err
 	}
 
 	// Define category if valid
@@ -168,7 +168,7 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (*models
 	// Unserialize thumbnails
 	var thumbs models.Thumbnails
 	if err = json.Unmarshal(thumbnails, &thumbs); err != nil {
-		return nil, fmt.Errorf("video ID '%s': %w", videoID, err)
+		return zero, fmt.Errorf("video ID '%s': %w", videoID, err)
 	}
 
 	// Assign the biggest thumbnail to post
@@ -183,5 +183,5 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (*models
 	// Make srcset string
 	post.Srcset = thumbs.Srcset(maxThumb.Width)
 
-	return &post, nil
+	return post, nil
 }

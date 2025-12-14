@@ -1,6 +1,7 @@
 package models
 
 import (
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"regexp"
@@ -51,12 +52,32 @@ type Post struct {
 	WhenUserFaved *time.Time `json:"when_current_user_faved,omitempty"`
 }
 
+// MarshalBinary implements the encoding.BinaryMarshaler interface
+func (p Post) MarshalBinary() (data []byte, err error) {
+	return json.Marshal(p)
+}
+
+// UnmarshalBinary implements the encoding.BinaryUnmarshaler interface
+func (p *Post) UnmarshalBinary(data []byte) error {
+	return json.Unmarshal(data, p)
+}
+
 type Posts struct {
 	Title      string `json:"title,omitempty"`
 	Items      []Post `json:"items"`
 	NextCursor string `json:"next_cursor"`
 	TotalNum   int    `json:"total_num,omitempty"`
 	TimeTook   string `json:"time_took,omitempty"`
+}
+
+// MarshalBinary implements the encoding.BinaryMarshaler interface
+func (p Posts) MarshalBinary() (data []byte, err error) {
+	return json.Marshal(p)
+}
+
+// UnmarshalBinary implements the encoding.BinaryUnmarshaler interface
+func (p *Posts) UnmarshalBinary(data []byte) error {
+	return json.Unmarshal(data, p)
 }
 
 // Create a srcset string from a struct of thumbnails

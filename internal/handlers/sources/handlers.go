@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/vlatan/video-store/internal/drivers/redis"
+	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/utils"
 )
@@ -16,13 +16,13 @@ func (s *Service) SourcesHandler(w http.ResponseWriter, r *http.Request) {
 	data := models.GetDataFromContext(r)
 
 	// Get sources from redis or DB
-	sources, err := redis.GetItems(
+	sources, err := rdb.GetItems(
 		!data.IsCurrentUserAdmin(),
 		r.Context(),
 		s.rdb,
 		"sources",
 		s.config.CacheTimeout,
-		func() ([]models.Source, error) {
+		func() (models.Sources, error) {
 			return s.sourcesRepo.GetSources(r.Context())
 		},
 	)
@@ -161,13 +161,13 @@ func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
 		redisKey += fmt.Sprintf(":cursor:%s", cursor)
 	}
 
-	posts, err := redis.GetItems(
+	posts, err := rdb.GetItems(
 		!data.IsCurrentUserAdmin(),
 		r.Context(),
 		s.rdb,
 		redisKey,
 		s.config.CacheTimeout,
-		func() (*models.Posts, error) {
+		func() (models.Posts, error) {
 			return s.postsRepo.GetSourcePosts(r.Context(), sourceID, cursor, orderBy)
 		},
 	)
@@ -184,7 +184,7 @@ func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data.Posts = posts
+	data.Posts = &posts
 	if sourceID == "other" {
 		data.Posts.Title = "Other Uploads"
 	}

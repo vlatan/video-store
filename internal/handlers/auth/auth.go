@@ -2,7 +2,7 @@ package auth
 
 import (
 	"github.com/vlatan/video-store/internal/config"
-	"github.com/vlatan/video-store/internal/drivers/redis"
+	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/integrations/r2"
 	"github.com/vlatan/video-store/internal/repositories/users"
 	"github.com/vlatan/video-store/internal/ui"
@@ -13,7 +13,7 @@ import (
 type Service struct {
 	usersRepo *users.Repository
 	store     sessions.Store
-	rdb       *redis.RedisService
+	rdb       *rdb.Service
 	r2s       r2.Service
 	ui        ui.Service
 	config    *config.Config
@@ -23,7 +23,7 @@ type Service struct {
 func New(
 	usersRepo *users.Repository,
 	store sessions.Store,
-	rdb *redis.RedisService,
+	rdb *rdb.Service,
 	r2s r2.Service,
 	ui ui.Service,
 	config *config.Config,

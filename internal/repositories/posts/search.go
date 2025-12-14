@@ -49,7 +49,9 @@ func (r *Repository) SearchPosts(
 	ctx context.Context,
 	searchTerm string,
 	limit int,
-	cursor string) (*models.Posts, error) {
+	cursor string) (models.Posts, error) {
+
+	var zero models.Posts
 
 	// Construct the SQL parts as well as the arguments
 	// The search term and limit are the first two arguments ($1 and $2)
@@ -67,16 +69,16 @@ func (r *Repository) SearchPosts(
 
 		cursorParts, err := decodeCursor(cursor)
 		if err != nil {
-			return nil, err
+			return zero, err
 		}
 
 		if len(cursorParts) != 4 {
-			return nil, errors.New("invalid cursor components")
+			return zero, errors.New("invalid cursor components")
 		}
 
 		score, err := strconv.ParseFloat(cursorParts[0], 64)
 		if err != nil {
-			return nil, err
+			return zero, err
 		}
 
 		args = append(args, score, cursorParts[1], cursorParts[2], cursorParts[3])
@@ -87,7 +89,7 @@ func (r *Repository) SearchPosts(
 	// Get rows from DB
 	rows, err := r.db.Query(ctx, query, args...)
 	if err != nil {
-		return nil, err
+		return zero, err
 	}
 
 	// Close rows on exit
@@ -110,7 +112,7 @@ func (r *Repository) SearchPosts(
 			&post.UploadDate,
 			&post.Score,
 		); err != nil {
-			return nil, err
+			return zero, err
 		}
 
 		// Include the processed post in the result
@@ -122,17 +124,17 @@ func (r *Repository) SearchPosts(
 
 	// If error during iteration
 	if err = rows.Err(); err != nil {
-		return nil, err
+		return zero, err
 	}
 
 	// Post-process the posts, prepare the thumbnail
-	if err = postProcessPosts(ctx, posts.Items); err != nil {
-		return nil, err
+	if err = postProcessPosts(ctx, posts); err != nil {
+		return zero, err
 	}
 
 	// This is the last page
 	if len(posts.Items) <= limit {
-		return &posts, nil
+		return posts, nil
 	}
 
 	// Exclude the last post
@@ -146,5 +148,5 @@ func (r *Repository) SearchPosts(
 	cursorStr := fmt.Sprintf("%.17g,%d,%s,%d", lastPost.Score, lastPost.Likes, uploadDate, lastPost.ID)
 	posts.NextCursor = base64.StdEncoding.EncodeToString([]byte(cursorStr))
 
-	return &posts, nil
+	return posts, nil
 }

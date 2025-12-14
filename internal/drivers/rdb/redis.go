@@ -1,4 +1,4 @@
-package redis
+package rdb
 
 import (
 	"context"
@@ -10,12 +10,12 @@ import (
 	"github.com/vlatan/video-store/internal/config"
 )
 
-type RedisService struct {
+type Service struct {
 	Client *redis.Client
 }
 
 // Produce new Redis service
-func New(cfg *config.Config) (*RedisService, error) {
+func New(cfg *config.Config) (*Service, error) {
 
 	if cfg == nil {
 		return nil, errors.New("unable to create Redis service with nil config")
@@ -27,11 +27,11 @@ func New(cfg *config.Config) (*RedisService, error) {
 		DB:       0, // use default DB
 	})
 
-	return &RedisService{rdb}, nil
+	return &Service{rdb}, nil
 }
 
 // Store hashmap
-func (rs *RedisService) PipeHset(ctx context.Context, ttl time.Duration, key string, values ...any) error {
+func (rs *Service) PipeHset(ctx context.Context, ttl time.Duration, key string, values ...any) error {
 
 	pipe := rs.Client.Pipeline()
 	if err := pipe.HSet(ctx, key, values...).Err(); err != nil {
@@ -47,7 +47,7 @@ func (rs *RedisService) PipeHset(ctx context.Context, ttl time.Duration, key str
 }
 
 // Check if the Redis client is healthy
-func (rs *RedisService) Health(ctx context.Context) map[string]any {
+func (rs *Service) Health(ctx context.Context) map[string]any {
 
 	start := time.Now()
 

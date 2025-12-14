@@ -109,7 +109,7 @@ func (r *Repository) GetUserFavedPosts(
 	}
 
 	// Post-process the posts, prepare the thumbnail
-	if err = postProcessPosts(ctx, posts.Items); err != nil {
+	if err = postProcessPosts(ctx, posts); err != nil {
 		return nil, err
 	}
 

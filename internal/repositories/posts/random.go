@@ -21,14 +21,14 @@ const getRandomPostsQuery = `
 `
 
 // Get random posts
-func (r *Repository) GetRandomPosts(ctx context.Context, title string, limit int) ([]models.Post, error) {
+func (r *Repository) GetRandomPosts(ctx context.Context, title string, limit int) (models.Posts, error) {
 
-	var posts []models.Post
+	var zero, posts models.Posts
 
 	// Get rows from DB
 	rows, err := r.db.Query(ctx, getRandomPostsQuery, title, limit)
 	if err != nil {
-		return nil, err
+		return zero, err
 	}
 
 	// Close rows on exit
@@ -37,29 +37,27 @@ func (r *Repository) GetRandomPosts(ctx context.Context, title string, limit int
 	// Iterate over the rows
 	for rows.Next() {
 		var post models.Post
-
-		// Paste post from row to struct, thumbnails in a separate var
 		if err = rows.Scan(
 			&post.VideoID,
 			&post.Title,
 			&post.RawThumbs,
 			&post.Likes,
 		); err != nil {
-			return nil, err
+			return zero, err
 		}
 
 		// Include the processed post in the result
-		posts = append(posts, post)
+		posts.Items = append(posts.Items, post)
 	}
 
 	// If error during iteration
 	if err = rows.Err(); err != nil {
-		return nil, err
+		return zero, err
 	}
 
 	// Post-process the posts, prepare the thumbnail
 	if err = postProcessPosts(ctx, posts); err != nil {
-		return nil, err
+		return zero, err
 	}
 
 	return posts, nil

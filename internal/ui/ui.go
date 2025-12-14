@@ -6,7 +6,7 @@ import (
 	"regexp"
 
 	"github.com/vlatan/video-store/internal/config"
-	"github.com/vlatan/video-store/internal/drivers/redis"
+	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/integrations/r2"
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/repositories/categories"
@@ -45,7 +45,7 @@ type Service interface {
 type service struct {
 	templates   models.TemplateMap
 	staticFiles models.StaticFiles
-	rdb         *redis.RedisService
+	rdb         *rdb.Service
 	r2s         r2.Service
 	config      *config.Config
 	store       sessions.Store
@@ -60,7 +60,7 @@ var validXML = regexp.MustCompile("[/+]xml$")
 func New(
 	usersRepo *users.Repository,
 	catsRepo *categories.Repository,
-	rdb *redis.RedisService,
+	rdb *rdb.Service,
 	r2s r2.Service,
 	store sessions.Store,
 	config *config.Config,

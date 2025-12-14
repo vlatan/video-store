@@ -17,7 +17,8 @@ import (
 
 	"github.com/redis/go-redis/v9"
 	"github.com/vlatan/video-store/internal/config"
-	rs "github.com/vlatan/video-store/internal/drivers/redis"
+	"github.com/vlatan/video-store/internal/drivers/rdb"
+
 	"github.com/vlatan/video-store/internal/integrations/r2"
 	"github.com/vlatan/video-store/internal/utils"
 
@@ -82,7 +83,7 @@ func (u *User) SetAnalyticsID() {
 func (u *User) SetAvatar(
 	ctx context.Context,
 	config *config.Config,
-	rdb *rs.RedisService,
+	rdb *rdb.Service,
 	r2s r2.Service) error {
 
 	// Set the anaylytics ID in case it's missing
@@ -236,7 +237,7 @@ func (u *User) DownloadAvatar(ctx context.Context, config *config.Config, r2s r2
 }
 
 // Delete local avatar if exists
-func (u *User) DeleteAvatar(ctx context.Context, config *config.Config, rdb *rs.RedisService, r2s r2.Service) {
+func (u *User) DeleteAvatar(ctx context.Context, config *config.Config, rdb *rdb.Service, r2s r2.Service) {
 
 	// Attemp to delete the avatar image from R2
 	objectKey := fmt.Sprintf(avatarPath, u.AnalyticsID)

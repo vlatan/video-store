@@ -16,7 +16,7 @@ func New(db *pgxpool.Pool) *Repository {
 }
 
 // Get all valid categories
-func (r *Repository) GetCategories(ctx context.Context) ([]models.Category, error) {
+func (r *Repository) GetCategories(ctx context.Context) (models.Categories, error) {
 
 	rows, err := r.db.Query(ctx, getCategoriesQuery)
 	if err != nil {
@@ -24,7 +24,7 @@ func (r *Repository) GetCategories(ctx context.Context) ([]models.Category, erro
 	}
 	defer rows.Close()
 
-	var categories []models.Category
+	var categories models.Categories
 	for rows.Next() {
 
 		// Get categories from DB

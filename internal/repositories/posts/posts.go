@@ -21,39 +21,41 @@ func New(db *pgxpool.Pool, config *config.Config) *Repository {
 }
 
 // Get post's related posts based on provided title as search query
-func (r *Repository) GetRelatedPosts(ctx context.Context, title string) ([]models.Post, error) {
+func (r *Repository) GetRelatedPosts(ctx context.Context, title string) (models.Posts, error) {
+
+	var zero, posts models.Posts
 
 	// Search the DB for posts
 	searchedPosts, err := r.SearchPosts(ctx, title, r.config.NumRelatedPosts+1, "")
 
 	if err != nil {
-		return nil, err
+		return zero, err
 	}
 
-	var posts []models.Post
 	for _, sp := range searchedPosts.Items {
 		if sp.Title != title {
-			posts = append(posts, sp)
+			posts.Items = append(posts.Items, sp)
 		}
 	}
 
-	if len(posts) > r.config.NumRelatedPosts {
-		return posts[:r.config.NumRelatedPosts], nil
+	if len(posts.Items) > r.config.NumRelatedPosts {
+		posts.Items = posts.Items[:r.config.NumRelatedPosts]
+		return posts, nil
 	}
 
-	if len(posts) == r.config.NumRelatedPosts {
+	if len(posts.Items) == r.config.NumRelatedPosts {
 		return posts, nil
 	}
 
 	// Get some random posts if not enough related posts
-	if len(posts) < r.config.NumRelatedPosts {
-		limit := r.config.NumRelatedPosts - len(posts)
+	if len(posts.Items) < r.config.NumRelatedPosts {
+		limit := r.config.NumRelatedPosts - len(posts.Items)
 		randomPosts, err := r.GetRandomPosts(ctx, title, limit)
 		if err != nil {
-			return nil, err
+			return zero, err
 		}
 
-		posts = append(posts, randomPosts...)
+		posts.Items = append(posts.Items, randomPosts.Items...)
 	}
 
 	return posts, nil

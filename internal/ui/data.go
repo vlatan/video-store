@@ -5,7 +5,7 @@ import (
 	"math"
 	"net/http"
 
-	"github.com/vlatan/video-store/internal/drivers/redis"
+	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/utils"
 
@@ -23,13 +23,13 @@ func (s *service) GetStaticFiles() models.StaticFiles {
 func (s *service) NewData(w http.ResponseWriter, r *http.Request) *models.TemplateData {
 
 	// Get the categories from cache
-	categories, _ := redis.GetItems(
+	categories, _ := rdb.GetItems(
 		true,
 		r.Context(),
 		s.rdb,
 		"categories",
 		s.config.CacheTimeout,
-		func() ([]models.Category, error) {
+		func() (models.Categories, error) {
 			return s.catsRepo.GetCategories(r.Context())
 		},
 	)

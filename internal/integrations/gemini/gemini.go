@@ -100,7 +100,7 @@ func (s *Service) GenerateContent(
 // https://ai.google.dev/gemini-api/docs/video-understanding#youtube
 func (s *Service) GenerateInfo(
 	ctx context.Context,
-	categories []models.Category,
+	categories models.Categories,
 	transcript string,
 	delay time.Duration,
 	maxRetries int,

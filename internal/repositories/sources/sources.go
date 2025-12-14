@@ -91,15 +91,16 @@ func (r *Repository) UpdateSource(ctx context.Context, source *models.Source) (i
 }
 
 // Get a limited number of sources with offset
-func (r *Repository) GetSources(ctx context.Context) ([]models.Source, error) {
+func (r *Repository) GetSources(ctx context.Context) (models.Sources, error) {
+
+	var zero, sources models.Sources
 
 	rows, err := r.db.Query(ctx, getSourcesQuery)
 	if err != nil {
-		return nil, err
+		return zero, err
 	}
 	defer rows.Close()
 
-	var sources []models.Source
 	for rows.Next() {
 		// Get categories from DB
 		var source models.Source
@@ -113,14 +114,14 @@ func (r *Repository) GetSources(ctx context.Context) ([]models.Source, error) {
 			&thumbnails,
 			&source.UpdatedAt,
 		); err != nil {
-			return nil, err
+			return zero, err
 		}
 
 		// Unserialize thumbnails
 		var channelThumbs models.Thumbnails
 		if err = json.Unmarshal(thumbnails, &channelThumbs); err != nil {
 			msg := "could not ummarshal the channel thumbs on playlist"
-			return nil, fmt.Errorf("%s: '%s': %w", msg, source.PlaylistID, err)
+			return zero, fmt.Errorf("%s: '%s': %w", msg, source.PlaylistID, err)
 		}
 
 		source.ChannelThumbnails = &channelThumbs
@@ -131,7 +132,7 @@ func (r *Repository) GetSources(ctx context.Context) ([]models.Source, error) {
 	}
 
 	if err = rows.Err(); err != nil {
-		return nil, err
+		return zero, err
 	}
 
 	return sources, nil

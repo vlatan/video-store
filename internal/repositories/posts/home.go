@@ -30,7 +30,9 @@ const getHomePostsQuery = `
 `
 
 // Get a limited number of posts with cursor
-func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (*models.Posts, error) {
+func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (models.Posts, error) {
+
+	var zero models.Posts
 
 	// Construct the SQL parts as well as the arguments
 	// The limit is the first argument ($1)
@@ -47,19 +49,19 @@ func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (
 
 		cursorParts, err := decodeCursor(cursor)
 		if err != nil {
-			return nil, err
+			return zero, err
 		}
 
 		switch orderBy {
 		case "likes":
 			if len(cursorParts) != 3 {
-				return nil, errors.New("invalid cursor components")
+				return zero, errors.New("invalid cursor components")
 			}
 			args = append(args, cursorParts[0], cursorParts[1], cursorParts[2])
 			where = "WHERE (likes, upload_date, id) < ($2, $3, $4)"
 		default:
 			if len(cursorParts) != 2 {
-				return nil, fmt.Errorf("invalid cursor components")
+				return zero, fmt.Errorf("invalid cursor components")
 			}
 			args = append(args, cursorParts[0], cursorParts[1])
 			where = "WHERE (upload_date, id) < ($2, $3)"
@@ -71,7 +73,7 @@ func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (
 	// Get rows from DB
 	rows, err := r.db.Query(ctx, query, args...)
 	if err != nil {
-		return nil, err
+		return zero, err
 	}
 
 	// Close rows on exit
@@ -90,24 +92,24 @@ func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (
 			&post.Likes,
 			&post.UploadDate,
 		); err != nil {
-			return nil, err
+			return zero, err
 		}
 		posts.Items = append(posts.Items, post)
 	}
 
 	// If error during iteration
 	if err = rows.Err(); err != nil {
-		return nil, err
+		return zero, err
 	}
 
 	// Post-process the posts, prepare the thumbnail
-	if err = postProcessPosts(ctx, posts.Items); err != nil {
-		return nil, err
+	if err = postProcessPosts(ctx, posts); err != nil {
+		return zero, err
 	}
 
 	// This is the last page
 	if len(posts.Items) <= r.config.PostsPerPage {
-		return &posts, nil
+		return posts, nil
 	}
 
 	// Exclude the last post
@@ -125,5 +127,5 @@ func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (
 
 	posts.NextCursor = base64.StdEncoding.EncodeToString([]byte(cursorStr))
 
-	return &posts, err
+	return posts, nil
 }
