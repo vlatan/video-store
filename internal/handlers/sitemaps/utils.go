@@ -104,8 +104,10 @@ func (s *Service) GetSitemapIndex(r *http.Request, sitemapKey string) (models.Si
 	}
 
 	// Set the sitemap to Redis
-	err = s.rdb.PipeHset(r.Context(), s.config.CacheTimeout, sitemapKey, hsetValues...)
-	if err != nil {
+	pipe := s.rdb.Client.Pipeline()
+	pipe.HSet(r.Context(), sitemapKey, hsetValues...)
+	pipe.Expire(r.Context(), sitemapKey, s.config.CacheTimeout)
+	if _, err = pipe.Exec(r.Context()); err != nil {
 		return nil, err
 	}
 
@@ -141,8 +143,10 @@ func (s *Service) GetSitemapPart(r *http.Request, sitemapKey, partKey string) (*
 	}
 
 	// Set the sitemap to Redis
-	err = s.rdb.PipeHset(r.Context(), s.config.CacheTimeout, sitemapKey, hsetValues...)
-	if err != nil {
+	pipe := s.rdb.Client.Pipeline()
+	pipe.HSet(r.Context(), sitemapKey, hsetValues...)
+	pipe.Expire(r.Context(), sitemapKey, s.config.CacheTimeout)
+	if _, err = pipe.Exec(r.Context()); err != nil {
 		return nil, err
 	}
 
