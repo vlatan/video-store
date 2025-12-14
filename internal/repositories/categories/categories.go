@@ -3,15 +3,15 @@ package categories
 import (
 	"context"
 
-	"github.com/vlatan/video-store/internal/drivers/database"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/vlatan/video-store/internal/models"
 )
 
 type Repository struct {
-	db database.Service
+	db *pgxpool.Pool
 }
 
-func New(db database.Service) *Repository {
+func New(db *pgxpool.Pool) *Repository {
 	return &Repository{db: db}
 }
 

@@ -74,7 +74,7 @@ func (r *Repository) InsertPost(ctx context.Context, post *models.Post) (int64, 
 	}
 
 	// Execute the query
-	return r.db.Exec(
+	result, err := r.db.Exec(
 		ctx,
 		insertPostQuery,
 		post.VideoID,
@@ -90,6 +90,8 @@ func (r *Repository) InsertPost(ctx context.Context, post *models.Post) (int64, 
 		post.UserID,
 		utils.ToNullString(post.Category.Name),
 	)
+
+	return result.RowsAffected(), err
 }
 
 const getSinglePostQuery = `

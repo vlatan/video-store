@@ -5,16 +5,16 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/vlatan/video-store/internal/drivers/database"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/utils"
 )
 
 type Repository struct {
-	db database.Service
+	db *pgxpool.Pool
 }
 
-func New(db database.Service) *Repository {
+func New(db *pgxpool.Pool) *Repository {
 	return &Repository{
 		db: db,
 	}
@@ -42,7 +42,7 @@ func (r *Repository) InsertSource(ctx context.Context, source *models.Source) (i
 	}
 
 	// Execute the query
-	return r.db.Exec(
+	result, err := r.db.Exec(
 		ctx,
 		insertSourceQuery,
 		source.PlaylistID,
@@ -55,6 +55,8 @@ func (r *Repository) InsertSource(ctx context.Context, source *models.Source) (i
 		utils.ToNullString(source.ChannelDescription),
 		source.UserID,
 	)
+
+	return result.RowsAffected(), err
 }
 
 // Update a source
@@ -72,7 +74,7 @@ func (r *Repository) UpdateSource(ctx context.Context, source *models.Source) (i
 	}
 
 	// Execute the query
-	return r.db.Exec(
+	result, err := r.db.Exec(
 		ctx,
 		updateSourceQuery,
 		source.PlaylistID,
@@ -84,6 +86,8 @@ func (r *Repository) UpdateSource(ctx context.Context, source *models.Source) (i
 		utils.ToNullString(source.Description),
 		utils.ToNullString(source.ChannelDescription),
 	)
+
+	return result.RowsAffected(), err
 }
 
 // Get a limited number of sources with offset

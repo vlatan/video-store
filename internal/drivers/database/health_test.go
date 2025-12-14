@@ -70,7 +70,7 @@ func TestHealth(t *testing.T) {
 				})
 			}
 
-			stats := db.Health(tt.ctx)
+			stats := Health(tt.ctx, db)
 			down := stats["status"] == "down"
 			if down != tt.down {
 				t.Errorf("got down = %t, want down = %t", down, tt.down)

@@ -5,18 +5,18 @@ import (
 	"database/sql"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/vlatan/video-store/internal/config"
-	"github.com/vlatan/video-store/internal/drivers/database"
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/utils"
 )
 
 type Repository struct {
-	db     database.Service
+	db     *pgxpool.Pool
 	config *config.Config
 }
 
-func New(db database.Service, config *config.Config) *Repository {
+func New(db *pgxpool.Pool, config *config.Config) *Repository {
 	return &Repository{
 		db:     db,
 		config: config,
@@ -42,11 +42,13 @@ func (r *Repository) UpsertUser(ctx context.Context, u *models.User) (int, error
 }
 
 func (r *Repository) DeleteUser(ctx context.Context, userID int) (int64, error) {
-	return r.db.Exec(ctx, deleteUserQuery, userID)
+	result, err := r.db.Exec(ctx, deleteUserQuery, userID)
+	return result.RowsAffected(), err
 }
 
 func (r *Repository) UpdateLastUserSeen(ctx context.Context, userID int, now time.Time) (int64, error) {
-	return r.db.Exec(ctx, updateLastUserSeenQuery, userID, now)
+	result, err := r.db.Exec(ctx, updateLastUserSeenQuery, userID, now)
+	return result.RowsAffected(), err
 }
 
 // Get users with limit and offset

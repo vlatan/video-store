@@ -4,16 +4,16 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/vlatan/video-store/internal/drivers/database"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/utils"
 )
 
 type Repository struct {
-	db database.Service
+	db *pgxpool.Pool
 }
 
-func New(db database.Service) *Repository {
+func New(db *pgxpool.Pool) *Repository {
 	return &Repository{
 		db: db,
 	}
@@ -44,15 +44,18 @@ func (r *Repository) GetSinglePage(ctx context.Context, slug string) (*models.Pa
 
 // Update page
 func (r *Repository) UpdatePage(ctx context.Context, slug, title, content string) (int64, error) {
-	return r.db.Exec(ctx, updatePageQuery, slug, title, utils.ToNullString(content))
+	result, err := r.db.Exec(ctx, updatePageQuery, slug, title, utils.ToNullString(content))
+	return result.RowsAffected(), err
 }
 
 // Update page
 func (r *Repository) InsertPage(ctx context.Context, slug, title, content string) (int64, error) {
-	return r.db.Exec(ctx, insertPageQuery, slug, title, utils.ToNullString(content))
+	result, err := r.db.Exec(ctx, insertPageQuery, slug, title, utils.ToNullString(content))
+	return result.RowsAffected(), err
 }
 
 // Delete page
 func (r *Repository) DeletePage(ctx context.Context, slug string) (int64, error) {
-	return r.db.Exec(ctx, deletePageQuery, slug)
+	result, err := r.db.Exec(ctx, deletePageQuery, slug)
+	return result.RowsAffected(), err
 }

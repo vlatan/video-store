@@ -9,6 +9,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/vlatan/video-store/internal/drivers/database"
 	"github.com/vlatan/video-store/internal/utils"
 	"github.com/vlatan/video-store/web"
 )
@@ -87,7 +88,7 @@ func (s *Service) HealthHandler(w http.ResponseWriter, r *http.Request) {
 	// Construct joined map
 	data := map[string]any{
 		"redis_status":    s.rdb.Health(r.Context()),
-		"database_status": s.db.Health(r.Context()),
+		"database_status": database.Health(r.Context(), s.db),
 		"server_status":   getServerStats(),
 	}
 

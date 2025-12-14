@@ -3,17 +3,17 @@ package posts
 import (
 	"context"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/vlatan/video-store/internal/config"
-	"github.com/vlatan/video-store/internal/drivers/database"
 	"github.com/vlatan/video-store/internal/models"
 )
 
 type Repository struct {
-	db     database.Service
+	db     *pgxpool.Pool
 	config *config.Config
 }
 
-func New(db database.Service, config *config.Config) *Repository {
+func New(db *pgxpool.Pool, config *config.Config) *Repository {
 	return &Repository{
 		db:     db,
 		config: config,
