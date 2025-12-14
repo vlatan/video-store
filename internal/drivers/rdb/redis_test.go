@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/vlatan/video-store/internal/config"
@@ -127,6 +128,46 @@ func TestHealth(t *testing.T) {
 			stats := rdb.Health(tt.ctx)
 			if _, gotErr := stats["error"]; gotErr != tt.wantErr {
 				t.Errorf("got error = %v, want error = %t", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestPipeHset(t *testing.T) {
+
+	// TODO context
+	ctx := context.TODO()
+
+	// Cancelled context
+	cancelledCtx, cancel := context.WithCancel(ctx)
+	cancel()
+
+	rdb, err := New(testCfg)
+	if err != nil {
+		t.Fatalf("failed to create Redis client; %v", err)
+	}
+
+	t.Cleanup(func() { rdb.Client.Close() })
+
+	tests := []struct {
+		name    string
+		ctx     context.Context
+		ttl     time.Duration
+		key     string
+		wantErr bool
+	}{
+		{"cancelled context", cancelledCtx, time.Second, "testpipe1", true},
+		{"invalid ttl", ctx, -1 * time.Second, "testpipe2", true},
+		{"valid result", ctx, time.Second, "testpipe3", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := rdb.PipeHset(tt.ctx, tt.ttl, tt.key, "foo", "bar")
+			if gotErr := err != nil; gotErr {
+				if gotErr != tt.wantErr {
+					t.Errorf("got error = %v, want error = %t", err, tt.wantErr)
+				}
 			}
 		})
 	}

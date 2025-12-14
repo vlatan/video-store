@@ -32,18 +32,12 @@ func New(cfg *config.Config) (*Service, error) {
 
 // Store hashmap
 func (rs *Service) PipeHset(ctx context.Context, ttl time.Duration, key string, values ...any) error {
-
 	pipe := rs.Client.Pipeline()
-	if err := pipe.HSet(ctx, key, values...).Err(); err != nil {
-		return err
-	}
-
-	if err := pipe.Expire(ctx, key, ttl).Err(); err != nil {
-		return err
-	}
-
+	pipe.HSet(ctx, key, values...)
+	pipe.Expire(ctx, key, ttl)
 	_, err := pipe.Exec(ctx)
 	return err
+
 }
 
 // Check if the Redis client is healthy
