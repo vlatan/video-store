@@ -73,7 +73,7 @@ func TestNew(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 
 			// Create Redis client
-			rs, err := New(tt.cfg)
+			rdb, err := New(tt.cfg)
 
 			// Check for error on creation,
 			// Stop this test if error
@@ -84,14 +84,49 @@ func TestNew(t *testing.T) {
 				return
 			}
 
-			t.Cleanup(func() { rs.Client.Close() })
+			t.Cleanup(func() { rdb.Client.Close() })
 
 			// Check for error on ping
-			err = rs.Client.Ping(ctx).Err()
+			err = rdb.Client.Ping(ctx).Err()
 			if gotErr := err != nil; gotErr {
 				if gotErr != tt.wantErr {
 					t.Errorf("got error = %v, want error = %t", err, tt.wantErr)
 				}
+			}
+		})
+	}
+}
+
+func TestHealth(t *testing.T) {
+
+	// todo context
+	ctx := context.TODO()
+
+	// Cancelled context
+	cancelledCtx, cancel := context.WithCancel(ctx)
+	cancel()
+
+	rdb, err := New(testCfg)
+	if err != nil {
+		t.Fatalf("failed to create Redis client; %v", err)
+	}
+
+	t.Cleanup(func() { rdb.Client.Close() })
+
+	tests := []struct {
+		name    string
+		ctx     context.Context
+		wantErr bool
+	}{
+		{"cancelled context", cancelledCtx, true},
+		{"valid result", ctx, false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			stats := rdb.Health(tt.ctx)
+			if _, gotErr := stats["error"]; gotErr != tt.wantErr {
+				t.Errorf("got error = %v, want error = %t", err, tt.wantErr)
 			}
 		})
 	}
