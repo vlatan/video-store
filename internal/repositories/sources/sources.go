@@ -5,16 +5,16 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/vlatan/video-store/internal/drivers/database"
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/utils"
 )
 
 type Repository struct {
-	db *pgxpool.Pool
+	db *database.Service
 }
 
-func New(db *pgxpool.Pool) *Repository {
+func New(db *database.Service) *Repository {
 	return &Repository{
 		db: db,
 	}
@@ -23,7 +23,7 @@ func New(db *pgxpool.Pool) *Repository {
 // Check if source exists
 func (r *Repository) SourceExists(ctx context.Context, playlistID string) bool {
 	var result int
-	err := r.db.QueryRow(ctx, sourceExistsQuery, playlistID).Scan(&result)
+	err := r.db.Pool.QueryRow(ctx, sourceExistsQuery, playlistID).Scan(&result)
 	return err == nil
 }
 
@@ -42,7 +42,7 @@ func (r *Repository) InsertSource(ctx context.Context, source *models.Source) (i
 	}
 
 	// Execute the query
-	result, err := r.db.Exec(
+	result, err := r.db.Pool.Exec(
 		ctx,
 		insertSourceQuery,
 		source.PlaylistID,
@@ -74,7 +74,7 @@ func (r *Repository) UpdateSource(ctx context.Context, source *models.Source) (i
 	}
 
 	// Execute the query
-	result, err := r.db.Exec(
+	result, err := r.db.Pool.Exec(
 		ctx,
 		updateSourceQuery,
 		source.PlaylistID,
@@ -95,7 +95,7 @@ func (r *Repository) GetSources(ctx context.Context) (models.Sources, error) {
 
 	var zero, sources models.Sources
 
-	rows, err := r.db.Query(ctx, getSourcesQuery)
+	rows, err := r.db.Pool.Query(ctx, getSourcesQuery)
 	if err != nil {
 		return zero, err
 	}

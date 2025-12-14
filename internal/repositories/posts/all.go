@@ -26,7 +26,7 @@ const getAllPostsQuery = `
 func (r *Repository) GetAllPosts(ctx context.Context) ([]*models.Post, error) {
 
 	// Get rows from DB
-	rows, err := r.db.Query(ctx, getAllPostsQuery)
+	rows, err := r.db.Pool.Query(ctx, getAllPostsQuery)
 	if err != nil {
 		return nil, err
 	}

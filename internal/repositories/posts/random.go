@@ -26,7 +26,7 @@ func (r *Repository) GetRandomPosts(ctx context.Context, title string, limit int
 	var zero, posts models.Posts
 
 	// Get rows from DB
-	rows, err := r.db.Query(ctx, getRandomPostsQuery, title, limit)
+	rows, err := r.db.Pool.Query(ctx, getRandomPostsQuery, title, limit)
 	if err != nil {
 		return zero, err
 	}

@@ -71,7 +71,7 @@ func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (
 	query := fmt.Sprintf(getHomePostsQuery, where, order)
 
 	// Get rows from DB
-	rows, err := r.db.Query(ctx, query, args...)
+	rows, err := r.db.Pool.Query(ctx, query, args...)
 	if err != nil {
 		return zero, err
 	}

@@ -5,18 +5,18 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/vlatan/video-store/internal/config"
+	"github.com/vlatan/video-store/internal/drivers/database"
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/utils"
 )
 
 type Repository struct {
-	db     *pgxpool.Pool
+	db     *database.Service
 	config *config.Config
 }
 
-func New(db *pgxpool.Pool, config *config.Config) *Repository {
+func New(db *database.Service, config *config.Config) *Repository {
 	return &Repository{
 		db:     db,
 		config: config,
@@ -27,7 +27,7 @@ func New(db *pgxpool.Pool, config *config.Config) *Repository {
 func (r *Repository) UpsertUser(ctx context.Context, u *models.User) (int, error) {
 
 	var id int
-	err := r.db.QueryRow(
+	err := r.db.Pool.QueryRow(
 		ctx,
 		upsertUserQuery,
 		u.ProviderUserId,
@@ -42,12 +42,12 @@ func (r *Repository) UpsertUser(ctx context.Context, u *models.User) (int, error
 }
 
 func (r *Repository) DeleteUser(ctx context.Context, userID int) (int64, error) {
-	result, err := r.db.Exec(ctx, deleteUserQuery, userID)
+	result, err := r.db.Pool.Exec(ctx, deleteUserQuery, userID)
 	return result.RowsAffected(), err
 }
 
 func (r *Repository) UpdateLastUserSeen(ctx context.Context, userID int, now time.Time) (int64, error) {
-	result, err := r.db.Exec(ctx, updateLastUserSeenQuery, userID, now)
+	result, err := r.db.Pool.Exec(ctx, updateLastUserSeenQuery, userID, now)
 	return result.RowsAffected(), err
 }
 
@@ -61,7 +61,7 @@ func (r *Repository) GetUsers(ctx context.Context, page int) (*models.Users, err
 	offset := (page - 1) * limit
 
 	// Get rows from DB
-	rows, err := r.db.Query(ctx, getUsersQuery, limit, offset)
+	rows, err := r.db.Pool.Query(ctx, getUsersQuery, limit, offset)
 	if err != nil {
 		return nil, err
 	}

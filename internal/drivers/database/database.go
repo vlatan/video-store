@@ -9,8 +9,12 @@ import (
 	"github.com/vlatan/video-store/internal/config"
 )
 
+type Service struct {
+	Pool *pgxpool.Pool
+}
+
 // Produce new database pool
-func New(cfg *config.Config) (*pgxpool.Pool, error) {
+func New(cfg *config.Config) (*Service, error) {
 
 	if cfg == nil {
 		return nil, errors.New("unable to create DB pool with nil config")
@@ -43,5 +47,5 @@ func New(cfg *config.Config) (*pgxpool.Pool, error) {
 		return nil, err
 	}
 
-	return pool, nil
+	return &Service{pool}, nil
 }

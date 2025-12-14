@@ -3,22 +3,22 @@ package categories
 import (
 	"context"
 
-	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/vlatan/video-store/internal/drivers/database"
 	"github.com/vlatan/video-store/internal/models"
 )
 
 type Repository struct {
-	db *pgxpool.Pool
+	db *database.Service
 }
 
-func New(db *pgxpool.Pool) *Repository {
+func New(db *database.Service) *Repository {
 	return &Repository{db: db}
 }
 
 // Get all valid categories
 func (r *Repository) GetCategories(ctx context.Context) (models.Categories, error) {
 
-	rows, err := r.db.Query(ctx, getCategoriesQuery)
+	rows, err := r.db.Pool.Query(ctx, getCategoriesQuery)
 	if err != nil {
 		return nil, err
 	}

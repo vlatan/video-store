@@ -93,7 +93,7 @@ const sitemapDataQuery = `
 func (r *Repository) SitemapData(ctx context.Context) ([]*models.SitemapItem, error) {
 
 	// Get rows from DB
-	rows, err := r.db.Query(ctx, sitemapDataQuery)
+	rows, err := r.db.Pool.Query(ctx, sitemapDataQuery)
 	if err != nil {
 		return nil, err
 	}

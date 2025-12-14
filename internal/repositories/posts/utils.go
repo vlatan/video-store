@@ -64,7 +64,7 @@ func (r *Repository) queryTaxonomyPosts(
 
 	// Get rows from DB
 	query = fmt.Sprintf(query, where, order)
-	rows, err := r.db.Query(ctx, query, args...)
+	rows, err := r.db.Pool.Query(ctx, query, args...)
 	if err != nil {
 		return zero, err
 	}

@@ -68,7 +68,7 @@ func (r *Repository) GetUserFavedPosts(
 	query := fmt.Sprintf(getUserFavedPostsQuery, total, where)
 
 	// Get rows from DB
-	rows, err := r.db.Query(ctx, query, args...)
+	rows, err := r.db.Pool.Query(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}

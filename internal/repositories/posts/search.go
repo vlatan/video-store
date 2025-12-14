@@ -87,7 +87,7 @@ func (r *Repository) SearchPosts(
 	query := fmt.Sprintf(searchPostsQuery, total, where)
 
 	// Get rows from DB
-	rows, err := r.db.Query(ctx, query, args...)
+	rows, err := r.db.Pool.Query(ctx, query, args...)
 	if err != nil {
 		return zero, err
 	}

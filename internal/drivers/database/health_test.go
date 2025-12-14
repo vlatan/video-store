@@ -25,7 +25,7 @@ func TestHealth(t *testing.T) {
 		t.Fatalf("failed to create db pool; %v", err)
 	}
 
-	t.Cleanup(db.Close)
+	t.Cleanup(db.Pool.Close)
 
 	tests := []struct {
 		name   string
@@ -46,7 +46,7 @@ func TestHealth(t *testing.T) {
 
 				heldConnections := make([]*pgxpool.Conn, 0, maxConnCfg.DBMaxConns)
 				for i := range maxConnCfg.DBMaxConns {
-					conn, err := db.Acquire(tt.ctx)
+					conn, err := db.Pool.Acquire(tt.ctx)
 
 					if err != nil {
 						t.Fatalf("failed to acquire connection; %v", err)
@@ -69,7 +69,7 @@ func TestHealth(t *testing.T) {
 				})
 			}
 
-			stats := Health(tt.ctx, db)
+			stats := db.Health(tt.ctx)
 			down := stats["status"] == "down"
 			if down != tt.down {
 				t.Errorf("got down = %t, want down = %t", down, tt.down)

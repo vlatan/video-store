@@ -6,13 +6,11 @@ import (
 	"log"
 	"strings"
 	"time"
-
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 // Health checks the health of the database connection.
 // It returns a map with keys indicating various health statistics.
-func Health(ctx context.Context, pool *pgxpool.Pool) map[string]any {
+func (s *Service) Health(ctx context.Context) map[string]any {
 
 	start := time.Now()
 
@@ -20,7 +18,7 @@ func Health(ctx context.Context, pool *pgxpool.Pool) map[string]any {
 	var healthMessages []string
 
 	// Ping the database
-	err := pool.Ping(ctx)
+	err := s.Pool.Ping(ctx)
 	if err != nil {
 		stats["status"] = "down"
 		stats["error"] = fmt.Sprintf("db down: %v", err)
@@ -32,7 +30,7 @@ func Health(ctx context.Context, pool *pgxpool.Pool) map[string]any {
 	stats["status"] = "up"
 
 	// Get database stats (like open connections, in use, idle, etc.)
-	dbStats := pool.Stat()
+	dbStats := s.Pool.Stat()
 
 	// Connection pool snapshots (raw numbers)
 	stats["maximum_possible_connections"] = dbStats.MaxConns()

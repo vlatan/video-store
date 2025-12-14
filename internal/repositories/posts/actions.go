@@ -20,7 +20,7 @@ const userActionsQuery = `
 
 // Check if the user liked and/or faved a post
 func (r *Repository) GetUserActions(ctx context.Context, userID, postID int) (*models.Actions, error) {
-	row := r.db.QueryRow(ctx, userActionsQuery, userID, postID)
+	row := r.db.Pool.QueryRow(ctx, userActionsQuery, userID, postID)
 	var actions models.Actions
 	err := row.Scan(&actions.Liked, &actions.Faved)
 	return &actions, err
@@ -35,7 +35,7 @@ const likeQuery = `
 
 // User likes a post
 func (r *Repository) Like(ctx context.Context, userID int, videoID string) (int64, error) {
-	result, err := r.db.Exec(ctx, likeQuery, userID, videoID)
+	result, err := r.db.Pool.Exec(ctx, likeQuery, userID, videoID)
 	return result.RowsAffected(), err
 }
 
@@ -49,7 +49,7 @@ const unlikeQuery = `
 
 // User unlikes a post
 func (r *Repository) Unlike(ctx context.Context, userID int, videoID string) (int64, error) {
-	result, err := r.db.Exec(ctx, unlikeQuery, userID, videoID)
+	result, err := r.db.Pool.Exec(ctx, unlikeQuery, userID, videoID)
 	return result.RowsAffected(), err
 }
 
@@ -62,7 +62,7 @@ const faveQuery = `
 
 // User favorites a post
 func (r *Repository) Fave(ctx context.Context, userID int, videoID string) (int64, error) {
-	result, err := r.db.Exec(ctx, faveQuery, userID, videoID)
+	result, err := r.db.Pool.Exec(ctx, faveQuery, userID, videoID)
 	return result.RowsAffected(), err
 }
 
@@ -76,7 +76,7 @@ const unfaveQuery = `
 
 // User unfavorites a post
 func (r *Repository) Unfave(ctx context.Context, userID int, videoID string) (int64, error) {
-	result, err := r.db.Exec(ctx, unfaveQuery, userID, videoID)
+	result, err := r.db.Pool.Exec(ctx, unfaveQuery, userID, videoID)
 	return result.RowsAffected(), err
 }
 
@@ -88,7 +88,7 @@ const updateTitleQuery = `
 
 // Update post title
 func (r *Repository) UpdateTitle(ctx context.Context, videoID, title string) (int64, error) {
-	result, err := r.db.Exec(ctx, updateTitleQuery, videoID, title)
+	result, err := r.db.Pool.Exec(ctx, updateTitleQuery, videoID, title)
 	return result.RowsAffected(), err
 }
 
@@ -100,7 +100,7 @@ const updateDescQuery = `
 
 // Update post description
 func (r *Repository) UpdateDesc(ctx context.Context, videoID, description string) (int64, error) {
-	result, err := r.db.Exec(ctx, updateDescQuery, videoID, description)
+	result, err := r.db.Pool.Exec(ctx, updateDescQuery, videoID, description)
 	return result.RowsAffected(), err
 }
 
@@ -118,7 +118,7 @@ const updatePlaylistQuery = `
 
 // Update a playlist
 func (r *Repository) UpdatePlaylist(ctx context.Context, videoID, playlistID string) (int64, error) {
-	result, err := r.db.Exec(ctx, updatePlaylistQuery, videoID, playlistID)
+	result, err := r.db.Pool.Exec(ctx, updatePlaylistQuery, videoID, playlistID)
 	return result.RowsAffected(), err
 }
 
@@ -132,7 +132,7 @@ const updateGeneretedDataQuery = `
 
 // Update post description
 func (r *Repository) UpdateGeneratedData(ctx context.Context, post *models.Post) (int64, error) {
-	result, err := r.db.Exec(
+	result, err := r.db.Pool.Exec(
 		ctx,
 		updateGeneretedDataQuery,
 		post.VideoID,
@@ -154,7 +154,7 @@ const banPostQuery = `
 
 // Ban a post (move it to deleted table)
 func (r *Repository) BanPost(ctx context.Context, videoID string) (int64, error) {
-	result, err := r.db.Exec(ctx, banPostQuery, videoID)
+	result, err := r.db.Pool.Exec(ctx, banPostQuery, videoID)
 	return result.RowsAffected(), err
 }
 
@@ -165,6 +165,6 @@ const deletePostQuery = `
 
 // Delete a post
 func (r *Repository) DeletePost(ctx context.Context, videoID string) (int64, error) {
-	result, err := r.db.Exec(ctx, deletePostQuery, videoID)
+	result, err := r.db.Pool.Exec(ctx, deletePostQuery, videoID)
 	return result.RowsAffected(), err
 }

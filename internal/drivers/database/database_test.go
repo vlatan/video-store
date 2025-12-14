@@ -85,7 +85,7 @@ func TestNew(t *testing.T) {
 				return
 			}
 
-			t.Cleanup(db.Close)
+			t.Cleanup(db.Pool.Close)
 
 			// For successful cases, verify we got a non-nil service
 			if !tt.wantErr && db == nil {

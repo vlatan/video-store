@@ -20,7 +20,7 @@ const postExistsQuery = `
 // Check if the post exists
 func (r *Repository) PostExists(ctx context.Context, videoID string) error {
 	var result int
-	return r.db.QueryRow(ctx, postExistsQuery, videoID).Scan(&result)
+	return r.db.Pool.QueryRow(ctx, postExistsQuery, videoID).Scan(&result)
 }
 
 const isPostBanneddQuery = `
@@ -31,7 +31,7 @@ const isPostBanneddQuery = `
 // Check if the post is deleted
 func (r *Repository) IsPostBanned(ctx context.Context, videoID string) error {
 	var result int
-	return r.db.QueryRow(ctx, isPostBanneddQuery, videoID).Scan(&result)
+	return r.db.Pool.QueryRow(ctx, isPostBanneddQuery, videoID).Scan(&result)
 }
 
 const insertPostQuery = `
@@ -74,7 +74,7 @@ func (r *Repository) InsertPost(ctx context.Context, post *models.Post) (int64, 
 	}
 
 	// Execute the query
-	result, err := r.db.Exec(
+	result, err := r.db.Pool.Exec(
 		ctx,
 		insertPostQuery,
 		post.VideoID,
@@ -124,7 +124,7 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.
 	var shortDesc, slug, name sql.NullString
 
 	// Get single row from DB
-	err := r.db.QueryRow(ctx, getSinglePostQuery, videoID).Scan(
+	err := r.db.Pool.QueryRow(ctx, getSinglePostQuery, videoID).Scan(
 		&post.ID,
 		&post.VideoID,
 		&post.Title,
