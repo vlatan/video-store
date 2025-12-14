@@ -3,19 +3,18 @@ package database
 import (
 	"context"
 	"testing"
-	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func TestHealth(t *testing.T) {
 
-	// Long context
+	// todo context
 	ctx := context.TODO()
 
-	// Timed out context
-	timeoutCtx, cancel := context.WithTimeout(ctx, time.Nanosecond)
-	t.Cleanup(cancel)
+	// Cancelled context
+	cancelledCtx, cancel := context.WithCancel(ctx)
+	cancel()
 
 	// Allow more max connections to properly measure 85% utilization
 	maxConnCfg := *testCfg
@@ -34,7 +33,7 @@ func TestHealth(t *testing.T) {
 		stress bool
 		down   bool
 	}{
-		{"context timeout", timeoutCtx, false, true},
+		{"cancelled context", cancelledCtx, false, true},
 		{"max total conns", ctx, true, false},
 		{"valid result", ctx, false, false},
 	}
