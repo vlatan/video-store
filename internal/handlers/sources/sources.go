@@ -12,7 +12,7 @@ import (
 type Service struct {
 	postsRepo   *postsRepo.Repository
 	sourcesRepo *sourcesRepo.Repository
-	rdb         redis.Service
+	rdb         *redis.RedisService
 	ui          ui.Service
 	config      *config.Config
 	yt          *yt.Service
@@ -21,7 +21,7 @@ type Service struct {
 func New(
 	postsRepo *postsRepo.Repository,
 	sourcesRepo *sourcesRepo.Repository,
-	rdb redis.Service,
+	rdb *redis.RedisService,
 	ui ui.Service,
 	config *config.Config,
 	yt *yt.Service,

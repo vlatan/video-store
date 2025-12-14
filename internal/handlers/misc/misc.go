@@ -10,11 +10,11 @@ import (
 type Service struct {
 	config *config.Config
 	db     *pgxpool.Pool
-	rdb    redis.Service
+	rdb    *redis.RedisService
 	ui     ui.Service
 }
 
-func New(config *config.Config, db *pgxpool.Pool, rdb redis.Service, ui ui.Service) *Service {
+func New(config *config.Config, db *pgxpool.Pool, rdb *redis.RedisService, ui ui.Service) *Service {
 	return &Service{
 		config: config,
 		db:     db,

@@ -115,7 +115,7 @@ func NewServer() (*http.Server, string, func() error) {
 	// func to close the DB pool and Redis connection
 	cleanup := func() error {
 		db.Close()
-		if err := rdb.Close(); err != nil {
+		if err := rdb.Client.Close(); err != nil {
 			return err
 		}
 		return nil

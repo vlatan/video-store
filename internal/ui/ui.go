@@ -45,7 +45,7 @@ type Service interface {
 type service struct {
 	templates   models.TemplateMap
 	staticFiles models.StaticFiles
-	rdb         redis.Service
+	rdb         *redis.RedisService
 	r2s         r2.Service
 	config      *config.Config
 	store       sessions.Store
@@ -60,7 +60,7 @@ var validXML = regexp.MustCompile("[/+]xml$")
 func New(
 	usersRepo *users.Repository,
 	catsRepo *categories.Repository,
-	rdb redis.Service,
+	rdb *redis.RedisService,
 	r2s r2.Service,
 	store sessions.Store,
 	config *config.Config,

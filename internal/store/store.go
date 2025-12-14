@@ -7,18 +7,17 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/vlatan/video-store/internal/config"
-	client "github.com/vlatan/video-store/internal/drivers/redis"
-
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
 	"github.com/redis/go-redis/v9"
+	"github.com/vlatan/video-store/internal/config"
+	rs "github.com/vlatan/video-store/internal/drivers/redis"
 )
 
 // redisStore implements sessions.Store (New, Get and Save)
 type redisStore struct {
 	config    *config.Config
-	client    client.Service
+	rdb       *rs.RedisService
 	keyPrefix string
 	maxAge    int
 	codec     securecookie.Codec
@@ -26,13 +25,13 @@ type redisStore struct {
 
 func New(
 	config *config.Config,
-	client client.Service,
+	rdb *rs.RedisService,
 	keyPrefix string,
 	maxAge int) *redisStore {
 
 	return &redisStore{
 		config:    config,
-		client:    client,
+		rdb:       rdb,
 		keyPrefix: keyPrefix,
 		maxAge:    maxAge,
 		codec: securecookie.New(
@@ -64,7 +63,7 @@ func (rs *redisStore) Get(r *http.Request, name string) (*sessions.Session, erro
 
 	// Get from Redis
 	key := rs.buildKey(session.Name(), cookie.Value)
-	val, err := rs.client.Get(r.Context(), key)
+	val, err := rs.rdb.Client.Get(r.Context(), key).Result()
 	if err == redis.Nil {
 		session.IsNew = true
 		return session, nil
@@ -118,7 +117,7 @@ func (rs *redisStore) Save(r *http.Request, w http.ResponseWriter, session *sess
 	// Save to Redis
 	key := rs.buildKey(session.Name(), sessionID)
 	expiration := time.Duration(session.Options.MaxAge) * time.Second
-	err = rs.client.Set(r.Context(), key, encoded, expiration)
+	err = rs.rdb.Client.Set(r.Context(), key, encoded, expiration).Err()
 	if err != nil {
 		return fmt.Errorf("could not save the session to Redis: %w", err)
 	}
@@ -172,7 +171,7 @@ func (rs *redisStore) deleteSession(
 
 	// Delete from redis
 	key := rs.buildKey(session.Name(), cookie.Value)
-	if err = rs.client.Delete(r.Context(), key); err != nil {
+	if err = rs.rdb.Client.Del(r.Context(), key).Err(); err != nil {
 		return err
 	}
 

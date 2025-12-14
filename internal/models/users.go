@@ -17,7 +17,7 @@ import (
 
 	"github.com/redis/go-redis/v9"
 	"github.com/vlatan/video-store/internal/config"
-	redisDriver "github.com/vlatan/video-store/internal/drivers/redis"
+	rs "github.com/vlatan/video-store/internal/drivers/redis"
 	"github.com/vlatan/video-store/internal/integrations/r2"
 	"github.com/vlatan/video-store/internal/utils"
 
@@ -82,7 +82,7 @@ func (u *User) SetAnalyticsID() {
 func (u *User) SetAvatar(
 	ctx context.Context,
 	config *config.Config,
-	rdb redisDriver.Service,
+	rdb *rs.RedisService,
 	r2s r2.Service) error {
 
 	// Set the anaylytics ID in case it's missing
@@ -92,7 +92,7 @@ func (u *User) SetAvatar(
 
 	// Get avatar URL from Redis
 	redisKey := fmt.Sprintf(avatarCacheKey, u.AnalyticsID)
-	avatar, err := rdb.Get(ctx, redisKey)
+	avatar, err := rdb.Client.Get(ctx, redisKey).Result()
 
 	if err == nil {
 		u.LocalAvatarURL = avatar
@@ -137,7 +137,7 @@ func (u *User) SetAvatar(
 
 	// Set avatar
 	u.LocalAvatarURL = avatar
-	err = rdb.Set(ctx, redisKey, avatar, avatarTimeout)
+	err = rdb.Client.Set(ctx, redisKey, avatar, avatarTimeout).Err()
 
 	// Return early if context error
 	if utils.IsContextErr(err) {
@@ -236,7 +236,7 @@ func (u *User) DownloadAvatar(ctx context.Context, config *config.Config, r2s r2
 }
 
 // Delete local avatar if exists
-func (u *User) DeleteAvatar(ctx context.Context, config *config.Config, rdb redisDriver.Service, r2s r2.Service) {
+func (u *User) DeleteAvatar(ctx context.Context, config *config.Config, rdb *rs.RedisService, r2s r2.Service) {
 
 	// Attemp to delete the avatar image from R2
 	objectKey := fmt.Sprintf(avatarPath, u.AnalyticsID)
@@ -245,7 +245,7 @@ func (u *User) DeleteAvatar(ctx context.Context, config *config.Config, rdb redi
 	}
 
 	redisKey := fmt.Sprintf(avatarCacheKey, u.AnalyticsID)
-	if err := rdb.Delete(ctx, redisKey); err != nil {
+	if err := rdb.Client.Del(ctx, redisKey).Err(); err != nil {
 		log.Printf("Could not remove the avatar %s from Redis: %v", redisKey, err)
 	}
 }

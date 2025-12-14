@@ -74,7 +74,7 @@ func TestNew(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 
 			// Create Redis client
-			redisClient, err := New(tt.cfg)
+			rs, err := New(tt.cfg)
 
 			// Check for error on creation,
 			// Stop this test if error
@@ -85,10 +85,10 @@ func TestNew(t *testing.T) {
 				return
 			}
 
-			t.Cleanup(func() { redisClient.Close() })
+			t.Cleanup(func() { rs.Client.Close() })
 
 			// Check for error on ping
-			_, err = redisClient.Ping(ctx)
+			err = rs.Client.Ping(ctx).Err()
 			if gotErr := err != nil; gotErr {
 				if gotErr != tt.wantErr {
 					t.Errorf("got error = %v, want error = %t", err, tt.wantErr)
@@ -101,12 +101,12 @@ func TestNew(t *testing.T) {
 func TestSet(t *testing.T) {
 
 	// Create Redis client
-	redisClient, err := New(testCfg)
+	rs, err := New(testCfg)
 	if err != nil {
 		t.Fatalf("failed to create Redis client; %v", err)
 	}
 
-	t.Cleanup(func() { redisClient.Close() })
+	t.Cleanup(func() { rs.Client.Close() })
 
 	ctx := context.TODO()
 	cancelledCtx, cancel := context.WithCancel(ctx)
@@ -156,7 +156,7 @@ func TestSet(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err = redisClient.Set(tt.ctx, tt.key, tt.value, tt.ttl)
+			err = rs.Client.Set(tt.ctx, tt.key, tt.value, tt.ttl).Err()
 			if gotErr := err != nil; gotErr {
 				if gotErr != tt.wantErr {
 					t.Errorf("got error = %v, want error = %t", err, tt.wantErr)
@@ -169,12 +169,12 @@ func TestSet(t *testing.T) {
 func TestGet(t *testing.T) {
 
 	// Create Redis client
-	redisClient, err := New(testCfg)
+	rs, err := New(testCfg)
 	if err != nil {
 		t.Fatalf("failed to create Redis client; %v", err)
 	}
 
-	t.Cleanup(func() { redisClient.Close() })
+	t.Cleanup(func() { rs.Client.Close() })
 
 	ctx := context.TODO()
 	cancelledCtx, cancel := context.WithCancel(ctx)
@@ -219,13 +219,13 @@ func TestGet(t *testing.T) {
 			}
 
 			// Set value to redis, always with valid context
-			err = redisClient.Set(ctx, key, tt.value, 10*time.Second)
+			err = rs.Client.Set(ctx, key, tt.value, 10*time.Second).Err()
 			if err != nil {
 				t.Fatalf("failed to set value; %v", err)
 			}
 
 			// Get value from Redis
-			value, err := redisClient.Get(tt.ctx, tt.key)
+			value, err := rs.Client.Get(tt.ctx, tt.key).Result()
 
 			// Check for wanted error
 			if gotErr := err != nil; gotErr {

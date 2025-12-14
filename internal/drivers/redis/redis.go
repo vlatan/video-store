@@ -2,50 +2,20 @@ package redis
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"time"
 
-	"github.com/vlatan/video-store/internal/config"
-
 	"github.com/redis/go-redis/v9"
+	"github.com/vlatan/video-store/internal/config"
 )
 
-// Service represents a service that interacts with a redis client.
-type Service interface {
-	// Ping the redis server
-	Ping(ctx context.Context) (string, error)
-	// Set a key-value pair in Redis with an expiration duration.
-	Set(ctx context.Context, key string, value any, expiration time.Duration) error
-	// Get a value from Redis by key. Returns the value as a string.
-	// Returns redis.Nil error if the key does not exist.
-	Get(ctx context.Context, key string) (string, error)
-	// Delete value in Redis
-	Delete(ctx context.Context, key string) error
-	// Check if specific field exists in a hashmap
-	HExists(ctx context.Context, key, field string) (bool, error)
-	// Store hashmap
-	Hset(ctx context.Context, ttl time.Duration, key string, values ...any) error
-	// Get specific field from a hashmap
-	HGet(ctx context.Context, key, field string) (string, error)
-	// Get the entire hashmap
-	HGetAll(ctx context.Context, key string) (map[string]string, error)
-	// Get simple stats from the redis server
-	Health(ctx context.Context) map[string]any
-	// Close redis client
-	// It returns an error if the connection cannot be closed.
-	Close() error
+type RedisService struct {
+	Client *redis.Client
 }
 
-type service struct {
-	rdb    *redis.Client
-	config *config.Config
-}
-
-// Produce new redis service
-func New(cfg *config.Config) (Service, error) {
+// Produce new Redis service
+func New(cfg *config.Config) (*RedisService, error) {
 
 	if cfg == nil {
 		return nil, errors.New("unable to create Redis service with nil config")
@@ -57,41 +27,13 @@ func New(cfg *config.Config) (Service, error) {
 		DB:       0, // use default DB
 	})
 
-	return &service{rdb, cfg}, nil
-}
-
-// Ping pings the redis server
-func (s *service) Ping(ctx context.Context) (string, error) {
-	return s.rdb.Ping(ctx).Result()
-}
-
-// Get a value from Redis by key. Returns redis.Nil error if key does not exist.
-func (s *service) Get(ctx context.Context, key string) (string, error) {
-	return s.rdb.Get(ctx, key).Result()
-}
-
-// Set a key-value pair in Redis with an expiration duration.
-func (s *service) Set(ctx context.Context, key string, value any, ttl time.Duration) error {
-	switch v := value.(type) {
-	case string, []byte, int:
-		return s.rdb.Set(ctx, key, v, ttl).Err()
-	default:
-		jsonData, err := json.Marshal(value)
-		if err != nil {
-			return fmt.Errorf("failed to marshal value to JSON: %w", err)
-		}
-		return s.rdb.Set(ctx, key, jsonData, ttl).Err()
-	}
-}
-
-// Delete a value in Redis
-func (s *service) Delete(ctx context.Context, key string) error {
-	return s.rdb.Del(ctx, key).Err()
+	return &RedisService{rdb}, nil
 }
 
 // Store hashmap
-func (s *service) Hset(ctx context.Context, ttl time.Duration, key string, values ...any) error {
-	pipe := s.rdb.Pipeline()
+func (rs *RedisService) PipeHset(ctx context.Context, ttl time.Duration, key string, values ...any) error {
+
+	pipe := rs.Client.Pipeline()
 	if err := pipe.HSet(ctx, key, values...).Err(); err != nil {
 		return err
 	}
@@ -104,28 +46,13 @@ func (s *service) Hset(ctx context.Context, ttl time.Duration, key string, value
 	return err
 }
 
-// Check if specific field exists in a hashmap
-func (s *service) HExists(ctx context.Context, key, field string) (bool, error) {
-	return s.rdb.HExists(ctx, key, field).Result()
-}
-
-// Get the entire hashmap
-func (s *service) HGetAll(ctx context.Context, key string) (map[string]string, error) {
-	return s.rdb.HGetAll(ctx, key).Result()
-}
-
-// Get specific field from a hashmap
-func (s *service) HGet(ctx context.Context, key, field string) (string, error) {
-	return s.rdb.HGet(ctx, key, field).Result()
-}
-
-// Check if the redis client is healthy
-func (s *service) Health(ctx context.Context) map[string]any {
+// Check if the Redis client is healthy
+func (rs *RedisService) Health(ctx context.Context) map[string]any {
 
 	start := time.Now()
 
 	// Test connectivity
-	ping, err := s.rdb.Ping(ctx).Result()
+	ping, err := rs.Client.Ping(ctx).Result()
 	if err != nil {
 		return map[string]any{
 			"status": "unhealthy",
@@ -134,10 +61,10 @@ func (s *service) Health(ctx context.Context) map[string]any {
 	}
 
 	// Get key count
-	keyCount, _ := s.rdb.DBSize(ctx).Result()
+	keyCount, _ := rs.Client.DBSize(ctx).Result()
 
 	// Get server time (useful for checking if server is responsive)
-	serverTime, _ := s.rdb.Time(ctx).Result()
+	serverTime, _ := rs.Client.Time(ctx).Result()
 
 	return map[string]any{
 		"status":      "healthy",
@@ -146,10 +73,4 @@ func (s *service) Health(ctx context.Context) map[string]any {
 		"total_keys":  keyCount,
 		"server_time": serverTime.Unix(),
 	}
-}
-
-// Close the redis client
-func (s *service) Close() error {
-	log.Printf("Redis client closed: %s", s.config.RedisHost)
-	return s.rdb.Close()
 }

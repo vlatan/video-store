@@ -18,7 +18,7 @@ import (
 func GetItems[T any](
 	cached bool,
 	ctx context.Context,
-	redisService Service,
+	rs *RedisService,
 	cacheKey string,
 	cacheTimeout time.Duration,
 	dbFunc func() (T, error), // Function to get the data if cache miss
@@ -36,7 +36,7 @@ func GetItems[T any](
 	}
 
 	// Try to get from Redis cache, unmarshall to target
-	cachedData, err := redisService.Get(ctx, cacheKey)
+	cachedData, err := rs.Client.Get(ctx, cacheKey).Result()
 	if err == nil && cachedData != "" {
 		var data T
 		err := json.Unmarshal([]byte(cachedData), &data)
@@ -55,7 +55,7 @@ func GetItems[T any](
 	}
 
 	// Cache the data for later use
-	err = redisService.Set(ctx, cacheKey, data, cacheTimeout)
+	err = rs.Client.Set(ctx, cacheKey, data, cacheTimeout).Err()
 	if err != nil {
 		// Don't return an error if unable to set redis cache
 		log.Printf("Error setting cache in Redis for key '%s': %v", cacheKey, err)

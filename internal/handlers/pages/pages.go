@@ -9,14 +9,14 @@ import (
 
 type Service struct {
 	pagesRepo *pagesRepo.Repository
-	rdb       redis.Service
+	rdb       *redis.RedisService
 	ui        ui.Service
 	config    *config.Config
 }
 
 func New(
 	pagesRepo *pagesRepo.Repository,
-	rdb redis.Service,
+	rdb *redis.RedisService,
 	ui ui.Service,
 	config *config.Config,
 ) *Service {

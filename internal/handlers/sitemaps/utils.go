@@ -71,7 +71,7 @@ func (s *Service) getSitemapIndexFromDB(r *http.Request, partSize int) (models.S
 func (s *Service) GetSitemapIndex(r *http.Request, sitemapKey string) (models.SitemapIndex, error) {
 
 	// Try to get the sitemap index from Redis
-	allParts, err := s.rdb.HGetAll(r.Context(), sitemapKey)
+	allParts, err := s.rdb.Client.HGetAll(r.Context(), sitemapKey).Result()
 	if err == nil && len(allParts) > 0 {
 		// Unmarshal the parts we got from redis
 		sitemapIndex := make(models.SitemapIndex)
@@ -104,7 +104,7 @@ func (s *Service) GetSitemapIndex(r *http.Request, sitemapKey string) (models.Si
 	}
 
 	// Set the sitemap to Redis
-	err = s.rdb.Hset(r.Context(), s.config.CacheTimeout, sitemapKey, hsetValues...)
+	err = s.rdb.PipeHset(r.Context(), s.config.CacheTimeout, sitemapKey, hsetValues...)
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +116,7 @@ func (s *Service) GetSitemapIndex(r *http.Request, sitemapKey string) (models.Si
 func (s *Service) GetSitemapPart(r *http.Request, sitemapKey, partKey string) (*models.SitemapPart, error) {
 
 	var part models.SitemapPart
-	jsonPart, err := s.rdb.HGet(r.Context(), sitemapKey, partKey)
+	jsonPart, err := s.rdb.Client.HGet(r.Context(), sitemapKey, partKey).Result()
 	if err == nil {
 		err = json.Unmarshal([]byte(jsonPart), &part)
 		if err == nil {
@@ -141,7 +141,7 @@ func (s *Service) GetSitemapPart(r *http.Request, sitemapKey, partKey string) (*
 	}
 
 	// Set the sitemap to Redis
-	err = s.rdb.Hset(r.Context(), s.config.CacheTimeout, sitemapKey, hsetValues...)
+	err = s.rdb.PipeHset(r.Context(), s.config.CacheTimeout, sitemapKey, hsetValues...)
 	if err != nil {
 		return nil, err
 	}
