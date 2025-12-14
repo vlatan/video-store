@@ -1,6 +1,7 @@
 package sitemaps
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -92,22 +93,8 @@ func (s *Service) GetSitemapIndex(r *http.Request, sitemapKey string) (models.Si
 		return nil, err
 	}
 
-	// Prepare hset values (key, field pairs) in a slice
-	var hsetValues []any
-	for key, value := range sitemapIndex {
-		partJson, err := json.Marshal(value)
-		if err != nil {
-			return nil, err
-		}
-		// Implicit conversion of key from string to []byte
-		hsetValues = append(hsetValues, key, partJson)
-	}
-
-	// Set the sitemap to Redis
-	pipe := s.rdb.Client.Pipeline()
-	pipe.HSet(r.Context(), sitemapKey, hsetValues...)
-	pipe.Expire(r.Context(), sitemapKey, s.config.CacheTimeout)
-	if _, err = pipe.Exec(r.Context()); err != nil {
+	// Store the sitemap in cache
+	if err = s.CacheSitemapIndex(r.Context(), sitemapKey, sitemapIndex); err != nil {
 		return nil, err
 	}
 
@@ -132,23 +119,34 @@ func (s *Service) GetSitemapPart(r *http.Request, sitemapKey, partKey string) (*
 		return nil, err
 	}
 
+	// Store the sitemap in cache
+	if err = s.CacheSitemapIndex(r.Context(), sitemapKey, sitemapIndex); err != nil {
+		return nil, err
+	}
+
+	return sitemapIndex[partKey], nil
+}
+
+// CacheSitemapIndex saves the sitemap index in Redis
+func (s *Service) CacheSitemapIndex(ctx context.Context, sitemapKey string, sitemapIndex models.SitemapIndex) error {
+
 	// Prepare hset values (key, field pairs) in a slice
 	var hsetValues []any
 	for key, value := range sitemapIndex {
 		partJson, err := json.Marshal(value)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		hsetValues = append(hsetValues, key, partJson)
 	}
 
 	// Set the sitemap to Redis
 	pipe := s.rdb.Client.Pipeline()
-	pipe.HSet(r.Context(), sitemapKey, hsetValues...)
-	pipe.Expire(r.Context(), sitemapKey, s.config.CacheTimeout)
-	if _, err = pipe.Exec(r.Context()); err != nil {
-		return nil, err
+	pipe.HSet(ctx, sitemapKey, hsetValues...)
+	pipe.Expire(ctx, sitemapKey, s.config.CacheTimeout)
+	if _, err := pipe.Exec(ctx); err != nil {
+		return err
 	}
 
-	return sitemapIndex[partKey], nil
+	return nil
 }
