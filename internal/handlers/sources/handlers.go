@@ -16,7 +16,7 @@ func (s *Service) SourcesHandler(w http.ResponseWriter, r *http.Request) {
 	data := models.GetDataFromContext(r)
 
 	// Get sources from redis or DB
-	sources, err := rdb.GetItems(
+	sources, err := rdb.GetCachedData(
 		!data.IsCurrentUserAdmin(),
 		r.Context(),
 		s.rdb,
@@ -161,7 +161,7 @@ func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
 		redisKey += fmt.Sprintf(":cursor:%s", cursor)
 	}
 
-	posts, err := rdb.GetItems(
+	posts, err := rdb.GetCachedData(
 		!data.IsCurrentUserAdmin(),
 		r.Context(),
 		s.rdb,

@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func TestGetItems(t *testing.T) {
+func TestGetCachedData(t *testing.T) {
 
 	// todo context
 	ctx := context.TODO()
@@ -43,7 +43,7 @@ func TestGetItems(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := GetItems(tt.wantCache, tt.ctx, rdb, tt.name, time.Minute, tt.callable)
+			_, err := GetCachedData(tt.wantCache, tt.ctx, rdb, tt.name, time.Minute, tt.callable)
 			if gotErr := err != nil; gotErr {
 				if gotErr != tt.wantErr {
 					t.Errorf("got error = %v, want error = %t", err, tt.wantErr)
@@ -53,7 +53,7 @@ func TestGetItems(t *testing.T) {
 			// If we want to fetche from cache,
 			// run the func again to fetch from cache
 			if tt.wantCache {
-				_, err = GetItems(tt.wantCache, tt.ctx, rdb, tt.name, time.Minute, tt.callable)
+				_, err = GetCachedData(tt.wantCache, tt.ctx, rdb, tt.name, time.Minute, tt.callable)
 				if gotErr := err != nil; gotErr {
 					if gotErr != tt.wantErr {
 						t.Errorf("got error = %v, want error = %t", err, tt.wantErr)

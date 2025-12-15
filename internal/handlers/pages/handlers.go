@@ -29,7 +29,7 @@ func (s *Service) SinglePageHandler(w http.ResponseWriter, r *http.Request) {
 	// Default data
 	data := models.GetDataFromContext(r)
 
-	page, err := rdb.GetItems(
+	page, err := rdb.GetCachedData(
 		!data.IsCurrentUserAdmin(),
 		r.Context(),
 		s.rdb,

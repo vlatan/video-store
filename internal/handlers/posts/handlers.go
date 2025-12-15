@@ -36,7 +36,7 @@ func (s *Service) HomeHandler(w http.ResponseWriter, r *http.Request) {
 		redisKey += fmt.Sprintf(":cursor:%s", cursor)
 	}
 
-	posts, err := rdb.GetItems(
+	posts, err := rdb.GetCachedData(
 		!data.IsCurrentUserAdmin(),
 		r.Context(),
 		s.rdb,
@@ -83,7 +83,7 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 		redisKey += fmt.Sprintf(":cursor:%s", cursor)
 	}
 
-	posts, err := rdb.GetItems(
+	posts, err := rdb.GetCachedData(
 		!data.IsCurrentUserAdmin(),
 		r.Context(),
 		s.rdb,
@@ -136,7 +136,7 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 		redisKey += fmt.Sprintf(":cursor:%s", cursor)
 	}
 
-	posts, err := rdb.GetItems(
+	posts, err := rdb.GetCachedData(
 		!data.IsCurrentUserAdmin(),
 		r.Context(),
 		s.rdb,
@@ -330,7 +330,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	post, err := rdb.GetItems(
+	post, err := rdb.GetCachedData(
 		!data.CurrentUser.IsAuthenticated(),
 		r.Context(),
 		s.rdb,
@@ -368,7 +368,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Ignore the error on related posts, no posts will be shown
-	relatedPosts, _ := rdb.GetItems(
+	relatedPosts, _ := rdb.GetCachedData(
 		!data.CurrentUser.IsAuthenticated(),
 		r.Context(),
 		s.rdb,

@@ -23,7 +23,7 @@ func (s *service) GetStaticFiles() models.StaticFiles {
 func (s *service) NewData(w http.ResponseWriter, r *http.Request) *models.TemplateData {
 
 	// Get the categories from cache
-	categories, _ := rdb.GetItems(
+	categories, _ := rdb.GetCachedData(
 		true,
 		r.Context(),
 		s.rdb,

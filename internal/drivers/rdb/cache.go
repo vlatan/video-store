@@ -13,7 +13,7 @@ import (
 // call an underlying method
 // It can bypass the call to redis altogether and go straight to database,
 // if the flag cached is false.
-func GetItems[T any](
+func GetCachedData[T any](
 	cached bool,
 	ctx context.Context,
 	rdb *Service,
@@ -48,7 +48,7 @@ func GetItems[T any](
 		)
 	}
 
-	// If not in cache or error, execute the database function
+	// If not in cache or error, execute the given function
 	data, err = callable()
 	if err != nil {
 		return zero, err
