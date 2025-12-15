@@ -2,7 +2,6 @@ package sitemaps
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -71,19 +70,20 @@ func (s *Service) getSitemapIndexFromDB(r *http.Request, partSize int) (models.S
 // Get the entire sitemap either from Redis or DB
 func (s *Service) GetSitemapIndex(r *http.Request, sitemapKey string) (models.SitemapIndex, error) {
 
-	// Try to get the sitemap index from Redis
+	// Try to get the sitemap index from Redis.
+	// HGetAll will not return redis.Nil on no-result.
+	// It will return nil error and emty map,
+	// so we need to check len(allParts) > 0 too for valid result.
 	allParts, err := s.rdb.Client.HGetAll(r.Context(), sitemapKey).Result()
 	if err == nil && len(allParts) > 0 {
-		// Unmarshal the parts we got from redis
-		sitemapIndex := make(models.SitemapIndex)
-		for partKey, partJson := range allParts {
+		sitemapIndex := make(models.SitemapIndex, len(allParts))
+		for partKey, partData := range allParts {
 			var part models.SitemapPart
-			if err := json.Unmarshal([]byte(partJson), &part); err != nil {
+			if err = part.UnmarshalBinary([]byte(partData)); err != nil {
 				return nil, fmt.Errorf("failed to unmarshal part %s: %w", partKey, err)
 			}
 			sitemapIndex[partKey] = &part
 		}
-
 		return sitemapIndex, nil
 	}
 
