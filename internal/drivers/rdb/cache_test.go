@@ -27,37 +27,30 @@ func TestGetCachedData(t *testing.T) {
 	errorCallable := func() (int, error) { return 0, errors.New("test") }
 
 	tests := []struct {
-		name      string
-		ctx       context.Context
-		wantCache bool
-		callable  func() (int, error)
-		wantErr   bool
+		name     string
+		ctx      context.Context
+		callable func() (int, error)
+		wantErr  bool
 	}{
-		{"no context", cancelledCtx, false, validCallable, true},
-		{"no context cached", cancelledCtx, true, validCallable, true},
-		{"error result", ctx, false, errorCallable, true},
-		{"error result cached", ctx, true, errorCallable, true},
-		{"valid result", ctx, false, validCallable, false},
-		{"valid result cached", ctx, true, validCallable, false},
+		{"no context", cancelledCtx, validCallable, true},
+		{"error result", ctx, errorCallable, true},
+		{"valid result", ctx, validCallable, false},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := GetCachedData(tt.wantCache, tt.ctx, rdb, tt.name, time.Minute, tt.callable)
+			_, err := GetCachedData(tt.ctx, rdb, tt.name, time.Minute, tt.callable)
 			if gotErr := err != nil; gotErr {
 				if gotErr != tt.wantErr {
 					t.Errorf("got error = %v, want error = %t", err, tt.wantErr)
 				}
 			}
 
-			// If we want to fetche from cache,
-			// run the func again to fetch from cache
-			if tt.wantCache {
-				_, err = GetCachedData(tt.wantCache, tt.ctx, rdb, tt.name, time.Minute, tt.callable)
-				if gotErr := err != nil; gotErr {
-					if gotErr != tt.wantErr {
-						t.Errorf("got error = %v, want error = %t", err, tt.wantErr)
-					}
+			// Run the func again to fetch from cache
+			_, err = GetCachedData(tt.ctx, rdb, tt.name, time.Minute, tt.callable)
+			if gotErr := err != nil; gotErr {
+				if gotErr != tt.wantErr {
+					t.Errorf("got error = %v, want error = %t", err, tt.wantErr)
 				}
 			}
 		})

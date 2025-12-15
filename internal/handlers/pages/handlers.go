@@ -29,16 +29,24 @@ func (s *Service) SinglePageHandler(w http.ResponseWriter, r *http.Request) {
 	// Default data
 	data := models.GetDataFromContext(r)
 
-	page, err := rdb.GetCachedData(
-		!data.IsCurrentUserAdmin(),
-		r.Context(),
-		s.rdb,
-		fmt.Sprintf(pageCacheKey, pageSlug),
-		s.config.CacheTimeout,
-		func() (models.Page, error) {
-			return s.pagesRepo.GetSinglePage(r.Context(), pageSlug)
-		},
+	var (
+		err  error
+		page models.Page
 	)
+
+	if data.IsCurrentUserAdmin() {
+		page, err = s.pagesRepo.GetSinglePage(r.Context(), pageSlug)
+	} else {
+		page, err = rdb.GetCachedData(
+			r.Context(),
+			s.rdb,
+			fmt.Sprintf(pageCacheKey, pageSlug),
+			s.config.CacheTimeout,
+			func() (models.Page, error) {
+				return s.pagesRepo.GetSinglePage(r.Context(), pageSlug)
+			},
+		)
+	}
 
 	if errors.Is(err, pgx.ErrNoRows) {
 		http.NotFound(w, r)
@@ -46,7 +54,7 @@ func (s *Service) SinglePageHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		log.Printf("Error while getting the page '%s' from DB: %v", pageSlug, err)
+		log.Printf("Error while getting the page '%s'; %v", pageSlug, err)
 		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}

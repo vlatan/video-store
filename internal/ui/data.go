@@ -24,7 +24,6 @@ func (s *service) NewData(w http.ResponseWriter, r *http.Request) *models.Templa
 
 	// Get the categories from cache
 	categories, _ := rdb.GetCachedData(
-		true,
 		r.Context(),
 		s.rdb,
 		"categories",

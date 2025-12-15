@@ -12,20 +12,28 @@ import (
 
 // Handle all sources page
 func (s *Service) SourcesHandler(w http.ResponseWriter, r *http.Request) {
+
 	// Generate template data
 	data := models.GetDataFromContext(r)
 
-	// Get sources from redis or DB
-	sources, err := rdb.GetCachedData(
-		!data.IsCurrentUserAdmin(),
-		r.Context(),
-		s.rdb,
-		"sources",
-		s.config.CacheTimeout,
-		func() (models.Sources, error) {
-			return s.sourcesRepo.GetSources(r.Context())
-		},
+	var (
+		err     error
+		sources models.Sources
 	)
+
+	if data.IsCurrentUserAdmin() {
+		sources, err = s.sourcesRepo.GetSources(r.Context())
+	} else {
+		sources, err = rdb.GetCachedData(
+			r.Context(),
+			s.rdb,
+			"sources",
+			s.config.CacheTimeout,
+			func() (models.Sources, error) {
+				return s.sourcesRepo.GetSources(r.Context())
+			},
+		)
+	}
 
 	if err != nil {
 		log.Printf("Was unabale to fetch sources on URI '%s': %v", r.RequestURI, err)
@@ -161,16 +169,28 @@ func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
 		redisKey += fmt.Sprintf(":cursor:%s", cursor)
 	}
 
-	posts, err := rdb.GetCachedData(
-		!data.IsCurrentUserAdmin(),
-		r.Context(),
-		s.rdb,
-		redisKey,
-		s.config.CacheTimeout,
-		func() (models.Posts, error) {
-			return s.postsRepo.GetSourcePosts(r.Context(), sourceID, cursor, orderBy)
-		},
+	var (
+		err   error
+		posts models.Posts
 	)
+
+	if data.IsCurrentUserAdmin() {
+		posts, err = s.postsRepo.GetSourcePosts(
+			r.Context(), sourceID, cursor, orderBy,
+		)
+	} else {
+		posts, err = rdb.GetCachedData(
+			r.Context(),
+			s.rdb,
+			redisKey,
+			s.config.CacheTimeout,
+			func() (models.Posts, error) {
+				return s.postsRepo.GetSourcePosts(
+					r.Context(), sourceID, cursor, orderBy,
+				)
+			},
+		)
+	}
 
 	if err != nil {
 		log.Printf("Was unabale to fetch posts on URI '%s': %v", r.RequestURI, err)
