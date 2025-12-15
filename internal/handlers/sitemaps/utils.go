@@ -105,12 +105,9 @@ func (s *Service) GetSitemapIndex(r *http.Request, sitemapKey string) (models.Si
 func (s *Service) GetSitemapPart(r *http.Request, sitemapKey, partKey string) (*models.SitemapPart, error) {
 
 	var part models.SitemapPart
-	jsonPart, err := s.rdb.Client.HGet(r.Context(), sitemapKey, partKey).Result()
+	err := s.rdb.Client.HGet(r.Context(), sitemapKey, partKey).Scan(&part)
 	if err == nil {
-		err = json.Unmarshal([]byte(jsonPart), &part)
-		if err == nil {
-			return &part, nil
-		}
+		return &part, nil
 	}
 
 	// Get data from DB and construct a sitemap
@@ -131,13 +128,9 @@ func (s *Service) GetSitemapPart(r *http.Request, sitemapKey, partKey string) (*
 func (s *Service) CacheSitemapIndex(ctx context.Context, sitemapKey string, sitemapIndex models.SitemapIndex) error {
 
 	// Prepare hset values (key, field pairs) in a slice
-	var hsetValues []any
+	hsetValues := make([]any, 0, len(sitemapIndex)*2)
 	for key, value := range sitemapIndex {
-		partJson, err := json.Marshal(value)
-		if err != nil {
-			return err
-		}
-		hsetValues = append(hsetValues, key, partJson)
+		hsetValues = append(hsetValues, key, value)
 	}
 
 	// Set the sitemap to Redis
