@@ -19,14 +19,14 @@ func GetItems[T any](
 	rdb *Service,
 	cacheKey string,
 	cacheTimeout time.Duration,
-	dbFunc func() (T, error), // Function to call if cache miss
+	callable func() (T, error), // Function to call if cache miss
 ) (T, error) {
 
 	var zero, data T
 
 	// Check if the caller needs a cached result at all
 	if !cached {
-		data, err := dbFunc()
+		data, err := callable()
 		if err != nil {
 			return zero, err
 		}
@@ -49,7 +49,7 @@ func GetItems[T any](
 	}
 
 	// If not in cache or error, execute the database function
-	data, err = dbFunc()
+	data, err = callable()
 	if err != nil {
 		return zero, err
 	}
