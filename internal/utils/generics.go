@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"math/rand"
 	"time"
 
@@ -37,45 +38,50 @@ func extractRetryDelay(err error) (time.Duration, bool) {
 // Retry a function
 func Retry[T any](
 	ctx context.Context,
-	delay time.Duration,
 	maxRetries int,
-	Func func() (T, error),
+	delay time.Duration,
+	callable func() (T, error),
 ) (T, error) {
 
-	var zero T
-	var lastError error
+	var (
+		zero      T
+		lastError error
+		sleepTime time.Duration
+	)
+
+	// Avoid zero or negative maxRetries
 	maxRetries = max(maxRetries, 1)
 
 	// Perform retries
 	for i := range maxRetries {
 
 		// Call the function
-		data, err := Func()
+		data, err := callable()
 		if err == nil {
 			return data, err
 		}
 
-		// If this is the last iteration, exit
+		// If this is the last iteration break the loop
 		lastError = err
-		if i == maxRetries-1 {
-			continue
+		if i+1 == maxRetries {
+			break
 		}
 
 		// Try to extract a delay value from the error
-		if retryDelay, ok := extractRetryDelay(lastError); ok {
-			delay = max(delay, retryDelay)
-		} else if i > 0 { // If not the first function call
-			delay *= 2 // exponentially increase the delay
+		if retryDelay, ok := extractRetryDelay(lastError); ok && retryDelay > 0 {
+			sleepTime = retryDelay
+		} else { // Increase the delay with backoff (delay * 2^i)
+			sleepTime = delay * time.Duration(math.Pow(2, float64(i)))
 		}
 
-		// Add jitter to the delay from 0 to 1 seconds
-		delay += time.Duration(rand.Float64() * float64(time.Second)) // #nosec G404
+		// Add jitter to the delay from 0 to 2 seconds
+		sleepTime += time.Duration(rand.Float64() * float64(2*time.Second)) // #nosec G404
 
-		// Wait for either the delay or context to end
+		// Wait for either the sleep time or context to end
 		select {
 		case <-ctx.Done():
 			return zero, errors.Join(ctx.Err(), lastError)
-		case <-time.After(delay):
+		case <-time.After(sleepTime):
 		}
 	}
 

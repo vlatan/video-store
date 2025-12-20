@@ -372,7 +372,7 @@ func (s *Service) Run(ctx context.Context) error {
 
 			// Generate content using Gemini
 			genaiResponse, err := s.gemini.GenerateInfo(
-				ctx, categories, transcript, 90*time.Second, 3,
+				ctx, categories, transcript, 3, 90*time.Second,
 			)
 
 			// Exit early if context ended
@@ -453,7 +453,7 @@ func (s *Service) Run(ctx context.Context) error {
 
 		// Generate content using Gemini
 		genaiResponse, err := s.gemini.GenerateInfo(
-			ctx, categories, transcript, 90*time.Second, 3,
+			ctx, categories, transcript, 3, 90*time.Second,
 		)
 
 		// Exit early if context ended

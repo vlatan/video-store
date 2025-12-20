@@ -25,8 +25,7 @@ func (s *Service) GetVideos(ctx context.Context, videoIDs ...string) ([]*youtube
 		end := min(i+batchSize, len(videoIDs))
 		batch := videoIDs[i:end]
 
-		response, err := utils.Retry(
-			ctx, time.Second, 5,
+		response, err := utils.Retry(ctx, 5, time.Second,
 			func() (*youtube.VideoListResponse, error) {
 				return s.youtube.Videos.List(part).Id(batch...).Do()
 			},

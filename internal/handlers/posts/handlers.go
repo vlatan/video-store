@@ -330,7 +330,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 			}
 
 			genaiResponse, err := s.gemini.GenerateInfo(
-				ctx, data.Categories, transcript, 90*time.Second, 1,
+				ctx, data.Categories, transcript, 1, 90*time.Second,
 			)
 
 			if err != nil {

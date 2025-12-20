@@ -102,8 +102,8 @@ func (s *Service) GenerateInfo(
 	ctx context.Context,
 	categories models.Categories,
 	transcript string,
-	delay time.Duration,
 	maxRetries int,
+	delay time.Duration,
 ) (*models.GenaiResponse, error) {
 
 	// Create categories string
@@ -126,7 +126,7 @@ func (s *Service) GenerateInfo(
 	}
 
 	response, err := utils.Retry(
-		ctx, delay, maxRetries,
+		ctx, maxRetries, delay,
 		func() (*models.GenaiResponse, error) {
 			return s.GenerateContent(ctx, contents)
 		},

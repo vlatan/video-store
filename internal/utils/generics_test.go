@@ -162,7 +162,7 @@ func TestRetry(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			data, err := Retry(tt.ctx, tt.initialDelay, tt.maxRetries, tt.Func)
+			data, err := Retry(tt.ctx, tt.maxRetries, tt.initialDelay, tt.Func)
 
 			if (err != nil) != tt.wantErr {
 				t.Errorf("got error = %v, want error = %v", err, tt.wantErr)
