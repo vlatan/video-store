@@ -414,7 +414,7 @@ func (s *Service) Run(ctx context.Context) error {
 	for _, video := range validDBVideos {
 
 		// Limit updates per worker run
-		if updated+failed+inserted > updateLimit {
+		if updated+failed+inserted >= updateLimit {
 			break
 		}
 
