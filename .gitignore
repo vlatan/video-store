@@ -25,6 +25,7 @@ prompt.json
 
 
 # tests
+cover.out
 cover.html
 coverage.html
 results.json
