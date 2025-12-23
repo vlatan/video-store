@@ -109,7 +109,7 @@ func (s *Service) Run(ctx context.Context) error {
 	// Make sure to unlock when done
 	defer lock.Unlock(ctx)
 
-	fmt.Println("Lock acquired!")
+	log.Println("Lock acquired!")
 	log.Println("Worker running...")
 
 	// ###################################################################
