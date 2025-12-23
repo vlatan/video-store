@@ -70,9 +70,9 @@ func New(ctx context.Context, config *config.Config) (*Service, error) {
 func (s *Service) GenerateContent(
 	ctx context.Context,
 	contents []*genai.Content,
-) (*models.GenaiResponse, error) {
+) (*genai.GenerateContentResponse, error) {
 
-	result, err := s.gemini.Models.GenerateContent(
+	return s.gemini.Models.GenerateContent(
 		ctx,
 		s.config.GeminiModel,
 		contents,
@@ -83,17 +83,6 @@ func (s *Service) GenerateContent(
 			MediaResolution:  genai.MediaResolutionLow,
 		},
 	)
-
-	if err != nil {
-		return nil, err
-	}
-
-	var response models.GenaiResponse
-	if err := json.Unmarshal([]byte(result.Text()), &response); err != nil {
-		return nil, fmt.Errorf("failed to parse Genai response to JSON: %w", err)
-	}
-
-	return &response, nil
 }
 
 // Create the prompt and generate content using Gemini
@@ -125,15 +114,20 @@ func (s *Service) GenerateInfo(
 		genai.NewContentFromParts(parts, genai.RoleUser),
 	}
 
-	response, err := utils.Retry(
+	result, err := utils.Retry(
 		ctx, maxRetries, delay,
-		func() (*models.GenaiResponse, error) {
+		func() (*genai.GenerateContentResponse, error) {
 			return s.GenerateContent(ctx, contents)
 		},
 	)
 
 	if err != nil {
 		return nil, err
+	}
+
+	var response models.GenaiResponse
+	if err := json.Unmarshal([]byte(result.Text()), &response); err != nil {
+		return nil, fmt.Errorf("failed to parse Genai response to JSON: %w", err)
 	}
 
 	response.Description = bluemonday.
@@ -143,5 +137,5 @@ func (s *Service) GenerateInfo(
 
 	response.Description += utils.UpdateMarker // REMOVE
 
-	return response, nil
+	return &response, nil
 }
