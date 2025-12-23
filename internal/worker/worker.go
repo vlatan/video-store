@@ -526,7 +526,10 @@ func (s *Service) Run(ctx context.Context) error {
 
 		// Check if we still own the lock before an expensive API call
 		if err = lock.CheckLock(ctx); err != nil {
-			return fmt.Errorf("this worker %s does not own the lock anymore; %w", s.id, err)
+			return fmt.Errorf(
+				"this worker %s does not own the lock anymore; %w",
+				s.id, err,
+			)
 		}
 
 		// Generate content using Gemini
