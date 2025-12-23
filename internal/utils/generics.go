@@ -46,7 +46,6 @@ func Retry[T any](
 	var (
 		zero      T
 		lastError error
-		sleepTime time.Duration
 	)
 
 	// Avoid zero or negative maxRetries
@@ -67,15 +66,20 @@ func Retry[T any](
 			break
 		}
 
-		// Try to extract a delay value from the error
-		if retryDelay, ok := extractRetryDelay(lastError); ok && retryDelay > 0 {
-			sleepTime = retryDelay
-		} else { // Increase the delay with backoff (delay * 2^i)
-			sleepTime = delay * time.Duration(math.Pow(2, float64(i)))
-		}
+		// Calculate the backoff (2^i) + jitter of 0-2 seconds
+		jitter := time.Duration(rand.Float64() * float64(2*time.Second)) // #nosec G404
+		sleepTime := delay*time.Duration(math.Pow(2, float64(i))) + jitter
 
-		// Add jitter to the delay from 0 to 2 seconds
-		sleepTime += time.Duration(rand.Float64() * float64(2*time.Second)) // #nosec G404
+		// Try to extract a delay value from the error
+		if retryDelay, ok := extractRetryDelay(lastError); ok {
+			if retryDelay > sleepTime {
+				return zero, fmt.Errorf(
+					"API requested excessive wait: %v; %w;",
+					retryDelay, lastError,
+				)
+			}
+			sleepTime = retryDelay
+		}
 
 		// Wait for either the sleep time or context to end
 		select {
