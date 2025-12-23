@@ -7,8 +7,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/drivers/database"
+	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/integrations/gemini"
 	"github.com/vlatan/video-store/internal/integrations/yt"
 	"github.com/vlatan/video-store/internal/models"
@@ -21,16 +23,19 @@ import (
 )
 
 type Service struct {
+	id          string
+	rdb         *rdb.Service
 	postsRepo   *posts.Repository
 	sourcesRepo *sources.Repository
 	catsRepo    *categories.Repository
 	config      *config.Config
-	yt          *yt.Service
+	youtube     *yt.Service
 	gemini      *gemini.Service
 }
 
 // Update limit per worker run
 const updateLimit = 20
+const workerLockKey = "worker:lock"
 
 // Maximum videos to delete per run
 const deleteLimit = 5
@@ -43,6 +48,11 @@ func New() *Service {
 	db, err := database.New(cfg)
 	if err != nil {
 		log.Fatalf("couldn't create DB service; %v", err)
+	}
+
+	rdb, err := rdb.New(cfg)
+	if err != nil {
+		log.Fatalf("couldn't create Redis service; %v", err)
 	}
 
 	// Create DB repositories
@@ -64,11 +74,13 @@ func New() *Service {
 	}
 
 	return &Service{
+		id:          uuid.New().String(),
+		rdb:         rdb,
 		postsRepo:   postsRepo,
 		sourcesRepo: sourcesRepo,
 		catsRepo:    catsRepo,
 		config:      cfg,
-		yt:          yt,
+		youtube:     yt,
 		gemini:      gemini,
 	}
 }
@@ -76,7 +88,28 @@ func New() *Service {
 // Run the worker
 func (s *Service) Run(ctx context.Context) error {
 
+	// Measure execution time
 	start := time.Now()
+	defer func() {
+		elapsed := time.Since(start).Round(time.Second)
+		log.Printf("Time took: %s", elapsed)
+	}()
+
+	// Create a new context tailored to this worker expected runtime
+	ctx, cancel := context.WithTimeout(ctx, s.config.WorkerExpectedRuntime)
+	defer cancel()
+
+	// Create and acquire a Redis lock with slightly bigger TTL
+	redisLockTTL := time.Duration(float64(s.config.WorkerExpectedRuntime) * 1.25)
+	lock := s.rdb.NewRedisLock(workerLockKey, s.id, redisLockTTL)
+	if err := lock.Lock(ctx); err != nil {
+		return fmt.Errorf("failed to acquire Redis lock; %w", err)
+	}
+
+	// Make sure to unlock when done
+	defer lock.Unlock(ctx)
+
+	fmt.Println("Lock acquired!")
 	log.Println("Worker running...")
 
 	// ###################################################################
@@ -105,7 +138,7 @@ func (s *Service) Run(ctx context.Context) error {
 	}
 
 	// Fetch playlists from YouTube
-	ytSources, err := s.yt.GetSources(ctx, playlistIDs...)
+	ytSources, err := s.youtube.GetSources(ctx, playlistIDs...)
 	if err != nil {
 		return fmt.Errorf(
 			"could not fetch the playlists from YouTube; %w",
@@ -127,7 +160,7 @@ func (s *Service) Run(ctx context.Context) error {
 	}
 
 	// Fetch corresponding channels
-	channels, err := s.yt.GetChannels(ctx, channelIDs...)
+	channels, err := s.youtube.GetChannels(ctx, channelIDs...)
 	if err != nil {
 		return fmt.Errorf(
 			"could not fetch the channels from YouTube; %w",
@@ -145,7 +178,7 @@ func (s *Service) Run(ctx context.Context) error {
 	var updatedPlaylists int
 	for playlistID, ytSource := range ytSourcesMap {
 
-		newSource := s.yt.NewYouTubeSource(
+		newSource := s.youtube.NewYouTubeSource(
 			ytSource, channelsMap[ytSource.Snippet.ChannelId],
 		)
 
@@ -198,7 +231,7 @@ func (s *Service) Run(ctx context.Context) error {
 
 	// Get orphans metadata from YT, start forming valid YT videos map
 	ytVideosMap := make(map[string]*models.Post)
-	ytOrphanVideos, err := s.yt.GetVideos(ctx, orphanVideoIDs...)
+	ytOrphanVideos, err := s.youtube.GetVideos(ctx, orphanVideoIDs...)
 	if err != nil {
 		return fmt.Errorf(
 			"could not get the orphan videos from YouTube; %w",
@@ -208,8 +241,8 @@ func (s *Service) Run(ctx context.Context) error {
 
 	// Add valid orphan videos to YT map
 	for _, video := range ytOrphanVideos {
-		if err = s.yt.ValidateYouTubeVideo(video); err == nil {
-			ytVideosMap[video.Id] = s.yt.NewYouTubePost(video, "")
+		if err = s.youtube.ValidateYouTubeVideo(video); err == nil {
+			ytVideosMap[video.Id] = s.youtube.NewYouTubePost(video, "")
 		}
 	}
 
@@ -217,7 +250,7 @@ func (s *Service) Run(ctx context.Context) error {
 
 	// Get valid videos from playlists
 	for _, playlistID := range playlistIDs {
-		sourceItems, err := s.yt.GetSourceItems(ctx, playlistID)
+		sourceItems, err := s.youtube.GetSourceItems(ctx, playlistID)
 		if err != nil {
 			return fmt.Errorf(
 				"could not get items from YouTube on source '%s'; %w",
@@ -232,7 +265,7 @@ func (s *Service) Run(ctx context.Context) error {
 		}
 
 		// Get all the videos metadata
-		videosMetadata, err := s.yt.GetVideos(ctx, videoIDs...)
+		videosMetadata, err := s.youtube.GetVideos(ctx, videoIDs...)
 		if err != nil {
 			return fmt.Errorf("could not get videos from YouTube: %w", err)
 		}
@@ -241,7 +274,7 @@ func (s *Service) Run(ctx context.Context) error {
 		for _, video := range videosMetadata {
 
 			// Skip if invalid video
-			if err = s.yt.ValidateYouTubeVideo(video); err != nil {
+			if err = s.youtube.ValidateYouTubeVideo(video); err != nil {
 				continue
 			}
 
@@ -258,7 +291,7 @@ func (s *Service) Run(ctx context.Context) error {
 
 			// If the video is already in ytVideosMap as an orphaned video
 			// we overwrite it, associate it with a YT playlist
-			ytVideosMap[video.Id] = s.yt.NewYouTubePost(video, playlistID)
+			ytVideosMap[video.Id] = s.youtube.NewYouTubePost(video, playlistID)
 		}
 	}
 
@@ -353,7 +386,7 @@ func (s *Service) Run(ctx context.Context) error {
 		if inserted <= updateLimit {
 
 			// Get the video transcript
-			transcript, err := s.yt.GetVideoTranscript(ctx, videoID)
+			transcript, err := s.youtube.GetVideoTranscript(ctx, videoID)
 
 			// Exit early if context ended
 			if utils.IsContextErr(err) {
@@ -368,6 +401,11 @@ func (s *Service) Run(ctx context.Context) error {
 
 				// If no transcript use the post title and description
 				transcript = newVideo.Title + "\n" + newVideo.Description
+			}
+
+			// Check if we still own the lock before an expensive API call
+			if err = lock.CheckLock(ctx); err != nil {
+				return fmt.Errorf("this worker %s does not own the lock anymore; %w", s.id, err)
 			}
 
 			// Generate content using Gemini
@@ -434,7 +472,7 @@ func (s *Service) Run(ctx context.Context) error {
 			continue
 		}
 
-		transcript, err := s.yt.GetVideoTranscript(ctx, video.VideoID)
+		transcript, err := s.youtube.GetVideoTranscript(ctx, video.VideoID)
 
 		// Exit early if context ended
 		if utils.IsContextErr(err) {
@@ -449,6 +487,11 @@ func (s *Service) Run(ctx context.Context) error {
 
 			// If no transcript use the post title and description
 			transcript = video.Title + "\n" + video.Description
+		}
+
+		// Check if we still own the lock before an expensive API call
+		if err = lock.CheckLock(ctx); err != nil {
+			return fmt.Errorf("this worker %s does not own the lock anymore; %w", s.id, err)
 		}
 
 		// Generate content using Gemini
@@ -508,11 +551,6 @@ func (s *Service) Run(ctx context.Context) error {
 		items = utils.Plural(updated, "video")
 		log.Printf("Updated %d %s", updated, items)
 	}
-
-	// ###################################################################
-
-	elapsed := time.Since(start).Round(time.Second)
-	log.Printf("Time took: %s", elapsed)
 
 	return nil
 }

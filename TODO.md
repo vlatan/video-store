@@ -1,3 +1,7 @@
+* Set counter in redis with 24hrs expiry for worker to check
+  Implement distributed workers with Redis lock
+  https://claude.ai/chat/9b8d2b0e-56d6-4763-a966-b66d8961ce67
+
 * Uncomment and remove code in:
   - `internal/integrations/gemini/gemini.go`
   - `internal/worker/worker.go`

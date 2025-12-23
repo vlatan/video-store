@@ -102,7 +102,7 @@ type Config struct {
 	RedisPort     int           `env:"REDIS_PORT" envDefault:"6379"`
 	RedisUsername string        `env:"REDIS_USERNAME"`
 	RedisPassword string        `env:"REDIS_PASSWORD"`
-	CacheTimeout  time.Duration `env:"CACHE_TIMEOUT" envDefault:"86400s"`
+	CacheTimeout  time.Duration `env:"CACHE_TIMEOUT" envDefault:"24h"`
 
 	// Postgres
 	DBHost     string `env:"DB_HOST" envDefault:"localhost"`
@@ -115,6 +115,9 @@ type Config struct {
 	// Local app host and port
 	Host string `env:"HOST" envDefault:"localhost"`
 	Port int    `env:"PORT" envDefault:"5000"`
+
+	// Worker expected runtime
+	WorkerExpectedRuntime time.Duration `env:"WORKER_EXPECTED_RUNTIME" envDefault:"1h"`
 }
 
 // New creates new config object
