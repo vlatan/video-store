@@ -569,11 +569,12 @@ func (s *Service) Run(ctx context.Context) error {
 			}
 
 			log.Printf(
-				"failed to update generated data on video '%s'; %v",
+				"failed to update generated data in DB on video '%s'; %v",
 				video.VideoID, err,
 			)
 
 			failed++
+			continue
 		}
 
 		updated++
