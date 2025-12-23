@@ -28,6 +28,7 @@ func (s *Service) GetSourceItems(ctx context.Context, playlistID string) ([]*you
 					MaxResults(50).
 					PageToken(nextPageToken).
 					PlaylistId(playlistID).
+					Context(ctx).
 					Do()
 			},
 		)
@@ -68,7 +69,11 @@ func (s *Service) GetSources(ctx context.Context, playlistIDs ...string) ([]*you
 
 		response, err := utils.Retry(ctx, 5, time.Second,
 			func() (*youtube.PlaylistListResponse, error) {
-				return s.youtube.Playlists.List(part).Id(batch...).Do()
+				return s.youtube.Playlists.
+					List(part).
+					Id(batch...).
+					Context(ctx).
+					Do()
 			},
 		)
 
@@ -103,7 +108,11 @@ func (s *Service) GetChannels(ctx context.Context, channelIDs ...string) ([]*you
 
 		response, err := utils.Retry(ctx, 5, time.Second,
 			func() (*youtube.ChannelListResponse, error) {
-				return s.youtube.Channels.List(part).Id(batch...).Do()
+				return s.youtube.Channels.
+					List(part).
+					Id(batch...).
+					Context(ctx).
+					Do()
 			},
 		)
 

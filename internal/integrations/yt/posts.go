@@ -27,7 +27,11 @@ func (s *Service) GetVideos(ctx context.Context, videoIDs ...string) ([]*youtube
 
 		response, err := utils.Retry(ctx, 5, time.Second,
 			func() (*youtube.VideoListResponse, error) {
-				return s.youtube.Videos.List(part).Id(batch...).Do()
+				return s.youtube.Videos.
+					List(part).
+					Id(batch...).
+					Context(ctx).
+					Do()
 			},
 		)
 
