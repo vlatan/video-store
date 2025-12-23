@@ -88,16 +88,16 @@ func New() *Service {
 // Run the worker
 func (s *Service) Run(ctx context.Context) error {
 
+	// Create a new context tailored to this worker expected runtime
+	ctx, cancel := context.WithTimeout(ctx, s.config.WorkerExpectedRuntime)
+	defer cancel()
+
 	// Measure execution time
 	start := time.Now()
 	defer func() {
 		elapsed := time.Since(start).Round(time.Second)
 		log.Printf("Time took: %s", elapsed)
 	}()
-
-	// Create a new context tailored to this worker expected runtime
-	ctx, cancel := context.WithTimeout(ctx, s.config.WorkerExpectedRuntime)
-	defer cancel()
 
 	// Create and acquire a Redis lock with slightly bigger TTL
 	redisLockTTL := time.Duration(float64(s.config.WorkerExpectedRuntime) * 1.25)
@@ -107,7 +107,8 @@ func (s *Service) Run(ctx context.Context) error {
 	}
 
 	// Make sure to unlock when done
-	defer lock.Unlock(ctx)
+	// Use background ctx so Unlock isn't killed by the expired ctx
+	defer lock.Unlock(context.Background())
 
 	log.Println("Lock acquired!")
 	log.Println("Worker running...")
@@ -177,6 +178,11 @@ func (s *Service) Run(ctx context.Context) error {
 	// Update each playlist in DB if change in thumbnails
 	var updatedPlaylists int
 	for playlistID, ytSource := range ytSourcesMap {
+
+		// Check the context first
+		if err = ctx.Err(); err != nil {
+			return err
+		}
 
 		newSource := s.youtube.NewYouTubeSource(
 			ytSource, channelsMap[ytSource.Snippet.ChannelId],
@@ -250,6 +256,12 @@ func (s *Service) Run(ctx context.Context) error {
 
 	// Get valid videos from playlists
 	for _, playlistID := range playlistIDs {
+
+		// Check the context first
+		if err = ctx.Err(); err != nil {
+			return err
+		}
+
 		sourceItems, err := s.youtube.GetSourceItems(ctx, playlistID)
 		if err != nil {
 			return fmt.Errorf(
@@ -272,6 +284,11 @@ func (s *Service) Run(ctx context.Context) error {
 
 		// Keep only the valid videos
 		for _, video := range videosMetadata {
+
+			// Check the context first
+			if err = ctx.Err(); err != nil {
+				return err
+			}
 
 			// Skip if invalid video
 			if err = s.youtube.ValidateYouTubeVideo(video); err != nil {
@@ -304,6 +321,11 @@ func (s *Service) Run(ctx context.Context) error {
 	var adopted, deleted int
 	var validDBVideos []*models.Post
 	for _, video := range dbVideos {
+
+		// Check the context first
+		if err = ctx.Err(); err != nil {
+			return err
+		}
 
 		// If the video doesn't exist on YT, delete it from DB
 		if _, exists := ytVideosMap[video.VideoID]; !exists {
@@ -383,6 +405,11 @@ func (s *Service) Run(ctx context.Context) error {
 	var inserted int
 	for videoID, newVideo := range ytVideosMap {
 
+		// Check the context first
+		if err = ctx.Err(); err != nil {
+			return err
+		}
+
 		if inserted <= updateLimit {
 
 			// Get the video transcript
@@ -405,7 +432,10 @@ func (s *Service) Run(ctx context.Context) error {
 
 			// Check if we still own the lock before an expensive API call
 			if err = lock.CheckLock(ctx); err != nil {
-				return fmt.Errorf("this worker %s does not own the lock anymore; %w", s.id, err)
+				return fmt.Errorf(
+					"this worker %s does not own the lock anymore; %w",
+					s.id, err,
+				)
 			}
 
 			// Generate content using Gemini
@@ -450,6 +480,11 @@ func (s *Service) Run(ctx context.Context) error {
 	// Update the existing DB videos if necessary
 	var updated, failed int
 	for _, video := range validDBVideos {
+
+		// Check the context first
+		if err = ctx.Err(); err != nil {
+			return err
+		}
 
 		// Limit updates per worker run
 		if updated+failed+inserted >= updateLimit {
