@@ -379,7 +379,7 @@ func (s *Service) Run(ctx context.Context) error {
 
 		if deleted >= deleteLimit {
 			msg := "WARNING: HIT MAX DELETION LIMIT. "
-			msg += "If this persists investigate for bugs"
+			msg += "If this persists investigate for bugs."
 			log.Println(msg)
 		}
 	}

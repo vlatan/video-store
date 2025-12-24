@@ -38,11 +38,6 @@ func (s *Service) GetSourceItems(ctx context.Context, playlistID string) ([]*you
 			return nil, err
 		}
 
-		if len(response.Items) == 0 {
-			msg := "empty response from YouTube"
-			return nil, errors.New(msg)
-		}
-
 		result = append(result, response.Items...)
 		nextPageToken = response.NextPageToken
 
@@ -50,6 +45,10 @@ func (s *Service) GetSourceItems(ctx context.Context, playlistID string) ([]*you
 		if nextPageToken == "" {
 			break
 		}
+	}
+
+	if len(result) == 0 {
+		return nil, errors.New("got zero source items from YouTube.")
 	}
 
 	return result, nil
@@ -82,13 +81,14 @@ func (s *Service) GetSources(ctx context.Context, playlistIDs ...string) ([]*you
 			return nil, err
 		}
 
-		if len(response.Items) == 0 {
-			return nil, fmt.Errorf(
-				"empty response from YouTube for batch %d:%d", i, end)
-		}
-
 		result = append(result, response.Items...)
+	}
 
+	if len(result) == 0 {
+		return nil, fmt.Errorf(
+			"got zero sources from YouTube, wanted %d",
+			len(playlistIDs),
+		)
 	}
 
 	return result, nil
@@ -121,12 +121,14 @@ func (s *Service) GetChannels(ctx context.Context, channelIDs ...string) ([]*you
 			return nil, err
 		}
 
-		if len(response.Items) == 0 {
-			return nil, fmt.Errorf(
-				"empty response from YouTube for batch %d:%d", i, end)
-		}
-
 		result = append(result, response.Items...)
+	}
+
+	if len(result) == 0 {
+		return nil, fmt.Errorf(
+			"got zero channels from YouTube, wanted %d",
+			len(channelIDs),
+		)
 	}
 
 	return result, nil

@@ -40,12 +40,14 @@ func (s *Service) GetVideos(ctx context.Context, videoIDs ...string) ([]*youtube
 			return nil, err
 		}
 
-		if len(response.Items) == 0 {
-			return nil, fmt.Errorf(
-				"empty response from YouTube for batch %d:%d", i, end)
-		}
-
 		result = append(result, response.Items...)
+	}
+
+	if len(result) == 0 {
+		return nil, fmt.Errorf(
+			"got zero videos from YouTube, wanted %d",
+			len(videoIDs),
+		)
 	}
 
 	return result, nil
