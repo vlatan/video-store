@@ -3,6 +3,7 @@ package yt
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/vlatan/video-store/internal/models"
@@ -82,8 +83,8 @@ func (s *Service) GetSources(ctx context.Context, playlistIDs ...string) ([]*you
 		}
 
 		if len(response.Items) == 0 {
-			msg := "empty response from YouTube"
-			return nil, errors.New(msg)
+			return nil, fmt.Errorf(
+				"empty response from YouTube for batch %d:%d", i, end)
 		}
 
 		result = append(result, response.Items...)
@@ -121,8 +122,8 @@ func (s *Service) GetChannels(ctx context.Context, channelIDs ...string) ([]*you
 		}
 
 		if len(response.Items) == 0 {
-			msg := "empty response from YouTube"
-			return nil, errors.New(msg)
+			return nil, fmt.Errorf(
+				"empty response from YouTube for batch %d:%d", i, end)
 		}
 
 		result = append(result, response.Items...)

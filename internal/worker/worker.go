@@ -265,21 +265,24 @@ func (s *Service) Run(ctx context.Context) error {
 		sourceItems, err := s.youtube.GetSourceItems(ctx, playlistID)
 		if err != nil {
 			return fmt.Errorf(
-				"could not get items from YouTube on source '%s'; %w",
+				"couldn't get items from YouTube for source '%s'; %w",
 				playlistID, err,
 			)
 		}
 
-		// Collect the video IDs
+		// Collect the video IDs for this source
 		var videoIDs []string
 		for _, item := range sourceItems {
 			videoIDs = append(videoIDs, item.ContentDetails.VideoId)
 		}
 
-		// Get all the videos metadata
+		// Get all the videos metadata for this source
 		videosMetadata, err := s.youtube.GetVideos(ctx, videoIDs...)
 		if err != nil {
-			return fmt.Errorf("could not get videos from YouTube: %w", err)
+			return fmt.Errorf(
+				"couldn't get videos from YouTube for source %s; %w",
+				playlistID, err,
+			)
 		}
 
 		// Keep only the valid videos

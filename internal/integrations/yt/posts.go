@@ -3,6 +3,7 @@ package yt
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -40,8 +41,8 @@ func (s *Service) GetVideos(ctx context.Context, videoIDs ...string) ([]*youtube
 		}
 
 		if len(response.Items) == 0 {
-			msg := "empty response from YouTube"
-			return nil, errors.New(msg)
+			return nil, fmt.Errorf(
+				"empty response from YouTube for batch %d:%d", i, end)
 		}
 
 		result = append(result, response.Items...)
