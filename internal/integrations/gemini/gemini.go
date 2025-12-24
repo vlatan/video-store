@@ -114,17 +114,9 @@ func (s *Service) GenerateInfo(
 	}
 	catString = strings.TrimSuffix(catString, ", ")
 
-	// Create genai parts
-	parts := make([]*genai.Part, len(s.config.GeminiPrompt.Parts))
-	for i, part := range s.config.GeminiPrompt.Parts {
-		text := strings.ReplaceAll(part.Text, categoriesPlaceholder, catString)
-		text = strings.ReplaceAll(text, transcriptPlaceholder, transcript)
-		parts[i] = genai.NewPartFromText(text)
-	}
-
-	contents := []*genai.Content{
-		genai.NewContentFromParts(parts, genai.RoleUser),
-	}
+	// Sanitize the transcript and make Genai contents
+	transcript = sanitizePrompt(transcript)
+	contents := s.makeContents(catString, transcript)
 
 	result, err := utils.Retry(
 		ctx, maxRetries, delay,
@@ -150,4 +142,20 @@ func (s *Service) GenerateInfo(
 	response.Description += utils.UpdateMarker // REMOVE
 
 	return &response, nil
+}
+
+// makeContents creates Genai contents
+func (s *Service) makeContents(categories, transcript string) []*genai.Content {
+
+	// Create genai parts
+	parts := make([]*genai.Part, len(s.config.GeminiPrompt.Parts))
+	for i, part := range s.config.GeminiPrompt.Parts {
+		text := strings.ReplaceAll(part.Text, categoriesPlaceholder, categories)
+		text = strings.ReplaceAll(text, transcriptPlaceholder, transcript)
+		parts[i] = genai.NewPartFromText(text)
+	}
+
+	return []*genai.Content{
+		genai.NewContentFromParts(parts, genai.RoleUser),
+	}
 }
