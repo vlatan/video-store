@@ -72,7 +72,7 @@ func (s *Service) GenerateContent(
 	contents []*genai.Content,
 ) (*genai.GenerateContentResponse, error) {
 
-	return s.gemini.Models.GenerateContent(
+	result, err := s.gemini.Models.GenerateContent(
 		ctx,
 		s.config.GeminiModel,
 		contents,
@@ -83,6 +83,18 @@ func (s *Service) GenerateContent(
 			MediaResolution:  genai.MediaResolutionLow,
 		},
 	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Check if there are candidates at all.
+	// Gemini can return zero candidates if it applies hard block.
+	if len(result.Candidates) == 0 {
+		return nil, &BlockedErr{result.PromptFeedback}
+	}
+
+	return result, nil
 }
 
 // Create the prompt and generate content using Gemini
