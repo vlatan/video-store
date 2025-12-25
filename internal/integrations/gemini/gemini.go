@@ -80,7 +80,7 @@ func (s *Service) GenerateContent(
 ) (*genai.GenerateContentResponse, error) {
 
 	// Check limits before calling the API
-	if err := s.CheckLimits(ctx); err != nil {
+	if err := s.AcquireQuota(ctx); err != nil {
 		return nil, fmt.Errorf("Gemini limit reached: %w", err)
 	}
 
@@ -172,12 +172,13 @@ func (s *Service) makeContents(categories, transcript string) []*genai.Content {
 	}
 }
 
-// CheckLimits exposes the limiter CheckLimits on the Gemini service
-func (s *Service) CheckLimits(ctx context.Context) error {
-	return s.limiter.CheckLimits(ctx)
+// AcquireQuota attempts to consume 1 request from the daily and minute buckets.
+// It returns a sentinel error if any of the quotas are full.
+func (s *Service) AcquireQuota(ctx context.Context) error {
+	return s.limiter.AcquireQuota(ctx)
 }
 
-// IsDailyLimitReached checks if daily limit was reached
-func (s *Service) IsDailyLimitReached(ctx context.Context) bool {
-	return s.limiter.IsDailyLimitReached(ctx)
+// Exhausted returns true if the daily limit has already been hit.
+func (s *Service) Exhausted(ctx context.Context) bool {
+	return s.limiter.Exhausted(ctx)
 }

@@ -418,7 +418,7 @@ func (s *Service) Run(ctx context.Context) error {
 		}
 
 		// If Gemini daily quota is reached just insert the video, do nothing else
-		if s.gemini.IsDailyLimitReached(ctx) {
+		if s.gemini.Exhausted(ctx) {
 			if _, err = s.postsRepo.InsertPost(ctx, newVideo); err != nil {
 				return fmt.Errorf(
 					"failed to insert video '%s' in DB; %w",
@@ -500,7 +500,7 @@ func (s *Service) Run(ctx context.Context) error {
 		}
 
 		// Skip summarizing videos if daily quota was reached
-		if s.gemini.IsDailyLimitReached(ctx) {
+		if s.gemini.Exhausted(ctx) {
 			break
 		}
 

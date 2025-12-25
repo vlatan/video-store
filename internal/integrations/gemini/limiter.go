@@ -33,10 +33,9 @@ func NewLimiter(rdb *rdb.Service) (*GeminiLimiter, error) {
 	return &GeminiLimiter{rdb: rdb, loc: loc}, nil
 }
 
-// CheckLimits atomically incremets the daily and minute counters.
-// Then checks if RPM and RPD limits are respected.
-// Returns an error if the any of the limits are not respected.
-func (gl *GeminiLimiter) CheckLimits(ctx context.Context) error {
+// AcquireQuota attempts to consume 1 request from the daily and minute buckets.
+// It returns a sentinel error if any of the quotas are full.
+func (gl *GeminiLimiter) AcquireQuota(ctx context.Context) error {
 	now := time.Now().In(gl.loc)
 
 	// Calculate TTL for the Daily Reset (RPD)
@@ -73,8 +72,8 @@ func (gl *GeminiLimiter) CheckLimits(ctx context.Context) error {
 	return nil
 }
 
-// IsDailyLimitReached checks if daily limit was reached
-func (gl *GeminiLimiter) IsDailyLimitReached(ctx context.Context) bool {
+// Exhausted returns true if the daily limit has already been hit.
+func (gl *GeminiLimiter) Exhausted(ctx context.Context) bool {
 	now := time.Now().In(gl.loc)
 	dailyKey := "gemini:rpd:" + now.Format("2006-01-02")
 	val, err := gl.rdb.Client.Get(ctx, dailyKey).Int()
