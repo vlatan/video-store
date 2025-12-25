@@ -448,7 +448,7 @@ func (s *Service) Run(ctx context.Context) error {
 
 			// Generate content using Gemini
 			genaiResponse, err := s.gemini.GenerateInfo(
-				ctx, categories, transcript, 3, 90*time.Second,
+				ctx, categories, transcript, 3, 65*time.Second,
 			)
 
 			// Exit early if context ended
@@ -475,7 +475,7 @@ func (s *Service) Run(ctx context.Context) error {
 		}
 
 		inserted++
-		time.Sleep(90 * time.Second)
+		time.Sleep(65 * time.Second)
 	}
 
 	if inserted > 0 {
@@ -542,7 +542,7 @@ func (s *Service) Run(ctx context.Context) error {
 
 		// Generate content using Gemini
 		genaiResponse, err := s.gemini.GenerateInfo(
-			ctx, categories, transcript, 3, 90*time.Second,
+			ctx, categories, transcript, 3, 65*time.Second,
 		)
 
 		// Exit early if context ended
@@ -556,7 +556,7 @@ func (s *Service) Run(ctx context.Context) error {
 				video.VideoID, err,
 			)
 			failed++
-			time.Sleep(90 * time.Second)
+			time.Sleep(65 * time.Second)
 			continue
 		}
 
@@ -586,7 +586,7 @@ func (s *Service) Run(ctx context.Context) error {
 		}
 
 		updated++
-		time.Sleep(90 * time.Second)
+		time.Sleep(65 * time.Second)
 	}
 
 	if failed > 0 {
