@@ -22,7 +22,7 @@ import (
 	"google.golang.org/api/youtube/v3"
 )
 
-type Service struct {
+type Worker struct {
 	id          string
 	rdb         *rdb.Service
 	postsRepo   *posts.Repository
@@ -39,7 +39,7 @@ const deleteLimit = 5
 // Redis key to lock the worker
 const workerLockKey = "worker:lock"
 
-func New() *Service {
+func New() *Worker {
 
 	// Create essential services
 	cfg := config.New()
@@ -72,7 +72,7 @@ func New() *Service {
 		log.Fatalf("couldn't create Gemini service: %v", err)
 	}
 
-	return &Service{
+	return &Worker{
 		id:          uuid.New().String(),
 		rdb:         rdb,
 		postsRepo:   postsRepo,
@@ -85,10 +85,10 @@ func New() *Service {
 }
 
 // Run the worker
-func (s *Service) Run(ctx context.Context) error {
+func (w *Worker) Run(ctx context.Context) error {
 
 	// Create a new context tailored to this worker expected runtime
-	ctx, cancel := context.WithTimeout(ctx, s.config.WorkerExpectedRuntime)
+	ctx, cancel := context.WithTimeout(ctx, w.config.WorkerExpectedRuntime)
 	defer cancel()
 
 	// Measure execution time
@@ -99,8 +99,8 @@ func (s *Service) Run(ctx context.Context) error {
 	}()
 
 	// Create and acquire a Redis lock with slightly bigger TTL than the context
-	redisLockTTL := time.Duration(float64(s.config.WorkerExpectedRuntime) * 1.25)
-	lock := s.rdb.NewRedisLock(workerLockKey, s.id, redisLockTTL)
+	redisLockTTL := time.Duration(float64(w.config.WorkerExpectedRuntime) * 1.25)
+	lock := w.rdb.NewRedisLock(workerLockKey, w.id, redisLockTTL)
 
 	// This is a blocking call until the lock is acquired
 	if err := lock.Lock(ctx); err != nil {
@@ -117,7 +117,7 @@ func (s *Service) Run(ctx context.Context) error {
 	// ###################################################################
 
 	// Fetch all the playlists from DB
-	dbSources, err := s.sourcesRepo.GetSources(ctx)
+	dbSources, err := w.sourcesRepo.GetSources(ctx)
 
 	if err != nil || len(dbSources) == 0 {
 		return fmt.Errorf(
@@ -140,7 +140,7 @@ func (s *Service) Run(ctx context.Context) error {
 	}
 
 	// Fetch playlists from YouTube
-	ytSources, err := s.youtube.GetSources(ctx, playlistIDs...)
+	ytSources, err := w.youtube.GetSources(ctx, playlistIDs...)
 	if err != nil {
 		return fmt.Errorf(
 			"could not fetch the playlists from YouTube; %w",
@@ -162,7 +162,7 @@ func (s *Service) Run(ctx context.Context) error {
 	}
 
 	// Fetch corresponding channels
-	channels, err := s.youtube.GetChannels(ctx, channelIDs...)
+	channels, err := w.youtube.GetChannels(ctx, channelIDs...)
 	if err != nil {
 		return fmt.Errorf(
 			"could not fetch the channels from YouTube; %w",
@@ -185,7 +185,7 @@ func (s *Service) Run(ctx context.Context) error {
 			return err
 		}
 
-		newSource := s.youtube.NewYouTubeSource(
+		newSource := w.youtube.NewYouTubeSource(
 			ytSource, channelsMap[ytSource.Snippet.ChannelId],
 		)
 
@@ -197,7 +197,7 @@ func (s *Service) Run(ctx context.Context) error {
 			continue
 		}
 
-		if _, err = s.sourcesRepo.UpdateSource(ctx, newSource); err != nil {
+		if _, err = w.sourcesRepo.UpdateSource(ctx, newSource); err != nil {
 			return fmt.Errorf(
 				"could not update source '%s' in DB; %w",
 				newSource.PlaylistID, err,
@@ -215,7 +215,7 @@ func (s *Service) Run(ctx context.Context) error {
 	// ###################################################################
 
 	// Get ALL videos from DB, should be ordered by upload date
-	dbVideos, err := s.postsRepo.GetAllPosts(ctx)
+	dbVideos, err := w.postsRepo.GetAllPosts(ctx)
 	if err != nil || len(dbVideos) == 0 {
 		return fmt.Errorf(
 			"could not fetch the videos from DB; Rows: %v; %w",
@@ -238,7 +238,7 @@ func (s *Service) Run(ctx context.Context) error {
 
 	// Get orphans metadata from YT, start forming valid YT videos map
 	ytVideosMap := make(map[string]*models.Post)
-	ytOrphanVideos, err := s.youtube.GetVideos(ctx, orphanVideoIDs...)
+	ytOrphanVideos, err := w.youtube.GetVideos(ctx, orphanVideoIDs...)
 	if err != nil {
 		return fmt.Errorf(
 			"could not get the orphan videos from YouTube; %w",
@@ -248,8 +248,8 @@ func (s *Service) Run(ctx context.Context) error {
 
 	// Add valid orphan videos to YT map
 	for _, video := range ytOrphanVideos {
-		if err = s.youtube.ValidateYouTubeVideo(video); err == nil {
-			ytVideosMap[video.Id] = s.youtube.NewYouTubePost(video, "")
+		if err = w.youtube.ValidateYouTubeVideo(video); err == nil {
+			ytVideosMap[video.Id] = w.youtube.NewYouTubePost(video, "")
 		}
 	}
 
@@ -263,7 +263,7 @@ func (s *Service) Run(ctx context.Context) error {
 			return err
 		}
 
-		sourceItems, err := s.youtube.GetSourceItems(ctx, playlistID)
+		sourceItems, err := w.youtube.GetSourceItems(ctx, playlistID)
 		if err != nil {
 			return fmt.Errorf(
 				"couldn't get items from YouTube for source '%s'; %w",
@@ -278,7 +278,7 @@ func (s *Service) Run(ctx context.Context) error {
 		}
 
 		// Get all the videos metadata for this source
-		videosMetadata, err := s.youtube.GetVideos(ctx, videoIDs...)
+		videosMetadata, err := w.youtube.GetVideos(ctx, videoIDs...)
 		if err != nil {
 			return fmt.Errorf(
 				"couldn't get videos from YouTube for source %s; %w",
@@ -295,13 +295,13 @@ func (s *Service) Run(ctx context.Context) error {
 			}
 
 			// Skip if invalid video
-			if err = s.youtube.ValidateYouTubeVideo(video); err != nil {
+			if err = w.youtube.ValidateYouTubeVideo(video); err != nil {
 				continue
 			}
 
 			// Skip if the video is banned (manually deleted).
 			// If error is nil the post is IN the deleted_post table.
-			if err = s.postsRepo.IsPostBanned(ctx, video.Id); err == nil {
+			if err = w.postsRepo.IsPostBanned(ctx, video.Id); err == nil {
 				continue
 			}
 
@@ -312,7 +312,7 @@ func (s *Service) Run(ctx context.Context) error {
 
 			// If the video is already in ytVideosMap as an orphaned video
 			// we overwrite it, associate it with a YT playlist
-			ytVideosMap[video.Id] = s.youtube.NewYouTubePost(video, playlistID)
+			ytVideosMap[video.Id] = w.youtube.NewYouTubePost(video, playlistID)
 		}
 	}
 
@@ -340,7 +340,7 @@ func (s *Service) Run(ctx context.Context) error {
 				continue
 			}
 
-			if _, err = s.postsRepo.DeletePost(ctx, video.VideoID); err != nil {
+			if _, err = w.postsRepo.DeletePost(ctx, video.VideoID); err != nil {
 				return fmt.Errorf(
 					"could not delete the video '%s' in DB; %w",
 					video.VideoID, err,
@@ -353,7 +353,7 @@ func (s *Service) Run(ctx context.Context) error {
 
 		// Update the video playlist, if necessary
 		if plID := ytVideosMap[video.VideoID].PlaylistID; video.PlaylistID != plID {
-			if _, err = s.postsRepo.UpdatePlaylist(ctx, video.VideoID, plID); err != nil {
+			if _, err = w.postsRepo.UpdatePlaylist(ctx, video.VideoID, plID); err != nil {
 
 				// Exit early if context ended
 				if utils.IsContextErr(err) {
@@ -398,7 +398,7 @@ func (s *Service) Run(ctx context.Context) error {
 	// ###################################################################
 
 	// Get the categories
-	categories, err := s.catsRepo.GetCategories(ctx)
+	categories, err := w.catsRepo.GetCategories(ctx)
 
 	if err != nil || len(categories) == 0 {
 		return fmt.Errorf(
@@ -420,8 +420,8 @@ func (s *Service) Run(ctx context.Context) error {
 		}
 
 		// If Gemini daily quota is reached just insert the video, do nothing else
-		if s.gemini.Exhausted(ctx) {
-			if _, err = s.postsRepo.InsertPost(ctx, newVideo); err != nil {
+		if w.gemini.Exhausted(ctx) {
+			if _, err = w.postsRepo.InsertPost(ctx, newVideo); err != nil {
 				return fmt.Errorf(
 					"failed to insert video '%s' in DB; %w",
 					videoID, err)
@@ -431,7 +431,7 @@ func (s *Service) Run(ctx context.Context) error {
 		}
 
 		// Get the video transcript
-		transcript, err := s.youtube.GetVideoTranscript(ctx, videoID)
+		transcript, err := w.youtube.GetVideoTranscript(ctx, videoID)
 
 		// Exit early if context ended
 		if utils.IsContextErr(err) {
@@ -452,12 +452,12 @@ func (s *Service) Run(ctx context.Context) error {
 		if err = lock.CheckLock(ctx); err != nil {
 			return fmt.Errorf(
 				"this worker %s does not own the lock anymore; %w",
-				s.id, err,
+				w.id, err,
 			)
 		}
 
 		// Generate content using Gemini
-		genaiResponse, err := s.gemini.Summarize(
+		genaiResponse, err := w.gemini.Summarize(
 			ctx, categories, transcript, 3, 65*time.Second,
 		)
 
@@ -477,7 +477,7 @@ func (s *Service) Run(ctx context.Context) error {
 		}
 
 		// Insert the video
-		if _, err = s.postsRepo.InsertPost(ctx, newVideo); err != nil {
+		if _, err = w.postsRepo.InsertPost(ctx, newVideo); err != nil {
 			return fmt.Errorf(
 				"failed to insert video '%s' in DB; %w",
 				videoID, err)
@@ -502,7 +502,7 @@ func (s *Service) Run(ctx context.Context) error {
 		}
 
 		// Skip summarizing videos if daily quota was reached
-		if s.gemini.Exhausted(ctx) {
+		if w.gemini.Exhausted(ctx) {
 			break
 		}
 
@@ -522,7 +522,7 @@ func (s *Service) Run(ctx context.Context) error {
 			continue
 		}
 
-		transcript, err := s.youtube.GetVideoTranscript(ctx, video.VideoID)
+		transcript, err := w.youtube.GetVideoTranscript(ctx, video.VideoID)
 
 		// Exit early if context ended
 		if utils.IsContextErr(err) {
@@ -543,12 +543,12 @@ func (s *Service) Run(ctx context.Context) error {
 		if err = lock.CheckLock(ctx); err != nil {
 			return fmt.Errorf(
 				"this worker %s does not own the lock anymore; %w",
-				s.id, err,
+				w.id, err,
 			)
 		}
 
 		// Generate content using Gemini
-		genaiResponse, err := s.gemini.Summarize(
+		genaiResponse, err := w.gemini.Summarize(
 			ctx, categories, transcript, 3, 65*time.Second,
 		)
 
@@ -575,7 +575,7 @@ func (s *Service) Run(ctx context.Context) error {
 		video.Category.Name = genaiResponse.Category
 
 		// Update the db video
-		if _, err = s.postsRepo.UpdateGeneratedData(ctx, video); err != nil {
+		if _, err = w.postsRepo.UpdateGeneratedData(ctx, video); err != nil {
 
 			// Exit early if context ended
 			if utils.IsContextErr(err) {
