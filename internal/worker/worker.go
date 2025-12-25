@@ -99,7 +99,7 @@ func (s *Service) Run(ctx context.Context) error {
 		log.Printf("Time took: %s", elapsed)
 	}()
 
-	// Create and acquire a Redis lock with slightly bigger TTL
+	// Create and acquire a Redis lock with slightly bigger TTL than the context
 	redisLockTTL := time.Duration(float64(s.config.WorkerExpectedRuntime) * 1.25)
 	lock := s.rdb.NewRedisLock(workerLockKey, s.id, redisLockTTL)
 	if err := lock.Lock(ctx); err != nil {
@@ -322,6 +322,7 @@ func (s *Service) Run(ctx context.Context) error {
 
 	// Delete and update videos in DB
 	var adopted, deleted int
+	var deletedVideoIDs []string
 	var validDBVideos []*models.Post
 	for _, video := range dbVideos {
 
@@ -345,6 +346,7 @@ func (s *Service) Run(ctx context.Context) error {
 				)
 			}
 			deleted++
+			deletedVideoIDs = append(deletedVideoIDs, video.VideoID)
 			continue
 		}
 
@@ -369,13 +371,16 @@ func (s *Service) Run(ctx context.Context) error {
 		// Keep the non-deleted videos
 		validDBVideos = append(validDBVideos, video)
 
-		// Keep only the new videos, the ones that are not in the DB
+		// Delete all the valid DB videos from the YT map.
+		// In this map ONLY the ones that are not in the DB will remain.
+		// Meaning the NEW videos that need to be added.
 		delete(ytVideosMap, video.VideoID)
 	}
 
 	if deleted > 0 {
 		items = utils.Plural(deleted, "video")
 		log.Printf("Deleted %d %s", deleted, items)
+		log.Printf("Deleted videos: %v", deletedVideoIDs)
 
 		if deleted >= deleteLimit {
 			msg := "WARNING: HIT MAX DELETION LIMIT. "
@@ -404,7 +409,7 @@ func (s *Service) Run(ctx context.Context) error {
 	// ###################################################################
 
 	// Insert new videos in DB,
-	// ytVideosMap should now contain only new videos
+	// ytVideosMap should now contain only new videos.
 	var inserted int
 	for videoID, newVideo := range ytVideosMap {
 
