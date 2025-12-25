@@ -72,3 +72,15 @@ func (gl *GeminiLimiter) CheckLimits(ctx context.Context) error {
 
 	return nil
 }
+
+// IsDailyLimitReached checks if daily limit was reached
+func (gl *GeminiLimiter) IsDailyLimitReached(ctx context.Context) bool {
+	now := time.Now().In(gl.loc)
+	dailyKey := "gemini:rpd:" + now.Format("2006-01-02")
+	val, err := gl.rdb.Client.Get(ctx, dailyKey).Int()
+	if err != nil {
+		return false
+	}
+
+	return val >= RPDLimit
+}

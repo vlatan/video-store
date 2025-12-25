@@ -176,3 +176,8 @@ func (s *Service) makeContents(categories, transcript string) []*genai.Content {
 func (s *Service) CheckLimits(ctx context.Context) error {
 	return s.limiter.CheckLimits(ctx)
 }
+
+// IsDailyLimitReached checks if daily limit was reached
+func (s *Service) IsDailyLimitReached(ctx context.Context) bool {
+	return s.limiter.IsDailyLimitReached(ctx)
+}

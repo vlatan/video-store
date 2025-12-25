@@ -34,7 +34,6 @@ type Service struct {
 }
 
 // Update limit per worker run
-const updateLimit = 20
 const workerLockKey = "worker:lock"
 
 // Maximum videos to delete per run
@@ -418,53 +417,61 @@ func (s *Service) Run(ctx context.Context) error {
 			return err
 		}
 
-		if inserted <= updateLimit {
-
-			// Get the video transcript
-			transcript, err := s.youtube.GetVideoTranscript(ctx, videoID)
-
-			// Exit early if context ended
-			if utils.IsContextErr(err) {
-				return err
-			}
-
-			if err != nil {
-				log.Printf(
-					"Error getting the video %s transcript; %v",
-					videoID, err,
-				)
-
-				// If no transcript use the post title and description
-				transcript = newVideo.Title + "\n" + newVideo.Description
-			}
-
-			// Check if we still own the lock before an expensive API call
-			if err = lock.CheckLock(ctx); err != nil {
+		// If Gemini daily quota is reached just insert the video, do nothing else
+		if s.gemini.IsDailyLimitReached(ctx) {
+			if _, err = s.postsRepo.InsertPost(ctx, newVideo); err != nil {
 				return fmt.Errorf(
-					"this worker %s does not own the lock anymore; %w",
-					s.id, err,
-				)
+					"failed to insert video '%s' in DB; %w",
+					videoID, err)
 			}
+			inserted++
+			continue
+		}
 
-			// Generate content using Gemini
-			genaiResponse, err := s.gemini.GenerateInfo(
-				ctx, categories, transcript, 3, 65*time.Second,
+		// Get the video transcript
+		transcript, err := s.youtube.GetVideoTranscript(ctx, videoID)
+
+		// Exit early if context ended
+		if utils.IsContextErr(err) {
+			return err
+		}
+
+		if err != nil {
+			log.Printf(
+				"Error getting the video %s transcript; %v",
+				videoID, err,
 			)
 
-			// Exit early if context ended
-			if utils.IsContextErr(err) {
-				return err
-			}
+			// If no transcript use the post title and description
+			transcript = newVideo.Title + "\n" + newVideo.Description
+		}
 
-			if err != nil {
-				log.Printf(
-					"Gemini content generation on video '%s' failed; %v",
-					videoID, err,
-				)
-			} else {
-				newVideo.ShortDesc = genaiResponse.Description
-				newVideo.Category = &models.Category{Name: genaiResponse.Category}
-			}
+		// Check if we still own the lock before an expensive API call
+		if err = lock.CheckLock(ctx); err != nil {
+			return fmt.Errorf(
+				"this worker %s does not own the lock anymore; %w",
+				s.id, err,
+			)
+		}
+
+		// Generate content using Gemini
+		genaiResponse, err := s.gemini.GenerateInfo(
+			ctx, categories, transcript, 3, 65*time.Second,
+		)
+
+		// Exit early if context ended
+		if utils.IsContextErr(err) {
+			return err
+		}
+
+		if err != nil {
+			log.Printf(
+				"Gemini content generation on video '%s' failed; %v",
+				videoID, err,
+			)
+		} else {
+			newVideo.ShortDesc = genaiResponse.Description
+			newVideo.Category = &models.Category{Name: genaiResponse.Category}
 		}
 
 		// Insert the video
@@ -473,7 +480,6 @@ func (s *Service) Run(ctx context.Context) error {
 				"failed to insert video '%s' in DB; %w",
 				videoID, err)
 		}
-
 		inserted++
 	}
 
@@ -493,8 +499,8 @@ func (s *Service) Run(ctx context.Context) error {
 			return err
 		}
 
-		// Limit updates per worker run
-		if updated+failed+inserted >= updateLimit {
+		// Skip summarizing videos if daily quota was reached
+		if s.gemini.IsDailyLimitReached(ctx) {
 			break
 		}
 
