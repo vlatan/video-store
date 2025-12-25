@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	_ "time/tzdata" // embed the timezone database into the binary
+
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 )
 
