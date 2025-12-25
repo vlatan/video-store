@@ -1,3 +1,5 @@
+* Fix generic test
+
 * Uncomment and remove code in:
   - `internal/integrations/gemini/gemini.go`
   - `internal/worker/worker.go`

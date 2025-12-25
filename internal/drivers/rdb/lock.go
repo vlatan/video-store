@@ -2,10 +2,7 @@ package rdb
 
 import (
 	"context"
-	"fmt"
 	"time"
-
-	"github.com/redis/go-redis/v9"
 )
 
 type RedisLock struct {
@@ -24,47 +21,12 @@ func (s *Service) NewRedisLock(key, value string, expiry time.Duration) *RedisLo
 	}
 }
 
-// Lock tries to aquire a lock in an infinite loop,
+// TryLock tries to aquire a lock,
 // by setting key-value ONLY if the key doesn't exist.
-// For Lock to work the workers should use the same key.
-func (l *RedisLock) Lock(ctx context.Context) error {
-	for {
-		success, err := l.rdb.Client.SetNX(ctx, l.key, l.value, l.expiry).Result()
-
-		if err != nil {
-			return err
-		}
-
-		if success {
-			return nil
-		}
-
-		time.Sleep(100 * time.Millisecond)
-	}
-}
-
-// CheckLock checks the ownership of the lock
-func (l *RedisLock) CheckLock(ctx context.Context) error {
-
-	// Get the lock value
-	value, err := l.rdb.Client.Get(ctx, l.key).Result()
-
-	if err == redis.Nil {
-		return fmt.Errorf("lock expired or deleted")
-	}
-
-	if err != nil {
-		return fmt.Errorf("connectivity error during lock check: %w", err)
-	}
-
-	if value != l.value {
-		return fmt.Errorf(
-			"lock ownership hijacked by another worker (expected %s, got %s)",
-			l.value, value,
-		)
-	}
-
-	return nil
+// The key should be unique to the resource being locked,
+// and the value should be unique to the client doing the lock.
+func (l *RedisLock) TryLock(ctx context.Context) (bool, error) {
+	return l.rdb.Client.SetNX(ctx, l.key, l.value, l.expiry).Result()
 }
 
 // Unlock deletes the key-value from Redis
