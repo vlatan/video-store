@@ -455,7 +455,7 @@ func (s *Service) Run(ctx context.Context) error {
 		}
 
 		// Generate content using Gemini
-		genaiResponse, err := s.gemini.GenerateInfo(
+		genaiResponse, err := s.gemini.Summarize(
 			ctx, categories, transcript, 3, 65*time.Second,
 		)
 
@@ -546,7 +546,7 @@ func (s *Service) Run(ctx context.Context) error {
 		}
 
 		// Generate content using Gemini
-		genaiResponse, err := s.gemini.GenerateInfo(
+		genaiResponse, err := s.gemini.Summarize(
 			ctx, categories, transcript, 3, 65*time.Second,
 		)
 

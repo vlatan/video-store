@@ -329,7 +329,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 				transcript = post.Title + "\n" + post.Description
 			}
 
-			genaiResponse, err := s.gemini.GenerateInfo(
+			genaiResponse, err := s.gemini.Summarize(
 				ctx, data.Categories, transcript, 1, 90*time.Second,
 			)
 

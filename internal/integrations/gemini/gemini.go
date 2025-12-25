@@ -111,7 +111,7 @@ func (s *Service) GenerateContent(
 
 // Create the prompt and generate content using Gemini
 // https://ai.google.dev/gemini-api/docs/video-understanding#youtube
-func (s *Service) GenerateInfo(
+func (s *Service) Summarize(
 	ctx context.Context,
 	categories models.Categories,
 	transcript string,
