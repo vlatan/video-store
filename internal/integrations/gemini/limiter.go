@@ -9,14 +9,16 @@ import (
 )
 
 const (
-	RPDLimit = 20
-	RPMLimit = 5
+	rpdLimit = 20
+	rpmLimit = 5
 	Timezone = "America/Los_Angeles"
+	rpd      = "gemini:rpd:"
+	rpm      = "gemini:rpm:"
 )
 
 var (
-	ErrDailyLimitReached  = fmt.Errorf("gemini daily limit (%d RPD) reached", RPDLimit)
-	ErrMinuteLimitReached = fmt.Errorf("gemini minute limit (%d RPM) reached", RPMLimit)
+	ErrDailyLimitReached  = fmt.Errorf("gemini daily limit (%d RPD) reached", rpdLimit)
+	ErrMinuteLimitReached = fmt.Errorf("gemini minute limit (%d RPM) reached", rpmLimit)
 )
 
 type GeminiLimiter struct {
@@ -43,8 +45,8 @@ func (gl *GeminiLimiter) AcquireQuota(ctx context.Context) error {
 	ttlDaily := time.Until(nextMidnight)
 
 	// Redis Keys
-	dailyKey := "gemini:rpd:" + now.Format("2006-01-02")
-	minuteKey := "gemini:rpm:" + now.Format("2006-01-02-15-04")
+	dailyKey := rpd + now.Format("2006-01-02")
+	minuteKey := rpm + now.Format("2006-01-02-15-04")
 
 	// Atomic check using a Pipeline
 	pipe := gl.rdb.Client.Pipeline()
@@ -60,12 +62,12 @@ func (gl *GeminiLimiter) AcquireQuota(ctx context.Context) error {
 	}
 
 	// Verify against the RPM limit
-	if minuteIncr.Val() > RPMLimit {
+	if minuteIncr.Val() > rpmLimit {
 		return ErrMinuteLimitReached
 	}
 
 	// Verify against the RPD limit
-	if dailyIncr.Val() > RPDLimit {
+	if dailyIncr.Val() > rpdLimit {
 		return ErrDailyLimitReached
 	}
 
@@ -75,11 +77,11 @@ func (gl *GeminiLimiter) AcquireQuota(ctx context.Context) error {
 // Exhausted returns true if the daily limit has already been hit.
 func (gl *GeminiLimiter) Exhausted(ctx context.Context) bool {
 	now := time.Now().In(gl.loc)
-	dailyKey := "gemini:rpd:" + now.Format("2006-01-02")
+	dailyKey := rpd + now.Format("2006-01-02")
 	val, err := gl.rdb.Client.Get(ctx, dailyKey).Int()
 	if err != nil {
 		return false
 	}
 
-	return val >= RPDLimit
+	return val >= rpdLimit
 }
