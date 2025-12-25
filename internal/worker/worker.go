@@ -68,7 +68,7 @@ func New() *Service {
 	}
 
 	// Create Gemini client
-	gemini, err := gemini.New(ctx, cfg)
+	gemini, err := gemini.New(ctx, cfg, rdb)
 	if err != nil {
 		log.Fatalf("couldn't create Gemini service: %v", err)
 	}
@@ -475,7 +475,6 @@ func (s *Service) Run(ctx context.Context) error {
 		}
 
 		inserted++
-		time.Sleep(65 * time.Second)
 	}
 
 	if inserted > 0 {
@@ -556,7 +555,6 @@ func (s *Service) Run(ctx context.Context) error {
 				video.VideoID, err,
 			)
 			failed++
-			time.Sleep(65 * time.Second)
 			continue
 		}
 
@@ -586,7 +584,6 @@ func (s *Service) Run(ctx context.Context) error {
 		}
 
 		updated++
-		time.Sleep(65 * time.Second)
 	}
 
 	if failed > 0 {

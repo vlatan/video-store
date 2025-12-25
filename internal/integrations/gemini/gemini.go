@@ -9,6 +9,7 @@ import (
 
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/vlatan/video-store/internal/config"
+	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/utils"
 
@@ -17,8 +18,9 @@ import (
 
 // Gemini service
 type Service struct {
-	config *config.Config
-	gemini *genai.Client
+	config  *config.Config
+	client  *genai.Client
+	limiter *GeminiLimiter
 }
 
 const categoriesPlaceholder = "{{ CATEGORIES }}"
@@ -55,7 +57,7 @@ var schema = &genai.Schema{
 }
 
 // Create new Gemini service
-func New(ctx context.Context, config *config.Config) (*Service, error) {
+func New(ctx context.Context, config *config.Config, rdb *rdb.Service) (*Service, error) {
 
 	// Configure new client
 	client, err := genai.NewClient(ctx, &genai.ClientConfig{APIKey: config.GeminiAPIKey})
@@ -63,7 +65,12 @@ func New(ctx context.Context, config *config.Config) (*Service, error) {
 		return nil, err
 	}
 
-	return &Service{config, client}, nil
+	limiter, err := NewLimiter(rdb)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Service{config, client, limiter}, nil
 }
 
 // Generate content given a prompt
@@ -72,7 +79,12 @@ func (s *Service) GenerateContent(
 	contents []*genai.Content,
 ) (*genai.GenerateContentResponse, error) {
 
-	response, err := s.gemini.Models.GenerateContent(
+	// Check limits before calling the API
+	if err := s.CheckLimits(ctx); err != nil {
+		return nil, fmt.Errorf("Gemini limit reached: %w", err)
+	}
+
+	response, err := s.client.Models.GenerateContent(
 		ctx,
 		s.config.GeminiModel,
 		contents,
@@ -158,4 +170,9 @@ func (s *Service) makeContents(categories, transcript string) []*genai.Content {
 	return []*genai.Content{
 		genai.NewContentFromParts(parts, genai.RoleUser),
 	}
+}
+
+// CheckLimits exposes the limiter CheckLimits on the Gemini service
+func (s *Service) CheckLimits(ctx context.Context) error {
+	return s.limiter.CheckLimits(ctx)
 }

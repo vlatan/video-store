@@ -80,7 +80,7 @@ func NewServer() (*http.Server, string, func() error) {
 	}
 
 	// Create Gemini client
-	gemini, err := gemini.New(ctx, cfg)
+	gemini, err := gemini.New(ctx, cfg, rdb)
 	if err != nil {
 		log.Fatalf("couldn't create Gemini service: %v", err)
 	}
