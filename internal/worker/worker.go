@@ -36,6 +36,9 @@ type Service struct {
 // Maximum videos to delete per run
 const deleteLimit = 5
 
+// Redis key to lock the worker
+const workerLockKey = "worker:lock"
+
 func New() *Service {
 
 	// Create essential services
@@ -94,6 +97,19 @@ func (s *Service) Run(ctx context.Context) error {
 		elapsed := time.Since(start).Round(time.Second)
 		log.Printf("Time took: %s", elapsed)
 	}()
+
+	// Create and acquire a Redis lock with slightly bigger TTL than the context
+	redisLockTTL := time.Duration(float64(s.config.WorkerExpectedRuntime) * 1.25)
+	lock := s.rdb.NewRedisLock(workerLockKey, s.id, redisLockTTL)
+
+	// This is a blocking call until the lock is acquired
+	if err := lock.Lock(ctx); err != nil {
+		return fmt.Errorf("failed to acquire Redis lock; %w", err)
+	}
+
+	// Make sure to unlock the worker when done.
+	// Use ctx without cancel so Unlock isn't killed by the expired ctx.
+	defer lock.Unlock(context.WithoutCancel(ctx))
 
 	log.Println("Lock acquired!")
 	log.Println("Worker running...")
@@ -432,6 +448,14 @@ func (s *Service) Run(ctx context.Context) error {
 			transcript = newVideo.Title + "\n" + newVideo.Description
 		}
 
+		// Check if we still own the lock before an expensive API call
+		if err = lock.CheckLock(ctx); err != nil {
+			return fmt.Errorf(
+				"this worker %s does not own the lock anymore; %w",
+				s.id, err,
+			)
+		}
+
 		// Generate content using Gemini
 		genaiResponse, err := s.gemini.Summarize(
 			ctx, categories, transcript, 3, 65*time.Second,
@@ -513,6 +537,14 @@ func (s *Service) Run(ctx context.Context) error {
 
 			// If no transcript use the post title and description
 			transcript = video.Title + "\n" + video.Description
+		}
+
+		// Check if we still own the lock before an expensive API call
+		if err = lock.CheckLock(ctx); err != nil {
+			return fmt.Errorf(
+				"this worker %s does not own the lock anymore; %w",
+				s.id, err,
+			)
 		}
 
 		// Generate content using Gemini
