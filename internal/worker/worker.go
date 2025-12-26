@@ -458,7 +458,7 @@ func (w *Worker) Run(ctx context.Context) error {
 
 		// Generate content using Gemini
 		genaiResponse, err := w.gemini.Summarize(
-			ctx, categories, transcript, 3, 65*time.Second,
+			ctx, categories, transcript, 3, 2*time.Second, 65*time.Second,
 		)
 
 		// Exit early if context ended
@@ -549,7 +549,7 @@ func (w *Worker) Run(ctx context.Context) error {
 
 		// Generate content using Gemini
 		genaiResponse, err := w.gemini.Summarize(
-			ctx, categories, transcript, 3, 65*time.Second,
+			ctx, categories, transcript, 3, 2*time.Second, 65*time.Second,
 		)
 
 		// Exit early if context ended

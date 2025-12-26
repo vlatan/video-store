@@ -22,7 +22,7 @@ func (s *Service) GetSourceItems(ctx context.Context, playlistID string) ([]*you
 
 	for {
 		// Get playlist items
-		response, err := utils.Retry(ctx, 5, time.Second,
+		response, err := utils.Retry(ctx, 5, time.Second, time.Second,
 			func() (*youtube.PlaylistItemListResponse, error) {
 				return s.youtube.PlaylistItems.
 					List(part).
@@ -67,7 +67,7 @@ func (s *Service) GetSources(ctx context.Context, playlistIDs ...string) ([]*you
 		end := min(i+batchSize, len(playlistIDs))
 		batch := playlistIDs[i:end]
 
-		response, err := utils.Retry(ctx, 5, time.Second,
+		response, err := utils.Retry(ctx, 5, time.Second, time.Second,
 			func() (*youtube.PlaylistListResponse, error) {
 				return s.youtube.Playlists.
 					List(part).
@@ -107,7 +107,7 @@ func (s *Service) GetChannels(ctx context.Context, channelIDs ...string) ([]*you
 		end := min(i+batchSize, len(channelIDs))
 		batch := channelIDs[i:end]
 
-		response, err := utils.Retry(ctx, 5, time.Second,
+		response, err := utils.Retry(ctx, 5, time.Second, time.Second,
 			func() (*youtube.ChannelListResponse, error) {
 				return s.youtube.Channels.
 					List(part).

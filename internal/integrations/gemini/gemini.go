@@ -116,6 +116,7 @@ func (s *Service) Summarize(
 	categories models.Categories,
 	transcript string,
 	maxRetries int,
+	maxJitter time.Duration,
 	delay time.Duration,
 ) (*models.GenaiResponse, error) {
 
@@ -131,7 +132,7 @@ func (s *Service) Summarize(
 	contents := s.makeContents(catString, transcript)
 
 	result, err := utils.Retry(
-		ctx, maxRetries, delay,
+		ctx, maxRetries, maxJitter, delay,
 		func() (*genai.GenerateContentResponse, error) {
 			return s.GenerateContent(ctx, contents)
 		},

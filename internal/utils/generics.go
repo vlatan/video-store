@@ -39,6 +39,7 @@ func extractRetryDelay(err error) (time.Duration, bool) {
 func Retry[T any](
 	ctx context.Context,
 	maxRetries int,
+	maxJitter time.Duration,
 	delay time.Duration,
 	callable func() (T, error),
 ) (T, error) {
@@ -67,7 +68,7 @@ func Retry[T any](
 		}
 
 		// Calculate the backoff (2^i) + jitter of 0-2 seconds
-		jitter := time.Duration(rand.Float64() * float64(2*time.Second)) // #nosec G404
+		jitter := time.Duration(rand.Float64() * float64(maxJitter)) // #nosec G404
 		sleepTime := delay*time.Duration(math.Pow(2, float64(i))) + jitter
 
 		// Try to extract a delay value from the error

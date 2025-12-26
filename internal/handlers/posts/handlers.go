@@ -330,7 +330,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 			}
 
 			genaiResponse, err := s.gemini.Summarize(
-				ctx, data.Categories, transcript, 1, 90*time.Second,
+				ctx, data.Categories, transcript, 1, 2*time.Second, 65*time.Second,
 			)
 
 			if err != nil {
