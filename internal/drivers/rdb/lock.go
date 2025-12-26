@@ -50,7 +50,7 @@ func (l *RedisLock) TryLock(ctx context.Context) (bool, error) {
 	return l.rdb.Client.SetNX(ctx, l.key, l.value, l.expiry).Result()
 }
 
-// CheckLock checks the ownership of the lock.
+// CheckLock checks if the caller still owns the lock.
 func (l *RedisLock) CheckLock(ctx context.Context) error {
 
 	// Get the lock value

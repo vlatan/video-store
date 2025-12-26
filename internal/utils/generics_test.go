@@ -83,9 +83,9 @@ func TestRetry(t *testing.T) {
 	type test struct {
 		name         string
 		ctx          context.Context
-		initialDelay time.Duration
+		delay        time.Duration
 		maxRetries   int
-		Func         func() (string, error)
+		callable     func() (string, error)
 		expectedData string
 		wantErr      bool
 	}
@@ -100,61 +100,70 @@ func TestRetry(t *testing.T) {
 	}
 
 	ctx := context.TODO()
-	timeoutCtx, cancel := context.WithTimeout(ctx, time.Nanosecond)
-	t.Cleanup(cancel)
+	noContext, cancel := context.WithCancel(ctx)
+	cancel()
 
 	tests := []test{
 		{
 			name:         "success (0 retries)",
 			ctx:          ctx,
-			initialDelay: time.Nanosecond,
+			delay:        time.Nanosecond,
 			maxRetries:   0,
-			Func:         func() (string, error) { return "foo", nil },
+			callable:     func() (string, error) { return "foo", nil },
 			expectedData: "foo",
 			wantErr:      false,
 		},
 		{
 			name:         "success (1+ retries)",
 			ctx:          ctx,
-			initialDelay: time.Nanosecond,
+			delay:        time.Nanosecond,
 			maxRetries:   3,
-			Func:         func() (string, error) { return "foo", nil },
+			callable:     func() (string, error) { return "foo", nil },
 			expectedData: "foo",
 			wantErr:      false,
 		},
 		{
 			name:         "error",
 			ctx:          ctx,
-			initialDelay: time.Nanosecond,
+			delay:        time.Nanosecond,
 			maxRetries:   3,
-			Func:         func() (string, error) { return "", errors.New("error") },
+			callable:     func() (string, error) { return "", errors.New("error") },
 			expectedData: "",
 			wantErr:      true,
 		},
 		{
-			name:         "error (context timeout)",
-			ctx:          timeoutCtx,
-			initialDelay: time.Second, // High initial delay so the context is surely timed out
+			name:         "error (no context)",
+			ctx:          noContext,
+			delay:        time.Nanosecond,
 			maxRetries:   3,
-			Func:         func() (string, error) { return "", errors.New("error") },
+			callable:     func() (string, error) { return "", errors.New("error") },
 			expectedData: "",
 			wantErr:      true,
 		},
 		{
 			name:         "gRPC error",
 			ctx:          ctx,
-			initialDelay: time.Nanosecond,
+			delay:        time.Nanosecond,
 			maxRetries:   3,
-			Func:         func() (string, error) { return "", makeGRPCError(time.Nanosecond) },
+			callable:     func() (string, error) { return "", makeGRPCError(time.Nanosecond) },
 			expectedData: "",
 			wantErr:      true,
 		},
 		{
-			name:         "gRPC error (context timeout)",
-			ctx:          timeoutCtx,
-			initialDelay: time.Second, // High initial delay so the context is surely timed out
+			name:         "gRPC error (retry delay > jitter)",
+			ctx:          ctx,
+			delay:        time.Nanosecond,
 			maxRetries:   3,
-			Func:         func() (string, error) { return "", makeGRPCError(time.Nanosecond) },
+			callable:     func() (string, error) { return "", makeGRPCError(3 * time.Second) },
+			expectedData: "",
+			wantErr:      true,
+		},
+		{
+			name:         "gRPC error (no context)",
+			ctx:          noContext,
+			delay:        time.Nanosecond,
+			maxRetries:   3,
+			callable:     func() (string, error) { return "", makeGRPCError(time.Nanosecond) },
 			expectedData: "",
 			wantErr:      true,
 		},
@@ -162,7 +171,7 @@ func TestRetry(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			data, err := Retry(tt.ctx, tt.maxRetries, tt.initialDelay, tt.Func)
+			data, err := Retry(tt.ctx, tt.maxRetries, tt.delay, tt.callable)
 
 			if (err != nil) != tt.wantErr {
 				t.Errorf("got error = %v, want error = %v", err, tt.wantErr)
