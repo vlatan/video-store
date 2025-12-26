@@ -103,7 +103,7 @@ func TestHealth(t *testing.T) {
 	ctx := context.TODO()
 
 	// Cancelled context
-	cancelledCtx, cancel := context.WithCancel(ctx)
+	noContext, cancel := context.WithCancel(ctx)
 	cancel()
 
 	rdb, err := New(testCfg)
@@ -118,7 +118,7 @@ func TestHealth(t *testing.T) {
 		ctx     context.Context
 		wantErr bool
 	}{
-		{"cancelled context", cancelledCtx, true},
+		{"cancelled context", noContext, true},
 		{"valid result", ctx, false},
 	}
 
