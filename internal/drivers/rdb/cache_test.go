@@ -13,7 +13,7 @@ func TestGetCachedData(t *testing.T) {
 	ctx := context.TODO()
 
 	// Cancelled context
-	cancelledCtx, cancel := context.WithCancel(ctx)
+	noContext, cancel := context.WithCancel(ctx)
 	cancel()
 
 	rdb, err := New(testCfg)
@@ -32,7 +32,7 @@ func TestGetCachedData(t *testing.T) {
 		callable func() (int, error)
 		wantErr  bool
 	}{
-		{"no context", cancelledCtx, validCallable, true},
+		{"no context", noContext, validCallable, true},
 		{"error result", ctx, errorCallable, true},
 		{"valid result", ctx, validCallable, false},
 	}
