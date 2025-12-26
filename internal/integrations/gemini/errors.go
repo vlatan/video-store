@@ -6,6 +6,8 @@ import (
 	"google.golang.org/genai"
 )
 
+var ErrDailyLimitReached, ErrMinuteLimitReached error
+
 type BlockedErr struct {
 	Feedback *genai.GenerateContentResponsePromptFeedback
 }

@@ -1,5 +1,4 @@
 * Fix generic test
-* Move quotas to config
 
 * Uncomment and remove code in:
   - `internal/integrations/gemini/gemini.go`

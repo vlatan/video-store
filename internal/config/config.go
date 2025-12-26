@@ -61,10 +61,13 @@ type Config struct {
 	NumRelatedPosts int    `env:"NUM_RELATED_POSTS" envDefault:"5"`
 
 	// Google APIs settings
-	YouTubeAPIKey string `env:"YOUTUBE_API_KEY"`
-	GeminiAPIKey  string `env:"GEMINI_API_KEY"`
-	GeminiModel   string `env:"GEMINI_MODEL" envDefault:"gemini-2.5-flash"`
-	GeminiPrompt  Prompt `env:"GEMINI_PROMPT"`
+	YouTubeAPIKey  string `env:"YOUTUBE_API_KEY"`
+	GeminiAPIKey   string `env:"GEMINI_API_KEY"`
+	GeminiModel    string `env:"GEMINI_MODEL" envDefault:"gemini-2.5-flash"`
+	GeminiPrompt   Prompt `env:"GEMINI_PROMPT"`
+	GeminiTimezone string `env:"GEMINI_TIMEZONE" envDefault:"America/Los_Angeles"`
+	GeminiRPD      int64  `env:"GEMINI_RPD" envDefault:"20"`
+	GeminiRPM      int64  `env:"GEMINI_RPM" envDefault:"5"`
 
 	// Google OAuth settings
 	GoogleOAuthClientID     string   `env:"GOOGLE_OAUTH_CLIENT_ID"`

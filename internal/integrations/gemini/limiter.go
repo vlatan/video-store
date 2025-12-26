@@ -7,34 +7,32 @@ import (
 
 	_ "time/tzdata" // embed the timezone database into the binary
 
+	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 )
 
 const (
-	rpdLimit = 20
-	rpmLimit = 5
-	Timezone = "America/Los_Angeles"
-	rpd      = "gemini:rpd:"
-	rpm      = "gemini:rpm:"
-)
-
-var (
-	ErrDailyLimitReached  = fmt.Errorf("gemini daily limit (%d RPD) reached", rpdLimit)
-	ErrMinuteLimitReached = fmt.Errorf("gemini minute limit (%d RPM) reached", rpmLimit)
+	rpd = "gemini:rpd:"
+	rpm = "gemini:rpm:"
 )
 
 type GeminiLimiter struct {
+	cfg *config.Config
 	rdb *rdb.Service
 	loc *time.Location
 }
 
 // NewLimiter creates new Gemini limiter
-func NewLimiter(rdb *rdb.Service) (*GeminiLimiter, error) {
-	loc, err := time.LoadLocation(Timezone)
+func NewLimiter(cfg *config.Config, rdb *rdb.Service) (*GeminiLimiter, error) {
+	loc, err := time.LoadLocation(cfg.GeminiTimezone)
 	if err != nil {
 		return nil, err
 	}
-	return &GeminiLimiter{rdb: rdb, loc: loc}, nil
+
+	ErrDailyLimitReached = fmt.Errorf("gemini daily limit (%d RPD) reached", cfg.GeminiRPD)
+	ErrMinuteLimitReached = fmt.Errorf("gemini minute limit (%d RPM) reached", cfg.GeminiRPM)
+
+	return &GeminiLimiter{cfg, rdb, loc}, nil
 }
 
 // AcquireQuota attempts to consume 1 request from the daily and minute buckets.
@@ -63,14 +61,14 @@ func (gl *GeminiLimiter) AcquireQuota(ctx context.Context) error {
 		return fmt.Errorf("redis failure: %w", err)
 	}
 
-	// Verify against the RPM limit
-	if minuteIncr.Val() > rpmLimit {
-		return ErrMinuteLimitReached
+	// Verify against the RPD limit
+	if dailyIncr.Val() > gl.cfg.GeminiRPD {
+		return ErrDailyLimitReached
 	}
 
-	// Verify against the RPD limit
-	if dailyIncr.Val() > rpdLimit {
-		return ErrDailyLimitReached
+	// Verify against the RPM limit
+	if minuteIncr.Val() > gl.cfg.GeminiRPM {
+		return ErrMinuteLimitReached
 	}
 
 	return nil
@@ -80,10 +78,10 @@ func (gl *GeminiLimiter) AcquireQuota(ctx context.Context) error {
 func (gl *GeminiLimiter) Exhausted(ctx context.Context) bool {
 	now := time.Now().In(gl.loc)
 	dailyKey := rpd + now.Format("2006-01-02")
-	val, err := gl.rdb.Client.Get(ctx, dailyKey).Int()
+	val, err := gl.rdb.Client.Get(ctx, dailyKey).Int64()
 	if err != nil {
 		return false
 	}
 
-	return val >= rpdLimit
+	return val >= gl.cfg.GeminiRPD
 }

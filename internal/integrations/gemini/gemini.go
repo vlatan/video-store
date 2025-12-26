@@ -57,20 +57,20 @@ var schema = &genai.Schema{
 }
 
 // Create new Gemini service
-func New(ctx context.Context, config *config.Config, rdb *rdb.Service) (*Service, error) {
+func New(ctx context.Context, cfg *config.Config, rdb *rdb.Service) (*Service, error) {
 
 	// Configure new client
-	client, err := genai.NewClient(ctx, &genai.ClientConfig{APIKey: config.GeminiAPIKey})
+	client, err := genai.NewClient(ctx, &genai.ClientConfig{APIKey: cfg.GeminiAPIKey})
 	if err != nil {
 		return nil, err
 	}
 
-	limiter, err := NewLimiter(rdb)
+	limiter, err := NewLimiter(cfg, rdb)
 	if err != nil {
 		return nil, err
 	}
 
-	return &Service{config, client, limiter}, nil
+	return &Service{cfg, client, limiter}, nil
 }
 
 // Generate content given a prompt
