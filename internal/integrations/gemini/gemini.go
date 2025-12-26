@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/vlatan/video-store/internal/config"
@@ -115,9 +114,7 @@ func (s *Service) Summarize(
 	ctx context.Context,
 	categories models.Categories,
 	transcript string,
-	maxRetries int,
-	maxJitter time.Duration,
-	delay time.Duration,
+	rc *utils.RetryConfig,
 ) (*models.GenaiResponse, error) {
 
 	// Create categories string
@@ -132,8 +129,7 @@ func (s *Service) Summarize(
 	contents := s.makeContents(catString, transcript)
 
 	result, err := utils.Retry(
-		ctx, maxRetries, maxJitter, delay,
-		func() (*genai.GenerateContentResponse, error) {
+		ctx, rc, func() (*genai.GenerateContentResponse, error) {
 			return s.GenerateContent(ctx, contents)
 		},
 	)

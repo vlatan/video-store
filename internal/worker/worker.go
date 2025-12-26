@@ -111,6 +111,19 @@ func (w *Worker) Run(ctx context.Context) error {
 	// Use ctx without cancel so Unlock isn't killed by the expired ctx.
 	defer lock.Unlock(context.WithoutCancel(ctx))
 
+	// Define retry configs for the external APIs
+	ytRetryConfig := utils.RetryConfig{
+		MaxRetries: 3,
+		MaxJitter:  time.Second,
+		Delay:      time.Second,
+	}
+
+	geminiRetryConfig := utils.RetryConfig{
+		MaxRetries: 3,
+		MaxJitter:  2 * time.Second,
+		Delay:      65 * time.Second,
+	}
+
 	log.Println("Lock acquired!")
 	log.Println("Worker running...")
 
@@ -140,7 +153,7 @@ func (w *Worker) Run(ctx context.Context) error {
 	}
 
 	// Fetch playlists from YouTube
-	ytSources, err := w.youtube.GetSources(ctx, playlistIDs...)
+	ytSources, err := w.youtube.GetSources(ctx, &ytRetryConfig, playlistIDs...)
 	if err != nil {
 		return fmt.Errorf(
 			"could not fetch the playlists from YouTube; %w",
@@ -162,7 +175,7 @@ func (w *Worker) Run(ctx context.Context) error {
 	}
 
 	// Fetch corresponding channels
-	channels, err := w.youtube.GetChannels(ctx, channelIDs...)
+	channels, err := w.youtube.GetChannels(ctx, &ytRetryConfig, channelIDs...)
 	if err != nil {
 		return fmt.Errorf(
 			"could not fetch the channels from YouTube; %w",
@@ -238,7 +251,7 @@ func (w *Worker) Run(ctx context.Context) error {
 
 	// Get orphans metadata from YT, start forming valid YT videos map
 	ytVideosMap := make(map[string]*models.Post)
-	ytOrphanVideos, err := w.youtube.GetVideos(ctx, orphanVideoIDs...)
+	ytOrphanVideos, err := w.youtube.GetVideos(ctx, &ytRetryConfig, orphanVideoIDs...)
 	if err != nil {
 		return fmt.Errorf(
 			"could not get the orphan videos from YouTube; %w",
@@ -263,7 +276,7 @@ func (w *Worker) Run(ctx context.Context) error {
 			return err
 		}
 
-		sourceItems, err := w.youtube.GetSourceItems(ctx, playlistID)
+		sourceItems, err := w.youtube.GetSourceItems(ctx, &ytRetryConfig, playlistID)
 		if err != nil {
 			return fmt.Errorf(
 				"couldn't get items from YouTube for source '%s'; %w",
@@ -278,7 +291,7 @@ func (w *Worker) Run(ctx context.Context) error {
 		}
 
 		// Get all the videos metadata for this source
-		videosMetadata, err := w.youtube.GetVideos(ctx, videoIDs...)
+		videosMetadata, err := w.youtube.GetVideos(ctx, &ytRetryConfig, videoIDs...)
 		if err != nil {
 			return fmt.Errorf(
 				"couldn't get videos from YouTube for source %s; %w",
@@ -458,7 +471,7 @@ func (w *Worker) Run(ctx context.Context) error {
 
 		// Generate content using Gemini
 		genaiResponse, err := w.gemini.Summarize(
-			ctx, categories, transcript, 3, 2*time.Second, 65*time.Second,
+			ctx, categories, transcript, &geminiRetryConfig,
 		)
 
 		// Exit early if context ended
@@ -549,7 +562,7 @@ func (w *Worker) Run(ctx context.Context) error {
 
 		// Generate content using Gemini
 		genaiResponse, err := w.gemini.Summarize(
-			ctx, categories, transcript, 3, 2*time.Second, 65*time.Second,
+			ctx, categories, transcript, &geminiRetryConfig,
 		)
 
 		// Exit early if context ended

@@ -83,9 +83,7 @@ func TestRetry(t *testing.T) {
 	type test struct {
 		name         string
 		ctx          context.Context
-		maxRetries   int
-		maxJitter    time.Duration
-		delay        time.Duration
+		retryConfig  *RetryConfig
 		callable     func() (string, error)
 		expectedData string
 		wantErr      bool
@@ -106,71 +104,85 @@ func TestRetry(t *testing.T) {
 
 	tests := []test{
 		{
-			name:         "success (0 retries)",
-			ctx:          ctx,
-			maxRetries:   0,
-			maxJitter:    time.Nanosecond,
-			delay:        time.Nanosecond,
+			name: "success (0 retries)",
+			ctx:  ctx,
+			retryConfig: &RetryConfig{
+				MaxRetries: 0,
+				MaxJitter:  time.Nanosecond,
+				Delay:      time.Nanosecond,
+			},
 			callable:     func() (string, error) { return "foo", nil },
 			expectedData: "foo",
 			wantErr:      false,
 		},
 		{
-			name:         "success (1+ retries)",
-			ctx:          ctx,
-			maxRetries:   3,
-			maxJitter:    time.Nanosecond,
-			delay:        time.Nanosecond,
+			name: "success (1+ retries)",
+			ctx:  ctx,
+			retryConfig: &RetryConfig{
+				MaxRetries: 3,
+				MaxJitter:  time.Nanosecond,
+				Delay:      time.Nanosecond,
+			},
 			callable:     func() (string, error) { return "foo", nil },
 			expectedData: "foo",
 			wantErr:      false,
 		},
 		{
-			name:         "error",
-			ctx:          ctx,
-			maxRetries:   3,
-			maxJitter:    time.Nanosecond,
-			delay:        time.Nanosecond,
+			name: "error",
+			ctx:  ctx,
+			retryConfig: &RetryConfig{
+				MaxRetries: 3,
+				MaxJitter:  time.Nanosecond,
+				Delay:      time.Nanosecond,
+			},
 			callable:     func() (string, error) { return "", errors.New("error") },
 			expectedData: "",
 			wantErr:      true,
 		},
 		{
-			name:         "error (no context)",
-			ctx:          noContext,
-			maxRetries:   3,
-			maxJitter:    time.Nanosecond,
-			delay:        time.Nanosecond,
+			name: "error (no context)",
+			ctx:  noContext,
+			retryConfig: &RetryConfig{
+				MaxRetries: 3,
+				MaxJitter:  time.Nanosecond,
+				Delay:      time.Nanosecond,
+			},
 			callable:     func() (string, error) { return "", errors.New("error") },
 			expectedData: "",
 			wantErr:      true,
 		},
 		{
-			name:         "gRPC error",
-			ctx:          ctx,
-			maxRetries:   3,
-			maxJitter:    time.Nanosecond,
-			delay:        time.Nanosecond,
+			name: "gRPC error",
+			ctx:  ctx,
+			retryConfig: &RetryConfig{
+				MaxRetries: 3,
+				MaxJitter:  time.Nanosecond,
+				Delay:      time.Nanosecond,
+			},
 			callable:     func() (string, error) { return "", makeGRPCError(time.Nanosecond) },
 			expectedData: "",
 			wantErr:      true,
 		},
 		{
-			name:         "gRPC error (gRPC delay > sleep time)",
-			ctx:          ctx,
-			maxRetries:   3,
-			maxJitter:    time.Nanosecond,
-			delay:        time.Nanosecond,
+			name: "gRPC error (gRPC delay > sleep time)",
+			ctx:  ctx,
+			retryConfig: &RetryConfig{
+				MaxRetries: 3,
+				MaxJitter:  time.Nanosecond,
+				Delay:      time.Nanosecond,
+			},
 			callable:     func() (string, error) { return "", makeGRPCError(2 * time.Nanosecond) },
 			expectedData: "",
 			wantErr:      true,
 		},
 		{
-			name:         "gRPC error (no context)",
-			ctx:          noContext,
-			maxRetries:   3,
-			maxJitter:    time.Nanosecond,
-			delay:        time.Nanosecond,
+			name: "gRPC error (no context)",
+			ctx:  noContext,
+			retryConfig: &RetryConfig{
+				MaxRetries: 3,
+				MaxJitter:  time.Nanosecond,
+				Delay:      time.Nanosecond,
+			},
 			callable:     func() (string, error) { return "", makeGRPCError(time.Nanosecond) },
 			expectedData: "",
 			wantErr:      true,
@@ -181,9 +193,7 @@ func TestRetry(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			data, err := Retry(
 				tt.ctx,
-				tt.maxRetries,
-				tt.maxJitter,
-				tt.delay,
+				tt.retryConfig,
 				tt.callable,
 			)
 

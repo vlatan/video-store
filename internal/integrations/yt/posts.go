@@ -14,7 +14,7 @@ import (
 )
 
 // Get YouTube videos metadata, provided video IDs.
-func (s *Service) GetVideos(ctx context.Context, videoIDs ...string) ([]*youtube.Video, error) {
+func (s *Service) GetVideos(ctx context.Context, rc *utils.RetryConfig, videoIDs ...string) ([]*youtube.Video, error) {
 
 	var result []*youtube.Video
 	part := []string{"status", "snippet", "contentDetails"}
@@ -26,8 +26,8 @@ func (s *Service) GetVideos(ctx context.Context, videoIDs ...string) ([]*youtube
 		end := min(i+batchSize, len(videoIDs))
 		batch := videoIDs[i:end]
 
-		response, err := utils.Retry(ctx, 5, time.Second, time.Second,
-			func() (*youtube.VideoListResponse, error) {
+		response, err := utils.Retry(
+			ctx, rc, func() (*youtube.VideoListResponse, error) {
 				return s.youtube.Videos.
 					List(part).
 					Id(batch...).

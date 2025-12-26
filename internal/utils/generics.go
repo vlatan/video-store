@@ -12,6 +12,12 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+type RetryConfig struct {
+	MaxRetries int
+	MaxJitter  time.Duration
+	Delay      time.Duration
+}
+
 // Extract retry delay from error on Google API.
 func extractRetryDelay(err error) (time.Duration, bool) {
 
@@ -38,9 +44,7 @@ func extractRetryDelay(err error) (time.Duration, bool) {
 // Retry a function
 func Retry[T any](
 	ctx context.Context,
-	maxRetries int,
-	maxJitter time.Duration,
-	delay time.Duration,
+	rc *RetryConfig,
 	callable func() (T, error),
 ) (T, error) {
 
@@ -50,10 +54,10 @@ func Retry[T any](
 	)
 
 	// Avoid zero or negative maxRetries
-	maxRetries = max(maxRetries, 1)
+	rc.MaxRetries = max(rc.MaxRetries, 1)
 
 	// Perform retries
-	for i := range maxRetries {
+	for i := range rc.MaxRetries {
 
 		// Call the function
 		data, err := callable()
@@ -63,13 +67,13 @@ func Retry[T any](
 
 		// If this is the last iteration break the loop
 		lastError = err
-		if i+1 == maxRetries {
+		if i+1 == rc.MaxRetries {
 			break
 		}
 
 		// Calculate the backoff (2^i) + jitter of 0-2 seconds
-		jitter := time.Duration(rand.Float64() * float64(maxJitter)) // #nosec G404
-		sleepTime := delay*time.Duration(math.Pow(2, float64(i))) + jitter
+		jitter := time.Duration(rand.Float64() * float64(rc.MaxJitter)) // #nosec G404
+		sleepTime := rc.Delay*time.Duration(math.Pow(2, float64(i))) + jitter
 
 		// Try to extract a delay value from the error
 		if retryDelay, ok := extractRetryDelay(lastError); ok {
@@ -90,5 +94,5 @@ func Retry[T any](
 		}
 	}
 
-	return zero, fmt.Errorf("%d max retries error; %w", maxRetries, lastError)
+	return zero, fmt.Errorf("%d max retries error; %w", rc.MaxRetries, lastError)
 }

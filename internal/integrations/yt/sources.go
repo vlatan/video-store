@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/utils"
@@ -14,7 +13,10 @@ import (
 
 // Get YouTube's playlist items, provided a playlist ID
 // Fetching can't be done at once, but in a paginated way
-func (s *Service) GetSourceItems(ctx context.Context, playlistID string) ([]*youtube.PlaylistItem, error) {
+func (s *Service) GetSourceItems(
+	ctx context.Context,
+	rc *utils.RetryConfig,
+	playlistID string) ([]*youtube.PlaylistItem, error) {
 
 	var result []*youtube.PlaylistItem
 	var nextPageToken string
@@ -22,7 +24,7 @@ func (s *Service) GetSourceItems(ctx context.Context, playlistID string) ([]*you
 
 	for {
 		// Get playlist items
-		response, err := utils.Retry(ctx, 5, time.Second, time.Second,
+		response, err := utils.Retry(ctx, rc,
 			func() (*youtube.PlaylistItemListResponse, error) {
 				return s.youtube.PlaylistItems.
 					List(part).
@@ -55,7 +57,10 @@ func (s *Service) GetSourceItems(ctx context.Context, playlistID string) ([]*you
 }
 
 // Get playlists metadata, provided playlist ids.
-func (s *Service) GetSources(ctx context.Context, playlistIDs ...string) ([]*youtube.Playlist, error) {
+func (s *Service) GetSources(
+	ctx context.Context,
+	rc *utils.RetryConfig,
+	playlistIDs ...string) ([]*youtube.Playlist, error) {
 
 	var result []*youtube.Playlist
 	part := []string{"snippet"}
@@ -67,7 +72,7 @@ func (s *Service) GetSources(ctx context.Context, playlistIDs ...string) ([]*you
 		end := min(i+batchSize, len(playlistIDs))
 		batch := playlistIDs[i:end]
 
-		response, err := utils.Retry(ctx, 5, time.Second, time.Second,
+		response, err := utils.Retry(ctx, rc,
 			func() (*youtube.PlaylistListResponse, error) {
 				return s.youtube.Playlists.
 					List(part).
@@ -95,7 +100,10 @@ func (s *Service) GetSources(ctx context.Context, playlistIDs ...string) ([]*you
 }
 
 // Get channels metadata, provided channel ids.
-func (s *Service) GetChannels(ctx context.Context, channelIDs ...string) ([]*youtube.Channel, error) {
+func (s *Service) GetChannels(
+	ctx context.Context,
+	rc *utils.RetryConfig,
+	channelIDs ...string) ([]*youtube.Channel, error) {
 
 	var result []*youtube.Channel
 	part := []string{"snippet"}
@@ -107,7 +115,7 @@ func (s *Service) GetChannels(ctx context.Context, channelIDs ...string) ([]*you
 		end := min(i+batchSize, len(channelIDs))
 		batch := channelIDs[i:end]
 
-		response, err := utils.Retry(ctx, 5, time.Second, time.Second,
+		response, err := utils.Retry(ctx, rc,
 			func() (*youtube.ChannelListResponse, error) {
 				return s.youtube.Channels.
 					List(part).

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/models"
@@ -107,7 +108,15 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Fetch playlist metadata from YouTube
-		sources, err := s.yt.GetSources(r.Context(), playlistID)
+		sources, err := s.yt.GetSources(
+			r.Context(),
+			&utils.RetryConfig{
+				MaxRetries: 3,
+				MaxJitter:  time.Second,
+				Delay:      time.Second,
+			},
+			playlistID,
+		)
 		if err != nil {
 			log.Printf("Playlist '%s': %v", playlistID, err)
 			formError.Message = "Unable to fetch the playlist from YouTube"
@@ -118,7 +127,15 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Fetch channel data from YouTube
 		channelID := sources[0].Snippet.ChannelId
-		channels, err := s.yt.GetChannels(r.Context(), channelID)
+		channels, err := s.yt.GetChannels(
+			r.Context(),
+			&utils.RetryConfig{
+				MaxRetries: 3,
+				MaxJitter:  time.Second,
+				Delay:      time.Second,
+			},
+			channelID,
+		)
 		if err != nil {
 			log.Printf("Channel '%s': %v", channelID, err)
 			formError.Message = "Unable to fetch channel info from YouTube"

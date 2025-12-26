@@ -271,7 +271,16 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Fetch video data from YouTube
-		metadata, err := s.yt.GetVideos(r.Context(), videoID)
+		metadata, err := s.yt.GetVideos(
+			r.Context(),
+			&utils.RetryConfig{
+				MaxRetries: 3,
+				MaxJitter:  time.Second,
+				Delay:      time.Second,
+			},
+			videoID,
+		)
+
 		if err != nil {
 			log.Printf("Video '%s': %v", videoID, err)
 			formError.Message = "Unable to fetch the video from YouTube"
@@ -330,8 +339,14 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 			}
 
 			genaiResponse, err := s.gemini.Summarize(
-				ctx, data.Categories, transcript, 1, 2*time.Second, 65*time.Second,
-			)
+				ctx,
+				data.Categories,
+				transcript,
+				&utils.RetryConfig{
+					MaxRetries: 1,
+					MaxJitter:  2 * time.Second,
+					Delay:      65 * time.Second,
+				})
 
 			if err != nil {
 				log.Printf("Content generation using Gemini failed: %v", err)
