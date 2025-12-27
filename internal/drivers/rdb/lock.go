@@ -32,7 +32,7 @@ func (l *RedisLock) Lock(ctx context.Context) error {
 		success, err := l.rdb.Client.SetNX(ctx, l.key, l.value, l.expiry).Result()
 
 		if err != nil && err != redis.Nil {
-			return fmt.Errorf("connectivity error during lock acquire; %w", err)
+			return fmt.Errorf("unexpected error during lock acquire; %w", err)
 		}
 
 		if success {
@@ -57,11 +57,11 @@ func (l *RedisLock) CheckLock(ctx context.Context) error {
 	value, err := l.rdb.Client.Get(ctx, l.key).Result()
 
 	if err == redis.Nil {
-		return fmt.Errorf("lock expired or deleted")
+		return fmt.Errorf("lock expired or deleted; %w", err)
 	}
 
 	if err != nil {
-		return fmt.Errorf("connectivity error during lock check; %w", err)
+		return fmt.Errorf("unexpected error during lock check; %w", err)
 	}
 
 	if value != l.value {
