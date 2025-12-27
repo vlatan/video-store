@@ -31,8 +31,8 @@ func (l *RedisLock) Lock(ctx context.Context) error {
 	for {
 		success, err := l.rdb.Client.SetNX(ctx, l.key, l.value, l.expiry).Result()
 
-		if err != nil {
-			return err
+		if err != nil && err != redis.Nil {
+			return fmt.Errorf("connectivity error during lock acquire; %w", err)
 		}
 
 		if success {
@@ -61,12 +61,12 @@ func (l *RedisLock) CheckLock(ctx context.Context) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("connectivity error during lock check: %w", err)
+		return fmt.Errorf("connectivity error during lock check; %w", err)
 	}
 
 	if value != l.value {
 		return fmt.Errorf(
-			"lock ownership hijacked by another worker (expected %s, got %s)",
+			"caller does not own this lock (expected %s, got %s)",
 			l.value, value,
 		)
 	}
