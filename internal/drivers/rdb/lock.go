@@ -9,18 +9,18 @@ import (
 )
 
 type RedisLock struct {
-	rdb    *Service
-	key    string // should be unique to the resource being locked
-	value  string // should be unique to the worker doing the lock
-	expiry time.Duration
+	rdb   *Service
+	key   string // should be unique to the resource being locked
+	value string // should be unique to the worker doing the lock
+	ttl   time.Duration
 }
 
-func (s *Service) NewRedisLock(key, value string, expiry time.Duration) *RedisLock {
+func (s *Service) NewRedisLock(key, value string, ttl time.Duration) *RedisLock {
 	return &RedisLock{
-		rdb:    s,
-		key:    key,
-		value:  value,
-		expiry: expiry,
+		rdb:   s,
+		key:   key,
+		value: value,
+		ttl:   ttl,
 	}
 }
 
@@ -29,7 +29,7 @@ func (s *Service) NewRedisLock(key, value string, expiry time.Duration) *RedisLo
 // Therefore it's a blocking method until it can acquire the lock.
 func (l *RedisLock) Lock(ctx context.Context) error {
 	for {
-		success, err := l.rdb.Client.SetNX(ctx, l.key, l.value, l.expiry).Result()
+		success, err := l.rdb.Client.SetNX(ctx, l.key, l.value, l.ttl).Result()
 
 		if err != nil && err != redis.Nil {
 			return fmt.Errorf("unexpected error during lock acquire; %w", err)
@@ -47,7 +47,7 @@ func (l *RedisLock) Lock(ctx context.Context) error {
 // and informs the caller if it was successful or not.
 // It sets key-value ONLY if the key doesn't exist.
 func (l *RedisLock) TryLock(ctx context.Context) (bool, error) {
-	return l.rdb.Client.SetNX(ctx, l.key, l.value, l.expiry).Result()
+	return l.rdb.Client.SetNX(ctx, l.key, l.value, l.ttl).Result()
 }
 
 // CheckLock checks if the caller still owns the lock.
