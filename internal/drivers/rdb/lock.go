@@ -15,7 +15,7 @@ type RedisLock struct {
 	ttl   time.Duration
 }
 
-func (s *Service) NewRedisLock(key, value string, ttl time.Duration) *RedisLock {
+func (s *Service) NewLock(key, value string, ttl time.Duration) *RedisLock {
 	return &RedisLock{
 		rdb:   s,
 		key:   key,
@@ -31,7 +31,7 @@ func (l *RedisLock) Lock(ctx context.Context) error {
 	for {
 		success, err := l.rdb.Client.SetNX(ctx, l.key, l.value, l.ttl).Result()
 
-		if err != nil && err != redis.Nil {
+		if err != nil {
 			return fmt.Errorf("unexpected error during lock acquire; %w", err)
 		}
 

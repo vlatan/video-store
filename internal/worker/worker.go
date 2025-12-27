@@ -100,7 +100,7 @@ func (w *Worker) Run(ctx context.Context) error {
 
 	// Create and acquire a Redis lock with slightly bigger TTL than the context
 	redisLockTTL := time.Duration(float64(w.config.WorkerExpectedRuntime) * 1.25)
-	lock := w.rdb.NewRedisLock(workerLockKey, w.id, redisLockTTL)
+	lock := w.rdb.NewLock(workerLockKey, w.id, redisLockTTL)
 
 	// This is a blocking call until the lock is acquired
 	if err := lock.Lock(ctx); err != nil {
