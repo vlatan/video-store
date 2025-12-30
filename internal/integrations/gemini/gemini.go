@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/microcosm-cc/bluemonday"
@@ -136,18 +135,11 @@ func (s *Service) Summarize(
 		return nil, err
 	}
 
-	log.Println(result.Text())
-
 	// Parse the text output
 	response, err := s.parseResponse(result.Text(), categories)
 	if err != nil {
 		return nil, err
 	}
-
-	response.Description = bluemonday.
-		StrictPolicy().
-		AllowElements("p").
-		Sanitize(response.Description)
 
 	response.Description += utils.UpdateMarker // REMOVE
 	response.Title = video.Title
@@ -211,6 +203,11 @@ func (s *Service) parseResponse(raw string, categories models.Categories) (*mode
 
 	// Extract the description
 	description := raw[startP : endP+4]
+
+	// Make sure the description has no additional HTML tags
+	description = bluemonday.StrictPolicy().AllowElements("p").Sanitize(description)
+
+	// Form the response
 	response := models.GenaiResponse{Description: description}
 
 	// Work only with the remaining string to find the category
