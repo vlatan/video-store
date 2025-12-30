@@ -2,8 +2,9 @@ package gemini
 
 import (
 	"context"
-	"encoding/json"
+	"errors"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/microcosm-cc/bluemonday"
@@ -23,7 +24,9 @@ type Service struct {
 }
 
 const categoriesPlaceholder = "{{ CATEGORIES }}"
-const transcriptPlaceholder = "{{ TRANSCRIPT }}"
+const titlePlaceholder = "{{ TITLE }}"
+const descriptionPlaceholder = "{{ DESCRIPTION }}"
+const urlPlaceholder = "{{ URL }}"
 
 // Configure safety settings to block none
 var blockNone = genai.HarmBlockThresholdBlockNone
@@ -88,10 +91,12 @@ func (s *Service) GenerateContent(
 		s.config.GeminiModel,
 		contents,
 		&genai.GenerateContentConfig{
-			ResponseMIMEType: "application/json",
-			SafetySettings:   safetySettings,
-			ResponseSchema:   schema,
-			MediaResolution:  genai.MediaResolutionLow,
+			// Can't return JSON when using web search
+			// ResponseMIMEType: "application/json",
+			SafetySettings:  safetySettings,
+			ResponseSchema:  schema,
+			MediaResolution: genai.MediaResolutionLow,
+			Tools:           []*genai.Tool{{GoogleSearch: &genai.GoogleSearch{}}},
 		},
 	)
 
@@ -112,22 +117,15 @@ func (s *Service) GenerateContent(
 // https://ai.google.dev/gemini-api/docs/video-understanding#youtube
 func (s *Service) Summarize(
 	ctx context.Context,
+	video *models.Post,
 	categories models.Categories,
-	transcript string,
 	rc *utils.RetryConfig,
 ) (*models.GenaiResponse, error) {
 
-	// Create categories string
-	var catString string
-	for _, cat := range categories {
-		catString += cat.Name + ", "
-	}
-	catString = strings.TrimSuffix(catString, ", ")
+	// Make Genai contents
+	contents := s.makeContents(video, categories)
 
-	// Sanitize the transcript and make Genai contents
-	transcript = sanitizePrompt(transcript)
-	contents := s.makeContents(catString, transcript)
-
+	// Make the API call
 	result, err := utils.Retry(
 		ctx, rc, func() (*genai.GenerateContentResponse, error) {
 			return s.GenerateContent(ctx, contents)
@@ -138,9 +136,12 @@ func (s *Service) Summarize(
 		return nil, err
 	}
 
-	var response models.GenaiResponse
-	if err := json.Unmarshal([]byte(result.Text()), &response); err != nil {
-		return nil, fmt.Errorf("failed to parse Genai response to JSON: %w", err)
+	log.Println(result.Text())
+
+	// Parse the text output
+	response, err := s.parseResponse(result.Text(), categories)
+	if err != nil {
+		return nil, err
 	}
 
 	response.Description = bluemonday.
@@ -149,18 +150,35 @@ func (s *Service) Summarize(
 		Sanitize(response.Description)
 
 	response.Description += utils.UpdateMarker // REMOVE
+	response.Title = video.Title
 
-	return &response, nil
+	return response, nil
 }
 
 // makeContents creates Genai contents
-func (s *Service) makeContents(categories, transcript string) []*genai.Content {
+func (s *Service) makeContents(video *models.Post, categories models.Categories) []*genai.Content {
+
+	// Create categories string
+	var catString string
+	for _, cat := range categories {
+		catString += cat.Name + ", "
+	}
+	catString = strings.TrimSuffix(catString, ", ")
 
 	// Create genai parts
 	parts := make([]*genai.Part, len(s.config.GeminiPrompt.Parts))
 	for i, part := range s.config.GeminiPrompt.Parts {
-		text := strings.ReplaceAll(part.Text, categoriesPlaceholder, categories)
-		text = strings.ReplaceAll(text, transcriptPlaceholder, transcript)
+		text := strings.ReplaceAll(part.Text, categoriesPlaceholder, catString)
+
+		title := sanitizePrompt(video.Title)
+		text = strings.ReplaceAll(text, titlePlaceholder, title)
+
+		description := sanitizePrompt(video.Description)
+		text = strings.ReplaceAll(text, descriptionPlaceholder, description)
+
+		url := "https://www.youtube.com/watch?v=" + video.VideoID
+		text = strings.ReplaceAll(text, urlPlaceholder, url)
+
 		parts[i] = genai.NewPartFromText(text)
 	}
 
@@ -178,4 +196,37 @@ func (s *Service) AcquireQuota(ctx context.Context) error {
 // Exhausted returns true if the daily limit has already been hit.
 func (s *Service) Exhausted(ctx context.Context) bool {
 	return s.limiter.Exhausted(ctx)
+}
+
+// parseResponse parses a raw genai text response
+func (s *Service) parseResponse(raw string, categories models.Categories) (*models.GenaiResponse, error) {
+
+	// Extract Description (everything inside <p> tags)
+	startP := strings.Index(raw, "<p>")
+	endP := strings.LastIndex(raw, "</p>")
+
+	if startP == -1 || endP == -1 {
+		return nil, errors.New("failed to extract summary from the response")
+	}
+
+	// Extract the description
+	description := raw[startP : endP+4]
+	response := models.GenaiResponse{Description: description}
+
+	// Work only with the remaining string to find the category
+	remaining := strings.Replace(raw, description, " ", 1)
+	remaining = strings.ToLower(remaining)
+
+	// Search for the allowed categories in the remaining text.
+	// We iterate through the category list to find a match.
+	for _, cat := range categories {
+		// See if the model mentioned this category
+		catLower := strings.ToLower(cat.Name)
+		if strings.Contains(remaining, catLower) {
+			response.Category = cat.Name
+			return &response, nil
+		}
+	}
+
+	return &response, nil
 }

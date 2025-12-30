@@ -321,27 +321,8 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 			ctx, cancel := context.WithTimeout(detachedCtx, 5*time.Minute)
 			defer cancel()
 
-			transcript, err := s.yt.GetVideoTranscript(ctx, videoID)
-
-			// Exit early if context ended
-			if utils.IsContextErr(err) {
-				return
-			}
-
-			if err != nil {
-				log.Printf(
-					"Error getting the video %s transcript; %v",
-					videoID, err,
-				)
-
-				// If no transcript use the post title and description
-				transcript = post.Title + "\n" + post.Description
-			}
-
 			genaiResponse, err := s.gemini.Summarize(
-				ctx,
-				data.Categories,
-				transcript,
+				ctx, post, data.Categories,
 				&utils.RetryConfig{
 					MaxRetries: 1,
 					MaxJitter:  2 * time.Second,

@@ -443,24 +443,6 @@ func (w *Worker) Run(ctx context.Context) error {
 			continue
 		}
 
-		// Get the video transcript
-		transcript, err := w.youtube.GetVideoTranscript(ctx, videoID)
-
-		// Exit early if context ended
-		if utils.IsContextErr(err) {
-			return err
-		}
-
-		if err != nil {
-			log.Printf(
-				"Error getting the video %s transcript; %v",
-				videoID, err,
-			)
-
-			// If no transcript use the post title and description
-			transcript = newVideo.Title + "\n" + newVideo.Description
-		}
-
 		// Check if we still own the lock before an expensive API call
 		if err = lock.CheckLock(ctx); err != nil {
 			return fmt.Errorf(
@@ -471,7 +453,7 @@ func (w *Worker) Run(ctx context.Context) error {
 
 		// Generate content using Gemini
 		genaiResponse, err := w.gemini.Summarize(
-			ctx, categories, transcript, &geminiRetryConfig,
+			ctx, newVideo, categories, &geminiRetryConfig,
 		)
 
 		// Exit early if context ended
@@ -535,23 +517,6 @@ func (w *Worker) Run(ctx context.Context) error {
 			continue
 		}
 
-		transcript, err := w.youtube.GetVideoTranscript(ctx, video.VideoID)
-
-		// Exit early if context ended
-		if utils.IsContextErr(err) {
-			return err
-		}
-
-		if err != nil {
-			log.Printf(
-				"Error getting video %s transcript; %v",
-				video.VideoID, err,
-			)
-
-			// If no transcript use the post title and description
-			transcript = video.Title + "\n" + video.Description
-		}
-
 		// Check if we still own the lock before an expensive API call
 		if err = lock.CheckLock(ctx); err != nil {
 			return fmt.Errorf(
@@ -562,7 +527,7 @@ func (w *Worker) Run(ctx context.Context) error {
 
 		// Generate content using Gemini
 		genaiResponse, err := w.gemini.Summarize(
-			ctx, categories, transcript, &geminiRetryConfig,
+			ctx, video, categories, &geminiRetryConfig,
 		)
 
 		// Exit early if context ended
