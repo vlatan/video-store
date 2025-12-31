@@ -82,7 +82,7 @@ func (s *Service) GenerateContent(
 
 	// Check limits before calling the API
 	if err := s.AcquireQuota(ctx); err != nil {
-		return nil, fmt.Errorf("Gemini limit reached: %w", err)
+		return nil, fmt.Errorf("gemini limit reached: %w", err)
 	}
 
 	response, err := s.client.Models.GenerateContent(
