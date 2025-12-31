@@ -142,7 +142,7 @@ h1.video-title {
 }
 
 @media screen and (max-width: 900px) {
-  .short_desc_wrap {
+  .summary_wrap {
     border-bottom: 1px solid var(--primary-border-color);
     padding-bottom: calc(var(--content-padding) / 2);
   }
@@ -157,7 +157,7 @@ h1.video-title {
 
   h1.video-title,
   .video-description,
-  .short_desc_wrap {
+  .summary_wrap {
     padding-bottom: var(--content-padding);
   }
 }
