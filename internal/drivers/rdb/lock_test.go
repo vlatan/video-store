@@ -111,7 +111,7 @@ func TestTryLock(t *testing.T) {
 	t.Cleanup(func() { rdb.Client.Close() })
 
 	const existingLockKey = "try_lock_key"
-	existingLock := rdb.NewLock(existingLockKey, "worker1", 5*time.Second)
+	existingLock := rdb.NewLock(existingLockKey, "existing_try_worker", 5*time.Second)
 	if err := existingLock.Lock(ctx); err != nil {
 		t.Fatalf("failed to create Redis lock; %v", err)
 	}
@@ -160,4 +160,73 @@ func TestTryLock(t *testing.T) {
 			tt.lock.Unlock(ctx)
 		})
 	}
+}
+
+func TestCheckLock(t *testing.T) {
+
+	// Main context
+	ctx := context.TODO()
+
+	// Cancelled context
+	noContext, cancel := context.WithCancel(ctx)
+	cancel()
+
+	rdb, err := New(testCfg)
+	if err != nil {
+		t.Fatalf("failed to create Redis client; %v", err)
+	}
+
+	t.Cleanup(func() { rdb.Client.Close() })
+
+	const existingLockKey = "check_lock_key"
+	const existingLockValue = "existing_check_worker"
+	existingLock := rdb.NewLock(existingLockKey, existingLockValue, 5*time.Second)
+	if err := existingLock.Lock(ctx); err != nil {
+		t.Fatalf("failed to create Redis lock; %v", err)
+	}
+
+	t.Cleanup(func() { existingLock.Unlock(ctx) })
+
+	tests := []struct {
+		name    string
+		ctx     context.Context
+		lock    *RedisLock
+		wantErr bool
+	}{
+		{
+			"no context", noContext,
+			rdb.NewLock("random_check_lock_key", "worker", time.Millisecond),
+			true,
+		},
+		{
+			"no lock", ctx,
+			rdb.NewLock("new_check_lock_key", "worker", time.Millisecond),
+			true,
+		},
+		{
+			"lock exists", ctx,
+			rdb.NewLock(existingLockKey, "worker", time.Millisecond),
+			true,
+		},
+		{
+			"lock doesn't exist", ctx,
+			rdb.NewLock(existingLockKey, existingLockValue, time.Millisecond),
+			false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(*testing.T) {
+			err := tt.lock.CheckLock(tt.ctx)
+			if gotErr := err != nil; gotErr != tt.wantErr {
+				t.Errorf(
+					"got error = %v, want error = %t",
+					err, tt.wantErr,
+				)
+			}
+
+			tt.lock.Unlock(ctx)
+		})
+	}
+
 }
