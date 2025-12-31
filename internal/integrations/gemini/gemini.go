@@ -155,22 +155,23 @@ func (s *Service) makeContents(video *models.Post, categories models.Categories)
 	for _, cat := range categories {
 		catString += cat.Name + ", "
 	}
+
 	catString = strings.TrimSuffix(catString, ", ")
+	title := sanitizePrompt(video.Title)
+	description := sanitizePrompt(video.Description)
+	url := "https://www.youtube.com/watch?v=" + video.VideoID
+
+	replacer := strings.NewReplacer(
+		categoriesPlaceholder, catString,
+		titlePlaceholder, title,
+		descriptionPlaceholder, description,
+		urlPlaceholder, url,
+	)
 
 	// Create genai parts
 	parts := make([]*genai.Part, len(s.config.GeminiPrompt.Parts))
 	for i, part := range s.config.GeminiPrompt.Parts {
-		text := strings.ReplaceAll(part.Text, categoriesPlaceholder, catString)
-
-		title := sanitizePrompt(video.Title)
-		text = strings.ReplaceAll(text, titlePlaceholder, title)
-
-		description := sanitizePrompt(video.Description)
-		text = strings.ReplaceAll(text, descriptionPlaceholder, description)
-
-		url := "https://www.youtube.com/watch?v=" + video.VideoID
-		text = strings.ReplaceAll(text, urlPlaceholder, url)
-
+		text := replacer.Replace(part.Text)
 		parts[i] = genai.NewPartFromText(text)
 	}
 
