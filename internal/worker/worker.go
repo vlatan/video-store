@@ -467,7 +467,7 @@ func (w *Worker) Run(ctx context.Context) error {
 				videoID, err,
 			)
 		} else {
-			newVideo.ShortDesc = genaiResponse.Description
+			newVideo.Summary = genaiResponse.Summary
 			newVideo.Category = &models.Category{Name: genaiResponse.Category}
 		}
 
@@ -502,16 +502,16 @@ func (w *Worker) Run(ctx context.Context) error {
 		}
 
 		// UNCOMMENT
-		// Nothing to update, short desc and category are populated
-		// if video.ShortDesc != "" &&
+		// Nothing to update, summary and category are populated
+		// if video.Summary != "" &&
 		// 	video.Category != nil &&
 		// 	video.Category.Name != "" {
 		// 	continue
 		// }
 
 		// REMOVE
-		// Nothing to update, short desc and category are populated
-		if strings.Contains(video.ShortDesc, utils.UpdateMarker) &&
+		// Nothing to update, summary and category are populated
+		if strings.Contains(video.Summary, utils.UpdateMarker) &&
 			video.Category != nil &&
 			video.Category.Name != "" {
 			continue
@@ -544,7 +544,7 @@ func (w *Worker) Run(ctx context.Context) error {
 			continue
 		}
 
-		video.ShortDesc = genaiResponse.Description
+		video.Summary = genaiResponse.Summary
 
 		if video.Category == nil {
 			video.Category = &models.Category{}

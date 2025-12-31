@@ -38,7 +38,7 @@ func (r *Repository) GetAllPosts(ctx context.Context) ([]*models.Post, error) {
 	var posts []*models.Post
 	for rows.Next() {
 		var post models.Post
-		var playlistID, shortDesc, categoryName sql.NullString
+		var playlistID, summary, categoryName sql.NullString
 
 		// Scan each row
 		if err = rows.Scan(
@@ -46,7 +46,7 @@ func (r *Repository) GetAllPosts(ctx context.Context) ([]*models.Post, error) {
 			&post.VideoID,
 			&playlistID,
 			&post.Title,
-			&shortDesc,
+			&summary,
 			&post.UploadDate,
 			&categoryName,
 		); err != nil {
@@ -54,7 +54,7 @@ func (r *Repository) GetAllPosts(ctx context.Context) ([]*models.Post, error) {
 		}
 
 		post.PlaylistID = utils.FromNullString(playlistID)
-		post.ShortDesc = utils.FromNullString(shortDesc)
+		post.Summary = utils.FromNullString(summary)
 		post.Category = &models.Category{Name: utils.FromNullString(categoryName)}
 
 		// Include the processed post in the result

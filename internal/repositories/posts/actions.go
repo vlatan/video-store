@@ -137,7 +137,7 @@ func (r *Repository) UpdateGeneratedData(ctx context.Context, post *models.Post)
 		updateGeneretedDataQuery,
 		post.VideoID,
 		post.Category.Name,
-		post.ShortDesc,
+		post.Summary,
 	)
 	return result.RowsAffected(), err
 }

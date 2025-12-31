@@ -141,7 +141,7 @@ func (s *Service) Summarize(
 		return nil, err
 	}
 
-	response.Description += utils.UpdateMarker // REMOVE
+	response.Summary += utils.UpdateMarker // REMOVE
 	response.Title = video.Title
 
 	return response, nil
@@ -194,7 +194,7 @@ func (s *Service) Exhausted(ctx context.Context) bool {
 // parseResponse parses a raw genai text response
 func (s *Service) parseResponse(raw string, categories models.Categories) (*models.GenaiResponse, error) {
 
-	// Extract Description (everything inside <p> tags)
+	// Extract summary (everything inside <p> tags)
 	startP := strings.Index(raw, "<p>")
 	endP := strings.LastIndex(raw, "</p>")
 
@@ -202,17 +202,17 @@ func (s *Service) parseResponse(raw string, categories models.Categories) (*mode
 		return nil, errors.New("failed to extract summary from the response")
 	}
 
-	// Extract the description
-	description := raw[startP : endP+4]
+	// Extract the summary
+	summary := raw[startP : endP+4]
 
-	// Make sure the description has no additional HTML tags
-	description = bluemonday.StrictPolicy().AllowElements("p").Sanitize(description)
+	// Make sure the summary has no additional HTML tags
+	summary = bluemonday.StrictPolicy().AllowElements("p").Sanitize(summary)
 
 	// Form the response
-	response := models.GenaiResponse{Description: description}
+	response := models.GenaiResponse{Summary: summary}
 
 	// Work only with the remaining string to find the category
-	remaining := strings.Replace(raw, description, " ", 1)
+	remaining := strings.Replace(raw, summary, " ", 1)
 	remaining = strings.ToLower(remaining)
 
 	// Search for the allowed categories in the remaining text.

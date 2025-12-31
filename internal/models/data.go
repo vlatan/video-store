@@ -22,9 +22,9 @@ type FileInfo struct {
 
 // The response from the Genai API
 type GenaiResponse struct {
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	Category    string `json:"category"`
+	Title    string `json:"title"`
+	Summary  string `json:"summary"`
+	Category string `json:"category"`
 }
 
 // Flash message object to store to session for the next page

@@ -334,7 +334,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			post.ShortDesc = genaiResponse.Description
+			post.Summary = genaiResponse.Summary
 			post.Category = &models.Category{Name: genaiResponse.Category}
 
 			_, err = s.postsRepo.UpdateGeneratedData(ctx, post)

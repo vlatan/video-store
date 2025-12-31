@@ -83,7 +83,7 @@ func (r *Repository) InsertPost(ctx context.Context, post *models.Post) (int64, 
 		post.Title,
 		thumbnails,
 		utils.ToNullString(post.Description),
-		utils.ToNullString(post.ShortDesc),
+		utils.ToNullString(post.Summary),
 		utils.ToNullString(post.Tags),
 		post.Duration.ISO,
 		post.UploadDate,
@@ -121,7 +121,7 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.
 	post.Duration = &models.Duration{}
 
 	var thumbnails []byte
-	var shortDesc, slug, name sql.NullString
+	var summary, slug, name sql.NullString
 
 	// Get single row from DB
 	err := r.db.Pool.QueryRow(ctx, getSinglePostQuery, videoID).Scan(
@@ -131,7 +131,7 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.
 		&thumbnails,
 		&post.Likes,
 		&post.Description,
-		&shortDesc,
+		&summary,
 		&slug,
 		&name,
 		&post.UploadDate,
@@ -149,9 +149,9 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.
 		post.Category.Name = utils.FromNullString(name)
 	}
 
-	// Define short desc
-	post.ShortDesc = utils.FromNullString(shortDesc)
-	post.HTMLShortDesc = template.HTML(post.ShortDesc) // #nosec G203
+	// Define summary
+	post.Summary = utils.FromNullString(summary)
+	post.HTMLSummary = template.HTML(post.Summary) // #nosec G203
 
 	// Provide humand readable video duration
 	humanDuration, _ := post.Duration.ISO.Human()
@@ -175,10 +175,10 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.
 	maxThumb := thumbs.MaxThumb()
 	post.Thumbnail = maxThumb
 
-	// Get the first sentence of the short description to be used as meta description
-	post.MetaDesc = strings.Split(post.ShortDesc, ".")[0]
-	post.MetaDesc = strings.ReplaceAll(post.MetaDesc, "<p>", "")
-	post.MetaDesc = strings.ReplaceAll(post.MetaDesc, "</p>", "")
+	// Get the first sentence of the summary to be used as meta description
+	post.MetaDescription = strings.Split(post.Summary, ".")[0]
+	replacer := strings.NewReplacer("<p>", "", "</p>", "")
+	post.MetaDescription = replacer.Replace(post.MetaDescription)
 
 	// Make srcset string
 	post.Srcset = thumbs.Srcset(maxThumb.Width)
