@@ -1,3 +1,5 @@
+* Use timeout context in tests where needed
+
 * Uncomment and remove code in:
   - `internal/integrations/gemini/gemini.go`
   - `internal/worker/worker.go`
