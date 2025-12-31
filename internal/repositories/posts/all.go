@@ -14,7 +14,7 @@ const getAllPostsQuery = `
 		video_id,
 		playlist_id,
 		title,
-		short_description,
+		summary,
 		upload_date,
 		cat.name AS category_name
 	FROM post

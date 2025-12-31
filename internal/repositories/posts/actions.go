@@ -94,7 +94,7 @@ func (r *Repository) UpdateTitle(ctx context.Context, videoID, title string) (in
 
 const updateSummaryQuery = `
 	UPDATE post
-	SET short_description = $2
+	SET summary = $2
 	WHERE video_id = $1
 `
 
@@ -126,7 +126,7 @@ const updateGeneretedDataQuery = `
 	UPDATE post
 	SET
 		category_id = (SELECT id FROM category WHERE name = $2),
-		short_description = $3
+		summary = $3
 	WHERE video_id = $1
 `
 
