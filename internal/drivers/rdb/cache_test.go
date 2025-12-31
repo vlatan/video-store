@@ -9,20 +9,6 @@ import (
 
 func TestGetCachedData(t *testing.T) {
 
-	// Main context
-	ctx := context.TODO()
-
-	// Cancelled context
-	noContext, cancel := context.WithCancel(ctx)
-	cancel()
-
-	rdb, err := New(testCfg)
-	if err != nil {
-		t.Fatalf("failed to create Redis client; %v", err)
-	}
-
-	t.Cleanup(func() { rdb.Client.Close() })
-
 	validCallable := func() (int, error) { return 1, nil }
 	errorCallable := func() (int, error) { return 0, errors.New("test") }
 
@@ -33,13 +19,13 @@ func TestGetCachedData(t *testing.T) {
 		wantErr  bool
 	}{
 		{"no context", noContext, validCallable, true},
-		{"error result", ctx, errorCallable, true},
-		{"valid result", ctx, validCallable, false},
+		{"error result", baseContext, errorCallable, true},
+		{"valid result", baseContext, validCallable, false},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := GetCachedData(tt.ctx, rdb, tt.name, time.Minute, tt.callable)
+			_, err := GetCachedData(tt.ctx, testRdb, tt.name, time.Minute, tt.callable)
 			if gotErr := err != nil; gotErr {
 				if gotErr != tt.wantErr {
 					t.Errorf("got error = %v, want error = %t", err, tt.wantErr)
@@ -47,7 +33,7 @@ func TestGetCachedData(t *testing.T) {
 			}
 
 			// Run the func again to fetch from cache
-			_, err = GetCachedData(tt.ctx, rdb, tt.name, time.Minute, tt.callable)
+			_, err = GetCachedData(tt.ctx, testRdb, tt.name, time.Minute, tt.callable)
 			if gotErr := err != nil; gotErr {
 				if gotErr != tt.wantErr {
 					t.Errorf("got error = %v, want error = %t", err, tt.wantErr)

@@ -6,16 +6,33 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/containers"
 )
 
-var testCfg *config.Config
+var ( // Package global variables
+	testCfg                *config.Config
+	testRdb                *Service
+	baseContext, noContext context.Context
+)
 
 // Sets ups a Redis container for all tests in this package to use
 func TestMain(m *testing.M) {
+
+	// Run all the tests.
+	// Needs a separate function to be able to run the defers inside,
+	// because they will not work with the os.Exit below.
+	exitCode := runTests(m)
+
+	// Exit with the appropriate code
+	os.Exit(exitCode)
+}
+
+// runTests performs a setup and runs all the tests in this package
+func runTests(m *testing.M) int {
 
 	// Get the project root
 	projectRoot, err := containers.GetProjectRoot()
@@ -30,24 +47,39 @@ func TestMain(m *testing.M) {
 		log.Printf("failed to load .env file; %v", err)
 	}
 
-	// Create the test config - globaly available for package's tests
-	ctx := context.Background()
+	// Main context - globaly available for package's tests
+	baseContext = context.Background()
+
+	// No Context - globaly available for package's tests
+	c, cancel := context.WithCancel(baseContext)
+	noContext = c
+	cancel()
+
+	// Test config - globaly available for package's tests
 	testCfg = config.New()
 
+	setupCtx, setupCancel := context.WithTimeout(baseContext, 2*time.Minute)
+	defer setupCancel()
+
 	// Spin up Redis container
-	container, err := containers.SetupTestRedis(ctx, testCfg)
+	container, err := containers.SetupTestRedis(setupCtx, testCfg)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("failed to create Redis container; %v", err)
 	}
 
 	// Terminate the container on exit
-	defer container.Terminate(ctx)
+	defer container.Terminate(baseContext)
+
+	// Redis service - globaly available for package's tests
+	testRdb, err = New(testCfg)
+	if err != nil {
+		log.Fatalf("failed to create Redis client; %v", err)
+	}
+
+	defer func() { testRdb.Client.Close() }()
 
 	// Run all the tests in the package
-	exitCode := m.Run()
-
-	// Exit with the appropriate code
-	os.Exit(exitCode)
+	return m.Run()
 }
 
 func TestNew(t *testing.T) {
@@ -99,33 +131,19 @@ func TestNew(t *testing.T) {
 
 func TestHealth(t *testing.T) {
 
-	// todo context
-	ctx := context.TODO()
-
-	// Cancelled context
-	noContext, cancel := context.WithCancel(ctx)
-	cancel()
-
-	rdb, err := New(testCfg)
-	if err != nil {
-		t.Fatalf("failed to create Redis client; %v", err)
-	}
-
-	t.Cleanup(func() { rdb.Client.Close() })
-
 	tests := []struct {
 		name    string
 		ctx     context.Context
 		wantErr bool
 	}{
 		{"cancelled context", noContext, true},
-		{"valid result", ctx, false},
+		{"valid result", baseContext, false},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			stats := rdb.Health(tt.ctx)
-			if _, gotErr := stats["error"]; gotErr != tt.wantErr {
+			stats := testRdb.Health(tt.ctx)
+			if err, gotErr := stats["error"]; gotErr != tt.wantErr {
 				t.Errorf("got error = %v, want error = %t", err, tt.wantErr)
 			}
 		})
