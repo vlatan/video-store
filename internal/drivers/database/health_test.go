@@ -9,13 +9,6 @@ import (
 
 func TestHealth(t *testing.T) {
 
-	// todo context
-	ctx := context.TODO()
-
-	// Cancelled context
-	cancelledCtx, cancel := context.WithCancel(ctx)
-	cancel()
-
 	// Allow more max connections to properly measure 85% utilization
 	maxConnCfg := *testCfg
 	maxConnCfg.DBMaxConns = 10
@@ -33,9 +26,9 @@ func TestHealth(t *testing.T) {
 		stress bool
 		down   bool
 	}{
-		{"cancelled context", cancelledCtx, false, true},
-		{"max total conns", ctx, true, false},
-		{"valid result", ctx, false, false},
+		{"cancelled context", noCtx, false, true},
+		{"max total conns", baseCtx, true, false},
+		{"valid result", baseCtx, false, false},
 	}
 
 	for _, tt := range tests {
