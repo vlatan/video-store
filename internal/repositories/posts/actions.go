@@ -92,15 +92,15 @@ func (r *Repository) UpdateTitle(ctx context.Context, videoID, title string) (in
 	return result.RowsAffected(), err
 }
 
-const updateDescQuery = `
+const updateSummaryQuery = `
 	UPDATE post
 	SET short_description = $2
 	WHERE video_id = $1
 `
 
-// Update post description
-func (r *Repository) UpdateDesc(ctx context.Context, videoID, description string) (int64, error) {
-	result, err := r.db.Pool.Exec(ctx, updateDescQuery, videoID, description)
+// Update post summary
+func (r *Repository) UpdateSummary(ctx context.Context, videoID, summary string) (int64, error) {
+	result, err := r.db.Pool.Exec(ctx, updateSummaryQuery, videoID, summary)
 	return result.RowsAffected(), err
 }
 

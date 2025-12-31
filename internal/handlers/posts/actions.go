@@ -87,9 +87,9 @@ func (s *Service) handleUpdateTitle(w http.ResponseWriter, r *http.Request, user
 	}
 }
 
-// Handle a post description update
-func (s *Service) handleUpdateDesc(w http.ResponseWriter, r *http.Request, userID int, videoID, description string) {
-	rowsAffected, err := s.postsRepo.UpdateDesc(r.Context(), videoID, description)
+// Handle a post summary update
+func (s *Service) handleUpdateSummary(w http.ResponseWriter, r *http.Request, userID int, videoID, summary string) {
+	rowsAffected, err := s.postsRepo.UpdateSummary(r.Context(), videoID, summary)
 	if err != nil {
 		log.Printf(
 			"User %d could not update the description of the video %s: %v",
@@ -151,6 +151,6 @@ func (s *Service) handleEdit(w http.ResponseWriter, r *http.Request, videoID str
 	}
 
 	if data.Description != "" {
-		s.handleUpdateDesc(w, r, currentUser.ID, videoID, data.Description)
+		s.handleUpdateSummary(w, r, currentUser.ID, videoID, data.Description)
 	}
 }
