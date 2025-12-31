@@ -26,6 +26,41 @@ func TestNewLock(t *testing.T) {
 	}
 }
 
+func TestUnlock(t *testing.T) {
+
+	tests := []struct {
+		name    string
+		ctx     context.Context
+		lock    *RedisLock
+		wantErr bool
+	}{
+		{
+			"no context", noContext,
+			testRdb.NewLock("random_unlock_key", "worker", time.Millisecond),
+			true,
+		},
+		{
+			"success unlock", baseContext,
+			testRdb.NewLock("new_unlock_key", "worker", time.Second),
+			false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(*testing.T) {
+			err := tt.lock.Unlock(tt.ctx)
+			if gotErr := err != nil; gotErr != tt.wantErr {
+				t.Errorf(
+					"got error = %v, want error = %t",
+					err, tt.wantErr,
+				)
+			}
+
+			tt.lock.Unlock(baseContext)
+		})
+	}
+}
+
 func TestLock(t *testing.T) {
 
 	if testing.Short() {
@@ -179,5 +214,4 @@ func TestCheckLock(t *testing.T) {
 			tt.lock.Unlock(baseContext)
 		})
 	}
-
 }
