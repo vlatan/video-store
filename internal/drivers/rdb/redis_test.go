@@ -88,9 +88,6 @@ func TestNew(t *testing.T) {
 	invalidHostCfg := *testCfg
 	invalidHostCfg.RedisHost = "::invalid"
 
-	// Create context for the tests
-	ctx := context.Background()
-
 	tests := []struct {
 		name    string
 		cfg     *config.Config
@@ -118,8 +115,12 @@ func TestNew(t *testing.T) {
 
 			t.Cleanup(func() { rdb.Client.Close() })
 
+			// Set timeout context for the ping
+			pingCtx, cancel := context.WithTimeout(baseContext, 10*time.Second)
+			t.Cleanup(func() { cancel() })
+
 			// Check for error on ping
-			err = rdb.Client.Ping(ctx).Err()
+			err = rdb.Client.Ping(pingCtx).Err()
 			if gotErr := err != nil; gotErr {
 				if gotErr != tt.wantErr {
 					t.Errorf("got error = %v, want error = %t", err, tt.wantErr)
