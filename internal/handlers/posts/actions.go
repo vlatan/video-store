@@ -104,7 +104,7 @@ func (s *Service) handleUpdateSummary(w http.ResponseWriter, r *http.Request, us
 	}
 }
 
-// Handle a post description update
+// Handle a post ban
 func (s *Service) handleBanPost(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
 	rowsAffected, err := s.postsRepo.BanPost(r.Context(), videoID)
 	if err != nil {
