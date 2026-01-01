@@ -435,10 +435,21 @@ func (w *Worker) Run(ctx context.Context) error {
 		// If Gemini daily quota is reached just insert the video, do nothing else
 		if w.gemini.Exhausted(ctx) {
 			if _, err = w.postsRepo.InsertPost(ctx, newVideo); err != nil {
-				return fmt.Errorf(
-					"failed to insert video '%s' in DB; %w",
-					videoID, err)
+
+				// Exit early if context ended
+				if utils.IsContextErr(err) {
+					return err
+				}
+
+				log.Printf(
+					"failed to insert video '%s' in DB; %v",
+					videoID, err,
+				)
+
+				failed++
+				continue
 			}
+
 			inserted++
 			continue
 		}
