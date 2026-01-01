@@ -80,7 +80,7 @@ func (s *Service) GenerateContent(
 	contents []*genai.Content,
 ) (*genai.GenerateContentResponse, error) {
 
-	// Check limits before calling the API
+	// Consume minute and daily quotas before calling the API
 	if err := s.AcquireQuota(ctx); err != nil {
 		return nil, fmt.Errorf("gemini limit reached: %w", err)
 	}

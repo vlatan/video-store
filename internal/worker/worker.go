@@ -424,7 +424,7 @@ func (w *Worker) Run(ctx context.Context) error {
 
 	// Insert new videos in DB,
 	// ytVideosMap should now contain only new videos.
-	var inserted int
+	var inserted, failed int
 	for videoID, newVideo := range ytVideosMap {
 
 		// Check the context first
@@ -441,6 +441,11 @@ func (w *Worker) Run(ctx context.Context) error {
 			}
 			inserted++
 			continue
+		}
+
+		// Sleep 20s before making a genai request to avoid hitting the RPM quota
+		if err = utils.SleepContext(ctx, 20*time.Second); err != nil {
+			return err
 		}
 
 		// Check if we still own the lock before an expensive API call
@@ -463,7 +468,7 @@ func (w *Worker) Run(ctx context.Context) error {
 
 		if err != nil {
 			log.Printf(
-				"Gemini content generation on video '%s' failed; %v",
+				"gemini content generation on video '%s' failed; %v",
 				videoID, err,
 			)
 		} else {
@@ -473,10 +478,21 @@ func (w *Worker) Run(ctx context.Context) error {
 
 		// Insert the video
 		if _, err = w.postsRepo.InsertPost(ctx, newVideo); err != nil {
-			return fmt.Errorf(
-				"failed to insert video '%s' in DB; %w",
-				videoID, err)
+
+			// Exit early if context ended
+			if utils.IsContextErr(err) {
+				return err
+			}
+
+			log.Printf(
+				"failed to insert video '%s' in DB; %v",
+				videoID, err,
+			)
+
+			failed++
+			continue
 		}
+
 		inserted++
 	}
 
@@ -488,7 +504,7 @@ func (w *Worker) Run(ctx context.Context) error {
 	// ###################################################################
 
 	// Update the existing DB videos if necessary
-	var updated, failed int
+	var updated int
 	for _, video := range validDBVideos {
 
 		// Check the context first
@@ -515,6 +531,11 @@ func (w *Worker) Run(ctx context.Context) error {
 			video.Category != nil &&
 			video.Category.Name != "" {
 			continue
+		}
+
+		// Sleep 20s before making a genai request to avoid hitting the RPM quota
+		if err = utils.SleepContext(ctx, 20*time.Second); err != nil {
+			return err
 		}
 
 		// Check if we still own the lock before an expensive API call

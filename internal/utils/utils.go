@@ -12,6 +12,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // Favicons used in the website
@@ -155,4 +156,15 @@ func HttpError(w http.ResponseWriter, status int) {
 func IsContextErr(err error) bool {
 	return errors.Is(err, context.Canceled) ||
 		errors.Is(err, context.DeadlineExceeded)
+}
+
+// SleepContext pauses the current goroutine
+// until the context is done or the delay elapses.
+func SleepContext(ctx context.Context, delay time.Duration) error {
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-time.After(delay):
+		return nil
+	}
 }
