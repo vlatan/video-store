@@ -218,14 +218,21 @@ func (w *Worker) Run(ctx context.Context) error {
 			continue
 		}
 
-		if _, err = w.sourcesRepo.UpdateSource(ctx, newSource); err != nil {
-			return fmt.Errorf(
-				"could not update source '%s' in DB; %w",
-				newSource.PlaylistID, err,
-			)
+		_, err = w.sourcesRepo.UpdateSource(ctx, newSource)
+		if err == nil {
+			updatedPlaylists++
+			continue
 		}
 
-		updatedPlaylists++
+		// Exit early if context ended
+		if utils.IsContextErr(err) {
+			return err
+		}
+
+		log.Printf(
+			"could not update source '%s' in DB; %v",
+			newSource.PlaylistID, err,
+		)
 	}
 
 	if updatedPlaylists > 0 {
@@ -325,7 +332,8 @@ func (w *Worker) Run(ctx context.Context) error {
 
 			// Skip if the video is banned (manually deleted).
 			// If error is nil the post is IN the deleted_post table.
-			if err = w.postsRepo.IsPostBanned(ctx, video.Id); err == nil {
+			err = w.postsRepo.IsPostBanned(ctx, video.Id)
+			if err == nil {
 				continue
 			}
 
@@ -343,64 +351,102 @@ func (w *Worker) Run(ctx context.Context) error {
 	items = utils.Plural(len(ytVideosMap), "video")
 	log.Printf("Fetched %d valid %s from YouTube", len(ytVideosMap), items)
 
-	// REMOVE THE OBSOLETE VIDEOS FROM DATABASE
+	// UPDATE VIDEOS' PLAYLIST IN DATABASE
 	// ###################################################################
 
-	// Delete and update videos in DB
-	var adopted, deleted int
-	var deletedVideoIDs []string
-	var validDBVideos []*models.Post
-	for _, video := range dbVideos {
+	var adopted int
+	for _, dbVideo := range dbVideos {
 
 		// Check the context first
 		if err = ctx.Err(); err != nil {
 			return err
 		}
 
-		// If the video doesn't exist on YT, delete it from DB
-		if _, exists := ytVideosMap[video.VideoID]; !exists {
-
-			// Do not delete any more videos if max deletion was reached
-			if deleted >= deleteLimit {
-				continue
-			}
-
-			if _, err = w.postsRepo.DeletePost(ctx, video.VideoID); err != nil {
-				return fmt.Errorf(
-					"could not delete the video '%s' in DB; %w",
-					video.VideoID, err,
-				)
-			}
-			deleted++
-			deletedVideoIDs = append(deletedVideoIDs, video.VideoID)
+		// Check if DB video exists on YouTube
+		ytVideo, exists := ytVideosMap[dbVideo.VideoID]
+		if !exists {
 			continue
 		}
 
-		// Update the video playlist, if necessary
-		if plID := ytVideosMap[video.VideoID].PlaylistID; video.PlaylistID != plID {
-			if _, err = w.postsRepo.UpdatePlaylist(ctx, video.VideoID, plID); err != nil {
-
-				// Exit early if context ended
-				if utils.IsContextErr(err) {
-					return err
-				}
-
-				log.Printf(
-					"Failed to update the playlist on video '%s'; %v",
-					video.VideoID, err,
-				)
-			} else {
-				adopted++
-			}
+		// Check if we need to update the video playlist
+		if ytVideo.PlaylistID == dbVideo.PlaylistID {
+			continue
 		}
 
-		// Keep the non-deleted videos
-		validDBVideos = append(validDBVideos, video)
+		_, err = w.postsRepo.UpdatePlaylist(
+			ctx, dbVideo.VideoID, ytVideo.PlaylistID,
+		)
 
-		// Delete all the valid DB videos from the YT map.
-		// In this map ONLY the ones that are not in the DB will remain.
-		// Meaning the NEW videos that need to be added.
-		delete(ytVideosMap, video.VideoID)
+		if err == nil {
+			adopted++
+			continue
+		}
+
+		// Exit early if context ended
+		if utils.IsContextErr(err) {
+			return err
+		}
+
+		log.Printf(
+			"Failed to update the playlist on video '%s'; %v",
+			dbVideo.VideoID, err,
+		)
+	}
+
+	if adopted > 0 {
+		items = utils.Plural(adopted, "video")
+		log.Printf("Adopted %d %s", adopted, items)
+	}
+
+	// DELETE THE OBSOLETE VIDEOS FROM DATABASE
+	// ###################################################################
+
+	// Delete videos in DB
+	var deleted int
+	var deletedVideoIDs []string
+	var validDBVideos []*models.Post
+	for _, dbVideo := range dbVideos {
+
+		// Check the context first
+		if err = ctx.Err(); err != nil {
+			return err
+		}
+
+		// If the DB video exists on YouTube keep it as valid
+		if _, exists := ytVideosMap[dbVideo.VideoID]; exists {
+			// Keep valid DB videos
+			validDBVideos = append(validDBVideos, dbVideo)
+
+			// Delete valid DB videos from the YT map.
+			// In this map ONLY the ones that are not in the DB will remain.
+			// Meaning the NEW videos that need to be added.
+			delete(ytVideosMap, dbVideo.VideoID)
+
+			continue
+		}
+
+		// Do not delete any more videos if max deletion was reached
+		if deleted >= deleteLimit {
+			break
+		}
+
+		// Delete the video
+		_, err = w.postsRepo.DeletePost(ctx, dbVideo.VideoID)
+		if err == nil {
+			deletedVideoIDs = append(deletedVideoIDs, dbVideo.VideoID)
+			deleted++
+			continue
+		}
+
+		// Exit early if context ended
+		if utils.IsContextErr(err) {
+			return err
+		}
+
+		log.Printf(
+			"could not delete the video '%s' in DB; %v",
+			dbVideo.VideoID, err,
+		)
 	}
 
 	if deleted > 0 {
@@ -413,11 +459,6 @@ func (w *Worker) Run(ctx context.Context) error {
 			msg += "If this persists investigate for bugs."
 			log.Println(msg)
 		}
-	}
-
-	if adopted > 0 {
-		items = utils.Plural(adopted, "video")
-		log.Printf("Adopted %d %s", adopted, items)
 	}
 
 	// GET ALL THE CATEGORIES FROM DATABASE

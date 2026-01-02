@@ -1,4 +1,3 @@
-* Use separate functions in worker for summarizing , inserting and updating videos
 * Use timeout context in tests where needed
 
 * Uncomment and remove code in:
