@@ -134,7 +134,7 @@ func (w *Worker) Run(ctx context.Context) error {
 
 	if err != nil || len(dbSources) == 0 {
 		return fmt.Errorf(
-			"could not fetch the sources from DB; Rows: %v; %w",
+			"could not fetch the sources from DB; rows: %v; %w",
 			len(dbSources), err,
 		)
 	}
@@ -231,7 +231,7 @@ func (w *Worker) Run(ctx context.Context) error {
 	dbVideos, err := w.postsRepo.GetAllPosts(ctx)
 	if err != nil || len(dbVideos) == 0 {
 		return fmt.Errorf(
-			"could not fetch the videos from DB; Rows: %v; %w",
+			"could not fetch the videos from DB; rows: %v; %w",
 			len(dbVideos), err,
 		)
 	}
@@ -415,7 +415,7 @@ func (w *Worker) Run(ctx context.Context) error {
 
 	if err != nil || len(categories) == 0 {
 		return fmt.Errorf(
-			"could not fetch the categories from DB; Rows: %v; %w",
+			"could not fetch the categories from DB; rows: %v; %w",
 			len(categories), err,
 		)
 	}
@@ -424,7 +424,7 @@ func (w *Worker) Run(ctx context.Context) error {
 
 	// Insert new videos in DB,
 	// ytVideosMap should now contain only new videos.
-	var inserted, failed int
+	var inserted int
 	for videoID, newVideo := range ytVideosMap {
 
 		// Check the context first
@@ -446,7 +446,6 @@ func (w *Worker) Run(ctx context.Context) error {
 					videoID, err,
 				)
 
-				failed++
 				continue
 			}
 
@@ -500,7 +499,6 @@ func (w *Worker) Run(ctx context.Context) error {
 				videoID, err,
 			)
 
-			failed++
 			continue
 		}
 
@@ -572,7 +570,7 @@ func (w *Worker) Run(ctx context.Context) error {
 				"gemini content generation on video '%s' failed; %v",
 				video.VideoID, err,
 			)
-			failed++
+
 			continue
 		}
 
@@ -597,16 +595,10 @@ func (w *Worker) Run(ctx context.Context) error {
 				video.VideoID, err,
 			)
 
-			failed++
 			continue
 		}
 
 		updated++
-	}
-
-	if failed > 0 {
-		items = utils.Plural(failed, "video")
-		log.Printf("Failed to update %d %s", failed, items)
 	}
 
 	if updated > 0 {
