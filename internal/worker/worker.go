@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"maps"
+	"slices"
 	"strings"
 	"time"
 
@@ -112,13 +114,13 @@ func (w *Worker) Run(ctx context.Context) error {
 	defer lock.Unlock(context.WithoutCancel(ctx))
 
 	// Define retry configs for the external APIs
-	ytRetryConfig := utils.RetryConfig{
+	ytRetryConfig := &utils.RetryConfig{
 		MaxRetries: 3,
 		MaxJitter:  time.Second,
 		Delay:      time.Second,
 	}
 
-	geminiRetryConfig := utils.RetryConfig{
+	geminiRetryConfig := &utils.RetryConfig{
 		MaxRetries: 3,
 		MaxJitter:  2 * time.Second,
 		Delay:      65 * time.Second,
@@ -127,6 +129,7 @@ func (w *Worker) Run(ctx context.Context) error {
 	log.Println("Lock acquired!")
 	log.Println("Worker running...")
 
+	// GET ALL THE PLAYLISTS FROM DATABASE
 	// ###################################################################
 
 	// Fetch all the playlists from DB
@@ -142,6 +145,7 @@ func (w *Worker) Run(ctx context.Context) error {
 	items := utils.Plural(len(dbSources), "playlist")
 	log.Printf("Fetched %d %s from DB", len(dbSources), items)
 
+	// GET GIVEN PLAYLISTS FROM YOUTUBE
 	// ###################################################################
 
 	// Extract playlist IDs and create DB sources map
@@ -153,7 +157,7 @@ func (w *Worker) Run(ctx context.Context) error {
 	}
 
 	// Fetch playlists from YouTube
-	ytSources, err := w.youtube.GetSources(ctx, &ytRetryConfig, playlistIDs...)
+	ytSources, err := w.youtube.GetSources(ctx, ytRetryConfig, playlistIDs...)
 	if err != nil {
 		return fmt.Errorf(
 			"could not fetch the playlists from YouTube; %w",
@@ -164,6 +168,7 @@ func (w *Worker) Run(ctx context.Context) error {
 	items = utils.Plural(len(ytSources), "playlist")
 	log.Printf("Fetched %d %s from YouTube", len(ytSources), items)
 
+	// GET GIVEN CHANNELS FROM YOUTUBE
 	// ###################################################################
 
 	// Extract channel IDs and create YT sources map
@@ -175,7 +180,7 @@ func (w *Worker) Run(ctx context.Context) error {
 	}
 
 	// Fetch corresponding channels
-	channels, err := w.youtube.GetChannels(ctx, &ytRetryConfig, channelIDs...)
+	channels, err := w.youtube.GetChannels(ctx, ytRetryConfig, channelIDs...)
 	if err != nil {
 		return fmt.Errorf(
 			"could not fetch the channels from YouTube; %w",
@@ -188,6 +193,9 @@ func (w *Worker) Run(ctx context.Context) error {
 	for _, channel := range channels {
 		channelsMap[channel.Id] = channel
 	}
+
+	// UPDATE THE PLAYLISTS IN DATABASE
+	// ###################################################################
 
 	// Update each playlist in DB if change in thumbnails
 	var updatedPlaylists int
@@ -225,6 +233,7 @@ func (w *Worker) Run(ctx context.Context) error {
 		log.Printf("Updated %d %s", updatedPlaylists, items)
 	}
 
+	// GET ALL THE VIDEOS FROM DATABASE
 	// ###################################################################
 
 	// Get ALL videos from DB, should be ordered by upload date
@@ -239,6 +248,7 @@ func (w *Worker) Run(ctx context.Context) error {
 	items = utils.Plural(len(dbVideos), "video")
 	log.Printf("Fetched %d %s from DB", len(dbVideos), items)
 
+	// GET ALL THE ORPHAN VALID VIDEOS FROM YOUTUBE
 	// ###################################################################
 
 	// Collect the orphans video IDs
@@ -251,7 +261,7 @@ func (w *Worker) Run(ctx context.Context) error {
 
 	// Get orphans metadata from YT, start forming valid YT videos map
 	ytVideosMap := make(map[string]*models.Post)
-	ytOrphanVideos, err := w.youtube.GetVideos(ctx, &ytRetryConfig, orphanVideoIDs...)
+	ytOrphanVideos, err := w.youtube.GetVideos(ctx, ytRetryConfig, orphanVideoIDs...)
 	if err != nil {
 		return fmt.Errorf(
 			"could not get the orphan videos from YouTube; %w",
@@ -266,6 +276,7 @@ func (w *Worker) Run(ctx context.Context) error {
 		}
 	}
 
+	// GET ALL THE PLAYLIST VALID VIDEOS FROM YOUTUBE
 	// ###################################################################
 
 	// Get valid videos from playlists
@@ -276,7 +287,7 @@ func (w *Worker) Run(ctx context.Context) error {
 			return err
 		}
 
-		sourceItems, err := w.youtube.GetSourceItems(ctx, &ytRetryConfig, playlistID)
+		sourceItems, err := w.youtube.GetSourceItems(ctx, ytRetryConfig, playlistID)
 		if err != nil {
 			return fmt.Errorf(
 				"couldn't get items from YouTube for source '%s'; %w",
@@ -291,7 +302,7 @@ func (w *Worker) Run(ctx context.Context) error {
 		}
 
 		// Get all the videos metadata for this source
-		videosMetadata, err := w.youtube.GetVideos(ctx, &ytRetryConfig, videoIDs...)
+		videosMetadata, err := w.youtube.GetVideos(ctx, ytRetryConfig, videoIDs...)
 		if err != nil {
 			return fmt.Errorf(
 				"couldn't get videos from YouTube for source %s; %w",
@@ -332,6 +343,7 @@ func (w *Worker) Run(ctx context.Context) error {
 	items = utils.Plural(len(ytVideosMap), "video")
 	log.Printf("Fetched %d valid %s from YouTube", len(ytVideosMap), items)
 
+	// REMOVE THE OBSOLETE VIDEOS FROM DATABASE
 	// ###################################################################
 
 	// Delete and update videos in DB
@@ -408,6 +420,7 @@ func (w *Worker) Run(ctx context.Context) error {
 		log.Printf("Adopted %d %s", adopted, items)
 	}
 
+	// GET ALL THE CATEGORIES FROM DATABASE
 	// ###################################################################
 
 	// Get the categories
@@ -420,89 +433,42 @@ func (w *Worker) Run(ctx context.Context) error {
 		)
 	}
 
+	// INSERT THE NEW VIDEOS IN DATABASE
 	// ###################################################################
 
-	// Insert new videos in DB,
+	// Put new YT videos in a slice.
 	// ytVideosMap should now contain only new videos.
+	newVideos := slices.Collect(maps.Values(ytVideosMap))
+
+	// Summarize new videos in place
+	_, err = w.summarizeVideos(
+		ctx, lock, categories,
+		geminiRetryConfig, newVideos,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	// Insert new videos in DB
 	var inserted int
-	for videoID, newVideo := range ytVideosMap {
+	for _, newVideo := range newVideos {
 
-		// Check the context first
-		if err = ctx.Err(); err != nil {
-			return err
-		}
-
-		// If Gemini daily quota is reached just insert the video, do nothing else
-		if w.gemini.Exhausted(ctx) {
-			if _, err = w.postsRepo.InsertPost(ctx, newVideo); err != nil {
-
-				// Exit early if context ended
-				if utils.IsContextErr(err) {
-					return err
-				}
-
-				log.Printf(
-					"failed to insert video '%s' in DB; %v",
-					videoID, err,
-				)
-
-				continue
-			}
-
+		_, err = w.postsRepo.InsertPost(ctx, newVideo)
+		if err == nil {
 			inserted++
 			continue
 		}
-
-		// Sleep 20s before making a genai request to avoid hitting the RPM quota
-		if err = utils.SleepContext(ctx, 20*time.Second); err != nil {
-			return err
-		}
-
-		// Check if we still own the lock before an expensive API call
-		if err = lock.CheckLock(ctx); err != nil {
-			return fmt.Errorf(
-				"this worker %s does not own the lock anymore; %w",
-				w.id, err,
-			)
-		}
-
-		// Generate content using Gemini
-		genaiResponse, err := w.gemini.Summarize(
-			ctx, newVideo, categories, &geminiRetryConfig,
-		)
 
 		// Exit early if context ended
 		if utils.IsContextErr(err) {
 			return err
 		}
 
-		if err != nil {
-			log.Printf(
-				"gemini content generation on video '%s' failed; %v",
-				videoID, err,
-			)
-		} else {
-			newVideo.Summary = genaiResponse.Summary
-			newVideo.Category = &models.Category{Name: genaiResponse.Category}
-		}
-
-		// Insert the video
-		if _, err = w.postsRepo.InsertPost(ctx, newVideo); err != nil {
-
-			// Exit early if context ended
-			if utils.IsContextErr(err) {
-				return err
-			}
-
-			log.Printf(
-				"failed to insert video '%s' in DB; %v",
-				videoID, err,
-			)
-
-			continue
-		}
-
-		inserted++
+		log.Printf(
+			"failed to insert video '%s' in DB; %v",
+			newVideo.VideoID, err,
+		)
 	}
 
 	if inserted > 0 {
@@ -510,15 +476,64 @@ func (w *Worker) Run(ctx context.Context) error {
 		log.Printf("Added %d %s", inserted, items)
 	}
 
+	// UPDATE THE EXISTING VIDEOS IN DATABASE
 	// ###################################################################
 
-	// Update the existing DB videos if necessary
+	// Summarize the existing videos in place
+	indexes, err := w.summarizeVideos(
+		ctx, lock, categories,
+		geminiRetryConfig, validDBVideos,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	// Update the existing DB videos
 	var updated int
-	for _, video := range validDBVideos {
+	for _, index := range indexes {
+
+		video := validDBVideos[index]
+		_, err = w.postsRepo.UpdateGeneratedData(ctx, video)
+		if err == nil {
+			updated++
+			continue
+		}
+
+		// Exit early if context ended
+		if utils.IsContextErr(err) {
+			return err
+		}
+
+		log.Printf(
+			"failed to update generated data in DB on video '%s'; %v",
+			video.VideoID, err,
+		)
+	}
+
+	if updated > 0 {
+		items = utils.Plural(updated, "video")
+		log.Printf("Updated %d %s", updated, items)
+	}
+
+	return nil
+}
+
+// summarizeVideos summarizes and categorizes videos in place,
+// and returns ther indicies.
+func (w *Worker) summarizeVideos(
+	ctx context.Context,
+	lock *rdb.RedisLock,
+	categories models.Categories,
+	rc *utils.RetryConfig,
+	videos []*models.Post) ([]int, error) {
+
+	var summarizedIndicies []int
+	for i, video := range videos {
 
 		// Check the context first
-		if err = ctx.Err(); err != nil {
-			return err
+		if err := ctx.Err(); err != nil {
+			return nil, err
 		}
 
 		// Skip summarizing videos if daily quota was reached
@@ -543,68 +558,40 @@ func (w *Worker) Run(ctx context.Context) error {
 		}
 
 		// Sleep 20s before making a genai request to avoid hitting the RPM quota
-		if err = utils.SleepContext(ctx, 20*time.Second); err != nil {
-			return err
+		if err := utils.SleepContext(ctx, 20*time.Second); err != nil {
+			return nil, err
 		}
 
 		// Check if we still own the lock before an expensive API call
-		if err = lock.CheckLock(ctx); err != nil {
-			return fmt.Errorf(
+		if err := lock.CheckLock(ctx); err != nil {
+			return nil, fmt.Errorf(
 				"this worker %s does not own the lock anymore; %w",
 				w.id, err,
 			)
 		}
 
 		// Generate content using Gemini
-		genaiResponse, err := w.gemini.Summarize(
-			ctx, video, categories, &geminiRetryConfig,
-		)
+		genaiResponse, err := w.gemini.Summarize(ctx, video, categories, rc)
 
 		// Exit early if context ended
 		if utils.IsContextErr(err) {
-			return err
+			return nil, err
 		}
 
+		// Skip the video update if error
 		if err != nil {
 			log.Printf(
 				"gemini content generation on video '%s' failed; %v",
 				video.VideoID, err,
 			)
-
 			continue
 		}
 
-		video.Summary = genaiResponse.Summary
-
-		if video.Category == nil {
-			video.Category = &models.Category{}
-		}
-
-		video.Category.Name = genaiResponse.Category
-
-		// Update the db video
-		if _, err = w.postsRepo.UpdateGeneratedData(ctx, video); err != nil {
-
-			// Exit early if context ended
-			if utils.IsContextErr(err) {
-				return err
-			}
-
-			log.Printf(
-				"failed to update generated data in DB on video '%s'; %v",
-				video.VideoID, err,
-			)
-
-			continue
-		}
-
-		updated++
+		// Update the video in the given slice and record its index
+		videos[i].Summary = genaiResponse.Summary
+		videos[i].Category = &models.Category{Name: genaiResponse.Category}
+		summarizedIndicies = append(summarizedIndicies, i)
 	}
 
-	if updated > 0 {
-		items = utils.Plural(updated, "video")
-		log.Printf("Updated %d %s", updated, items)
-	}
-
-	return nil
+	return summarizedIndicies, nil
 }
