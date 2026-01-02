@@ -351,7 +351,7 @@ func (w *Worker) Run(ctx context.Context) error {
 	items = utils.Plural(len(ytVideosMap), "video")
 	log.Printf("Fetched %d valid %s from YouTube", len(ytVideosMap), items)
 
-	// UPDATE VIDEOS' PLAYLIST IN DATABASE
+	// UPDATE VIDEOS' PLAYLIST IDS IN DATABASE
 	// ###################################################################
 
 	var adopted int
