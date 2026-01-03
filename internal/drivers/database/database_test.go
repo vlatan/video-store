@@ -99,7 +99,8 @@ func TestNew(t *testing.T) {
 			// Create db pool
 			db, err := New(tt.cfg)
 
-			// Check error cases
+			// Check error cases.
+			// Exit early if error.
 			if gotErr := err != nil; gotErr {
 				if gotErr != tt.wantErr {
 					t.Errorf("got error = %v, want error = %t", err, tt.wantErr)

@@ -18,26 +18,22 @@ func TestGetCachedData(t *testing.T) {
 		callable func() (int, error)
 		wantErr  bool
 	}{
-		{"no context", noContext, validCallable, true},
-		{"error result", baseContext, errorCallable, true},
-		{"valid result", baseContext, validCallable, false},
+		{"no context", noCtx, validCallable, true},
+		{"error result", baseCtx, errorCallable, true},
+		{"valid result", baseCtx, validCallable, false},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			_, err := GetCachedData(tt.ctx, testRdb, tt.name, time.Minute, tt.callable)
-			if gotErr := err != nil; gotErr {
-				if gotErr != tt.wantErr {
-					t.Errorf("got error = %v, want error = %t", err, tt.wantErr)
-				}
+			if gotErr := err != nil; gotErr != tt.wantErr {
+				t.Errorf("got error = %v, want error = %t", err, tt.wantErr)
 			}
 
 			// Run the func again to fetch from cache
 			_, err = GetCachedData(tt.ctx, testRdb, tt.name, time.Minute, tt.callable)
-			if gotErr := err != nil; gotErr {
-				if gotErr != tt.wantErr {
-					t.Errorf("got error = %v, want error = %t", err, tt.wantErr)
-				}
+			if gotErr := err != nil; gotErr != tt.wantErr {
+				t.Errorf("got error = %v, want error = %t", err, tt.wantErr)
 			}
 		})
 	}

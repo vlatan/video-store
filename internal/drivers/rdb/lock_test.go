@@ -35,12 +35,12 @@ func TestUnlock(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			"no context", noContext,
+			"no context", noCtx,
 			testRdb.NewLock("random_unlock_key", "worker", time.Millisecond),
 			true,
 		},
 		{
-			"success unlock", baseContext,
+			"success unlock", baseCtx,
 			testRdb.NewLock("new_unlock_key", "worker", time.Second),
 			false,
 		},
@@ -56,7 +56,7 @@ func TestUnlock(t *testing.T) {
 				)
 			}
 
-			tt.lock.Unlock(baseContext)
+			tt.lock.Unlock(baseCtx)
 		})
 	}
 }
@@ -75,14 +75,14 @@ func TestLock(t *testing.T) {
 	}{
 		{
 			"no context",
-			noContext,
+			noCtx,
 			testRdb.NewLock("lock_key_1", "worker1", time.Millisecond),
 			testRdb.NewLock("lock_key_1", "worker2", time.Millisecond),
 			true,
 		},
 		{
 			"success lock",
-			baseContext,
+			baseCtx,
 			testRdb.NewLock("lock_key_2", "worker1", 200*time.Millisecond),
 			testRdb.NewLock("lock_key_2", "worker2", 5*time.Second),
 			false,
@@ -96,14 +96,14 @@ func TestLock(t *testing.T) {
 				t.Errorf("got error = %v, want error = %t", err, tt.wantErr)
 			}
 
-			t.Cleanup(func() { tt.lock1.Unlock(baseContext) })
+			t.Cleanup(func() { tt.lock1.Unlock(baseCtx) })
 
 			err = tt.lock2.Lock(tt.ctx)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("got error = %v, want error = %t", err, tt.wantErr)
 			}
 
-			tt.lock2.Unlock(baseContext)
+			tt.lock2.Unlock(baseCtx)
 		})
 	}
 }
@@ -112,10 +112,10 @@ func TestTryLock(t *testing.T) {
 
 	const existingLockKey = "try_lock_key"
 	existingLock := testRdb.NewLock(existingLockKey, "existing_try_worker", 5*time.Second)
-	if err := existingLock.Lock(baseContext); err != nil {
+	if err := existingLock.Lock(baseCtx); err != nil {
 		t.Fatalf("failed to create Redis lock; %v", err)
 	}
-	t.Cleanup(func() { existingLock.Unlock(baseContext) })
+	t.Cleanup(func() { existingLock.Unlock(baseCtx) })
 
 	tests := []struct {
 		name             string
@@ -124,17 +124,17 @@ func TestTryLock(t *testing.T) {
 		success, wantErr bool
 	}{
 		{
-			"no context", noContext,
+			"no context", noCtx,
 			testRdb.NewLock("random_try_lock_key", "worker", time.Millisecond),
 			false, true,
 		},
 		{
-			"success lock", baseContext,
+			"success lock", baseCtx,
 			testRdb.NewLock("new_try_lock_key", "worker", time.Millisecond),
 			true, false,
 		},
 		{
-			"failed lock", baseContext,
+			"failed lock", baseCtx,
 			testRdb.NewLock(existingLockKey, "worker", time.Millisecond),
 			false, false,
 		},
@@ -157,7 +157,7 @@ func TestTryLock(t *testing.T) {
 				)
 			}
 
-			tt.lock.Unlock(baseContext)
+			tt.lock.Unlock(baseCtx)
 		})
 	}
 }
@@ -167,11 +167,11 @@ func TestCheckLock(t *testing.T) {
 	const existingLockKey = "check_lock_key"
 	const existingLockValue = "existing_check_worker"
 	existingLock := testRdb.NewLock(existingLockKey, existingLockValue, 5*time.Second)
-	if err := existingLock.Lock(baseContext); err != nil {
+	if err := existingLock.Lock(baseCtx); err != nil {
 		t.Fatalf("failed to create Redis lock; %v", err)
 	}
 
-	t.Cleanup(func() { existingLock.Unlock(baseContext) })
+	t.Cleanup(func() { existingLock.Unlock(baseCtx) })
 
 	tests := []struct {
 		name    string
@@ -180,22 +180,22 @@ func TestCheckLock(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			"no context", noContext,
+			"no context", noCtx,
 			testRdb.NewLock("random_check_lock_key", "worker", time.Millisecond),
 			true,
 		},
 		{
-			"no lock", baseContext,
+			"no lock", baseCtx,
 			testRdb.NewLock("new_check_lock_key", "worker", time.Millisecond),
 			true,
 		},
 		{
-			"lock exists", baseContext,
+			"lock exists", baseCtx,
 			testRdb.NewLock(existingLockKey, "worker", time.Millisecond),
 			true,
 		},
 		{
-			"lock doesn't exist", baseContext,
+			"lock doesn't exist", baseCtx,
 			testRdb.NewLock(existingLockKey, existingLockValue, time.Millisecond),
 			false,
 		},
@@ -211,7 +211,7 @@ func TestCheckLock(t *testing.T) {
 				)
 			}
 
-			tt.lock.Unlock(baseContext)
+			tt.lock.Unlock(baseCtx)
 		})
 	}
 }

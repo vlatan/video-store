@@ -14,9 +14,9 @@ import (
 )
 
 var ( // Package global variables
-	testCfg                *config.Config
-	testRdb                *Service
-	baseContext, noContext context.Context
+	testCfg        *config.Config
+	testRdb        *Service
+	baseCtx, noCtx context.Context
 )
 
 // Sets ups a Redis container for all tests in this package to use
@@ -48,17 +48,17 @@ func runTests(m *testing.M) int {
 	}
 
 	// Main context - globaly available for package's tests
-	baseContext = context.Background()
+	baseCtx = context.Background()
 
 	// No Context - globaly available for package's tests
-	c, cancel := context.WithCancel(baseContext)
-	noContext = c
+	c, cancel := context.WithCancel(baseCtx)
+	noCtx = c
 	cancel()
 
 	// Test config - globaly available for package's tests
 	testCfg = config.New()
 
-	setupCtx, setupCancel := context.WithTimeout(baseContext, 2*time.Minute)
+	setupCtx, setupCancel := context.WithTimeout(baseCtx, 2*time.Minute)
 	defer setupCancel()
 
 	// Spin up Redis container
@@ -68,7 +68,7 @@ func runTests(m *testing.M) int {
 	}
 
 	// Terminate the container on exit
-	defer container.Terminate(baseContext)
+	defer container.Terminate(baseCtx)
 
 	// Redis service - globaly available for package's tests
 	testRdb, err = New(testCfg)
@@ -104,8 +104,8 @@ func TestNew(t *testing.T) {
 			// Create Redis client
 			rdb, err := New(tt.cfg)
 
-			// Check for error on creation,
-			// Stop this test if error
+			// Check for error on creation.
+			// Exit early if error.
 			if gotErr := err != nil; gotErr {
 				if gotErr != tt.wantErr {
 					t.Errorf("got error = %v, want error = %t", err, tt.wantErr)
@@ -116,15 +116,13 @@ func TestNew(t *testing.T) {
 			t.Cleanup(func() { rdb.Client.Close() })
 
 			// Set timeout context for the ping
-			pingCtx, cancel := context.WithTimeout(baseContext, 10*time.Second)
+			pingCtx, cancel := context.WithTimeout(baseCtx, 10*time.Second)
 			t.Cleanup(func() { cancel() })
 
 			// Check for error on ping
 			err = rdb.Client.Ping(pingCtx).Err()
-			if gotErr := err != nil; gotErr {
-				if gotErr != tt.wantErr {
-					t.Errorf("got error = %v, want error = %t", err, tt.wantErr)
-				}
+			if gotErr := err != nil; gotErr != tt.wantErr {
+				t.Errorf("got error = %v, want error = %t", err, tt.wantErr)
 			}
 		})
 	}
@@ -137,8 +135,8 @@ func TestHealth(t *testing.T) {
 		ctx     context.Context
 		wantErr bool
 	}{
-		{"cancelled context", noContext, true},
-		{"valid result", baseContext, false},
+		{"cancelled context", noCtx, true},
+		{"valid result", baseCtx, false},
 	}
 
 	for _, tt := range tests {
