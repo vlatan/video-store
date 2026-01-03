@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/redis/go-redis/v9"
+	"github.com/vlatan/video-store/internal/utils"
 )
 
 // Generic wrapper getting and setting from cache,
@@ -31,6 +32,11 @@ func GetCachedData[T any](
 		return data, nil
 	}
 
+	// Return early if context error
+	if utils.IsContextErr(err) {
+		return zero, err
+	}
+
 	if err != redis.Nil {
 		log.Printf(
 			"Error getting data from Redis for key '%s': %v",
@@ -48,6 +54,12 @@ func GetCachedData[T any](
 	// The underlying data type needs to implement
 	// the encoding.BinaryMarshaler interface if needed.
 	if err = rdb.Client.Set(ctx, key, data, ttl).Err(); err != nil {
+
+		// Return early if context error
+		if utils.IsContextErr(err) {
+			return zero, err
+		}
+
 		// Don't return an error if unable to set redis cache
 		log.Printf("Error setting cache in Redis for key '%s': %v", key, err)
 	}
