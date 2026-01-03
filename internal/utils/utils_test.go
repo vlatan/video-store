@@ -10,6 +10,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 )
@@ -224,8 +225,7 @@ func TestPlural(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := Plural(tt.num, tt.word)
-			if got != tt.expected {
+			if got := Plural(tt.num, tt.word); got != tt.expected {
 				t.Errorf("got %q, want %q", got, tt.expected)
 			}
 		})
@@ -251,8 +251,7 @@ func TestIsStatic(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := IsStatic(tt.path)
-			if got != tt.expected {
+			if got := IsStatic(tt.path); got != tt.expected {
 				t.Errorf("got %t, want %t", got, tt.expected)
 			}
 		})
@@ -280,8 +279,7 @@ func TestIsFilePath(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := IsFilePath(tt.path)
-			if got != tt.expected {
+			if got := IsFilePath(tt.path); got != tt.expected {
 				t.Errorf("got %t, want %t", got, tt.expected)
 			}
 		})
@@ -341,9 +339,34 @@ func TestIsContextErr(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := IsContextErr(tt.err)
-			if got != tt.expected {
+			if got := IsContextErr(tt.err); got != tt.expected {
 				t.Errorf("got %t, want %t", got, tt.expected)
+			}
+		})
+	}
+}
+
+func TestSleepContext(t *testing.T) {
+
+	ctx := context.Background()
+	noCtx, cancel := context.WithCancel(ctx)
+	cancel()
+
+	tests := []struct {
+		name     string
+		ctx      context.Context
+		delay    time.Duration
+		weantErr bool
+	}{
+		{"no context", noCtx, 100 * time.Millisecond, true},
+		{"valid context", ctx, 100 * time.Millisecond, false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := SleepContext(tt.ctx, tt.delay)
+			if gotErr := err != nil; gotErr != tt.weantErr {
+				t.Errorf("got error = %v, want error = %t", err, tt.weantErr)
 			}
 		})
 	}
