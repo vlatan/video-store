@@ -73,8 +73,7 @@ func TestAbsoluteURL(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := AbsoluteURL(tt.baseURL, tt.path)
-			if got != tt.expected {
+			if got := AbsoluteURL(tt.baseURL, tt.path); got != tt.expected {
 				t.Errorf("got %q, want %q", got, tt.expected)
 			}
 		})
@@ -123,8 +122,7 @@ func TestEscapeTrancateString(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := EscapeTrancateString(tt.query, tt.maxLen)
-			if got != tt.expected {
+			if got := EscapeTrancateString(tt.query, tt.maxLen); got != tt.expected {
 				t.Errorf("got %q, want %q", got, tt.expected)
 			}
 		})
@@ -145,8 +143,7 @@ func TestGetPageNum(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			req := httptest.NewRequest("GET", fmt.Sprintf("/?page=%s", tt.page), nil)
-			got := GetPageNum(req)
-			if got != tt.expected {
+			if got := GetPageNum(req); got != tt.expected {
 				t.Errorf("got %d, want %d", got, tt.expected)
 			}
 		})
@@ -164,8 +161,7 @@ func TestCapitalize(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := Capitalize(tt.input)
-			if got != tt.expected {
+			if got := Capitalize(tt.input); got != tt.expected {
 				t.Errorf("got %q, want %q", got, tt.expected)
 			}
 		})
@@ -183,8 +179,7 @@ func TestToNullString(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := ToNullString(tt.input)
-			if !cmp.Equal(got, tt.expected) {
+			if got := ToNullString(tt.input); !cmp.Equal(got, tt.expected) {
 				t.Errorf("got %+v, want %+v", got, tt.expected)
 			}
 		})
@@ -203,8 +198,7 @@ func TestFromNullString(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := FromNullString(tt.input)
-			if got != tt.expected {
+			if got := FromNullString(tt.input); got != tt.expected {
 				t.Errorf("got %+v, want %+v", got, tt.expected)
 			}
 		})
