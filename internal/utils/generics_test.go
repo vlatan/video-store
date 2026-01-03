@@ -95,8 +95,8 @@ func TestRetry(t *testing.T) {
 
 	rc := &RetryConfig{
 		MaxRetries: 3,
-		MaxJitter:  time.Nanosecond,
-		Delay:      time.Nanosecond,
+		MaxJitter:  10 * time.Millisecond,
+		Delay:      100 * time.Millisecond,
 	}
 
 	tests := []test{
@@ -128,7 +128,7 @@ func TestRetry(t *testing.T) {
 			name:         "gRPC error",
 			ctx:          ctx,
 			retryConfig:  rc,
-			callable:     func() (string, error) { return "", makeGRPCError(time.Nanosecond) },
+			callable:     func() (string, error) { return "", makeGRPCError(100 * time.Millisecond) },
 			expectedData: "",
 			wantErr:      true,
 		},
@@ -136,7 +136,7 @@ func TestRetry(t *testing.T) {
 			name:         "gRPC error (gRPC delay > sleep time)",
 			ctx:          ctx,
 			retryConfig:  rc,
-			callable:     func() (string, error) { return "", makeGRPCError(2 * time.Nanosecond) },
+			callable:     func() (string, error) { return "", makeGRPCError(200 * time.Millisecond) },
 			expectedData: "",
 			wantErr:      true,
 		},
@@ -144,7 +144,7 @@ func TestRetry(t *testing.T) {
 			name:         "gRPC error (no context)",
 			ctx:          noContext,
 			retryConfig:  rc,
-			callable:     func() (string, error) { return "", makeGRPCError(time.Nanosecond) },
+			callable:     func() (string, error) { return "", makeGRPCError(100 * time.Millisecond) },
 			expectedData: "",
 			wantErr:      true,
 		},
