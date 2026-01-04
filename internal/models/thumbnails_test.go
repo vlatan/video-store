@@ -23,8 +23,7 @@ func TestThumbnailEqual(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := ThumbnailEqual(tt.a, tt.b)
-			if got != tt.expected {
+			if got := ThumbnailEqual(tt.a, tt.b); got != tt.expected {
 				t.Errorf("got %t, want %t", got, tt.expected)
 			}
 		})
@@ -63,8 +62,7 @@ func TestThumbnailsEqual(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := ThumbnailsEqual(tt.thumbsA, tt.thumbsB)
-			if got != tt.expected {
+			if got := ThumbnailsEqual(tt.thumbsA, tt.thumbsB); got != tt.expected {
 				t.Errorf("got %t, want %t", got, tt.expected)
 			}
 		})
