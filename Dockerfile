@@ -28,9 +28,14 @@ FROM alpine:3.21
 # Consume the TARGET build argument in the build stage
 ARG TARGET
 
-# The backup app will need the postgresql client in order to dump the DB
+# The app will need curl in order to perform the healthcheck
+RUN if [ "$TARGET" = "app" ]; then \
+    apk update && apk add --no-cache curl; \
+    fi
+
+# The backup will need the postgresql client in order to dump the DB
 RUN if [ "$TARGET" = "backup" ]; then \
-    apk update && apk add postgresql16-client; \
+    apk update && apk add --no-cache postgresql16-client; \
     fi
 
 # Copy the binary from the build stage
