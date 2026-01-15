@@ -1,7 +1,11 @@
+# Build argument to determine which service to build
+# https://docs.docker.com/build/building/variables/#scoping
+ARG TARGET="app"
+
 FROM golang:1.25.1-alpine AS builder
 
-# Build argument to determine which service to build
-ARG TARGET="app"
+# Consume the TARGET build argument in the build stage
+ARG TARGET
 
 # Set destination for COPY
 WORKDIR /src
@@ -21,8 +25,8 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o binary ./cmd/${TARGET}
 # Use small image for the final stage
 FROM alpine:3.21
 
-# Redeclare the ARG for this stage
-ARG TARGET="app"
+# Consume the TARGET build argument in the build stage
+ARG TARGET
 
 # The backup app will need the postgresql client in order to dump the DB
 RUN if [ "$TARGET" = "backup" ]; then \
