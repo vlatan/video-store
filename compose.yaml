@@ -134,7 +134,7 @@ services:
   worker:
     image: golang:1.25.1-alpine
     container_name: worker
-    command: tail -f /dev/null
+    command: sleep infinity
     env_file: .env
     volumes:
       - /etc/timezone:/etc/timezone:ro
@@ -147,7 +147,8 @@ services:
   backup:
     image: golang:1.25.1-alpine
     container_name: backup
-    command: [ "sh", "-c", "apk update && apk add postgresql16-client && tail -f /dev/null" ]
+    entrypoint: ["/bin/sh", "-c"]
+    command: [ "apk update && apk add --no-cache postgresql16-client && sleep infinity" ]
     env_file: .env
     volumes:
       - /etc/timezone:/etc/timezone:ro
