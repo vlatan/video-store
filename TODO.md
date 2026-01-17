@@ -1,4 +1,3 @@
-* Build images conditionally only if relevant files changed
 * Remove caregory from description if wrapped in <p></p>
 
 * Uncomment and remove code in:
