@@ -173,12 +173,12 @@ docker cp ./db.prod.dump postgres:/tmp/db.prod.dump
 
 Restore to the local running container:
 ``` bash
- docker compose exec -e LOCAL_DB_URL postgres pg_restore -F t -d $DATABASE_URL /tmp/db.prod.dump
+ docker compose exec -e LOCAL_DB_URL postgres pg_restore -F t -d $LOCAL_DB_URL /tmp/db.prod.dump
 ```
 
 Also, for example, dump from the local running container:
 ``` bash
-docker compose exec -e LOCAL_DB_URL postgres pg_dump -F t -d $DATABASE_URL > db.local.dump
+docker compose exec -e LOCAL_DB_URL postgres pg_dump -F t -d $LOCAL_DB_URL > db.local.dump
 ```
 
 And, restore to production:
