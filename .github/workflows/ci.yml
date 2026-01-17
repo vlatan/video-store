@@ -57,9 +57,34 @@ jobs:
         with:
           args: ./...
   
-  build-and-push:
+  check-changes:
     runs-on: ubuntu-latest
-    needs: [tests, sast]
+    outputs:
+      app: ${{ steps.filter.outputs.app }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+      
+      - name: Check for relevant file changes
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            app:
+              - '.github/**'
+              - 'cmd/**'
+              - 'internal/**'
+              - 'web/**'
+              - 'compose.yaml'
+              - 'Dockerfile'
+              - 'go.mod'
+              - 'go.sum'
+  
+  build-and-push:
+    needs: [tests, sast, check-changes]
+    # Deploy only if relevant files changed
+    if: needs.check-changes.outputs.app == 'true'
+    runs-on: ubuntu-latest
 
     env:
       REGISTRY: ghcr.io
