@@ -126,10 +126,6 @@ jobs:
     needs: build-and-push
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        target: [app, worker, backup]
-
     steps:
       - name: Deploy to VPS via SSH
         uses: appleboy/ssh-action@v1.2.4
@@ -140,8 +136,4 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd ~/proxy
-            docker compose up \
-            --detach \
-            --pull always \
-            ${{ matrix.target == 'app' && '--scale video-store-app=2' || '' }} \
-            video-store-${{ matrix.target }}
+            docker compose up --detach --pull always --scale video-store-app=2
