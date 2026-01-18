@@ -116,8 +116,7 @@ type Config struct {
 	DBMaxConns int32  `env:"DB_MAX_CONNS" envDefault:"4"`
 
 	// Local app host and port
-	Host string `env:"HOST" envDefault:"localhost"`
-	Port int    `env:"PORT" envDefault:"5000"`
+	Port int `env:"PORT" envDefault:"5000"`
 
 	// Worker expected runtime
 	WorkerExpectedRuntime time.Duration `env:"WORKER_EXPECTED_RUNTIME" envDefault:"1h"`
