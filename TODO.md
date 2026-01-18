@@ -1,5 +1,4 @@
 * Remove caregory from description if wrapped in <p></p>
-* Remove host
 
 * Uncomment and remove code in:
   - `internal/integrations/gemini/gemini.go`
