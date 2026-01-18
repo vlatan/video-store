@@ -77,21 +77,20 @@ jobs:
     needs: check-changes
     runs-on: ubuntu-latest
     
-    env:
-      GO111MODULE: on
-
     steps:
       - name: Early exit if no relevant changes
         run: |
           if [ "${{ needs.check-changes.outputs.relevant }}" != "true" ]; then
-            echo "No relevant changes, skipping tests"
+            echo "No relevant changes, skipping sast"
             exit 0
           fi
 
-      - name: Checkout Source
+      - name: Checkout source code
         uses: actions/checkout@v6
 
-      - name: Run Gosec Security Scanner
+      - name: Run gosec security scanner
+        env:
+          GO111MODULE: on
         uses: securego/gosec@v2.22.11
         with:
           args: ./...
