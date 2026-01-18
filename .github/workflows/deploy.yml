@@ -10,9 +10,9 @@ jobs:
   check-changes:
     runs-on: ubuntu-latest
     outputs:
-      app: ${{ steps.filter.outputs.app }}
+      relevant: ${{ steps.filter.outputs.relevant }}
     steps:
-      - name: Checkout code
+      - name: Checkout source code
         uses: actions/checkout@v6
       
       - name: Check for relevant file changes
@@ -20,7 +20,7 @@ jobs:
         uses: dorny/paths-filter@v3
         with:
           filters: |
-            app:
+            relevant:
               - '.github/**'
               - 'cmd/**'
               - 'internal/**'
@@ -29,13 +29,20 @@ jobs:
               - 'Dockerfile'
               - 'go.mod'
               - 'go.sum'
+
   tests:
-    needs: [check-changes]
-    if: needs.check-changes.outputs.app == 'true'
+    needs: check-changes
     runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout Source
+    - name: Early exit if no relevant changes
+      run: |
+        if [ "${{ needs.check-changes.outputs.relevant }}" != "true" ]; then
+          echo "No relevant changes, skipping tests"
+          exit 0
+        fi
+
+    - name: Checkout source code
       uses: actions/checkout@v6
     
     - name: Set up Go
@@ -43,10 +50,10 @@ jobs:
       with:
         go-version: '1.25.1'
     
-    - name: Clean Test Cache
+    - name: Clean test cache
       run: go clean -testcache
     
-    - name: Run Tests
+    - name: Run tests
       env:
           DB_DATABASE: ${{ secrets.DB_DATABASE }}
           DB_USERNAME: ${{ secrets.DB_USERNAME }}
@@ -54,27 +61,33 @@ jobs:
           REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
       run: go test -race -coverprofile=coverage.out ./...
     
-    - name: Display Coverage
+    - name: Display coverage
       run: go tool cover -func=coverage.out
 
-    - name: Generate Coverage HTML
+    - name: Generate coverage HTML
       run: go tool cover -html=coverage.out -o coverage.html
 
-    - name: Upload Coverage Report
+    - name: Upload coverage report
       uses: actions/upload-artifact@v6
       with:
         name: coverage-report
         path: coverage.html
   
   sast:
-    needs: [check-changes]
-    if: needs.check-changes.outputs.app == 'true'
+    needs: check-changes
     runs-on: ubuntu-latest
     
     env:
       GO111MODULE: on
 
     steps:
+      - name: Early exit if no relevant changes
+        run: |
+          if [ "${{ needs.check-changes.outputs.relevant }}" != "true" ]; then
+            echo "No relevant changes, skipping tests"
+            exit 0
+          fi
+
       - name: Checkout Source
         uses: actions/checkout@v6
 
@@ -82,9 +95,11 @@ jobs:
         uses: securego/gosec@v2.22.11
         with:
           args: ./...
-   
+  
+ 
   build-and-push:
-    needs: [tests, sast]
+    needs: [tests, sast, check-changes]
+    if: needs.check-changes.outputs.relevant == 'true'
     runs-on: ubuntu-latest
 
     env:
@@ -103,7 +118,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Log in to the Container registry
+      - name: Log in to the container registry
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
