@@ -5,7 +5,7 @@
   - `internal/worker/worker.go`
   - `internal/utils/utils.go`
 
-* Write tests  
+* Write tests
 * Add slug input to page
 * Add form for new category as well as delete, edit category routes
 * Delete source - should cascade and delete all the videos?
