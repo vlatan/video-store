@@ -132,31 +132,36 @@ services:
         condition: service_healthy
 
   worker:
-    image: golang:1.25.1-alpine
     container_name: worker
-    command: sleep infinity
+    build:
+      context: .
+      args:
+        TARGET: worker
     env_file: .env
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
-      - ./bin:/src/bin
     depends_on:
       postgres:
         condition: service_healthy
+    profiles:
+      - worker
 
   backup:
-    image: golang:1.25.1-alpine
     container_name: backup
-    entrypoint: ["/bin/sh", "-c"]
-    command: [ "apk update && apk add --no-cache postgresql16-client && sleep infinity" ]
+    build:
+      context: .
+      args:
+        TARGET: backup
     env_file: .env
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
-      - ./bin:/src/bin
     depends_on:
       postgres:
         condition: service_healthy
+    profiles:
+      - backup
 
 volumes:
   redis_data:

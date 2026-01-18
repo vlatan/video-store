@@ -99,16 +99,14 @@ Put this alias in your `~/.bash_aliases` file too and run `down` to bring down t
 alias down='docker compose down --remove-orphans && docker system prune --force'
 ```
 
-**NOTE**: `worker` and `backup` binaries are being recompiled during each live reload too, so code changes instantly propagate there too.
-
 ### Run the worker
 ``` bash
-docker compose exec worker /src/bin/worker
+docker compose run --rm worker
 ```
 
 ### Run the backup
 ``` bash
-docker compose exec backup /src/bin/backup
+docker compose run --rm backup
 ```
 
 ### Access redis
