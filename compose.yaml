@@ -2,16 +2,16 @@ name: fd
 
 services:
   traefik:
-    image: "traefik:v3.6.2"
+    image: traefik:v3.6.7
     container_name: traefik
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
-    
+
     depends_on:
       app:
         condition: service_healthy
-    
+
     ports:
       - "80:80"
       - "443:443"
@@ -21,7 +21,6 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./certs:/certs:ro
       - ./dynamic:/dynamic:ro
-
 
     command:
       # EntryPoints
@@ -34,7 +33,7 @@ services:
       # Providers 
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
-      - "--providers.file.directory=/dynamic" 
+      - "--providers.file.directory=/dynamic"
 
       # API & Dashboard 
       - "--api.dashboard=true"
@@ -119,7 +118,7 @@ services:
       - ./.air.toml:/src/.air.toml
 
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:${PORT}/healthcheck"]
+      test: [ "CMD", "curl", "-f", "http://localhost:${PORT}/healthcheck" ]
       interval: 5s
       timeout: 5s
       retries: 3
