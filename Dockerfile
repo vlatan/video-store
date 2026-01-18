@@ -30,12 +30,12 @@ ARG TARGET
 
 # The app will need curl in order to perform the healthcheck
 RUN if [ "$TARGET" = "app" ]; then \
-    apk update && apk add --no-cache curl; \
+    apk add --no-cache curl; \
     fi
 
 # The backup will need the postgresql client in order to dump the DB
 RUN if [ "$TARGET" = "backup" ]; then \
-    apk update && apk add --no-cache postgresql16-client; \
+    apk add --no-cache postgresql16-client; \
     fi
 
 # Copy the binary from the build stage
