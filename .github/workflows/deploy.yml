@@ -7,41 +7,10 @@ on:
     branches: [ main ]
 
 jobs:
-  check-changes:
-    runs-on: ubuntu-latest
-    outputs:
-      relevant: ${{ steps.filter.outputs.relevant }}
-    steps:
-      - name: Checkout source code
-        uses: actions/checkout@v6
-      
-      - name: Check for relevant file changes
-        id: filter
-        uses: dorny/paths-filter@v3
-        with:
-          filters: |
-            relevant:
-              - '.github/**'
-              - 'cmd/**'
-              - 'internal/**'
-              - 'web/**'
-              - 'compose.yaml'
-              - 'Dockerfile'
-              - 'go.mod'
-              - 'go.sum'
-
   tests:
-    needs: check-changes
     runs-on: ubuntu-latest
     
     steps:
-    - name: Early exit if no relevant changes
-      run: |
-        if [ "${{ needs.check-changes.outputs.relevant }}" != "true" ]; then
-          echo "No relevant changes, skipping tests"
-          exit 0
-        fi
-
     - name: Checkout source code
       uses: actions/checkout@v6
     
@@ -74,17 +43,9 @@ jobs:
         path: coverage.html
   
   sast:
-    needs: check-changes
     runs-on: ubuntu-latest
     
     steps:
-      - name: Early exit if no relevant changes
-        run: |
-          if [ "${{ needs.check-changes.outputs.relevant }}" != "true" ]; then
-            echo "No relevant changes, skipping sast"
-            exit 0
-          fi
-
       - name: Checkout source code
         uses: actions/checkout@v6
 
@@ -95,7 +56,29 @@ jobs:
         with:
           args: ./...
   
- 
+  check-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      relevant: ${{ steps.filter.outputs.relevant }}
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v6
+      
+      - name: Check for relevant file changes
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            relevant:
+              - '.github/**'
+              - 'cmd/**'
+              - 'internal/**'
+              - 'web/**'
+              - 'compose.yaml'
+              - 'Dockerfile'
+              - 'go.mod'
+              - 'go.sum'
+
   build-and-push:
     needs: [tests, sast, check-changes]
     if: needs.check-changes.outputs.relevant == 'true'
