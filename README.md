@@ -101,12 +101,12 @@ alias down='docker compose down --remove-orphans && docker system prune --force'
 
 ### Run the worker
 ``` bash
-docker compose run --rm worker
+docker compose run --rm --build worker
 ```
 
 ### Run the backup
 ``` bash
-docker compose run --rm backup
+docker compose run --rm --build backup
 ```
 
 ### Access redis
@@ -159,7 +159,7 @@ Export the database URL vars you'll need. Leave an empty space before the export
 The flag `-a` determines if you want to dump or restore the data with or without the schema. Include `-a` if you want the **DATA ONLY**.  
 These are the available dump formats.
 
-```
+``` bash
 -Fc = custom format (compressed, flexible)
 -Ft = tar format
 -Fp = plain SQL
@@ -184,11 +184,6 @@ docker compose exec -T <service_name> psql -U <user> -d <user> < db.dump
 Restore the database if the dump is NOT plain SQL.
 ``` bash
 docker compose exec -T <service_name> pg_restore -U <user> -d <db_name> --clean --no-owner < db.dump
-```
-
-Confirm the data is there. This will land you at `psql` in the docker container from where you can see the tables, query the data, etc.
-``` bash
-docker compose exec -it postgres psql -U <user> -d <db_name>
 ```
 
 

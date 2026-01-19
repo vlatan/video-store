@@ -55,7 +55,7 @@ func (s *Service) Run(ctx context.Context) error {
 	log.Println("Database dumped.")
 
 	archive := fmt.Sprintf("%s.tar.gz", dbDump)
-	if err := s.ArchiveFiles([]string{dbDump}, archive); err != nil {
+	if err := s.ArchiveFiles(archive, dbDump); err != nil {
 		return err
 	}
 
@@ -86,6 +86,7 @@ func (s *Service) DumpDatabase(dest string) error {
 		"-p", strconv.Itoa(s.config.DBPort),
 		"-U", s.config.DBUsername,
 		"-d", s.config.DBDatabase,
+		"-Fc", // compressed
 		"-f", dest,
 	) // #nosec G204
 
@@ -106,8 +107,8 @@ func (s *Service) DumpDatabase(dest string) error {
 	return nil
 }
 
-// Compress compresses a file
-func (s *Service) ArchiveFiles(files []string, dest string) error {
+// ArchiveFiles tars files into an archive and gzips the archive
+func (s *Service) ArchiveFiles(dest string, files ...string) error {
 
 	// Create destination file
 	destFile, err := r2.SecureCreate(backupRoot, dest)
