@@ -1,3 +1,5 @@
+* Print new line when worker/backup finishes
+
 * Remove caregory from description if wrapped in <p></p>
 
 * Uncomment and remove code in:
