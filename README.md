@@ -151,46 +151,44 @@ Once inside the `pprof` CLI run `top`, or `top20` to see if there's memory incre
 
 Run `export HISTCONTROL=ignorespace` so you're able to hide bash commands from the history if they start with empty space. This is probably already set on your system in the `~/.bashrc` file, but to be sure run it, there's no harm.
 
-Export the database URLs you'll need. Leave an empty space before the export commands. From now on you can use these variables in dump and restoee commands.
+Export the database URL vars you'll need. Leave an empty space before the export commands. From now on you can use these variables in dump and restore commands.
 ``` bash
  export PROD_DB_URL=postgresql://user:password@host:port/dbname
- export LOCAL_DB_URL=postgresql://user:password@localhost:5432/dbname
 ```
 
-The flag `-a` determines if you want to dump or restore the data with or without the schema. Include `-a` if you want the DATA ONLY.
+The flag `-a` determines if you want to dump or restore the data with or without the schema. Include `-a` if you want the **DATA ONLY**.  
+These are the available dump formats.
 
-Dump from production:
+```
+-Fc = custom format (compressed, flexible)
+-Ft = tar format
+-Fp = plain SQL
+-Fd = directory format
+```
+
+Dump from a remote database using URL. On the fly we're creating, running - and when done removing - our own temporary `postgres:16.3` container to match the remote postgres version.
 ``` bash
-docker run --rm -e PROD_DB_URL postgres:16.3 pg_dump -F t -d $PROD_DB_URL > db.prod.dump
+docker run --rm -e PROD_DB_URL postgres:16.3 pg_dump -Fc -d $PROD_DB_URL > db.dump
 ```
 
-Copy the dump file into the local running container:
+Dump from a running postgres container. Note, we're using `exec` to execute a command within the container.
 ``` bash
-docker cp ./db.prod.dump postgres:/tmp/db.prod.dump
+docker compose exec -T <service_name> pg_dump -U <user> -Fc <db_name> > db.dump
 ```
 
-Restore to the local running container:
+Restore the database if the dump is plain SQL.
 ``` bash
- docker compose exec -e LOCAL_DB_URL postgres pg_restore -F t -d $LOCAL_DB_URL /tmp/db.prod.dump
+docker compose exec -T <service_name> psql -U <user> -d <user> < db.dump
 ```
 
-Also, for example, dump from the local running container:
+Restore the database if the dump is NOT plain SQL.
 ``` bash
-docker compose exec -e LOCAL_DB_URL postgres pg_dump -F t -d $LOCAL_DB_URL > db.local.dump
+docker compose exec -T <service_name> pg_restore -U <user> -d <db_name> --clean --no-owner < db.dump
 ```
-
-And, restore to production:
-``` bash
-docker run --rm -e PROD_DB_URL \
--v ./db.local.dump:/db.local.dump postgres:16.3 \
-pg_restore -F t -d $PROD_DB_URL /db.local.dump
-```
-
-When we need tto access the local running postgres server we use `exec`, and when we want to reach the production we use `run` on our own temporary `postgres:16.3` container. The postgres versions need to match though.
 
 Confirm the data is there. This will land you at `psql` in the docker container from where you can see the tables, query the data, etc.
-```
-docker compose exec -it postgres psql -U xxx -d xxx
+``` bash
+docker compose exec -it postgres psql -U <user> -d <db_name>
 ```
 
 
