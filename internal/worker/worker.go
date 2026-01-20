@@ -89,9 +89,8 @@ func New() *Worker {
 // Run the worker
 func (w *Worker) Run(ctx context.Context) error {
 
-	// Create a new context tailored to this worker expected runtime
-	ctx, cancel := context.WithTimeout(ctx, w.config.WorkerExpectedRuntime)
-	defer cancel()
+	// Print empty line at the end
+	defer fmt.Println()
 
 	// Measure execution time
 	start := time.Now()
@@ -99,6 +98,10 @@ func (w *Worker) Run(ctx context.Context) error {
 		elapsed := time.Since(start).Round(time.Second)
 		log.Printf("Time took: %s", elapsed)
 	}()
+
+	// Create a new context tailored to this worker expected runtime
+	ctx, cancel := context.WithTimeout(ctx, w.config.WorkerExpectedRuntime)
+	defer cancel()
 
 	// Create and acquire a Redis lock with slightly bigger TTL than the context
 	redisLockTTL := time.Duration(float64(w.config.WorkerExpectedRuntime) * 1.25)

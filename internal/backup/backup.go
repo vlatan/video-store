@@ -45,6 +45,9 @@ func New(cfg *config.Config, r2s r2.Service) *Service {
 // Run dumps a database to file and uploads that file to a bucket
 func (s *Service) Run(ctx context.Context) error {
 
+	// Print empty line at the end
+	defer fmt.Println()
+
 	log.Println("Backup service running...")
 
 	dbDump := fmt.Sprintf("backup-%v.bak", time.Now().Format("2006-01-02T15-04"))
