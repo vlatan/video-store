@@ -89,8 +89,8 @@ func New() *Worker {
 // Run the worker
 func (w *Worker) Run(ctx context.Context) error {
 
-	// Print empty line at the end
-	defer fmt.Println()
+	// Print separator at the end
+	defer fmt.Println(strings.Repeat("-", 70))
 
 	// Measure execution time
 	start := time.Now()
