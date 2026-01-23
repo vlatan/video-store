@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/vlatan/video-store/internal/backup"
@@ -11,6 +12,11 @@ import (
 )
 
 func main() {
+
+	// Print separator at the end
+	defer log.Println(strings.Repeat("-", 70))
+
+	// Give the backup a reasonable time to finish
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 

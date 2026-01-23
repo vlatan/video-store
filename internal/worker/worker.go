@@ -41,10 +41,7 @@ const deleteLimit = 5
 // Redis key to lock the worker
 const workerLockKey = "worker:lock"
 
-func New() *Worker {
-
-	// Create essential services
-	cfg := config.New()
+func New(cfg *config.Config) *Worker {
 
 	db, err := database.New(cfg)
 	if err != nil {
@@ -89,9 +86,6 @@ func New() *Worker {
 // Run the worker
 func (w *Worker) Run(ctx context.Context) error {
 
-	// Print separator at the end
-	defer log.Println(strings.Repeat("-", 70))
-
 	// Measure execution time
 	start := time.Now()
 	defer func() {
@@ -99,11 +93,8 @@ func (w *Worker) Run(ctx context.Context) error {
 		log.Printf("Time took: %s", elapsed)
 	}()
 
-	// Create a new context tailored to this worker expected runtime
-	ctx, cancel := context.WithTimeout(ctx, w.config.WorkerExpectedRuntime)
-	defer cancel()
-
-	// Create and acquire a Redis lock with slightly bigger TTL than the context
+	// Create and acquire a Redis lock
+	// with bigger TTL than the worker expected runtime
 	redisLockTTL := time.Duration(float64(w.config.WorkerExpectedRuntime) * 1.25)
 	lock := w.rdb.NewLock(workerLockKey, w.id, redisLockTTL)
 
