@@ -47,7 +47,7 @@ func New(cfg *config.Config, r2s r2.Service) *Service {
 func (s *Service) Run(ctx context.Context) error {
 
 	// Print separator at the end
-	defer fmt.Println(strings.Repeat("-", 70))
+	defer log.Println(strings.Repeat("-", 70))
 	log.Println("Backup service running...")
 
 	dbDump := fmt.Sprintf("backup-%v.bak", time.Now().Format("2006-01-02T15-04"))

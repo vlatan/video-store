@@ -90,7 +90,7 @@ func New() *Worker {
 func (w *Worker) Run(ctx context.Context) error {
 
 	// Print separator at the end
-	defer fmt.Println(strings.Repeat("-", 70))
+	defer log.Println(strings.Repeat("-", 70))
 
 	// Measure execution time
 	start := time.Now()
