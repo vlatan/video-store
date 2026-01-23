@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/microcosm-cc/bluemonday"
@@ -26,6 +27,8 @@ const categoriesPlaceholder = "{{ CATEGORIES }}"
 const titlePlaceholder = "{{ TITLE }}"
 const descriptionPlaceholder = "{{ DESCRIPTION }}"
 const urlPlaceholder = "{{ URL }}"
+
+var catRegex = regexp.MustCompile(`<p>\s*CATEGORY:.*?</p>`)
 
 // Configure safety settings to block none
 var blockNone = genai.HarmBlockThresholdBlockNone
@@ -192,39 +195,65 @@ func (s *Service) Exhausted(ctx context.Context) bool {
 }
 
 // parseResponse parses a raw genai text response
-func (s *Service) parseResponse(raw string, categories models.Categories) (*models.GenaiResponse, error) {
+func (s *Service) parseResponse(
+	raw string,
+	categories models.Categories,
+) (*models.GenaiResponse, error) {
 
 	// Extract summary (everything inside <p> tags)
 	startP := strings.Index(raw, "<p>")
 	endP := strings.LastIndex(raw, "</p>")
 
 	if startP == -1 || endP == -1 {
-		return nil, errors.New("failed to extract summary from the response")
+		msg := "failed to extract summary from the response"
+		return nil, errors.New(msg)
 	}
 
 	// Extract the summary
 	summary := raw[startP : endP+4]
 
-	// Make sure the summary has no additional HTML tags
-	summary = bluemonday.StrictPolicy().AllowElements("p").Sanitize(summary)
-
-	// Form the response
-	response := models.GenaiResponse{Summary: summary}
-
-	// Work only with the remaining string to find the category
+	// Save the remaining string to check for category there
 	remaining := strings.Replace(raw, summary, " ", 1)
 	remaining = strings.ToLower(remaining)
 
-	// Search for the allowed categories in the remaining text.
-	// We iterate through the category list to find a match.
+	response := &models.GenaiResponse{}
+
+	// Find matching category in the remaining content
+	catName := matchCategory(remaining, categories)
+	if catName != "" {
+		response.Category = catName
+		response.Summary = allowOnlyParagraphs(summary)
+		return response, nil
+	}
+
+	// Try to find the category in a paragraph
+	para := catRegex.FindString(summary)
+	if para != "" {
+		// Remove that paragraph
+		summary = catRegex.ReplaceAllString(summary, "")
+		catName = matchCategory(para, categories)
+	}
+
+	response.Category = catName
+	response.Summary = allowOnlyParagraphs(summary)
+	return response, nil
+}
+
+// matchCategory returns a category from categories found in text
+func matchCategory(text string, categories models.Categories) string {
+
+	text = strings.ToLower(text)
 	for _, cat := range categories {
-		// See if the model mentioned this category
 		catLower := strings.ToLower(cat.Name)
-		if strings.Contains(remaining, catLower) {
-			response.Category = cat.Name
-			return &response, nil
+		if strings.Contains(text, catLower) {
+			return cat.Name
 		}
 	}
 
-	return &response, nil
+	return ""
+}
+
+// allowOnlyParagraphs sanitizes HTML allowing only <p></p> paragraphs
+func allowOnlyParagraphs(text string) string {
+	return bluemonday.StrictPolicy().AllowElements("p").Sanitize(text)
 }

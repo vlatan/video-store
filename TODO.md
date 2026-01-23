@@ -1,5 +1,3 @@
-* Remove caregory from description if wrapped in <p></p>
-
 * Uncomment and remove code in:
   - `internal/integrations/gemini/gemini.go`
   - `internal/worker/worker.go`
