@@ -93,12 +93,13 @@ func (w *Worker) Run(ctx context.Context) error {
 		log.Printf("Time took: %s", elapsed)
 	}()
 
-	// Create and acquire a Redis lock
+	// Create new Redis lock
 	// with bigger TTL than the worker expected runtime
 	redisLockTTL := time.Duration(float64(w.config.WorkerExpectedRuntime) * 1.25)
 	lock := w.rdb.NewLock(workerLockKey, w.id, redisLockTTL)
 
-	// This is a blocking call until the lock is acquired
+	// Acquire the lock.
+	// This is a blocking call until the lock is acquired.
 	if err := lock.Lock(ctx); err != nil {
 		return fmt.Errorf("failed to acquire Redis lock; %w", err)
 	}
