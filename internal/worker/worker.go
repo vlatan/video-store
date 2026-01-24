@@ -446,8 +446,7 @@ func (w *Worker) Run(ctx context.Context) error {
 
 	if deleted > 0 {
 		items = utils.Plural(deleted, "video")
-		log.Printf("Deleted %d %s", deleted, items)
-		log.Printf("Deleted videos: %v", deletedVideoIDs)
+		log.Printf("Deleted %d %s %v", deleted, items, deletedVideoIDs)
 
 		if deleted >= deleteLimit {
 			msg := "WARNING: HIT MAX DELETION LIMIT. "
