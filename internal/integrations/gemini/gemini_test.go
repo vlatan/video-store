@@ -68,8 +68,7 @@ func TestParseResponse(t *testing.T) {
 		t.Fatalf("couldn't create Redis service; %v", err)
 	}
 
-	ctx := context.Background()
-	gemini, err := New(ctx, testCfg, rdb)
+	gemini, err := New(baseCtx, testCfg, rdb)
 	if err != nil {
 		t.Fatalf("couldn't create Gemini service; %v", err)
 	}

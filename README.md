@@ -147,6 +147,23 @@ go tool pprof -base heap1 heap2
 Once inside the `pprof` CLI run `top`, or `top20` to see if there's memory increase.
 
 
+## Run tests
+
+Produce coverage report and heat map.
+
+``` bash
+go test -race -coverprofile=coverage.out ./... && 
+go tool cover -html=coverage.out
+```
+
+Target specific package.
+``` bash
+go test -race -coverprofile=coverage.out ./internal/integrations/gemini && 
+go tool cover -html=coverage.out
+```
+
+
+
 ## Dump/Restore DB data
 
 Run `export HISTCONTROL=ignorespace` so you're able to hide bash commands from the history if they start with empty space. This is probably already set on your system in the `~/.bashrc` file, but to be sure run it, there's no harm.
