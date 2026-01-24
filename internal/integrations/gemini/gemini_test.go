@@ -1,4 +1,4 @@
-package database
+package gemini
 
 import (
 	"context"
@@ -6,11 +6,11 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
-	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/vlatan/video-store/internal/config"
-	"github.com/vlatan/video-store/internal/containers"
+	"github.com/vlatan/video-store/internal/drivers/rdb"
+	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/testutils"
 )
 
@@ -57,63 +57,63 @@ func runTests(m *testing.M) int {
 	// Create the test config - globaly available for package's tests
 	testCfg = config.New()
 
-	setupCtx, setupCancel := context.WithTimeout(baseCtx, 2*time.Minute)
-	defer setupCancel()
-
-	// Spin up PostrgeSQL container and seed it with test data
-	container, err := containers.SetupTestDB(setupCtx, testCfg, projectRoot)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Terminate the container on exit
-	defer container.Terminate(baseCtx)
-
 	// Run all the tests in the package
 	return m.Run()
 }
 
-func TestNew(t *testing.T) {
+func TestParseResponse(t *testing.T) {
 
-	// Invalid connection string
-	invalidConnStr := *testCfg
-	invalidConnStr.DBHost = "::invalid"
+	rdb, err := rdb.New(testCfg)
+	if err != nil {
+		t.Fatalf("couldn't create Redis service; %v", err)
+	}
 
-	// Invalid max connections
-	invalidMaxConns := *testCfg
-	invalidMaxConns.DBMaxConns = 0
+	ctx := context.Background()
+	gemini, err := New(ctx, testCfg, rdb)
+	if err != nil {
+		t.Fatalf("couldn't create Gemini service; %v", err)
+	}
+
+	categories := models.Categories{
+		models.Category{Name: "Science"},
+	}
 
 	tests := []struct {
-		name    string
-		cfg     *config.Config
-		wantErr bool
+		name       string
+		raw        string
+		categories models.Categories
+		wantErr    bool
+		expected   *models.GenaiResponse
 	}{
-		{"nil config", nil, true},
-		{"invalid connString", &invalidConnStr, true},
-		{"invalid DBMaxConns", &invalidMaxConns, true},
-		{"valid config", testCfg, false},
+		{
+			"valid test",
+			"<p>Foo Bar</p>\n <p>Foo Bar</p> CATEGORY: Science",
+			categories,
+			false,
+			&models.GenaiResponse{
+				Summary:  "<p>Foo Bar</p>\n <p>Foo Bar</p>",
+				Category: "Science",
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-
-			// Create db pool
-			db, err := New(tt.cfg)
-
-			// Check error cases.
-			// Exit early if error.
-			if gotErr := err != nil; gotErr {
-				if gotErr != tt.wantErr {
-					t.Errorf("got error = %v, want error = %t", err, tt.wantErr)
-				}
-				return
+			response, err := gemini.parseResponse(tt.raw, tt.categories)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("got error = %v, want error = %v", err, tt.wantErr)
 			}
 
-			t.Cleanup(db.Pool.Close)
+			if response.Summary != tt.expected.Summary {
+				t.Errorf("got summary %q, want summary %q",
+					response.Summary, tt.expected.Summary,
+				)
+			}
 
-			// For successful cases, verify we got a non-nil service
-			if !tt.wantErr && db == nil {
-				t.Errorf("got %+v, want non-nil", db)
+			if response.Category != tt.expected.Category {
+				t.Errorf("got category %q, want category %q",
+					response.Category, tt.expected.Category,
+				)
 			}
 		})
 	}
