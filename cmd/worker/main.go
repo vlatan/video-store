@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os/signal"
 	"strings"
@@ -14,7 +15,7 @@ import (
 func main() {
 
 	// Print separator at the end
-	defer log.Println(strings.Repeat("-", 70))
+	defer fmt.Println(strings.Repeat("-", 70))
 
 	cfg := config.New()
 	worker := worker.New(cfg)

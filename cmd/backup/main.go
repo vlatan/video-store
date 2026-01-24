@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -14,7 +15,7 @@ import (
 func main() {
 
 	// Print separator at the end
-	defer log.Println(strings.Repeat("-", 70))
+	defer fmt.Println(strings.Repeat("-", 70))
 
 	// Give the backup a reasonable time to finish
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
