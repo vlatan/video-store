@@ -139,7 +139,7 @@ func (s *Service) Summarize(
 	}
 
 	// Parse the text output
-	response, err := s.parseResponse(result.Text(), categories)
+	response, err := parseResponse(result.Text(), categories)
 	if err != nil {
 		return nil, err
 	}
@@ -195,14 +195,14 @@ func (s *Service) Exhausted(ctx context.Context) bool {
 }
 
 // parseResponse parses a raw genai text response
-func (s *Service) parseResponse(
-	raw string,
+func parseResponse(
+	rawResponse string,
 	categories models.Categories,
 ) (*models.GenaiResponse, error) {
 
 	// Extract summary (everything inside <p> tags)
-	startP := strings.Index(raw, "<p>")
-	endP := strings.LastIndex(raw, "</p>")
+	startP := strings.Index(rawResponse, "<p>")
+	endP := strings.LastIndex(rawResponse, "</p>")
 
 	if startP == -1 || endP == -1 {
 		msg := "failed to extract summary from the response"
@@ -210,10 +210,10 @@ func (s *Service) parseResponse(
 	}
 
 	// Extract the summary
-	summary := raw[startP : endP+4]
+	summary := rawResponse[startP : endP+4]
 
 	// Save the remaining string to check for category there
-	remaining := strings.Replace(raw, summary, " ", 1)
+	remaining := strings.Replace(rawResponse, summary, " ", 1)
 	remaining = strings.ToLower(remaining)
 
 	response := &models.GenaiResponse{}

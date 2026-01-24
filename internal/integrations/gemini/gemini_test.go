@@ -9,7 +9,6 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/vlatan/video-store/internal/config"
-	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/testutils"
 )
@@ -63,16 +62,6 @@ func runTests(m *testing.M) int {
 
 func TestParseResponse(t *testing.T) {
 
-	rdb, err := rdb.New(testCfg)
-	if err != nil {
-		t.Fatalf("couldn't create Redis service; %v", err)
-	}
-
-	gemini, err := New(baseCtx, testCfg, rdb)
-	if err != nil {
-		t.Fatalf("couldn't create Gemini service; %v", err)
-	}
-
 	categories := models.Categories{
 		models.Category{Name: "Science"},
 	}
@@ -98,7 +87,7 @@ func TestParseResponse(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			response, err := gemini.parseResponse(tt.raw, tt.categories)
+			response, err := parseResponse(tt.raw, tt.categories)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("got error = %v, want error = %v", err, tt.wantErr)
 			}
