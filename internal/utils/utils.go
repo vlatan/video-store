@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"path"
@@ -167,4 +168,12 @@ func SleepContext(ctx context.Context, delay time.Duration) error {
 	case <-time.After(delay):
 		return nil
 	}
+}
+
+// LogPlainln prints a line without a prefix using the log package
+func LogPlainln(s string) {
+	flags := log.Flags()
+	log.SetFlags(0)
+	log.Println(s)
+	log.SetFlags(flags)
 }

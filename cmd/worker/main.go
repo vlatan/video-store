@@ -2,20 +2,20 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"os/signal"
 	"strings"
 	"syscall"
 
 	"github.com/vlatan/video-store/internal/config"
+	"github.com/vlatan/video-store/internal/utils"
 	"github.com/vlatan/video-store/internal/worker"
 )
 
 func main() {
 
 	// Print separator at the end
-	defer fmt.Println(strings.Repeat("-", 70))
+	defer utils.LogPlainln(strings.Repeat("-", 70))
 
 	cfg := config.New()
 	worker := worker.New(cfg)
