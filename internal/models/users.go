@@ -151,7 +151,7 @@ func (u *User) downloadAvatar(ctx context.Context) ([]byte, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.AvatarURL, nil)
 	if err != nil {
 		return nil, fmt.Errorf(
-			"couldn't create request for avatar %q download; %w",
+			"failed to create GET request for avatar %q download; %w",
 			u.AvatarURL, err,
 		)
 	}
@@ -161,7 +161,7 @@ func (u *User) downloadAvatar(ctx context.Context) ([]byte, error) {
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf(
-			"failed to download avatar %q; %w",
+			"failed tot execute GET request for avatar %q; %w",
 			u.AvatarURL, err,
 		)
 	}
@@ -170,8 +170,8 @@ func (u *User) downloadAvatar(ctx context.Context) ([]byte, error) {
 	// Ensure the HTTP request was successful (status code 2xx)
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf(
-			"failed to download avatar %s, received status code %d",
-			u.AvatarURL, resp.StatusCode,
+			"received status code %d for avatar %q",
+			resp.StatusCode, u.AvatarURL,
 		)
 	}
 
@@ -238,7 +238,7 @@ func (u *User) refreshAvatar(
 	if err == nil && head.Metadata != nil {
 		storedHash, exists := head.Metadata["source-hash"]
 		if exists && storedHash == sourceHash {
-			println("BOOOOOM")
+			fmt.Println("BOOOOOOOOOOOOOOOOOOOOOOM")
 			return avatar, nil
 		}
 	}
