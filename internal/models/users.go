@@ -51,7 +51,8 @@ type User struct {
 	CreatedAt      *time.Time `json:"created_at,omitempty"`
 }
 
-const avatarCacheKey = "avatar:r2:%s"
+const AvatarAdminPrefix = "avatar:admin:"
+const AvatarUserPrefix = "avatar:user:"
 const avatarPath = "avatars/%s.jpg"
 const defaultAvatar = "/static/images/default-avatar.jpg"
 
@@ -82,6 +83,7 @@ func (u *User) SetAvatar(
 	config *config.Config,
 	rdb *rdb.Service,
 	r2s r2.Service,
+	keyPrefix string,
 	ttl time.Duration) error {
 
 	// Set the anaylytics ID in case it's missing
@@ -90,7 +92,7 @@ func (u *User) SetAvatar(
 	}
 
 	// Get avatar URL from Redis
-	redisKey := fmt.Sprintf(avatarCacheKey, u.AnalyticsID)
+	redisKey := keyPrefix + u.AnalyticsID
 	avatar, err := rdb.Client.Get(ctx, redisKey).Result()
 
 	if err == nil {
@@ -233,7 +235,11 @@ func (u *User) DownloadAvatar(ctx context.Context, config *config.Config, r2s r2
 }
 
 // Delete local avatar if exists
-func (u *User) DeleteAvatar(ctx context.Context, config *config.Config, rdb *rdb.Service, r2s r2.Service) {
+func (u *User) DeleteAvatar(
+	ctx context.Context,
+	config *config.Config,
+	rdb *rdb.Service,
+	r2s r2.Service) {
 
 	// Attemp to delete the avatar image from R2
 	objectKey := fmt.Sprintf(avatarPath, u.AnalyticsID)
@@ -241,8 +247,13 @@ func (u *User) DeleteAvatar(ctx context.Context, config *config.Config, rdb *rdb
 		log.Printf("Could not remove the avatar %s from R2: %v", objectKey, err)
 	}
 
-	redisKey := fmt.Sprintf(avatarCacheKey, u.AnalyticsID)
-	if err := rdb.Client.Del(ctx, redisKey).Err(); err != nil {
-		log.Printf("Could not remove the avatar %s from Redis: %v", redisKey, err)
+	// Delete all avatar Redis values
+	for _, key := range []string{
+		AvatarAdminPrefix + u.AnalyticsID,
+		AvatarUserPrefix + u.AnalyticsID,
+	} {
+		if err := rdb.Client.Del(ctx, key).Err(); err != nil {
+			log.Printf("Could not remove the avatar %s from Redis: %v", key, err)
+		}
 	}
 }

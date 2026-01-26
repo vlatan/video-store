@@ -58,7 +58,12 @@ func (s *Service) UsersHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Assign local avatars to users if ttl expired, set cache to 30 days
-	if err = s.SetAvatars(r.Context(), users.Items, 30*24*time.Hour); err != nil {
+	if err = s.SetAvatars(
+		r.Context(),
+		users.Items,
+		models.AvatarAdminPrefix,
+		30*24*time.Hour,
+	); err != nil {
 		log.Printf("was unabale to set users avatars on URI '%s': %v", r.RequestURI, err)
 		utils.HttpError(w, http.StatusInternalServerError)
 		return

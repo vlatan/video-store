@@ -15,6 +15,7 @@ import (
 func (s *Service) SetAvatars(
 	ctx context.Context,
 	users []models.User,
+	keyPrefix string,
 	ttl time.Duration) error {
 
 	g := new(errgroup.Group)
@@ -26,7 +27,7 @@ func (s *Service) SetAvatars(
 				return ctx.Err()
 			case semaphore <- struct{}{}: // Semaphore will block if full
 				defer func() { <-semaphore }()
-				err := user.SetAvatar(ctx, s.config, s.rdb, s.r2s, ttl)
+				err := user.SetAvatar(ctx, s.config, s.rdb, s.r2s, keyPrefix, ttl)
 
 				// Return the error if contex ended
 				if utils.IsContextErr(err) {
