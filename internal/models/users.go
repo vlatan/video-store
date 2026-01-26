@@ -114,7 +114,7 @@ func (u *User) GetAvatar(
 	}
 
 	// Refresh the avatar
-	avatar, err = u.refreshAvatar(ctx, config, rdb, r2s)
+	avatar, err = u.refreshAvatar(ctx, config, r2s)
 
 	// Return early if context error
 	if utils.IsContextErr(err) {
@@ -122,14 +122,15 @@ func (u *User) GetAvatar(
 	}
 
 	// Save non-nil error
+	// Set to default avatar if no remote avatar
 	if err != nil {
-		errs = append(errs, err)
 		avatar = defaultAvatar
+		errs = append(errs, err)
 	}
 
 	// Set avatar
 	u.LocalAvatarURL = avatar
-	err = rdb.Client.Set(ctx, redisKey, avatar, ttl).Err()
+	err = u.updateAvatarCache(ctx, rdb, avatar)
 
 	// Return early if context error
 	if utils.IsContextErr(err) {
@@ -180,29 +181,27 @@ func (u *User) downloadAvatar(ctx context.Context) ([]byte, error) {
 }
 
 // updateCache sets both user and admin avatar caches
-func (u *User) updateAvatarCache(ctx context.Context, rdb *rdb.Service, url string) (string, error) {
+func (u *User) updateAvatarCache(ctx context.Context, rdb *rdb.Service, url string) error {
 
+	errs := make([]error, 0, 2)
 	userKey := AvatarUserPrefix + u.AnalyticsID
 	adminKey := AvatarAdminPrefix + u.AnalyticsID
 
 	// Set user cache (1 day)
-	if err := rdb.Client.Set(ctx, userKey, url, 24*time.Hour).Err(); err != nil {
-		return "", fmt.Errorf("failed to cache user avatar; %w", err)
-	}
+	err := rdb.Client.Set(ctx, userKey, url, 24*time.Hour).Err()
+	errs = append(errs, err)
 
 	// Set admin cache (30 days)
-	if err := rdb.Client.Set(ctx, adminKey, url, 30*24*time.Hour).Err(); err != nil {
-		return "", fmt.Errorf("failed to cache admin avatar; %w", err)
-	}
+	err = rdb.Client.Set(ctx, adminKey, url, 30*24*time.Hour).Err()
+	errs = append(errs, err)
 
-	return url, nil
+	return errors.Join(errs...)
 }
 
 // Download remote image (user avatar)
 func (u *User) refreshAvatar(
 	ctx context.Context,
 	config *config.Config,
-	rdb *rdb.Service,
 	r2s r2.Service) (string, error) {
 
 	// Set the analytics ID in case it's missing
@@ -240,7 +239,7 @@ func (u *User) refreshAvatar(
 	if err == nil && head.Metadata != nil {
 		storedHash, exists := head.Metadata["source-hash"]
 		if exists && storedHash == sourceHash {
-			return u.updateAvatarCache(ctx, rdb, avatar)
+			return avatar, nil
 		}
 	}
 
@@ -282,7 +281,7 @@ func (u *User) refreshAvatar(
 	}
 
 	// Update both cache keys
-	return u.updateAvatarCache(ctx, rdb, avatar)
+	return avatar, nil
 }
 
 // Delete local avatar if exists
