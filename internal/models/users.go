@@ -74,10 +74,10 @@ func (u *User) SetAnalyticsID() {
 	u.AnalyticsID = fmt.Sprintf("%x", hashBytes)[:32]
 }
 
-// GetAvatar gets user avatar path, either from redis,
-// or downloads and stores avatar path to redis.
+// SetAvatar sets user avatar path, either from Redis,
+// or downloads remote avatar, uploads it to R2 and caches the path to Redis.
 // If the function returns an error the default avatar might be set.
-func (u *User) GetAvatar(
+func (u *User) SetAvatar(
 	ctx context.Context,
 	config *config.Config,
 	rdb *rdb.Service,

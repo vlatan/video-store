@@ -90,7 +90,7 @@ func (s *service) GetUserFromSession(w http.ResponseWriter, r *http.Request) *mo
 		AccessToken:    accessToken,
 	}
 
-	if err = user.GetAvatar(
+	if err = user.SetAvatar(
 		r.Context(),
 		s.config,
 		s.rdb,

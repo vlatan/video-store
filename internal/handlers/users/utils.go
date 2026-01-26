@@ -11,8 +11,8 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-// Get users avatars in parallel
-func (s *Service) GetAvatars(
+// SetAvatars sets users avatars in parallel
+func (s *Service) SetAvatars(
 	ctx context.Context,
 	users []models.User,
 	keyPrefix string,
@@ -27,7 +27,7 @@ func (s *Service) GetAvatars(
 				return ctx.Err()
 			case semaphore <- struct{}{}: // Semaphore will block if full
 				defer func() { <-semaphore }()
-				err := user.GetAvatar(ctx, s.config, s.rdb, s.r2s, keyPrefix)
+				err := user.SetAvatar(ctx, s.config, s.rdb, s.r2s, keyPrefix)
 
 				// Return the error if contex ended
 				if utils.IsContextErr(err) {
