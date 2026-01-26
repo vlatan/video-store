@@ -145,7 +145,11 @@ func (u *User) SetAvatar(
 }
 
 // Download remote image (user avatar)
-func (u *User) DownloadAvatar(ctx context.Context, config *config.Config, r2s r2.Service) (string, error) {
+func (u *User) DownloadAvatar(
+	ctx context.Context,
+	config *config.Config,
+	r2s r2.Service) (string, error) {
+
 	// Set the anaylytics ID in case it's missing
 	if u.AnalyticsID == "" {
 		u.SetAnalyticsID()
