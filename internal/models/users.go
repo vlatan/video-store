@@ -10,7 +10,6 @@ import (
 	"image"
 	"image/jpeg"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"time"
@@ -289,21 +288,25 @@ func (u *User) DeleteAvatar(
 	ctx context.Context,
 	config *config.Config,
 	rdb *rdb.Service,
-	r2s r2.Service) {
+	r2s r2.Service) error {
+
+	errs := make([]error, 0, 3)
 
 	// Attemp to delete the avatar image from R2
 	objectKey := fmt.Sprintf(avatarPath, u.AnalyticsID)
-	if err := r2s.DeleteObject(ctx, config.R2CdnBucketName, objectKey); err != nil {
-		log.Printf("Could not remove the avatar %s from R2: %v", objectKey, err)
-	}
+	err := r2s.DeleteObject(ctx, config.R2CdnBucketName, objectKey)
+	err = fmt.Errorf("failed to remove avatar %q from R2: %w", objectKey, err)
+	errs = append(errs, err)
 
-	// Delete all avatar Redis values
+	// Delete user and admin avatar Redis cache values
 	for _, key := range []string{
 		AvatarAdminPrefix + u.AnalyticsID,
 		AvatarUserPrefix + u.AnalyticsID,
 	} {
-		if err := rdb.Client.Del(ctx, key).Err(); err != nil {
-			log.Printf("Could not remove the avatar %s from Redis: %v", key, err)
-		}
+		err := rdb.Client.Del(ctx, key).Err()
+		err = fmt.Errorf("failed to remove avatar %q from Redis: %w", key, err)
+		errs = append(errs, err)
 	}
+
+	return errors.Join(errs...)
 }
