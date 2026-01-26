@@ -58,7 +58,7 @@ func (s *Service) UsersHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Assign local avatars to users if ttl expired, set cache to 30 days
-	if err = s.SetAvatars(
+	if err = s.GetAvatars(
 		r.Context(),
 		users.Items,
 		models.AvatarAdminPrefix,

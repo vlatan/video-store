@@ -78,7 +78,7 @@ func (u *User) SetAnalyticsID() {
 // SetAvatar gets user avatar path, either from redis,
 // or downloads and stores avatar path to redis.
 // If the function returns an error the default avatar might be set.
-func (u *User) SetAvatar(
+func (u *User) GetAvatar(
 	ctx context.Context,
 	config *config.Config,
 	rdb *rdb.Service,
@@ -113,8 +113,8 @@ func (u *User) SetAvatar(
 		errs = append(errs, err)
 	}
 
-	// Attempt to download the avatar
-	avatar, err = u.DownloadAvatar(ctx, config, r2s)
+	// Refresh the avatar
+	avatar, err = u.refreshAvatar(ctx, config, rdb, r2s)
 
 	// Return early if context error
 	if utils.IsContextErr(err) {
@@ -144,22 +144,13 @@ func (u *User) SetAvatar(
 	return errors.Join(errs...)
 }
 
-// Download remote image (user avatar)
-func (u *User) DownloadAvatar(
-	ctx context.Context,
-	config *config.Config,
-	r2s r2.Service) (string, error) {
-
-	// Set the anaylytics ID in case it's missing
-	if u.AnalyticsID == "" {
-		u.SetAnalyticsID()
-	}
+func (u *User) downloadAvatar(ctx context.Context) ([]byte, error) {
 
 	// Create a request with context
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.AvatarURL, nil)
 	if err != nil {
-		return "", fmt.Errorf(
-			"couldn't create request for avatar %s download: %w",
+		return nil, fmt.Errorf(
+			"couldn't create request for avatar %q download; %w",
 			u.AvatarURL, err,
 		)
 	}
@@ -168,8 +159,8 @@ func (u *User) DownloadAvatar(
 	var client = &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return "", fmt.Errorf(
-			"failed to download avatar %s: %w",
+		return nil, fmt.Errorf(
+			"failed to download avatar %q; %w",
 			u.AvatarURL, err,
 		)
 	}
@@ -177,26 +168,88 @@ func (u *User) DownloadAvatar(
 
 	// Ensure the HTTP request was successful (status code 2xx)
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf(
+		return nil, fmt.Errorf(
 			"failed to download avatar %s, received status code %d",
 			u.AvatarURL, resp.StatusCode,
 		)
 	}
 
-	// Read the body
-	fileData, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", fmt.Errorf(
-			"failed to read file data for avatar %s: %w",
-			u.AvatarURL, err,
-		)
+	// Limit size to prevent abuse (5MB max)
+	limitedReader := io.LimitReader(resp.Body, 5*1024*1024)
+	return io.ReadAll(limitedReader)
+}
+
+// updateCache sets both user and admin avatar caches
+func (u *User) updateAvatarCache(ctx context.Context, rdb *rdb.Service, url string) (string, error) {
+
+	userKey := AvatarUserPrefix + u.AnalyticsID
+	adminKey := AvatarAdminPrefix + u.AnalyticsID
+
+	// Set user cache (1 day)
+	if err := rdb.Client.Set(ctx, userKey, url, 24*time.Hour).Err(); err != nil {
+		return "", fmt.Errorf("failed to cache user avatar; %w", err)
 	}
 
+	// Set admin cache (30 days)
+	if err := rdb.Client.Set(ctx, adminKey, url, 30*24*time.Hour).Err(); err != nil {
+		return "", fmt.Errorf("failed to cache admin avatar; %w", err)
+	}
+
+	return url, nil
+}
+
+// Download remote image (user avatar)
+func (u *User) refreshAvatar(
+	ctx context.Context,
+	config *config.Config,
+	rdb *rdb.Service,
+	r2s r2.Service) (string, error) {
+
+	// Set the analytics ID in case it's missing
+	if u.AnalyticsID == "" {
+		u.SetAnalyticsID()
+	}
+
+	// Download the avatar from remote location
+	data, err := u.downloadAvatar(ctx)
+	if err != nil {
+		return "", fmt.Errorf("failed to download avatar; %w", err)
+	}
+
+	// Hash of the source image
+	sourceHash := fmt.Sprintf("%x", md5.Sum(data)) // #nosec G401
+
+	// Check for metadata - if we already have this version in R2
+	head, err := r2s.HeadObject(
+		ctx,
+		config.R2CdnBucketName,
+		fmt.Sprintf(avatarPath, u.AnalyticsID),
+	)
+
+	// Form the avatar URL
+	avatarURL := &url.URL{
+		Scheme:   "https",
+		Host:     config.R2CdnDomain,
+		Path:     fmt.Sprintf(avatarPath, u.AnalyticsID),
+		RawQuery: "v=" + url.QueryEscape(sourceHash),
+	}
+
+	avatar := avatarURL.String()
+
+	// If source unchanged just refresh both cache keys
+	if err == nil && head.Metadata != nil {
+		storedHash, exists := head.Metadata["source-hash"]
+		if exists && storedHash == sourceHash {
+			return u.updateAvatarCache(ctx, rdb, avatar)
+		}
+	}
+
+	// Source changed or doesn't exist - decode and re-encode
 	// Decode the avatar
-	img, _, err := image.Decode(bytes.NewReader(fileData))
+	img, _, err := image.Decode(bytes.NewReader(data))
 	if err != nil {
 		return "", fmt.Errorf(
-			"failed to decode the file for avatar %s: %w",
+			"failed to decode the file for avatar %s; %w",
 			u.AvatarURL, err,
 		)
 	}
@@ -206,7 +259,7 @@ func (u *User) DownloadAvatar(
 	err = jpeg.Encode(&buf, img, &jpeg.Options{Quality: 85})
 	if err != nil {
 		return "", fmt.Errorf(
-			"failed to convert the avatar %s to JPEG: %w",
+			"failed to convert the avatar %s to JPEG; %w",
 			u.AvatarURL, err,
 		)
 	}
@@ -214,10 +267,11 @@ func (u *User) DownloadAvatar(
 	// Upload object to bucket
 	err = r2s.PutObject(
 		ctx,
-		bytes.NewReader(buf.Bytes()),
-		"image/jpeg",
 		config.R2CdnBucketName,
 		fmt.Sprintf(avatarPath, u.AnalyticsID),
+		bytes.NewReader(buf.Bytes()),
+		"image/jpeg",
+		map[string]string{"source-hash": sourceHash},
 	)
 
 	if err != nil {
@@ -227,15 +281,8 @@ func (u *User) DownloadAvatar(
 		)
 	}
 
-	etag := fmt.Sprintf("%x", md5.Sum(fileData)) // #nosec G401
-	avatarURL := &url.URL{
-		Scheme:   "https",
-		Host:     config.R2CdnDomain,
-		Path:     fmt.Sprintf(avatarPath, u.AnalyticsID),
-		RawQuery: "v=" + url.QueryEscape(etag),
-	}
-
-	return avatarURL.String(), nil
+	// Update both cache keys
+	return u.updateAvatarCache(ctx, rdb, avatar)
 }
 
 // Delete local avatar if exists

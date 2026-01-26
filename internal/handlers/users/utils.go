@@ -12,7 +12,7 @@ import (
 )
 
 // Get users avatars in parallel
-func (s *Service) SetAvatars(
+func (s *Service) GetAvatars(
 	ctx context.Context,
 	users []models.User,
 	keyPrefix string,
@@ -27,7 +27,7 @@ func (s *Service) SetAvatars(
 				return ctx.Err()
 			case semaphore <- struct{}{}: // Semaphore will block if full
 				defer func() { <-semaphore }()
-				err := user.SetAvatar(ctx, s.config, s.rdb, s.r2s, keyPrefix, ttl)
+				err := user.GetAvatar(ctx, s.config, s.rdb, s.r2s, keyPrefix, ttl)
 
 				// Return the error if contex ended
 				if utils.IsContextErr(err) {

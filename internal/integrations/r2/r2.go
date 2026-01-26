@@ -23,8 +23,19 @@ type Service interface {
 	DeleteObject(ctx context.Context, bucket, key string) error
 	// ObjectExists checks if the object exists in the bucket
 	ObjectExists(ctx context.Context, timeout time.Duration, bucket, key string) error
+	// HeadObject gets and returns the head of a given object
+	HeadObject(ctx context.Context, bucket, key string) (*s3.HeadObjectOutput, error)
+
 	// PutObject puts object to bucket having the content
-	PutObject(ctx context.Context, body io.Reader, contentType, bucket, key string) error
+	PutObject(
+		ctx context.Context,
+		bucket string,
+		key string,
+		body io.Reader,
+		contentType string,
+		metadata map[string]string,
+	) error
+
 	// UploadFile uploads a file to bucket
 	UploadFile(ctx context.Context, bucket, rootPath, key, filePath string) error
 }
@@ -83,14 +94,30 @@ func (s *service) ObjectExists(ctx context.Context, timeout time.Duration, bucke
 	)
 }
 
+// HeadObject gets and returns the head of a given object
+func (s *service) HeadObject(ctx context.Context, bucket, key string) (*s3.HeadObjectOutput, error) {
+	return s.client.HeadObject(ctx, &s3.HeadObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
+	})
+}
+
 // PutObject puts object to bucket having the content
-func (s *service) PutObject(ctx context.Context, body io.Reader, contentType, bucket, key string) error {
+func (s *service) PutObject(
+	ctx context.Context,
+	bucket string,
+	key string,
+	body io.Reader,
+	contentType string,
+	metadata map[string]string,
+) error {
 
 	_, err := s.client.PutObject(ctx, &s3.PutObjectInput{
 		Bucket:      aws.String(bucket),
 		Key:         aws.String(key),
 		Body:        body,
 		ContentType: aws.String(contentType),
+		Metadata:    metadata,
 	})
 
 	if err != nil {
@@ -142,7 +169,5 @@ func (s *service) UploadFile(ctx context.Context, bucket, rootPath, key, filePat
 	}
 
 	contentType := http.DetectContentType(buffer)
-	err = s.PutObject(ctx, file, contentType, bucket, key)
-
-	return err
+	return s.PutObject(ctx, bucket, key, file, contentType, nil)
 }
