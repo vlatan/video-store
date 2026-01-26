@@ -161,7 +161,7 @@ func (u *User) downloadAvatar(ctx context.Context) ([]byte, error) {
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf(
-			"failed tot execute GET request for avatar %q; %w",
+			"failed to execute GET request for avatar %q; %w",
 			u.AvatarURL, err,
 		)
 	}
