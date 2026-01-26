@@ -113,7 +113,7 @@ func (u *User) GetAvatar(
 		errs = append(errs, err)
 	}
 
-	// Refresh the avatar
+	// Refresh the avatar - reupload if changed
 	avatar, err = u.refreshAvatar(ctx, config, r2s)
 
 	// Return early if context error
@@ -145,6 +145,7 @@ func (u *User) GetAvatar(
 	return errors.Join(errs...)
 }
 
+// downloadAvatar downloads avatar from a remote source
 func (u *User) downloadAvatar(ctx context.Context) ([]byte, error) {
 
 	// Create a request with context
@@ -180,25 +181,24 @@ func (u *User) downloadAvatar(ctx context.Context) ([]byte, error) {
 	return io.ReadAll(limitedReader)
 }
 
-// updateCache sets both user and admin avatar caches
+// updateAvatarCache sets both user and admin avatar caches in Redis
 func (u *User) updateAvatarCache(ctx context.Context, rdb *rdb.Service, url string) error {
 
 	errs := make([]error, 0, 2)
-	userKey := AvatarUserPrefix + u.AnalyticsID
-	adminKey := AvatarAdminPrefix + u.AnalyticsID
+	data := map[string]time.Duration{
+		(AvatarUserPrefix + u.AnalyticsID):  24 * time.Hour,      // 1 day
+		(AvatarAdminPrefix + u.AnalyticsID): 30 * 24 * time.Hour, // 30 days
+	}
 
-	// Set user cache (1 day)
-	err := rdb.Client.Set(ctx, userKey, url, 24*time.Hour).Err()
-	errs = append(errs, err)
-
-	// Set admin cache (30 days)
-	err = rdb.Client.Set(ctx, adminKey, url, 30*24*time.Hour).Err()
-	errs = append(errs, err)
+	for key, ttl := range data {
+		err := rdb.Client.Set(ctx, key, url, ttl).Err()
+		errs = append(errs, err)
+	}
 
 	return errors.Join(errs...)
 }
 
-// Download remote image (user avatar)
+// refreshAvatar reuploads the user avatar at R2 if changed
 func (u *User) refreshAvatar(
 	ctx context.Context,
 	config *config.Config,
@@ -235,7 +235,7 @@ func (u *User) refreshAvatar(
 
 	avatar := avatarURL.String()
 
-	// If source unchanged just refresh both cache keys
+	// If object source unchanged avatar not changed, return it
 	if err == nil && head.Metadata != nil {
 		storedHash, exists := head.Metadata["source-hash"]
 		if exists && storedHash == sourceHash {
@@ -243,7 +243,6 @@ func (u *User) refreshAvatar(
 		}
 	}
 
-	// Source changed or doesn't exist - decode and re-encode
 	// Decode the avatar
 	img, _, err := image.Decode(bytes.NewReader(data))
 	if err != nil {
@@ -280,11 +279,11 @@ func (u *User) refreshAvatar(
 		)
 	}
 
-	// Update both cache keys
+	// Return the avatar
 	return avatar, nil
 }
 
-// Delete local avatar if exists
+// Delete avatar from object storage if exists
 func (u *User) DeleteAvatar(
 	ctx context.Context,
 	config *config.Config,
