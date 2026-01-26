@@ -75,7 +75,7 @@ func (u *User) SetAnalyticsID() {
 	u.AnalyticsID = fmt.Sprintf("%x", hashBytes)[:32]
 }
 
-// SetAvatar gets user avatar path, either from redis,
+// GetAvatar gets user avatar path, either from redis,
 // or downloads and stores avatar path to redis.
 // If the function returns an error the default avatar might be set.
 func (u *User) GetAvatar(
@@ -239,6 +239,7 @@ func (u *User) refreshAvatar(
 	if err == nil && head.Metadata != nil {
 		storedHash, exists := head.Metadata["source-hash"]
 		if exists && storedHash == sourceHash {
+			println("BOOOOOM")
 			return avatar, nil
 		}
 	}
