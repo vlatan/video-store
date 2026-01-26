@@ -112,7 +112,7 @@ func (u *User) SetAvatar(
 	}
 
 	// Attempt to download the avatar
-	etag, err := u.DownloadAvatar(ctx, config, r2s)
+	avatar, err = u.DownloadAvatar(ctx, config, r2s)
 
 	// Return early if context error
 	if utils.IsContextErr(err) {
@@ -123,15 +123,6 @@ func (u *User) SetAvatar(
 	if err != nil {
 		errs = append(errs, err)
 		avatar = defaultAvatar
-	} else {
-		avatarURL := &url.URL{
-			Scheme:   "https",
-			Host:     config.R2CdnDomain,
-			Path:     fmt.Sprintf(avatarPath, u.AnalyticsID),
-			RawQuery: "v=" + url.QueryEscape(etag),
-		}
-
-		avatar = avatarURL.String()
 	}
 
 	// Set avatar
@@ -231,7 +222,14 @@ func (u *User) DownloadAvatar(ctx context.Context, config *config.Config, r2s r2
 	}
 
 	etag := fmt.Sprintf("%x", md5.Sum(fileData)) // #nosec G401
-	return etag, nil
+	avatarURL := &url.URL{
+		Scheme:   "https",
+		Host:     config.R2CdnDomain,
+		Path:     fmt.Sprintf(avatarPath, u.AnalyticsID),
+		RawQuery: "v=" + url.QueryEscape(etag),
+	}
+
+	return avatarURL.String(), nil
 }
 
 // Delete local avatar if exists
