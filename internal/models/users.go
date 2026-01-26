@@ -238,7 +238,6 @@ func (u *User) refreshAvatar(
 	if err == nil && head.Metadata != nil {
 		storedHash, exists := head.Metadata["source-hash"]
 		if exists && storedHash == sourceHash {
-			fmt.Println("BOOOOOOOOOOOOOOOOOOOOOOM")
 			return avatar, nil
 		}
 	}
