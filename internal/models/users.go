@@ -55,9 +55,6 @@ const avatarCacheKey = "avatar:r2:%s"
 const avatarPath = "avatars/%s.jpg"
 const defaultAvatar = "/static/images/default-avatar.jpg"
 
-// Time interval to recheck the user avatar
-var avatarTimeout time.Duration = 24 * time.Hour
-
 // Check if the user is authenticated
 func (u *User) IsAuthenticated() bool {
 	return u != nil && u.ProviderUserId != ""
@@ -84,7 +81,8 @@ func (u *User) SetAvatar(
 	ctx context.Context,
 	config *config.Config,
 	rdb *rdb.Service,
-	r2s r2.Service) error {
+	r2s r2.Service,
+	ttl time.Duration) error {
 
 	// Set the anaylytics ID in case it's missing
 	if u.AnalyticsID == "" {
@@ -138,7 +136,7 @@ func (u *User) SetAvatar(
 
 	// Set avatar
 	u.LocalAvatarURL = avatar
-	err = rdb.Client.Set(ctx, redisKey, avatar, avatarTimeout).Err()
+	err = rdb.Client.Set(ctx, redisKey, avatar, ttl).Err()
 
 	// Return early if context error
 	if utils.IsContextErr(err) {

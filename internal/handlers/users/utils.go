@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"runtime"
+	"time"
 
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/utils"
@@ -11,7 +12,10 @@ import (
 )
 
 // Get users avatars in parallel
-func (s *Service) SetAvatars(ctx context.Context, users []models.User) error {
+func (s *Service) SetAvatars(
+	ctx context.Context,
+	users []models.User,
+	ttl time.Duration) error {
 
 	g := new(errgroup.Group)
 	semaphore := make(chan struct{}, runtime.GOMAXPROCS(0))
@@ -22,7 +26,7 @@ func (s *Service) SetAvatars(ctx context.Context, users []models.User) error {
 				return ctx.Err()
 			case semaphore <- struct{}{}: // Semaphore will block if full
 				defer func() { <-semaphore }()
-				err := user.SetAvatar(ctx, s.config, s.rdb, s.r2s)
+				err := user.SetAvatar(ctx, s.config, s.rdb, s.r2s, ttl)
 
 				// Return the error if contex ended
 				if utils.IsContextErr(err) {

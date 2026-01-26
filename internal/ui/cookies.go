@@ -90,7 +90,7 @@ func (s *service) GetUserFromSession(w http.ResponseWriter, r *http.Request) *mo
 		AccessToken:    accessToken,
 	}
 
-	if err = user.SetAvatar(r.Context(), s.config, s.rdb, s.r2s); err != nil {
+	if err = user.SetAvatar(r.Context(), s.config, s.rdb, s.r2s, 24*time.Hour); err != nil {
 		log.Printf("couldn't set local avatar for user; %v", err)
 	}
 
