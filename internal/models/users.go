@@ -219,7 +219,7 @@ func (u *User) refreshAvatar(
 	// Hash of the source image
 	sourceHash := fmt.Sprintf("%x", md5.Sum(data)) // #nosec G401
 
-	// Check for metadata - if we already have this version in R2
+	// Get R2 object head
 	head, err := r2s.HeadObject(
 		ctx,
 		config.R2CdnBucketName,

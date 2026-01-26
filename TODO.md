@@ -1,3 +1,4 @@
+* Fix how and where default avatar is set
 * Uncomment and remove code in:
   - `internal/integrations/gemini/gemini.go`
   - `internal/worker/worker.go`
