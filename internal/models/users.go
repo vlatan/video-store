@@ -119,7 +119,6 @@ func (u *User) GetAvatar(
 		return err
 	}
 
-	// Save non-nil error
 	// Set to default avatar if no remote avatar
 	if err != nil {
 		avatar = defaultAvatar
