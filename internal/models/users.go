@@ -82,8 +82,7 @@ func (u *User) GetAvatar(
 	config *config.Config,
 	rdb *rdb.Service,
 	r2s r2.Service,
-	keyPrefix string,
-	ttl time.Duration) error {
+	keyPrefix string) error {
 
 	// Set the anaylytics ID in case it's missing
 	if u.AnalyticsID == "" {
@@ -136,11 +135,7 @@ func (u *User) GetAvatar(
 		return err
 	}
 
-	// Save non-nil error
-	if err != nil {
-		errs = append(errs, err)
-	}
-
+	errs = append(errs, err)
 	return errors.Join(errs...)
 }
 
@@ -203,18 +198,13 @@ func (u *User) refreshAvatar(
 	config *config.Config,
 	r2s r2.Service) (string, error) {
 
-	// Set the analytics ID in case it's missing
-	if u.AnalyticsID == "" {
-		u.SetAnalyticsID()
-	}
-
 	// Download the avatar from remote location
 	data, err := u.downloadAvatar(ctx)
 	if err != nil {
 		return "", fmt.Errorf("failed to download avatar; %w", err)
 	}
 
-	// Hash of the source image
+	// Hash the source image
 	sourceHash := fmt.Sprintf("%x", md5.Sum(data)) // #nosec G401
 
 	// Get R2 object head

@@ -27,7 +27,7 @@ func (s *Service) GetAvatars(
 				return ctx.Err()
 			case semaphore <- struct{}{}: // Semaphore will block if full
 				defer func() { <-semaphore }()
-				err := user.GetAvatar(ctx, s.config, s.rdb, s.r2s, keyPrefix, ttl)
+				err := user.GetAvatar(ctx, s.config, s.rdb, s.r2s, keyPrefix)
 
 				// Return the error if contex ended
 				if utils.IsContextErr(err) {

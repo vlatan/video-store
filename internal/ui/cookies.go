@@ -96,7 +96,6 @@ func (s *service) GetUserFromSession(w http.ResponseWriter, r *http.Request) *mo
 		s.rdb,
 		s.r2s,
 		models.AvatarUserPrefix,
-		24*time.Hour,
 	); err != nil {
 		log.Printf("couldn't set local avatar for user; %v", err)
 	}
