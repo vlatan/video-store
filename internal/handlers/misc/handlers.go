@@ -33,31 +33,28 @@ var weirdBots = []string{
 // RobotsHandler handles robots.txt page
 func (s *Service) RobotsHandler(w http.ResponseWriter, r *http.Request) {
 
+	var builder strings.Builder
+
 	// Point to sitemap
-	content := "# Sitemap\n"
-	content += fmt.Sprintf("# %s\n", strings.Repeat("-", 20))
+	builder.WriteString("# Sitemap\n")
 	baseUrl := utils.GetBaseURL(r, s.config.Protocol)
 	sitemapIndex := utils.AbsoluteURL(baseUrl, "sitemap.xml")
-	content += fmt.Sprintf("Sitemap: %s\n\n", sitemapIndex)
+	fmt.Fprintf(&builder, "Sitemap: %s\n\n", sitemapIndex)
 
 	// Ban bad bots
-	content += "# Ban weird bots\n"
-	content += fmt.Sprintf("# %s\n", strings.Repeat("-", 20))
-
+	builder.WriteString("# Ban weird bots\n")
 	for _, bot := range weirdBots {
-		content += fmt.Sprintf("User-agent: %s\n", bot)
+		fmt.Fprintf(&builder, "User-agent: %s\n", bot)
 	}
+	builder.WriteString("Disallow: /\n\n")
 
-	content += "Disallow: /\n\n"
-
-	// Disallow all bots on paths with prefixes
-	content += "# Disallow bots on paths with prefixes\n"
-	content += fmt.Sprintf("# %s\n", strings.Repeat("-", 20))
-	content += "User-agent: *\n"
-	content += "Disallow: /auth"
+	// Disallow all bots on /auth
+	builder.WriteString("# Disallow all bots on /auth\n")
+	builder.WriteString("User-agent: *\n")
+	builder.WriteString("Disallow: /auth/")
 
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	if _, err := w.Write([]byte(content)); err != nil {
+	if _, err := w.Write([]byte(builder.String())); err != nil {
 		log.Printf("Failed to write response to '/robots.txt': %v", err)
 	}
 }
