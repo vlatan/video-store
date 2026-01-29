@@ -32,7 +32,11 @@ func (s *service) WriteJSON(w http.ResponseWriter, r *http.Request, data any) {
 // Check if template exists in the collection of templates (map)
 // Write the template to buffer to check for errors
 // Finally write the template to http response writer
-func (s *service) RenderHTML(w http.ResponseWriter, r *http.Request, templateName string, data *models.TemplateData) {
+func (s *service) RenderHTML(
+	w http.ResponseWriter,
+	r *http.Request,
+	templateName string,
+	data *models.TemplateData) {
 	tmpl, exists := s.templates[templateName]
 
 	if !exists {
@@ -56,15 +60,11 @@ func (s *service) RenderHTML(w http.ResponseWriter, r *http.Request, templateNam
 
 	// Actually the body/template and the status code are written to a recoder, not a real response writer,
 	// because there's a middleware that intercepts the request and passes a recoder to next handler.
-	// Only the rest of the headers are written to the real response writer.
 	if err := tmpl.ExecuteTemplate(w, templateName, data); err != nil {
 		log.Printf(
 			"Failed to execute the HTML template '%s' on URI '%s': %v",
-			templateName,
-			r.RequestURI,
-			err,
+			templateName, r.RequestURI, err,
 		)
 		utils.HttpError(w, http.StatusInternalServerError)
-		return
 	}
 }

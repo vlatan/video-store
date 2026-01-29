@@ -238,7 +238,7 @@ func (s *Service) HandleErrors(next http.Handler) http.Handler {
 		// Default data
 		data := models.GetDataFromContext(r)
 
-		// Set headers
+		// Set HTML content type header becaue we will serve HTML error page
 		recorder.Header().Set("Content-Type", "text/html; charset=utf-8")
 
 		// Try to render error template
