@@ -33,13 +33,25 @@ func (s *service) TextFiles() models.TextFiles {
 // PaparseTextFiles parses the text files that app needs and serves
 func parseTextFiles(cfg *config.Config) models.TextFiles {
 	tf := make(models.TextFiles)
-	tf["/robots.txt"] = &models.FileInfo{Bytes: buildRobotsTxt(cfg)}
-	tf["/ads.txt"] = &models.FileInfo{Bytes: builAdsTxt(cfg)}
+
+	if robotsTxt := buildRobotsTxt(cfg); robotsTxt != nil {
+		tf["/robots.txt"] = &models.FileInfo{Bytes: robotsTxt}
+	}
+
+	if adsTxt := builAdsTxt(cfg); adsTxt != nil {
+		tf["/ads.txt"] = &models.FileInfo{Bytes: adsTxt}
+	}
+
 	return tf
 }
 
 // buildRobotsTxt build the content of the robots.txt file
 func builAdsTxt(cfg *config.Config) []byte {
+
+	if cfg.AdSenseAccount == "" {
+		return nil
+	}
+
 	return fmt.Appendf(
 		[]byte{},
 		"google.com, pub-%s, DIRECT, f08c47fec0942fa0",
