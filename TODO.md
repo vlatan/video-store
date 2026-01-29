@@ -1,6 +1,3 @@
-* Build `robots.txt`, `ads.txt` on startup
-* See what else can we build on startup
-
 * Uncomment and remove code in:
   - `internal/integrations/gemini/gemini.go`
   - `internal/worker/worker.go`
