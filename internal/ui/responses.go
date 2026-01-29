@@ -11,7 +11,7 @@ import (
 	"github.com/vlatan/video-store/internal/utils"
 )
 
-// Write JSON to buffer first and then if succesfull to the response writer
+// WriteJSON writes JSON to the response
 func (s *service) WriteJSON(w http.ResponseWriter, r *http.Request, data any) {
 	// Encode data to JSON
 	jsonData, err := json.Marshal(data)
@@ -21,7 +21,8 @@ func (s *service) WriteJSON(w http.ResponseWriter, r *http.Request, data any) {
 		return
 	}
 
-	// Write to response
+	// Actually the body and the status code are written to a recoder, not a real response writer,
+	// which allows us to serve custom error if there was an error.
 	w.Header().Set("Content-Type", "application/json")
 	if _, err := w.Write(jsonData); err != nil {
 		// Too late for recovery here, just log the error
@@ -29,9 +30,8 @@ func (s *service) WriteJSON(w http.ResponseWriter, r *http.Request, data any) {
 	}
 }
 
-// Check if template exists in the collection of templates (map)
-// Write the template to buffer to check for errors
-// Finally write the template to http response writer
+// RenderHTML checks if template exists in the collection of templates (map),
+// executes the given template and writes the output to the response.
 func (s *service) RenderHTML(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -58,8 +58,8 @@ func (s *service) RenderHTML(
 	header := fmt.Sprintf("%s; charset=utf-8", contentType)
 	w.Header().Set("Content-Type", header)
 
-	// Actually the body/template and the status code are written to a recoder, not a real response writer,
-	// because there's a middleware that intercepts the request and passes a recoder to next handler.
+	// Actually the body and the status code are written to a recoder, not a real response writer,
+	// which allows us to serve custom error if there was an error.
 	if err := tmpl.ExecuteTemplate(w, templateName, data); err != nil {
 		log.Printf(
 			"Failed to execute the HTML template '%s' on URI '%s': %v",
