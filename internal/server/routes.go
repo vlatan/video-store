@@ -54,7 +54,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	mux.HandleFunc("GET /search/{$}", s.posts.SearchPostsHandler)
 	mux.HandleFunc("GET /health/{$}", s.mw.IsAdmin(s.misc.HealthHandler))
 	mux.HandleFunc("GET /static/", s.misc.StaticHandler)
-	mux.HandleFunc("GET /ads.txt", s.mw.PublicCache(s.misc.AdsTextHandler))
+	mux.HandleFunc("GET /ads.txt", s.mw.PublicCache(s.misc.TextHandler))
 	mux.HandleFunc("GET /robots.txt", s.mw.PublicCache(s.misc.TextHandler))
 
 	// Register favicons serving from root

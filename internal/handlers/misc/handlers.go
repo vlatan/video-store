@@ -23,7 +23,7 @@ func (s *Service) TextHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if the text file exists
-	textFile, exists := s.ui.GetTextFiles()[r.URL.Path]
+	textFile, exists := s.ui.TextFiles()[r.URL.Path]
 	if !exists {
 		http.NotFound(w, r)
 		return
@@ -32,24 +32,6 @@ func (s *Service) TextHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	if _, err := w.Write(textFile.Bytes); err != nil {
 		log.Printf("Failed to write response to %q: %v", r.URL.Path, err)
-	}
-}
-
-// Handle ads.txt
-func (s *Service) AdsTextHandler(w http.ResponseWriter, r *http.Request) {
-	if s.config.AdSenseAccount == "" {
-		http.NotFound(w, r)
-		return
-	}
-
-	content := fmt.Sprintf(
-		"google.com, pub-%s, DIRECT, f08c47fec0942fa0",
-		s.config.AdSenseAccount,
-	)
-
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	if _, err := w.Write([]byte(content)); err != nil {
-		log.Printf("Failed to write response to '/ads.txt': %v", err)
 	}
 }
 
@@ -81,7 +63,7 @@ func (s *Service) StaticHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Vary", "Accept-Encoding")
 
 	// Get the file information
-	fileInfo, ok := s.ui.GetStaticFiles()[r.URL.Path]
+	fileInfo, ok := s.ui.StaticFiles()[r.URL.Path]
 
 	// Set Etag if etag available
 	if ok && fileInfo.Etag != "" {

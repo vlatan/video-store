@@ -15,7 +15,7 @@ import (
 )
 
 // GetStaticFiles gets the map containing the static files
-func (s *service) GetStaticFiles() models.StaticFiles {
+func (s *service) StaticFiles() models.StaticFiles {
 	return s.staticFiles
 }
 

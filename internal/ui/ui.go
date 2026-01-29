@@ -27,9 +27,9 @@ type Service interface {
 	// Store flash message in a session
 	StoreFlashMessage(w http.ResponseWriter, r *http.Request, m *models.FlashMessage)
 	// Get the map containing the static files
-	GetStaticFiles() models.StaticFiles
+	StaticFiles() models.StaticFiles
 	// Get the map containing the text files
-	GetTextFiles() models.TextFiles
+	TextFiles() models.TextFiles
 	// Create new template data
 	NewData(w http.ResponseWriter, r *http.Request) *models.TemplateData
 	// Create new pagination struct

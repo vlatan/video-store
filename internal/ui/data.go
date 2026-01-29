@@ -29,7 +29,7 @@ func (s *service) NewData(w http.ResponseWriter, r *http.Request) *models.Templa
 
 	// Construct the data
 	data := &models.TemplateData{
-		StaticFiles: s.GetStaticFiles(),
+		StaticFiles: s.StaticFiles(),
 		Config:      s.config,
 		Categories:  categories,
 		CurrentURI:  r.RequestURI,
