@@ -9,6 +9,7 @@ import (
 	"github.com/vlatan/video-store/internal/config"
 )
 
+type TextFiles map[string]*FileInfo
 type StaticFiles map[string]*FileInfo
 type TemplateMap map[string]*template.Template
 

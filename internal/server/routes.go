@@ -55,7 +55,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	mux.HandleFunc("GET /health/{$}", s.mw.IsAdmin(s.misc.HealthHandler))
 	mux.HandleFunc("GET /static/", s.misc.StaticHandler)
 	mux.HandleFunc("GET /ads.txt", s.mw.PublicCache(s.misc.AdsTextHandler))
-	mux.HandleFunc("GET /robots.txt", s.mw.PublicCache(s.misc.RobotsHandler))
+	mux.HandleFunc("GET /robots.txt", s.mw.PublicCache(s.misc.TextHandler))
 
 	// Register favicons serving from root
 	for _, favicon := range utils.RootFavicons {

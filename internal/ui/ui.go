@@ -28,6 +28,8 @@ type Service interface {
 	StoreFlashMessage(w http.ResponseWriter, r *http.Request, m *models.FlashMessage)
 	// Get the map containing the static files
 	GetStaticFiles() models.StaticFiles
+	// Get the map containing the text files
+	GetTextFiles() models.TextFiles
 	// Create new template data
 	NewData(w http.ResponseWriter, r *http.Request) *models.TemplateData
 	// Create new pagination struct
@@ -44,6 +46,7 @@ type Service interface {
 
 type service struct {
 	templates   models.TemplateMap
+	textFiles   models.TextFiles
 	staticFiles models.StaticFiles
 	rdb         *rdb.Service
 	r2s         r2.Service
@@ -75,6 +78,7 @@ func New(
 	return &service{
 		templates:   parseTemplates(m),
 		staticFiles: parseStaticFiles(m, "static"),
+		textFiles:   parseTextFiles(config),
 		rdb:         rdb,
 		r2s:         r2s,
 		config:      config,

@@ -13,49 +13,25 @@ import (
 	"github.com/vlatan/video-store/web"
 )
 
-var weirdBots = []string{
-	"Nuclei",
-	"WikiDo",
-	"Riddler",
-	"PetalBot",
-	"Zoominfobot",
-	"Go-http-client",
-	"Node/simplecrawler",
-	"CazoodleBot",
-	"dotbot/1.0",
-	"Gigabot",
-	"Barkrowler",
-	"BLEXBot",
-	"magpie-crawler",
-	"Thinkbot",
-}
+// TextHandler handles text files such as robots.txt, ads.txt, etc.
+func (s *Service) TextHandler(w http.ResponseWriter, r *http.Request) {
 
-// RobotsHandler handles robots.txt page
-func (s *Service) RobotsHandler(w http.ResponseWriter, r *http.Request) {
-
-	var builder strings.Builder
-
-	// Point to sitemap
-	builder.WriteString("# Sitemap\n")
-	baseUrl := utils.GetBaseURL(r, s.config.Protocol)
-	sitemapIndex := utils.AbsoluteURL(baseUrl, "sitemap.xml")
-	fmt.Fprintf(&builder, "Sitemap: %s\n\n", sitemapIndex)
-
-	// Ban bad bots
-	builder.WriteString("# Ban weird bots\n")
-	for _, bot := range weirdBots {
-		fmt.Fprintf(&builder, "User-agent: %s\n", bot)
+	// Validate the path
+	if err := utils.ValidateFilePath(r.URL.Path); err != nil {
+		http.NotFound(w, r)
+		return
 	}
-	builder.WriteString("Disallow: /\n\n")
 
-	// Disallow all bots on /auth
-	builder.WriteString("# Disallow all bots on /auth\n")
-	builder.WriteString("User-agent: *\n")
-	builder.WriteString("Disallow: /auth/")
+	// Check if the text file exists
+	textFile, exists := s.ui.GetTextFiles()[r.URL.Path]
+	if !exists {
+		http.NotFound(w, r)
+		return
+	}
 
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	if _, err := w.Write([]byte(builder.String())); err != nil {
-		log.Printf("Failed to write response to '/robots.txt': %v", err)
+	if _, err := w.Write(textFile.Bytes); err != nil {
+		log.Printf("Failed to write response to %q: %v", r.URL.Path, err)
 	}
 }
 
@@ -112,7 +88,7 @@ func (s *Service) StaticHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Etag", fmt.Sprintf(`"%s"`, fileInfo.Etag))
 	}
 
-	// Return 304 if etag match
+	// Return 304 not modified if etag match
 	noneMatch := strings.Trim(r.Header.Get("If-None-Match"), "\"")
 	if ok && fileInfo.Etag != "" && noneMatch == fileInfo.Etag {
 		w.WriteHeader(http.StatusNotModified)
