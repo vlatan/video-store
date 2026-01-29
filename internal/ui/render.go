@@ -11,7 +11,8 @@ import (
 	"github.com/vlatan/video-store/internal/utils"
 )
 
-// WriteJSON writes JSON to the response
+// WriteJSON converts the data into JSON-formatted string
+// and writes the output to response
 func (s *service) WriteJSON(w http.ResponseWriter, r *http.Request, data any) {
 	// Encode data to JSON
 	jsonData, err := json.Marshal(data)
@@ -21,8 +22,7 @@ func (s *service) WriteJSON(w http.ResponseWriter, r *http.Request, data any) {
 		return
 	}
 
-	// Actually the body and the status code are written to a recoder, not a real response writer,
-	// which allows us to serve custom error if there was an error.
+	// Write to response
 	w.Header().Set("Content-Type", "application/json")
 	if _, err := w.Write(jsonData); err != nil {
 		// Too late for recovery here, just log the error
@@ -58,8 +58,7 @@ func (s *service) RenderHTML(
 	header := fmt.Sprintf("%s; charset=utf-8", contentType)
 	w.Header().Set("Content-Type", header)
 
-	// Actually the body and the status code are written to a recoder, not a real response writer,
-	// which allows us to serve custom error if there was an error.
+	// Write to response
 	if err := tmpl.ExecuteTemplate(w, templateName, data); err != nil {
 		log.Printf(
 			"Failed to execute the HTML template '%s' on URI '%s': %v",
