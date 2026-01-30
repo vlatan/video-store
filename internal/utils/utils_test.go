@@ -14,37 +14,30 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestCanonicalURI(t *testing.T) {
+func TestCanonicalURL(t *testing.T) {
 
+	req := httptest.NewRequest("GET", "/foo/?test=true", nil)
 	mockTLS := &tls.ConnectionState{Version: tls.VersionTLS13}
+
 	tests := []struct {
-		name           string
-		protocol       string
-		tls            *tls.ConnectionState
-		expectedScheme string
+		name     string
+		protocol string
+		tls      *tls.ConnectionState
+		expected string
 	}{
-		{"force https, with TLS", "https", mockTLS, "https"},
-		{"force https, no TLS", "https", nil, "https"},
-		{"don't force https, with TLS", "http", mockTLS, "https"},
-		{"don't force https, no TLS", "http", nil, "http"},
+		{"force https, with TLS", "https", mockTLS, "https://example.com/foo/"},
+		{"force https, no TLS", "https", nil, "https://example.com/foo/"},
+		{"don't force https, with TLS", "http", mockTLS, "https://example.com/foo/"},
+		{"don't force https, no TLS", "http", nil, "http://example.com/foo/"},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			req := httptest.NewRequest("GET", "/", nil)
 			req.TLS = tt.tls
 
-			url := CanonicalURI(req, tt.protocol)
-			if url.Scheme != tt.expectedScheme {
-				t.Errorf("got %q scheme, want %q scheme", url.Scheme, tt.expectedScheme)
-			}
-
-			if url.Host != req.Host {
-				t.Errorf("got %q host, want %q host", url.Host, req.Host)
-			}
-
-			if url.Path != req.URL.Path {
-				t.Errorf("got %q path, want %q path", url.Path, req.URL.Path)
+			url := CanonicalURL(req, tt.protocol)
+			if url != tt.expected {
+				t.Errorf("got %q url, want %q url", url, tt.expected)
 			}
 		})
 	}

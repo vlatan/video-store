@@ -2,7 +2,6 @@ package models
 
 import (
 	"html/template"
-	"net/url"
 	"strings"
 	"time"
 
@@ -87,7 +86,7 @@ type TemplateData struct {
 	CurrentPage     *Page
 	CurrentUser     *User
 	CurrentURI      string
-	CanonicalURI    *url.URL
+	CanonicalURL    string
 	Sources         []Source
 	Categories      []Category
 	FlashMessages   []*FlashMessage
@@ -100,10 +99,6 @@ type TemplateData struct {
 	*Posts
 	*Users
 	*Form
-}
-
-func (td *TemplateData) CanonicalURL() string {
-	return td.CanonicalURI.String()
 }
 
 // Check if current user is admin

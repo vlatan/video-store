@@ -33,7 +33,7 @@ func (s *service) NewData(w http.ResponseWriter, r *http.Request) *models.Templa
 		Config:       s.config,
 		Categories:   categories,
 		CurrentURI:   r.RequestURI,
-		CanonicalURI: utils.CanonicalURI(r, s.config.Protocol),
+		CanonicalURL: utils.CanonicalURL(r, s.config.Protocol),
 		CSRFField:    csrf.TemplateField(r),
 	}
 

@@ -29,18 +29,20 @@ var RootFavicons = []string{
 
 const UpdateMarker = "<!-- v2 -->" // REMOVE
 
-// Create canonical URI object
-func CanonicalURI(r *http.Request, protocol string) *url.URL {
+// Create canonical URI string
+func CanonicalURL(r *http.Request, protocol string) string {
 
 	if r.TLS != nil {
 		protocol = "https"
 	}
 
-	return &url.URL{
+	url := url.URL{
 		Scheme: protocol,
 		Host:   r.Host,
 		Path:   r.URL.Path,
 	}
+
+	return url.String()
 }
 
 // Validates a path
