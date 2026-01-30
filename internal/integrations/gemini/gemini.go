@@ -26,7 +26,8 @@ const titlePlaceholder = "{{ TITLE }}"
 const descriptionPlaceholder = "{{ DESCRIPTION }}"
 const urlPlaceholder = "{{ URL }}"
 
-var catRegex = regexp.MustCompile(`<p>\s*CATEGORY:.*?</p>`)
+// Find category paragraph
+var catRegex = regexp.MustCompile(`(?i)<p>\s*CATEGORY:.*?</p>`)
 
 // Configure safety settings to block none
 var blockNone = genai.HarmBlockThresholdBlockNone

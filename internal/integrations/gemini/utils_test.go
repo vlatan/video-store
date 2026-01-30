@@ -48,8 +48,28 @@ func TestParseResponse(t *testing.T) {
 			},
 		},
 		{
-			"valid - category inside paragraph",
+			"valid - category inside paragraph (upper case)",
 			"<p>foo</p><p>bar</p><p>CATEGORY: Science</p>",
+			categories,
+			false,
+			&models.GenaiResponse{
+				Summary:  "<p>foo</p><p>bar</p>",
+				Category: "Science",
+			},
+		},
+		{
+			"valid - category inside paragraph (lower case)",
+			"<p>foo</p><p>bar</p><p>category: Science</p>",
+			categories,
+			false,
+			&models.GenaiResponse{
+				Summary:  "<p>foo</p><p>bar</p>",
+				Category: "Science",
+			},
+		},
+		{
+			"valid - category inside paragraph (capitalized)",
+			"<p>foo</p><p>bar</p><p>Category: Science</p>",
 			categories,
 			false,
 			&models.GenaiResponse{
