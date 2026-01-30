@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/vlatan/video-store/internal/models"
-	"github.com/vlatan/video-store/internal/utils"
 )
 
 // Get sitemap data from DB and split it in smaller parts.
@@ -29,7 +28,7 @@ func (s *Service) getSitemapIndexFromDB(r *http.Request, partSize int) (models.S
 	}
 
 	// Get base absolute URL
-	baseURL := utils.GetBaseURL(r, s.config.Protocol)
+	baseURL := fmt.Sprintf("%s://%s", s.config.Protocol, s.config.Domain)
 
 	// Additional processing to get the last modified time for each part
 	// And adjust the location with an absolute URL
@@ -52,14 +51,14 @@ func (s *Service) getSitemapIndexFromDB(r *http.Request, partSize int) (models.S
 			}
 
 			// Provide absolute URL for an item location
-			entries[j].Location = utils.AbsoluteURL(baseURL, entry.Location)
+			entries[j].Location = baseURL + entry.Location
 		}
 
 		key := fmt.Sprintf("%02d", (i/partSize)+1)
 		path := fmt.Sprintf("/sitemap/%s/part.xml", key)
 		result[key] = &models.SitemapPart{
 			Entries:      entries,
-			Location:     utils.AbsoluteURL(baseURL, path),
+			Location:     baseURL + path,
 			LastModified: maxTime.Format("2006-01-02"),
 		}
 	}

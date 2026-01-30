@@ -87,7 +87,7 @@ type TemplateData struct {
 	CurrentPage     *Page
 	CurrentUser     *User
 	CurrentURI      string
-	BaseURL         *url.URL
+	CanonicalURI    *url.URL
 	Sources         []Source
 	Categories      []Category
 	FlashMessages   []*FlashMessage
@@ -103,13 +103,7 @@ type TemplateData struct {
 }
 
 func (td *TemplateData) CanonicalURL() string {
-	return td.BaseURL.String()
-}
-
-func (td *TemplateData) AbsoluteURL(path string) string {
-	u := *td.BaseURL // Copy the URL
-	u.Path = path
-	return u.String()
+	return td.CanonicalURI.String()
 }
 
 // Check if current user is admin

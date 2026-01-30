@@ -29,8 +29,8 @@ var RootFavicons = []string{
 
 const UpdateMarker = "<!-- v2 -->" // REMOVE
 
-// Create base URL object (absolute path only)
-func GetBaseURL(r *http.Request, protocol string) *url.URL {
+// Create canonical URI object
+func CanonicalURI(r *http.Request, protocol string) *url.URL {
 
 	if r.TLS != nil {
 		protocol = "https"
@@ -41,16 +41,6 @@ func GetBaseURL(r *http.Request, protocol string) *url.URL {
 		Host:   r.Host,
 		Path:   r.URL.Path,
 	}
-}
-
-// Construct an absolute url given a base url and path
-func AbsoluteURL(baseURL *url.URL, path string) string {
-	var u url.URL
-	if baseURL != nil {
-		u = *baseURL // Copy the URL
-	}
-	u.Path = path
-	return u.String()
 }
 
 // Validates a path

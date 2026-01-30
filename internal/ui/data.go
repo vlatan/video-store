@@ -29,12 +29,12 @@ func (s *service) NewData(w http.ResponseWriter, r *http.Request) *models.Templa
 
 	// Construct the data
 	data := &models.TemplateData{
-		StaticFiles: s.StaticFiles(),
-		Config:      s.config,
-		Categories:  categories,
-		CurrentURI:  r.RequestURI,
-		BaseURL:     utils.GetBaseURL(r, s.config.Protocol),
-		CSRFField:   csrf.TemplateField(r),
+		StaticFiles:  s.StaticFiles(),
+		Config:       s.config,
+		Categories:   categories,
+		CurrentURI:   r.RequestURI,
+		CanonicalURI: utils.CanonicalURI(r, s.config.Protocol),
+		CSRFField:    csrf.TemplateField(r),
 	}
 
 	// Check if the path needs flash messages

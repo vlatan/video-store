@@ -8,14 +8,13 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
 	"testing"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestGetBaseURL(t *testing.T) {
+func TestCanonicalURI(t *testing.T) {
 
 	mockTLS := &tls.ConnectionState{Version: tls.VersionTLS13}
 	tests := []struct {
@@ -35,7 +34,7 @@ func TestGetBaseURL(t *testing.T) {
 			req := httptest.NewRequest("GET", "/", nil)
 			req.TLS = tt.tls
 
-			url := GetBaseURL(req, tt.protocol)
+			url := CanonicalURI(req, tt.protocol)
 			if url.Scheme != tt.expectedScheme {
 				t.Errorf("got %q scheme, want %q scheme", url.Scheme, tt.expectedScheme)
 			}
@@ -49,36 +48,6 @@ func TestGetBaseURL(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestAbsoluteURL(t *testing.T) {
-
-	baseURL := &url.URL{
-		Scheme: "https",
-		Host:   "localhost",
-		Path:   "/home",
-	}
-
-	tests := []struct {
-		name     string
-		baseURL  *url.URL
-		path     string
-		expected string
-	}{
-		{"empty path", baseURL, "", "https://localhost"},
-		{"ordinary path", baseURL, "/test", "https://localhost/test"},
-		{"nil base url", nil, "/test", "/test"},
-		{"nil base url, empty path", nil, "", ""},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := AbsoluteURL(tt.baseURL, tt.path); got != tt.expected {
-				t.Errorf("got %q, want %q", got, tt.expected)
-			}
-		})
-	}
-
 }
 
 func TestValidateFilePath(t *testing.T) {
