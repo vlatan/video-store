@@ -163,9 +163,9 @@ func SleepContext(ctx context.Context, delay time.Duration) error {
 }
 
 // LogPlainln prints a line without a prefix using the log package
-func LogPlainln(s string) {
+func LogPlainln(v ...any) {
 	flags := log.Flags()
 	log.SetFlags(0)
-	log.Println(s)
+	log.Println(v...)
 	log.SetFlags(flags)
 }

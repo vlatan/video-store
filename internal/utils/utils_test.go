@@ -1,11 +1,13 @@
 package utils
 
 import (
+	"bytes"
 	"context"
 	"crypto/tls"
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -323,6 +325,33 @@ func TestSleepContext(t *testing.T) {
 			err := SleepContext(tt.ctx, tt.delay)
 			if gotErr := err != nil; gotErr != tt.weantErr {
 				t.Errorf("got error = %v, want error = %t", err, tt.weantErr)
+			}
+		})
+	}
+}
+
+func TestLogPlainln(t *testing.T) {
+	var buf bytes.Buffer
+	original := log.Writer()
+	log.SetOutput(&buf)
+	t.Cleanup(func() { log.SetOutput(original) })
+
+	tests := []struct {
+		name     string
+		input    []any
+		expected string
+	}{
+		{"empty string", []any{""}, "\n"},
+		{"valid string", []any{"foo"}, "foo\n"},
+		{"valid string", []any{"foo", "bar"}, "foo bar\n"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Cleanup(buf.Reset)
+			LogPlainln(tt.input...)
+			if buf.String() != tt.expected {
+				t.Errorf("got: %q, expected %q", buf.String(), tt.expected)
 			}
 		})
 	}
