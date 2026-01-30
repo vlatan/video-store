@@ -36,7 +36,6 @@ func TestCanonicalURL(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			req.TLS = tt.tls
-
 			url := CanonicalURL(req, tt.protocol)
 			if url != tt.expected {
 				t.Errorf("got %q url, want %q url", url, tt.expected)
