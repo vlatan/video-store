@@ -18,25 +18,30 @@ import (
 
 func TestCanonicalURL(t *testing.T) {
 
-	req := httptest.NewRequest("GET", "/foo/?test=true", nil)
-	mockTLS := &tls.ConnectionState{Version: tls.VersionTLS13}
+	mockReq := func(useTLS bool) *http.Request {
+		req := httptest.NewRequest("GET", "/foo/?test=true", nil)
+		req.TLS = nil
+		if useTLS {
+			req.TLS = &tls.ConnectionState{Version: tls.VersionTLS13}
+		}
+		return req
+	}
 
 	tests := []struct {
 		name     string
 		protocol string
-		tls      *tls.ConnectionState
+		req      *http.Request
 		expected string
 	}{
-		{"force https, with TLS", "https", mockTLS, "https://example.com/foo/"},
-		{"force https, no TLS", "https", nil, "https://example.com/foo/"},
-		{"don't force https, with TLS", "http", mockTLS, "https://example.com/foo/"},
-		{"don't force https, no TLS", "http", nil, "http://example.com/foo/"},
+		{"force https, with TLS", "https", mockReq(true), "https://example.com/foo/"},
+		{"force https, no TLS", "https", mockReq(false), "https://example.com/foo/"},
+		{"don't force https, with TLS", "http", mockReq(true), "https://example.com/foo/"},
+		{"don't force https, no TLS", "http", mockReq(false), "http://example.com/foo/"},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			req.TLS = tt.tls
-			url := CanonicalURL(req, tt.protocol)
+			url := CanonicalURL(tt.req, tt.protocol)
 			if url != tt.expected {
 				t.Errorf("got %q url, want %q url", url, tt.expected)
 			}
@@ -341,8 +346,8 @@ func TestLogPlainln(t *testing.T) {
 		expected string
 	}{
 		{"empty string", []any{""}, "\n"},
-		{"valid string", []any{"foo"}, "foo\n"},
-		{"valid string", []any{"foo", "bar"}, "foo bar\n"},
+		{"valid single string", []any{"foo"}, "foo\n"},
+		{"valid multiple strings", []any{"foo", "bar"}, "foo bar\n"},
 	}
 
 	for _, tt := range tests {
