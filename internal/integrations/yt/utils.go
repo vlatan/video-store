@@ -6,9 +6,10 @@ import (
 	"unicode"
 )
 
-var bracketedContent = regexp.MustCompile(`[\(\[].*?[\)\]]`)
-var extraSpace = regexp.MustCompile(`\s+`)
-var urls = regexp.MustCompile(`http\S+`)
+var bracketedContentRegex = regexp.MustCompile(`[\(\[].*?[\)\]]`)
+var extraSpaceRegex = regexp.MustCompile(`\s+`)
+var urlRegex = regexp.MustCompile(`http\S+`)
+var emailRegex = regexp.MustCompile(`\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b`)
 
 var unwantedWords = map[string]bool{
 	"documentary": true,
@@ -86,10 +87,10 @@ func normalizeTitle(title string) string {
 	}
 
 	// Remove bracketed content
-	title = strings.TrimSpace(bracketedContent.ReplaceAllString(title, ""))
+	title = strings.TrimSpace(bracketedContentRegex.ReplaceAllString(title, ""))
 
 	// Remove extra spaces
-	title = extraSpace.ReplaceAllString(title, " ")
+	title = extraSpaceRegex.ReplaceAllString(title, " ")
 
 	// Split the title into words and inspect/mutate/exclude them
 	words := strings.Split(title, " ")
