@@ -143,5 +143,6 @@ jobs:
 
             # Recreate the service
             docker compose -f ${{ secrets.COMPOSE_FILE }} \
-            up --detach --scale ${{ secrets.SERVICE_NAME }}=${{ secrets.SERVICE_REPLICAS }} \
+            up --detach --remove-orphans \
+            --scale ${{ secrets.SERVICE_NAME }}=${{ secrets.SERVICE_REPLICAS }} \
             ${{ secrets.SERVICE_NAME }}
