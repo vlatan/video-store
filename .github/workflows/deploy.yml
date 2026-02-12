@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ main ]
 
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
 jobs:
   tests:
     runs-on: ubuntu-latest
@@ -83,11 +87,7 @@ jobs:
     needs: [tests, sast, check-changes]
     if: needs.check-changes.outputs.relevant == 'true'
     runs-on: ubuntu-latest
-
-    env:
-      REGISTRY: ghcr.io
-      IMAGE_NAME: ${{ github.repository }}
-   
+  
     permissions:
       contents: read
       packages: write
@@ -132,4 +132,16 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: ${{ secrets.DEPLOY_SCRIPT }}
+          script: |
+            set -e
+
+            # Pull fresh images
+            for service in app worker backup; do
+              docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-${service} &
+            done
+            wait
+
+            # Recreate the service
+            docker compose -f ${{ secrets.COMPOSE_FILE }} \
+            up --detach --scale ${{ secrets.SERVICE_NAME }}=${{ secrets.SERVICE_REPLICAS }} \
+            ${{ secrets.SERVICE_NAME }}
