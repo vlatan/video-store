@@ -205,11 +205,10 @@ func (w *Worker) Run(ctx context.Context) error {
 			ytSource, channelsMap[ytSource.Snippet.ChannelId],
 		)
 
-		// Check if channel thumbnails have changed
-		if models.ThumbnailsEqual(
-			dbSourcesMap[playlistID].ChannelThumbnails,
-			newSource.ChannelThumbnails,
-		) {
+		// Check if channel thumbs or title have changed
+		dbChThumbs := dbSourcesMap[playlistID].ChannelThumbnails
+		if models.ThumbnailsEqual(dbChThumbs, newSource.ChannelThumbnails) &&
+			dbSourcesMap[playlistID].ChannelTitle == newSource.ChannelTitle {
 			continue
 		}
 
