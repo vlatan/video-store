@@ -93,35 +93,35 @@
 					{{ end }}
 				</div>
 			</div>
-			<div class="other-metadata">
-				<div class="metadata-block">
-					<div class="inner-metadata-block">
-						<span>
-							Duration:
-							<time itemprop="duration" datetime="{{ .CurrentPost.Duration.ISO }}">
-								{{ .CurrentPost.Duration.Human }}
-							</time>
-						</span>
-						{{ with .CurrentPost.Category }}
-						<span>|</span>
-						<span>
-							Category:
-							<a class="nav-item" href="/category/{{ .Slug }}/">{{ .Name }}</a>
-						</span>
-						{{ end }}
-						{{ with .CurrentPost.Source }}
-						<span>|</span>
-						<span>
-							Source:
-							<a class="nav-item" href="/source/{{ .PlaylistID }}/">{{ .ChannelTitle }}</a>
-						</span>
-						{{ end }}
-					</div>
-					{{ if .IsCurrentUserAdmin }}
-					<button data-modal="video" class="modal-button">Delete</button>
-					<button class="modal-button edit-title edit-content">Edit Title</button>
+			<div class="metadata-block">
+				<div class="inner-metadata-block">
+					<span>
+						Duration:
+						<time itemprop="duration" datetime="{{ .CurrentPost.Duration.ISO }}">
+							{{ .CurrentPost.Duration.Human }}
+						</time>
+					</span>
+					{{ with .CurrentPost.Category }}
+					<span>|</span>
+					<span>
+						Category:
+						<a class="nav-item" href="/category/{{ .Slug }}/">{{ .Name }}</a>
+					</span>
+					{{ end }}
+					{{ with .CurrentPost.Source }}
+					<span>|</span>
+					<span>
+						Source:
+						<a class="nav-item" href="/source/{{ .PlaylistID }}/">{{ .ChannelTitle }}</a>
+					</span>
 					{{ end }}
 				</div>
+				{{ if .IsCurrentUserAdmin }}
+				<span class="admin-buttons">
+					<button data-modal="video" class="modal-button">Delete</button>
+					<button class="modal-button edit-title edit-content">Edit Title</button>
+				</span>
+				{{ end }}
 			</div>
 		</header>
 

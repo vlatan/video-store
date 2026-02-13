@@ -94,11 +94,6 @@ h1.video-title {
   border-bottom: 1px solid rgb(88, 88, 150);
 }
 
-.other-metadata {
-  display: flex;
-  column-gap: 1rem;
-}
-
 .metadata-block {
   display: flex;
   justify-content: space-between;
@@ -108,11 +103,18 @@ h1.video-title {
 
 .inner-metadata-block {
   display: flex;
-  column-gap: 0.70rem;
+  align-items: center;
+  gap: 0.70rem;
 }
 
 .inner-metadata-block .nav-item {
   color: #f26123;
+}
+
+.admin-buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.50rem;
 }
 
 .video-description {
