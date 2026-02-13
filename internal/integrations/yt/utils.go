@@ -7,7 +7,6 @@ import (
 )
 
 var bracketedContentRegex = regexp.MustCompile(`[\(\[].*?[\)\]]`)
-var extraSpaceRegex = regexp.MustCompile(`\s+`)
 var urlRegex = regexp.MustCompile(`http\S+`)
 var emailRegex = regexp.MustCompile(`\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b`)
 
@@ -87,13 +86,12 @@ func normalizeTitle(title string) string {
 	}
 
 	// Remove bracketed content
-	title = strings.TrimSpace(bracketedContentRegex.ReplaceAllString(title, ""))
+	title = bracketedContentRegex.ReplaceAllString(title, "")
 
-	// Remove extra spaces
-	title = extraSpaceRegex.ReplaceAllString(title, " ")
+	// Remove leading/trailing white space and split on empty space(s)
+	words := strings.Fields(title)
 
-	// Split the title into words and inspect/mutate/exclude them
-	words := strings.Split(title, " ")
+	// Inspect/mutate/exclude the words
 	var result []string
 	for i, word := range words {
 
