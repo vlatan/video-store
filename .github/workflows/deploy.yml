@@ -11,7 +11,30 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
+  check-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      relevant: ${{ steps.filter.outputs.relevant }}
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v6
+      
+      - name: Check for relevant file changes
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            relevant:
+              - '.github/**'
+              - 'cmd/**'
+              - 'internal/**'
+              - 'web/**'
+              - 'Dockerfile'
+              - 'go.mod'
+              - 'go.sum'
   tests:
+    needs: check-changes
+    if: needs.check-changes.outputs.relevant == 'true'
     runs-on: ubuntu-latest
     
     steps:
@@ -47,6 +70,8 @@ jobs:
         path: coverage.html
   
   sast:
+    needs: check-changes
+    if: needs.check-changes.outputs.relevant == 'true'
     runs-on: ubuntu-latest
     
     steps:
@@ -60,31 +85,8 @@ jobs:
         with:
           args: ./...
   
-  check-changes:
-    runs-on: ubuntu-latest
-    outputs:
-      relevant: ${{ steps.filter.outputs.relevant }}
-    steps:
-      - name: Checkout source code
-        uses: actions/checkout@v6
-      
-      - name: Check for relevant file changes
-        id: filter
-        uses: dorny/paths-filter@v3
-        with:
-          filters: |
-            relevant:
-              - '.github/**'
-              - 'cmd/**'
-              - 'internal/**'
-              - 'web/**'
-              - 'Dockerfile'
-              - 'go.mod'
-              - 'go.sum'
-
   build-push-images:
-    needs: [tests, sast, check-changes]
-    if: needs.check-changes.outputs.relevant == 'true'
+    needs: [tests, sast]
     runs-on: ubuntu-latest
   
     permissions:
