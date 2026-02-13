@@ -1,4 +1,3 @@
-* Normalize source title
 * Show link to source on single post
 
 * Uncomment and remove code in:
