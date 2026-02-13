@@ -1,3 +1,7 @@
+# This compose file is for local development only.
+# It has nothing to do with production.
+# Safe to ignore its changes in Github workflows.
+
 name: fd
 
 services:

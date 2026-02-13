@@ -78,12 +78,11 @@ jobs:
               - 'cmd/**'
               - 'internal/**'
               - 'web/**'
-              - 'compose.yaml'
               - 'Dockerfile'
               - 'go.mod'
               - 'go.sum'
 
-  build-and-push:
+  build-push-images:
     needs: [tests, sast, check-changes]
     if: needs.check-changes.outputs.relevant == 'true'
     runs-on: ubuntu-latest
@@ -121,7 +120,7 @@ jobs:
           cache-to: type=gha,mode=max
 
   deploy:
-    needs: build-and-push
+    needs: build-push-images
     runs-on: ubuntu-latest
 
     steps:
