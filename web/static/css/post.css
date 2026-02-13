@@ -106,7 +106,6 @@ h1.video-title {
   flex-wrap: wrap;
   align-items: center;
   column-gap: 1rem;
-  row-gap: 0.50rem;
   font-size: 0.90rem;
 }
 
@@ -115,7 +114,6 @@ h1.video-title {
   flex-wrap: wrap;
   align-items: center;
   gap: 0.25rem;
-  line-height: 1;
 }
 
 .inner-metadata-block .nav-item {
