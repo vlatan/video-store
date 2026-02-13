@@ -420,9 +420,9 @@ func (w *Worker) Run(ctx context.Context) error {
 			continue
 		}
 
-		// Do not delete any more videos if max deletion was reached
+		// Do not remove any more videos from DB if delete limit was reached
 		if deleted >= deleteLimit {
-			break
+			continue
 		}
 
 		// Delete the video
