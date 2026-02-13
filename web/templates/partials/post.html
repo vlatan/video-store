@@ -96,22 +96,20 @@
 			<div class="metadata-block">
 				<div class="inner-metadata-block">
 					<span>
-						Duration:
+						<strong>Duration:</strong>
 						<time itemprop="duration" datetime="{{ .CurrentPost.Duration.ISO }}">
 							{{ .CurrentPost.Duration.Human }}
 						</time>
 					</span>
 					{{ with .CurrentPost.Category }}
-					<span>|</span>
 					<span>
-						Category:
+						<strong>Category:</strong>
 						<a class="nav-item" href="/category/{{ .Slug }}/">{{ .Name }}</a>
 					</span>
 					{{ end }}
 					{{ with .CurrentPost.Source }}
-					<span>|</span>
 					<span>
-						Source:
+						<strong>Source:</strong>
 						<a class="nav-item" href="/source/{{ .PlaylistID }}/">{{ .ChannelTitle }}</a>
 					</span>
 					{{ end }}
