@@ -147,8 +147,15 @@ func (s *Service) NewYouTubeSource(playlist *youtube.Playlist, channel *youtube.
 	var source models.Source
 	source.PlaylistID = playlist.Id
 	source.ChannelID = playlist.Snippet.ChannelId
-	source.Title = playlist.Snippet.Title
-	source.ChannelTitle = channel.Snippet.Title
+
+	// Normalize the titles
+	cutOffs := []string{" // ", " | ", " - "}
+	source.Title = normalizeTitle(playlist.Snippet.Title, cutOffs)
+	source.ChannelTitle = normalizeTitle(channel.Snippet.Title, cutOffs)
+
+	// Normalize the descriptions
+	source.Description = normalizeDescription(playlist.Snippet.Description)
+	source.ChannelDescription = normalizeDescription(channel.Snippet.Description)
 
 	// Assign the playlist thumbnails
 	source.Thumbnails = &models.Thumbnails{}
@@ -165,10 +172,6 @@ func (s *Service) NewYouTubeSource(playlist *youtube.Playlist, channel *youtube.
 	source.ChannelThumbnails.High = channel.Snippet.Thumbnails.High
 	source.ChannelThumbnails.Standard = channel.Snippet.Thumbnails.Standard
 	source.ChannelThumbnails.Maxres = channel.Snippet.Thumbnails.Maxres
-
-	// Assign descriptions
-	source.Description = playlist.Snippet.Description
-	source.ChannelDescription = channel.Snippet.Description
 
 	return &source
 }

@@ -107,9 +107,9 @@ func (s *Service) NewYouTubePost(video *youtube.Video, playlistID string) *model
 	post.Thumbnails.Maxres = video.Snippet.Thumbnails.Maxres
 
 	// Normalize title, description and tags
-	post.Title = normalizeTitle(video.Snippet.Title)
-	post.Description = urlRegex.ReplaceAllString(video.Snippet.Description, "")
-	post.Description = emailRegex.ReplaceAllString(post.Description, "")
+	cutOffs := []string{" I SLICE ", " // ", " | "}
+	post.Title = normalizeTitle(video.Snippet.Title, cutOffs)
+	post.Description = normalizeDescription(video.Snippet.Description)
 	post.Tags = normalizeTags(video.Snippet.Tags, post.Title, post.Description)
 
 	// Get video duration

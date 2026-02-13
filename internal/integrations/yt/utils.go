@@ -78,10 +78,10 @@ var wierdDoubleQuotes = map[rune]bool{
 }
 
 // Normalize the YouTube video title
-func normalizeTitle(title string) string {
+func normalizeTitle(title string, cutOffs []string) string {
 
 	// Cut off the title at certain substrings
-	for _, substring := range []string{" I SLICE ", " // ", " | "} {
+	for _, substring := range cutOffs {
 		title = strings.Split(title, substring)[0]
 	}
 
@@ -162,7 +162,7 @@ func normalizeTitle(title string) string {
 
 		// This is not the first word.
 		// The word is a preposition but not after a punctuation.
-		// So it should be lowercase, not capitalized.
+		// So it should be all lowercase.
 		if i > 0 && preps[currentWord] && !puncts[previousWordLastRune] {
 			word = firstQuote + currentWord + lastQuote
 
@@ -209,4 +209,10 @@ func normalizeTags(tags []string, title, description string) (result string) {
 	}
 
 	return strings.TrimSpace(result)
+}
+
+// normalizeDescription removes URLs and emails from a text
+func normalizeDescription(text string) string {
+	text = urlRegex.ReplaceAllString(text, "")
+	return emailRegex.ReplaceAllString(text, "")
 }
