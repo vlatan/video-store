@@ -1,5 +1,3 @@
-* Show link to source on single post
-
 * Uncomment and remove code in:
   - `internal/integrations/gemini/gemini.go`
   - `internal/worker/worker.go`

@@ -29,6 +29,7 @@ type Post struct {
 	Thumbnails      *Thumbnails   `json:"thumbnails,omitempty"`
 	Thumbnail       *Thumbnail    `json:"thumbnail,omitempty"`
 	Category        *Category     `json:"category,omitempty"`
+	Source          *Source       `json:"source,omitempty"`
 	Likes           int           `json:"likes,omitempty"`
 	Score           float64       `json:"score,omitempty"`
 	LikeButtonText  string        `json:"like_button_text,omitempty"`

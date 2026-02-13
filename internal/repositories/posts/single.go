@@ -103,6 +103,9 @@ const getSinglePostQuery = `
 		COUNT(pl.id) AS likes,
 		post.description,
 		post.summary,
+		playlist.playlist_id,
+		playlist.title,
+		playlist.channel_title,
 		category.slug,
 		category.name,
 		post.upload_date,
@@ -110,8 +113,9 @@ const getSinglePostQuery = `
 	FROM post 
 	LEFT JOIN post_like AS pl ON pl.post_id = post.id
 	LEFT JOIN category ON category.id = post.category_id
+	LEFT JOIN playlist ON playlist.id = post.playlist_db_id
 	WHERE video_id = $1
-	GROUP BY post.id, category.id
+	GROUP BY post.id, category.id, playlist.id
 `
 
 // Get single post from DB based on a video ID
@@ -121,7 +125,7 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.
 	post.Duration = &models.Duration{}
 
 	var thumbnails []byte
-	var summary, slug, name sql.NullString
+	var summary, slug, name, playlistID, playlistTitle, channelTitle sql.NullString
 
 	// Get single row from DB
 	err := r.db.Pool.QueryRow(ctx, getSinglePostQuery, videoID).Scan(
@@ -132,6 +136,9 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.
 		&post.Likes,
 		&post.Description,
 		&summary,
+		&playlistID,
+		&playlistTitle,
+		&channelTitle,
 		&slug,
 		&name,
 		&post.UploadDate,
@@ -140,6 +147,19 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.
 
 	if err != nil {
 		return zero, err
+	}
+
+	// Gather playlist/channel info
+	post.Source = &models.Source{
+		PlaylistID:   utils.FromNullString(playlistID),
+		Title:        utils.FromNullString(playlistTitle),
+		ChannelTitle: utils.FromNullString(channelTitle),
+	}
+
+	// Check if the video does not belong to source
+	if !playlistID.Valid {
+		post.Source.PlaylistID = "other"
+		post.Source.ChannelTitle = "Other"
 	}
 
 	// Define category if valid
