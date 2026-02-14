@@ -47,7 +47,8 @@ type Server struct {
 	HttpServer *http.Server
 }
 
-// Create new HTTP server
+// Create new server service
+// that holds handler services and a HTTP server.
 func NewServer() *Server {
 
 	// Register types with gob to be able to use them in sessions
