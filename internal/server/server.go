@@ -41,28 +41,35 @@ type Server struct {
 	sitemaps *sitemaps.Service
 	mw       *middlewares.Service
 	misc     *misc.Service
+	cleanup  func() error
+
+	Domain     string
+	HttpServer *http.Server
 }
 
 // Create new HTTP server
-func NewServer() (*http.Server, string, func() error) {
+func NewServer() *Server {
 
 	// Register types with gob to be able to use them in sessions
 	gob.Register(&models.FlashMessage{})
 	gob.Register(time.Time{})
 
-	// Create essential services
+	// Init config
 	cfg := config.New()
 
+	// Create database service
 	db, err := database.New(cfg)
 	if err != nil {
 		log.Fatalf("couldn't create DB service; %v", err)
 	}
 
+	// Create Redis service
 	rdb, err := rdb.New(cfg)
 	if err != nil {
 		log.Fatalf("couldn't create Redis service; %v", err)
 	}
 
+	// Create session store
 	store := redisStore.New(cfg, rdb, "session", 86400*30)
 
 	// Create DB repositories
@@ -91,8 +98,8 @@ func NewServer() (*http.Server, string, func() error) {
 	// Create user interface service
 	ui := ui.New(usersRepo, catsRepo, rdb, r2s, store, cfg)
 
-	// Create new server struct with domain services/handlers
-	newServer := &Server{
+	// Create new server service
+	s := &Server{
 		auth:     auth.New(usersRepo, store, rdb, r2s, ui, cfg),
 		users:    users.New(usersRepo, postsRepo, rdb, r2s, ui, cfg),
 		posts:    posts.New(postsRepo, rdb, ui, cfg, yt, gemini),
@@ -101,22 +108,19 @@ func NewServer() (*http.Server, string, func() error) {
 		sitemaps: sitemaps.New(postsRepo, rdb, ui, cfg),
 		misc:     misc.New(cfg, db, rdb, ui),
 		mw:       middlewares.New(ui, cfg),
+		cleanup: func() error {
+			db.Pool.Close()
+			return rdb.Client.Close()
+		},
+
+		Domain: cfg.Domain,
+		HttpServer: &http.Server{
+			Addr:         fmt.Sprintf(":%d", cfg.Port),
+			IdleTimeout:  time.Minute,
+			ReadTimeout:  10 * time.Second,
+			WriteTimeout: 30 * time.Second,
+		},
 	}
 
-	// Declare Server config
-	server := &http.Server{
-		Addr:         fmt.Sprintf(":%d", cfg.Port),
-		Handler:      newServer.RegisterRoutes(),
-		IdleTimeout:  time.Minute,
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 30 * time.Second,
-	}
-
-	// func to close the DB pool and Redis connection
-	cleanup := func() error {
-		db.Pool.Close()
-		return rdb.Client.Close()
-	}
-
-	return server, cfg.Domain, cleanup
+	return s
 }

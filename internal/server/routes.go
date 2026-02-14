@@ -9,8 +9,9 @@ import (
 	"github.com/vlatan/video-store/internal/utils"
 )
 
-// RegisterRoutes registers routes
-func (s *Server) RegisterRoutes() http.Handler {
+// RegisterRoutes registers routes and
+// assigns custom handler to the HTTP server
+func (s *Server) RegisterRoutes() *Server {
 	mux := http.NewServeMux()
 
 	// Home
@@ -85,7 +86,8 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	// Chain middlewares that apply to all requests.
 	// The order is important.
-	return s.mw.ApplyToAll(
+	// Use this custom handler as HTTP server handler
+	s.HttpServer.Handler = s.mw.ApplyToAll(
 		s.mw.RecoverPanic,
 		s.mw.CloseBody,
 		s.mw.WWWRedirect,
@@ -97,4 +99,6 @@ func (s *Server) RegisterRoutes() http.Handler {
 		s.mw.Compress,
 		s.mw.HandleErrors,
 	)(mux)
+
+	return s
 }
