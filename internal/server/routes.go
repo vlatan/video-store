@@ -83,7 +83,8 @@ func (s *Server) RegisterRoutes() http.Handler {
 		}
 	})
 
-	// Chain middlewares that apply to all requests
+	// Chain middlewares that apply to all requests.
+	// The order is important.
 	return s.mw.ApplyToAll(
 		s.mw.RecoverPanic,
 		s.mw.CloseBody,
