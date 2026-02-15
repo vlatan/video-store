@@ -1,4 +1,4 @@
-package server
+package app
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 )
 
 // Run runs the app by making the HTTP server listen and serve
-func (s *Server) Run() error {
+func (a *App) Run() error {
 
 	// Create a notification channel to receive a signal
 	// from when a shutdown is complete
@@ -15,17 +15,17 @@ func (s *Server) Run() error {
 
 	// Listen for SIGINT SIGTERM in a separate goroutine
 	// Gracefully shut down the server there if needed.
-	go s.Shutdown(done)
+	go a.Shutdown(done)
 
-	fmt.Printf("Server running on: http://%s\n", s.HttpServer.Addr)
-	if s.Domain != "" {
-		fmt.Printf("Website available at: https://%s\n", s.Domain)
+	fmt.Printf("Server running on: http://%s\n", a.server.Addr)
+	if a.domain != "" {
+		fmt.Printf("Website available at: https://%s\n", a.domain)
 	}
 
 	// If the HTTP server was shut down, meaning
-	// s.HttpServer.Shutdown(ctx) method was called,
+	// s.Server.Shutdown(ctx) method was called,
 	// ListenAndServe will return ErrServerClosed.
-	err := s.HttpServer.ListenAndServe()
+	err := a.server.ListenAndServe()
 	if err != nil && err != http.ErrServerClosed {
 		return err
 	}

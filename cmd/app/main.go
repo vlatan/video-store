@@ -3,16 +3,16 @@ package main
 import (
 	"log"
 
-	"github.com/vlatan/video-store/internal/server"
+	"github.com/vlatan/video-store/internal/app"
 )
 
 func main() {
 
-	// Create new server, register routes
-	s := server.NewServer().RegisterRoutes()
+	// Create new app, register routes
+	a := app.New().RegisterRoutes()
 
 	// Run tne app
-	if err := s.Run(); err != nil {
+	if err := a.Run(); err != nil {
 		log.Println(err)
 	}
 }

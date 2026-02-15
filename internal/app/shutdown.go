@@ -1,4 +1,4 @@
-package server
+package app
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 // Shutdown listens for SIGINT and SIGTERM signals,
 // gracefully shuts down the HTTP server,
 // performs cleanup and informs the main goroutine when done.
-func (s *Server) Shutdown(done chan<- struct{}) {
+func (a *App) Shutdown(done chan<- struct{}) {
 	// Create context that listens for the interrupt signal from the OS.
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
@@ -37,13 +37,13 @@ func (s *Server) Shutdown(done chan<- struct{}) {
 	// This is a blocking call.
 	// Shutdown will wait for connections to return to idle,
 	// but in this case up to 5 seconds.
-	if err := s.HttpServer.Shutdown(ctx); err != nil {
+	if err := a.server.Shutdown(ctx); err != nil {
 		log.Printf("Server forced to shutdown with error: %v", err)
 	}
 
 	// Perform cleanup. Close the DB pool and Redis connections.
 	log.Println("Closing Database and Redis connections...")
-	if err := s.cleanup(); err != nil {
+	if err := a.cleanup(); err != nil {
 		log.Printf("Error during cleanup: %v", err)
 	}
 

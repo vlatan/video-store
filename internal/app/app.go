@@ -1,4 +1,4 @@
-package server
+package app
 
 import (
 	"context"
@@ -32,7 +32,7 @@ import (
 	"github.com/vlatan/video-store/internal/ui"
 )
 
-type Server struct {
+type App struct {
 	auth     *auth.Service
 	users    *users.Service
 	posts    *posts.Service
@@ -41,15 +41,14 @@ type Server struct {
 	sitemaps *sitemaps.Service
 	mw       *middlewares.Service
 	misc     *misc.Service
+	domain   string
 	cleanup  func() error
-
-	Domain     string
-	HttpServer *http.Server
+	server   *http.Server
 }
 
-// Create new server service
+// Create new app
 // that holds handler services and a HTTP server.
-func NewServer() *Server {
+func New() *App {
 
 	// Register types with gob to be able to use them in sessions
 	gob.Register(&models.FlashMessage{})
@@ -100,7 +99,7 @@ func NewServer() *Server {
 	ui := ui.New(usersRepo, catsRepo, rdb, r2s, store, cfg)
 
 	// Create new server service
-	s := &Server{
+	a := &App{
 		auth:     auth.New(usersRepo, store, rdb, r2s, ui, cfg),
 		users:    users.New(usersRepo, postsRepo, rdb, r2s, ui, cfg),
 		posts:    posts.New(postsRepo, rdb, ui, cfg, yt, gemini),
@@ -109,13 +108,12 @@ func NewServer() *Server {
 		sitemaps: sitemaps.New(postsRepo, rdb, ui, cfg),
 		misc:     misc.New(cfg, db, rdb, ui),
 		mw:       middlewares.New(ui, cfg),
+		domain:   cfg.Domain,
 		cleanup: func() error {
 			db.Pool.Close()
 			return rdb.Client.Close()
 		},
-
-		Domain: cfg.Domain,
-		HttpServer: &http.Server{
+		server: &http.Server{
 			Addr:         fmt.Sprintf(":%d", cfg.Port),
 			IdleTimeout:  time.Minute,
 			ReadTimeout:  10 * time.Second,
@@ -123,5 +121,5 @@ func NewServer() *Server {
 		},
 	}
 
-	return s
+	return a
 }
