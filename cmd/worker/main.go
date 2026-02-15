@@ -3,9 +3,7 @@ package main
 import (
 	"context"
 	"log"
-	"os/signal"
 	"strings"
-	"syscall"
 
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/utils"
@@ -20,12 +18,8 @@ func main() {
 	cfg := config.New()
 	worker := worker.New(cfg)
 
-	// Listen for interruption or termination signals
-	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
-	defer stop()
-
 	// Give the worker a reasonable time to finish
-	ctx, cancel := context.WithTimeout(ctx, cfg.WorkerExpectedRuntime)
+	ctx, cancel := context.WithTimeout(context.Background(), cfg.WorkerExpectedRuntime)
 	defer cancel()
 
 	// Run the worker
