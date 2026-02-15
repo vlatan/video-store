@@ -46,8 +46,8 @@ type App struct {
 	server   *http.Server
 }
 
-// Create new app
-// that holds handler services and a HTTP server.
+// New creates new app.
+// Holds handler services and a HTTP server.
 func New() *App {
 
 	// Register types with gob to be able to use them in sessions
@@ -98,7 +98,7 @@ func New() *App {
 	// Create user interface service
 	ui := ui.New(usersRepo, catsRepo, rdb, r2s, store, cfg)
 
-	// Create new server service
+	// Create new app service
 	a := &App{
 		auth:     auth.New(usersRepo, store, rdb, r2s, ui, cfg),
 		users:    users.New(usersRepo, postsRepo, rdb, r2s, ui, cfg),
