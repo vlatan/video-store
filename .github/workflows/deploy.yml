@@ -11,7 +11,6 @@ on:
       - 'Dockerfile'
       - 'go.mod'
       - 'go.sum'
-      
   pull_request: *code_changes
 
 env:
