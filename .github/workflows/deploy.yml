@@ -1,40 +1,25 @@
 name: Video Store CI/CD
 
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+  push: &code_changes
+    branches: [main]
+    paths:
+      - '.github/**'
+      - 'cmd/**'
+      - 'internal/**'
+      - 'web/**'
+      - 'Dockerfile'
+      - 'go.mod'
+      - 'go.sum'
+      
+  pull_request: *code_changes
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  check-changes:
-    runs-on: ubuntu-latest
-    outputs:
-      relevant: ${{ steps.filter.outputs.relevant }}
-    steps:
-      - name: Checkout source code
-        uses: actions/checkout@v6
-      
-      - name: Check for relevant file changes
-        id: filter
-        uses: dorny/paths-filter@v3
-        with:
-          filters: |
-            relevant:
-              - '.github/**'
-              - 'cmd/**'
-              - 'internal/**'
-              - 'web/**'
-              - 'Dockerfile'
-              - 'go.mod'
-              - 'go.sum'
   tests:
-    needs: check-changes
-    if: needs.check-changes.outputs.relevant == 'true'
     runs-on: ubuntu-latest
     
     steps:
@@ -70,8 +55,6 @@ jobs:
         path: coverage.html
   
   sast:
-    needs: check-changes
-    if: needs.check-changes.outputs.relevant == 'true'
     runs-on: ubuntu-latest
     
     steps:
@@ -85,7 +68,7 @@ jobs:
         with:
           args: ./...
   
-  build-push-images:
+  build-push:
     needs: [tests, sast]
     runs-on: ubuntu-latest
   
@@ -122,7 +105,7 @@ jobs:
           cache-to: type=gha,mode=max
 
   deploy:
-    needs: build-push-images
+    needs: build-push
     runs-on: ubuntu-latest
 
     steps:
