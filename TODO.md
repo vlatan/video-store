@@ -1,3 +1,6 @@
+* The app needs the yt-dlp, deno, ffmpeg too because user can add videos via UI
+  which will make the app image large too.
+  
 * Try downloading only the audio
 * Try extracting the first 3 minutes and the last 1 minute in images.
 
