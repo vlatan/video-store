@@ -127,11 +127,6 @@ docker compose exec -it postgres psql -U xxx -d xxx
 
 No really a difference, except the `app`, `worker` or the `backup` will be built and run by the `Dockerfile` so you need the `TARGET` environment variable in production to specify which one you want to run, `app`, `worker` or `backup`. That is the host needs to be able to pass this `TARGET` variable as a build argument.
 
-If you want to locally mimic the production image/container you can use:
-``` bash
-docker build --build-arg TARGET=app -t prod-app-image .
-docker run --detach --env-file .env --name app prod-app-image
-``` 
 
 ## Useful information for identifying memory leaks
 
