@@ -22,30 +22,13 @@ RUN go mod download
 # Build the binary
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o binary ./cmd/${TARGET}
 
-
-# Use small image for the final stage
-FROM alpine:3.21 AS alpine-base
-
-
-# The app will need curl in order to perform the healthcheck
-FROM alpine-base AS app
-RUN apk add --no-cache curl
-
+# The app and worker base 
+FROM jauderho/yt-dlp AS app
+FROM jauderho/yt-dlp AS worker
 
 # The backup will need the postgresql client in order to dump the DB
-FROM alpine-base AS backup
+FROM alpine:3.21 AS backup
 RUN apk add --no-cache postgresql16-client
-
-
-# Worker needs yt-dlp, deno, ffmpeg
-FROM debian:bookworm-slim AS worker
-RUN set -e; \
-    apt-get update && apt-get install -y --no-install-recommends curl ffmpeg python3 ca-certificates unzip; \
-    curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp; \
-    chmod a+rx /usr/local/bin/yt-dlp; \
-    curl -fsSL https://deno.land/install.sh | DENO_INSTALL=/usr/local sh; \
-    rm -rf /var/lib/apt/lists/*
-
 
 # Final stage - pick the right base
 FROM ${TARGET}
