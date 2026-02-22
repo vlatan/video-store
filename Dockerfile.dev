@@ -1,0 +1,17 @@
+# Use yt-dlp image
+FROM jauderho/yt-dlp
+
+# Install go
+RUN apk add --no-cache curl && \
+    curl -Lo /tmp/go.tar.gz https://go.dev/dl/go1.25.7.linux-amd64.tar.gz && \
+    tar -C /usr/local -xzf /tmp/go.tar.gz && \
+    rm /tmp/go.tar.gz
+
+ENV PATH=$PATH:/usr/local/go/bin
+
+# Install air
+RUN go install github.com/air-verse/air@latest
+
+ENV PATH=$PATH:/root/go/bin
+
+ENTRYPOINT ["air"]
