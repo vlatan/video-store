@@ -12,8 +12,8 @@
 
   mkdir -p frames
 
-  ffmpeg -i output.webm -t 180 -vf fps=1 frames/first_%04d.png
-  ffmpeg -ss $((DURATION - 60)) -i output.webm -vf fps=1 frames/last_%04d.png
+  ffmpeg -loglevel error -i output.webm -t 180 -vf fps=1 frames/first_%04d.png
+  ffmpeg -loglevel error -ss $((DURATION - 60)) -i output.webm -vf fps=1 frames/last_%04d.png
   ```
 
 * Try prompt with audio and images but write a rich md file: with:
