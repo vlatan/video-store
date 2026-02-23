@@ -57,37 +57,19 @@ Also edit your local `/etc/hosts` and map `127.0.0.1` to `dev.domain.com` and `d
 
 In this example the app can be accessed at `https://dev.domain.com` and the traefik dashboard at `https://dash.dev.domain.com`.
 
-The secret keys (`CSRF_KEY`, `AUTH_KEY`, `ENCRYPTION_KEY`) and the `GEMINI_PROMPT` need to be `base64` encoded.
-
-For the secret keys you can use the following recommended snippet from `gorilla/sessions` to generate different keys and encode them to `base64`:
+The secret keys (`CSRF_KEY`, `AUTH_KEY`, `ENCRYPTION_KEY`) need to be `base64` encoded. You can use the following recommended snippet from `gorilla/sessions` to generate different keys and encode them to `base64`:
 ``` golang
 key := securecookie.GenerateRandomKey(32)
 log.Println(base64.StdEncoding.EncodeToString(key))
 ```
 
-For the Gemini prompt here's the exact `JSON` structure with example text which you'll need to `base64` encode by using `base64.StdEncoding.EncodeToString(prompt)` as well. The placeholders need to be in the exact same format as shown below because the code will look for them to replace them.
-``` json
-[
-    {
-        "text": "Summarize the video."
-    },
-    {
-        "text": "Select one category from these categories: {{ CATEGORIES }}."
-    },
-    {
-        "url": "https://www.youtube.com/watch?v={{ VIDEO_ID }}",
-        "mime_type": "video/mp4"
-    }
-]
-```
+For the Gemini prompt you'll need `prompt.json` file in the same directory. The app will look for it to load it. If missing the app will not start. You can checkout [prompt.example.json](prompt.example.json) for reference.
 
 
-Put this alias in your `~/.bash_aliases` file and run `build` whenever you want to build and run the app.
+Put this alias in your `~/.bash_aliases` file and run `build` whenever you want to build and run the app. The app will run with [air](https://github.com/air-verse/air) which will provide live reloading.
 ``` bash
 alias build='docker compose pull && docker compose up --build --detach'
 ```
-
-The app will run with [air](https://github.com/air-verse/air) which will provide live reloading. Sometimes though during a long running coding session you might want to rebuild this because `air` can stop live reloading. Access the app on `https://localhost:port` where `port` is the port defined in `PORT` in the `.env` file.
 
 To see the app logs in real time use this:
 ``` bash

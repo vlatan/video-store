@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"os"
 	"runtime"
 	"time"
 
@@ -20,10 +21,6 @@ type Part struct {
 	Text     string `json:"text,omitempty"`
 	URL      string `json:"url,omitempty"`
 	MimeType string `json:"mime_type,omitempty"`
-}
-
-type Prompt struct {
-	Parts []Part `json:"parts,omitempty"`
 }
 
 type Target string
@@ -64,10 +61,10 @@ type Config struct {
 	YouTubeAPIKey  string `env:"YOUTUBE_API_KEY"`
 	GeminiAPIKey   string `env:"GEMINI_API_KEY"`
 	GeminiModel    string `env:"GEMINI_MODEL" envDefault:"gemini-2.5-flash"`
-	GeminiPrompt   Prompt `env:"GEMINI_PROMPT"`
 	GeminiTimezone string `env:"GEMINI_TIMEZONE" envDefault:"America/Los_Angeles"`
 	GeminiRPD      int64  `env:"GEMINI_RPD" envDefault:"20"`
 	GeminiRPM      int64  `env:"GEMINI_RPM" envDefault:"5"`
+	GeminiPrompt   []Part
 
 	// Google OAuth settings
 	GoogleOAuthClientID     string   `env:"GOOGLE_OAUTH_CLIENT_ID"`
@@ -151,6 +148,13 @@ func New() *Config {
 		}
 	}
 
+	// Load the genai prompt
+	prompt, err := loadPrompt("prompt.json")
+	if err != nil {
+		log.Fatalf("failed to load the promot: %v", err)
+	}
+	cfg.GeminiPrompt = prompt
+
 	return &cfg
 }
 
@@ -168,19 +172,15 @@ func (s *Secret) UnmarshalText(text []byte) error {
 	return nil
 }
 
-// UnmarshalText implements the encoding.TextUnmarshaler interface.
-// It's called by the env library to decode the Prompt,
-func (p *Prompt) UnmarshalText(text []byte) error {
-
-	promptBytes := make([]byte, base64.StdEncoding.DecodedLen(len(text)))
-	n, err := base64.StdEncoding.Decode(promptBytes, text)
+// loadPromt loads the Gemini prompt from a file
+func loadPrompt(path string) ([]Part, error) {
+	data, err := os.ReadFile(path)
 	if err != nil {
-		return fmt.Errorf("error decoding the prompt; %w", err)
+		return nil, fmt.Errorf("error reading the prompt file; %w", err)
 	}
-
-	if err = json.Unmarshal(promptBytes[:n], &p.Parts); err != nil {
-		return fmt.Errorf("error decoding the prompt; %w", err)
+	var parts []Part
+	if err := json.Unmarshal(data, &parts); err != nil {
+		return nil, fmt.Errorf("error unmarshaling the prompt file; %w", err)
 	}
-
-	return nil
+	return parts, nil
 }

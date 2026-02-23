@@ -171,8 +171,8 @@ func (s *Service) makeContents(video *models.Post, categories models.Categories)
 	)
 
 	// Create genai parts
-	parts := make([]*genai.Part, len(s.config.GeminiPrompt.Parts))
-	for i, part := range s.config.GeminiPrompt.Parts {
+	parts := make([]*genai.Part, len(s.config.GeminiPrompt))
+	for i, part := range s.config.GeminiPrompt {
 		text := replacer.Replace(part.Text)
 		parts[i] = genai.NewPartFromText(text)
 	}
