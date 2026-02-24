@@ -1,7 +1,3 @@
-* Fix CI sast
-* Remove the TARGET env var from prod
-* Remove the GEMINI_PROMPT from prod
-
 * Uncomment and remove code in:
   - `internal/integrations/gemini/gemini.go`
   - `internal/worker/worker.go`

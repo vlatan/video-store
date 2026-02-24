@@ -187,7 +187,13 @@ func loadPrompt() ([]Part, error) {
 		path = filepath.Join(root, "prompt.json")
 	}
 
-	data, err := os.ReadFile(path)
+	root, err := os.OpenRoot(filepath.Dir(path))
+	if err != nil {
+		return nil, fmt.Errorf("error opening root: %w", err)
+	}
+	defer root.Close()
+
+	data, err := root.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("error reading the prompt file; %w", err)
 	}
