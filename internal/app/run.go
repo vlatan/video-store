@@ -3,6 +3,7 @@ package app
 import (
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 )
 
@@ -17,7 +18,16 @@ func (a *App) Run() error {
 	// Gracefully shut down the server there if needed.
 	go a.Shutdown(done)
 
-	fmt.Printf("Server running on: http://%s\n", a.server.Addr)
+	host, port, err := net.SplitHostPort(a.server.Addr)
+	if err != nil {
+		return err
+	}
+
+	if host == "" {
+		host = "0.0.0.0"
+	}
+
+	fmt.Printf("Server running on: http://%s:%s\n", host, port)
 	if a.domain != "" {
 		fmt.Printf("Website available at: https://%s\n", a.domain)
 	}
@@ -25,7 +35,7 @@ func (a *App) Run() error {
 	// If the HTTP server was shut down, meaning
 	// s.Server.Shutdown(ctx) method was called,
 	// ListenAndServe will return ErrServerClosed.
-	err := a.server.ListenAndServe()
+	err = a.server.ListenAndServe()
 	if err != nil && err != http.ErrServerClosed {
 		return err
 	}
