@@ -184,7 +184,7 @@ func loadPrompt() ([]Part, error) {
 		if err != nil {
 			return nil, fmt.Errorf("error finding the root; %w", err)
 		}
-		path = filepath.Join(root, "prompt.json")
+		path = filepath.Join(root, path)
 	}
 
 	root, err := os.OpenRoot(filepath.Dir(path))
