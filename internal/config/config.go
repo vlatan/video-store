@@ -139,12 +139,10 @@ func New() *Config {
 	cfg.DBMaxConns = max(cfg.DBMaxConns, int32(numCPU))
 
 	// Check if the app has all the necessary secrets
-	if cfg.Target == App {
-		secrets := []Secret{cfg.CsrfKey, cfg.AuthKey, cfg.EncryptionKey}
-		for _, secret := range secrets {
-			if len(secret.Bytes) == 0 {
-				log.Fatalf("empty or no secret key defined in env: %s", secret)
-			}
+	secrets := []Secret{cfg.CsrfKey, cfg.AuthKey, cfg.EncryptionKey}
+	for _, secret := range secrets {
+		if len(secret.Bytes) == 0 {
+			log.Fatalf("empty or no secret key defined in env: %s", secret)
 		}
 	}
 
