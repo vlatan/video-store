@@ -112,7 +112,7 @@ type Config struct {
 	DBPassword string `env:"DB_PASSWORD"`
 	DBMaxConns int32  `env:"DB_MAX_CONNS" envDefault:"4"`
 
-	// Local app host and port
+	// Local port
 	Port int `env:"PORT" envDefault:"5000"`
 
 	// Worker expected runtime
@@ -151,7 +151,7 @@ func New() *Config {
 	// Load the genai prompt
 	prompt, err := loadPrompt("prompt.json")
 	if err != nil {
-		log.Fatalf("failed to load the promot: %v", err)
+		log.Fatalf("failed to load the prompt: %v", err)
 	}
 	cfg.GeminiPrompt = prompt
 
