@@ -37,11 +37,6 @@ jobs:
       run: cp prompt.example.json prompt.json
     
     - name: Run tests
-      env:
-          DB_DATABASE: ${{ secrets.DB_DATABASE }}
-          DB_USERNAME: ${{ secrets.DB_USERNAME }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
       run: go test -race -coverprofile=coverage.out ./...
     
     - name: Display coverage
