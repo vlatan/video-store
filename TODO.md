@@ -1,3 +1,7 @@
+* Search for the prompt file in the root
+* Remove the TARGET env var from prod
+* Add `prompt.json` file in prod
+
 * Uncomment and remove code in:
   - `internal/integrations/gemini/gemini.go`
   - `internal/worker/worker.go`

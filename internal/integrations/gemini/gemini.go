@@ -21,11 +21,6 @@ type Service struct {
 	limiter *GeminiLimiter
 }
 
-const categoriesPlaceholder = "{{ CATEGORIES }}"
-const titlePlaceholder = "{{ TITLE }}"
-const descriptionPlaceholder = "{{ DESCRIPTION }}"
-const urlPlaceholder = "{{ URL }}"
-
 // Find category paragraph
 var catRegex = regexp.MustCompile(`(?i)<p>\s*CATEGORY:.*?</p>`)
 
@@ -152,30 +147,37 @@ func (s *Service) Summarize(
 // makeContents creates Genai contents
 func (s *Service) makeContents(video *models.Post, categories models.Categories) []*genai.Content {
 
+	// Populate user prompt custom text parts
+	var parts []*genai.Part
+	for _, part := range s.config.GeminiPrompt {
+		parts = append(parts, genai.NewPartFromText(part.Text))
+	}
+
 	// Create categories string
 	var catString string
 	for _, cat := range categories {
 		catString += cat.Name + ", "
 	}
-
 	catString = strings.TrimSuffix(catString, ", ")
+
+	// Ready the rest of the parts
 	title := sanitizePrompt(video.Title)
 	description := sanitizePrompt(video.Description)
 	url := "https://www.youtube.com/watch?v=" + video.VideoID
 
-	replacer := strings.NewReplacer(
-		categoriesPlaceholder, catString,
-		titlePlaceholder, title,
-		descriptionPlaceholder, description,
-		urlPlaceholder, url,
-	)
-
-	// Create genai parts
-	parts := make([]*genai.Part, len(s.config.GeminiPrompt))
-	for i, part := range s.config.GeminiPrompt {
-		text := replacer.Replace(part.Text)
-		parts[i] = genai.NewPartFromText(text)
+	// Create hardcoded genai prompt parts
+	hardParts := []*genai.Part{
+		genai.NewPartFromText(fmt.Sprintf("--- TITLE --- \n%s", title)),
+		genai.NewPartFromText(fmt.Sprintf("--- DESCRIPTION --- \n%s", description)),
+		genai.NewPartFromText(fmt.Sprintf("--- YOUTUBE URL --- \n%s", url)),
+		genai.NewPartFromText(fmt.Sprintf(
+			"--- CATEGORIES --- \nSelect ONE category from these categories: %s.",
+			catString,
+		)),
 	}
+
+	// Append the hardcoded prompt parts
+	parts = append(parts, hardParts...)
 
 	return []*genai.Content{
 		genai.NewContentFromParts(parts, genai.RoleUser),

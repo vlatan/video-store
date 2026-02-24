@@ -7,10 +7,12 @@ import (
 	"log"
 	"math"
 	"os"
+	"path/filepath"
 	"runtime"
 	"time"
 
 	"github.com/caarlos0/env/v11"
+	"github.com/vlatan/video-store/internal/utils"
 )
 
 type Secret struct {
@@ -35,7 +37,7 @@ type Config struct {
 	// Running localy or not
 	Debug    bool   `env:"DEBUG" envDefault:"false"`
 	Protocol string `env:"PROTOCOL" envDefault:"https"`
-	Target   Target `env:"TARGET envDefault:app"`
+	Target   Target `env:"TARGET" envDefault:"app"`
 
 	// Sessions
 	CsrfKey             Secret `env:"CSRF_KEY"`
@@ -136,24 +138,24 @@ func New() *Config {
 	// Cap the DBMaxConns to the number of cores
 	cfg.DBMaxConns = max(cfg.DBMaxConns, int32(numCPU))
 
-	if cfg.Target != App {
-		return &cfg
-	}
-
 	// Check if the app has all the necessary secrets
-	secrets := []Secret{cfg.CsrfKey, cfg.AuthKey, cfg.EncryptionKey}
-	for _, secret := range secrets {
-		if len(secret.Bytes) == 0 {
-			log.Fatalf("empty or no secret key defined in env: %s", secret)
+	if cfg.Target == App {
+		secrets := []Secret{cfg.CsrfKey, cfg.AuthKey, cfg.EncryptionKey}
+		for _, secret := range secrets {
+			if len(secret.Bytes) == 0 {
+				log.Fatalf("empty or no secret key defined in env: %s", secret)
+			}
 		}
 	}
 
-	// Load the genai prompt
-	prompt, err := loadPrompt("prompt.json")
-	if err != nil {
-		log.Fatalf("failed to load the prompt: %v", err)
+	// Load the genai prompt for the app and worker
+	if cfg.Target == App || cfg.Target == Worker {
+		prompt, err := loadPrompt()
+		if err != nil {
+			log.Fatalf("failed to load the prompt: %v", err)
+		}
+		cfg.GeminiPrompt = prompt
 	}
-	cfg.GeminiPrompt = prompt
 
 	return &cfg
 }
@@ -173,11 +175,23 @@ func (s *Secret) UnmarshalText(text []byte) error {
 }
 
 // loadPromt loads the Gemini prompt from a file
-func loadPrompt(path string) ([]Part, error) {
+func loadPrompt() ([]Part, error) {
+
+	path := "prompt.json"
+	_, err := os.Stat(path)
+	if err != nil {
+		root, err := utils.GetProjectRoot()
+		if err != nil {
+			return nil, fmt.Errorf("error finding the root; %w", err)
+		}
+		path = filepath.Join(root, "prompt.json")
+	}
+
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("error reading the prompt file; %w", err)
 	}
+
 	var parts []Part
 	if err := json.Unmarshal(data, &parts); err != nil {
 		return nil, fmt.Errorf("error unmarshaling the prompt file; %w", err)

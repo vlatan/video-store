@@ -108,7 +108,7 @@ services:
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
-      - ./bin:/src/bin:ro
+      - ./bin:/src/bin
       - ./cmd:/src/cmd:ro
       - ./internal:/src/internal:ro
       - ./web:/src/web:ro
@@ -138,6 +138,8 @@ services:
       args:
         TARGET: worker
     env_file: .env
+    environment:
+      - TARGET=worker
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
@@ -155,6 +157,8 @@ services:
       args:
         TARGET: backup
     env_file: .env
+    environment:
+      - TARGET=backup
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
