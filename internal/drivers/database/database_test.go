@@ -55,7 +55,12 @@ func runTests(m *testing.M) int {
 	cancel()
 
 	// Create the test config - globaly available for package's tests
-	testCfg = config.New()
+	testCfg = &config.Config{
+		DBDatabase: "testdb",
+		DBUsername: "testuser",
+		DBPassword: "testpass",
+		DBMaxConns: 4,
+	}
 
 	setupCtx, setupCancel := context.WithTimeout(baseCtx, 2*time.Minute)
 	defer setupCancel()

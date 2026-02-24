@@ -8,12 +8,10 @@ import (
 	"testing"
 
 	"github.com/joho/godotenv"
-	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/utils"
 )
 
 var ( // Package global variables
-	testCfg        *config.Config
 	baseCtx, noCtx context.Context
 )
 
@@ -51,9 +49,6 @@ func runTests(m *testing.M) int {
 	c, cancel := context.WithCancel(baseCtx)
 	noCtx = c
 	cancel()
-
-	// Create the test config - globaly available for package's tests
-	testCfg = config.New()
 
 	// Run all the tests in the package
 	return m.Run()

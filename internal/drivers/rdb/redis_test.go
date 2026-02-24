@@ -57,7 +57,7 @@ func runTests(m *testing.M) int {
 	cancel()
 
 	// Test config - globaly available for package's tests
-	testCfg = config.New()
+	testCfg = &config.Config{}
 
 	setupCtx, setupCancel := context.WithTimeout(baseCtx, 2*time.Minute)
 	defer setupCancel()

@@ -1,6 +1,6 @@
-* Search for the prompt file in the root
+* Fix CI sast
 * Remove the TARGET env var from prod
-* Add `prompt.json` file in prod
+* Remove the GEMINI_PROMPT from prod
 
 * Uncomment and remove code in:
   - `internal/integrations/gemini/gemini.go`
