@@ -5,7 +5,7 @@ tmp_dir = "tmp"
 
 [build]
 args_bin = []
-bin = "./bin/app"
+entrypoint = "./bin/app"
 cmd = "make build"
 delay = 1000
 exclude_dir = ["assets", "tmp", "vendor", "testdata", "node_modules"]
@@ -20,7 +20,7 @@ include_file = []
 kill_delay = "5s"
 log = "build-errors.log"
 poll = true
-poll_interval = 0
+poll_interval = 500
 post_cmd = []
 pre_cmd = []
 rerun = false
