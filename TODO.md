@@ -1,5 +1,7 @@
-* Unknown mime type: Could not determine the mimetype for your file please set the `MIMEType` argument
-* Time the media extraction, make gaps between calls 10 minutes.
+* Make gaps between `yt-dlp` calls 10 minutes, basically between videos
+* Give more timeout on POST new video context
+* Upload images in parallel
+* Limit CPU usage on worker
 
 * Try prompt with audio and images but write a rich md file: with:
   specs, context box, short summary and some other rich content.
