@@ -125,7 +125,7 @@ func (s *Service) Summarize(
 	defer os.RemoveAll(dataDir)
 
 	// Make Genai contents
-	contents, err := s.makeContents(video, categories)
+	contents, err := s.makeContents(ctx, video, categories)
 	if err != nil {
 		return nil, err
 	}
@@ -155,6 +155,7 @@ func (s *Service) Summarize(
 
 // makeContents creates Genai contents
 func (s *Service) makeContents(
+	ctx context.Context,
 	video *models.Post,
 	categories models.Categories,
 ) ([]*genai.Content, error) {
@@ -169,14 +170,22 @@ func (s *Service) makeContents(
 		genai.NewPartFromText(fmt.Sprintf("--- DESCRIPTION --- \n%s", description)),
 	}
 
-	// Extract YT video media
+	// Extract audio file and images from YT video
 	if err := extractMedia(video.VideoID); err != nil {
 		return nil, err
 	}
 
-	// TODO: Upload the audio to genai
+	// Upload the audio file to genai and include it in prompt
+	// https://ai.google.dev/gemini-api/docs/audio
+	uploadedFile, err := s.client.Files.UploadFromPath(ctx, audioFile, nil)
+	if err != nil {
+		return nil, err
+	}
+	audioPart := genai.NewPartFromURI(uploadedFile.URI, uploadedFile.MIMEType)
+	parts = append(parts, audioPart)
+
 	// TODO: Inline pass or upload the images
-	// TODO: Create genai parts and append them
+	// https://ai.google.dev/gemini-api/docs/image-understanding
 
 	// Populate user prompt custom text parts
 	for _, part := range s.config.GeminiPrompt {

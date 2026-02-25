@@ -13,9 +13,10 @@ import (
 // The dir in which the data will be fetched
 const dataDir = "data"
 const framesDir = "data/frames"
+const audioFile = "data/output.mp3"
 
 // extractAudio extracts the audio from a given YT video.
-func extractAudio(videoID, output string) error {
+func extractAudio(videoID string) error {
 
 	cmdArgs := []string{
 		"--keep-video",
@@ -24,7 +25,7 @@ func extractAudio(videoID, output string) error {
 		"mp3",
 		videoID,
 		"-o",
-		output,
+		audioFile,
 	}
 
 	return exec.Command("yt-dlp", cmdArgs...).Run()
@@ -88,15 +89,18 @@ func extractImages(videoFilePath, outputDir string) error {
 	return exec.Command("ffmpeg", cmdArgs...).Run()
 }
 
-func findMergedVideo(dir, stem string) (string, error) {
-	var videoExts = []string{".mp4", ".mkv", ".webm", ".avi", ".mov"}
+func findMergedVideo() (string, error) {
+
+	stem := strings.TrimSuffix(audioFile, filepath.Ext(audioFile))
+	videoExts := []string{".mp4", ".mkv", ".webm", ".avi", ".mov"}
+
 	for _, ext := range videoExts {
-		path := filepath.Join(dir, stem+ext)
+		path := stem + ext
 		if _, err := os.Stat(path); err == nil {
 			return path, nil
 		}
 	}
-	return "", fmt.Errorf("no merged video found for stem %q in %q", stem, dir)
+	return "", fmt.Errorf("no merged video found for stem %q", stem)
 }
 
 // extractMedia extracts media given a YT video ID,
@@ -121,11 +125,11 @@ func extractMedia(videoID string) error {
 		return fmt.Errorf("can't make directories; %w", err)
 	}
 
-	if err := extractAudio(videoID, filepath.Join(dataDir, "output.mp3")); err != nil {
+	if err := extractAudio(videoID); err != nil {
 		return fmt.Errorf("can't extract audio; %w", err)
 	}
 
-	videoFilePath, err := findMergedVideo(dataDir, "output")
+	videoFilePath, err := findMergedVideo()
 	if err != nil {
 		return fmt.Errorf("can't find extracted video; %w", err)
 	}
