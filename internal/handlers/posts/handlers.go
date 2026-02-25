@@ -318,7 +318,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 			// Detach the request context and
 			// give this goroutine 5 minutes to finish
 			detachedCtx := context.WithoutCancel(r.Context())
-			ctx, cancel := context.WithTimeout(detachedCtx, 5*time.Minute)
+			ctx, cancel := context.WithTimeout(detachedCtx, 15*time.Minute)
 			defer cancel()
 
 			genaiResponse, err := s.gemini.Summarize(

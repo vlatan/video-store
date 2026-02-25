@@ -185,13 +185,15 @@ func (s *Service) makeContents(
 
 	// Upload the audio file to genai and include it in prompt
 	// https://ai.google.dev/gemini-api/docs/audio
-	uploadedFile, err := s.client.Files.UploadFromPath(ctx, audioFile, nil)
+	uploadedFile, err := s.client.Files.UploadFromPath(
+		ctx,
+		audioFile,
+		&genai.UploadFileConfig{MIMEType: "audio/mpeg"},
+	)
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to upload the audio file; %w", err)
 	}
-
-	fmt.Println("============ AUDIO UPLOADED ==============")
-	fmt.Println("MIME:", uploadedFile.MIMEType)
 
 	audioPart := genai.NewPartFromURI(uploadedFile.URI, uploadedFile.MIMEType)
 	parts = append(parts, audioPart)
@@ -212,13 +214,15 @@ func (s *Service) makeContents(
 			return nil
 		}
 
-		uploadedFile, err := s.client.Files.UploadFromPath(ctx, path, nil)
+		uploadedFile, err := s.client.Files.UploadFromPath(
+			ctx,
+			path,
+			&genai.UploadFileConfig{MIMEType: "image/png"},
+		)
+
 		if err != nil {
 			return fmt.Errorf("failed to upload an image; %w", err)
 		}
-
-		fmt.Println("============ IMAGE UPLOADED ==============")
-		fmt.Println("MIME:", uploadedFile.MIMEType)
 
 		imagePart := genai.NewPartFromURI(uploadedFile.URI, uploadedFile.MIMEType)
 		parts = append(parts, imagePart)

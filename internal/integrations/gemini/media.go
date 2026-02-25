@@ -36,6 +36,8 @@ func extractImages(videoFilePath, outputDir string) error {
 
 	// Get 1 image per second, the first 180 seconds
 	cmdArgs := []string{
+		"-threads",
+		"1",
 		"-loglevel",
 		"error",
 		"-i",
@@ -78,6 +80,8 @@ func extractImages(videoFilePath, outputDir string) error {
 	duration := int(math.Round(durationFloat))
 
 	cmdArgs = []string{
+		"-threads",
+		"1",
 		"-loglevel",
 		"error",
 		"-ss",
