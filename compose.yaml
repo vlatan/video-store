@@ -111,13 +111,14 @@ services:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
       - ./bin:/src/bin
-      - ./cmd:/src/cmd
-      - ./internal:/src/internal
-      - ./web:/src/web
-      - ./go.mod:/src/go.mod
-      - ./go.sum:/src/go.sum
-      - ./Makefile:/src/Makefile
-      - ./.air.toml:/src/.air.toml
+      - ./cmd:/src/cmd:ro
+      - ./internal:/src/internal:ro
+      - ./web:/src/web:ro
+      - ./go.mod:/src/go.mod:ro
+      - ./go.sum:/src/go.sum:ro
+      - ./Makefile:/src/Makefile:ro
+      - ./.air.toml:/src/.air.toml:ro
+      - ./prompt.json:/src/prompt.json:ro
 
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:${PORT}/healthcheck" ]
@@ -139,9 +140,12 @@ services:
       args:
         TARGET: worker
     env_file: .env
+    environment:
+      - TARGET=worker
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
+      - ./prompt.json:/src/prompt.json:ro
     depends_on:
       postgres:
         condition: service_healthy
@@ -155,6 +159,8 @@ services:
       args:
         TARGET: backup
     env_file: .env
+    environment:
+      - TARGET=backup
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro

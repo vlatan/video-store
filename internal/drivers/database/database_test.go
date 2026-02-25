@@ -11,7 +11,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/containers"
-	"github.com/vlatan/video-store/internal/testutils"
+	"github.com/vlatan/video-store/internal/utils"
 )
 
 var ( // Package global variables
@@ -34,7 +34,7 @@ func TestMain(m *testing.M) {
 // runTests performs a setup and runs all the tests in this package
 func runTests(m *testing.M) int {
 	// Get the project root
-	projectRoot, err := testutils.GetProjectRoot()
+	projectRoot, err := utils.GetProjectRoot()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -55,7 +55,12 @@ func runTests(m *testing.M) int {
 	cancel()
 
 	// Create the test config - globaly available for package's tests
-	testCfg = config.New()
+	testCfg = &config.Config{
+		DBDatabase: "testdb",
+		DBUsername: "testuser",
+		DBPassword: "testpass",
+		DBMaxConns: 4,
+	}
 
 	setupCtx, setupCancel := context.WithTimeout(baseCtx, 2*time.Minute)
 	defer setupCancel()
