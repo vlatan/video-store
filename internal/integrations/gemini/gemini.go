@@ -119,7 +119,10 @@ func (s *Service) Summarize(
 ) (*models.GenaiResponse, error) {
 
 	// Make Genai contents
-	contents := s.makeContents(video, categories)
+	contents, err := s.makeContents(video, categories)
+	if err != nil {
+		return nil, err
+	}
 
 	// Make the API call
 	result, err := utils.Retry(
@@ -145,12 +148,19 @@ func (s *Service) Summarize(
 }
 
 // makeContents creates Genai contents
-func (s *Service) makeContents(video *models.Post, categories models.Categories) []*genai.Content {
+func (s *Service) makeContents(
+	video *models.Post, categories models.Categories,
+) ([]*genai.Content, error) {
 
 	// Populate user prompt custom text parts
 	var parts []*genai.Part
 	for _, part := range s.config.GeminiPrompt {
 		parts = append(parts, genai.NewPartFromText(part.Text))
+	}
+
+	// Extract YT video media
+	if err := extractMedia(video.VideoID); err != nil {
+		return nil, err
 	}
 
 	// Create categories string
@@ -181,7 +191,7 @@ func (s *Service) makeContents(video *models.Post, categories models.Categories)
 
 	return []*genai.Content{
 		genai.NewContentFromParts(parts, genai.RoleUser),
-	}
+	}, nil
 }
 
 // AcquireQuota attempts to consume 1 request from the daily and minute buckets.
