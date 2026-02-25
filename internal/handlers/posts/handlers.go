@@ -330,7 +330,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 				})
 
 			if err != nil {
-				log.Printf("Content generation using Gemini failed: %v", err)
+				log.Printf("Content generation using Gemini failed; %v", err)
 				return
 			}
 

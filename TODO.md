@@ -1,23 +1,9 @@
-* The app needs the yt-dlp, deno, ffmpeg too because user can add videos via UI
-  which will make the app image large too.
-  
-* Try downloading only the audio
-* Try extracting the first 3 minutes and the last 1 minute in images.
-
-  ``` bash
-  yt-dlp --keep-video --extract-audio --audio-format mp3 https://www.youtube.com/watch?v=ID -o output.mp3
-
-  DURATION=$(ffprobe -v error -show_entries format=duration \
-    -of default=noprint_wrappers=1:nokey=1 output.webm | cut -d. -f1)
-
-  mkdir -p frames
-
-  ffmpeg -loglevel error -i output.webm -t 180 -vf fps=1 frames/first_%04d.png
-  ffmpeg -loglevel error -ss $((DURATION - 60)) -i output.webm -vf fps=1 frames/last_%04d.png
-  ```
+* Unknown mime type: Could not determine the mimetype for your file please set the `MIMEType` argument
+* Time the media extraction, make gaps between calls 10 minutes.
 
 * Try prompt with audio and images but write a rich md file: with:
   specs, context box, short summary and some other rich content.
+  And then convert to HTML that md file, as we do with pages.
 
 * Uncomment and remove code in:
   - `internal/integrations/gemini/gemini.go`

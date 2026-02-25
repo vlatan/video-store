@@ -11,9 +11,9 @@ import (
 )
 
 // The dir in which the data will be fetched
-const dataDir = "data"
-const framesDir = "data/frames"
-const audioFile = "data/output.mp3"
+const dataDir = "/tmp/data"
+const framesDir = "/tmp/data/frames"
+const audioFile = "/tmp/data/output.mp3"
 
 // extractAudio extracts the audio from a given YT video.
 func extractAudio(videoID string) error {
@@ -28,6 +28,7 @@ func extractAudio(videoID string) error {
 		audioFile,
 	}
 
+	// #nosec G204
 	return exec.Command("yt-dlp", cmdArgs...).Run()
 }
 
@@ -46,6 +47,7 @@ func extractImages(videoFilePath, outputDir string) error {
 		filepath.Join(outputDir, "first_%04d.png"),
 	}
 
+	// #nosec G204
 	if err := exec.Command("ffmpeg", cmdArgs...).Run(); err != nil {
 		return err
 	}
@@ -61,6 +63,7 @@ func extractImages(videoFilePath, outputDir string) error {
 		videoFilePath,
 	}
 
+	// #nosec G204
 	output, err := exec.Command("ffprobe", cmdArgs...).Output()
 	if err != nil {
 		return err
@@ -86,6 +89,7 @@ func extractImages(videoFilePath, outputDir string) error {
 		filepath.Join(outputDir, "last_%04d.png"),
 	}
 
+	// #nosec G204
 	return exec.Command("ffmpeg", cmdArgs...).Run()
 }
 
@@ -107,21 +111,8 @@ func findMergedVideo() (string, error) {
 // namely audio and images.
 func extractMedia(videoID string) error {
 
-	// Get current directory
-	currentDir, err := os.Getwd()
-	if err != nil {
-		return fmt.Errorf("can't get the current dir; %w", err)
-	}
-
-	root, err := os.OpenRoot(currentDir)
-	if err != nil {
-		return fmt.Errorf("can't open current dir as root; %w", err)
-	}
-
-	defer root.Close()
-
 	// Create dirs
-	if err := root.MkdirAll(framesDir, 0755); err != nil {
+	if err := os.MkdirAll(framesDir, 0750); err != nil {
 		return fmt.Errorf("can't make directories; %w", err)
 	}
 

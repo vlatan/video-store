@@ -2,8 +2,11 @@ package gemini
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io/fs"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -42,9 +45,9 @@ var schema = &genai.Schema{
 			Type:        genai.TypeString,
 			Description: "Title",
 		},
-		"description": {
+		"summary": {
 			Type:        genai.TypeString,
-			Description: "Description",
+			Description: "Summary",
 		},
 
 		"category": {
@@ -52,7 +55,7 @@ var schema = &genai.Schema{
 			Description: "Category",
 		},
 	},
-	Required: []string{"title", "description", "category"},
+	Required: []string{"title", "summary", "category"},
 }
 
 // Create new Gemini service
@@ -89,11 +92,11 @@ func (s *Service) GenerateContent(
 		contents,
 		&genai.GenerateContentConfig{
 			// Can't return JSON when using web search
-			// ResponseMIMEType: "application/json",
-			SafetySettings:  safetySettings,
-			ResponseSchema:  schema,
-			MediaResolution: genai.MediaResolutionLow,
-			Tools:           []*genai.Tool{{GoogleSearch: &genai.GoogleSearch{}}},
+			ResponseMIMEType: "application/json",
+			SafetySettings:   safetySettings,
+			ResponseSchema:   schema,
+			// MediaResolution:  genai.MediaResolutionLow,
+			// Tools:            []*genai.Tool{{GoogleSearch: &genai.GoogleSearch{}}},
 		},
 	)
 
@@ -141,16 +144,21 @@ func (s *Service) Summarize(
 		return nil, err
 	}
 
-	// Parse the text output
-	response, err := parseResponse(result.Text(), categories)
-	if err != nil {
-		return nil, err
+	var response models.GenaiResponse
+	if err := json.Unmarshal([]byte(result.Text()), &response); err != nil {
+		return nil, fmt.Errorf("failed to parse Genai response to JSON: %w", err)
 	}
+
+	// // Parse the text output
+	// response, err := parseResponse(result.Text(), categories)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	response.Summary += utils.UpdateMarker // REMOVE
 	response.Title = video.Title
 
-	return response, nil
+	return &response, nil
 }
 
 // makeContents creates Genai contents
@@ -160,7 +168,7 @@ func (s *Service) makeContents(
 	categories models.Categories,
 ) ([]*genai.Content, error) {
 
-	// Ready the rest of the parts
+	// Sanitize YT title and description
 	title := sanitizePrompt(video.Title)
 	description := sanitizePrompt(video.Description)
 
@@ -179,13 +187,49 @@ func (s *Service) makeContents(
 	// https://ai.google.dev/gemini-api/docs/audio
 	uploadedFile, err := s.client.Files.UploadFromPath(ctx, audioFile, nil)
 	if err != nil {
+		err = fmt.Errorf("failed to upload the audio file %q; %w", uploadedFile.URI, err)
 		return nil, err
 	}
+
+	fmt.Println("============ AUDIO UPLOADED ==============")
+	fmt.Println("MIME:", uploadedFile.MIMEType)
+
 	audioPart := genai.NewPartFromURI(uploadedFile.URI, uploadedFile.MIMEType)
 	parts = append(parts, audioPart)
 
-	// TODO: Inline pass or upload the images
+	// Upload the images
 	// https://ai.google.dev/gemini-api/docs/image-understanding
+	err = filepath.WalkDir(framesDir, func(path string, info fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		// Skip directories
+		if info.IsDir() {
+			return nil
+		}
+
+		if filepath.Ext(info.Name()) != ".png" {
+			return nil
+		}
+
+		uploadedFile, err := s.client.Files.UploadFromPath(ctx, path, nil)
+		if err != nil {
+			return fmt.Errorf("failed to upload image %q; %w", uploadedFile.URI, err)
+		}
+
+		fmt.Println("============ IMAGE UPLOADED ==============")
+		fmt.Println("MIME:", uploadedFile.MIMEType)
+
+		imagePart := genai.NewPartFromURI(uploadedFile.URI, uploadedFile.MIMEType)
+		parts = append(parts, imagePart)
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
 
 	// Populate user prompt custom text parts
 	for _, part := range s.config.GeminiPrompt {
@@ -205,9 +249,8 @@ func (s *Service) makeContents(
 		catString,
 	)))
 
-	return []*genai.Content{
-		genai.NewContentFromParts(parts, genai.RoleUser),
-	}, nil
+	contents := []*genai.Content{genai.NewContentFromParts(parts, genai.RoleUser)}
+	return contents, nil
 }
 
 // AcquireQuota attempts to consume 1 request from the daily and minute buckets.
