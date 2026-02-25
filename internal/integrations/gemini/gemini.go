@@ -187,8 +187,7 @@ func (s *Service) makeContents(
 	// https://ai.google.dev/gemini-api/docs/audio
 	uploadedFile, err := s.client.Files.UploadFromPath(ctx, audioFile, nil)
 	if err != nil {
-		err = fmt.Errorf("failed to upload the audio file %q; %w", uploadedFile.URI, err)
-		return nil, err
+		return nil, fmt.Errorf("failed to upload the audio file; %w", err)
 	}
 
 	fmt.Println("============ AUDIO UPLOADED ==============")
@@ -215,7 +214,7 @@ func (s *Service) makeContents(
 
 		uploadedFile, err := s.client.Files.UploadFromPath(ctx, path, nil)
 		if err != nil {
-			return fmt.Errorf("failed to upload image %q; %w", uploadedFile.URI, err)
+			return fmt.Errorf("failed to upload an image; %w", err)
 		}
 
 		fmt.Println("============ IMAGE UPLOADED ==============")
