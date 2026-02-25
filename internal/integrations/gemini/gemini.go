@@ -3,6 +3,7 @@ package gemini
 import (
 	"context"
 	"fmt"
+	"os"
 	"regexp"
 	"strings"
 
@@ -118,6 +119,11 @@ func (s *Service) Summarize(
 	rc *utils.RetryConfig,
 ) (*models.GenaiResponse, error) {
 
+	// Defer remove the data dir and its contents
+	// after the content is generated.
+	// If it doesn exist the error is nil.
+	defer os.RemoveAll(dataDir)
+
 	// Make Genai contents
 	contents, err := s.makeContents(video, categories)
 	if err != nil {
@@ -149,18 +155,32 @@ func (s *Service) Summarize(
 
 // makeContents creates Genai contents
 func (s *Service) makeContents(
-	video *models.Post, categories models.Categories,
+	video *models.Post,
+	categories models.Categories,
 ) ([]*genai.Content, error) {
 
-	// Populate user prompt custom text parts
-	var parts []*genai.Part
-	for _, part := range s.config.GeminiPrompt {
-		parts = append(parts, genai.NewPartFromText(part.Text))
+	// Ready the rest of the parts
+	title := sanitizePrompt(video.Title)
+	description := sanitizePrompt(video.Description)
+
+	// Create genai prompt parts
+	parts := []*genai.Part{
+		genai.NewPartFromText(fmt.Sprintf("--- TITLE --- \n%s", title)),
+		genai.NewPartFromText(fmt.Sprintf("--- DESCRIPTION --- \n%s", description)),
 	}
 
 	// Extract YT video media
 	if err := extractMedia(video.VideoID); err != nil {
 		return nil, err
+	}
+
+	// TODO: Upload the audio to genai
+	// TODO: Inline pass or upload the images
+	// TODO: Create genai parts and append them
+
+	// Populate user prompt custom text parts
+	for _, part := range s.config.GeminiPrompt {
+		parts = append(parts, genai.NewPartFromText(part.Text))
 	}
 
 	// Create categories string
@@ -170,24 +190,11 @@ func (s *Service) makeContents(
 	}
 	catString = strings.TrimSuffix(catString, ", ")
 
-	// Ready the rest of the parts
-	title := sanitizePrompt(video.Title)
-	description := sanitizePrompt(video.Description)
-	url := "https://www.youtube.com/watch?v=" + video.VideoID
-
-	// Create hardcoded genai prompt parts
-	hardParts := []*genai.Part{
-		genai.NewPartFromText(fmt.Sprintf("--- TITLE --- \n%s", title)),
-		genai.NewPartFromText(fmt.Sprintf("--- DESCRIPTION --- \n%s", description)),
-		genai.NewPartFromText(fmt.Sprintf("--- YOUTUBE URL --- \n%s", url)),
-		genai.NewPartFromText(fmt.Sprintf(
-			"--- CATEGORIES --- \nSelect ONE category from these categories: %s.",
-			catString,
-		)),
-	}
-
-	// Append the hardcoded prompt parts
-	parts = append(parts, hardParts...)
+	// Append the category prompt
+	parts = append(parts, genai.NewPartFromText(fmt.Sprintf(
+		"--- CATEGORIES --- \nSelect ONE category from these categories: %s.",
+		catString,
+	)))
 
 	return []*genai.Content{
 		genai.NewContentFromParts(parts, genai.RoleUser),

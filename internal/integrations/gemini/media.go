@@ -10,6 +10,10 @@ import (
 	"strings"
 )
 
+// The dir in which the data will be fetched
+const dataDir = "data"
+const framesDir = "data/frames"
+
 // extractAudio extracts the audio from a given YT video.
 func extractAudio(videoID, output string) error {
 
@@ -110,21 +114,23 @@ func extractMedia(videoID string) error {
 		return fmt.Errorf("can't open current dir as root; %w", err)
 	}
 
+	defer root.Close()
+
 	// Create dirs
-	if err := root.MkdirAll("data/frames", 0755); err != nil {
+	if err := root.MkdirAll(framesDir, 0755); err != nil {
 		return fmt.Errorf("can't make directories; %w", err)
 	}
 
-	if err := extractAudio(videoID, "data/output.mp3"); err != nil {
+	if err := extractAudio(videoID, filepath.Join(dataDir, "output.mp3")); err != nil {
 		return fmt.Errorf("can't extract audio; %w", err)
 	}
 
-	videoFilePath, err := findMergedVideo("data", "output")
+	videoFilePath, err := findMergedVideo(dataDir, "output")
 	if err != nil {
 		return fmt.Errorf("can't find extracted video; %w", err)
 	}
 
-	if err := extractImages(videoFilePath, "data/frames"); err != nil {
+	if err := extractImages(videoFilePath, framesDir); err != nil {
 		return fmt.Errorf("can't extract images; %w", err)
 	}
 
