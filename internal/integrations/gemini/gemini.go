@@ -14,6 +14,7 @@ import (
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/utils"
+	"golang.org/x/sync/errgroup"
 
 	"google.golang.org/genai"
 )
@@ -24,6 +25,14 @@ type Service struct {
 	client  *genai.Client
 	limiter *GeminiLimiter
 }
+
+type Media struct {
+	path      string
+	mimeType  string
+	genaiPart *genai.Part
+}
+
+const concurrentUploads = 30
 
 // Find category paragraph
 var catRegex = regexp.MustCompile(`(?i)<p>\s*CATEGORY:.*?</p>`)
@@ -168,39 +177,14 @@ func (s *Service) makeContents(
 	categories models.Categories,
 ) ([]*genai.Content, error) {
 
-	// Sanitize YT title and description
-	title := sanitizePrompt(video.Title)
-	description := sanitizePrompt(video.Description)
-
-	// Create genai prompt parts
-	parts := []*genai.Part{
-		genai.NewPartFromText(fmt.Sprintf("--- TITLE --- \n%s", title)),
-		genai.NewPartFromText(fmt.Sprintf("--- DESCRIPTION --- \n%s", description)),
-	}
-
 	// Extract audio file and images from YT video
 	if err := extractMedia(video.VideoID); err != nil {
 		return nil, err
 	}
 
-	// Upload the audio file to genai and include it in prompt
-	// https://ai.google.dev/gemini-api/docs/audio
-	uploadedFile, err := s.client.Files.UploadFromPath(
-		ctx,
-		audioFile,
-		&genai.UploadFileConfig{MIMEType: "audio/mpeg"},
-	)
-
-	if err != nil {
-		return nil, fmt.Errorf("failed to upload the audio file; %w", err)
-	}
-
-	audioPart := genai.NewPartFromURI(uploadedFile.URI, uploadedFile.MIMEType)
-	parts = append(parts, audioPart)
-
-	// Upload the images
-	// https://ai.google.dev/gemini-api/docs/image-understanding
-	err = filepath.WalkDir(framesDir, func(path string, info fs.DirEntry, err error) error {
+	// Gather the media for upload
+	files := []*Media{{path: audioFile, mimeType: "audio/mpeg"}}
+	err := filepath.WalkDir(framesDir, func(path string, info fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
@@ -210,23 +194,12 @@ func (s *Service) makeContents(
 			return nil
 		}
 
+		// Skip non PNG files
 		if filepath.Ext(info.Name()) != ".png" {
 			return nil
 		}
 
-		uploadedFile, err := s.client.Files.UploadFromPath(
-			ctx,
-			path,
-			&genai.UploadFileConfig{MIMEType: "image/png"},
-		)
-
-		if err != nil {
-			return fmt.Errorf("failed to upload an image; %w", err)
-		}
-
-		imagePart := genai.NewPartFromURI(uploadedFile.URI, uploadedFile.MIMEType)
-		parts = append(parts, imagePart)
-
+		files = append(files, &Media{path: path, mimeType: "image/png"})
 		return nil
 	})
 
@@ -234,23 +207,73 @@ func (s *Service) makeContents(
 		return nil, err
 	}
 
-	// Populate user prompt custom text parts
+	// Fire goroutines to upload media in parallel
+	g := new(errgroup.Group)
+	semaphore := make(chan struct{}, concurrentUploads)
+	for _, file := range files {
+		g.Go(func() error {
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			case semaphore <- struct{}{}: // Semaphore will block if full
+				defer func() { <-semaphore }()
+
+				// Upload the file to genai
+				// https://ai.google.dev/gemini-api/docs/audio
+				// https://ai.google.dev/gemini-api/docs/image-understanding
+				uploadedFile, err := s.client.Files.UploadFromPath(
+					ctx,
+					file.path,
+					&genai.UploadFileConfig{MIMEType: file.mimeType},
+				)
+
+				if err != nil {
+					return fmt.Errorf(
+						"failed to upload the file %q; %w",
+						file.path, err,
+					)
+				}
+
+				// Save the genai Part
+				file.genaiPart = genai.NewPartFromURI(uploadedFile.URI, uploadedFile.MIMEType)
+				return nil
+			}
+		})
+	}
+
+	// Wait for all uploads to finish
+	g.Wait()
+
+	// Gather the media parts
+	var parts []*genai.Part
+	for _, file := range files {
+		parts = append(parts, file.genaiPart)
+	}
+
+	// 	Include the video text parts (title and description)
+	title := sanitizePrompt(video.Title)
+	description := sanitizePrompt(video.Description)
+	parts = append(parts,
+		genai.NewPartFromText(fmt.Sprintf("--- TITLE --- \n%s", title)),
+		genai.NewPartFromText(fmt.Sprintf("--- DESCRIPTION --- \n%s", description)),
+	)
+
+	// Include the user's custom text parts
 	for _, part := range s.config.GeminiPrompt {
 		parts = append(parts, genai.NewPartFromText(part.Text))
 	}
 
-	// Create categories string
+	// Include the category text part
 	var catString string
 	for _, cat := range categories {
 		catString += cat.Name + ", "
 	}
 	catString = strings.TrimSuffix(catString, ", ")
-
-	// Append the category prompt
-	parts = append(parts, genai.NewPartFromText(fmt.Sprintf(
-		"--- CATEGORIES --- \nSelect ONE category from these categories: %s.",
+	catText := fmt.Sprintf(
+		"--- CATEGORY --- \nSelect only ONE category from these categories: %s.",
 		catString,
-	)))
+	)
+	parts = append(parts, genai.NewPartFromText(catText))
 
 	contents := []*genai.Content{genai.NewContentFromParts(parts, genai.RoleUser)}
 	return contents, nil

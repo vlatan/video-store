@@ -127,6 +127,12 @@ services:
       retries: 3
       start_period: 60s
 
+    deploy:
+      resources:
+        limits:
+          cpus: 2.0
+          memory: 4G
+
     depends_on:
       postgres:
         condition: service_healthy
@@ -139,16 +145,26 @@ services:
       context: .
       args:
         TARGET: worker
+
     env_file: .env
     environment:
       - TARGET=worker
+
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
       - ./prompt.json:/src/prompt.json:ro
+
+    deploy:
+      resources:
+        limits:
+          cpus: 2.0
+          memory: 4G
+
     depends_on:
       postgres:
         condition: service_healthy
+
     profiles:
       - worker
 
@@ -158,17 +174,22 @@ services:
       context: .
       args:
         TARGET: backup
+
     env_file: .env
     environment:
       - TARGET=backup
+
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
+
     depends_on:
       postgres:
         condition: service_healthy
+
     profiles:
       - backup
+
 
 volumes:
   redis_data:
