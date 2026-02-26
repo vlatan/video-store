@@ -1,7 +1,6 @@
 package posts
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -312,37 +311,14 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// Generate content in the background using Gemini
-		go func() {
-
-			// Detach the request context and
-			// give this goroutine 5 minutes to finish
-			detachedCtx := context.WithoutCancel(r.Context())
-			ctx, cancel := context.WithTimeout(detachedCtx, 30*time.Minute)
-			defer cancel()
-
-			genaiResponse, err := s.gemini.Summarize(
-				ctx, post, data.Categories,
-				&utils.RetryConfig{
-					MaxRetries: 1,
-					MaxJitter:  2 * time.Second,
-					Delay:      65 * time.Second,
-				})
-
-			if err != nil {
-				log.Printf("Content generation using Gemini failed; %v", err)
-				return
-			}
-
-			post.Summary = genaiResponse.Summary
-			post.Category = &models.Category{Name: genaiResponse.Category}
-
-			_, err = s.postsRepo.UpdateGeneratedData(ctx, post)
-			if err != nil {
-				log.Printf("failed to update generated data on video '%s'; %v",
-					post.VideoID, err)
-			}
-		}()
+		// Generate content in the background using Gemini.
+		// This is intensive work, involving using yt-dlp, ffmpeg,
+		// uploading to genai, etc. ffmpeg is restricted to using
+		// one thread but still this process will make the machine work very hard.
+		// Give reasonable TTL for this to finish.
+		// In production no need to use it, the worker will
+		// generate the post content overnight.
+		go s.generatePostContent(r, post, data, 30*time.Minute)
 
 		// Check out the video
 		redirectTo := fmt.Sprintf("/video/%s/", videoID)
