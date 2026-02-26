@@ -303,16 +303,36 @@ func (s *Service) makeContents(
 	}
 
 	// Include the category text part
-	var catString string
-	for _, cat := range categories {
-		catString += cat.Name + ", "
+	catNames := make([]string, len(categories))
+	for i, cat := range categories {
+		catNames[i] = cat.Name
 	}
-	catString = strings.TrimSuffix(catString, ", ")
-	catText := fmt.Sprintf(
-		"--- CATEGORY --- \nSelect only ONE category from these categories: %s.",
-		catString,
-	)
+	cat := []string{
+		"--- CATEGORY ---",
+		fmt.Sprintf(
+			"Select only ONE category from these categories: %s.",
+			strings.Join(catNames, ", "),
+		),
+	}
+	catText := strings.Join(cat, "\n")
 	parts = append(parts, genai.NewPartFromText(catText))
+
+	// Include the credits text part
+	credits := []string{
+		"--- CREDITS ---",
+		"Extract the following information:",
+		"1. Original Title",
+		"2. Production Year",
+		"3. Production Studio",
+		"4. Director",
+		"5. Narrator",
+		"6. Producer",
+		"Given what have you been able to extract, " +
+			"fill in the blanks from your knowledge base.",
+	}
+
+	creditsText := strings.Join(credits, "\n")
+	parts = append(parts, genai.NewPartFromText(creditsText))
 
 	contents := []*genai.Content{genai.NewContentFromParts(parts, genai.RoleUser)}
 	return contents, nil
