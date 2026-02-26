@@ -1,11 +1,12 @@
 * Make gaps between `yt-dlp` calls 10 minutes, basically between videos
-* Give more timeout on POST new video context
-* Upload images in parallel
-* Limit CPU usage on worker
 
 * Try prompt with audio and images but write a rich md file: with:
   specs, context box, short summary and some other rich content.
   And then convert to HTML that md file, as we do with pages.
+
+* Group videos by entity, create taxonomies.
+* Create "Best of" landing pages for these clusters.
+* Internal linking.
 
 * Uncomment and remove code in:
   - `internal/integrations/gemini/gemini.go`
