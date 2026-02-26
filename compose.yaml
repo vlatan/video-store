@@ -153,7 +153,7 @@ services:
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
-      - ./prompt.json:/src/prompt.json:ro
+      - ./prompt.json:/prompt.json:ro
 
     deploy:
       resources:
