@@ -20,11 +20,21 @@ type FileInfo struct {
 	Etag       string
 }
 
+type Credits struct {
+	OriginalTitle    string `json:"original_title"`
+	ProductionYear   string `json:"production_year"`
+	ProductionStudio string `json:"production_studio"`
+	Director         string `json:"director"`
+	Narrator         string `json:"narrator"`
+	Producer         string `json:"producer"`
+}
+
 // The response from the Genai API
 type GenaiResponse struct {
-	Title    string `json:"title"`
-	Summary  string `json:"summary"`
-	Category string `json:"category"`
+	Title    string  `json:"title"`
+	Summary  string  `json:"summary"`
+	Category string  `json:"category"`
+	Credits  Credits `json:"credits"`
 }
 
 // Flash message object to store to session for the next page

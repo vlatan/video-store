@@ -63,8 +63,47 @@ var schema = &genai.Schema{
 			Type:        genai.TypeString,
 			Description: "Category",
 		},
+
+		"credits": {
+			Type:        genai.TypeObject,
+			Description: "Credits",
+			Properties: map[string]*genai.Schema{
+				"original_title": {
+					Type:        genai.TypeString,
+					Description: "Original Title",
+				},
+				"production_year": {
+					Type:        genai.TypeString,
+					Description: "Production Year",
+				},
+				"production_studio": {
+					Type:        genai.TypeString,
+					Description: "Production Studio",
+				},
+				"director": {
+					Type:        genai.TypeString,
+					Description: "Director",
+				},
+				"narrator": {
+					Type:        genai.TypeString,
+					Description: "Narrator",
+				},
+				"producer": {
+					Type:        genai.TypeString,
+					Description: "Producer",
+				},
+			},
+			Required: []string{
+				"original_title",
+				"production_year",
+				"production_studio",
+				"director",
+				"narrator",
+				"producer",
+			},
+		},
 	},
-	Required: []string{"title", "summary", "category"},
+	Required: []string{"title", "summary", "category", "credits"},
 }
 
 // Create new Gemini service
