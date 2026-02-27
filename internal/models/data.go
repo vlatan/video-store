@@ -21,11 +21,10 @@ type FileInfo struct {
 }
 
 type Credits struct {
-	OriginalTitle       string   `json:"original_title"`
 	Directors           []string `json:"directors"`
 	Writers             []string `json:"writers"`
 	Narrators           []string `json:"narrators"`
-	Interviewees        []string `json:"interviewees"`
+	Appearances         []string `json:"appearances"`
 	ReleaseYear         string   `json:"release_year"`
 	CountryOfOrigin     string   `json:"country_of_origin"`
 	Language            string   `json:"language"`

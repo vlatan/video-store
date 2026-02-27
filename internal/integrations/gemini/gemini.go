@@ -52,7 +52,7 @@ var schema = &genai.Schema{
 	Properties: map[string]*genai.Schema{
 		"title": {
 			Type:        genai.TypeString,
-			Description: "Title",
+			Description: "Original title",
 		},
 		"summary": {
 			Type:        genai.TypeString,
@@ -68,10 +68,6 @@ var schema = &genai.Schema{
 			Type:        genai.TypeObject,
 			Description: "Credits",
 			Properties: map[string]*genai.Schema{
-				"original_title": {
-					Type:        genai.TypeString,
-					Description: "Original title",
-				},
 				"directors": {
 					Type:        genai.TypeArray,
 					Items:       &genai.Schema{Type: genai.TypeString},
@@ -87,10 +83,10 @@ var schema = &genai.Schema{
 					Items:       &genai.Schema{Type: genai.TypeString},
 					Description: "Narrators",
 				},
-				"interviewees": {
+				"appearances": {
 					Type:        genai.TypeArray,
 					Items:       &genai.Schema{Type: genai.TypeString},
-					Description: "People being interviewed",
+					Description: "Key figures appearing or heard, including interviewees, archive footage, etc.",
 				},
 				"release_year": {
 					Type:        genai.TypeString,
@@ -112,7 +108,7 @@ var schema = &genai.Schema{
 			},
 		},
 	},
-	Required: []string{"title", "summary", "category", "credits"},
+	Required: []string{"summary", "category"},
 }
 
 // Create new Gemini service
@@ -206,7 +202,10 @@ func (s *Service) Summarize(
 		return nil, fmt.Errorf("failed to unmarshal Genai JSON response; %w", err)
 	}
 
-	fmt.Printf("%+v\n", response.Credits)
+	b, err := json.MarshalIndent(response, "", "  ")
+	if err == nil {
+		fmt.Println(string(b))
+	}
 
 	// // Parse the text output
 	// response, err := parseResponse(result.Text(), categories)
@@ -300,13 +299,13 @@ func (s *Service) makeContents(
 		parts = append(parts, file.genaiPart)
 	}
 
-	// 	Include the video text parts (title and description)
-	title := sanitizePrompt(video.Title)
-	description := sanitizePrompt(video.Description)
-	parts = append(parts,
-		genai.NewPartFromText(fmt.Sprintf("--- TITLE --- \n%s", title)),
-		genai.NewPartFromText(fmt.Sprintf("--- DESCRIPTION --- \n%s", description)),
-	)
+	// // 	Include the video text parts (title and description)
+	// title := sanitizePrompt(video.Title)
+	// description := sanitizePrompt(video.Description)
+	// parts = append(parts,
+	// 	genai.NewPartFromText(fmt.Sprintf("--- TITLE --- \n%s", title)),
+	// 	genai.NewPartFromText(fmt.Sprintf("--- DESCRIPTION --- \n%s", description)),
+	// )
 
 	// Include the user's custom text parts
 	for _, part := range s.config.GeminiPrompt {
@@ -328,10 +327,18 @@ func (s *Service) makeContents(
 	catText := strings.Join(cat, "\n")
 	parts = append(parts, genai.NewPartFromText(catText))
 
+	// Include the title text part
+	title := []string{
+		"--- TITLE ---",
+		"- Extract the original title from the audio and/or the images",
+	}
+	titleText := strings.Join(title, "\n")
+	parts = append(parts, genai.NewPartFromText(titleText))
+
 	// Include the credits text part
 	credits := []string{
 		"--- CREDITS ---",
-		"- Extract the credits from the audio and the images",
+		"- Extract the credits from the audio and/or the images",
 		"- Fill in the missing details if available in your knowledge base.",
 	}
 
