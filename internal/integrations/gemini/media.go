@@ -1,6 +1,7 @@
 package gemini
 
 import (
+	"bytes"
 	"fmt"
 	"math"
 	"os"
@@ -28,8 +29,16 @@ func extractAudio(videoID string) error {
 		audioFile,
 	}
 
+	var errBuf bytes.Buffer
+	cmd := exec.Command("yt-dlp", cmdArgs...)
+	cmd.Stderr = &errBuf
+
 	// #nosec G204
-	return exec.Command("yt-dlp", cmdArgs...).Run()
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("STDERR: %s\n%w", errBuf.String(), err)
+	}
+
+	return nil
 }
 
 func extractImages(videoFilePath, outputDir string) error {
@@ -49,9 +58,13 @@ func extractImages(videoFilePath, outputDir string) error {
 		filepath.Join(outputDir, "first_%04d.png"),
 	}
 
+	var errBuf bytes.Buffer
+	cmd := exec.Command("ffmpeg", cmdArgs...)
+	cmd.Stderr = &errBuf
+
 	// #nosec G204
-	if err := exec.Command("ffmpeg", cmdArgs...).Run(); err != nil {
-		return err
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("STDERR: %s\n%w", errBuf.String(), err)
 	}
 
 	// Get video duration
@@ -65,10 +78,14 @@ func extractImages(videoFilePath, outputDir string) error {
 		videoFilePath,
 	}
 
+	errBuf.Reset()
+	cmd = exec.Command("ffprobe", cmdArgs...)
+	cmd.Stderr = &errBuf
+
 	// #nosec G204
-	output, err := exec.Command("ffprobe", cmdArgs...).Output()
+	output, err := cmd.Output()
 	if err != nil {
-		return err
+		return fmt.Errorf("STDERR: %s\n%w", errBuf.String(), err)
 	}
 
 	durationStr := strings.TrimSpace(string(output))
@@ -79,6 +96,7 @@ func extractImages(videoFilePath, outputDir string) error {
 
 	duration := int(math.Round(durationFloat))
 
+	// Get 1 image per second, the last 60 seconds
 	cmdArgs = []string{
 		"-threads",
 		"1",
@@ -93,8 +111,16 @@ func extractImages(videoFilePath, outputDir string) error {
 		filepath.Join(outputDir, "last_%04d.png"),
 	}
 
+	errBuf.Reset()
+	cmd = exec.Command("ffmpeg", cmdArgs...)
+	cmd.Stderr = &errBuf
+
 	// #nosec G204
-	return exec.Command("ffmpeg", cmdArgs...).Run()
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("STDERR: %s\n%w", errBuf.String(), err)
+	}
+
+	return nil
 }
 
 func findMergedVideo() (string, error) {

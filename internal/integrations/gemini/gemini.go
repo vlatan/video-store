@@ -70,36 +70,45 @@ var schema = &genai.Schema{
 			Properties: map[string]*genai.Schema{
 				"original_title": {
 					Type:        genai.TypeString,
-					Description: "Original Title",
+					Description: "Original title",
 				},
-				"director": {
+				"directors": {
+					Type:        genai.TypeArray,
+					Items:       &genai.Schema{Type: genai.TypeString},
+					Description: "Directors",
+				},
+				"writers": {
+					Type:        genai.TypeArray,
+					Items:       &genai.Schema{Type: genai.TypeString},
+					Description: "Writers",
+				},
+				"narrators": {
+					Type:        genai.TypeArray,
+					Items:       &genai.Schema{Type: genai.TypeString},
+					Description: "Narrators",
+				},
+				"interviewees": {
+					Type:        genai.TypeArray,
+					Items:       &genai.Schema{Type: genai.TypeString},
+					Description: "People being interviewed",
+				},
+				"release_year": {
 					Type:        genai.TypeString,
-					Description: "Director",
+					Description: "Release year",
 				},
-				"narrator": {
+				"country_of_origin": {
 					Type:        genai.TypeString,
-					Description: "Narrator",
+					Description: "Country of origin",
 				},
-				"producer": {
+				"language": {
 					Type:        genai.TypeString,
-					Description: "Producer",
+					Description: "Language",
 				},
-				"production_year": {
-					Type:        genai.TypeString,
-					Description: "Production Year",
+				"production_companies": {
+					Type:        genai.TypeArray,
+					Items:       &genai.Schema{Type: genai.TypeString},
+					Description: "Production Companies",
 				},
-				"production_studio": {
-					Type:        genai.TypeString,
-					Description: "Production Studio",
-				},
-			},
-			Required: []string{
-				"original_title",
-				"director",
-				"narrator",
-				"producer",
-				"production_year",
-				"production_studio",
 			},
 		},
 	},
@@ -197,7 +206,7 @@ func (s *Service) Summarize(
 		return nil, fmt.Errorf("failed to unmarshal Genai JSON response; %w", err)
 	}
 
-	// fmt.Printf("%+v\n", response.Credits)
+	fmt.Printf("%+v\n", response.Credits)
 
 	// // Parse the text output
 	// response, err := parseResponse(result.Text(), categories)
@@ -322,14 +331,8 @@ func (s *Service) makeContents(
 	// Include the credits text part
 	credits := []string{
 		"--- CREDITS ---",
-		"Extract the following information:",
-		"1. Original Title",
-		"2. Director",
-		"3. Narrator",
-		"4. Producer",
-		"5. Production Year",
-		"6. Production Studio",
-		"Fill in the blanks from your knowledge base.",
+		"- Extract the credits from the audio and the images",
+		"- Fill in the missing details if available in your knowledge base.",
 	}
 
 	creditsText := strings.Join(credits, "\n")

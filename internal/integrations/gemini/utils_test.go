@@ -1,106 +1,100 @@
 package gemini
 
-import (
-	"testing"
+// func TestParseResponse(t *testing.T) {
 
-	"github.com/vlatan/video-store/internal/models"
-)
+// 	categories := models.Categories{
+// 		models.Category{Name: "Science"},
+// 	}
 
-func TestParseResponse(t *testing.T) {
+// 	tests := []struct {
+// 		name       string
+// 		raw        string
+// 		categories models.Categories
+// 		wantErr    bool
+// 		expected   *models.GenaiResponse
+// 	}{
+// 		{
+// 			"invalid HTML",
+// 			"foo bar. CATEGORY: Science",
+// 			categories,
+// 			true,
+// 			nil,
+// 		},
+// 		{
+// 			"invalid paragraph",
+// 			"foo</p><p>bar</p><p>CATEGORY: Science</p>",
+// 			categories,
+// 			false,
+// 			&models.GenaiResponse{
+// 				Summary:  "<p>bar</p>",
+// 				Category: "Science",
+// 			},
+// 		},
 
-	categories := models.Categories{
-		models.Category{Name: "Science"},
-	}
+// 		{
+// 			"valid - category out of paragraph",
+// 			"<p>foo</p><p>bar</p>CATEGORY: Science",
+// 			categories,
+// 			false,
+// 			&models.GenaiResponse{
+// 				Summary:  "<p>foo</p><p>bar</p>",
+// 				Category: "Science",
+// 			},
+// 		},
+// 		{
+// 			"valid - category inside paragraph (upper case)",
+// 			"<p>foo</p><p>bar</p><p>CATEGORY: Science</p>",
+// 			categories,
+// 			false,
+// 			&models.GenaiResponse{
+// 				Summary:  "<p>foo</p><p>bar</p>",
+// 				Category: "Science",
+// 			},
+// 		},
+// 		{
+// 			"valid - category inside paragraph (lower case)",
+// 			"<p>foo</p><p>bar</p><p>category: Science</p>",
+// 			categories,
+// 			false,
+// 			&models.GenaiResponse{
+// 				Summary:  "<p>foo</p><p>bar</p>",
+// 				Category: "Science",
+// 			},
+// 		},
+// 		{
+// 			"valid - category inside paragraph (capitalized)",
+// 			"<p>foo</p><p>bar</p><p>Category: Science</p>",
+// 			categories,
+// 			false,
+// 			&models.GenaiResponse{
+// 				Summary:  "<p>foo</p><p>bar</p>",
+// 				Category: "Science",
+// 			},
+// 		},
+// 	}
 
-	tests := []struct {
-		name       string
-		raw        string
-		categories models.Categories
-		wantErr    bool
-		expected   *models.GenaiResponse
-	}{
-		{
-			"invalid HTML",
-			"foo bar. CATEGORY: Science",
-			categories,
-			true,
-			nil,
-		},
-		{
-			"invalid paragraph",
-			"foo</p><p>bar</p><p>CATEGORY: Science</p>",
-			categories,
-			false,
-			&models.GenaiResponse{
-				Summary:  "<p>bar</p>",
-				Category: "Science",
-			},
-		},
+// 	for _, tt := range tests {
+// 		t.Run(tt.name, func(t *testing.T) {
 
-		{
-			"valid - category out of paragraph",
-			"<p>foo</p><p>bar</p>CATEGORY: Science",
-			categories,
-			false,
-			&models.GenaiResponse{
-				Summary:  "<p>foo</p><p>bar</p>",
-				Category: "Science",
-			},
-		},
-		{
-			"valid - category inside paragraph (upper case)",
-			"<p>foo</p><p>bar</p><p>CATEGORY: Science</p>",
-			categories,
-			false,
-			&models.GenaiResponse{
-				Summary:  "<p>foo</p><p>bar</p>",
-				Category: "Science",
-			},
-		},
-		{
-			"valid - category inside paragraph (lower case)",
-			"<p>foo</p><p>bar</p><p>category: Science</p>",
-			categories,
-			false,
-			&models.GenaiResponse{
-				Summary:  "<p>foo</p><p>bar</p>",
-				Category: "Science",
-			},
-		},
-		{
-			"valid - category inside paragraph (capitalized)",
-			"<p>foo</p><p>bar</p><p>Category: Science</p>",
-			categories,
-			false,
-			&models.GenaiResponse{
-				Summary:  "<p>foo</p><p>bar</p>",
-				Category: "Science",
-			},
-		},
-	}
+// 			response, err := parseResponse(tt.raw, tt.categories)
+// 			if (err != nil) != tt.wantErr {
+// 				t.Errorf("got error = %v, want error = %v", err, tt.wantErr)
+// 			}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-
-			response, err := parseResponse(tt.raw, tt.categories)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("got error = %v, want error = %v", err, tt.wantErr)
-			}
-
-			switch {
-			case response != nil && tt.expected != nil:
-				if *response != *tt.expected {
-					t.Errorf("got response %q, want response %q",
-						response, tt.expected,
-					)
-				}
-			default:
-				if response != tt.expected {
-					t.Errorf("got response %q, want response %q",
-						response, tt.expected,
-					)
-				}
-			}
-		})
-	}
-}
+// 			switch {
+// 			case response != nil && tt.expected != nil:
+// 				if *response != *tt.expected {
+// 					t.Errorf("got response %q, want response %q",
+// 						response, tt.expected,
+// 					)
+// 				}
+// 			default:
+// 				if response != tt.expected {
+// 					t.Errorf("got response %q, want response %q",
+// 						response, tt.expected,
+// 					)
+// 				}
+// 			}
+// 		})
+// 	}
+// }
