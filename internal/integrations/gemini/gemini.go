@@ -72,14 +72,6 @@ var schema = &genai.Schema{
 					Type:        genai.TypeString,
 					Description: "Original Title",
 				},
-				"production_year": {
-					Type:        genai.TypeString,
-					Description: "Production Year",
-				},
-				"production_studio": {
-					Type:        genai.TypeString,
-					Description: "Production Studio",
-				},
 				"director": {
 					Type:        genai.TypeString,
 					Description: "Director",
@@ -92,14 +84,22 @@ var schema = &genai.Schema{
 					Type:        genai.TypeString,
 					Description: "Producer",
 				},
+				"production_year": {
+					Type:        genai.TypeString,
+					Description: "Production Year",
+				},
+				"production_studio": {
+					Type:        genai.TypeString,
+					Description: "Production Studio",
+				},
 			},
 			Required: []string{
 				"original_title",
-				"production_year",
-				"production_studio",
 				"director",
 				"narrator",
 				"producer",
+				"production_year",
+				"production_studio",
 			},
 		},
 	},
@@ -322,13 +322,12 @@ func (s *Service) makeContents(
 		"--- CREDITS ---",
 		"Extract the following information:",
 		"1. Original Title",
-		"2. Production Year",
-		"3. Production Studio",
-		"4. Director",
-		"5. Narrator",
-		"6. Producer",
-		"Given what have you been able to extract, " +
-			"fill in the blanks from your knowledge base.",
+		"2. Director",
+		"3. Narrator",
+		"4. Producer",
+		"5. Production Year",
+		"6. Production Studio",
+		"Fill in the blanks from your knowledge base.",
 	}
 
 	creditsText := strings.Join(credits, "\n")
