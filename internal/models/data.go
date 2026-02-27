@@ -22,11 +22,11 @@ type FileInfo struct {
 
 type Credits struct {
 	OriginalTitle    string `json:"original_title"`
-	ProductionYear   string `json:"production_year"`
-	ProductionStudio string `json:"production_studio"`
 	Director         string `json:"director"`
 	Narrator         string `json:"narrator"`
 	Producer         string `json:"producer"`
+	ProductionYear   string `json:"production_year"`
+	ProductionStudio string `json:"production_studio"`
 }
 
 // The response from the Genai API

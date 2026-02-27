@@ -197,6 +197,8 @@ func (s *Service) Summarize(
 		return nil, fmt.Errorf("failed to unmarshal Genai JSON response; %w", err)
 	}
 
+	// fmt.Printf("%+v\n", response.Credits)
+
 	// // Parse the text output
 	// response, err := parseResponse(result.Text(), categories)
 	// if err != nil {
