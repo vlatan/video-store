@@ -1,8 +1,10 @@
-* Make gaps between `yt-dlp` calls 10 minutes, basically between videos
-
 * Try prompt with audio and images but write a rich md file: with:
-  specs, context box, short summary and some other rich content.
+  credits, context box, short summary and some other rich content.
   And then convert to HTML that md file, as we do with pages.
+
+* Make Credits table and migrate the DB
+
+* Make gaps between `yt-dlp` calls 10 minutes, basically between videos
 
 * Group videos by entity, create taxonomies.
 * Create "Best of" landing pages for these clusters.
