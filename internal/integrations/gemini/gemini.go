@@ -194,7 +194,7 @@ func (s *Service) Summarize(
 
 	var response models.GenaiResponse
 	if err := json.Unmarshal([]byte(result.Text()), &response); err != nil {
-		return nil, fmt.Errorf("failed to parse Genai response to JSON: %w", err)
+		return nil, fmt.Errorf("failed to unmarshal Genai JSON response; %w", err)
 	}
 
 	// // Parse the text output
