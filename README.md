@@ -63,9 +63,6 @@ key := securecookie.GenerateRandomKey(32)
 log.Println(base64.StdEncoding.EncodeToString(key))
 ```
 
-For the Gemini prompt you'll need `prompt.json` file in the same directory. The app will look for it to load it. If missing the app will not start. You can checkout [prompt.example.json](prompt.example.json) for reference.
-
-
 Put this alias in your `~/.bash_aliases` file and run `build` whenever you want to build and run the app. The app will run with [air](https://github.com/air-verse/air) which will provide live reloading.
 ``` bash
 alias build='docker compose pull && docker compose up --build --detach'

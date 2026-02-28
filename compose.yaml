@@ -118,7 +118,6 @@ services:
       - ./go.sum:/src/go.sum:ro
       - ./Makefile:/src/Makefile:ro
       - ./.air.toml:/src/.air.toml:ro
-      - ./prompt.json:/src/prompt.json:ro
 
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:${PORT}/healthcheck" ]
@@ -153,7 +152,6 @@ services:
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
-      - ./prompt.json:/prompt.json:ro
 
     deploy:
       resources:
