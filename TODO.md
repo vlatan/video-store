@@ -1,6 +1,7 @@
-* Try prompt with audio and images but write a rich md file: with:
-  credits, context box, short summary and some other rich content.
-  And then convert to HTML that md file, as we do with pages.
+* Context box = what happened since?
+  What about if the documentary is few years old, or new?
+
+* Narator keeps getting false.
 
 * Make Credits table and migrate the DB
 * Fix genai test
