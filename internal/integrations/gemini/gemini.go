@@ -162,7 +162,6 @@ func (s *Service) responseSchema(ctx context.Context) *genai.Schema {
 
 // systemInstruction generates system instructions
 func (s *Service) systemInstruction() *genai.Content {
-
 	content := []string{
 		"Write as if you are a historian or journalist reporting on the subject matter itself.",
 		"Write in third-person factual prose, as if writing for a news article.",
@@ -174,7 +173,6 @@ func (s *Service) systemInstruction() *genai.Content {
 
 	contentText := strings.Join(content, "\n")
 	return genai.NewContentFromText(contentText, genai.RoleUser)
-
 }
 
 // Generate Genai content
