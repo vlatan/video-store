@@ -72,7 +72,7 @@ func New(
 		catsRepo: catsRepo,
 	}
 
-	temp, topP := float32(0.1), float32(0.95)
+	temp, topP := float32(0.0), float32(0.1)
 	s.genaiConfig = &genai.GenerateContentConfig{
 		Temperature: &temp,
 		TopP:        &topP,
