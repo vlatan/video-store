@@ -96,8 +96,9 @@ func (s *Service) responseSchema(ctx context.Context) *genai.Schema {
 		Type: genai.TypeObject,
 		Properties: map[string]*genai.Schema{
 			"title": {
-				Type:        genai.TypeString,
-				Description: "Extract the original title from the audio and/or the images.",
+				Type: genai.TypeString,
+				Description: "Extract the original title from the audio and/or the images. " +
+					"Use title case.",
 			},
 			"summary": {
 				Type:        genai.TypeString,
@@ -128,8 +129,8 @@ func (s *Service) responseSchema(ctx context.Context) *genai.Schema {
 					"narrators": {
 						Type:  genai.TypeArray,
 						Items: &genai.Schema{Type: genai.TypeString},
-						Description: "Extract names associated with the primary voice-over. " +
-							"Check the credits or listen for self-introduction.",
+						Description: "Extract names explicitly labeled as narrators. " +
+							"Do not guess or infer based on the audio.",
 					},
 					"appearances": {
 						Type:  genai.TypeArray,
