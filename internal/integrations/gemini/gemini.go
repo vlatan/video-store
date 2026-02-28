@@ -49,74 +49,6 @@ var safetySettings = []*genai.SafetySetting{
 	{Category: genai.HarmCategorySexuallyExplicit, Threshold: blockNone},
 }
 
-// Define the JSON schema for the response
-var schema = &genai.Schema{
-	Type: genai.TypeObject,
-	Properties: map[string]*genai.Schema{
-		"title": {
-			Type:        genai.TypeString,
-			Description: "Extract the original title from the audio and/or the images.",
-		},
-		"summary": {
-			Type:        genai.TypeString,
-			Description: "Summary",
-		},
-
-		"category": {
-			Type:        genai.TypeString,
-			Description: "Category",
-		},
-
-		"credits": {
-			Type:        genai.TypeObject,
-			Description: "Extract the credits from the audio and/or the images.",
-			Properties: map[string]*genai.Schema{
-				"directors": {
-					Type:        genai.TypeArray,
-					Items:       &genai.Schema{Type: genai.TypeString},
-					Description: "Directors",
-				},
-				"writers": {
-					Type:  genai.TypeArray,
-					Items: &genai.Schema{Type: genai.TypeString},
-					Description: "Names explicitly credited ONLY as writers. " +
-						"Do not guess based on narration.",
-				},
-				"narrators": {
-					Type:  genai.TypeArray,
-					Items: &genai.Schema{Type: genai.TypeString},
-					Description: "The names associated with the primary voice-over. " +
-						"Check the credits or listen for self-introduction.",
-				},
-				"appearances": {
-					Type:  genai.TypeArray,
-					Items: &genai.Schema{Type: genai.TypeString},
-					Description: "Key figures appearing or heard speaking. " +
-						"List only specific, individual proper names",
-				},
-				"release_year": {
-					Type:        genai.TypeString,
-					Description: "Look for the earliest release year.",
-				},
-				"country_of_origin": {
-					Type:        genai.TypeString,
-					Description: "Country of origin",
-				},
-				"language": {
-					Type:        genai.TypeString,
-					Description: "Language",
-				},
-				"production_companies": {
-					Type:        genai.TypeArray,
-					Items:       &genai.Schema{Type: genai.TypeString},
-					Description: "Production Companies",
-				},
-			},
-		},
-	},
-	Required: []string{"summary", "category"},
-}
-
 // Create new Gemini service
 func New(
 	ctx context.Context,
@@ -136,6 +68,79 @@ func New(
 	}
 
 	return &Service{cfg, client, limiter, rdb, catsRepo}, nil
+}
+
+// produceSchema defines the JSON schema for the response
+func (s *Service) produceSchema(ctx context.Context) *genai.Schema {
+	return &genai.Schema{
+		Type: genai.TypeObject,
+		Properties: map[string]*genai.Schema{
+			"title": {
+				Type:        genai.TypeString,
+				Description: "Extract the original title from the audio and/or the images.",
+			},
+			"summary": {
+				Type:        genai.TypeString,
+				Description: "Given the audo write an engaging one paragraph storyline.",
+			},
+
+			"category": {
+				Type: genai.TypeString,
+				Description: fmt.Sprintf(
+					"Select only ONE category from these categories: %s.",
+					s.catString(ctx),
+				),
+			},
+
+			"credits": {
+				Type:        genai.TypeObject,
+				Description: "Extract the credits from the audio and/or the images.",
+				Properties: map[string]*genai.Schema{
+					"directors": {
+						Type:        genai.TypeArray,
+						Items:       &genai.Schema{Type: genai.TypeString},
+						Description: "Directors",
+					},
+					"writers": {
+						Type:  genai.TypeArray,
+						Items: &genai.Schema{Type: genai.TypeString},
+						Description: "Names explicitly credited ONLY as writers. " +
+							"Do not guess based on narration.",
+					},
+					"narrators": {
+						Type:  genai.TypeArray,
+						Items: &genai.Schema{Type: genai.TypeString},
+						Description: "Names associated with the primary voice-over. " +
+							"Check the credits or listen for self-introduction.",
+					},
+					"appearances": {
+						Type:  genai.TypeArray,
+						Items: &genai.Schema{Type: genai.TypeString},
+						Description: "Key figures appearing or heard speaking. " +
+							"List only specific, individual proper names",
+					},
+					"release_year": {
+						Type:        genai.TypeString,
+						Description: "Look for the earliest release year.",
+					},
+					"country_of_origin": {
+						Type:        genai.TypeString,
+						Description: "Country of origin",
+					},
+					"language": {
+						Type:        genai.TypeString,
+						Description: "Language",
+					},
+					"production_companies": {
+						Type:        genai.TypeArray,
+						Items:       &genai.Schema{Type: genai.TypeString},
+						Description: "Production Companies",
+					},
+				},
+			},
+		},
+		Required: []string{"summary", "category"},
+	}
 }
 
 // Generate content given a prompt
@@ -161,7 +166,7 @@ func (s *Service) GenerateContent(
 			// Can't return JSON when using web search
 			ResponseMIMEType: "application/json",
 			SafetySettings:   safetySettings,
-			ResponseSchema:   schema,
+			ResponseSchema:   s.produceSchema(ctx),
 			// MediaResolution:  genai.MediaResolutionLow,
 			// Tools:            []*genai.Tool{{GoogleSearch: &genai.GoogleSearch{}}},
 		},
@@ -310,11 +315,6 @@ func (s *Service) makeContents(
 	for _, file := range files {
 		parts = append(parts, file.genaiPart)
 	}
-
-	schema.Properties["category"].Description = fmt.Sprintf(
-		"Select only ONE category from these categories: %s.",
-		s.catString(ctx),
-	)
 
 	// Include the user's custom text parts
 	for _, part := range s.config.GeminiPrompt {
