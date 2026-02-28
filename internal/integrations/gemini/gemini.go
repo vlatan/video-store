@@ -98,19 +98,19 @@ func (s *Service) produceSchema(ctx context.Context) *genai.Schema {
 					"writers": {
 						Type:  genai.TypeArray,
 						Items: &genai.Schema{Type: genai.TypeString},
-						Description: "Names explicitly paired with 'Written by' or 'Writer' credits headers. " +
-							"Do not guess based on narration.",
+						Description: "Extract names explicitly labeled as writers. " +
+							"Do not guess or infer based on narration.",
 					},
 					"narrators": {
 						Type:  genai.TypeArray,
 						Items: &genai.Schema{Type: genai.TypeString},
-						Description: "Names associated with the primary voice-over. " +
+						Description: "Extract names associated with the primary voice-over. " +
 							"Check the credits or listen for self-introduction.",
 					},
 					"appearances": {
 						Type:  genai.TypeArray,
 						Items: &genai.Schema{Type: genai.TypeString},
-						Description: "List only 3-5 key figures appearing or heard speaking. " +
+						Description: "Extract 3-5 key figures appearing or heard speaking. " +
 							"List only specific, individual proper names",
 					},
 					"release_year": {
