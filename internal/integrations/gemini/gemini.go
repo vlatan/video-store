@@ -82,8 +82,9 @@ func New(
 		SafetySettings:    safetySettings,
 		ResponseSchema:    s.responseSchema(ctx),
 		SystemInstruction: s.systemInstruction(),
+
 		// MediaResolution:  genai.MediaResolutionLow,
-		// Tools:            []*genai.Tool{{GoogleSearch: &genai.GoogleSearch{}}},
+		// Tools: []*genai.Tool{{GoogleSearch: &genai.GoogleSearch{}}},
 	}
 
 	return s, nil
