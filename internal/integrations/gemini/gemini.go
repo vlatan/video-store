@@ -7,7 +7,6 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 
 	"github.com/vlatan/video-store/internal/config"
@@ -36,9 +35,6 @@ type Media struct {
 }
 
 const concurrentUploads = 30
-
-// Find category paragraph
-var catRegex = regexp.MustCompile(`(?i)<p>\s*CATEGORY:.*?</p>`)
 
 // Configure safety settings to block none
 var blockNone = genai.HarmBlockThresholdBlockNone
@@ -81,9 +77,8 @@ func (s *Service) produceSchema(ctx context.Context) *genai.Schema {
 			},
 			"summary": {
 				Type:        genai.TypeString,
-				Description: "Given the audo write an engaging one paragraph storyline.",
+				Description: "Write an engaging one paragraph storyline.",
 			},
-
 			"category": {
 				Type: genai.TypeString,
 				Description: fmt.Sprintf(
@@ -91,7 +86,6 @@ func (s *Service) produceSchema(ctx context.Context) *genai.Schema {
 					s.catString(ctx),
 				),
 			},
-
 			"credits": {
 				Type:        genai.TypeObject,
 				Description: "Extract the credits from the audio and/or the images.",
@@ -104,7 +98,7 @@ func (s *Service) produceSchema(ctx context.Context) *genai.Schema {
 					"writers": {
 						Type:  genai.TypeArray,
 						Items: &genai.Schema{Type: genai.TypeString},
-						Description: "Names explicitly credited ONLY as writers. " +
+						Description: "Names explicitly paired with 'Written by' or 'Writer' credits headers. " +
 							"Do not guess based on narration.",
 					},
 					"narrators": {
@@ -116,7 +110,7 @@ func (s *Service) produceSchema(ctx context.Context) *genai.Schema {
 					"appearances": {
 						Type:  genai.TypeArray,
 						Items: &genai.Schema{Type: genai.TypeString},
-						Description: "Key figures appearing or heard speaking. " +
+						Description: "List only 3-5 key figures appearing or heard speaking. " +
 							"List only specific, individual proper names",
 					},
 					"release_year": {
@@ -144,7 +138,7 @@ func (s *Service) produceSchema(ctx context.Context) *genai.Schema {
 }
 
 // Generate content given a prompt
-func (s *Service) GenerateContent(
+func (s *Service) generateContent(
 	ctx context.Context,
 	contents []*genai.Content,
 ) (*genai.GenerateContentResponse, error) {
@@ -207,7 +201,7 @@ func (s *Service) Summarize(
 	// Make the API call
 	result, err := utils.Retry(
 		ctx, rc, func() (*genai.GenerateContentResponse, error) {
-			return s.GenerateContent(ctx, contents)
+			return s.generateContent(ctx, contents)
 		},
 	)
 
@@ -224,12 +218,6 @@ func (s *Service) Summarize(
 	if err == nil {
 		fmt.Println(string(b))
 	}
-
-	// // Parse the text output
-	// response, err := parseResponse(result.Text(), categories)
-	// if err != nil {
-	// 	return nil, err
-	// }
 
 	response.Summary += utils.UpdateMarker // REMOVE
 	response.Title = video.Title
