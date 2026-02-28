@@ -195,7 +195,7 @@ func (s *Service) Summarize(
 	// Make Genai contents
 	contents, err := s.makeContents(ctx, video)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to make Genai contents; %w", err)
 	}
 
 	// Make the API call
@@ -206,7 +206,7 @@ func (s *Service) Summarize(
 	)
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to generate Genai content; %w", err)
 	}
 
 	var response models.GenaiResponse

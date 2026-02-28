@@ -42,7 +42,6 @@ func extractYouTubeID(rawURL string) (string, error) {
 func (s *Service) generatePostContent(
 	r *http.Request,
 	post *models.Post,
-	data *models.TemplateData,
 	ttl time.Duration) error {
 
 	// Detach the request context and

@@ -318,7 +318,11 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 		// Give reasonable TTL for this to finish.
 		// In production no need to use it, the worker will
 		// generate the post content overnight.
-		go s.generatePostContent(r, post, data, 30*time.Minute)
+		go func() {
+			if err := s.generatePostContent(r, post, 30*time.Minute); err != nil {
+				log.Println(err)
+			}
+		}()
 
 		// Check out the video
 		redirectTo := fmt.Sprintf("/video/%s/", videoID)
