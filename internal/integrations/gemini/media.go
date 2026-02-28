@@ -96,14 +96,14 @@ func extractImages(videoFilePath, outputDir string) error {
 
 	duration := int(math.Round(durationFloat))
 
-	// Get 1 image per second, the last 60 seconds
+	// Get 1 image per second, the last 180 seconds
 	cmdArgs = []string{
 		"-threads",
 		"1",
 		"-loglevel",
 		"error",
 		"-ss",
-		fmt.Sprintf("%d", duration-60),
+		fmt.Sprintf("%d", duration-180),
 		"-i",
 		videoFilePath,
 		"-vf",
