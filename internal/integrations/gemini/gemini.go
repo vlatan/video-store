@@ -137,6 +137,7 @@ func (s *Service) responseSchema(ctx context.Context) *genai.Schema {
 	}
 }
 
+// systemInstruction generates system instructions
 func (s *Service) systemInstruction() *genai.Content {
 
 	content := []string{
@@ -153,7 +154,7 @@ func (s *Service) systemInstruction() *genai.Content {
 
 }
 
-// Generate content given a prompt
+// Generate Genai content
 func (s *Service) generateContent(
 	ctx context.Context,
 	contents []*genai.Content,
