@@ -214,6 +214,7 @@ func (s *Service) Summarize(
 		return nil, fmt.Errorf("failed to unmarshal Genai JSON response; %w", err)
 	}
 
+	// REMOVE: For testing purposes only
 	b, err := json.MarshalIndent(response, "", "  ")
 	if err == nil {
 		fmt.Println(string(b))
