@@ -87,7 +87,7 @@ func New() *App {
 	}
 
 	// Create Gemini client
-	gemini, err := gemini.New(ctx, cfg, rdb)
+	gemini, err := gemini.New(ctx, cfg, rdb, catsRepo)
 	if err != nil {
 		log.Fatalf("couldn't create Gemini service: %v", err)
 	}

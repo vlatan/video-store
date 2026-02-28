@@ -52,7 +52,7 @@ func (s *Service) generatePostContent(
 	defer cancel()
 
 	genaiResponse, err := s.gemini.Summarize(
-		ctx, post, data.Categories,
+		ctx, post,
 		&utils.RetryConfig{
 			MaxRetries: 1,
 			MaxJitter:  2 * time.Second,

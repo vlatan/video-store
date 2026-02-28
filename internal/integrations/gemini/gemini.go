@@ -13,6 +13,7 @@ import (
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/repositories/categories"
 	"github.com/vlatan/video-store/internal/utils"
 	"golang.org/x/sync/errgroup"
 
@@ -21,9 +22,11 @@ import (
 
 // Gemini service
 type Service struct {
-	config  *config.Config
-	client  *genai.Client
-	limiter *GeminiLimiter
+	config   *config.Config
+	client   *genai.Client
+	limiter  *GeminiLimiter
+	rdb      *rdb.Service
+	catsRepo *categories.Repository
 }
 
 type Media struct {
@@ -52,7 +55,7 @@ var schema = &genai.Schema{
 	Properties: map[string]*genai.Schema{
 		"title": {
 			Type:        genai.TypeString,
-			Description: "Original title",
+			Description: "Extract the original title from the audio and/or the images.",
 		},
 		"summary": {
 			Type:        genai.TypeString,
@@ -66,7 +69,7 @@ var schema = &genai.Schema{
 
 		"credits": {
 			Type:        genai.TypeObject,
-			Description: "Credits",
+			Description: "Extract the credits from the audio and/or the images.",
 			Properties: map[string]*genai.Schema{
 				"directors": {
 					Type:        genai.TypeArray,
@@ -74,23 +77,26 @@ var schema = &genai.Schema{
 					Description: "Directors",
 				},
 				"writers": {
-					Type:        genai.TypeArray,
-					Items:       &genai.Schema{Type: genai.TypeString},
-					Description: "Writers",
+					Type:  genai.TypeArray,
+					Items: &genai.Schema{Type: genai.TypeString},
+					Description: "Names explicitly credited ONLY as writers. " +
+						"Do not guess based on narration.",
 				},
 				"narrators": {
-					Type:        genai.TypeArray,
-					Items:       &genai.Schema{Type: genai.TypeString},
-					Description: "Narrators",
+					Type:  genai.TypeArray,
+					Items: &genai.Schema{Type: genai.TypeString},
+					Description: "The names associated with the primary voice-over. " +
+						"Check the credits or listen for self-introduction.",
 				},
 				"appearances": {
-					Type:        genai.TypeArray,
-					Items:       &genai.Schema{Type: genai.TypeString},
-					Description: "Key figures appearing or heard, including interviewees, archive footage, etc.",
+					Type:  genai.TypeArray,
+					Items: &genai.Schema{Type: genai.TypeString},
+					Description: "Key figures appearing or heard speaking. " +
+						"List only specific, individual proper names",
 				},
 				"release_year": {
 					Type:        genai.TypeString,
-					Description: "Release year",
+					Description: "Look for the earliest release year.",
 				},
 				"country_of_origin": {
 					Type:        genai.TypeString,
@@ -112,7 +118,11 @@ var schema = &genai.Schema{
 }
 
 // Create new Gemini service
-func New(ctx context.Context, cfg *config.Config, rdb *rdb.Service) (*Service, error) {
+func New(
+	ctx context.Context,
+	cfg *config.Config,
+	rdb *rdb.Service,
+	catsRepo *categories.Repository) (*Service, error) {
 
 	// Configure new client
 	client, err := genai.NewClient(ctx, &genai.ClientConfig{APIKey: cfg.GeminiAPIKey})
@@ -125,7 +135,7 @@ func New(ctx context.Context, cfg *config.Config, rdb *rdb.Service) (*Service, e
 		return nil, err
 	}
 
-	return &Service{cfg, client, limiter}, nil
+	return &Service{cfg, client, limiter, rdb, catsRepo}, nil
 }
 
 // Generate content given a prompt
@@ -139,11 +149,15 @@ func (s *Service) GenerateContent(
 		return nil, fmt.Errorf("gemini limit reached: %w", err)
 	}
 
+	temp, topP := float32(0.1), float32(0.95)
 	response, err := s.client.Models.GenerateContent(
 		ctx,
 		s.config.GeminiModel,
 		contents,
 		&genai.GenerateContentConfig{
+			Temperature: &temp,
+			TopP:        &topP,
+
 			// Can't return JSON when using web search
 			ResponseMIMEType: "application/json",
 			SafetySettings:   safetySettings,
@@ -171,7 +185,6 @@ func (s *Service) GenerateContent(
 func (s *Service) Summarize(
 	ctx context.Context,
 	video *models.Post,
-	categories models.Categories,
 	rc *utils.RetryConfig,
 ) (*models.GenaiResponse, error) {
 
@@ -181,7 +194,7 @@ func (s *Service) Summarize(
 	defer os.RemoveAll(dataDir)
 
 	// Make Genai contents
-	contents, err := s.makeContents(ctx, video, categories)
+	contents, err := s.makeContents(ctx, video)
 	if err != nil {
 		return nil, err
 	}
@@ -223,7 +236,6 @@ func (s *Service) Summarize(
 func (s *Service) makeContents(
 	ctx context.Context,
 	video *models.Post,
-	categories models.Categories,
 ) ([]*genai.Content, error) {
 
 	// Extract audio file and images from YT video
@@ -299,51 +311,15 @@ func (s *Service) makeContents(
 		parts = append(parts, file.genaiPart)
 	}
 
-	// // 	Include the video text parts (title and description)
-	// title := sanitizePrompt(video.Title)
-	// description := sanitizePrompt(video.Description)
-	// parts = append(parts,
-	// 	genai.NewPartFromText(fmt.Sprintf("--- TITLE --- \n%s", title)),
-	// 	genai.NewPartFromText(fmt.Sprintf("--- DESCRIPTION --- \n%s", description)),
-	// )
+	schema.Properties["category"].Description = fmt.Sprintf(
+		"Select only ONE category from these categories: %s.",
+		s.catString(ctx),
+	)
 
 	// Include the user's custom text parts
 	for _, part := range s.config.GeminiPrompt {
 		parts = append(parts, genai.NewPartFromText(part.Text))
 	}
-
-	// Include the category text part
-	catNames := make([]string, len(categories))
-	for i, cat := range categories {
-		catNames[i] = cat.Name
-	}
-	cat := []string{
-		"--- CATEGORY ---",
-		fmt.Sprintf(
-			"Select only ONE category from these categories: %s.",
-			strings.Join(catNames, ", "),
-		),
-	}
-	catText := strings.Join(cat, "\n")
-	parts = append(parts, genai.NewPartFromText(catText))
-
-	// Include the title text part
-	title := []string{
-		"--- TITLE ---",
-		"- Extract the original title from the audio and/or the images",
-	}
-	titleText := strings.Join(title, "\n")
-	parts = append(parts, genai.NewPartFromText(titleText))
-
-	// Include the credits text part
-	credits := []string{
-		"--- CREDITS ---",
-		"- Extract the credits from the audio and/or the images",
-		"- Fill in the missing details if available in your knowledge base.",
-	}
-
-	creditsText := strings.Join(credits, "\n")
-	parts = append(parts, genai.NewPartFromText(creditsText))
 
 	contents := []*genai.Content{genai.NewContentFromParts(parts, genai.RoleUser)}
 	return contents, nil
@@ -355,7 +331,30 @@ func (s *Service) AcquireQuota(ctx context.Context) error {
 	return s.limiter.AcquireQuota(ctx)
 }
 
-// Exhausted returns true if the daily limit has already been hit.
+// Exhausted returns true if the daily limit has already been hit
 func (s *Service) Exhausted(ctx context.Context) bool {
 	return s.limiter.Exhausted(ctx)
+}
+
+// catString creates a string of categories separated by comma
+func (s *Service) catString(ctx context.Context) string {
+
+	// Get the categories from cache or DB
+	categories, _ := rdb.GetCachedData(
+		ctx,
+		s.rdb,
+		"categories",
+		s.config.CacheTimeout,
+		func() (models.Categories, error) {
+			return s.catsRepo.GetCategories(ctx)
+		},
+	)
+
+	// Extract the category names
+	catNames := make([]string, len(categories))
+	for i, cat := range categories {
+		catNames[i] = cat.Name
+	}
+
+	return strings.Join(catNames, ", ")
 }
