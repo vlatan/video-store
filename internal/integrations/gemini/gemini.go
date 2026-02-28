@@ -21,11 +21,12 @@ import (
 
 // Gemini service
 type Service struct {
-	config   *config.Config
-	client   *genai.Client
-	limiter  *GeminiLimiter
-	rdb      *rdb.Service
-	catsRepo *categories.Repository
+	config      *config.Config
+	genaiConfig *genai.GenerateContentConfig
+	client      *genai.Client
+	limiter     *GeminiLimiter
+	rdb         *rdb.Service
+	catsRepo    *categories.Repository
 }
 
 type Media struct {
@@ -63,7 +64,29 @@ func New(
 		return nil, err
 	}
 
-	return &Service{cfg, client, limiter, rdb, catsRepo}, nil
+	s := &Service{
+		config:   cfg,
+		client:   client,
+		limiter:  limiter,
+		rdb:      rdb,
+		catsRepo: catsRepo,
+	}
+
+	temp, topP := float32(0.1), float32(0.95)
+	s.genaiConfig = &genai.GenerateContentConfig{
+		Temperature: &temp,
+		TopP:        &topP,
+
+		// Can't return JSON when using web search
+		ResponseMIMEType:  "application/json",
+		SafetySettings:    safetySettings,
+		ResponseSchema:    s.responseSchema(ctx),
+		SystemInstruction: s.systemInstruction(),
+		// MediaResolution:  genai.MediaResolutionLow,
+		// Tools:            []*genai.Tool{{GoogleSearch: &genai.GoogleSearch{}}},
+	}
+
+	return s, nil
 }
 
 // produceSchema defines the JSON schema for the response
@@ -165,23 +188,11 @@ func (s *Service) generateContent(
 		return nil, fmt.Errorf("gemini limit reached: %w", err)
 	}
 
-	temp, topP := float32(0.1), float32(0.95)
 	response, err := s.client.Models.GenerateContent(
 		ctx,
 		s.config.GeminiModel,
 		contents,
-		&genai.GenerateContentConfig{
-			Temperature: &temp,
-			TopP:        &topP,
-
-			// Can't return JSON when using web search
-			ResponseMIMEType:  "application/json",
-			SafetySettings:    safetySettings,
-			ResponseSchema:    s.responseSchema(ctx),
-			SystemInstruction: s.systemInstruction(),
-			// MediaResolution:  genai.MediaResolutionLow,
-			// Tools:            []*genai.Tool{{GoogleSearch: &genai.GoogleSearch{}}},
-		},
+		s.genaiConfig,
 	)
 
 	if err != nil {
