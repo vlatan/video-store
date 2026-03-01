@@ -90,88 +90,6 @@ func New(
 	return s, nil
 }
 
-// produceSchema defines the JSON schema for the response
-func (s *Service) responseSchema(ctx context.Context) *genai.Schema {
-	return &genai.Schema{
-		Type: genai.TypeObject,
-		Properties: map[string]*genai.Schema{
-			"title": {
-				Type: genai.TypeString,
-				Description: "Extract the original title from the audio and/or the images. " +
-					"Use title case.",
-			},
-			"summary": {
-				Type:        genai.TypeString,
-				Description: "Write an engaging one paragraph storyline.",
-			},
-			"category": {
-				Type: genai.TypeString,
-				Description: fmt.Sprintf(
-					"Select only ONE category from these categories: %s.",
-					s.catString(ctx),
-				),
-			},
-			"before_context": {
-				Type: genai.TypeString,
-				Description: "Write one paragraph what happened before. " +
-					"Give history's context on the topic.",
-			},
-			"after_context": {
-				Type: genai.TypeString,
-				Description: "Write one paragraph about what happened after. " +
-					"Give today's context on the topic.",
-			},
-			"credits": {
-				Type:        genai.TypeObject,
-				Description: "Extract the credits from the audio and/or the images.",
-				Properties: map[string]*genai.Schema{
-					"directors": {
-						Type:        genai.TypeArray,
-						Items:       &genai.Schema{Type: genai.TypeString},
-						Description: "Directors",
-					},
-					"writers": {
-						Type:  genai.TypeArray,
-						Items: &genai.Schema{Type: genai.TypeString},
-						Description: "Extract names explicitly labeled as writers. " +
-							"Do not guess or infer based on narration.",
-					},
-					"narrators": {
-						Type:  genai.TypeArray,
-						Items: &genai.Schema{Type: genai.TypeString},
-						Description: "Extract names explicitly labeled as narrators. " +
-							"Do not guess or infer based on narration.",
-					},
-					"appearances": {
-						Type:  genai.TypeArray,
-						Items: &genai.Schema{Type: genai.TypeString},
-						Description: "Extract 3-5 key figures appearing or heard speaking. " +
-							"List only specific, individual proper names",
-					},
-					"release_year": {
-						Type:        genai.TypeString,
-						Description: "Look for the earliest release year.",
-					},
-					"country_of_origin": {
-						Type:        genai.TypeString,
-						Description: "Country of origin",
-					},
-					"language": {
-						Type:        genai.TypeString,
-						Description: "Language",
-					},
-					"production_companies": {
-						Type:        genai.TypeArray,
-						Items:       &genai.Schema{Type: genai.TypeString},
-						Description: "Production Companies",
-					},
-				},
-			},
-		},
-		Required: []string{"summary", "category"},
-	}
-}
-
 // systemInstruction generates system instructions
 func (s *Service) systemInstruction() *genai.Content {
 	content := []string{
@@ -179,7 +97,9 @@ func (s *Service) systemInstruction() *genai.Content {
 		"Write in third-person factual prose, as if writing for a news article.",
 		"Never use hedging language. Use specific, verifiable facts only.",
 		"If a fact cannot be stated with confidence, omit it entirely.",
-		"Do NOT write about the media itself - write about its SUBJECT.",
+		"Do not use transitional or connective filler between facts.",
+		"State each fact as a direct sentence.",
+		"Do NOT mention the given media itself - write about its SUBJECT.",
 		"Avoid: flowery language, metaphors, purple prose, and generalized statements.",
 		"Do not include timestamps.",
 		"Do not use UPPER CASE.",
