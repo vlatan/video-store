@@ -111,6 +111,16 @@ func (s *Service) responseSchema(ctx context.Context) *genai.Schema {
 					s.catString(ctx),
 				),
 			},
+			"before_context": {
+				Type: genai.TypeString,
+				Description: "Write one paragraph what happened before. " +
+					"Give history's context on the topic.",
+			},
+			"after_context": {
+				Type: genai.TypeString,
+				Description: "Write one paragraph about what happened after. " +
+					"Give today's context on the topic.",
+			},
 			"credits": {
 				Type:        genai.TypeObject,
 				Description: "Extract the credits from the audio and/or the images.",
@@ -167,6 +177,8 @@ func (s *Service) systemInstruction() *genai.Content {
 	content := []string{
 		"Write as if you are a historian or journalist reporting on the subject matter itself.",
 		"Write in third-person factual prose, as if writing for a news article.",
+		"Never use hedging language. Use specific, verifiable facts only.",
+		"If a fact cannot be stated with confidence, omit it entirely.",
 		"Do NOT write about the media itself - write about its SUBJECT.",
 		"Avoid: flowery language, metaphors, purple prose, and generalized statements.",
 		"Do not include timestamps.",
