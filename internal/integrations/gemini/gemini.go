@@ -130,7 +130,7 @@ func (s *Service) responseSchema(ctx context.Context) *genai.Schema {
 						Type:  genai.TypeArray,
 						Items: &genai.Schema{Type: genai.TypeString},
 						Description: "Extract names explicitly labeled as narrators. " +
-							"Do not guess or infer based on the audio.",
+							"Do not guess or infer based on narration.",
 					},
 					"appearances": {
 						Type:  genai.TypeArray,
