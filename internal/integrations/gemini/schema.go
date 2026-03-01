@@ -21,7 +21,7 @@ var personItem = &genai.Schema{
 		},
 		"bio": {
 			Type: genai.TypeString,
-			Description: "2-3 sentence factual bio written from your own knowledge. " +
+			Description: "Very short factual bio written from your own knowledge. " +
 				"Do not transcribe or extract from the given media. " +
 				"Omit if person is not notable or no reliable information exists.",
 		},
