@@ -1,4 +1,4 @@
-* Create new tables, triggers, functions bia migration file
+* Create new tables, triggers, functions via migration file
 * Addapt the vector search query
 
 * Add more markup schema if available for the credits
