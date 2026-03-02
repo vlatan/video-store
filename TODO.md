@@ -1,9 +1,7 @@
-* Context box = what happened since?
-  What about if the documentary is few years old, or new?
-
-* Narator keeps getting false.
-
 * Make Credits table and migrate the DB
+
+* Add more markup schema if available for the credits
+* Include the credits in the text search
 * Fix genai test
 
 * Make gaps between `yt-dlp` calls 10 minutes, basically between videos

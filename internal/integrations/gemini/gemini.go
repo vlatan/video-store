@@ -225,41 +225,9 @@ func (s *Service) makeContents(
 	}
 
 	// Fire goroutines to upload media in parallel
-	g := new(errgroup.Group)
-	semaphore := make(chan struct{}, concurrentUploads)
-	for _, file := range files {
-		g.Go(func() error {
-			select {
-			case <-ctx.Done():
-				return ctx.Err()
-			case semaphore <- struct{}{}: // Semaphore will block if full
-				defer func() { <-semaphore }()
-
-				// Upload the file to genai
-				// https://ai.google.dev/gemini-api/docs/audio
-				// https://ai.google.dev/gemini-api/docs/image-understanding
-				uploadedFile, err := s.client.Files.UploadFromPath(
-					ctx,
-					file.path,
-					&genai.UploadFileConfig{MIMEType: file.mimeType},
-				)
-
-				if err != nil {
-					return fmt.Errorf(
-						"failed to upload the file %q; %w",
-						file.path, err,
-					)
-				}
-
-				// Save the genai Part
-				file.genaiPart = genai.NewPartFromURI(uploadedFile.URI, uploadedFile.MIMEType)
-				return nil
-			}
-		})
+	if err := s.uploadFiles(ctx, files); err != nil {
+		return nil, err
 	}
-
-	// Wait for all uploads to finish
-	g.Wait()
 
 	// Gather the media parts
 	var parts []*genai.Part
@@ -303,4 +271,46 @@ func (s *Service) catString(ctx context.Context) string {
 	}
 
 	return strings.Join(catNames, ", ")
+}
+
+// uploadFiles uploads file concurrently to Gemini
+// Mutates each item in files.
+func (s *Service) uploadFiles(ctx context.Context, files []*Media) error {
+
+	// Fire goroutines to upload media in parallel
+	g := new(errgroup.Group)
+	semaphore := make(chan struct{}, concurrentUploads)
+	for _, file := range files {
+		g.Go(func() error {
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			case semaphore <- struct{}{}: // Semaphore will block if full
+				defer func() { <-semaphore }()
+
+				// Upload the file to genai
+				// https://ai.google.dev/gemini-api/docs/audio
+				// https://ai.google.dev/gemini-api/docs/image-understanding
+				uploadedFile, err := s.client.Files.UploadFromPath(
+					ctx,
+					file.path,
+					&genai.UploadFileConfig{MIMEType: file.mimeType},
+				)
+
+				if err != nil {
+					return fmt.Errorf(
+						"failed to upload the file %q; %w",
+						file.path, err,
+					)
+				}
+
+				// Save the genai Part
+				file.genaiPart = genai.NewPartFromURI(uploadedFile.URI, uploadedFile.MIMEType)
+				return nil
+			}
+		})
+	}
+
+	// Wait for all uploads to finish
+	return g.Wait()
 }
