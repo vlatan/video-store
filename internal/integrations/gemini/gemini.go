@@ -199,32 +199,13 @@ func (s *Service) makeContents(
 		return nil, err
 	}
 
-	// Gather the media for upload
-	files := []*Media{{path: audioFile, mimeType: "audio/mpeg"}}
-	err := filepath.WalkDir(framesDir, func(path string, info fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-
-		// Skip directories
-		if info.IsDir() {
-			return nil
-		}
-
-		// Skip non PNG files
-		if filepath.Ext(info.Name()) != ".png" {
-			return nil
-		}
-
-		files = append(files, &Media{path: path, mimeType: "image/png"})
-		return nil
-	})
-
+	// Gather the files for upload
+	files, err := s.gatherFiles()
 	if err != nil {
 		return nil, err
 	}
 
-	// Fire goroutines to upload media in parallel
+	// Fire goroutines to upload files in parallel
 	if err := s.uploadFiles(ctx, files); err != nil {
 		return nil, err
 	}
@@ -248,29 +229,6 @@ func (s *Service) AcquireQuota(ctx context.Context) error {
 // Exhausted returns true if the daily limit has already been hit
 func (s *Service) Exhausted(ctx context.Context) bool {
 	return s.limiter.Exhausted(ctx)
-}
-
-// catString creates a string of categories separated by comma
-func (s *Service) catString(ctx context.Context) string {
-
-	// Get the categories from cache or DB
-	categories, _ := rdb.GetCachedData(
-		ctx,
-		s.rdb,
-		"categories",
-		s.config.CacheTimeout,
-		func() (models.Categories, error) {
-			return s.catsRepo.GetCategories(ctx)
-		},
-	)
-
-	// Extract the category names
-	catNames := make([]string, len(categories))
-	for i, cat := range categories {
-		catNames[i] = cat.Name
-	}
-
-	return strings.Join(catNames, ", ")
 }
 
 // uploadFiles uploads file concurrently to Gemini
@@ -313,4 +271,35 @@ func (s *Service) uploadFiles(ctx context.Context, files []*Media) error {
 
 	// Wait for all uploads to finish
 	return g.Wait()
+}
+
+// gatherFiles gathers the files for upload
+func (s *Service) gatherFiles() ([]*Media, error) {
+	files := []*Media{{path: audioFile, mimeType: "audio/mpeg"}}
+	err := filepath.WalkDir(framesDir,
+		func(path string, info fs.DirEntry, err error) error {
+			if err != nil {
+				return err
+			}
+
+			// Skip directories
+			if info.IsDir() {
+				return nil
+			}
+
+			// Skip non PNG files
+			if filepath.Ext(info.Name()) != ".png" {
+				return nil
+			}
+
+			files = append(files, &Media{path: path, mimeType: "image/png"})
+			return nil
+		},
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return files, nil
 }
