@@ -1,7 +1,7 @@
-* Make Credits table and migrate the DB
+* Create new tables, triggers, functions bia migration file
+* Addapt the vector search query
 
 * Add more markup schema if available for the credits
-* Include the credits in the text search
 * Fix genai test
 
 * Make gaps between `yt-dlp` calls 10 minutes, basically between videos
