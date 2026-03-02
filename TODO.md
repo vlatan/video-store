@@ -1,5 +1,6 @@
 * Create new tables, triggers, functions via migration file
 * Addapt the vector search query
+* How to run the migrations in production in closed VPS
 
 * Add more markup schema if available for the credits
 * Fix genai test

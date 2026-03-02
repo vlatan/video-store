@@ -14,7 +14,9 @@ BEGIN
         setweight(to_tsvector('english', coalesce(NEW.title, '')), 'A') ||
         setweight(to_tsvector('english', coalesce(NEW.summary, '')), 'B') ||
         setweight(to_tsvector('english', coalesce(NEW.past_context, '')), 'C') ||
-        setweight(to_tsvector('english', coalesce(NEW.present_context, '')), 'C');
+        setweight(to_tsvector('english', coalesce(NEW.present_context, '')), 'C') ||
+        setweight(to_tsvector('english', coalesce(NEW.description, '')), 'C') ||
+        setweight(to_tsvector('english', coalesce(NEW.tags, '')), 'D');
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
