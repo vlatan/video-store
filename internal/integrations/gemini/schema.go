@@ -13,7 +13,8 @@ import (
 const contextPart = "Write as a sequence of discrete factual statements, " +
 	"one per sentence, each containing a specific date, name, or number. " +
 	"Write exclusively from your own knowledge. " +
-	"Do not transcribe or extract from the given media."
+	"Do not transcribe or extract from the given media. " +
+	"Do not indicate a cut off date."
 
 var personItem = &genai.Schema{
 	Type: genai.TypeObject,
@@ -26,7 +27,8 @@ var personItem = &genai.Schema{
 			Type: genai.TypeString,
 			Description: "Very short factual bio written from your own knowledge. " +
 				"Do not transcribe or extract from the given media. " +
-				"Omit if person is not notable or no reliable information exists.",
+				"Omit if person is not notable or no reliable information exists. " +
+				"Do not repeat the name in the bio.",
 		},
 	},
 	Required: []string{"name"},
