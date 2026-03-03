@@ -22,6 +22,8 @@ web/avatars/
 
 # genai prompt
 prompt.json
+response.json
+response.html
 
 
 # tests
