@@ -1,11 +1,11 @@
-* Delete sources and posts without credits - mainly video essays
-  Should post cascade delete if source is deleted?
-
 * Run new migration file
 * Addapt the search query
 * Make gaps between `yt-dlp` calls 10 minutes, basically between videos
 * Apply the migration to production. Bind the remote database to localhost.
   `ssh -L 5432:localhost:5432 user@your-vps`
+
+* Delete sources and posts without credits - mainly video essays
+  Should post cascade delete if source is deleted?
 
 * Add markup schema if available for the credits
 * Group videos by entity, create taxonomies
