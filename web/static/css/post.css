@@ -258,3 +258,37 @@ h2.related-post-title {
   font-weight: normal;
   line-height: 1.4;
 }
+
+
+/* ################# Experimental ################# */
+
+.video-description {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.video-description>section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.video-description section p {
+  margin-top: 0;
+}
+
+.video-description h3,
+.video-description h4 {
+  border-bottom: 1px solid var(--primary-border-color);
+}
+
+.video-description>section ul {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.video-description>section.details ul {
+  gap: unset;
+}
