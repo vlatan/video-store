@@ -43,7 +43,7 @@ func extractAudio(videoID string) error {
 
 func extractImages(videoFilePath, outputDir string) error {
 
-	// Get 1 image per second, the first 180 seconds
+	// Get 1 image per second, the first 210 seconds
 	cmdArgs := []string{
 		"-threads",
 		"1",
@@ -52,7 +52,7 @@ func extractImages(videoFilePath, outputDir string) error {
 		"-i",
 		videoFilePath,
 		"-t",
-		"180",
+		"210",
 		"-vf",
 		"fps=1",
 		filepath.Join(outputDir, "first_%04d.png"),
@@ -96,14 +96,14 @@ func extractImages(videoFilePath, outputDir string) error {
 
 	duration := int(math.Round(durationFloat))
 
-	// Get 1 image per second, the last 180 seconds
+	// Get 1 image per second, the last 210 seconds
 	cmdArgs = []string{
 		"-threads",
 		"1",
 		"-loglevel",
 		"error",
 		"-ss",
-		fmt.Sprintf("%d", duration-180),
+		fmt.Sprintf("%d", duration-210),
 		"-i",
 		videoFilePath,
 		"-vf",
