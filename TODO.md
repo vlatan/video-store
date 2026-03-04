@@ -9,6 +9,7 @@
 
 * Add markup schema for the credits
   The YT video title should go to the VideoObject
+  Do not repeat persons names/bios in different roles
 
 * Group videos by entity, create taxonomies
 * Create "Best of" landing pages for these clusters
