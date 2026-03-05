@@ -1,10 +1,12 @@
 * Run the DB migration locally
 * Addapt the search query
 
-* Add markup schema for the credits
-  The YT video title should go to the VideoObject
-  Do not repeat persons names/bios in different roles
+* Add markup schema in the post template for the credits.
+  The YT video title should go to the VideoObject.
+  Do not repeat persons names/bios in different roles.
+  Design the sections better.
 
+* Do not process very large videos
 * Make gaps between `yt-dlp` calls 10 minutes, basically between videos
 
 * Run the DB migration to production.
@@ -12,7 +14,8 @@
   `ssh -L 5432:localhost:5432 user@your-vps`
   Update the README.md for this process.
 
-* Do not process very large videos
+* Push code changes
+
 * Delete sources and posts without credits - mainly video essays
   Should post cascade delete if source is deleted?
   If so another DB migration is required.
@@ -27,6 +30,8 @@
   - `internal/integrations/gemini/gemini.go`
   - `internal/worker/worker.go`
   - `internal/utils/utils.go`
+
+* Eventually remove tags and description from search vector
 
 * Write tests
 * Add slug input to page
