@@ -12,6 +12,7 @@
   `ssh -L 5432:localhost:5432 user@your-vps`
   Update the README.md for this process.
 
+* Do not process very large videos
 * Delete sources and posts without credits - mainly video essays
   Should post cascade delete if source is deleted?
   If so another DB migration is required.
