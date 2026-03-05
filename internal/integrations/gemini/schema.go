@@ -94,8 +94,9 @@ func (s *Service) responseSchema(ctx context.Context) *genai.Schema {
 							"List only specific, individual proper names.",
 					},
 					"release_year": {
-						Type:        genai.TypeString,
-						Description: "Look for the earliest release year.",
+						Type: genai.TypeString,
+						Description: "Look for the earliest release year. " +
+							"Might appear in Roman numerals.",
 					},
 					"country_of_origin": {
 						Type: genai.TypeString,
