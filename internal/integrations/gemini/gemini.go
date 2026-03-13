@@ -19,32 +19,7 @@ import (
 	"google.golang.org/genai"
 )
 
-// Gemini service
-type Service struct {
-	config      *config.Config
-	genaiConfig *genai.GenerateContentConfig
-	client      *genai.Client
-	limiter     *GeminiLimiter
-	rdb         *rdb.Service
-	catsRepo    *categories.Repository
-}
-
-type Media struct {
-	path      string
-	mimeType  string
-	genaiPart *genai.Part
-}
-
 const concurrentUploads = 30
-
-// Configure safety settings to block none
-var blockNone = genai.HarmBlockThresholdBlockNone
-var safetySettings = []*genai.SafetySetting{
-	{Category: genai.HarmCategoryHateSpeech, Threshold: blockNone},
-	{Category: genai.HarmCategoryDangerousContent, Threshold: blockNone},
-	{Category: genai.HarmCategoryHarassment, Threshold: blockNone},
-	{Category: genai.HarmCategorySexuallyExplicit, Threshold: blockNone},
-}
 
 // Create new Gemini service
 func New(
