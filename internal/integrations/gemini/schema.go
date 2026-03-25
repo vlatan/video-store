@@ -10,11 +10,8 @@ import (
 	"google.golang.org/genai"
 )
 
-const contextPart = "Write as a sequence of discrete factual statements, " +
-	"one per sentence, each containing a specific date, name, or number. " +
-	"Write exclusively from your own knowledge. " +
-	"Do not transcribe or extract from the given media. " +
-	"Do not indicate a cut off date."
+var names = "Extract names explicitly labeled as %s. " +
+	"Do not guess or infer based on narration."
 
 var personItem = &genai.Schema{
 	Type: genai.TypeObject,
@@ -46,7 +43,7 @@ func (s *Service) responseSchema(ctx context.Context) *genai.Schema {
 			},
 			"summary": {
 				Type:        genai.TypeString,
-				Description: "Write an engaging one paragraph storyline.",
+				Description: "Write an engaging one paragraph storyline about the given media.",
 			},
 			"category": {
 				Type: genai.TypeString,
@@ -55,37 +52,24 @@ func (s *Service) responseSchema(ctx context.Context) *genai.Schema {
 					s.catString(ctx),
 				),
 			},
-			"past_context": {
-				Type: genai.TypeString,
-				Description: "One paragraph about the historical context preceding the subject matter. " +
-					contextPart,
-			},
-			"present_context": {
-				Type: genai.TypeString,
-				Description: "One paragraph about current developments and status of the subject matter. " +
-					contextPart,
-			},
 			"credits": {
 				Type:        genai.TypeObject,
 				Description: "Extract the credits from the given media.",
 				Properties: map[string]*genai.Schema{
 					"directors": {
-						Type:  genai.TypeArray,
-						Items: personItem,
-						Description: "Extract names explicitly labeled as directors. " +
-							"Do not guess or infer based on narration.",
+						Type:        genai.TypeArray,
+						Items:       personItem,
+						Description: fmt.Sprintf(names, "directors"),
 					},
 					"writers": {
-						Type:  genai.TypeArray,
-						Items: personItem,
-						Description: "Extract names explicitly labeled as writers. " +
-							"Do not guess or infer based on narration.",
+						Type:        genai.TypeArray,
+						Items:       personItem,
+						Description: fmt.Sprintf(names, "writers"),
 					},
 					"narrators": {
-						Type:  genai.TypeArray,
-						Items: &genai.Schema{Type: genai.TypeString},
-						Description: "Extract names explicitly labeled as narrators. " +
-							"Do not guess or infer based on narration.",
+						Type:        genai.TypeArray,
+						Items:       &genai.Schema{Type: genai.TypeString},
+						Description: fmt.Sprintf(names, "narrators"),
 					},
 					"appearances": {
 						Type:  genai.TypeArray,

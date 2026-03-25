@@ -38,12 +38,10 @@ type Credits struct {
 
 // The response from the Genai API
 type GenaiResponse struct {
-	Title          string  `json:"title"`
-	Summary        string  `json:"summary"`
-	Category       string  `json:"category"`
-	PastContext    string  `json:"past_context"`
-	PresentContext string  `json:"present_context"`
-	Credits        Credits `json:"credits"`
+	Title    string  `json:"title"`
+	Summary  string  `json:"summary"`
+	Category string  `json:"category"`
+	Credits  Credits `json:"credits"`
 }
 
 // Flash message object to store to session for the next page

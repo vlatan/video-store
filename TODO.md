@@ -1,6 +1,10 @@
 * Run the DB migration locally
 * Addapt the search query
 
+* Sanitize the incoming parts
+  gemini returned no candidates, reason=PROHIBITED_CONTENT
+  In this case the audio or images might be overly explicit.
+
 * Add markup schema in the post template for the credits.
   The YT video title should go to the VideoObject.
   Do not repeat persons names/bios in different roles.
