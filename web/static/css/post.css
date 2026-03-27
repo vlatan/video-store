@@ -258,3 +258,36 @@ h2.related-post-title {
   font-weight: normal;
   line-height: 1.4;
 }
+
+/* ################# Experimental ################# */
+
+.experimental-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.experimental-content>section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.experimental-content section p {
+  margin-top: 0;
+}
+
+.experimental-content h3,
+.experimental-content h4 {
+  border-bottom: 1px solid var(--primary-border-color);
+}
+
+.experimental-content>section ul {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.experimental-content>section.details ul {
+  gap: unset;
+}

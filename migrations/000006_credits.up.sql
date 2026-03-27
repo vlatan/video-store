@@ -1,25 +1,8 @@
 -- Add new columns to post table
 ALTER TABLE post
-    ADD COLUMN past_context TEXT,
-    ADD COLUMN present_context TEXT,
     ADD COLUMN release_year INT,
     ADD COLUMN country_of_origin TEXT,
     ADD COLUMN language TEXT;
-
--- Update the post search vector function
-CREATE OR REPLACE FUNCTION update_post_search_vector()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.search_vector =
-        setweight(to_tsvector('english', coalesce(NEW.title, '')), 'A') ||
-        setweight(to_tsvector('english', coalesce(NEW.summary, '')), 'B') ||
-        setweight(to_tsvector('english', coalesce(NEW.past_context, '')), 'C') ||
-        setweight(to_tsvector('english', coalesce(NEW.present_context, '')), 'C') ||
-        setweight(to_tsvector('english', coalesce(NEW.description, '')), 'C') ||
-        setweight(to_tsvector('english', coalesce(NEW.tags, '')), 'D');
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
 
 -- Person table
 CREATE TABLE person (
