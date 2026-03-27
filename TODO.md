@@ -1,8 +1,9 @@
 * Run the DB migration locally
 * Addapt the search query
+* Adapt the get single post query
 
-* Sanitize the incoming parts
-  gemini returned no candidates, reason=PROHIBITED_CONTENT
+* Sanitize the incoming parts.
+  Gemini returned no candidates, reason=PROHIBITED_CONTENT
   In this case the audio or images might be overly explicit.
 
 * Add markup schema in the post template for the credits.
