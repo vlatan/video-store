@@ -10,7 +10,7 @@ import (
 	"google.golang.org/genai"
 )
 
-var names = "Extract names explicitly labeled as %s. " +
+var persons = "Extract names explicitly labeled as %s. " +
 	"Do not guess or infer based on narration."
 
 var personItem = &genai.Schema{
@@ -25,6 +25,7 @@ var personItem = &genai.Schema{
 			Description: "Very short factual bio written from your own knowledge. " +
 				"Do not transcribe or extract from the given media. " +
 				"Omit if person is not notable or no reliable information exists. " +
+				"Omit if you already extracted this person's bio. " +
 				"Do not repeat the name in the bio.",
 		},
 	},
@@ -59,17 +60,17 @@ func (s *Service) responseSchema(ctx context.Context) *genai.Schema {
 					"directors": {
 						Type:        genai.TypeArray,
 						Items:       personItem,
-						Description: fmt.Sprintf(names, "directors"),
+						Description: fmt.Sprintf(persons, "directors"),
 					},
 					"writers": {
 						Type:        genai.TypeArray,
 						Items:       personItem,
-						Description: fmt.Sprintf(names, "writers"),
+						Description: fmt.Sprintf(persons, "writers"),
 					},
 					"narrators": {
 						Type:        genai.TypeArray,
 						Items:       &genai.Schema{Type: genai.TypeString},
-						Description: fmt.Sprintf(names, "narrators"),
+						Description: fmt.Sprintf(persons, "narrators"),
 					},
 					"appearances": {
 						Type:  genai.TypeArray,
