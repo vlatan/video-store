@@ -4,6 +4,7 @@ ALTER TABLE post
     ADD COLUMN country_of_origin TEXT,
     ADD COLUMN language TEXT;
 
+
 -- Person table
 CREATE TABLE person (
     id SERIAL PRIMARY KEY,
@@ -34,6 +35,7 @@ CREATE TRIGGER person_timestamp_update
     FOR EACH ROW
     EXECUTE FUNCTION update_timestamp();
 
+
 -- Production company table
 CREATE TABLE production_company (
     id SERIAL PRIMARY KEY,
@@ -62,6 +64,7 @@ CREATE TRIGGER production_company_timestamp_update
     FOR EACH ROW
     EXECUTE FUNCTION update_timestamp();
 
+
 -- Post person junction table
 CREATE TABLE post_person (
     id SERIAL PRIMARY KEY,
@@ -77,6 +80,7 @@ CREATE TRIGGER post_person_timestamp_update
     BEFORE UPDATE ON post_person
     FOR EACH ROW
     EXECUTE FUNCTION update_timestamp();
+
 
 -- Post production company junction table
 CREATE TABLE post_production_company (
