@@ -14,7 +14,7 @@ ENV PATH=$PATH:/usr/local/go/bin
 RUN go install github.com/air-verse/air@latest
 
 # Tell where Air is installed.
-# The settings for Air - such as .air.toml and Makefile - as well as the code base
+# The settings for Air, such as .air.toml and Makefile, as well as the code base
 # are provided via volumes in the compose.yaml file
 ENV PATH=$PATH:/root/go/bin
 
