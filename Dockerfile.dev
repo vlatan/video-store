@@ -1,17 +1,21 @@
-# Use yt-dlp image
-FROM jauderho/yt-dlp
+# Development - use Air
+FROM jauderho/yt-dlp AS dev
 
-# Install go
+# Install Go
 RUN apk add --no-cache curl make && \
     curl -Lo /tmp/go.tar.gz https://go.dev/dl/go1.25.7.linux-amd64.tar.gz && \
     tar -C /usr/local -xzf /tmp/go.tar.gz && \
     rm /tmp/go.tar.gz
 
+# Tell where Go is installed
 ENV PATH=$PATH:/usr/local/go/bin
 
-# Install air
+# Install Air
 RUN go install github.com/air-verse/air@latest
 
+# Tell where Air is installed.
+# The settings for Air - such as .air.toml and Makefile - as well as the code base
+# are provided via volumes in the compose.yaml file
 ENV PATH=$PATH:/root/go/bin
 
 ENTRYPOINT ["air"]
