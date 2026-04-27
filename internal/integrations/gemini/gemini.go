@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/fs"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -125,9 +126,12 @@ func (s *Service) Summarize(
 ) (*models.GenaiResponse, error) {
 
 	// Defer remove the data dir and its contents
-	// after the content is generated.
-	// If it doesn't exist the error is nil.
-	defer os.RemoveAll(dataDir)
+	// on the exit regardless of success or fail.
+	defer func() {
+		if err := os.RemoveAll(dataDir); err != nil {
+			log.Printf("error while removing the data on disk; %v", err)
+		}
+	}()
 
 	// Make Genai contents
 	contents, err := s.makeContents(ctx, video)

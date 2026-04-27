@@ -141,6 +141,11 @@ func findVideo() (string, error) {
 // namely audio and images.
 func extractMedia(videoID string) error {
 
+	// Remove any previosly downloaded data
+	if err := os.RemoveAll(dataDir); err != nil {
+		return fmt.Errorf("can't remove previous data; %w", err)
+	}
+
 	// Create dirs
 	if err := os.MkdirAll(framesDir, 0750); err != nil {
 		return fmt.Errorf("can't make directories; %w", err)
@@ -156,7 +161,7 @@ func extractMedia(videoID string) error {
 	}
 
 	if err := extractImages(videoFilePath, framesDir); err != nil {
-		return fmt.Errorf("can't extract images; %w", err)
+		return fmt.Errorf("can't extract frames from video; %w", err)
 	}
 
 	return nil
