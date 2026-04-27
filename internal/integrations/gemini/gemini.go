@@ -126,7 +126,7 @@ func (s *Service) Summarize(
 
 	// Defer remove the data dir and its contents
 	// after the content is generated.
-	// If it doesn exist the error is nil.
+	// If it doesn't exist the error is nil.
 	defer os.RemoveAll(dataDir)
 
 	// Make Genai contents
@@ -250,7 +250,11 @@ func (s *Service) uploadFiles(ctx context.Context, files []*Media) error {
 
 // gatherFiles gathers the files for upload
 func (s *Service) gatherFiles() ([]*Media, error) {
-	files := []*Media{{path: audioFile, mimeType: "audio/mpeg"}}
+
+	// Add ther audio file
+	files := []*Media{{path: outputStem + ".mp3", mimeType: "audio/mpeg"}}
+
+	// Gather the images
 	err := filepath.WalkDir(framesDir,
 		func(path string, info fs.DirEntry, err error) error {
 			if err != nil {

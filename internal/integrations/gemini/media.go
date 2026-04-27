@@ -14,7 +14,7 @@ import (
 // The dir in which the data will be fetched
 const dataDir = "/tmp/data"
 const framesDir = "/tmp/data/frames"
-const audioFile = "/tmp/data/output.mp3"
+const outputStem = "/tmp/data/output"
 
 // extractAudio extracts the audio from a given YT video.
 func extractAudio(videoID string) error {
@@ -26,7 +26,7 @@ func extractAudio(videoID string) error {
 		"mp3",
 		videoID,
 		"-o",
-		audioFile,
+		outputStem + ".mp3",
 	}
 
 	var errBuf bytes.Buffer
@@ -41,6 +41,7 @@ func extractAudio(videoID string) error {
 	return nil
 }
 
+// extractImages extracts frames from a video
 func extractImages(videoFilePath, outputDir string) error {
 
 	// Get 1 image per second, the first 210 seconds
@@ -123,18 +124,17 @@ func extractImages(videoFilePath, outputDir string) error {
 	return nil
 }
 
-func findMergedVideo() (string, error) {
+// findVideo finds a video on disk with a given stem
+func findVideo() (string, error) {
 
-	stem := strings.TrimSuffix(audioFile, filepath.Ext(audioFile))
-	videoExts := []string{".mp4", ".mkv", ".webm", ".avi", ".mov"}
-
-	for _, ext := range videoExts {
-		path := stem + ext
+	exts := []string{".mp4", ".mkv", ".webm", ".avi", ".mov"}
+	for _, ext := range exts {
+		path := outputStem + ext
 		if _, err := os.Stat(path); err == nil {
 			return path, nil
 		}
 	}
-	return "", fmt.Errorf("no merged video found for stem %q", stem)
+	return "", fmt.Errorf("no video found for stem %q", outputStem)
 }
 
 // extractMedia extracts media given a YT video ID,
@@ -150,7 +150,7 @@ func extractMedia(videoID string) error {
 		return fmt.Errorf("can't extract audio; %w", err)
 	}
 
-	videoFilePath, err := findMergedVideo()
+	videoFilePath, err := findVideo()
 	if err != nil {
 		return fmt.Errorf("can't find extracted video; %w", err)
 	}
