@@ -2,6 +2,7 @@ package gemini
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"math"
 	"os"
@@ -17,7 +18,7 @@ const framesDir = "/tmp/data/frames"
 const outputStem = "/tmp/data/output"
 
 // extractAudio extracts the audio from a given YT video.
-func extractAudio(videoID string) error {
+func extractAudio(ctx context.Context, videoID string) error {
 
 	cmdArgs := []string{
 		"--keep-video",
@@ -30,7 +31,7 @@ func extractAudio(videoID string) error {
 	}
 
 	var errBuf bytes.Buffer
-	cmd := exec.Command("yt-dlp", cmdArgs...)
+	cmd := exec.CommandContext(ctx, "yt-dlp", cmdArgs...)
 	cmd.Stderr = &errBuf
 
 	// #nosec G204
@@ -42,7 +43,7 @@ func extractAudio(videoID string) error {
 }
 
 // extractImages extracts frames from a video
-func extractImages(videoFilePath, outputDir string) error {
+func extractImages(ctx context.Context, videoFilePath, outputDir string) error {
 
 	// Get 1 image per second, the first 210 seconds
 	cmdArgs := []string{
@@ -60,7 +61,7 @@ func extractImages(videoFilePath, outputDir string) error {
 	}
 
 	var errBuf bytes.Buffer
-	cmd := exec.Command("ffmpeg", cmdArgs...)
+	cmd := exec.CommandContext(ctx, "ffmpeg", cmdArgs...)
 	cmd.Stderr = &errBuf
 
 	// #nosec G204
@@ -80,7 +81,7 @@ func extractImages(videoFilePath, outputDir string) error {
 	}
 
 	errBuf.Reset()
-	cmd = exec.Command("ffprobe", cmdArgs...)
+	cmd = exec.CommandContext(ctx, "ffprobe", cmdArgs...)
 	cmd.Stderr = &errBuf
 
 	// #nosec G204
@@ -113,7 +114,7 @@ func extractImages(videoFilePath, outputDir string) error {
 	}
 
 	errBuf.Reset()
-	cmd = exec.Command("ffmpeg", cmdArgs...)
+	cmd = exec.CommandContext(ctx, "ffmpeg", cmdArgs...)
 	cmd.Stderr = &errBuf
 
 	// #nosec G204
@@ -139,7 +140,7 @@ func findVideo() (string, error) {
 
 // extractMedia extracts media given a YT video ID,
 // namely audio and images.
-func extractMedia(videoID string) error {
+func extractMedia(ctx context.Context, videoID string) error {
 
 	// Remove any previosly downloaded data
 	if err := os.RemoveAll(dataDir); err != nil {
@@ -151,7 +152,7 @@ func extractMedia(videoID string) error {
 		return fmt.Errorf("can't make directories; %w", err)
 	}
 
-	if err := extractAudio(videoID); err != nil {
+	if err := extractAudio(ctx, videoID); err != nil {
 		return fmt.Errorf("can't extract audio; %w", err)
 	}
 
@@ -160,7 +161,7 @@ func extractMedia(videoID string) error {
 		return fmt.Errorf("can't find extracted video; %w", err)
 	}
 
-	if err := extractImages(videoFilePath, framesDir); err != nil {
+	if err := extractImages(ctx, videoFilePath, framesDir); err != nil {
 		return fmt.Errorf("can't extract frames from video; %w", err)
 	}
 

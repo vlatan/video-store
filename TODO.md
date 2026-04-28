@@ -1,4 +1,3 @@
-* Check context for long running operations
 * Run the DB migration locally
 * Addapt the search query
 * Adapt the get single post query

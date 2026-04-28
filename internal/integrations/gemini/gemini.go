@@ -174,7 +174,7 @@ func (s *Service) makeContents(
 ) ([]*genai.Content, error) {
 
 	// Extract audio file and images from YT video
-	if err := extractMedia(video.VideoID); err != nil {
+	if err := extractMedia(ctx, video.VideoID); err != nil {
 		return nil, err
 	}
 
