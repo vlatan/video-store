@@ -1,6 +1,6 @@
 * Run the DB migration locally
+* Adapt thet single post query (SELECT AND UPSERT)
 * Addapt the search query
-* Adapt the get single post query
 
 * Sanitize the incoming parts.
   Gemini returned no candidates, reason=PROHIBITED_CONTENT
@@ -20,6 +20,9 @@
   Update the README.md for this process.
 
 * Push code changes
+  Change CI to use the feature branch
+  Test this setup for a prolonged period of time in prod
+  If it's not working revert to main branch in CI
 
 * Delete sources and posts without credits - mainly video essays
   Should post cascade delete if source is deleted?
