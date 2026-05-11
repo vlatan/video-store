@@ -156,13 +156,13 @@ func (s *Service) Summarize(
 	}
 
 	// REMOVE: For testing purposes only
-	b, err := json.MarshalIndent(response, "", "  ")
-	if err == nil {
-		fmt.Println(string(b))
-	}
+	// b, err := json.MarshalIndent(response, "", "  ")
+	// if err == nil {
+	// 	fmt.Println(string(b))
+	// }
 
+	// Add marker to summary
 	response.Summary += utils.UpdateMarker // REMOVE
-	response.Title = video.Title
 
 	return &response, nil
 }
