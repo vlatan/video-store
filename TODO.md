@@ -1,6 +1,15 @@
-* Run the DB migration locally
-* Adapt thet single post query (SELECT AND UPSERT)
-* Addapt the search query
+* Push code changes
+  First try updating JUST the summary and title
+  Change CI to use the feature branch
+  Do not process very large videos
+  Make gaps between `yt-dlp` calls 10 minutes, basically between videos
+  Test this setup for a prolonged period of time in prod
+  If it's not working revert to main branch in CI, abandon this feature.
+
+* If everything goes well
+  Run the DB migration locally
+  Adapt thet single post query (SELECT AND UPSERT)
+  Addapt the search query
 
 * Sanitize the incoming parts.
   Gemini returned no candidates, reason=PROHIBITED_CONTENT
@@ -11,20 +20,12 @@
   Do not repeat persons names/bios in different roles.
   Design the sections better.
 
-* Do not process very large videos
-* Make gaps between `yt-dlp` calls 10 minutes, basically between videos
-
 * Run the DB migration to production.
   Bind the remote database to localhost:
   `ssh -L 5432:localhost:5432 user@your-vps`
   Update the README.md for this process.
 
 * Update README.md in general, remova stale info.
-
-* Push code changes
-  Change CI to use the feature branch
-  Test this setup for a prolonged period of time in prod
-  If it's not working revert to main branch in CI
 
 * Delete sources and posts without credits - mainly video essays
   Should post cascade delete if source is deleted?
