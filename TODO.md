@@ -19,6 +19,8 @@
   `ssh -L 5432:localhost:5432 user@your-vps`
   Update the README.md for this process.
 
+* Update README.md in general, remova stale info.
+
 * Push code changes
   Change CI to use the feature branch
   Test this setup for a prolonged period of time in prod
