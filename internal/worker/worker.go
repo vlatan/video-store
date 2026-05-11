@@ -580,7 +580,7 @@ func (w *Worker) summarizeVideos(
 		// Minimum sleep here needs to be 20s to avoid hitting the genai RPM quota.
 		minSleep := 3 * time.Minute
 		maxOffset := 2 * time.Minute
-		sleep := minSleep + time.Duration(rand.Intn(int(maxOffset)))
+		sleep := minSleep + time.Duration(rand.Intn(int(maxOffset))) // #nosec G404
 		if err := utils.SleepContext(ctx, sleep); err != nil {
 			return nil, err
 		}

@@ -31,7 +31,7 @@ func extractAudio(ctx context.Context, videoID string) error {
 	}
 
 	var errBuf bytes.Buffer
-	cmd := exec.CommandContext(ctx, "yt-dlp", cmdArgs...)
+	cmd := exec.CommandContext(ctx, "yt-dlp", cmdArgs...) // #nosec G204
 	cmd.Stderr = &errBuf
 
 	// #nosec G204
@@ -61,7 +61,7 @@ func extractImages(ctx context.Context, videoFilePath, outputDir string) error {
 	}
 
 	var errBuf bytes.Buffer
-	cmd := exec.CommandContext(ctx, "ffmpeg", cmdArgs...)
+	cmd := exec.CommandContext(ctx, "ffmpeg", cmdArgs...) // #nosec G204
 	cmd.Stderr = &errBuf
 
 	// #nosec G204
@@ -81,7 +81,7 @@ func extractImages(ctx context.Context, videoFilePath, outputDir string) error {
 	}
 
 	errBuf.Reset()
-	cmd = exec.CommandContext(ctx, "ffprobe", cmdArgs...)
+	cmd = exec.CommandContext(ctx, "ffprobe", cmdArgs...) // #nosec G204
 	cmd.Stderr = &errBuf
 
 	// #nosec G204
@@ -114,7 +114,7 @@ func extractImages(ctx context.Context, videoFilePath, outputDir string) error {
 	}
 
 	errBuf.Reset()
-	cmd = exec.CommandContext(ctx, "ffmpeg", cmdArgs...)
+	cmd = exec.CommandContext(ctx, "ffmpeg", cmdArgs...) // #nosec G204
 	cmd.Stderr = &errBuf
 
 	// #nosec G204
