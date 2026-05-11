@@ -27,6 +27,8 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o binary ./cmd/${TARGET}
 
 # The app and worker bases
 FROM jauderho/yt-dlp AS app
+RUN apk add --no-cache curl
+
 FROM jauderho/yt-dlp AS worker
 
 
