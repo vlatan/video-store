@@ -38,4 +38,4 @@ RUN apk add --no-cache postgresql16-client
 # Final stage - pick the right base
 FROM ${TARGET}
 COPY --from=builder /src/binary /binary
-CMD ["/binary"]
+ENTRYPOINT ["/binary"]
