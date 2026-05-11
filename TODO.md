@@ -1,13 +1,18 @@
-* Push code changes
-  First try updating JUST the summary and title
+* First try updating JUST the summary and title
   Change CI to use the feature branch
+  Push code changes
   Do not process very large videos
   Make gaps between `yt-dlp` calls 10 minutes, basically between videos
   Test this setup for a prolonged period of time in prod
   If it's not working revert to main branch in CI, abandon this feature.
 
 * If everything goes well
+
+* Add title in Credits struct and use this as na actual Post title.
+  Probably add VideoTitle in the Post struct and the DB
+  to use it as a title in the VideoObject markup.
   Run the DB migration locally
+
   Adapt thet single post query (SELECT AND UPSERT)
   Addapt the search query
 
@@ -16,7 +21,6 @@
   In this case the audio or images might be overly explicit.
 
 * Add markup schema in the post template for the credits.
-  The YT video title should go to the VideoObject.
   Do not repeat persons names/bios in different roles.
   Design the sections better.
 
