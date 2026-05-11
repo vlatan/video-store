@@ -125,7 +125,7 @@ func (s *Service) Summarize(
 	rc *utils.RetryConfig,
 ) (*models.GenaiResponse, error) {
 
-	// Defer remove the data dir and its contents
+	// Remove the data dir and its contents
 	// on the exit regardless of success or fail.
 	defer func() {
 		if err := os.RemoveAll(dataDir); err != nil {
@@ -163,7 +163,6 @@ func (s *Service) Summarize(
 
 	// Add marker to summary
 	response.Summary += utils.UpdateMarker // REMOVE
-
 	return &response, nil
 }
 
@@ -210,7 +209,7 @@ func (s *Service) Exhausted(ctx context.Context) bool {
 	return s.limiter.Exhausted(ctx)
 }
 
-// uploadFiles uploads file concurrently to Gemini
+// uploadFiles uploads files concurrently to Gemini
 // Mutates each item in files.
 func (s *Service) uploadFiles(ctx context.Context, files []*Media) error {
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"maps"
+	"math/rand"
 	"slices"
 	"strings"
 	"time"
@@ -575,8 +576,12 @@ func (w *Worker) summarizeVideos(
 			continue
 		}
 
-		// Sleep 20s before making a genai request to avoid hitting the RPM quota
-		if err := utils.SleepContext(ctx, 20*time.Second); err != nil {
+		// Sleep 3-5 min before making a request to give space between yt-dlp calls.
+		// Minimum sleep here needs to be 20s to avoid hitting the genai RPM quota.
+		minSleep := 3 * time.Minute
+		maxOffset := 2 * time.Minute
+		sleep := minSleep + time.Duration(rand.Intn(int(maxOffset)))
+		if err := utils.SleepContext(ctx, sleep); err != nil {
 			return nil, err
 		}
 
