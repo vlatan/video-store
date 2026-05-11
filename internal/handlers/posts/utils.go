@@ -65,7 +65,8 @@ func (s *Service) generatePostContent(
 		)
 	}
 
-	post.Summary = genaiResponse.Summary
+	post.Title = utils.NormalizeTitle(genaiResponse.Title, utils.VideoTitleCutoffs)
+	post.Summary = utils.NormalizeDescription(genaiResponse.Summary)
 	post.Category = &models.Category{Name: genaiResponse.Category}
 
 	_, err = s.postsRepo.UpdateGeneratedData(ctx, post)

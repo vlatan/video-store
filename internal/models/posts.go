@@ -23,7 +23,6 @@ type Post struct {
 	ID              int           `json:"id,omitempty"`
 	Provider        string        `json:"provider,omitempty"`
 	VideoID         string        `json:"video_id,omitempty"`
-	VideoTitle      string        `json:"video_title,omitempty"`
 	Title           string        `json:"title,omitempty"`
 	Srcset          string        `json:"srcset,omitempty"`
 	RawThumbs       []byte        `json:"-"`
