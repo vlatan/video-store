@@ -45,7 +45,7 @@ func (s *Service) generatePostContent(
 	ttl time.Duration) error {
 
 	// Detach the request context and
-	// give this goroutine reasonable to finish
+	// give this goroutine reasonable time to finish
 	detachedCtx := context.WithoutCancel(r.Context())
 	ctx, cancel := context.WithTimeout(detachedCtx, ttl)
 	defer cancel()
