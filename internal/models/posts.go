@@ -37,7 +37,6 @@ type Post struct {
 	Summary         string        `json:"summary,omitempty"`
 	HTMLSummary     template.HTML `json:"html_summary,omitempty"`
 	MetaDescription string        `json:"meta_description,omitempty"`
-	Credits         Credits       `json:"credits,omitempty"`
 	Tags            string        `json:"tags,omitempty"`
 	PlaylistID      string        `json:"playlist_id,omitempty"`
 	RelatedPosts    []Post        `json:"related_posts,omitempty"`
