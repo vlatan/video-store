@@ -91,6 +91,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
 
   app:
+    image: cosmtrek/air
     container_name: app
     labels:
       - "traefik.enable=true"
