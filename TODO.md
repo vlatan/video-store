@@ -1,6 +1,4 @@
 * Update README.md remove stale info.
-* Add GEMINI_PROMPT var in prod
-
 * Should post cascade delete if source is deleted?
 
 * Group videos by entity, create taxonomies
