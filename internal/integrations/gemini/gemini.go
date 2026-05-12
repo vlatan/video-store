@@ -4,10 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/fs"
-	"log"
-	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/vlatan/video-store/internal/config"
@@ -15,12 +11,9 @@ import (
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/repositories/categories"
 	"github.com/vlatan/video-store/internal/utils"
-	"golang.org/x/sync/errgroup"
 
 	"google.golang.org/genai"
 )
-
-const concurrentUploads = 30
 
 // Create new Gemini service
 func New(
@@ -125,14 +118,6 @@ func (s *Service) Summarize(
 	rc *utils.RetryConfig,
 ) (*models.GenaiResponse, error) {
 
-	// Remove the data dir and its contents
-	// on the exit regardless of success or fail.
-	defer func() {
-		if err := os.RemoveAll(dataDir); err != nil {
-			log.Printf("error while removing the data on disk; %v", err)
-		}
-	}()
-
 	// Make Genai contents
 	contents, err := s.makeContents(ctx, video)
 	if err != nil {
@@ -166,28 +151,8 @@ func (s *Service) makeContents(
 	video *models.Post,
 ) ([]*genai.Content, error) {
 
-	// Extract audio file and images from YT video
-	if err := extractMedia(ctx, video.VideoID); err != nil {
-		return nil, err
-	}
-
-	// Gather the files for upload
-	files, err := s.gatherFiles()
-	if err != nil {
-		return nil, err
-	}
-
-	// Fire goroutines to upload files in parallel
-	if err := s.uploadFiles(ctx, files); err != nil {
-		return nil, err
-	}
-
 	// Gather the media parts
 	var parts []*genai.Part
-	for _, file := range files {
-		parts = append(parts, file.genaiPart)
-	}
-
 	contents := []*genai.Content{genai.NewContentFromParts(parts, genai.RoleUser)}
 	return contents, nil
 }
@@ -201,81 +166,4 @@ func (s *Service) AcquireQuota(ctx context.Context) error {
 // Exhausted returns true if the daily limit has already been hit
 func (s *Service) Exhausted(ctx context.Context) bool {
 	return s.limiter.Exhausted(ctx)
-}
-
-// uploadFiles uploads files concurrently to Gemini
-// Mutates each item in files.
-func (s *Service) uploadFiles(ctx context.Context, files []*Media) error {
-
-	// Fire goroutines to upload media in parallel
-	g := new(errgroup.Group)
-	semaphore := make(chan struct{}, concurrentUploads)
-	for _, file := range files {
-		g.Go(func() error {
-			select {
-			case <-ctx.Done():
-				return ctx.Err()
-			case semaphore <- struct{}{}: // Semaphore will block if full
-				defer func() { <-semaphore }()
-
-				// Upload the file to genai
-				// https://ai.google.dev/gemini-api/docs/audio
-				// https://ai.google.dev/gemini-api/docs/image-understanding
-				uploadedFile, err := s.client.Files.UploadFromPath(
-					ctx,
-					file.path,
-					&genai.UploadFileConfig{MIMEType: file.mimeType},
-				)
-
-				if err != nil {
-					return fmt.Errorf(
-						"failed to upload the file %q; %w",
-						file.path, err,
-					)
-				}
-
-				// Save the genai Part
-				file.genaiPart = genai.NewPartFromURI(uploadedFile.URI, uploadedFile.MIMEType)
-				return nil
-			}
-		})
-	}
-
-	// Wait for all uploads to finish
-	return g.Wait()
-}
-
-// gatherFiles gathers the files for upload
-func (s *Service) gatherFiles() ([]*Media, error) {
-
-	// Add ther audio file
-	files := []*Media{{path: outputStem + ".mp3", mimeType: "audio/mpeg"}}
-
-	// Gather the images
-	err := filepath.WalkDir(framesDir,
-		func(path string, info fs.DirEntry, err error) error {
-			if err != nil {
-				return err
-			}
-
-			// Skip directories
-			if info.IsDir() {
-				return nil
-			}
-
-			// Skip non PNG files
-			if filepath.Ext(info.Name()) != ".png" {
-				return nil
-			}
-
-			files = append(files, &Media{path: path, mimeType: "image/png"})
-			return nil
-		},
-	)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return files, nil
 }
