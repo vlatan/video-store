@@ -90,18 +90,34 @@ func (s *Service) makeContents(video *models.Post) []*genai.Content {
 
 	// Populate user prompt custom text parts
 	var parts []*genai.Part
-	// for _, part := range s.config.GeminiPrompt {
-	// 	parts = append(parts, genai.NewPartFromText(part.Text))
-	// }
+
+	if prompt := s.config.GeminiPrompt; prompt != "" {
+		prompt = fmt.Sprintf("--- SUMMARY --- \n%s", prompt)
+		parts = append(parts, genai.NewPartFromText(prompt))
+	}
 
 	// Ready the rest of the parts
-	// title := sanitizePrompt(video.Title)
-	// description := sanitizePrompt(video.Description)
-	// url := "https://www.youtube.com/watch?v=" + video.VideoID
+	title := sanitizePrompt(video.Title)
+	description := sanitizePrompt(video.Description)
+	url := "https://www.youtube.com/watch?v=" + video.VideoID
 
-	// Gather the media parts
-	contents := []*genai.Content{genai.NewContentFromParts(parts, genai.RoleUser)}
-	return contents
+	// Create video data genai prompt parts
+	videoParts := []*genai.Part{
+		genai.NewPartFromText(fmt.Sprintf("--- TITLE --- \n%s", title)),
+		genai.NewPartFromText(fmt.Sprintf("--- DESCRIPTION --- \n%s", description)),
+		genai.NewPartFromText(fmt.Sprintf("--- YOUTUBE URL --- \n%s", url)),
+		// genai.NewPartFromText(fmt.Sprintf(
+		// 	"--- CATEGORIES --- \nSelect ONE category from these categories: %s.",
+		// 	s.catStr,
+		// )),
+	}
+
+	// Append the video prompt parts
+	parts = append(parts, videoParts...)
+
+	return []*genai.Content{
+		genai.NewContentFromParts(parts, genai.RoleUser),
+	}
 }
 
 // Generate Genai content

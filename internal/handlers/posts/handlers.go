@@ -312,9 +312,6 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Generate content in the background using Gemini.
-		// This is intensive work, involving using yt-dlp, ffmpeg,
-		// uploading to genai, etc. ffmpeg is restricted to using
-		// one thread but still this process will make the machine work very hard.
 		// Give reasonable TTL for this to finish.
 		// In production no need to use it, the worker will
 		// generate the post content overnight.

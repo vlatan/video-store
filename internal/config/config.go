@@ -56,6 +56,7 @@ type Config struct {
 	GeminiTimezone string `env:"GEMINI_TIMEZONE" envDefault:"America/Los_Angeles"`
 	GeminiRPD      int64  `env:"GEMINI_RPD" envDefault:"20"`
 	GeminiRPM      int64  `env:"GEMINI_RPM" envDefault:"5"`
+	GeminiPrompt   string `env:"GEMINI_PROMPT"`
 
 	// Google OAuth settings
 	GoogleOAuthClientID     string   `env:"GOOGLE_OAUTH_CLIENT_ID"`

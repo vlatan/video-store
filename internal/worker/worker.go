@@ -576,10 +576,10 @@ func (w *Worker) summarizeVideos(
 			continue
 		}
 
-		// Sleep 3-5 min before making a request to give space between yt-dlp calls.
-		// Minimum sleep here needs to be 20s to avoid hitting the genai RPM quota.
-		minSleep := 3 * time.Minute
-		maxOffset := 2 * time.Minute
+		// Sleep 20-30 seconds.
+		// Min sleep needs to be 20s to avoid hitting the genai RPM quota.
+		minSleep := 20 * time.Second
+		maxOffset := 10 * time.Second
 		sleep := minSleep + time.Duration(rand.Intn(int(maxOffset))) // #nosec G404
 		if err := utils.SleepContext(ctx, sleep); err != nil {
 			return nil, err
