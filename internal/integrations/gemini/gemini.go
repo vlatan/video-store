@@ -54,13 +54,13 @@ func New(
 		TopP:        &topP,
 
 		// Can't return JSON when using web search
-		ResponseMIMEType:  "application/json",
+		// ResponseMIMEType:  "application/json",
 		SafetySettings:    safetySettings,
 		ResponseSchema:    s.responseSchema(ctx),
 		SystemInstruction: s.systemInstruction(),
 
 		// MediaResolution:  genai.MediaResolutionLow,
-		// Tools: []*genai.Tool{{GoogleSearch: &genai.GoogleSearch{}}},
+		Tools: []*genai.Tool{{GoogleSearch: &genai.GoogleSearch{}}},
 	}
 
 	return s, nil
@@ -154,12 +154,6 @@ func (s *Service) Summarize(
 	if err := json.Unmarshal([]byte(result.Text()), &response); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal Genai JSON response; %w", err)
 	}
-
-	// REMOVE: For testing purposes only
-	// b, err := json.MarshalIndent(response, "", "  ")
-	// if err == nil {
-	// 	fmt.Println(string(b))
-	// }
 
 	// Add marker to summary
 	response.Summary += utils.UpdateMarker // REMOVE
