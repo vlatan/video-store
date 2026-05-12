@@ -106,10 +106,10 @@ func (s *Service) makeContents(video *models.Post) []*genai.Content {
 		genai.NewPartFromText(fmt.Sprintf("--- TITLE --- \n%s", title)),
 		genai.NewPartFromText(fmt.Sprintf("--- DESCRIPTION --- \n%s", description)),
 		genai.NewPartFromText(fmt.Sprintf("--- YOUTUBE URL --- \n%s", url)),
-		// genai.NewPartFromText(fmt.Sprintf(
-		// 	"--- CATEGORIES --- \nSelect ONE category from these categories: %s.",
-		// 	s.catStr,
-		// )),
+		genai.NewPartFromText(fmt.Sprintf(
+			"--- CATEGORY --- \nSelect ONE category from these categories: %s.",
+			s.catStr,
+		)),
 	}
 
 	// Append the video prompt parts
@@ -174,11 +174,7 @@ func (s *Service) Summarize(
 	}
 
 	// Parse the text output
-	response, err := parseResponse(result.Text(), s.categories)
-	if err != nil {
-		return nil, err
-	}
-
+	response := parseResponse(result.Text(), s.categories)
 	response.Summary += utils.UpdateMarker // REMOVE
 	response.Title = video.Title
 

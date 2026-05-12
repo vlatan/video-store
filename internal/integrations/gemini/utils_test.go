@@ -16,64 +16,50 @@ func TestParseResponse(t *testing.T) {
 		name       string
 		raw        string
 		categories models.Categories
-		wantErr    bool
 		expected   *models.GenaiResponse
 	}{
 		{
-			"invalid HTML",
-			"foo bar. CATEGORY: Science",
+			"no category",
+			"Foo bar.",
 			categories,
-			true,
-			nil,
-		},
-		{
-			"invalid paragraph",
-			"foo</p><p>bar</p><p>CATEGORY: Science</p>",
-			categories,
-			false,
 			&models.GenaiResponse{
-				Summary:  "<p>bar</p>",
-				Category: "Science",
+				Summary:  "Foo bar.",
+				Category: "",
 			},
 		},
-
 		{
-			"valid - category out of paragraph",
-			"<p>foo</p><p>bar</p>CATEGORY: Science",
+			"valid - capitalized category",
+			"Foo bar.\nCategory: Science",
 			categories,
-			false,
 			&models.GenaiResponse{
-				Summary:  "<p>foo</p><p>bar</p>",
+				Summary:  "Foo bar.",
 				Category: "Science",
 			},
 		},
 		{
-			"valid - category inside paragraph (upper case)",
-			"<p>foo</p><p>bar</p><p>CATEGORY: Science</p>",
+			"valid - uppercase category",
+			"Foo bar.\nCATEGORY: Science",
 			categories,
-			false,
 			&models.GenaiResponse{
-				Summary:  "<p>foo</p><p>bar</p>",
+				Summary:  "Foo bar.",
 				Category: "Science",
 			},
 		},
 		{
-			"valid - category inside paragraph (lower case)",
-			"<p>foo</p><p>bar</p><p>category: Science</p>",
+			"valid - lowercase category",
+			"Foo bar.\ncategory: Science",
 			categories,
-			false,
 			&models.GenaiResponse{
-				Summary:  "<p>foo</p><p>bar</p>",
+				Summary:  "Foo bar.",
 				Category: "Science",
 			},
 		},
 		{
-			"valid - category inside paragraph (capitalized)",
-			"<p>foo</p><p>bar</p><p>Category: Science</p>",
+			"valid - category in the middle",
+			"Foo bar.\ncategory: Science.\nBro.",
 			categories,
-			false,
 			&models.GenaiResponse{
-				Summary:  "<p>foo</p><p>bar</p>",
+				Summary:  "Foo bar.\n\nBro.",
 				Category: "Science",
 			},
 		},
@@ -81,12 +67,7 @@ func TestParseResponse(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-
-			response, err := parseResponse(tt.raw, tt.categories)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("got error = %v, want error = %v", err, tt.wantErr)
-			}
-
+			response := parseResponse(tt.raw, tt.categories)
 			switch {
 			case response != nil && tt.expected != nil:
 				if *response != *tt.expected {
