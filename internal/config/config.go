@@ -107,7 +107,7 @@ type Config struct {
 	Port int `env:"PORT" envDefault:"5000"`
 
 	// Worker expected runtime
-	WorkerExpectedRuntime time.Duration `env:"WORKER_EXPECTED_RUNTIME" envDefault:"200m"`
+	WorkerExpectedRuntime time.Duration `env:"WORKER_EXPECTED_RUNTIME" envDefault:"1h"`
 }
 
 // New creates new config object
