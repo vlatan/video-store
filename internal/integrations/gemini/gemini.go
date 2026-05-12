@@ -27,6 +27,7 @@ func New(
 		return nil, err
 	}
 
+	// Configure new limiter
 	limiter, err := NewLimiter(cfg, redisService)
 	if err != nil {
 		return nil, err
@@ -82,6 +83,25 @@ func New(
 	}
 
 	return s, nil
+}
+
+// makeContents creates Genai contents
+func (s *Service) makeContents(video *models.Post) []*genai.Content {
+
+	// Populate user prompt custom text parts
+	var parts []*genai.Part
+	// for _, part := range s.config.GeminiPrompt {
+	// 	parts = append(parts, genai.NewPartFromText(part.Text))
+	// }
+
+	// Ready the rest of the parts
+	// title := sanitizePrompt(video.Title)
+	// description := sanitizePrompt(video.Description)
+	// url := "https://www.youtube.com/watch?v=" + video.VideoID
+
+	// Gather the media parts
+	contents := []*genai.Content{genai.NewContentFromParts(parts, genai.RoleUser)}
+	return contents
 }
 
 // Generate Genai content
@@ -147,25 +167,6 @@ func (s *Service) Summarize(
 	response.Title = video.Title
 
 	return response, nil
-}
-
-// makeContents creates Genai contents
-func (s *Service) makeContents(video *models.Post) []*genai.Content {
-
-	// Populate user prompt custom text parts
-	var parts []*genai.Part
-	// for _, part := range s.config.GeminiPrompt {
-	// 	parts = append(parts, genai.NewPartFromText(part.Text))
-	// }
-
-	// Ready the rest of the parts
-	// title := sanitizePrompt(video.Title)
-	// description := sanitizePrompt(video.Description)
-	// url := "https://www.youtube.com/watch?v=" + video.VideoID
-
-	// Gather the media parts
-	contents := []*genai.Content{genai.NewContentFromParts(parts, genai.RoleUser)}
-	return contents
 }
 
 // AcquireQuota attempts to consume 1 request from the daily and minute buckets.
