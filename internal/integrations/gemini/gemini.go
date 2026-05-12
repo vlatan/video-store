@@ -2,7 +2,6 @@ package gemini
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -19,7 +18,7 @@ import (
 func New(
 	ctx context.Context,
 	cfg *config.Config,
-	rdb *rdb.Service,
+	redisService *rdb.Service,
 	catsRepo *categories.Repository) (*Service, error) {
 
 	// Configure new client
@@ -28,19 +27,45 @@ func New(
 		return nil, err
 	}
 
-	limiter, err := NewLimiter(cfg, rdb)
+	limiter, err := NewLimiter(cfg, redisService)
 	if err != nil {
 		return nil, err
 	}
 
 	s := &Service{
-		config:   cfg,
-		client:   client,
-		limiter:  limiter,
-		rdb:      rdb,
-		catsRepo: catsRepo,
+		config:  cfg,
+		client:  client,
+		limiter: limiter,
 	}
 
+	// Get the categories from cache or DB
+	categories, err := rdb.GetCachedData(
+		ctx,
+		redisService,
+		"categories",
+		s.config.CacheTimeout,
+		func() (models.Categories, error) {
+			return s.catsRepo.GetCategories(ctx)
+		},
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Save tle slice of categories to this service
+	s.categories = categories
+
+	// Extract the category names
+	catNames := make([]string, len(categories))
+	for i, cat := range categories {
+		catNames[i] = cat.Name
+	}
+
+	// Save the categories string to this service
+	s.catStr = strings.Join(catNames, ", ")
+
+	// Configure genai
 	temp, topP := float32(0.0), float32(0.1)
 	s.genaiConfig = &genai.GenerateContentConfig{
 		Temperature: &temp,
@@ -49,7 +74,7 @@ func New(
 		// Can't return JSON when using web search
 		// ResponseMIMEType:  "application/json",
 		SafetySettings:    safetySettings,
-		ResponseSchema:    s.responseSchema(ctx),
+		ResponseSchema:    s.responseSchema(),
 		SystemInstruction: s.systemInstruction(),
 
 		// MediaResolution:  genai.MediaResolutionLow,
@@ -57,26 +82,6 @@ func New(
 	}
 
 	return s, nil
-}
-
-// systemInstruction generates system instructions
-func (s *Service) systemInstruction() *genai.Content {
-	content := []string{
-		"Write as if you are a historian or journalist reporting on the subject matter itself.",
-		"Write in third-person factual prose, as if writing for a news article.",
-		"Never use hedging language. Use specific, verifiable facts only.",
-		"If a fact cannot be stated with confidence, omit it entirely.",
-		"Do not use transitional or connective filler between facts.",
-		"State each fact as a direct sentence.",
-		"Do NOT mention the given media itself - write about its SUBJECT.",
-		"Avoid: flowery language, metaphors, purple prose, and generalized statements.",
-		"Do not include timestamps.",
-		"Do not use UPPER CASE.",
-		"Do not use em dashes (—).",
-	}
-
-	contentText := strings.Join(content, "\n")
-	return genai.NewContentFromText(contentText, genai.RoleUser)
 }
 
 // Generate Genai content
@@ -119,10 +124,7 @@ func (s *Service) Summarize(
 ) (*models.GenaiResponse, error) {
 
 	// Make Genai contents
-	contents, err := s.makeContents(ctx, video)
-	if err != nil {
-		return nil, fmt.Errorf("failed to make Genai contents; %w", err)
-	}
+	contents := s.makeContents(video)
 
 	// Make the API call
 	result, err := utils.Retry(
@@ -132,29 +134,38 @@ func (s *Service) Summarize(
 	)
 
 	if err != nil {
-		return nil, fmt.Errorf("failed to generate Genai content; %w", err)
+		return nil, err
 	}
 
-	var response models.GenaiResponse
-	if err := json.Unmarshal([]byte(result.Text()), &response); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal Genai JSON response; %w", err)
+	// Parse the text output
+	response, err := parseResponse(result.Text(), s.categories)
+	if err != nil {
+		return nil, err
 	}
 
-	// Add marker to summary
 	response.Summary += utils.UpdateMarker // REMOVE
-	return &response, nil
+	response.Title = video.Title
+
+	return response, nil
 }
 
 // makeContents creates Genai contents
-func (s *Service) makeContents(
-	ctx context.Context,
-	video *models.Post,
-) ([]*genai.Content, error) {
+func (s *Service) makeContents(video *models.Post) []*genai.Content {
+
+	// Populate user prompt custom text parts
+	var parts []*genai.Part
+	// for _, part := range s.config.GeminiPrompt {
+	// 	parts = append(parts, genai.NewPartFromText(part.Text))
+	// }
+
+	// Ready the rest of the parts
+	// title := sanitizePrompt(video.Title)
+	// description := sanitizePrompt(video.Description)
+	// url := "https://www.youtube.com/watch?v=" + video.VideoID
 
 	// Gather the media parts
-	var parts []*genai.Part
 	contents := []*genai.Content{genai.NewContentFromParts(parts, genai.RoleUser)}
-	return contents, nil
+	return contents
 }
 
 // AcquireQuota attempts to consume 1 request from the daily and minute buckets.

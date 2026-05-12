@@ -3,6 +3,7 @@ package gemini
 import (
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
+	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/repositories/categories"
 	"google.golang.org/genai"
 )
@@ -13,12 +14,9 @@ type Service struct {
 	genaiConfig *genai.GenerateContentConfig
 	client      *genai.Client
 	limiter     *GeminiLimiter
-	rdb         *rdb.Service
-	catsRepo    *categories.Repository
-}
+	categories  models.Categories
+	catStr      string
 
-type Media struct {
-	path      string
-	mimeType  string
-	genaiPart *genai.Part
+	rdb      *rdb.Service
+	catsRepo *categories.Repository
 }
