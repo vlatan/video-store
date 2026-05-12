@@ -2,9 +2,7 @@ package gemini
 
 import (
 	"github.com/vlatan/video-store/internal/config"
-	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/models"
-	"github.com/vlatan/video-store/internal/repositories/categories"
 	"google.golang.org/genai"
 )
 
@@ -16,7 +14,4 @@ type Service struct {
 	limiter     *GeminiLimiter
 	categories  models.Categories
 	catStr      string
-
-	rdb      *rdb.Service
-	catsRepo *categories.Repository
 }

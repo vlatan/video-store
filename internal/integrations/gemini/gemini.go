@@ -45,7 +45,7 @@ func New(
 		"categories",
 		s.config.CacheTimeout,
 		func() (models.Categories, error) {
-			return s.catsRepo.GetCategories(ctx)
+			return catsRepo.GetCategories(ctx)
 		},
 	)
 
