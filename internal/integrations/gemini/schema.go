@@ -32,7 +32,7 @@ func (s *Service) responseSchema(ctx context.Context) *genai.Schema {
 				),
 			},
 		},
-		Required: []string{"summary", "category"},
+		Required: []string{"title", "summary", "category"},
 	}
 }
 
