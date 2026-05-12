@@ -91,9 +91,6 @@ services:
       - postgres_data:/var/lib/postgresql/data
 
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile.dev
     container_name: app
     labels:
       - "traefik.enable=true"
@@ -107,6 +104,7 @@ services:
     environment:
       # Use Go version specified in the go.mod, not the local one
       - GOTOOLCHAIN=auto
+      
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
