@@ -1,4 +1,3 @@
-* Update README.md remove stale info.
 * Possibly change the summary marker to regenerate one para summaries
 * Change back the CI branch to main
 
