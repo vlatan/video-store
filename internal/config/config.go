@@ -91,14 +91,14 @@ type Config struct {
 
 	// Redis
 	RedisHost     string        `env:"REDIS_HOST" envDefault:"localhost"`
-	RedisPort     int           `env:"REDIS_PORT" envDefault:"6379"`
+	RedisPort     uint16        `env:"REDIS_PORT" envDefault:"6379"`
 	RedisUsername string        `env:"REDIS_USERNAME"`
 	RedisPassword string        `env:"REDIS_PASSWORD"`
 	CacheTimeout  time.Duration `env:"CACHE_TIMEOUT" envDefault:"24h"`
 
 	// Postgres
 	DBHost     string `env:"DB_HOST" envDefault:"localhost"`
-	DBPort     int    `env:"DB_PORT" envDefault:"5432"`
+	DBPort     uint16 `env:"DB_PORT" envDefault:"5432"`
 	DBDatabase string `env:"DB_DATABASE"`
 	DBUsername string `env:"DB_USERNAME"`
 	DBPassword string `env:"DB_PASSWORD"`

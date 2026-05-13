@@ -11,7 +11,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strconv"
 	"time"
 
 	"github.com/vlatan/video-store/internal/config"
@@ -82,7 +81,7 @@ func (s *Service) DumpDatabase(dest string) error {
 	// The dump command
 	cmd := exec.Command("pg_dump",
 		"-h", s.config.DBHost,
-		"-p", strconv.Itoa(s.config.DBPort),
+		"-p", fmt.Sprintf("%d", s.config.DBPort),
 		"-U", s.config.DBUsername,
 		"-d", s.config.DBDatabase,
 		"-Fc", // compressed
