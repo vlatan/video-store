@@ -54,7 +54,7 @@ func New(
 		return nil, err
 	}
 
-	// Save tle slice of categories to this service
+	// Save the slice of categories to this service
 	s.categories = categories
 
 	// Extract the category names
