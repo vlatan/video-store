@@ -1,5 +1,4 @@
 * Possibly change the summary marker to regenerate one para summaries
-* Change back the CI branch to main
 
 * Should post cascade delete if source is deleted?
 

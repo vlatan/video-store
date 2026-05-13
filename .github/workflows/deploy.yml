@@ -2,7 +2,7 @@ name: Video Store CI/CD
 
 on:
   push: &code_changes
-    branches: [yt-dlp]
+    branches: [main]
     paths:
       - '.github/**'
       - 'cmd/**'
