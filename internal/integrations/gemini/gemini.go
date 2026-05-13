@@ -93,6 +93,7 @@ func (s *Service) makeContents(video *models.Post) []*genai.Content {
 
 	if prompt := s.config.GeminiPrompt; prompt != "" {
 		prompt = fmt.Sprintf("--- SUMMARY --- \n%s", prompt)
+		prompt = sanitizePrompt(prompt)
 		parts = append(parts, genai.NewPartFromText(prompt))
 	}
 
