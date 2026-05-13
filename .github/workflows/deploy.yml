@@ -64,6 +64,7 @@ jobs:
   
   build-push:
     needs: [tests, sast]
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
   
     permissions:
@@ -100,6 +101,7 @@ jobs:
 
   deploy:
     needs: build-push
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
 
     steps:
