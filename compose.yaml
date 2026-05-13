@@ -125,12 +125,6 @@ services:
       retries: 3
       start_period: 2m
 
-    deploy:
-      resources:
-        limits:
-          cpus: 2.0
-          memory: 4G
-
     depends_on:
       postgres:
         condition: service_healthy
@@ -151,12 +145,6 @@ services:
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
-
-    deploy:
-      resources:
-        limits:
-          cpus: 2.0
-          memory: 4G
 
     depends_on:
       postgres:
