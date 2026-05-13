@@ -1,10 +1,17 @@
 package posts
 
 import (
+	"context"
 	"errors"
+	"fmt"
+	"net/http"
 	"net/url"
 	"regexp"
 	"strings"
+	"time"
+
+	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/utils"
 )
 
 // Validate video ID
@@ -30,4 +37,44 @@ func extractYouTubeID(rawURL string) (string, error) {
 	}
 
 	return "", errors.New("could not extract the video ID")
+}
+
+func (s *Service) generatePostContent(
+	r *http.Request,
+	post *models.Post,
+	ttl time.Duration) error {
+
+	// Detach the request context and
+	// give this goroutine reasonable time to finish
+	detachedCtx := context.WithoutCancel(r.Context())
+	ctx, cancel := context.WithTimeout(detachedCtx, ttl)
+	defer cancel()
+
+	genaiResponse, err := s.gemini.Summarize(
+		ctx, post,
+		&utils.RetryConfig{
+			MaxRetries: 1,
+			MaxJitter:  2 * time.Second,
+			Delay:      65 * time.Second,
+		})
+
+	if err != nil {
+		return fmt.Errorf(
+			"failed to generate content on video %q; %w",
+			post.VideoID, err,
+		)
+	}
+
+	post.Title = utils.NormalizeTitle(genaiResponse.Title, utils.VideoTitleCutoffs)
+	post.Summary = utils.NormalizeDescription(genaiResponse.Summary)
+	post.Category = &models.Category{Name: genaiResponse.Category}
+
+	_, err = s.postsRepo.UpdateGeneratedData(ctx, post)
+	if err != nil {
+		return fmt.Errorf(
+			"failed to update generated data on video %q; %v",
+			post.VideoID, err)
+	}
+
+	return nil
 }

@@ -49,7 +49,7 @@ func SetupTestRedis(ctx context.Context, cfg *config.Config) (Container, error) 
 
 	// Update config with container connection details
 	cfg.RedisHost = host
-	cfg.RedisPort = port.Int()
+	cfg.RedisPort = port.Num()
 
 	return &redisContainer{container}, nil
 }

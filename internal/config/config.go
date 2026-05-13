@@ -2,27 +2,17 @@ package config
 
 import (
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"log"
 	"math"
-	"os"
-	"path/filepath"
 	"runtime"
 	"time"
 
 	"github.com/caarlos0/env/v11"
-	"github.com/vlatan/video-store/internal/utils"
 )
 
 type Secret struct {
 	Bytes []byte
-}
-
-type Part struct {
-	Text     string `json:"text,omitempty"`
-	URL      string `json:"url,omitempty"`
-	MimeType string `json:"mime_type,omitempty"`
 }
 
 type Target string
@@ -66,7 +56,7 @@ type Config struct {
 	GeminiTimezone string `env:"GEMINI_TIMEZONE" envDefault:"America/Los_Angeles"`
 	GeminiRPD      int64  `env:"GEMINI_RPD" envDefault:"20"`
 	GeminiRPM      int64  `env:"GEMINI_RPM" envDefault:"5"`
-	GeminiPrompt   []Part
+	GeminiPrompt   string `env:"GEMINI_PROMPT"`
 
 	// Google OAuth settings
 	GoogleOAuthClientID     string   `env:"GOOGLE_OAUTH_CLIENT_ID"`
@@ -101,14 +91,14 @@ type Config struct {
 
 	// Redis
 	RedisHost     string        `env:"REDIS_HOST" envDefault:"localhost"`
-	RedisPort     int           `env:"REDIS_PORT" envDefault:"6379"`
+	RedisPort     uint16        `env:"REDIS_PORT" envDefault:"6379"`
 	RedisUsername string        `env:"REDIS_USERNAME"`
 	RedisPassword string        `env:"REDIS_PASSWORD"`
 	CacheTimeout  time.Duration `env:"CACHE_TIMEOUT" envDefault:"24h"`
 
 	// Postgres
 	DBHost     string `env:"DB_HOST" envDefault:"localhost"`
-	DBPort     int    `env:"DB_PORT" envDefault:"5432"`
+	DBPort     uint16 `env:"DB_PORT" envDefault:"5432"`
 	DBDatabase string `env:"DB_DATABASE"`
 	DBUsername string `env:"DB_USERNAME"`
 	DBPassword string `env:"DB_PASSWORD"`
@@ -148,15 +138,6 @@ func New() *Config {
 		}
 	}
 
-	// Load the genai prompt for the app and worker
-	if cfg.Target == App || cfg.Target == Worker {
-		prompt, err := loadPrompt()
-		if err != nil {
-			log.Fatalf("failed to load the prompt: %v", err)
-		}
-		cfg.GeminiPrompt = prompt
-	}
-
 	return &cfg
 }
 
@@ -172,35 +153,4 @@ func (s *Secret) UnmarshalText(text []byte) error {
 
 	s.Bytes = s.Bytes[:n]
 	return nil
-}
-
-// loadPromt loads the Gemini prompt from a file
-func loadPrompt() ([]Part, error) {
-
-	path := "prompt.json"
-	_, err := os.Stat(path)
-	if err != nil {
-		root, err := utils.GetProjectRoot()
-		if err != nil {
-			return nil, fmt.Errorf("error finding the root; %w", err)
-		}
-		path = filepath.Join(root, path)
-	}
-
-	root, err := os.OpenRoot(filepath.Dir(path))
-	if err != nil {
-		return nil, fmt.Errorf("error opening root: %w", err)
-	}
-	defer root.Close()
-
-	data, err := root.ReadFile(path)
-	if err != nil {
-		return nil, fmt.Errorf("error reading the prompt file; %w", err)
-	}
-
-	var parts []Part
-	if err := json.Unmarshal(data, &parts); err != nil {
-		return nil, fmt.Errorf("error unmarshaling the prompt file; %w", err)
-	}
-	return parts, nil
 }

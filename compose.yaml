@@ -105,6 +105,7 @@ services:
     environment:
       # Use Go version specified in the go.mod, not the local one
       - GOTOOLCHAIN=auto
+      
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
@@ -116,14 +117,13 @@ services:
       - ./go.sum:/src/go.sum:ro
       - ./Makefile:/src/Makefile:ro
       - ./.air.toml:/src/.air.toml:ro
-      - ./prompt.json:/src/prompt.json:ro
 
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:${PORT}/healthcheck" ]
       interval: 5s
       timeout: 5s
       retries: 3
-      start_period: 60s
+      start_period: 2m
 
     depends_on:
       postgres:
@@ -137,16 +137,19 @@ services:
       context: .
       args:
         TARGET: worker
+
     env_file: .env
     environment:
       - TARGET=worker
+
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
-      - ./prompt.json:/prompt.json:ro
+
     depends_on:
       postgres:
         condition: service_healthy
+
     profiles:
       - worker
 
@@ -156,17 +159,22 @@ services:
       context: .
       args:
         TARGET: backup
+
     env_file: .env
     environment:
       - TARGET=backup
+
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
+
     depends_on:
       postgres:
         condition: service_healthy
+
     profiles:
       - backup
+
 
 volumes:
   redis_data:

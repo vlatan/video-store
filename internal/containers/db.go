@@ -73,7 +73,7 @@ func SetupTestDB(ctx context.Context, cfg *config.Config, projectRoot string) (C
 
 	// Update config with container connection details
 	cfg.DBHost = host
-	cfg.DBPort = port.Int()
+	cfg.DBPort = port.Num()
 
 	// Setup database (migrations + seeding)
 	if err := setupDatabase(ctx, cfg); err != nil {

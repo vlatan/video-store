@@ -1,7 +1,19 @@
+* Possibly change the summary marker to regenerate one para summaries
+
+* Should post cascade delete if source is deleted?
+
+* Group videos by entity, create taxonomies
+* Create "Best of" landing pages for these clusters
+* Internal linking
+* Rating
+* User reviews
+
 * Uncomment and remove code in:
   - `internal/integrations/gemini/gemini.go`
   - `internal/worker/worker.go`
   - `internal/utils/utils.go`
+
+* Eventually remove tags and description from search vector
 
 * Write tests
 * Add slug input to page

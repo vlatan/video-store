@@ -1,10 +1,13 @@
-package yt
+package utils
 
 import (
 	"regexp"
 	"strings"
 	"unicode"
 )
+
+var VideoTitleCutoffs = []string{" I SLICE ", " // ", " | "}
+var SourceTitleCutoffs = []string{" // ", " | ", " - "}
 
 var bracketedContentRegex = regexp.MustCompile(`[\(\[].*?[\)\]]`)
 var urlRegex = regexp.MustCompile(`http\S+`)
@@ -78,7 +81,7 @@ var wierdDoubleQuotes = map[rune]bool{
 }
 
 // Normalize the YouTube video title
-func normalizeTitle(title string, cutOffs []string) string {
+func NormalizeTitle(title string, cutOffs []string) string {
 
 	// Cut off the title at certain substrings
 	for _, substring := range cutOffs {
@@ -179,7 +182,7 @@ func normalizeTitle(title string, cutOffs []string) string {
 }
 
 // Normalize tags, remove duplicate words
-func normalizeTags(tags []string, title, description string) (result string) {
+func NormalizeTags(tags []string, title, description string) (result string) {
 
 	// Assemble a map
 	seen := map[string]bool{
@@ -212,7 +215,7 @@ func normalizeTags(tags []string, title, description string) (result string) {
 }
 
 // normalizeDescription removes URLs and emails from a text
-func normalizeDescription(text string) string {
+func NormalizeDescription(text string) string {
 	text = urlRegex.ReplaceAllString(text, "")
 	return emailRegex.ReplaceAllString(text, "")
 }

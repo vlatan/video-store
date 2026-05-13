@@ -3,50 +3,23 @@ package gemini
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strings"
 
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/repositories/categories"
 	"github.com/vlatan/video-store/internal/utils"
 
 	"google.golang.org/genai"
 )
 
-// Gemini service
-type Service struct {
-	config  *config.Config
-	client  *genai.Client
-	limiter *GeminiLimiter
-}
-
-// Find category paragraph
-var catRegex = regexp.MustCompile(`(?i)<p>\s*CATEGORY:.*?</p>`)
-
-// Define the JSON schema for the response
-var schema = &genai.Schema{
-	Type: genai.TypeObject,
-	Properties: map[string]*genai.Schema{
-		"title": {
-			Type:        genai.TypeString,
-			Description: "Title",
-		},
-		"description": {
-			Type:        genai.TypeString,
-			Description: "Description",
-		},
-
-		"category": {
-			Type:        genai.TypeString,
-			Description: "Category",
-		},
-	},
-	Required: []string{"title", "description", "category"},
-}
-
 // Create new Gemini service
-func New(ctx context.Context, cfg *config.Config, rdb *rdb.Service) (*Service, error) {
+func New(
+	ctx context.Context,
+	cfg *config.Config,
+	redisService *rdb.Service,
+	catsRepo *categories.Repository) (*Service, error) {
 
 	// Configure new client
 	client, err := genai.NewClient(ctx, &genai.ClientConfig{APIKey: cfg.GeminiAPIKey})
@@ -54,16 +27,101 @@ func New(ctx context.Context, cfg *config.Config, rdb *rdb.Service) (*Service, e
 		return nil, err
 	}
 
-	limiter, err := NewLimiter(cfg, rdb)
+	// Configure new limiter
+	limiter, err := NewLimiter(cfg, redisService)
 	if err != nil {
 		return nil, err
 	}
 
-	return &Service{cfg, client, limiter}, nil
+	s := &Service{
+		config:  cfg,
+		client:  client,
+		limiter: limiter,
+	}
+
+	// Get the categories from cache or DB
+	categories, err := rdb.GetCachedData(
+		ctx,
+		redisService,
+		"categories",
+		s.config.CacheTimeout,
+		func() (models.Categories, error) {
+			return catsRepo.GetCategories(ctx)
+		},
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Save tle slice of categories to this service
+	s.categories = categories
+
+	// Extract the category names
+	catNames := make([]string, len(categories))
+	for i, cat := range categories {
+		catNames[i] = cat.Name
+	}
+
+	// Save the categories string to this service
+	s.catStr = strings.Join(catNames, ", ")
+
+	// Configure genai
+	temp, topP := float32(0.0), float32(0.1)
+	s.genaiConfig = &genai.GenerateContentConfig{
+		Temperature: &temp,
+		TopP:        &topP,
+
+		// Can't return JSON when using web search
+		// ResponseMIMEType:  "application/json",
+		SafetySettings:    safetySettings,
+		ResponseSchema:    s.responseSchema(),
+		SystemInstruction: s.systemInstruction(),
+
+		// MediaResolution:  genai.MediaResolutionLow,
+		Tools: []*genai.Tool{{GoogleSearch: &genai.GoogleSearch{}}},
+	}
+
+	return s, nil
 }
 
-// Generate content given a prompt
-func (s *Service) GenerateContent(
+// makeContents creates Genai contents
+func (s *Service) makeContents(video *models.Post) []*genai.Content {
+
+	// Populate user prompt custom text parts
+	var parts []*genai.Part
+
+	if prompt := s.config.GeminiPrompt; prompt != "" {
+		prompt = fmt.Sprintf("--- SUMMARY --- \n%s", prompt)
+		parts = append(parts, genai.NewPartFromText(prompt))
+	}
+
+	// Ready the rest of the parts
+	title := sanitizePrompt(video.Title)
+	description := sanitizePrompt(video.Description)
+	url := "https://www.youtube.com/watch?v=" + video.VideoID
+
+	// Create video data genai prompt parts
+	videoParts := []*genai.Part{
+		genai.NewPartFromText(fmt.Sprintf("--- TITLE --- \n%s", title)),
+		genai.NewPartFromText(fmt.Sprintf("--- DESCRIPTION --- \n%s", description)),
+		genai.NewPartFromText(fmt.Sprintf("--- YOUTUBE URL --- \n%s", url)),
+		genai.NewPartFromText(fmt.Sprintf(
+			"--- CATEGORY --- \nSelect ONE category from these categories: %s.",
+			s.catStr,
+		)),
+	}
+
+	// Append the video prompt parts
+	parts = append(parts, videoParts...)
+
+	return []*genai.Content{
+		genai.NewContentFromParts(parts, genai.RoleUser),
+	}
+}
+
+// Generate Genai content
+func (s *Service) generateContent(
 	ctx context.Context,
 	contents []*genai.Content,
 ) (*genai.GenerateContentResponse, error) {
@@ -77,14 +135,7 @@ func (s *Service) GenerateContent(
 		ctx,
 		s.config.GeminiModel,
 		contents,
-		&genai.GenerateContentConfig{
-			// Can't return JSON when using web search
-			// ResponseMIMEType: "application/json",
-			SafetySettings:  safetySettings,
-			ResponseSchema:  schema,
-			MediaResolution: genai.MediaResolutionLow,
-			Tools:           []*genai.Tool{{GoogleSearch: &genai.GoogleSearch{}}},
-		},
+		s.genaiConfig,
 	)
 
 	if err != nil {
@@ -105,17 +156,16 @@ func (s *Service) GenerateContent(
 func (s *Service) Summarize(
 	ctx context.Context,
 	video *models.Post,
-	categories models.Categories,
 	rc *utils.RetryConfig,
 ) (*models.GenaiResponse, error) {
 
 	// Make Genai contents
-	contents := s.makeContents(video, categories)
+	contents := s.makeContents(video)
 
 	// Make the API call
 	result, err := utils.Retry(
 		ctx, rc, func() (*genai.GenerateContentResponse, error) {
-			return s.GenerateContent(ctx, contents)
+			return s.generateContent(ctx, contents)
 		},
 	)
 
@@ -124,55 +174,11 @@ func (s *Service) Summarize(
 	}
 
 	// Parse the text output
-	response, err := parseResponse(result.Text(), categories)
-	if err != nil {
-		return nil, err
-	}
-
+	response := parseResponse(result.Text(), s.categories)
 	response.Summary += utils.UpdateMarker // REMOVE
 	response.Title = video.Title
 
 	return response, nil
-}
-
-// makeContents creates Genai contents
-func (s *Service) makeContents(video *models.Post, categories models.Categories) []*genai.Content {
-
-	// Populate user prompt custom text parts
-	var parts []*genai.Part
-	for _, part := range s.config.GeminiPrompt {
-		parts = append(parts, genai.NewPartFromText(part.Text))
-	}
-
-	// Create categories string
-	var catString string
-	for _, cat := range categories {
-		catString += cat.Name + ", "
-	}
-	catString = strings.TrimSuffix(catString, ", ")
-
-	// Ready the rest of the parts
-	title := sanitizePrompt(video.Title)
-	description := sanitizePrompt(video.Description)
-	url := "https://www.youtube.com/watch?v=" + video.VideoID
-
-	// Create hardcoded genai prompt parts
-	hardParts := []*genai.Part{
-		genai.NewPartFromText(fmt.Sprintf("--- TITLE --- \n%s", title)),
-		genai.NewPartFromText(fmt.Sprintf("--- DESCRIPTION --- \n%s", description)),
-		genai.NewPartFromText(fmt.Sprintf("--- YOUTUBE URL --- \n%s", url)),
-		genai.NewPartFromText(fmt.Sprintf(
-			"--- CATEGORIES --- \nSelect ONE category from these categories: %s.",
-			catString,
-		)),
-	}
-
-	// Append the hardcoded prompt parts
-	parts = append(parts, hardParts...)
-
-	return []*genai.Content{
-		genai.NewContentFromParts(parts, genai.RoleUser),
-	}
 }
 
 // AcquireQuota attempts to consume 1 request from the daily and minute buckets.
@@ -181,7 +187,7 @@ func (s *Service) AcquireQuota(ctx context.Context) error {
 	return s.limiter.AcquireQuota(ctx)
 }
 
-// Exhausted returns true if the daily limit has already been hit.
+// Exhausted returns true if the daily limit has already been hit
 func (s *Service) Exhausted(ctx context.Context) bool {
 	return s.limiter.Exhausted(ctx)
 }

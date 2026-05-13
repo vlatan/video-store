@@ -19,7 +19,7 @@ Once the video satisfies all of this criteria it is validated and whitelisted to
 
 Via a background process a function is periodically called which goes through the playlists (video sources) in the database and checks if there are new videos by using the YouTube API and automatically posts the videos if any. The app is autonomous in that regard. The admin can also manually post videos and of course add new video sources (playlists).
 
-Users can login via Google and Facebook. The app doesn't store passwords so naturally it makes use of the [Google's OAuth 2.0](https://developers.google.com/identity/protocols/oauth2) and [Facebook's Login Flow](https://developers.facebook.com/docs/facebook-login/guides/advanced/manual-flow).
+Users can login via Google, Github and LinkedIn. The app doesn't store passwords so naturally it makes use of their OAuth 2.0 protocol for authorization..
 
 
 ## Run the app locally
@@ -57,18 +57,15 @@ Also edit your local `/etc/hosts` and map `127.0.0.1` to `dev.domain.com` and `d
 
 In this example the app can be accessed at `https://dev.domain.com` and the traefik dashboard at `https://dash.dev.domain.com`.
 
-The secret keys (`CSRF_KEY`, `AUTH_KEY`, `ENCRYPTION_KEY`) need to be `base64` encoded. You can use the following recommended snippet from `gorilla/sessions` to generate different keys and encode them to `base64`:
+The secret keys (`CSRF_KEY`, `AUTH_KEY`, `ENCRYPTION_KEY`) in the `.env` file need to be `base64` encoded. You can use the following recommended snippet from `gorilla/sessions` to generate different keys and encode them to `base64`:
 ``` golang
 key := securecookie.GenerateRandomKey(32)
 log.Println(base64.StdEncoding.EncodeToString(key))
 ```
 
-For the Gemini prompt you'll need `prompt.json` file in the same directory. The app will look for it to load it. If missing the app will not start. You can checkout [prompt.example.json](prompt.example.json) for reference.
-
-
-Put this alias in your `~/.bash_aliases` file and run `build` whenever you want to build and run the app. The app will run with [air](https://github.com/air-verse/air) which will provide live reloading.
+Put this alias in your `~/.bash_aliases` file and run `dcup` whenever you want to build and run the app. The app will run with [air](https://github.com/air-verse/air) which will provide live reloading.
 ``` bash
-alias build='docker compose pull && docker compose up --build --detach'
+alias dcup='docker compose up --build --detach --remove-orphans'
 ```
 
 To see the app logs in real time use this:
@@ -76,7 +73,7 @@ To see the app logs in real time use this:
 docker compose logs -f app
 ```
 
-Put this alias in your `~/.bash_aliases` file too and run `down` to bring down the system.
+Put this alias in your `~/.bash_aliases` file too and run `dcdown` to bring down the system.
 ``` bash
 alias down='docker compose down --remove-orphans && docker system prune --force'
 ```
@@ -107,7 +104,7 @@ docker compose exec -it postgres psql -U xxx -d xxx
 
 ## Run the app in production
 
-No really a difference, except the `app`, `worker` or the `backup` will be built and run by the `Dockerfile` so you need the `TARGET` environment variable in production to specify which one you want to run, `app`, `worker` or `backup`. That is the host needs to be able to pass this `TARGET` variable as a build argument.
+No really a difference, the `app`, `worker` or the `backup` will be built by the same `Dockerfile` so you need the `TARGET` build argument to specify which one you want to build, as well as an environment variable since the code makes use of that too.
 
 
 ## Useful information for identifying memory leaks

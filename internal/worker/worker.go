@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"maps"
+	"math/rand"
 	"slices"
 	"strings"
 	"time"
@@ -66,7 +67,7 @@ func New(cfg *config.Config) *Worker {
 	}
 
 	// Create Gemini client
-	gemini, err := gemini.New(ctx, cfg, rdb)
+	gemini, err := gemini.New(ctx, cfg, rdb, catsRepo)
 	if err != nil {
 		log.Fatalf("couldn't create Gemini service: %v", err)
 	}
@@ -454,19 +455,6 @@ func (w *Worker) Run(ctx context.Context) error {
 		}
 	}
 
-	// GET ALL THE CATEGORIES FROM DATABASE
-	// ###################################################################
-
-	// Get the categories
-	categories, err := w.catsRepo.GetCategories(ctx)
-
-	if err != nil || len(categories) == 0 {
-		return fmt.Errorf(
-			"could not fetch the categories from DB; rows: %v; %w",
-			len(categories), err,
-		)
-	}
-
 	// INSERT THE NEW VIDEOS IN DATABASE
 	// ###################################################################
 
@@ -476,8 +464,7 @@ func (w *Worker) Run(ctx context.Context) error {
 
 	// Summarize new videos in place
 	_, err = w.summarizeVideos(
-		ctx, lock, categories,
-		geminiRetryConfig, newVideos,
+		ctx, lock, geminiRetryConfig, newVideos,
 	)
 
 	if err != nil {
@@ -515,8 +502,7 @@ func (w *Worker) Run(ctx context.Context) error {
 
 	// Summarize the existing videos in place
 	indexes, err := w.summarizeVideos(
-		ctx, lock, categories,
-		geminiRetryConfig, validDBVideos,
+		ctx, lock, geminiRetryConfig, validDBVideos,
 	)
 
 	if err != nil {
@@ -558,7 +544,6 @@ func (w *Worker) Run(ctx context.Context) error {
 func (w *Worker) summarizeVideos(
 	ctx context.Context,
 	lock *rdb.RedisLock,
-	categories models.Categories,
 	rc *utils.RetryConfig,
 	videos []*models.Post) ([]int, error) {
 
@@ -591,8 +576,11 @@ func (w *Worker) summarizeVideos(
 			continue
 		}
 
-		// Sleep 20s before making a genai request to avoid hitting the RPM quota
-		if err := utils.SleepContext(ctx, 20*time.Second); err != nil {
+		// Sleep 15-20 seconds.
+		// Min sleep needs to be 12s to avoid hitting the genai RPM quota.
+		minSleep, maxOffset := 15*time.Second, 5*time.Second
+		sleep := minSleep + time.Duration(rand.Intn(int(maxOffset))) // #nosec G404
+		if err := utils.SleepContext(ctx, sleep); err != nil {
 			return nil, err
 		}
 
@@ -605,7 +593,7 @@ func (w *Worker) summarizeVideos(
 		}
 
 		// Generate content using Gemini
-		genaiResponse, err := w.gemini.Summarize(ctx, video, categories, rc)
+		genaiResponse, err := w.gemini.Summarize(ctx, video, rc)
 
 		// Exit early if context ended
 		if utils.IsContextErr(err) {
@@ -622,7 +610,8 @@ func (w *Worker) summarizeVideos(
 		}
 
 		// Update the video in the given slice and record its index
-		videos[i].Summary = genaiResponse.Summary
+		videos[i].Title = utils.NormalizeTitle(genaiResponse.Title, utils.VideoTitleCutoffs)
+		videos[i].Summary = utils.NormalizeDescription(genaiResponse.Summary)
 		videos[i].Category = &models.Category{Name: genaiResponse.Category}
 		summarizedIndicies = append(summarizedIndicies, i)
 	}
