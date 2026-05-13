@@ -1,5 +1,5 @@
-* Possibly change the summary marker to regenerate one para summaries
-
+* Possibly change the summary marker to regenerate one paragraph summaries
+* Check if model can extract the original title
 * Should post cascade delete if source is deleted?
 
 * Group videos by entity, create taxonomies
