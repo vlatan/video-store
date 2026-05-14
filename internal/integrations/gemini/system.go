@@ -15,6 +15,7 @@ func (s *Service) systemInstruction() *genai.Content {
 		"If a fact cannot be stated with confidence, omit it entirely.",
 		"Do not use transitional or connective filler between facts.",
 		"State each fact as a direct sentence.",
+		"Do NOT make the sentences short and dry, though.",
 		"Do NOT mention the given media itself - write about its SUBJECT.",
 		"Avoid: flowery language, metaphors, purple prose, and generalized statements.",
 		"Do not include timestamps.",
