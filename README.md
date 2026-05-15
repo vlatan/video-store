@@ -197,9 +197,9 @@ Export the database URL in a variable. The empty space at the beginning is impor
  export DATABASE_URL='postgres://postgres:password@localhost:5432/example?sslmode=disable'
 ```
 
-You can bind a remote database locally if you have SSH access to the server.
+You can bind a remote database locally if you have SSH access to the server, that is postgres needs to listen on `5432` on the host, meaning if postgres is a docker container its port needs to be mapped to `127.0.0.1:5432` on the host.
 ``` bash
-ssh -L 5432:localhost:5432 user@ip
+ssh -NL 5432:127.0.0.1:5432 user@ip
 ```
 
 Check the current version.
