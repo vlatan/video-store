@@ -197,6 +197,11 @@ Export the database URL in a variable. The empty space at the beginning is impor
  export DATABASE_URL='postgres://postgres:password@localhost:5432/example?sslmode=disable'
 ```
 
+You can bind a remote database locally if you have SSH access to the server.
+``` bash
+ssh -L 5432:localhost:5432 user@ip
+```
+
 Check the current version.
 ``` bash
 migrate -path migrations -database $DATABASE_URL version
