@@ -1,8 +1,4 @@
-* Improve the resulting summary, it looks like it's written by a robot
-* Check if the model can extract the original title
-* Possibly change the summary marker to regenerate all summaries
 * Should post cascade delete if source is deleted?
-
 * Group videos by entity, create taxonomies
 * Create "Best of" landing pages for these clusters
 * Internal linking
