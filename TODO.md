@@ -1,4 +1,3 @@
-* Should post cascade delete if source is deleted?
 * Group videos by entity, create taxonomies
 * Create "Best of" landing pages for these clusters
 * Internal linking
