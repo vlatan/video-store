@@ -1,3 +1,5 @@
+* Adjust the prompt, the paragraphs are too long and sometimes empty.
+
 * Group videos by entity, create taxonomies
 * Create "Best of" landing pages for these clusters
 * Internal linking

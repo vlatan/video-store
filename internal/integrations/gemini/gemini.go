@@ -101,16 +101,14 @@ func (s *Service) makeContents(video *models.Post) []*genai.Content {
 	title := sanitizePrompt(video.Title)
 	description := sanitizePrompt(video.Description)
 	url := "https://www.youtube.com/watch?v=" + video.VideoID
+	category := fmt.Sprintf("Select ONE category from these categories: %s.", s.catStr)
 
 	// Create video data genai prompt parts
 	videoParts := []*genai.Part{
 		genai.NewPartFromText(fmt.Sprintf("--- TITLE --- \n%s", title)),
 		genai.NewPartFromText(fmt.Sprintf("--- DESCRIPTION --- \n%s", description)),
 		genai.NewPartFromText(fmt.Sprintf("--- YOUTUBE URL --- \n%s", url)),
-		genai.NewPartFromText(fmt.Sprintf(
-			"--- CATEGORY --- \nSelect ONE category from these categories: %s.",
-			s.catStr,
-		)),
+		genai.NewPartFromText(fmt.Sprintf("--- CATEGORY --- \n%s.", category)),
 	}
 
 	// Append the video prompt parts
