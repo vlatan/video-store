@@ -1,4 +1,4 @@
-* Adjust the prompt, the paragraphs are too long and sometimes empty.
+* Instruct the model to extract the original title
 
 * Group videos by entity, create taxonomies
 * Create "Best of" landing pages for these clusters
