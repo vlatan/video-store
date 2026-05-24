@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"strings"
 	"time"
 
@@ -89,29 +88,21 @@ func New(
 }
 
 // makeContents creates Genai contents
-func (s *Service) makeContents(video *models.Post) []*genai.Content {
+func (s *Service) makeContents(video *models.Post) ([]*genai.Content, error) {
 
-	// Ready the genai text parts
-	title := sanitizePrompt(video.Title)
-	description := sanitizePrompt(video.Description)
-	parts := []*genai.Part{
-		genai.NewPartFromText(fmt.Sprintf("--- TITLE --- \n%s", title)),
-		genai.NewPartFromText(fmt.Sprintf("--- DESCRIPTION --- \n%s", description)),
-	}
-
-	videoFps := 1.0
-	youtubeURL := "https://www.youtube.com/watch?v=" + video.VideoID
 	videoDuration, err := video.Duration.ISO.Seconds()
 	if err != nil || videoDuration == 0 {
-		log.Printf(
-			"Couldn't convert video %q duration %q to seconds; %v",
-			video.VideoID, videoDuration, err,
+		return nil, fmt.Errorf(
+			"couldn't convert video's %q duration %q to seconds; %w",
+			video.VideoID, video.Duration.ISO, err,
 		)
 	}
 
 	// Ready the video INTRO part
-	if videoDuration != 0 {
-		parts = append(parts, &genai.Part{
+	videoFps := 1.0
+	youtubeURL := "https://www.youtube.com/watch?v=" + video.VideoID
+	parts := []*genai.Part{
+		{
 			FileData: &genai.FileData{FileURI: youtubeURL, MIMEType: "video/*"},
 			VideoMetadata: &genai.VideoMetadata{
 				StartOffset: 0,
@@ -119,12 +110,12 @@ func (s *Service) makeContents(video *models.Post) []*genai.Content {
 				EndOffset: min(videoDuration, 40*60) * time.Second,
 				FPS:       &videoFps,
 			},
-		})
+		},
 	}
 
-	// Ready the video outro part
-	// Passing another genai part with the same YT URL will cause 500 error on the API
-	// This needs to be refactored if somehow used in the future
+	// Ready the video OUTRO part.
+	// Passing another genai part with the same URL will cause 500 error on the API.
+	// This needs to be refactored if somehow used in the future.
 
 	// 	parts = append(parts, &genai.Part{
 	// 		FileData: &genai.FileData{FileURI: youtubeURL, MIMEType: "video/*"},
@@ -135,9 +126,11 @@ func (s *Service) makeContents(video *models.Post) []*genai.Content {
 	// 		},
 	// 	})
 
-	return []*genai.Content{
+	genaiContent := []*genai.Content{
 		genai.NewContentFromParts(parts, genai.RoleUser),
 	}
+
+	return genaiContent, nil
 }
 
 // Generate Genai content
@@ -180,7 +173,10 @@ func (s *Service) Summarize(
 ) (*models.GenaiResponse, error) {
 
 	// Make Genai contents
-	contents := s.makeContents(video)
+	contents, err := s.makeContents(video)
+	if err != nil {
+		return nil, err
+	}
 
 	// Make the API call
 	result, err := utils.Retry(
