@@ -2,6 +2,7 @@ package gemini
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -72,14 +73,14 @@ func New(
 		Temperature: &temp,
 		TopP:        &topP,
 
-		// Can't return JSON when using web search
-		// ResponseMIMEType:  "application/json",
+		// Can't return JSON if using web search
+		ResponseMIMEType: "application/json",
+		// Tools: []*genai.Tool{{GoogleSearch: &genai.GoogleSearch{}}},
+
 		SafetySettings:    safetySettings,
 		ResponseSchema:    s.responseSchema(),
 		SystemInstruction: s.systemInstruction(),
-
-		// MediaResolution:  genai.MediaResolutionLow,
-		Tools: []*genai.Tool{{GoogleSearch: &genai.GoogleSearch{}}},
+		MediaResolution:   genai.MediaResolutionLow,
 	}
 
 	return s, nil
@@ -88,31 +89,17 @@ func New(
 // makeContents creates Genai contents
 func (s *Service) makeContents(video *models.Post) []*genai.Content {
 
-	// Populate user prompt custom text parts
-	var parts []*genai.Part
-
-	if prompt := s.config.GeminiPrompt; prompt != "" {
-		prompt = fmt.Sprintf("--- SUMMARY --- \n%s", prompt)
-		prompt = sanitizePrompt(prompt)
-		parts = append(parts, genai.NewPartFromText(prompt))
-	}
-
-	// Ready the rest of the parts
+	// Ready the genai API call parts
 	title := sanitizePrompt(video.Title)
 	description := sanitizePrompt(video.Description)
 	url := "https://www.youtube.com/watch?v=" + video.VideoID
-	category := fmt.Sprintf("Select ONE category from these categories: %s.", s.catStr)
 
 	// Create video data genai prompt parts
-	videoParts := []*genai.Part{
+	parts := []*genai.Part{
 		genai.NewPartFromText(fmt.Sprintf("--- TITLE --- \n%s", title)),
 		genai.NewPartFromText(fmt.Sprintf("--- DESCRIPTION --- \n%s", description)),
 		genai.NewPartFromText(fmt.Sprintf("--- YOUTUBE URL --- \n%s", url)),
-		genai.NewPartFromText(fmt.Sprintf("--- CATEGORY --- \n%s.", category)),
 	}
-
-	// Append the video prompt parts
-	parts = append(parts, videoParts...)
 
 	return []*genai.Content{
 		genai.NewContentFromParts(parts, genai.RoleUser),
@@ -172,12 +159,13 @@ func (s *Service) Summarize(
 		return nil, err
 	}
 
-	// Parse the text output
-	response := parseResponse(result.Text(), s.categories)
-	response.Summary += utils.UpdateMarker // REMOVE
-	response.Title = video.Title
+	var response models.GenaiResponse
+	if err = json.Unmarshal([]byte(result.Text()), &response); err != nil {
+		return nil, err
+	}
 
-	return response, nil
+	response.Summary += utils.UpdateMarker // REMOVE
+	return &response, nil
 }
 
 // AcquireQuota attempts to consume 1 request from the daily and minute buckets.
