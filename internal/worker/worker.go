@@ -611,8 +611,11 @@ func (w *Worker) summarizeVideos(
 		}
 
 		// Update the video in the given slice and record its index
-		videos[i].Title = utils.NormalizeTitle(genaiResponse.Title, utils.VideoTitleCutoffs)
-		videos[i].Summary = utils.NormalizeDescription(genaiResponse.Summary)
+		if genaiResponse.Title != "" {
+			videos[i].Title = genaiResponse.Title
+		}
+
+		videos[i].Summary = genaiResponse.Summary
 		videos[i].Category = &models.Category{Name: genaiResponse.Category}
 		summarizedIndicies = append(summarizedIndicies, i)
 	}

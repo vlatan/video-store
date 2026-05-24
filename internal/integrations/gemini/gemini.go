@@ -194,7 +194,10 @@ func (s *Service) Summarize(
 		return nil, err
 	}
 
+	response.Title = utils.NormalizeTitle(response.Title, utils.VideoTitleCutoffs)
+	response.Summary = utils.NormalizeDescription(response.Summary)
 	response.Summary += utils.UpdateMarker // REMOVE
+
 	return &response, nil
 }
 
