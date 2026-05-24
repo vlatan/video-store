@@ -14,9 +14,8 @@ import (
 type ISO8601Duration string
 
 type Duration struct {
-	ISO     ISO8601Duration `json:"iso,omitempty"`
-	Human   string          `json:"human,omitempty"`
-	Seconds int             `json:"seconds,omitempty"`
+	ISO   ISO8601Duration `json:"iso,omitempty"`
+	Human string          `json:"human,omitempty"`
 }
 
 type Post struct {
@@ -166,11 +165,12 @@ func (d ISO8601Duration) Human() (string, error) {
 }
 
 // Get video duration in seconds
-func (d ISO8601Duration) Seconds() (int, error) {
+func (d ISO8601Duration) Seconds() (time.Duration, error) {
 	t, err := d.compile()
 	if err != nil {
 		return 0, err
 	}
 
-	return t["h"]*60*60 + t["m"]*60 + t["s"], nil
+	seconds := t["h"]*60*60 + t["m"]*60 + t["s"]
+	return time.Duration(seconds) * time.Second, nil
 }
