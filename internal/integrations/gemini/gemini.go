@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"strings"
+	"time"
 
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
@@ -89,17 +91,49 @@ func New(
 // makeContents creates Genai contents
 func (s *Service) makeContents(video *models.Post) []*genai.Content {
 
-	// Ready the genai API call parts
+	// Ready the genai text parts
 	title := sanitizePrompt(video.Title)
 	description := sanitizePrompt(video.Description)
-	url := "https://www.youtube.com/watch?v=" + video.VideoID
-
-	// Create video data genai prompt parts
 	parts := []*genai.Part{
 		genai.NewPartFromText(fmt.Sprintf("--- TITLE --- \n%s", title)),
 		genai.NewPartFromText(fmt.Sprintf("--- DESCRIPTION --- \n%s", description)),
-		genai.NewPartFromText(fmt.Sprintf("--- YOUTUBE URL --- \n%s", url)),
 	}
+
+	videoFps := 1.0
+	youtubeURL := "https://www.youtube.com/watch?v=" + video.VideoID
+	videoDuration, err := video.Duration.ISO.Seconds()
+	if err != nil || videoDuration == 0 {
+		log.Printf(
+			"Couldn't convert video %q duration %q to seconds; %v",
+			video.VideoID, videoDuration, err,
+		)
+	}
+
+	// Ready the video INTRO part
+	if videoDuration != 0 {
+		parts = append(parts, &genai.Part{
+			FileData: &genai.FileData{FileURI: youtubeURL, MIMEType: "video/*"},
+			VideoMetadata: &genai.VideoMetadata{
+				StartOffset: 0,
+				// <= 40 minutes to keep within the 250k TPM quota
+				EndOffset: min(videoDuration, 40*60) * time.Second,
+				FPS:       &videoFps,
+			},
+		})
+	}
+
+	// Ready the video outro part
+	// Passing another genai part with the same YT URL will cause 500 error on the API
+	// This needs to be refactored if somehow used in the future
+
+	// 	parts = append(parts, &genai.Part{
+	// 		FileData: &genai.FileData{FileURI: youtubeURL, MIMEType: "video/*"},
+	// 		VideoMetadata: &genai.VideoMetadata{
+	// 			StartOffset: time.Duration(videoDuration-300) * time.Second,
+	// 			EndOffset:   time.Duration(videoDuration) * time.Second,
+	// 			FPS:         &videoFps,
+	// 		},
+	// 	})
 
 	return []*genai.Content{
 		genai.NewContentFromParts(parts, genai.RoleUser),
