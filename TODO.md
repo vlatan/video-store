@@ -1,4 +1,4 @@
-* Instruct the model to extract the original title
+* Add original title column in post table
 
 * Group videos by entity, create taxonomies
 * Create "Best of" landing pages for these clusters
