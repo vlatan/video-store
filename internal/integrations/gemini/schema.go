@@ -11,9 +11,16 @@ func (s *Service) responseSchema() *genai.Schema {
 	return &genai.Schema{
 		Type: genai.TypeObject,
 		Properties: map[string]*genai.Schema{
-			"title": {
+			"video_title": {
+				Type:        genai.TypeString,
+				Description: "The title of the given video. Use title case.",
+			},
+			"original_title": {
 				Type: genai.TypeString,
-				Description: "Extract the original title from the given media. " +
+				Description: "Extract the complete original title visually displayed on the video frames. " +
+					"If the title is split into a main title and a subtitle across different frames, " +
+					"combine them into a single string (e.g., 'Main Title: Subtitle'). " +
+					"You must read the pixels. Strictly ignore the audio track, transcript, and the metadata. " +
 					"Use title case.",
 			},
 			"summary": {
@@ -28,6 +35,6 @@ func (s *Service) responseSchema() *genai.Schema {
 				),
 			},
 		},
-		Required: []string{"title", "summary", "category"},
+		Required: []string{"video_title", "original_title", "summary", "category"},
 	}
 }

@@ -65,8 +65,8 @@ func (s *Service) generatePostContent(
 		)
 	}
 
-	if genaiResponse.Title != "" {
-		post.Title = genaiResponse.Title
+	if genaiResponse.OriginalTitle != "" {
+		post.Title = genaiResponse.OriginalTitle
 	}
 
 	post.Summary = genaiResponse.Summary

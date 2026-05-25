@@ -125,8 +125,9 @@ func (r *Repository) UpdatePlaylist(ctx context.Context, videoID, playlistID str
 const updateGeneretedDataQuery = `
 	UPDATE post
 	SET
-		category_id = (SELECT id FROM category WHERE name = $2),
-		summary = $3
+		title = $2,
+		category_id = (SELECT id FROM category WHERE name = $3),
+		summary = $4
 	WHERE video_id = $1
 `
 
@@ -136,6 +137,7 @@ func (r *Repository) UpdateGeneratedData(ctx context.Context, post *models.Post)
 		ctx,
 		updateGeneretedDataQuery,
 		post.VideoID,
+		post.Title,
 		post.Category.Name,
 		post.Summary,
 	)

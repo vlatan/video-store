@@ -611,8 +611,8 @@ func (w *Worker) summarizeVideos(
 		}
 
 		// Update the video in the given slice and record its index
-		if genaiResponse.Title != "" {
-			videos[i].Title = genaiResponse.Title
+		if genaiResponse.OriginalTitle != "" {
+			videos[i].Title = genaiResponse.OriginalTitle
 		}
 
 		videos[i].Summary = genaiResponse.Summary
