@@ -84,7 +84,7 @@ func (s *Service) ValidateYouTubeVideo(video *youtube.Video) error {
 	}
 
 	duration := models.ISO8601Duration(video.ContentDetails.Duration)
-	if seconds, _ := duration.Seconds(); seconds < 1800 {
+	if seconds, _ := duration.Seconds(); seconds < 30*time.Minute {
 		return errors.New("this video is too short")
 	}
 
