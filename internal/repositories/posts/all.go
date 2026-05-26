@@ -42,7 +42,7 @@ func (r *Repository) GetAllPosts(ctx context.Context) ([]*models.Post, error) {
 		var playlistID, summary, categoryName sql.NullString
 
 		// Scan each row
-		if err = rows.Scan(
+		err = rows.Scan(
 			&post.ID,
 			&post.VideoID,
 			&playlistID,
@@ -51,7 +51,9 @@ func (r *Repository) GetAllPosts(ctx context.Context) ([]*models.Post, error) {
 			&post.Duration,
 			&post.UploadDate,
 			&categoryName,
-		); err != nil {
+		)
+
+		if err != nil {
 			return nil, err
 		}
 
