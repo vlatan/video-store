@@ -7,7 +7,7 @@ import (
 )
 
 // Run starts the worker
-func (w *Worker) Run(ctx context.Context) error {
+func (w *Worker) Run(ctx context.Context) {
 
 	// Cleanup on exit
 	defer w.cleanup()
@@ -20,13 +20,7 @@ func (w *Worker) Run(ctx context.Context) error {
 	}()
 
 	log.Println("Worker running...")
-
-	for {
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		default:
-			return w.Process(ctx)
-		}
+	if err := w.Process(ctx); err != nil {
+		log.Printf("Worker error: %v", err)
 	}
 }

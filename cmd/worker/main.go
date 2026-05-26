@@ -35,12 +35,10 @@ func main() {
 	// Create the worker
 	worker, err := worker.New(cfg, ctx)
 	if err != nil {
-		defer log.Println(err)
+		log.Println(err)
 		return
 	}
 
 	// Run the worker
-	if err := worker.Run(ctx); err != nil {
-		log.Println(err)
-	}
+	worker.Run(ctx)
 }

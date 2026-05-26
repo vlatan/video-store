@@ -2,7 +2,6 @@ package worker
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -27,7 +26,7 @@ type Worker struct {
 	youtube     *yt.Service
 	gemini      *gemini.Service
 	lock        *rdb.RedisLock
-	cleanup     func() error
+	cleanup     func()
 }
 
 // Maximum videos to delete per run
@@ -82,14 +81,13 @@ func New(cfg *config.Config, ctx context.Context) (*Worker, error) {
 
 	// Acquire the lock.
 	// This is a blocking call until the lock is acquired.
-	log.Println("Acquiring lock...")
 	if err := w.lock.Lock(ctx); err != nil {
 		return nil, fmt.Errorf("failed to acquire Redis lock; %w", err)
 	}
 	log.Println("Lock acquired!")
 
 	// Register the cleanup function
-	w.cleanup = func() error {
+	w.cleanup = func() {
 
 		log.Println("Cleaning up...")
 
@@ -98,13 +96,16 @@ func New(cfg *config.Config, ctx context.Context) (*Worker, error) {
 
 		// Delete the Redis lock key
 		// Use ctx without cancel so Unlock isn't killed by the expired ctx.
-		lockErr := w.lock.Unlock(context.WithoutCancel(ctx))
+		if err := w.lock.Unlock(context.WithoutCancel(ctx)); err != nil {
+			log.Printf("Failed to release the Redis lock; %v", err)
+		}
 
 		// Close the Redis client
-		redisErr := rdb.Client.Close()
+		if err := rdb.Client.Close(); err != nil {
+			log.Printf("Failed to close the Redis client; %v", err)
+		}
 
-		defer log.Println("Done!")
-		return errors.Join(lockErr, redisErr)
+		log.Println("Done!")
 	}
 
 	return w, nil

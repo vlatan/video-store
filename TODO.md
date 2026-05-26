@@ -4,9 +4,6 @@
   That can be done with a method on the Post struct to fetch the official title.
   Also keep using the video title as video title.
 
-* Worker needs to release a lock if crashes or manually terminated.
-  In the gracefull studwon probably.
-
 * Group videos by entity, create taxonomies
 * Create "Best of" landing pages for these clusters
 * Internal linking
