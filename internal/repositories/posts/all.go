@@ -15,6 +15,7 @@ const getAllPostsQuery = `
 		playlist_id,
 		title,
 		summary,
+		duration,
 		upload_date,
 		cat.name AS category_name
 	FROM post
@@ -47,6 +48,7 @@ func (r *Repository) GetAllPosts(ctx context.Context) ([]*models.Post, error) {
 			&playlistID,
 			&post.Title,
 			&summary,
+			&post.Duration,
 			&post.UploadDate,
 			&categoryName,
 		); err != nil {
