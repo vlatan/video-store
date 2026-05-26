@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/utils"
 	"google.golang.org/api/youtube/v3"
@@ -370,9 +369,7 @@ func (w *Worker) Process(ctx context.Context) error {
 	newVideos := slices.Collect(maps.Values(ytVideosMap))
 
 	// Summarize new videos in place
-	_, err = w.summarizeVideos(
-		ctx, w.lock, geminiRetryConfig, newVideos,
-	)
+	_, err = w.summarizeVideos(ctx, geminiRetryConfig, newVideos)
 
 	if err != nil {
 		return err
@@ -408,9 +405,7 @@ func (w *Worker) Process(ctx context.Context) error {
 	// ###################################################################
 
 	// Summarize the existing videos in place
-	indexes, err := w.summarizeVideos(
-		ctx, w.lock, geminiRetryConfig, validDBVideos,
-	)
+	indexes, err := w.summarizeVideos(ctx, geminiRetryConfig, validDBVideos)
 
 	if err != nil {
 		return err
@@ -450,7 +445,6 @@ func (w *Worker) Process(ctx context.Context) error {
 // and returns ther indicies.
 func (w *Worker) summarizeVideos(
 	ctx context.Context,
-	lock *rdb.RedisLock,
 	rc *utils.RetryConfig,
 	videos []*models.Post) ([]int, error) {
 
@@ -493,7 +487,7 @@ func (w *Worker) summarizeVideos(
 		}
 
 		// Check if we still own the lock before an expensive API call
-		if err := lock.CheckLock(ctx); err != nil {
+		if err := w.lock.CheckLock(ctx); err != nil {
 			return nil, fmt.Errorf(
 				"this worker %s does not own the lock anymore; %w",
 				w.id, err,
