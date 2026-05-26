@@ -13,36 +13,31 @@ import (
 // Custom string type used to convert string duration to desirable format
 type ISO8601Duration string
 
-type Duration struct {
-	ISO   ISO8601Duration `json:"iso,omitempty"`
-	Human string          `json:"human,omitempty"`
-}
-
 type Post struct {
-	ID              int           `json:"id,omitempty"`
-	Provider        string        `json:"provider,omitempty"`
-	VideoID         string        `json:"video_id,omitempty"`
-	Title           string        `json:"title,omitempty"`
-	Srcset          string        `json:"srcset,omitempty"`
-	RawThumbs       []byte        `json:"-"`
-	Thumbnails      *Thumbnails   `json:"thumbnails,omitempty"`
-	Thumbnail       *Thumbnail    `json:"thumbnail,omitempty"`
-	Category        *Category     `json:"category,omitempty"`
-	Source          *Source       `json:"source,omitempty"`
-	Likes           int           `json:"likes,omitempty"`
-	Score           float64       `json:"score,omitempty"`
-	LikeButtonText  string        `json:"like_button_text,omitempty"`
-	Description     string        `json:"description,omitempty"`
-	Summary         string        `json:"summary,omitempty"`
-	HTMLSummary     template.HTML `json:"html_summary,omitempty"`
-	MetaDescription string        `json:"meta_description,omitempty"`
-	Tags            string        `json:"tags,omitempty"`
-	PlaylistID      string        `json:"playlist_id,omitempty"`
-	RelatedPosts    []Post        `json:"related_posts,omitempty"`
-	UploadDate      *time.Time    `json:"upload_date,omitempty"` // needs pointer to omit the date
-	CreatedAt       *time.Time    `json:"created_at,omitempty"`
-	UpdatedAt       *time.Time    `json:"updated_at,omitempty"`
-	Duration        *Duration     `json:"duration,omitempty"`
+	ID              int             `json:"id,omitempty"`
+	Provider        string          `json:"provider,omitempty"`
+	VideoID         string          `json:"video_id,omitempty"`
+	Title           string          `json:"title,omitempty"`
+	Srcset          string          `json:"srcset,omitempty"`
+	RawThumbs       []byte          `json:"-"`
+	Thumbnails      *Thumbnails     `json:"thumbnails,omitempty"`
+	Thumbnail       *Thumbnail      `json:"thumbnail,omitempty"`
+	Category        *Category       `json:"category,omitempty"`
+	Source          *Source         `json:"source,omitempty"`
+	Likes           int             `json:"likes,omitempty"`
+	Score           float64         `json:"score,omitempty"`
+	LikeButtonText  string          `json:"like_button_text,omitempty"`
+	Description     string          `json:"description,omitempty"`
+	Summary         string          `json:"summary,omitempty"`
+	HTMLSummary     template.HTML   `json:"html_summary,omitempty"`
+	MetaDescription string          `json:"meta_description,omitempty"`
+	Tags            string          `json:"tags,omitempty"`
+	PlaylistID      string          `json:"playlist_id,omitempty"`
+	RelatedPosts    []Post          `json:"related_posts,omitempty"`
+	UploadDate      *time.Time      `json:"upload_date,omitempty"` // needs pointer to omit the date
+	CreatedAt       *time.Time      `json:"created_at,omitempty"`
+	UpdatedAt       *time.Time      `json:"updated_at,omitempty"`
+	Duration        ISO8601Duration `json:"duration,omitempty"`
 
 	// Fields used when the current user is creating, faving or liking a post.
 	// Or when listing the current user faved posts.

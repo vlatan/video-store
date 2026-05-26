@@ -112,8 +112,7 @@ func (s *Service) NewYouTubePost(video *youtube.Video, playlistID string) *model
 	post.Tags = utils.NormalizeTags(video.Snippet.Tags, post.Title, post.Description)
 
 	// Get video duration
-	post.Duration = &models.Duration{}
-	post.Duration.ISO = models.ISO8601Duration(video.ContentDetails.Duration)
+	post.Duration = models.ISO8601Duration(video.ContentDetails.Duration)
 
 	// Parse the upload date into an object
 	parsedTime, _ := time.Parse("2006-01-02T15:04:05Z", video.Snippet.PublishedAt)

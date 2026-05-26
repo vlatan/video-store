@@ -85,7 +85,7 @@ func (r *Repository) InsertPost(ctx context.Context, post *models.Post) (int64, 
 		utils.ToNullString(post.Description),
 		utils.ToNullString(post.Summary),
 		utils.ToNullString(post.Tags),
-		post.Duration.ISO,
+		post.Duration,
 		post.UploadDate,
 		post.UserID,
 		utils.ToNullString(post.Category.Name),
@@ -122,7 +122,6 @@ const getSinglePostQuery = `
 func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.Post, error) {
 
 	var zero, post models.Post
-	post.Duration = &models.Duration{}
 
 	var thumbnails []byte
 	var summary, slug, name, playlistID, playlistTitle, channelTitle sql.NullString
@@ -142,7 +141,7 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.
 		&slug,
 		&name,
 		&post.UploadDate,
-		&post.Duration.ISO,
+		&post.Duration,
 	)
 
 	if err != nil {
@@ -172,10 +171,6 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.
 	// Define summary
 	post.Summary = utils.FromNullString(summary)
 	post.HTMLSummary = template.HTML(post.Summary) // #nosec G203
-
-	// Provide humand readable video duration
-	humanDuration, _ := post.Duration.ISO.Human()
-	post.Duration.Human = humanDuration
 
 	// Like button text
 	post.LikeButtonText = "Like"
