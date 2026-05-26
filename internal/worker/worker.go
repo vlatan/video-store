@@ -101,6 +101,7 @@ func (w *Worker) Run(ctx context.Context) error {
 
 	// Acquire the lock.
 	// This is a blocking call until the lock is acquired.
+	log.Println("Acquiring lock...")
 	if err := lock.Lock(ctx); err != nil {
 		return fmt.Errorf("failed to acquire Redis lock; %w", err)
 	}
