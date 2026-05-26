@@ -90,6 +90,14 @@ func New(
 // makeContents creates Genai contents
 func (s *Service) makeContents(video *models.Post) ([]*genai.Content, error) {
 
+	// Check if the video even has duration
+	if video.Duration == nil {
+		return nil, fmt.Errorf(
+			"the video %q doesn't have duration",
+			video.VideoID,
+		)
+	}
+
 	videoDuration, err := video.Duration.ISO.Seconds()
 	if err != nil || videoDuration == 0 {
 		return nil, fmt.Errorf(
