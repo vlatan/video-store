@@ -377,7 +377,6 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Assign the post to data
 	data.CurrentPost = &post
-	data.Title = post.Title
 
 	// Check whether the current user liked and/or faved the post
 	if data.CurrentUser.IsAuthenticated() {
@@ -394,7 +393,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 	// Ignore the error on related posts, no posts will be shown.
 	var relatedPosts models.Posts
 	if data.IsCurrentUserAdmin() {
-		relatedPosts, _ = s.postsRepo.GetRelatedPosts(r.Context(), post.Title)
+		relatedPosts, _ = s.postsRepo.GetRelatedPosts(r.Context(), post.GetTitle())
 	} else {
 		relatedPosts, _ = rdb.GetCachedData(
 			r.Context(),
@@ -402,7 +401,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 			fmt.Sprintf("post:%s:related_posts", videoID),
 			s.config.CacheTimeout,
 			func() (models.Posts, error) {
-				return s.postsRepo.GetRelatedPosts(r.Context(), post.Title)
+				return s.postsRepo.GetRelatedPosts(r.Context(), post.GetTitle())
 			},
 		)
 	}

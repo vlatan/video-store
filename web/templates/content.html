@@ -3,13 +3,14 @@
     {{ range $index, $item := .Posts.Items }}
     <a class="video-link" href="/video/{{ $item.VideoID }}/">
         <span class="video-img-wrap">
-            <img {{ if gt $index 7 }} loading="lazy" {{ end }} class="video-img" alt="{{ $item.Title }}"
+            <img {{ if gt $index 7 }} loading="lazy" {{ end }} class="video-img" alt="{{ $item.GetTitle }}"
                 src="{{ $item.Thumbnail.Url  }}" srcset="{{ $item.Srcset }}">
         </span>
-        <h2 class="video-title">{{ $item.Title }}</h2>
+        <h2 class="video-title">{{ $item.GetTitle }}</h2>
     </a>
     {{ end }}
 
+    <!-- Template used by Javascript to create posts dynamically -->
     <template id="post_template">
         <a class="video-link" href="#">
             <span class="video-img-wrap">

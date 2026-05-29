@@ -51,6 +51,14 @@ func (p *Post) UnmarshalBinary(data []byte) error {
 	return json.Unmarshal(data, p)
 }
 
+// GetTitle gets the post title preferring the original title first
+func (p *Post) GetTitle() string {
+	if p.OriginalTitle != "" {
+		return p.OriginalTitle
+	}
+	return p.Title
+}
+
 type Posts struct {
 	Title      string `json:"title,omitempty"`
 	Items      []Post `json:"items"`

@@ -29,13 +29,14 @@
         <span data-id="{{ .VideoID }}" class="remove-option">&times;</span>
         <a class="video-link" href="/video/{{ .VideoID }}/">
             <span class="video-img-wrap">
-                <img class="video-img" alt="{{ .Title }}" src="{{ .Thumbnail.Url  }}" srcset="{{ .Srcset }}">
+                <img class="video-img" alt="{{ .GetTitle }}" src="{{ .Thumbnail.Url  }}" srcset="{{ .Srcset }}">
             </span>
-            <h2 class="video-title">{{ .Title }}</h2>
+            <h2 class="video-title">{{ .GetTitle }}</h2>
         </a>
     </div>
     {{ end }}
 
+    <!-- Template used by Javascript to create posts dynamically -->
     <template id="post_template">
         <div class="video-block">
             <span class="remove-option">&times;</span>
