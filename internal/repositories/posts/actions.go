@@ -81,15 +81,15 @@ func (r *Repository) Unfave(ctx context.Context, userID int, videoID string) (in
 	return result.RowsAffected(), err
 }
 
-const updateTitleQuery = `
+const updateOriginalTitleQuery = `
 	UPDATE post
-	SET title = $2
+	SET originaL_title = $2
 	WHERE video_id = $1
 `
 
 // Update post title
 func (r *Repository) UpdateTitle(ctx context.Context, videoID, title string) (int64, error) {
-	result, err := r.db.Pool.Exec(ctx, updateTitleQuery, videoID, title)
+	result, err := r.db.Pool.Exec(ctx, updateOriginalTitleQuery, videoID, title)
 	return result.RowsAffected(), err
 }
 

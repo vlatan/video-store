@@ -1,4 +1,3 @@
-* Modify `UpdateTitle` metod in `posts` repository.
 * Use `original_title` on the rest of the `posts` repository
 
 * Group videos by entity, create taxonomies
