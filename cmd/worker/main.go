@@ -17,6 +17,7 @@ func main() {
 	// Print separator at the end
 	defer utils.LogPlainln(strings.Repeat("-", 70))
 
+	// Listen for OS interruption and termination signals
 	sigCtx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
@@ -33,12 +34,11 @@ func main() {
 	}()
 
 	// Create the worker
-	worker, err := worker.New(cfg, ctx)
+	w, err := worker.New(cfg, ctx)
 	if err != nil {
-		log.Println(err)
-		return
+		log.Fatal(err)
 	}
 
 	// Run the worker
-	worker.Run(ctx)
+	w.Run(ctx)
 }
