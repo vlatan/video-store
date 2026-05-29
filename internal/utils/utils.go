@@ -103,6 +103,13 @@ func Capitalize(s string) string {
 	return strings.ToUpper(s[:1]) + s[1:]
 }
 
+func ToNullInt64(i int) sql.NullInt64 {
+	if i == 0 {
+		return sql.NullInt64{Valid: false}
+	}
+	return sql.NullInt64{Int64: int64(i), Valid: true}
+}
+
 // ToNullString is a helper function to convert
 // a string to sql.NullString on db UPDATE/INSERT
 func ToNullString(s string) sql.NullString {

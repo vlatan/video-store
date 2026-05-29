@@ -43,7 +43,8 @@ const insertPostQuery = `
 		video_id, 
 		provider,
 		playlist_id, 
-		title, 
+		title,
+		original_title,
 		thumbnails, 
 		description, 
 		summary,
@@ -55,8 +56,8 @@ const insertPostQuery = `
 		playlist_db_id
 	)
 	VALUES (
-		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NULLIF($11, 0),
-		(SELECT id FROM category WHERE name = $12),
+		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12,
+		(SELECT id FROM category WHERE name = $13),
 		(SELECT id FROM playlist WHERE playlist_id = $3::varchar(50))
 	)
 `
@@ -81,13 +82,14 @@ func (r *Repository) InsertPost(ctx context.Context, post *models.Post) (int64, 
 		post.Provider,
 		utils.ToNullString(post.PlaylistID),
 		post.Title,
+		utils.ToNullString(post.OriginalTitle),
 		thumbnails,
 		utils.ToNullString(post.Description),
 		utils.ToNullString(post.Summary),
 		utils.ToNullString(post.Tags),
 		post.Duration,
 		post.UploadDate,
-		post.UserID,
+		utils.ToNullInt64(post.UserID),
 		utils.ToNullString(post.Category.Name),
 	)
 
@@ -98,7 +100,8 @@ const getSinglePostQuery = `
 	SELECT 
 		post.id,
 		post.video_id,
-		post.title, 
+		post.title,
+		post.original_title,
 		post.thumbnails,
 		COUNT(pl.id) AS likes,
 		post.description,
@@ -121,16 +124,25 @@ const getSinglePostQuery = `
 // Get single post from DB based on a video ID
 func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.Post, error) {
 
+	// Initialize vars
 	var zero, post models.Post
-
 	var thumbnails []byte
-	var summary, slug, name, playlistID, playlistTitle, channelTitle sql.NullString
+	var (
+		originalTitle,
+		summary,
+		categorySlug,
+		categoryName,
+		playlistID,
+		playlistTitle,
+		channelTitle sql.NullString
+	)
 
 	// Get single row from DB
 	err := r.db.Pool.QueryRow(ctx, getSinglePostQuery, videoID).Scan(
 		&post.ID,
 		&post.VideoID,
 		&post.Title,
+		&originalTitle,
 		&thumbnails,
 		&post.Likes,
 		&post.Description,
@@ -138,8 +150,8 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.
 		&playlistID,
 		&playlistTitle,
 		&channelTitle,
-		&slug,
-		&name,
+		&categorySlug,
+		&categoryName,
 		&post.UploadDate,
 		&post.Duration,
 	)
@@ -147,6 +159,9 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.
 	if err != nil {
 		return zero, err
 	}
+
+	// Assign the original title if any
+	post.OriginalTitle = utils.FromNullString(originalTitle)
 
 	// Gather playlist/channel info
 	post.Source = &models.Source{
@@ -162,10 +177,10 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.
 	}
 
 	// Define category if valid
-	if slug.Valid && name.Valid {
+	if categorySlug.Valid && categoryName.Valid {
 		post.Category = &models.Category{}
-		post.Category.Slug = utils.FromNullString(slug)
-		post.Category.Name = utils.FromNullString(name)
+		post.Category.Slug = utils.FromNullString(categorySlug)
+		post.Category.Name = utils.FromNullString(categoryName)
 	}
 
 	// Define summary
