@@ -89,7 +89,12 @@ const updateOriginalTitleQuery = `
 
 // Update post title
 func (r *Repository) UpdateTitle(ctx context.Context, videoID, title string) (int64, error) {
-	result, err := r.db.Pool.Exec(ctx, updateOriginalTitleQuery, videoID, title)
+	result, err := r.db.Pool.Exec(
+		ctx,
+		updateOriginalTitleQuery,
+		videoID,
+		utils.ToNullString(title),
+	)
 	return result.RowsAffected(), err
 }
 
