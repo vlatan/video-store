@@ -2,12 +2,14 @@ package posts
 
 import (
 	"context"
+	"database/sql"
 	"encoding/base64"
 	"errors"
 	"fmt"
 	"time"
 
 	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/utils"
 )
 
 const getUserFavedPostsQuery = `
@@ -16,6 +18,7 @@ const getUserFavedPostsQuery = `
 			p.id,
 			p.video_id,
 			p.title,
+			p.original_title,
 			p.thumbnails,
 			COUNT(pl.id) AS likes,
 			%s AS total_results,
@@ -82,12 +85,14 @@ func (r *Repository) GetUserFavedPosts(
 	for rows.Next() {
 		var post models.Post
 		var totalNum int
+		var originalTitle sql.NullString
 
 		// Paste post from row to struct, thumbnails in a separate var
 		if err = rows.Scan(
 			&post.ID,
 			&post.VideoID,
 			&post.Title,
+			&originalTitle,
 			&post.RawThumbs,
 			&post.Likes,
 			&totalNum,
@@ -97,11 +102,12 @@ func (r *Repository) GetUserFavedPosts(
 			return nil, err
 		}
 
+		// Assing the original title
+		post.OriginalTitle = utils.FromNullString(originalTitle)
 		// Include the processed post in the result
 		posts.Items = append(posts.Items, post)
-		if totalNum != 0 {
-			posts.TotalNum = totalNum
-		}
+		// Assign the total num of posts
+		posts.TotalNum = max(posts.TotalNum, totalNum)
 	}
 
 	// If error during iteration
