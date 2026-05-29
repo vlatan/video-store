@@ -14,6 +14,7 @@ const getAllPostsQuery = `
 		video_id,
 		playlist_id,
 		title,
+		original_title,
 		summary,
 		duration,
 		upload_date,
@@ -39,7 +40,7 @@ func (r *Repository) GetAllPosts(ctx context.Context) ([]*models.Post, error) {
 	var posts []*models.Post
 	for rows.Next() {
 		var post models.Post
-		var playlistID, summary, categoryName sql.NullString
+		var playlistID, originalTitle, summary, categoryName sql.NullString
 
 		// Scan each row
 		err = rows.Scan(
@@ -47,6 +48,7 @@ func (r *Repository) GetAllPosts(ctx context.Context) ([]*models.Post, error) {
 			&post.VideoID,
 			&playlistID,
 			&post.Title,
+			&originalTitle,
 			&summary,
 			&post.Duration,
 			&post.UploadDate,
@@ -57,7 +59,9 @@ func (r *Repository) GetAllPosts(ctx context.Context) ([]*models.Post, error) {
 			return nil, err
 		}
 
+		// Asign values
 		post.PlaylistID = utils.FromNullString(playlistID)
+		post.OriginalTitle = utils.FromNullString(originalTitle)
 		post.Summary = utils.FromNullString(summary)
 		post.Category = &models.Category{Name: utils.FromNullString(categoryName)}
 
