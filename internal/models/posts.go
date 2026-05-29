@@ -2,9 +2,7 @@ package models
 
 import (
 	"encoding/json"
-	"fmt"
 	"html/template"
-	"strings"
 	"time"
 )
 
@@ -69,46 +67,4 @@ func (p Posts) MarshalBinary() (data []byte, err error) {
 // UnmarshalBinary implements the encoding.BinaryUnmarshaler interface
 func (p *Posts) UnmarshalBinary(data []byte) error {
 	return json.Unmarshal(data, p)
-}
-
-// Create a srcset string from a struct of thumbnails
-func (t *Thumbnails) Srcset(maxWidth int64) (result string) {
-
-	thumbs := []*Thumbnail{
-		t.Default,
-		t.Medium,
-		t.High,
-		t.Standard,
-		t.Maxres,
-	}
-
-	for _, thumb := range thumbs {
-		if thumb != nil && thumb.Width != 0 && thumb.Width <= maxWidth {
-			result += fmt.Sprintf("%s %dw, ", thumb.Url, thumb.Width)
-		}
-	}
-
-	return strings.TrimSuffix(result, ", ")
-}
-
-// Get the thumbnail with maximum width
-func (t *Thumbnails) MaxThumb() (result *Thumbnail) {
-
-	thumbs := []*Thumbnail{
-		t.Default,
-		t.Medium,
-		t.High,
-		t.Standard,
-		t.Maxres,
-	}
-
-	var maxWidth int64
-	for _, thumb := range thumbs {
-		if thumb != nil && thumb.Width != 0 && thumb.Width > maxWidth {
-			result = thumb
-			maxWidth = thumb.Width
-		}
-	}
-
-	return result
 }

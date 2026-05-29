@@ -1,6 +1,11 @@
 package models
 
-import "google.golang.org/api/youtube/v3"
+import (
+	"fmt"
+	"strings"
+
+	"google.golang.org/api/youtube/v3"
+)
 
 type Thumbnail = youtube.Thumbnail
 
@@ -10,6 +15,48 @@ type Thumbnails struct {
 	High     *Thumbnail `json:"high,omitempty"`
 	Standard *Thumbnail `json:"standard,omitempty"`
 	Maxres   *Thumbnail `json:"maxres,omitempty"`
+}
+
+// Create a srcset string from a struct of thumbnails
+func (t *Thumbnails) Srcset(maxWidth int64) (result string) {
+
+	thumbs := []*Thumbnail{
+		t.Default,
+		t.Medium,
+		t.High,
+		t.Standard,
+		t.Maxres,
+	}
+
+	for _, thumb := range thumbs {
+		if thumb != nil && thumb.Width != 0 && thumb.Width <= maxWidth {
+			result += fmt.Sprintf("%s %dw, ", thumb.Url, thumb.Width)
+		}
+	}
+
+	return strings.TrimSuffix(result, ", ")
+}
+
+// Get the thumbnail with maximum width
+func (t *Thumbnails) MaxThumb() (result *Thumbnail) {
+
+	thumbs := []*Thumbnail{
+		t.Default,
+		t.Medium,
+		t.High,
+		t.Standard,
+		t.Maxres,
+	}
+
+	var maxWidth int64
+	for _, thumb := range thumbs {
+		if thumb != nil && thumb.Width != 0 && thumb.Width > maxWidth {
+			result = thumb
+			maxWidth = thumb.Width
+		}
+	}
+
+	return result
 }
 
 // ThumbnailEqual checks two thumbnails equality
