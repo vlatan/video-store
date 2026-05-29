@@ -2,12 +2,14 @@ package posts
 
 import (
 	"context"
+	"database/sql"
 	"encoding/base64"
 	"errors"
 	"fmt"
 	"time"
 
 	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/utils"
 )
 
 const getHomePostsQuery = `
@@ -15,7 +17,8 @@ const getHomePostsQuery = `
 		SELECT
 			post.id,
 			video_id, 
-			title, 
+			title,
+			original_title, 
 			thumbnails,
 			COUNT(pl.id) AS likes,
 			upload_date
@@ -45,6 +48,7 @@ func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (
 	}
 
 	// Build args and SQL parts
+	// No cursor on the first page, no need for total and the WHERE clause
 	if cursor != "" {
 
 		cursorParts, err := decodeCursor(cursor)
@@ -84,16 +88,23 @@ func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (
 	for rows.Next() {
 
 		var post models.Post
-		if err = rows.Scan(
+		var originalTitle sql.NullString
+
+		err = rows.Scan(
 			&post.ID,
 			&post.VideoID,
 			&post.Title,
+			&originalTitle,
 			&post.RawThumbs,
 			&post.Likes,
 			&post.UploadDate,
-		); err != nil {
+		)
+
+		if err != nil {
 			return zero, err
 		}
+
+		post.OriginalTitle = utils.FromNullString(originalTitle)
 		posts.Items = append(posts.Items, post)
 	}
 
