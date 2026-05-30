@@ -105,7 +105,6 @@ func (s *Service) makeContents(video *models.Post) ([]*genai.Content, error) {
 		{
 			FileData: &genai.FileData{FileURI: youtubeURL, MIMEType: "video/*"},
 			VideoMetadata: &genai.VideoMetadata{
-				StartOffset: 0,
 				// <= 40 minutes to keep within the 250k TPM quota
 				EndOffset: min(videoDuration, 40*60) * time.Second,
 				FPS:       &videoFps,
@@ -121,7 +120,6 @@ func (s *Service) makeContents(video *models.Post) ([]*genai.Content, error) {
 	// 		FileData: &genai.FileData{FileURI: youtubeURL, MIMEType: "video/*"},
 	// 		VideoMetadata: &genai.VideoMetadata{
 	// 			StartOffset: time.Duration(videoDuration-300) * time.Second,
-	// 			EndOffset:   time.Duration(videoDuration) * time.Second,
 	// 			FPS:         &videoFps,
 	// 		},
 	// 	})
