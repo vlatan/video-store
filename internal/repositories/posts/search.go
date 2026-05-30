@@ -2,6 +2,7 @@ package posts
 
 import (
 	"context"
+	"database/sql"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -9,6 +10,7 @@ import (
 	"time"
 
 	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/utils"
 )
 
 const searchPostsQuery = `
@@ -24,13 +26,15 @@ const searchPostsQuery = `
 			p.id,
 			p.video_id,
 			p.title,
+			p.original_title,
 			p.thumbnails,
 			COUNT(pl.id) AS likes,
 			%s AS total_results,
 			p.upload_date,
 			(ts_rank(p.search_vector, st.and_query, 32) * 2) + 
 			ts_rank(p.search_vector, st.or_query, 32) +
-			(similarity(p.title, st.raw_query) * 0.5) AS score
+			(similarity(p.title, st.raw_query) * 0.25) + 
+			(COALESCE(similarity(p.original_title, st.raw_query), 0) * 0.25) AS score
 		FROM post AS p
 		CROSS JOIN search_terms AS st
 		LEFT JOIN post_like AS pl ON pl.post_id = p.id
@@ -99,6 +103,7 @@ func (r *Repository) SearchPosts(
 	var posts models.Posts
 	for rows.Next() {
 		var post models.Post
+		var originalTitle sql.NullString
 		var totalNum int
 
 		// Paste post from row to struct, thumbnails in a separate var
@@ -106,6 +111,7 @@ func (r *Repository) SearchPosts(
 			&post.ID,
 			&post.VideoID,
 			&post.Title,
+			&originalTitle,
 			&post.RawThumbs,
 			&post.Likes,
 			&totalNum,
@@ -116,6 +122,7 @@ func (r *Repository) SearchPosts(
 		}
 
 		// Include the processed post in the result
+		post.OriginalTitle = utils.FromNullString(originalTitle)
 		posts.Items = append(posts.Items, post)
 		if totalNum != 0 {
 			posts.TotalNum = totalNum

@@ -24,32 +24,33 @@ func New(db *database.Service, config *config.Config) *Repository {
 func (r *Repository) GetRelatedPosts(ctx context.Context, title string) (models.Posts, error) {
 
 	var zero, posts models.Posts
+	nrp := r.config.NumRelatedPosts
 
 	// Search the DB for posts
-	searchedPosts, err := r.SearchPosts(ctx, title, r.config.NumRelatedPosts+1, "")
+	searchedPosts, err := r.SearchPosts(ctx, title, nrp+1, "")
 
 	if err != nil {
 		return zero, err
 	}
 
 	for _, sp := range searchedPosts.Items {
-		if sp.Title != title {
+		if sp.GetTitle() != title {
 			posts.Items = append(posts.Items, sp)
 		}
 	}
 
-	if len(posts.Items) > r.config.NumRelatedPosts {
-		posts.Items = posts.Items[:r.config.NumRelatedPosts]
+	if len(posts.Items) > nrp {
+		posts.Items = posts.Items[:nrp]
 		return posts, nil
 	}
 
-	if len(posts.Items) == r.config.NumRelatedPosts {
+	if len(posts.Items) == nrp {
 		return posts, nil
 	}
 
 	// Get some random posts if not enough related posts
-	if len(posts.Items) < r.config.NumRelatedPosts {
-		limit := r.config.NumRelatedPosts - len(posts.Items)
+	if len(posts.Items) < nrp {
+		limit := nrp - len(posts.Items)
 		randomPosts, err := r.GetRandomPosts(ctx, title, limit)
 		if err != nil {
 			return zero, err
