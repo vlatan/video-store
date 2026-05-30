@@ -1,4 +1,4 @@
-* Use `original_title` on the rest of the `posts` repository
+* Maybe use another gemini API call for the credits
 
 * Group videos by entity, create taxonomies
 * Create "Best of" landing pages for these clusters
