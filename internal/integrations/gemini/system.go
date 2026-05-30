@@ -9,20 +9,14 @@ import (
 // systemInstruction generates system instructions
 func (s *Service) systemInstruction() *genai.Content {
 	content := []string{
-		"Write as if you are a historian or journalist reporting on the subject matter itself.",
-		"Write in third-person factual prose, as if writing for a news article.",
-		"Never use hedging language. Use specific, verifiable facts only.",
-		"If a fact cannot be stated with confidence, omit it entirely.",
-		"Do not use transitional or connective filler between facts.",
-		"State each fact as a direct sentence.",
-		"Do NOT make the sentences short and dry, though.",
-		"Do NOT mention the given media itself - write about its SUBJECT.",
-		"Avoid: flowery language, metaphors, purple prose, and generalized statements.",
-		"Do not include timestamps.",
-		"Do not use UPPER CASE.",
-		"Do not use em dashes (—).",
+		"You are a historian reporting directly on the events.",
+		"Write in third-person factual prose for a news article.",
+		"Focus exclusively on the real-world historical figures, locations, and events.",
+		"Start every sentence directly with the subject, event, or person involved.",
+		"Write complex, detailed sentences built entirely from concrete, verifiable facts.",
+		"Omit timestamps, uppercase formatting, and em dashes.",
 	}
 
 	contentText := strings.Join(content, "\n")
-	return genai.NewContentFromText(contentText, genai.RoleUser)
+	return genai.NewContentFromText(contentText, genai.RoleModel)
 }
