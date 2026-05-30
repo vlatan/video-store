@@ -9,13 +9,13 @@
 {{ end }}
 
 {{ define "extra_meta" }}
-<meta property='og:title' content='{{ .Title }}'>
+<meta property='og:title' content='{{ .CurrentPost.GetTitle }}'>
 <meta property='og:type' content='video.movie'>
 <meta property='og:url' content='{{ .CanonicalURL }}'>
 <meta property='og:image' content='{{ .CurrentPost.Thumbnail.Url  }}'>
 <meta name='thumbnail' content='{{ .CurrentPost.Thumbnail.Url  }}'>
 
-<meta name="twitter:title" content="{{ .Title }}">
+<meta name="twitter:title" content="{{ .CurrentPost.GetTitle }}">
 <meta property="twitter:url" content="{{ .CanonicalURL }}">
 <meta name="twitter:image" content="{{ .CurrentPost.Thumbnail.Url  }}">
 
@@ -27,7 +27,7 @@
 {{ end }}
 
 {{ define "title_tag" }}
-{{ .Title }} - {{ .Config.AppName }}
+{{ .CurrentPost.GetTitle }} - {{ .Config.AppName }}
 {{ end }}
 
 {{ define "content" }}
@@ -38,6 +38,7 @@
 	{{ end }}
 	<div class="video-content">
 		<div class="player" itemprop="video" itemscope itemtype="https://schema.org/VideoObject">
+			<!-- The actual video title for the video object schema -->
 			<meta itemprop="name" content="{{ .CurrentPost.Title }}">
 			<meta itemprop="thumbnailUrl" content="{{ .CurrentPost.Thumbnail.Url  }}">
 			<meta itemprop="embedUrl" content="https://www.youtube-nocookie.com/embed/{{ .CurrentPost.VideoID }}">
@@ -46,7 +47,7 @@
 			{{ end }}
 			<meta itemprop="uploadDate" content='{{ .CurrentPost.UploadDate.Format "2006-01-02T15:04:05Z07:00" }}'>
 			<div class="player-content" id="{{ .CurrentPost.VideoID }}">
-				<img alt="{{ .CurrentPost.Title }}" src="{{ .CurrentPost.Thumbnail.Url  }}"
+				<img alt="{{ .CurrentPost.GetTitle }}" src="{{ .CurrentPost.Thumbnail.Url  }}"
 					srcset="{{ .CurrentPost.Srcset }}">
 				<svg role="img" aria-label="Play" xmlns="http://www.w3.org/2000/svg" class="play-icon"
 					viewBox="0 0 24 24">
@@ -63,7 +64,7 @@
 
 		<header class="metadata">
 			<div class="metadata-block">
-				<h1 class="video-title" itemprop="name">{{ .CurrentPost.Title }}</h1>
+				<h1 class="video-title" itemprop="name">{{ .CurrentPost.GetTitle }}</h1>
 				<div class="social">
 					{{ if .CurrentUser.IsAuthenticated }}
 					{{ if .CurrentPost.UserLiked }}
@@ -156,9 +157,9 @@
 			{{ range .CurrentPost.RelatedPosts }}
 			<a href="/video/{{ .VideoID }}/" class="related-video">
 				<img class="related-img" src="{{ .Thumbnail.Url  }}" width="{{ .Thumbnail.Width }}"
-					height="{{ .Thumbnail.Height }}" alt="{{ .Title }}">
+					height="{{ .Thumbnail.Height }}" alt="{{ .GetTitle }}">
 				<h2 class="related-post-title">
-					{{ .Title }}
+					{{ .GetTitle }}
 				</h2>
 			</a>
 			{{ end }}

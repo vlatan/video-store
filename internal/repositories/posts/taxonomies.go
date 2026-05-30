@@ -12,7 +12,8 @@ const getCategoryPostsQuery = `
 			c.name AS category_title,
 			post.id,
 			post.video_id, 
-			post.title, 
+			post.title,
+			post.original_title,
 			post.thumbnails,
 			COUNT(pl.id) AS likes,
 			post.upload_date
@@ -57,7 +58,8 @@ const getSourcePostsQuery = `
 			p.title AS playlist_title,
 			post.id,
 			post.video_id, 
-			post.title, 
+			post.title,
+			post.original_title,
 			post.thumbnails,
 			COUNT(pl.id) AS likes,
 			post.upload_date

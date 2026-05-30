@@ -2,12 +2,14 @@ package posts
 
 import (
 	"context"
+	"database/sql"
 	"encoding/base64"
 	"errors"
 	"fmt"
 	"time"
 
 	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/utils"
 )
 
 const getUserFavedPostsQuery = `
@@ -16,6 +18,7 @@ const getUserFavedPostsQuery = `
 			p.id,
 			p.video_id,
 			p.title,
+			p.original_title,
 			p.thumbnails,
 			COUNT(pl.id) AS likes,
 			%s AS total_results,
@@ -43,14 +46,15 @@ func (r *Repository) GetUserFavedPosts(
 	// The user ID and the limit are the first two arguments ($1 and $2)
 	// Peek for one post beoynd the limit
 	var where string
-	total := "COUNT(*) OVER()"
+	totalCount := "COUNT(*) OVER()"
 	args := []any{userID, r.config.PostsPerPage + 1}
 
 	// Build args and SQL parts
+	// No cursor on the first page, no need for total and the WHERE clause
 	if cursor != "" {
 
 		// SQL parts
-		total = "0"
+		totalCount = "0"
 		where = "WHERE (when_faved, likes, upload_date, id) < ($3, $4, $5, $6)"
 
 		cursorParts, err := decodeCursor(cursor)
@@ -65,7 +69,7 @@ func (r *Repository) GetUserFavedPosts(
 		args = append(args, cursorParts[0], cursorParts[1], cursorParts[2], cursorParts[3])
 	}
 
-	query := fmt.Sprintf(getUserFavedPostsQuery, total, where)
+	query := fmt.Sprintf(getUserFavedPostsQuery, totalCount, where)
 
 	// Get rows from DB
 	rows, err := r.db.Pool.Query(ctx, query, args...)
@@ -81,12 +85,14 @@ func (r *Repository) GetUserFavedPosts(
 	for rows.Next() {
 		var post models.Post
 		var totalNum int
+		var originalTitle sql.NullString
 
 		// Paste post from row to struct, thumbnails in a separate var
 		if err = rows.Scan(
 			&post.ID,
 			&post.VideoID,
 			&post.Title,
+			&originalTitle,
 			&post.RawThumbs,
 			&post.Likes,
 			&totalNum,
@@ -96,11 +102,12 @@ func (r *Repository) GetUserFavedPosts(
 			return nil, err
 		}
 
+		// Assing the original title
+		post.OriginalTitle = utils.FromNullString(originalTitle)
 		// Include the processed post in the result
 		posts.Items = append(posts.Items, post)
-		if totalNum != 0 {
-			posts.TotalNum = totalNum
-		}
+		// Assign the total num of posts
+		posts.TotalNum = max(posts.TotalNum, totalNum)
 	}
 
 	// If error during iteration

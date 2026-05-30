@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/utils"
 )
 
 const userActionsQuery = `
@@ -80,15 +81,20 @@ func (r *Repository) Unfave(ctx context.Context, userID int, videoID string) (in
 	return result.RowsAffected(), err
 }
 
-const updateTitleQuery = `
+const updateOriginalTitleQuery = `
 	UPDATE post
-	SET title = $2
+	SET originaL_title = $2
 	WHERE video_id = $1
 `
 
 // Update post title
 func (r *Repository) UpdateTitle(ctx context.Context, videoID, title string) (int64, error) {
-	result, err := r.db.Pool.Exec(ctx, updateTitleQuery, videoID, title)
+	result, err := r.db.Pool.Exec(
+		ctx,
+		updateOriginalTitleQuery,
+		videoID,
+		utils.ToNullString(title),
+	)
 	return result.RowsAffected(), err
 }
 
@@ -125,7 +131,7 @@ func (r *Repository) UpdatePlaylist(ctx context.Context, videoID, playlistID str
 const updateGeneretedDataQuery = `
 	UPDATE post
 	SET
-		title = $2,
+		original_title = $2,
 		category_id = (SELECT id FROM category WHERE name = $3),
 		summary = $4
 	WHERE video_id = $1
@@ -133,14 +139,16 @@ const updateGeneretedDataQuery = `
 
 // Update post description
 func (r *Repository) UpdateGeneratedData(ctx context.Context, post *models.Post) (int64, error) {
+
 	result, err := r.db.Pool.Exec(
 		ctx,
 		updateGeneretedDataQuery,
 		post.VideoID,
-		post.Title,
+		utils.ToNullString(post.OriginalTitle),
 		post.Category.Name,
 		post.Summary,
 	)
+
 	return result.RowsAffected(), err
 }
 

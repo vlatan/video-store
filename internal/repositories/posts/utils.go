@@ -76,7 +76,7 @@ func (r *Repository) queryTaxonomyPosts(
 	var posts models.Posts
 	for rows.Next() {
 		var post models.Post
-		var playlistTitle sql.NullString
+		var originalTitle, playlistTitle sql.NullString
 
 		// Paste post from row to struct, thumbnails in a separate var
 		if err = rows.Scan(
@@ -84,6 +84,7 @@ func (r *Repository) queryTaxonomyPosts(
 			&post.ID,
 			&post.VideoID,
 			&post.Title,
+			&originalTitle,
 			&post.RawThumbs,
 			&post.Likes,
 			&post.UploadDate,
@@ -91,6 +92,7 @@ func (r *Repository) queryTaxonomyPosts(
 			return zero, err
 		}
 
+		post.OriginalTitle = utils.FromNullString(originalTitle)
 		posts.Title = utils.FromNullString(playlistTitle)
 
 		// Include the processed post in the result

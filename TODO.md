@@ -1,8 +1,4 @@
-* Add `original_title` column in the `post` table.
-  That will entail changing almost all queries to SELECT/UPSERT the original title too.
-  As well as adding mechanism that if the there's no original title to default to the video title.
-  That can be done with a method on the Post struct to fetch the official title.
-  Also keep using the video title as video title.
+* Maybe use another gemini API call for the credits
 
 * Group videos by entity, create taxonomies
 * Create "Best of" landing pages for these clusters

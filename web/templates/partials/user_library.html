@@ -24,24 +24,26 @@
 
 <div id="scroller" class="scroll-content">
 
-    {{ range .Posts.Items }}
+    {{ range $index, $item := .Posts.Items }}
     <div class="video-block">
-        <span data-id="{{ .VideoID }}" class="remove-option">&times;</span>
-        <a class="video-link" href="/video/{{ .VideoID }}/">
+        <span data-id="{{ $item.VideoID }}" class="remove-option">&times;</span>
+        <a class="video-link" href="/video/{{ $item.VideoID }}/">
             <span class="video-img-wrap">
-                <img class="video-img" alt="{{ .Title }}" src="{{ .Thumbnail.Url  }}" srcset="{{ .Srcset }}">
+                <img {{ if gt $index 7 }} loading="lazy" {{ end }} class="video-img" alt="{{ $item.GetTitle }}"
+                    src="{{ $item.Thumbnail.Url  }}" srcset="{{ $item.Srcset }}">
             </span>
-            <h2 class="video-title">{{ .Title }}</h2>
+            <h2 class="video-title">{{ $item.GetTitle }}</h2>
         </a>
     </div>
     {{ end }}
 
+    <!-- Template used by Javascript to create posts dynamically -->
     <template id="post_template">
         <div class="video-block">
             <span class="remove-option">&times;</span>
             <a class="video-link" href="#">
                 <span class="video-img-wrap">
-                    <img class="video-img" src="#">
+                    <img loading="lazy" class="video-img" src="#">
                 </span>
                 <h2 class="video-title"></h2>
             </a>

@@ -19,13 +19,14 @@ func (s *Service) responseSchema() *genai.Schema {
 				Type: genai.TypeString,
 				Description: "Extract the complete original title visually displayed on the video frames. " +
 					"If the title is split into a main title and a subtitle across different frames, " +
-					"combine them into a single string (e.g., 'Main Title: Subtitle'). " +
+					"combine them into a single string (e.g. 'Main Title: Subtitle'). " +
 					"You must read the pixels. Strictly ignore the audio track, transcript, and the metadata. " +
 					"Use title case.",
 			},
 			"summary": {
-				Type:        genai.TypeString,
-				Description: "Write an engaging one paragraph storyline about the given media.",
+				Type: genai.TypeString,
+				Description: "Write an engaging one paragraph blurb about the given media. " +
+					"Do NOT mention the media or the narrative itself, write ONLY about its SUBJECT.",
 			},
 			"category": {
 				Type: genai.TypeString,
@@ -35,6 +36,6 @@ func (s *Service) responseSchema() *genai.Schema {
 				),
 			},
 		},
-		Required: []string{"video_title", "original_title", "summary", "category"},
+		Required: []string{"summary", "category"},
 	}
 }
