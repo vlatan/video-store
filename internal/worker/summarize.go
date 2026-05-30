@@ -43,7 +43,6 @@ func (w *Worker) summarizeVideos(
 		// REMOVE
 		// Nothing to update, summary and category are populated
 		if strings.Contains(video.Summary, utils.UpdateMarker) &&
-			video.OriginalTitle != "" &&
 			video.Category != nil &&
 			video.Category.Name != "" {
 			continue
