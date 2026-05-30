@@ -18,5 +18,5 @@ func (s *Service) systemInstruction() *genai.Content {
 	}
 
 	contentText := strings.Join(content, "\n")
-	return genai.NewContentFromText(contentText, genai.RoleModel)
+	return genai.NewContentFromText(contentText, genai.RoleUser)
 }
