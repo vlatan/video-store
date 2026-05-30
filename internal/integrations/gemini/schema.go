@@ -36,6 +36,6 @@ func (s *Service) responseSchema() *genai.Schema {
 				),
 			},
 		},
-		Required: []string{"video_title", "original_title", "summary", "category"},
+		Required: []string{"summary", "category"},
 	}
 }
