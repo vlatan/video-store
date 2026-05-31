@@ -16,6 +16,94 @@ import (
 // Process processes the videos
 func (w *Worker) Process(ctx context.Context) error {
 
+	var (
+		dbSources        models.Sources
+		ytSources        []*youtube.Playlist
+		updatedPlaylists int
+		dbVideos         []*models.Post
+		ytVideosMap      map[string]*models.Post
+		adopted          int
+		deleted          int
+		deletedVideoIDs  []string
+		inserted         int
+		updated          int
+	)
+
+	// Print stats on exit
+	defer func() {
+		log.Printf(
+			"Fetched %d %s from DB",
+			len(dbSources),
+			utils.Plural(len(dbSources), "playlist"),
+		)
+
+		log.Printf(
+			"Fetched %d %s from YouTube",
+			len(ytSources),
+			utils.Plural(len(ytSources), "playlist"),
+		)
+
+		if updatedPlaylists > 0 {
+			log.Printf(
+				"Updated %d %s",
+				updatedPlaylists,
+				utils.Plural(updatedPlaylists, "playlist"),
+			)
+		}
+
+		log.Printf(
+			"Fetched %d %s from DB",
+			len(dbVideos),
+			utils.Plural(len(dbVideos), "video"),
+		)
+
+		log.Printf(
+			"Fetched %d valid %s from YouTube",
+			len(ytVideosMap),
+			utils.Plural(len(ytVideosMap), "video"),
+		)
+
+		if adopted > 0 {
+			log.Printf(
+				"Adopted %d %s",
+				adopted,
+				utils.Plural(adopted, "video"),
+			)
+		}
+
+		if deleted > 0 {
+			log.Printf(
+				"Deleted %d %s %v",
+				deleted,
+				utils.Plural(deleted, "video"),
+				deletedVideoIDs,
+			)
+
+			if deleted >= deleteLimit {
+				log.Println(
+					"WARNING: HIT MAX DELETION LIMIT. " +
+						"If this persists investigate for bugs.",
+				)
+			}
+		}
+
+		if inserted > 0 {
+			log.Printf(
+				"Added %d %s",
+				inserted,
+				utils.Plural(inserted, "video"),
+			)
+		}
+
+		if updated > 0 {
+			log.Printf(
+				"Updated %d %s",
+				updated,
+				utils.Plural(updated, "video"),
+			)
+		}
+	}()
+
 	// Define retry configs for the external APIs
 	ytRetryConfig := &utils.RetryConfig{
 		MaxRetries: 3,
@@ -42,9 +130,6 @@ func (w *Worker) Process(ctx context.Context) error {
 		)
 	}
 
-	items := utils.Plural(len(dbSources), "playlist")
-	log.Printf("Fetched %d %s from DB", len(dbSources), items)
-
 	// GET GIVEN PLAYLISTS FROM YOUTUBE
 	// ###################################################################
 
@@ -57,16 +142,13 @@ func (w *Worker) Process(ctx context.Context) error {
 	}
 
 	// Fetch playlists from YouTube
-	ytSources, err := w.youtube.GetSources(ctx, ytRetryConfig, playlistIDs...)
+	ytSources, err = w.youtube.GetSources(ctx, ytRetryConfig, playlistIDs...)
 	if err != nil {
 		return fmt.Errorf(
 			"could not fetch the playlists from YouTube; %w",
 			err,
 		)
 	}
-
-	items = utils.Plural(len(ytSources), "playlist")
-	log.Printf("Fetched %d %s from YouTube", len(ytSources), items)
 
 	// GET GIVEN CHANNELS FROM YOUTUBE
 	// ###################################################################
@@ -98,7 +180,6 @@ func (w *Worker) Process(ctx context.Context) error {
 	// ###################################################################
 
 	// Update each playlist in DB if change in thumbnails
-	var updatedPlaylists int
 	for playlistID, ytSource := range ytSourcesMap {
 
 		// Check the context first
@@ -129,30 +210,22 @@ func (w *Worker) Process(ctx context.Context) error {
 		}
 
 		log.Printf(
-			"could not update source '%s' in DB; %v",
+			"Could not update source '%s' in DB; %v",
 			newSource.PlaylistID, err,
 		)
-	}
-
-	if updatedPlaylists > 0 {
-		items = utils.Plural(updatedPlaylists, "playlist")
-		log.Printf("Updated %d %s", updatedPlaylists, items)
 	}
 
 	// GET ALL THE VIDEOS FROM DATABASE
 	// ###################################################################
 
 	// Get ALL videos from DB, should be ordered by upload date
-	dbVideos, err := w.postsRepo.GetAllPosts(ctx)
+	dbVideos, err = w.postsRepo.GetAllPosts(ctx)
 	if err != nil || len(dbVideos) == 0 {
 		return fmt.Errorf(
 			"could not fetch the videos from DB; rows: %v; %w",
 			len(dbVideos), err,
 		)
 	}
-
-	items = utils.Plural(len(dbVideos), "video")
-	log.Printf("Fetched %d %s from DB", len(dbVideos), items)
 
 	// GET ALL THE ORPHAN VALID VIDEOS FROM YOUTUBE
 	// ###################################################################
@@ -166,7 +239,7 @@ func (w *Worker) Process(ctx context.Context) error {
 	}
 
 	// Get orphans metadata from YT, start forming valid YT videos map
-	ytVideosMap := make(map[string]*models.Post)
+	ytVideosMap = make(map[string]*models.Post)
 	ytOrphanVideos, err := w.youtube.GetVideos(ctx, ytRetryConfig, orphanVideoIDs...)
 	if err != nil {
 		return fmt.Errorf(
@@ -247,13 +320,9 @@ func (w *Worker) Process(ctx context.Context) error {
 		}
 	}
 
-	items = utils.Plural(len(ytVideosMap), "video")
-	log.Printf("Fetched %d valid %s from YouTube", len(ytVideosMap), items)
-
 	// UPDATE VIDEOS' PLAYLIST IDS IN DATABASE
 	// ###################################################################
 
-	var adopted int
 	for _, dbVideo := range dbVideos {
 
 		// Check the context first
@@ -292,17 +361,10 @@ func (w *Worker) Process(ctx context.Context) error {
 		)
 	}
 
-	if adopted > 0 {
-		items = utils.Plural(adopted, "video")
-		log.Printf("Adopted %d %s", adopted, items)
-	}
-
 	// DELETE THE OBSOLETE VIDEOS FROM DATABASE
 	// ###################################################################
 
 	// Delete videos in DB
-	var deleted int
-	var deletedVideoIDs []string
 	var validDBVideos []*models.Post
 	for _, dbVideo := range dbVideos {
 
@@ -343,20 +405,9 @@ func (w *Worker) Process(ctx context.Context) error {
 		}
 
 		log.Printf(
-			"could not delete the video '%s' in DB; %v",
+			"Could not delete the video '%s' in DB; %v",
 			dbVideo.VideoID, err,
 		)
-	}
-
-	if deleted > 0 {
-		items = utils.Plural(deleted, "video")
-		log.Printf("Deleted %d %s %v", deleted, items, deletedVideoIDs)
-
-		if deleted >= deleteLimit {
-			msg := "WARNING: HIT MAX DELETION LIMIT. "
-			msg += "If this persists investigate for bugs."
-			log.Println(msg)
-		}
 	}
 
 	// INSERT THE NEW VIDEOS IN DATABASE
@@ -374,7 +425,6 @@ func (w *Worker) Process(ctx context.Context) error {
 	}
 
 	// Insert new videos in DB
-	var inserted int
 	for _, newVideo := range newVideos {
 
 		_, err = w.postsRepo.InsertPost(ctx, newVideo)
@@ -389,14 +439,9 @@ func (w *Worker) Process(ctx context.Context) error {
 		}
 
 		log.Printf(
-			"failed to insert video '%s' in DB; %v",
+			"Failed to insert video '%s' in DB; %v",
 			newVideo.VideoID, err,
 		)
-	}
-
-	if inserted > 0 {
-		items = utils.Plural(inserted, "video")
-		log.Printf("Added %d %s", inserted, items)
 	}
 
 	// UPDATE THE EXISTING VIDEOS IN DATABASE
@@ -410,7 +455,6 @@ func (w *Worker) Process(ctx context.Context) error {
 	}
 
 	// Update the existing DB videos
-	var updated int
 	for _, index := range indexes {
 
 		video := validDBVideos[index]
@@ -426,14 +470,9 @@ func (w *Worker) Process(ctx context.Context) error {
 		}
 
 		log.Printf(
-			"failed to update generated data in DB on video '%s'; %v",
+			"Failed to update generated data in DB on video '%s'; %v",
 			video.VideoID, err,
 		)
-	}
-
-	if updated > 0 {
-		items = utils.Plural(updated, "video")
-		log.Printf("Updated %d %s", updated, items)
 	}
 
 	return nil
