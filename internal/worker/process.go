@@ -13,6 +13,9 @@ import (
 	"google.golang.org/api/youtube/v3"
 )
 
+// Maximum videos to delete per run
+const deleteLimit = 5
+
 // Process processes the videos
 func (w *Worker) Process(ctx context.Context) error {
 
@@ -29,79 +32,35 @@ func (w *Worker) Process(ctx context.Context) error {
 		updated          int
 	)
 
+	// logStat logs "format N word(s) extra".
+	// It will log even if n is zero, if instructed by skipZero to do so.
+	logStat := func(skipZero bool, format string, n int, word string, extra ...any) {
+		if skipZero && n == 0 {
+			return
+		}
+		args := append([]any{n, utils.Plural(n, word)}, extra...)
+		log.Printf(format, args...)
+	}
+
 	// Print stats on exit
 	defer func() {
-		log.Printf(
-			"Fetched %d %s from DB",
-			len(dbSources),
-			utils.Plural(len(dbSources), "playlist"),
-		)
+		logStat(false, "Fetched %d %s from DB", len(dbSources), "playlist")
+		logStat(false, "Fetched %d %s from YouTube", len(ytSources), "playlist")
+		logStat(true, "Updated %d %s", updatedPlaylists, "playlist")
+		logStat(false, "Fetched %d %s from DB", len(dbVideos), "video")
+		logStat(false, "Fetched %d valid %s from YouTube", len(ytVideosMap), "video")
+		logStat(true, "Adopted %d %s", adopted, "video")
+		logStat(true, "Deleted %d %s %v", deleted, "video", deletedVideoIDs)
 
-		log.Printf(
-			"Fetched %d %s from YouTube",
-			len(ytSources),
-			utils.Plural(len(ytSources), "playlist"),
-		)
-
-		if updatedPlaylists > 0 {
-			log.Printf(
-				"Updated %d %s",
-				updatedPlaylists,
-				utils.Plural(updatedPlaylists, "playlist"),
+		if deleted > 0 && deleted >= deleteLimit {
+			log.Println(
+				"WARNING: HIT MAX DELETION LIMIT. ",
+				"If this persists investigate for bugs.",
 			)
 		}
 
-		log.Printf(
-			"Fetched %d %s from DB",
-			len(dbVideos),
-			utils.Plural(len(dbVideos), "video"),
-		)
-
-		log.Printf(
-			"Fetched %d valid %s from YouTube",
-			len(ytVideosMap),
-			utils.Plural(len(ytVideosMap), "video"),
-		)
-
-		if adopted > 0 {
-			log.Printf(
-				"Adopted %d %s",
-				adopted,
-				utils.Plural(adopted, "video"),
-			)
-		}
-
-		if deleted > 0 {
-			log.Printf(
-				"Deleted %d %s %v",
-				deleted,
-				utils.Plural(deleted, "video"),
-				deletedVideoIDs,
-			)
-
-			if deleted >= deleteLimit {
-				log.Println(
-					"WARNING: HIT MAX DELETION LIMIT. " +
-						"If this persists investigate for bugs.",
-				)
-			}
-		}
-
-		if inserted > 0 {
-			log.Printf(
-				"Added %d %s",
-				inserted,
-				utils.Plural(inserted, "video"),
-			)
-		}
-
-		if updated > 0 {
-			log.Printf(
-				"Updated %d %s",
-				updated,
-				utils.Plural(updated, "video"),
-			)
-		}
+		logStat(true, "Added %d %s", inserted, "video")
+		logStat(true, "Updated %d %s", updated, "video")
 	}()
 
 	// Define retry configs for the external APIs

@@ -29,9 +29,6 @@ type Worker struct {
 	cleanup     func()
 }
 
-// Maximum videos to delete per run
-const deleteLimit = 5
-
 // Redis key to lock the worker
 const workerLockKey = "worker:lock"
 
