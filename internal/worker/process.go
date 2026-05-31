@@ -54,7 +54,7 @@ func (w *Worker) Process(ctx context.Context) error {
 
 		if deleted > 0 && deleted >= deleteLimit {
 			log.Println(
-				"WARNING: HIT MAX DELETION LIMIT. ",
+				"WARNING: HIT MAX DELETION LIMIT.",
 				"If this persists investigate for bugs.",
 			)
 		}
