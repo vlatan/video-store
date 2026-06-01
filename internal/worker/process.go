@@ -26,7 +26,6 @@ func (w *Worker) Process(ctx context.Context) error {
 		dbVideos         []*models.Post
 		ytVideosMap      = make(map[string]*models.Post)
 		adopted          int
-		deleted          int
 		deletedVideoIDs  []string
 		inserted         int
 		updated          int
@@ -55,9 +54,9 @@ func (w *Worker) Process(ctx context.Context) error {
 		logStat(false, "Fetched %d %s from DB", len(dbVideos), "video")
 		logStat(false, "Fetched %d valid %s from YouTube", len(ytVideosMap), "video")
 		logStat(true, "Adopted %d %s", adopted, "video")
-		logStat(true, "Deleted %d %s %v", deleted, "video", deletedVideoIDs)
+		logStat(true, "Deleted %d %s %v", len(deletedVideoIDs), "video", deletedVideoIDs)
 
-		if deleted > 0 && deleted >= deleteLimit {
+		if len(deletedVideoIDs) > 0 && len(deletedVideoIDs) >= deleteLimit {
 			log.Println(
 				"WARNING: HIT MAX DELETION LIMIT.",
 				"If this persists investigate for bugs.",
@@ -350,7 +349,7 @@ func (w *Worker) Process(ctx context.Context) error {
 		}
 
 		// Do not remove any more videos from DB if delete limit was reached
-		if deleted >= deleteLimit {
+		if len(deletedVideoIDs) >= deleteLimit {
 			continue
 		}
 
@@ -358,7 +357,6 @@ func (w *Worker) Process(ctx context.Context) error {
 		_, err = w.postsRepo.DeletePost(ctx, dbVideo.VideoID)
 		if err == nil {
 			deletedVideoIDs = append(deletedVideoIDs, dbVideo.VideoID)
-			deleted++
 			continue
 		}
 
