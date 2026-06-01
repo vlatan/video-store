@@ -929,6 +929,13 @@ button.cancel-button {
 		display: flex;
 	}
 
+	.site-footer-wrap {
+		max-width: 100%;
+		align-items: center;
+		border-left: none;
+		border-right: none;
+	}
+
 	.site-footer {
 		width: 100%;
 		flex-wrap: wrap;
