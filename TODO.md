@@ -1,4 +1,5 @@
 * Add tagline to the logo
+* Span footer 100% on small screens
 * Maybe use another gemini API call for the credits
 
 * Group videos by entity, create taxonomies
