@@ -117,7 +117,7 @@ h1.video-title {
 }
 
 .inner-metadata-block .nav-item {
-  color: #f26123;
+  color: var(--orange);
 }
 
 .admin-buttons {

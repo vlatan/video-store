@@ -17,6 +17,7 @@
 	--img-hover-filter: brightness(85%);
 	--img-hover-transition-duration: 0.3s;
 	--img-border-radius: 10px;
+	--orange: #f26123;
 }
 
 
@@ -484,7 +485,7 @@ a.nav-item:hover::after {
 }
 
 .nav-item.delete-account {
-	color: #f26123;
+	color: var(--orange);
 	font-weight: bold;
 	padding-top: 0.5rem;
 	border-top: 1px solid var(--primary-background-color);
@@ -787,9 +788,9 @@ button.cancel-button {
 	align-items: center;
 	justify-content: center;
 	column-gap: 1rem;
-	background-color: var(--primary-background-color);
+	background-color: var(--secondary-background-color);
+	border: 1px solid var(--secondary-border-color);
 	padding: 0.3rem 0.6rem;
-	border: 1px solid var(--primary-border-color);
 	border-bottom: none;
 	font-size: 0.75rem;
 	visibility: visible;
@@ -801,6 +802,10 @@ button.cancel-button {
 
 .site-copy {
 	color: rgb(162, 162, 162);
+}
+
+.privacy {
+	color: var(--orange);
 }
 
 
