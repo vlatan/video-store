@@ -2,7 +2,6 @@ package yt
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -54,38 +53,47 @@ func (s *Service) GetVideos(ctx context.Context, rc *utils.RetryConfig, videoIDs
 }
 
 // Validate a YouTube video against custom criteria.
-// Returns client facing error messages if any.
 func (s *Service) ValidateYouTubeVideo(video *youtube.Video) error {
 
 	if video.Status.PrivacyStatus == "private" {
-		return errors.New("this video is not public")
+		return &ValidationError{"this video is not public"}
 	}
 
 	if video.ContentDetails.ContentRating.YtRating == "ytAgeRestricted" {
-		return errors.New("this video is age-restricted")
+		return &ValidationError{"this video is age-restricted"}
 	}
 
 	if !video.Status.Embeddable {
-		return errors.New("this video is not embeddable")
+		return &ValidationError{"this video is not embeddable"}
 	}
 
 	if video.ContentDetails.RegionRestriction != nil {
-		return errors.New("this video is region-restricted")
+		return &ValidationError{"this video is region-restricted"}
 	}
 
 	language := strings.ToLower(video.Snippet.DefaultLanguage)
 	if language != "" && !strings.HasPrefix(language, "en") {
-		return errors.New("this video's title and/or description is not in English")
+		return &ValidationError{
+			"this video's title and/or description is not in English",
+		}
 	}
 
 	broadcast := video.Snippet.LiveBroadcastContent
 	if broadcast != "" && broadcast != "none" {
-		return errors.New("this video is not fully broadcasted")
+		return &ValidationError{"this video is not fully broadcasted"}
 	}
 
 	duration := models.ISO8601Duration(video.ContentDetails.Duration)
-	if seconds, _ := duration.Seconds(); seconds < 30*time.Minute {
-		return errors.New("this video is too short")
+	seconds, err := duration.Seconds()
+
+	if err != nil {
+		return fmt.Errorf(
+			"failed to convert this video's duration to seconds; %w", err,
+		)
+	}
+
+	if seconds < 30*time.Minute {
+		return &ValidationError{"this video is too short"}
 	}
 
 	return nil
