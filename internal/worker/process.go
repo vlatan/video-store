@@ -41,7 +41,7 @@ func (w *Worker) Process(ctx context.Context) error {
 			return
 		}
 
-		if word != "" && n == 1 {
+		if word != "" && (n == 0 || n > 1) {
 			word += "s"
 		}
 
