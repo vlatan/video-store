@@ -201,7 +201,7 @@ func (w *Worker) Process(ctx context.Context) error {
 		}
 	}
 
-	// Get orphans metadata from YT, start forming valid YT videos map
+	// Get orphans metadata from YT
 	ytOrphanVideos, err := w.youtube.GetVideos(ctx, ytRetryConfig, orphanVideoIDs...)
 	if err != nil {
 		return fmt.Errorf(
@@ -210,7 +210,7 @@ func (w *Worker) Process(ctx context.Context) error {
 		)
 	}
 
-	// Add valid orphan videos to YT map
+	// Start filling up the YT videos map with valid videos
 	for _, video := range ytOrphanVideos {
 		if err = w.youtube.ValidateYouTubeVideo(video); err == nil {
 			ytVideosMap[video.Id] = w.youtube.NewYouTubePost(video, "")
