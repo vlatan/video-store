@@ -173,27 +173,6 @@ func TestFromNullString(t *testing.T) {
 	}
 }
 
-func TestPlural(t *testing.T) {
-	tests := []struct {
-		name     string
-		num      int
-		word     string
-		expected string
-	}{
-		{"empty string", 1, "", ""},
-		{"single", 1, "foo", "foo"},
-		{"multiple", 2, "foo", "foos"},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := Plural(tt.num, tt.word); got != tt.expected {
-				t.Errorf("got %q, want %q", got, tt.expected)
-			}
-		})
-	}
-}
-
 func TestIsStatic(t *testing.T) {
 
 	type test struct {

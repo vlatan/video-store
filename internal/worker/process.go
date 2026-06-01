@@ -24,7 +24,7 @@ func (w *Worker) Process(ctx context.Context) error {
 		ytSources        []*youtube.Playlist
 		updatedPlaylists int
 		dbVideos         []*models.Post
-		ytVideosMap      map[string]*models.Post
+		ytVideosMap      = make(map[string]*models.Post)
 		adopted          int
 		deleted          int
 		deletedVideoIDs  []string
@@ -38,7 +38,12 @@ func (w *Worker) Process(ctx context.Context) error {
 		if skipZero && n == 0 {
 			return
 		}
-		args := append([]any{n, utils.Plural(n, word)}, extra...)
+
+		if word != "" && n > 1 {
+			word += "s"
+		}
+
+		args := append([]any{n, word}, extra...)
 		log.Printf(format, args...)
 	}
 
@@ -198,7 +203,6 @@ func (w *Worker) Process(ctx context.Context) error {
 	}
 
 	// Get orphans metadata from YT, start forming valid YT videos map
-	ytVideosMap = make(map[string]*models.Post)
 	ytOrphanVideos, err := w.youtube.GetVideos(ctx, ytRetryConfig, orphanVideoIDs...)
 	if err != nil {
 		return fmt.Errorf(
