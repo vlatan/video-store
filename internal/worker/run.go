@@ -20,7 +20,12 @@ func (w *Worker) Run(ctx context.Context) {
 	}()
 
 	log.Println("Worker running...")
-	if err := w.Process(ctx); err != nil {
+	stats, err := w.Process(ctx)
+
+	// Print the worker stats
+	log.Println(stats)
+
+	if err != nil {
 		log.Printf("Worker error: %v", err)
 	}
 }
