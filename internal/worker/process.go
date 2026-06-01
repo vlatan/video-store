@@ -2,12 +2,14 @@ package worker
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"maps"
 	"slices"
 	"time"
 
+	"github.com/vlatan/video-store/internal/integrations/yt"
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/utils"
 	"google.golang.org/api/youtube/v3"
@@ -29,6 +31,7 @@ func (w *Worker) Process(ctx context.Context) error {
 		deletedVideoIDs  []string
 		inserted         int
 		updated          int
+		valErr           *yt.ValidationError
 	)
 
 	// logStat logs "format N word(s) extra".
@@ -212,8 +215,21 @@ func (w *Worker) Process(ctx context.Context) error {
 
 	// Start filling up the YT videos map with valid videos
 	for _, video := range ytOrphanVideos {
-		if err = w.youtube.ValidateYouTubeVideo(video); err == nil {
+
+		err = w.youtube.ValidateYouTubeVideo(video)
+
+		// If no error this is a valid video
+		if err == nil {
 			ytVideosMap[video.Id] = w.youtube.NewYouTubePost(video, "")
+			continue
+		}
+
+		// If this is NOT a validation error, stop the process
+		if !errors.As(err, &valErr) {
+			return fmt.Errorf(
+				"unexpected error during video %q validation; %w",
+				video.Id, err,
+			)
 		}
 	}
 
@@ -259,13 +275,24 @@ func (w *Worker) Process(ctx context.Context) error {
 				return err
 			}
 
-			// Skip if invalid video
-			if err = w.youtube.ValidateYouTubeVideo(video); err != nil {
+			// Validate the video
+			err = w.youtube.ValidateYouTubeVideo(video)
+
+			// If this is validation error, skip the video
+			if errors.As(err, &valErr) {
 				continue
 			}
 
+			// If this is any other error, stop the process
+			if err != nil {
+				return fmt.Errorf(
+					"unexpected error during video %q validation; %w",
+					video.Id, err,
+				)
+			}
+
 			// Skip if the video is banned (manually deleted).
-			// If error is nil the post is IN the deleted_post table.
+			// If error is nil the post is IN the deleted_post database table.
 			err = w.postsRepo.IsPostBanned(ctx, video.Id)
 			if err == nil {
 				continue
@@ -277,7 +304,8 @@ func (w *Worker) Process(ctx context.Context) error {
 			}
 
 			// If the video is already in ytVideosMap as an orphaned video
-			// we overwrite it, associate it with a YT playlist
+			// we overwrite it, associate it with a YT playlist.
+			// If not we just add new video.
 			ytVideosMap[video.Id] = w.youtube.NewYouTubePost(video, playlistID)
 		}
 	}
