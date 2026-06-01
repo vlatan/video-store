@@ -222,6 +222,7 @@ func (w *Worker) Process(ctx context.Context) error {
 		// If no error this is a valid video
 		if err == nil {
 			ytVideosMap[video.Id] = w.youtube.NewYouTubePost(video, "")
+			fetched++
 			continue
 		}
 
@@ -308,12 +309,9 @@ func (w *Worker) Process(ctx context.Context) error {
 			// we overwrite it, associate it with a YT playlist.
 			// If not we just add new video.
 			ytVideosMap[video.Id] = w.youtube.NewYouTubePost(video, playlistID)
+			fetched++
 		}
 	}
-
-	// How much videos in total we fetched from YouTube.
-	// ytVideosMap will modify down the line, we can't use its lenght then.
-	fetched = len(ytVideosMap)
 
 	// UPDATE VIDEOS' PLAYLIST IDS IN DATABASE
 	// ###################################################################
