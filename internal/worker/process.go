@@ -26,7 +26,7 @@ func (w *Worker) Process(ctx context.Context) error {
 		ytSources        []*youtube.Playlist
 		updatedPlaylists int
 		dbVideos         []*models.Post
-		ytVideosMap      = make(map[string]*models.Post)
+		fetched          int
 		adopted          int
 		deletedVideoIDs  []string
 		inserted         int
@@ -55,7 +55,7 @@ func (w *Worker) Process(ctx context.Context) error {
 		logStat(false, "Fetched %d %s from YouTube", len(ytSources), "playlist")
 		logStat(true, "Updated %d %s", updatedPlaylists, "playlist")
 		logStat(false, "Fetched %d %s from DB", len(dbVideos), "video")
-		logStat(false, "Fetched %d valid %s from YouTube", len(ytVideosMap), "video")
+		logStat(false, "Fetched %d valid %s from YouTube", fetched, "video")
 		logStat(true, "Adopted %d %s", adopted, "video")
 		logStat(true, "Deleted %d %s %v", len(deletedVideoIDs), "video", deletedVideoIDs)
 
@@ -214,6 +214,7 @@ func (w *Worker) Process(ctx context.Context) error {
 	}
 
 	// Start filling up the YT videos map with valid videos
+	ytVideosMap := make(map[string]*models.Post)
 	for _, video := range ytOrphanVideos {
 
 		err = w.youtube.ValidateYouTubeVideo(video)
@@ -309,6 +310,10 @@ func (w *Worker) Process(ctx context.Context) error {
 			ytVideosMap[video.Id] = w.youtube.NewYouTubePost(video, playlistID)
 		}
 	}
+
+	// How much videos in total we fetched from YouTube.
+	// ytVideosMap will modify down the line, we can't use its lenght then.
+	fetched = len(ytVideosMap)
 
 	// UPDATE VIDEOS' PLAYLIST IDS IN DATABASE
 	// ###################################################################
