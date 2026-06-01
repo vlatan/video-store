@@ -258,7 +258,8 @@
 			<span class="site-copy">{{ .Config.AppName }} &copy; {{ .Now.Year }}</span>
 			<a class="nav-item" href="/sources/">Sources</a>
 			<a class="nav-item" href="/page/about/">About</a>
-			<a class="nav-item privacy" href="/page/privacy/">Privacy</a>
+			<!-- Needs absolute URL for Google OAuth branding -->
+			<a class="nav-item privacy" href="{{ .Config.Protocol }}://{{ .Config.Domain }}/page/privacy/">Privacy</a>
 		</footer>
 	</div>
 

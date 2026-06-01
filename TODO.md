@@ -1,4 +1,3 @@
-* Add tagline to the logo
 * Maybe use another gemini API call for the credits
 
 * Group videos by entity, create taxonomies
