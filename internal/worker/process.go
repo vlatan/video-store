@@ -101,41 +101,11 @@ func (w *Worker) Process(ctx context.Context) (WorkerStats, error) {
 	// UPDATE THE PLAYLISTS IN DATABASE
 	// ###################################################################
 
-	// Update each playlist in DB if change in thumbnails
-	for playlistID, ytSource := range ytSourcesMap {
+	stats.UpdatedDbSources, err = w.updatePlaylists(ctx, ytSourcesMap, channelsMap, dbSourcesMap)
 
-		// Check the context first
-		if err = ctx.Err(); err != nil {
-			return stats, err
-		}
-
-		newSource := w.youtube.NewYouTubeSource(
-			ytSource, channelsMap[ytSource.Snippet.ChannelId],
-		)
-
-		// Check if channel thumbs or title have changed
-		dbChThumbs := dbSourcesMap[playlistID].ChannelThumbnails
-		if models.ThumbnailsEqual(dbChThumbs, newSource.ChannelThumbnails) &&
-			dbSourcesMap[playlistID].ChannelTitle == newSource.ChannelTitle {
-			continue
-		}
-
-		_, err = w.sourcesRepo.UpdateSource(ctx, newSource)
-		if err == nil {
-			stats.UpdatedDbSources++
-			continue
-		}
-
-		// Exit early if context ended
-		if utils.IsContextErr(err) {
-			return stats, err
-		}
-
-		// Log the error do not exit if can't update playlist in DB
-		log.Printf(
-			"Could not update source '%s' in DB; %v",
-			newSource.PlaylistID, err,
-		)
+	// This can only be context error
+	if err != nil {
+		return stats, err
 	}
 
 	// GET ALL THE VIDEOS FROM DATABASE

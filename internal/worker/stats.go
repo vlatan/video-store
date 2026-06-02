@@ -8,7 +8,7 @@ type WorkerStats struct {
 	FetchedDbSources  int
 	FetchedYtSources  int
 	FetchedYtChannels int
-	UpdatedDbSources  int
+	UpdatedDbSources  int64
 	FetchedDbVideos   int
 	FetchedYtVideos   int
 	AdoptedDbVideos   int
