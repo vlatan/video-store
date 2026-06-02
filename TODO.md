@@ -1,4 +1,5 @@
 * Change how summarize videos works, no need for indexes
+* Also we want to insert after each summarizing
 * Think about the constant context checking
 * Maybe use another gemini API call for the credits
 
