@@ -100,7 +100,7 @@ func (w *Worker) Process(ctx context.Context) error {
 	// UPDATE THE PLAYLISTS IN DATABASE
 	// ###################################################################
 
-	w.stats.UpdatedDbSources, err = w.updatePlaylists(ctx, ytSourcesMap, channelsMap, dbSourcesMap)
+	err = w.updatePlaylists(ctx, ytSourcesMap, channelsMap, dbSourcesMap)
 
 	// This can only be context error
 	if err != nil {

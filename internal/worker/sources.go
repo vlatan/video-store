@@ -16,13 +16,13 @@ func (w *Worker) updatePlaylists(
 	ytSources map[string]*youtube.Playlist,
 	ytChannels map[string]*youtube.Channel,
 	dbSources map[string]*models.Source,
-) (counter int64, err error) {
+) error {
 
 	for playlistID, ytSource := range ytSources {
 
 		// Check the context first
-		if err = ctx.Err(); err != nil {
-			return counter, err
+		if err := ctx.Err(); err != nil {
+			return err
 		}
 
 		newSource := w.youtube.NewYouTubeSource(
@@ -37,11 +37,11 @@ func (w *Worker) updatePlaylists(
 		}
 
 		rowsAffected, err := w.sourcesRepo.UpdateSource(ctx, newSource)
-		counter += rowsAffected
+		w.stats.UpdatedDbSources += rowsAffected
 
 		// Exit early if context ended
 		if utils.IsContextErr(err) {
-			return counter, err
+			return err
 		}
 
 		// Log the error, do not exit if can't update playlist in DB
@@ -51,5 +51,5 @@ func (w *Worker) updatePlaylists(
 		)
 	}
 
-	return counter, nil
+	return nil
 }
