@@ -11,7 +11,7 @@ type WorkerStats struct {
 	UpdatedDbSources  int64
 	FetchedDbVideos   int
 	FetchedYtVideos   int
-	AdoptedDbVideos   int
+	AdoptedDbVideos   int64
 	DeletedDbVideos   []string
 	InsertedDbVideos  int
 	UpdatedDbVideos   int

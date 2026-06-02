@@ -123,7 +123,7 @@ const updatePlaylistQuery = `
 `
 
 // Update a playlist
-func (r *Repository) UpdatePlaylist(ctx context.Context, videoID, playlistID string) (int64, error) {
+func (r *Repository) UpdateSource(ctx context.Context, videoID, playlistID string) (int64, error) {
 	result, err := r.db.Pool.Exec(ctx, updatePlaylistQuery, videoID, playlistID)
 	return result.RowsAffected(), err
 }

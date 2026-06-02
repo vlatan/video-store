@@ -9,9 +9,9 @@ import (
 	"google.golang.org/api/youtube/v3"
 )
 
-// updatePlaylists updates playlists in the database if the thumbnails or title have changed.
+// updateSources updates playlists in the database if the thumbnails or title have changed.
 // Exits with error only if context ended, any other error is just logged.
-func (w *Worker) updatePlaylists(
+func (w *Worker) updateSources(
 	ctx context.Context,
 	ytSources map[string]*youtube.Playlist,
 	ytChannels map[string]*youtube.Channel,

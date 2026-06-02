@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 
 	"github.com/vlatan/video-store/internal/integrations/yt"
 	"github.com/vlatan/video-store/internal/models"
@@ -52,9 +53,9 @@ func (w *Worker) getValidVideos(
 	return nil
 }
 
-// getValidSourcessVideos gets valid videos for a given playlist ids,
+// getValidSourcesVideos gets valid videos for a given playlist ids,
 // and stores them in the destMap.
-func (w *Worker) getValidSourcessVideos(
+func (w *Worker) getValidSourcesVideos(
 	ctx context.Context,
 	playlistIds []string,
 	destMap map[string]*models.Post,
@@ -134,6 +135,53 @@ func (w *Worker) getValidSourcessVideos(
 			destMap[video.Id] = w.youtube.NewYouTubePost(video, playlistId)
 			w.stats.FetchedYtVideos++
 		}
+	}
+
+	return nil
+}
+
+// adoptVideos associates database videos with playlists if any.
+// Checks against the sourceMap.
+// Exits with error only if context ended, any other error is just logged.
+func (w *Worker) adoptVideos(
+	ctx context.Context,
+	videos []*models.Post,
+	sourceMap map[string]*models.Post,
+) error {
+
+	for _, dbVideo := range videos {
+
+		// Check the context first
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+
+		// Check if DB video exists on YouTube
+		ytVideo, exists := sourceMap[dbVideo.VideoID]
+		if !exists {
+			continue
+		}
+
+		// Check if we need to update the video playlist
+		if ytVideo.PlaylistID == dbVideo.PlaylistID {
+			continue
+		}
+
+		rowsAffected, err := w.postsRepo.UpdateSource(
+			ctx, dbVideo.VideoID, ytVideo.PlaylistID,
+		)
+
+		w.stats.AdoptedDbVideos += rowsAffected
+
+		// Exit early if context ended
+		if utils.IsContextErr(err) {
+			return err
+		}
+
+		log.Printf(
+			"Failed to update the playlist on video '%s'; %v",
+			dbVideo.VideoID, err,
+		)
 	}
 
 	return nil

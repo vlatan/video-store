@@ -82,10 +82,8 @@ func (w *Worker) Process(ctx context.Context) error {
 	// UPDATE THE PLAYLISTS IN DATABASE
 	// ###################################################################
 
-	err = w.updatePlaylists(ctx, ytSourcesMap, channelsMap, dbSourcesMap)
-
 	// This can only be context error
-	if err != nil {
+	if err = w.updateSources(ctx, ytSourcesMap, channelsMap, dbSourcesMap); err != nil {
 		return err
 	}
 
@@ -124,49 +122,16 @@ func (w *Worker) Process(ctx context.Context) error {
 	// GET THE PLAYLISTS' VALID VIDEOS FROM YOUTUBE
 	// ###################################################################
 
-	if err = w.getValidSourcessVideos(ctx, playlistIds, ytVideosMap); err != nil {
+	if err = w.getValidSourcesVideos(ctx, playlistIds, ytVideosMap); err != nil {
 		return err
 	}
 
-	// ASSOCIATE VIDEOS TO PLAYLISTS IN DATABASE
+	// ADOPT VIDEOS TO PLAYLISTS IN DATABASE
 	// ###################################################################
 
-	for _, dbVideo := range dbVideos {
-
-		// Check the context first
-		if err = ctx.Err(); err != nil {
-			return err
-		}
-
-		// Check if DB video exists on YouTube
-		ytVideo, exists := ytVideosMap[dbVideo.VideoID]
-		if !exists {
-			continue
-		}
-
-		// Check if we need to update the video playlist
-		if ytVideo.PlaylistID == dbVideo.PlaylistID {
-			continue
-		}
-
-		_, err = w.postsRepo.UpdatePlaylist(
-			ctx, dbVideo.VideoID, ytVideo.PlaylistID,
-		)
-
-		if err == nil {
-			w.stats.AdoptedDbVideos++
-			continue
-		}
-
-		// Exit early if context ended
-		if utils.IsContextErr(err) {
-			return err
-		}
-
-		log.Printf(
-			"Failed to update the playlist on video '%s'; %v",
-			dbVideo.VideoID, err,
-		)
+	// This can only be context error
+	if err = w.adoptVideos(ctx, dbVideos, ytVideosMap); err != nil {
+		return err
 	}
 
 	// DELETE THE OBSOLETE VIDEOS FROM DATABASE
