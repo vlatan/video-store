@@ -1,4 +1,3 @@
-* Add vertical padding to footer
 * Maybe use another gemini API call for the credits
 
 * Group videos by entity, create taxonomies
