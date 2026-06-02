@@ -1,3 +1,5 @@
+* Change how summarize videos works, no need for indexes
+* Think about the constant context checking
 * Maybe use another gemini API call for the credits
 
 * Group videos by entity, create taxonomies
