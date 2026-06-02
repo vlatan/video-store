@@ -49,7 +49,7 @@ func (w *Worker) Process(ctx context.Context) error {
 	}
 	w.stats.FetchedDbSources = len(dbSources)
 
-	// GET GIVEN PLAYLISTS FROM YOUTUBE
+	// GET THE PLAYLISTS FROM YOUTUBE
 	// ###################################################################
 
 	// Extract playlist IDs and create DB sources map
@@ -120,6 +120,9 @@ func (w *Worker) Process(ctx context.Context) error {
 	}
 	w.stats.FetchedDbVideos = len(dbVideos)
 
+	// Define map that will accumulate all valid YT videos
+	ytVideosMap := make(map[string]*models.Post)
+
 	// GET ALL THE ORPHAN VALID VIDEOS FROM YOUTUBE
 	// ###################################################################
 
@@ -131,35 +134,9 @@ func (w *Worker) Process(ctx context.Context) error {
 		}
 	}
 
-	// Get orphans metadata from YT
-	ytOrphanVideos, err := w.youtube.GetVideos(ctx, ytRetryConfig, orphanVideoIDs...)
-	if err != nil {
-		return fmt.Errorf(
-			"could not get the orphan videos from YouTube; %w",
-			err,
-		)
-	}
-
-	// Start filling up the YT videos map with valid videos
-	ytVideosMap := make(map[string]*models.Post)
-	for _, video := range ytOrphanVideos {
-
-		err = w.youtube.ValidateYouTubeVideo(video)
-
-		// If no error this is a valid video
-		if err == nil {
-			ytVideosMap[video.Id] = w.youtube.NewYouTubePost(video, "")
-			w.stats.FetchedYtVideos++
-			continue
-		}
-
-		// If this is NOT a validation error, stop the process
-		if !errors.As(err, &valErr) {
-			return fmt.Errorf(
-				"unexpected error during video %q validation; %w",
-				video.Id, err,
-			)
-		}
+	// Get valid orphan videos from YT
+	if err = w.getOrphanVideos(ctx, ytRetryConfig, orphanVideoIDs, ytVideosMap); err != nil {
+		return err
 	}
 
 	// GET ALL THE PLAYLIST VALID VIDEOS FROM YOUTUBE
@@ -240,7 +217,7 @@ func (w *Worker) Process(ctx context.Context) error {
 		}
 	}
 
-	// UPDATE VIDEOS' PLAYLIST IDS IN DATABASE
+	// ASSOCIATE VIDEOS TO PLAYLISTS IN DATABASE
 	// ###################################################################
 
 	for _, dbVideo := range dbVideos {
