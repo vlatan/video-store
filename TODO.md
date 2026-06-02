@@ -1,6 +1,4 @@
 * Add vertical padding to footer
-* Convert String() to Log() and log each line
-* Ditch the worker error
 * Maybe use another gemini API call for the credits
 
 * Group videos by entity, create taxonomies
