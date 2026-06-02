@@ -82,7 +82,6 @@ func (w *Worker) Process(ctx context.Context) error {
 	// UPDATE THE PLAYLISTS IN DATABASE
 	// ###################################################################
 
-	// This can only be context error
 	if err = w.updateSources(ctx, ytSourcesMap, channelsMap, dbSourcesMap); err != nil {
 		return err
 	}
@@ -129,7 +128,6 @@ func (w *Worker) Process(ctx context.Context) error {
 	// ADOPT VIDEOS TO PLAYLISTS IN DATABASE
 	// ###################################################################
 
-	// This can only be context error
 	if err = w.adoptVideos(ctx, dbVideos, ytVideosMap); err != nil {
 		return err
 	}
@@ -138,7 +136,6 @@ func (w *Worker) Process(ctx context.Context) error {
 	// ###################################################################
 
 	validDbVideos, err := w.deleteVideos(ctx, dbVideos, ytVideosMap)
-	// This can only be context error
 	if err != nil {
 		return err
 	}
@@ -155,7 +152,6 @@ func (w *Worker) Process(ctx context.Context) error {
 		return err
 	}
 
-	// This can only be context error
 	if err = w.insertVideos(ctx, newVideos); err != nil {
 		return err
 	}
@@ -165,8 +161,6 @@ func (w *Worker) Process(ctx context.Context) error {
 
 	// Summarize the existing videos in place
 	indexes, err := w.summarizeVideos(ctx, validDbVideos)
-
-	// This can only be context error
 	if err != nil {
 		return err
 	}
