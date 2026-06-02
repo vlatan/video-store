@@ -15,19 +15,22 @@ import (
 	"github.com/vlatan/video-store/internal/repositories/categories"
 	"github.com/vlatan/video-store/internal/repositories/posts"
 	"github.com/vlatan/video-store/internal/repositories/sources"
+	"github.com/vlatan/video-store/internal/utils"
 )
 
 type Worker struct {
-	id          string
-	postsRepo   *posts.Repository
-	sourcesRepo *sources.Repository
-	catsRepo    *categories.Repository
-	config      *config.Config
-	youtube     *yt.Service
-	gemini      *gemini.Service
-	lock        *rdb.RedisLock
-	stats       WorkerStats
-	cleanup     func()
+	id                string
+	postsRepo         *posts.Repository
+	sourcesRepo       *sources.Repository
+	catsRepo          *categories.Repository
+	config            *config.Config
+	youtube           *yt.Service
+	gemini            *gemini.Service
+	lock              *rdb.RedisLock
+	stats             WorkerStats
+	ytRetryConfig     *utils.RetryConfig
+	geminiRetryConfig *utils.RetryConfig
+	cleanup           func()
 }
 
 // Redis key to lock the worker
@@ -70,6 +73,16 @@ func New(cfg *config.Config, ctx context.Context) (*Worker, error) {
 		config:      cfg,
 		youtube:     yt,
 		gemini:      gemini,
+		ytRetryConfig: &utils.RetryConfig{
+			MaxRetries: 3,
+			MaxJitter:  time.Second,
+			Delay:      time.Second,
+		},
+		geminiRetryConfig: &utils.RetryConfig{
+			MaxRetries: 3,
+			MaxJitter:  2 * time.Second,
+			Delay:      65 * time.Second,
+		},
 	}
 
 	// Create new Redis lock

@@ -16,7 +16,6 @@ import (
 // and returns ther indicies.
 func (w *Worker) summarizeVideos(
 	ctx context.Context,
-	rc *utils.RetryConfig,
 	videos []*models.Post) ([]int, error) {
 
 	var summarizedIndicies []int
@@ -66,7 +65,7 @@ func (w *Worker) summarizeVideos(
 		}
 
 		// Generate content using Gemini
-		genaiResponse, err := w.gemini.Summarize(ctx, video, rc)
+		genaiResponse, err := w.gemini.Summarize(ctx, video, w.geminiRetryConfig)
 
 		// Exit early if context ended
 		if utils.IsContextErr(err) {

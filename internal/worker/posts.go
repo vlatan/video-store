@@ -7,18 +7,16 @@ import (
 
 	"github.com/vlatan/video-store/internal/integrations/yt"
 	"github.com/vlatan/video-store/internal/models"
-	"github.com/vlatan/video-store/internal/utils"
 )
 
 func (w *Worker) getOrphanVideos(
 	ctx context.Context,
-	ytRetryConfig *utils.RetryConfig,
 	videoIds []string,
 	ytVideosMap map[string]*models.Post,
 ) error {
 
 	// Get orphans metadata from YT
-	ytOrphanVideos, err := w.youtube.GetVideos(ctx, ytRetryConfig, videoIds...)
+	ytOrphanVideos, err := w.youtube.GetVideos(ctx, w.ytRetryConfig, videoIds...)
 	if err != nil {
 		return fmt.Errorf(
 			"could not get the orphan videos from YouTube; %w",

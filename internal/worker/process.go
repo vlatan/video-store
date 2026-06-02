@@ -7,7 +7,6 @@ import (
 	"log"
 	"maps"
 	"slices"
-	"time"
 
 	"github.com/vlatan/video-store/internal/integrations/yt"
 	"github.com/vlatan/video-store/internal/models"
@@ -22,19 +21,6 @@ const deleteLimit = 5
 func (w *Worker) Process(ctx context.Context) error {
 
 	var valErr *yt.ValidationError
-
-	// Define retry configs for the external APIs
-	ytRetryConfig := &utils.RetryConfig{
-		MaxRetries: 3,
-		MaxJitter:  time.Second,
-		Delay:      time.Second,
-	}
-
-	geminiRetryConfig := &utils.RetryConfig{
-		MaxRetries: 3,
-		MaxJitter:  2 * time.Second,
-		Delay:      65 * time.Second,
-	}
 
 	// GET ALL THE PLAYLISTS FROM DATABASE
 	// ###################################################################
@@ -61,7 +47,7 @@ func (w *Worker) Process(ctx context.Context) error {
 	}
 
 	// Fetch playlists from YouTube
-	ytSources, err := w.youtube.GetSources(ctx, ytRetryConfig, playlistIDs...)
+	ytSources, err := w.youtube.GetSources(ctx, w.ytRetryConfig, playlistIDs...)
 	if err != nil {
 		return fmt.Errorf(
 			"could not fetch the playlists from YouTube; %w",
@@ -82,7 +68,7 @@ func (w *Worker) Process(ctx context.Context) error {
 	}
 
 	// Fetch corresponding channels
-	channels, err := w.youtube.GetChannels(ctx, ytRetryConfig, channelIDs...)
+	channels, err := w.youtube.GetChannels(ctx, w.ytRetryConfig, channelIDs...)
 	if err != nil {
 		return fmt.Errorf(
 			"could not fetch the channels from YouTube; %w",
@@ -135,7 +121,7 @@ func (w *Worker) Process(ctx context.Context) error {
 	}
 
 	// Get valid orphan videos from YT
-	if err = w.getOrphanVideos(ctx, ytRetryConfig, orphanVideoIDs, ytVideosMap); err != nil {
+	if err = w.getOrphanVideos(ctx, orphanVideoIDs, ytVideosMap); err != nil {
 		return err
 	}
 
@@ -150,7 +136,7 @@ func (w *Worker) Process(ctx context.Context) error {
 			return err
 		}
 
-		sourceItems, err := w.youtube.GetSourceItems(ctx, ytRetryConfig, playlistID)
+		sourceItems, err := w.youtube.GetSourceItems(ctx, w.ytRetryConfig, playlistID)
 		if err != nil {
 			return fmt.Errorf(
 				"couldn't get items from YouTube for source '%s'; %w",
@@ -165,7 +151,7 @@ func (w *Worker) Process(ctx context.Context) error {
 		}
 
 		// Get all the videos metadata for this source
-		videosMetadata, err := w.youtube.GetVideos(ctx, ytRetryConfig, videoIDs...)
+		videosMetadata, err := w.youtube.GetVideos(ctx, w.ytRetryConfig, videoIDs...)
 		if err != nil {
 			return fmt.Errorf(
 				"couldn't get videos from YouTube for source %s; %w",
@@ -314,7 +300,7 @@ func (w *Worker) Process(ctx context.Context) error {
 	newVideos := slices.Collect(maps.Values(ytVideosMap))
 
 	// Summarize new videos in place
-	_, err = w.summarizeVideos(ctx, geminiRetryConfig, newVideos)
+	_, err = w.summarizeVideos(ctx, newVideos)
 
 	// This can only be context error
 	if err != nil {
@@ -345,7 +331,7 @@ func (w *Worker) Process(ctx context.Context) error {
 	// ###################################################################
 
 	// Summarize the existing videos in place
-	indexes, err := w.summarizeVideos(ctx, geminiRetryConfig, validDBVideos)
+	indexes, err := w.summarizeVideos(ctx, validDBVideos)
 
 	// This can only be context error
 	if err != nil {
