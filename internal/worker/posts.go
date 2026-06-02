@@ -9,14 +9,16 @@ import (
 	"github.com/vlatan/video-store/internal/models"
 )
 
-func (w *Worker) getOrphanVideos(
+// getValidVideos gets valid videos from YT for given video ids,
+// and stores them in the destMap.
+func (w *Worker) getValidVideos(
 	ctx context.Context,
 	videoIds []string,
-	ytVideosMap map[string]*models.Post,
+	destMap map[string]*models.Post,
 ) error {
 
 	// Get orphans metadata from YT
-	ytOrphanVideos, err := w.youtube.GetVideos(ctx, w.ytRetryConfig, videoIds...)
+	videos, err := w.youtube.GetVideos(ctx, w.ytRetryConfig, videoIds...)
 	if err != nil {
 		return fmt.Errorf(
 			"could not get the orphan videos from YouTube; %w",
@@ -25,13 +27,13 @@ func (w *Worker) getOrphanVideos(
 	}
 
 	// Validate the videos
-	for _, video := range ytOrphanVideos {
+	for _, video := range videos {
 
 		err = w.youtube.ValidateYouTubeVideo(video)
 
 		// If no error this is a valid video
 		if err == nil {
-			ytVideosMap[video.Id] = w.youtube.NewYouTubePost(video, "")
+			destMap[video.Id] = w.youtube.NewYouTubePost(video, "")
 			w.stats.FetchedYtVideos++
 			continue
 		}

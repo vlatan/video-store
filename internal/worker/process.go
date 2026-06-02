@@ -109,7 +109,7 @@ func (w *Worker) Process(ctx context.Context) error {
 	// Define map that will accumulate all valid YT videos
 	ytVideosMap := make(map[string]*models.Post)
 
-	// GET ALL THE ORPHAN VALID VIDEOS FROM YOUTUBE
+	// GET THE ORPHAN VALID VIDEOS FROM YOUTUBE
 	// ###################################################################
 
 	// Collect the orphans video IDs
@@ -121,11 +121,11 @@ func (w *Worker) Process(ctx context.Context) error {
 	}
 
 	// Get valid orphan videos from YT
-	if err = w.getOrphanVideos(ctx, orphanVideoIDs, ytVideosMap); err != nil {
+	if err = w.getValidVideos(ctx, orphanVideoIDs, ytVideosMap); err != nil {
 		return err
 	}
 
-	// GET ALL THE PLAYLIST VALID VIDEOS FROM YOUTUBE
+	// GET THE PLAYLISTS' VALID VIDEOS FROM YOUTUBE
 	// ###################################################################
 
 	// Get valid videos from playlists
