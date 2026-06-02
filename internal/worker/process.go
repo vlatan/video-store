@@ -151,10 +151,7 @@ func (w *Worker) Process(ctx context.Context) error {
 	newVideos := slices.Collect(maps.Values(ytVideosMap))
 
 	// Summarize all new videos in place
-	_, err = w.summarizeVideos(ctx, newVideos)
-
-	// Exit early if context ended
-	if utils.IsContextErr(err) {
+	if _, err = w.summarizeVideos(ctx, newVideos); err != nil {
 		return err
 	}
 
