@@ -150,7 +150,7 @@ func (w *Worker) Process(ctx context.Context) error {
 	// ytVideosMap should now contain only new videos.
 	newVideos := slices.Collect(maps.Values(ytVideosMap))
 
-	// Summarize new videos in place
+	// Summarize all new videos in place
 	_, err = w.summarizeVideos(ctx, newVideos)
 
 	// This can only be context error
@@ -158,24 +158,9 @@ func (w *Worker) Process(ctx context.Context) error {
 		return err
 	}
 
-	// Insert new videos in DB
-	for _, newVideo := range newVideos {
-
-		_, err = w.postsRepo.InsertPost(ctx, newVideo)
-		if err == nil {
-			w.stats.InsertedDbVideos++
-			continue
-		}
-
-		// Exit early if context ended
-		if utils.IsContextErr(err) {
-			return err
-		}
-
-		log.Printf(
-			"Failed to insert video '%s' in DB; %v",
-			newVideo.VideoID, err,
-		)
+	// This can only be context error
+	if err = w.insertVideos(ctx, newVideos); err != nil {
+		return err
 	}
 
 	// UPDATE THE EXISTING VIDEOS IN DATABASE

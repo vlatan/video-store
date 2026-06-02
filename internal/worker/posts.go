@@ -247,3 +247,31 @@ func (w *Worker) deleteVideos(
 
 	return validDbVideos, nil
 }
+
+// insertVideos inserts videos in database
+// Exits with error only if context ended, any other error is just logged.
+func (w *Worker) insertVideos(ctx context.Context, videos []*models.Post) error {
+
+	// Insert new videos in DB
+	for _, video := range videos {
+
+		rowsAffected, err := w.postsRepo.InsertPost(ctx, video)
+		w.stats.InsertedDbVideos += rowsAffected
+
+		if err == nil {
+			continue
+		}
+
+		// Exit early if context ended
+		if utils.IsContextErr(err) {
+			return err
+		}
+
+		log.Printf(
+			"Failed to insert video '%s' in DB; %v",
+			video.VideoID, err,
+		)
+	}
+
+	return nil
+}
