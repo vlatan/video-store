@@ -26,6 +26,7 @@ type Worker struct {
 	youtube     *yt.Service
 	gemini      *gemini.Service
 	lock        *rdb.RedisLock
+	stats       WorkerStats
 	cleanup     func()
 }
 

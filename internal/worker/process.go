@@ -19,9 +19,8 @@ import (
 const deleteLimit = 5
 
 // Process processes the videos
-func (w *Worker) Process(ctx context.Context) (WorkerStats, error) {
+func (w *Worker) Process(ctx context.Context) error {
 
-	var stats WorkerStats
 	var valErr *yt.ValidationError
 
 	// Define retry configs for the external APIs
@@ -43,12 +42,12 @@ func (w *Worker) Process(ctx context.Context) (WorkerStats, error) {
 	// Fetch all the playlists from DB
 	dbSources, err := w.sourcesRepo.GetSources(ctx)
 	if err != nil || len(dbSources) == 0 {
-		return stats, fmt.Errorf(
+		return fmt.Errorf(
 			"could not fetch the sources from DB; rows: %v; %w",
 			len(dbSources), err,
 		)
 	}
-	stats.FetchedDbSources = len(dbSources)
+	w.stats.FetchedDbSources = len(dbSources)
 
 	// GET GIVEN PLAYLISTS FROM YOUTUBE
 	// ###################################################################
@@ -64,12 +63,12 @@ func (w *Worker) Process(ctx context.Context) (WorkerStats, error) {
 	// Fetch playlists from YouTube
 	ytSources, err := w.youtube.GetSources(ctx, ytRetryConfig, playlistIDs...)
 	if err != nil {
-		return stats, fmt.Errorf(
+		return fmt.Errorf(
 			"could not fetch the playlists from YouTube; %w",
 			err,
 		)
 	}
-	stats.FetchedYtSources = len(ytSources)
+	w.stats.FetchedYtSources = len(ytSources)
 
 	// GET THE CORRESPONDING CHANNELS FROM YOUTUBE
 	// ###################################################################
@@ -85,12 +84,12 @@ func (w *Worker) Process(ctx context.Context) (WorkerStats, error) {
 	// Fetch corresponding channels
 	channels, err := w.youtube.GetChannels(ctx, ytRetryConfig, channelIDs...)
 	if err != nil {
-		return stats, fmt.Errorf(
+		return fmt.Errorf(
 			"could not fetch the channels from YouTube; %w",
 			err,
 		)
 	}
-	stats.FetchedYtChannels = len(channels)
+	w.stats.FetchedYtChannels = len(channels)
 
 	// Create channels map
 	channelsMap := make(map[string]*youtube.Channel, len(channels))
@@ -101,11 +100,11 @@ func (w *Worker) Process(ctx context.Context) (WorkerStats, error) {
 	// UPDATE THE PLAYLISTS IN DATABASE
 	// ###################################################################
 
-	stats.UpdatedDbSources, err = w.updatePlaylists(ctx, ytSourcesMap, channelsMap, dbSourcesMap)
+	w.stats.UpdatedDbSources, err = w.updatePlaylists(ctx, ytSourcesMap, channelsMap, dbSourcesMap)
 
 	// This can only be context error
 	if err != nil {
-		return stats, err
+		return err
 	}
 
 	// GET ALL THE VIDEOS FROM DATABASE
@@ -114,12 +113,12 @@ func (w *Worker) Process(ctx context.Context) (WorkerStats, error) {
 	// Get ALL videos from DB, should be ordered by upload date
 	dbVideos, err := w.postsRepo.GetAllPosts(ctx)
 	if err != nil || len(dbVideos) == 0 {
-		return stats, fmt.Errorf(
+		return fmt.Errorf(
 			"could not fetch the videos from DB; rows: %v; %w",
 			len(dbVideos), err,
 		)
 	}
-	stats.FetchedDbVideos = len(dbVideos)
+	w.stats.FetchedDbVideos = len(dbVideos)
 
 	// GET ALL THE ORPHAN VALID VIDEOS FROM YOUTUBE
 	// ###################################################################
@@ -135,7 +134,7 @@ func (w *Worker) Process(ctx context.Context) (WorkerStats, error) {
 	// Get orphans metadata from YT
 	ytOrphanVideos, err := w.youtube.GetVideos(ctx, ytRetryConfig, orphanVideoIDs...)
 	if err != nil {
-		return stats, fmt.Errorf(
+		return fmt.Errorf(
 			"could not get the orphan videos from YouTube; %w",
 			err,
 		)
@@ -150,13 +149,13 @@ func (w *Worker) Process(ctx context.Context) (WorkerStats, error) {
 		// If no error this is a valid video
 		if err == nil {
 			ytVideosMap[video.Id] = w.youtube.NewYouTubePost(video, "")
-			stats.FetchedYtVideos++
+			w.stats.FetchedYtVideos++
 			continue
 		}
 
 		// If this is NOT a validation error, stop the process
 		if !errors.As(err, &valErr) {
-			return stats, fmt.Errorf(
+			return fmt.Errorf(
 				"unexpected error during video %q validation; %w",
 				video.Id, err,
 			)
@@ -171,12 +170,12 @@ func (w *Worker) Process(ctx context.Context) (WorkerStats, error) {
 
 		// Check the context first
 		if err = ctx.Err(); err != nil {
-			return stats, err
+			return err
 		}
 
 		sourceItems, err := w.youtube.GetSourceItems(ctx, ytRetryConfig, playlistID)
 		if err != nil {
-			return stats, fmt.Errorf(
+			return fmt.Errorf(
 				"couldn't get items from YouTube for source '%s'; %w",
 				playlistID, err,
 			)
@@ -191,7 +190,7 @@ func (w *Worker) Process(ctx context.Context) (WorkerStats, error) {
 		// Get all the videos metadata for this source
 		videosMetadata, err := w.youtube.GetVideos(ctx, ytRetryConfig, videoIDs...)
 		if err != nil {
-			return stats, fmt.Errorf(
+			return fmt.Errorf(
 				"couldn't get videos from YouTube for source %s; %w",
 				playlistID, err,
 			)
@@ -202,7 +201,7 @@ func (w *Worker) Process(ctx context.Context) (WorkerStats, error) {
 
 			// Check the context first
 			if err = ctx.Err(); err != nil {
-				return stats, err
+				return err
 			}
 
 			// Validate the video
@@ -215,7 +214,7 @@ func (w *Worker) Process(ctx context.Context) (WorkerStats, error) {
 
 			// If this is any other error, stop the process
 			if err != nil {
-				return stats, fmt.Errorf(
+				return fmt.Errorf(
 					"unexpected error during video %q validation; %w",
 					video.Id, err,
 				)
@@ -230,14 +229,14 @@ func (w *Worker) Process(ctx context.Context) (WorkerStats, error) {
 
 			// Exit early if context ended
 			if utils.IsContextErr(err) {
-				return stats, err
+				return err
 			}
 
 			// If the video is already in ytVideosMap as an orphaned video
 			// we overwrite it, associate it with a YT playlist.
 			// If not we just add new video.
 			ytVideosMap[video.Id] = w.youtube.NewYouTubePost(video, playlistID)
-			stats.FetchedYtVideos++
+			w.stats.FetchedYtVideos++
 		}
 	}
 
@@ -248,7 +247,7 @@ func (w *Worker) Process(ctx context.Context) (WorkerStats, error) {
 
 		// Check the context first
 		if err = ctx.Err(); err != nil {
-			return stats, err
+			return err
 		}
 
 		// Check if DB video exists on YouTube
@@ -267,13 +266,13 @@ func (w *Worker) Process(ctx context.Context) (WorkerStats, error) {
 		)
 
 		if err == nil {
-			stats.AdoptedDbVideos++
+			w.stats.AdoptedDbVideos++
 			continue
 		}
 
 		// Exit early if context ended
 		if utils.IsContextErr(err) {
-			return stats, err
+			return err
 		}
 
 		log.Printf(
@@ -291,7 +290,7 @@ func (w *Worker) Process(ctx context.Context) (WorkerStats, error) {
 
 		// Check the context first
 		if err = ctx.Err(); err != nil {
-			return stats, err
+			return err
 		}
 
 		// If the DB video exists on YouTube keep it as valid
@@ -308,20 +307,20 @@ func (w *Worker) Process(ctx context.Context) (WorkerStats, error) {
 		}
 
 		// Do not remove any more videos from DB if delete limit was reached
-		if len(stats.DeletedDbVideos) >= deleteLimit {
+		if len(w.stats.DeletedDbVideos) >= deleteLimit {
 			continue
 		}
 
 		// Delete the video
 		_, err = w.postsRepo.DeletePost(ctx, dbVideo.VideoID)
 		if err == nil {
-			stats.DeletedDbVideos = append(stats.DeletedDbVideos, dbVideo.VideoID)
+			w.stats.DeletedDbVideos = append(w.stats.DeletedDbVideos, dbVideo.VideoID)
 			continue
 		}
 
 		// Exit early if context ended
 		if utils.IsContextErr(err) {
-			return stats, err
+			return err
 		}
 
 		log.Printf(
@@ -342,7 +341,7 @@ func (w *Worker) Process(ctx context.Context) (WorkerStats, error) {
 
 	// This can only be context error
 	if err != nil {
-		return stats, err
+		return err
 	}
 
 	// Insert new videos in DB
@@ -350,13 +349,13 @@ func (w *Worker) Process(ctx context.Context) (WorkerStats, error) {
 
 		_, err = w.postsRepo.InsertPost(ctx, newVideo)
 		if err == nil {
-			stats.InsertedDbVideos++
+			w.stats.InsertedDbVideos++
 			continue
 		}
 
 		// Exit early if context ended
 		if utils.IsContextErr(err) {
-			return stats, err
+			return err
 		}
 
 		log.Printf(
@@ -373,7 +372,7 @@ func (w *Worker) Process(ctx context.Context) (WorkerStats, error) {
 
 	// This can only be context error
 	if err != nil {
-		return stats, err
+		return err
 	}
 
 	// Update the existing DB videos
@@ -382,13 +381,13 @@ func (w *Worker) Process(ctx context.Context) (WorkerStats, error) {
 		video := validDBVideos[index]
 		_, err = w.postsRepo.UpdateGeneratedData(ctx, video)
 		if err == nil {
-			stats.UpdatedDbVideos++
+			w.stats.UpdatedDbVideos++
 			continue
 		}
 
 		// Exit early if context ended
 		if utils.IsContextErr(err) {
-			return stats, err
+			return err
 		}
 
 		log.Printf(
@@ -397,5 +396,5 @@ func (w *Worker) Process(ctx context.Context) (WorkerStats, error) {
 		)
 	}
 
-	return stats, nil
+	return nil
 }

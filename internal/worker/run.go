@@ -20,10 +20,10 @@ func (w *Worker) Run(ctx context.Context) {
 	}()
 
 	log.Println("Worker running...")
-	stats, err := w.Process(ctx)
+	err := w.Process(ctx)
 
 	// Log the worker stats
-	stats.Log()
+	w.stats.Log()
 
 	if err != nil {
 		log.Printf("Worker error: %v", err)
