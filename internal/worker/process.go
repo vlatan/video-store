@@ -153,8 +153,8 @@ func (w *Worker) Process(ctx context.Context) error {
 	// Summarize all new videos in place
 	_, err = w.summarizeVideos(ctx, newVideos)
 
-	// This can only be context error
-	if err != nil {
+	// Exit early if context ended
+	if utils.IsContextErr(err) {
 		return err
 	}
 
