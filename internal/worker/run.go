@@ -22,7 +22,7 @@ func (w *Worker) Run(ctx context.Context) {
 	log.Println("Worker running...")
 	stats, err := w.Process(ctx)
 
-	// Print the worker stats
+	// Log the worker stats
 	stats.Log()
 
 	if err != nil {
