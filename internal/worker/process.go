@@ -137,49 +137,10 @@ func (w *Worker) Process(ctx context.Context) error {
 	// DELETE THE OBSOLETE VIDEOS FROM DATABASE
 	// ###################################################################
 
-	// Delete videos in DB
-	var validDBVideos []*models.Post
-	for _, dbVideo := range dbVideos {
-
-		// Check the context first
-		if err = ctx.Err(); err != nil {
-			return err
-		}
-
-		// If the DB video exists on YouTube keep it as valid
-		if _, exists := ytVideosMap[dbVideo.VideoID]; exists {
-			// Keep valid DB videos
-			validDBVideos = append(validDBVideos, dbVideo)
-
-			// Delete valid DB videos from the YT map.
-			// In this map ONLY the ones that are not in the DB will remain.
-			// Meaning the NEW videos that need to be added.
-			delete(ytVideosMap, dbVideo.VideoID)
-
-			continue
-		}
-
-		// Do not remove any more videos from DB if delete limit was reached
-		if len(w.stats.DeletedDbVideos) >= deleteLimit {
-			continue
-		}
-
-		// Delete the video
-		_, err = w.postsRepo.DeletePost(ctx, dbVideo.VideoID)
-		if err == nil {
-			w.stats.DeletedDbVideos = append(w.stats.DeletedDbVideos, dbVideo.VideoID)
-			continue
-		}
-
-		// Exit early if context ended
-		if utils.IsContextErr(err) {
-			return err
-		}
-
-		log.Printf(
-			"Could not delete the video '%s' in DB; %v",
-			dbVideo.VideoID, err,
-		)
+	validDbVideos, err := w.deleteVideos(ctx, dbVideos, ytVideosMap)
+	// This can only be context error
+	if err != nil {
+		return err
 	}
 
 	// INSERT THE NEW VIDEOS IN DATABASE
@@ -221,7 +182,7 @@ func (w *Worker) Process(ctx context.Context) error {
 	// ###################################################################
 
 	// Summarize the existing videos in place
-	indexes, err := w.summarizeVideos(ctx, validDBVideos)
+	indexes, err := w.summarizeVideos(ctx, validDbVideos)
 
 	// This can only be context error
 	if err != nil {
@@ -231,7 +192,7 @@ func (w *Worker) Process(ctx context.Context) error {
 	// Update the existing DB videos
 	for _, index := range indexes {
 
-		video := validDBVideos[index]
+		video := validDbVideos[index]
 		_, err = w.postsRepo.UpdateGeneratedData(ctx, video)
 		if err == nil {
 			w.stats.UpdatedDbVideos++

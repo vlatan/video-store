@@ -39,6 +39,10 @@ func (w *Worker) updateSources(
 		rowsAffected, err := w.sourcesRepo.UpdateSource(ctx, newSource)
 		w.stats.UpdatedDbSources += rowsAffected
 
+		if err == nil {
+			continue
+		}
+
 		// Exit early if context ended
 		if utils.IsContextErr(err) {
 			return err

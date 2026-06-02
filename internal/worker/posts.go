@@ -173,6 +173,10 @@ func (w *Worker) adoptVideos(
 
 		w.stats.AdoptedDbVideos += rowsAffected
 
+		if err == nil {
+			continue
+		}
+
 		// Exit early if context ended
 		if utils.IsContextErr(err) {
 			return err
@@ -185,4 +189,61 @@ func (w *Worker) adoptVideos(
 	}
 
 	return nil
+}
+
+// deleteVideos deletes videos from DB which are not in destMap.
+// Mutates destMap by deleting valid videos from there.
+// Returns a slice of valid videos.
+// Exits with error only if context ended, any other error is just logged.
+func (w *Worker) deleteVideos(
+	ctx context.Context,
+	dbVideos []*models.Post,
+	destMap map[string]*models.Post,
+) ([]*models.Post, error) {
+
+	var validDbVideos []*models.Post
+	for _, dbVideo := range dbVideos {
+
+		// Check the context first
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
+
+		// If the DB video exists on YouTube keep it as valid
+		if _, exists := destMap[dbVideo.VideoID]; exists {
+			// Keep valid DB videos
+			validDbVideos = append(validDbVideos, dbVideo)
+
+			// Delete valid DB videos from the YT map.
+			// In this map ONLY the ones that are not in the DB will remain.
+			// Meaning the NEW videos that need to be added.
+			delete(destMap, dbVideo.VideoID)
+
+			continue
+		}
+
+		// Do not remove any more videos from DB if delete limit was reached
+		if len(w.stats.DeletedDbVideos) >= deleteLimit {
+			continue
+		}
+
+		// Delete the video
+		_, err := w.postsRepo.DeletePost(ctx, dbVideo.VideoID)
+		if err == nil {
+			w.stats.DeletedDbVideos = append(w.stats.DeletedDbVideos, dbVideo.VideoID)
+			continue
+		}
+
+		// Exit early if context ended
+		if utils.IsContextErr(err) {
+			return nil, err
+		}
+
+		log.Printf(
+			"Could not delete the video '%s' in DB; %v",
+			dbVideo.VideoID, err,
+		)
+	}
+
+	return validDbVideos, nil
 }
