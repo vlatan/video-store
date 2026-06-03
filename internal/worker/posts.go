@@ -258,7 +258,9 @@ func (w *Worker) insertVideos(ctx context.Context, videos []*models.Post) error 
 			return err
 		}
 
-		if err := w.summarizeVideo(ctx, video); err != nil {
+		// We don't care if the video was succesfully summarized.
+		// We need to insert it regardless.
+		if _, err := w.summarizeVideo(ctx, video); err != nil {
 			return err
 		}
 
@@ -294,11 +296,16 @@ func (w *Worker) updateVideos(ctx context.Context, videos []*models.Post) error 
 			return err
 		}
 
-		if err := w.summarizeVideo(ctx, video); err != nil {
+		summarized, err := w.summarizeVideo(ctx, video)
+
+		if err != nil {
 			return err
 		}
 
-		// TODO: Needs to skip the update if nothing changed
+		// If the video was not summarized, there's nothing to update
+		if !summarized {
+			continue
+		}
 
 		rowsAffected, err := w.postsRepo.UpdateGeneratedData(ctx, video)
 		w.stats.UpdatedDbVideos += rowsAffected

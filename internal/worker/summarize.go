@@ -14,10 +14,13 @@ import (
 	"github.com/vlatan/video-store/internal/utils"
 )
 
-// summarizeVideo summarizes and categorizes a video in place
+// summarizeVideo summarizes and categorizes a video in place.
+// In addition to the error it returns a bool flag
+// to signify if the video was indeed summarized,
+// because the error might be nil even if the video was not summarized.
 func (w *Worker) summarizeVideo(
 	ctx context.Context,
-	video *models.Post) error {
+	video *models.Post) (bool, error) {
 
 	// UNCOMMENT
 	// Nothing to update, summary and category are populated
@@ -32,12 +35,20 @@ func (w *Worker) summarizeVideo(
 	if strings.Contains(video.Summary, utils.UpdateMarker) &&
 		video.Category != nil &&
 		video.Category.Name != "" {
-		return nil
+		return false, nil
+	}
+
+	// Sleep for 60-90 seconds before making a request.
+	// Min sleep needs to be 1m to avoid the genai 250k TPM quota,
+	minSleep, maxOffset := 60*time.Second, 30*time.Second
+	sleep := minSleep + time.Duration(rand.Intn(int(maxOffset))) // #nosec G404
+	if err := utils.SleepContext(ctx, sleep); err != nil {
+		return false, err
 	}
 
 	// Check if the worker still owns the lock before an expensive API call
 	if err := w.lock.CheckLock(ctx); err != nil {
-		return fmt.Errorf(
+		return false, fmt.Errorf(
 			"this worker %s does not own the lock anymore; %w",
 			w.id, err,
 		)
@@ -48,31 +59,24 @@ func (w *Worker) summarizeVideo(
 
 	// Exit with error if RPD reached or context ended
 	if errors.Is(err, gemini.ErrDailyLimitReached) || utils.IsContextErr(err) {
-		return fmt.Errorf(
+		return false, fmt.Errorf(
 			"gemini content generation on video '%s' failed; %v",
 			video.VideoID, err)
 	}
 
-	// Sleep for 60-90 seconds.
-	// Min sleep needs to be 1m to avoid the genai 250k TPM quota,
-	minSleep, maxOffset := 60*time.Second, 30*time.Second
-	sleep := minSleep + time.Duration(rand.Intn(int(maxOffset))) // #nosec G404
-	if err := utils.SleepContext(ctx, sleep); err != nil {
-		return err
-	}
-
-	// For every other error we just log and exit
+	// For every other error we just log and exit.
+	// The video was not summarized though.
 	if err != nil {
 		log.Printf(
 			"gemini content generation on video '%s' failed; %v",
 			video.VideoID, err,
 		)
-		return nil
+		return false, nil
 	}
 
 	video.OriginalTitle = genaiResponse.OriginalTitle
 	video.Summary = genaiResponse.Summary
 	video.Category = &models.Category{Name: genaiResponse.Category}
 
-	return nil
+	return true, nil
 }
