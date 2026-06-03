@@ -90,11 +90,11 @@ func New(cfg *config.Config, ctx context.Context) (*Worker, error) {
 	redisLockTTL := time.Duration(float64(w.config.WorkerExpectedRuntime) * 1.25)
 	w.lock = rdb.NewLock(workerLockKey, w.id, redisLockTTL)
 
-	// Acquire the lock.
-	// This is a blocking call until the lock is acquired.
-	if err := w.lock.Lock(ctx); err != nil {
-		return nil, fmt.Errorf("failed to acquire Redis lock; %w", err)
+	// Try to acquire the lock.
+	if ok, err := w.lock.TryLock(ctx); !ok || err != nil {
+		return nil, fmt.Errorf("worker failed to acquire Redis lock; %w", err)
 	}
+
 	log.Println("Lock acquired!")
 
 	// Register the cleanup function
