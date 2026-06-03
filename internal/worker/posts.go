@@ -259,7 +259,7 @@ func (w *Worker) insertVideos(ctx context.Context, videos []*models.Post) error 
 		}
 
 		// We don't care if the video was succesfully summarized.
-		// We need to insert it regardless.
+		// We will insert it regardless.
 		if _, err := w.summarizeVideo(ctx, video); err != nil {
 			return err
 		}

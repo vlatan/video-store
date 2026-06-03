@@ -105,7 +105,7 @@ func New(cfg *config.Config, ctx context.Context) (*Worker, error) {
 		// Close the DB pool
 		db.Pool.Close()
 
-		// Delete the Redis lock key
+		// Delete the Redis lock key.
 		// Use ctx without cancel so Unlock isn't killed by the expired ctx.
 		if err := w.lock.Unlock(context.WithoutCancel(ctx)); err != nil {
 			log.Printf("Failed to release the Redis lock; %v", err)
