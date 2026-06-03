@@ -1,5 +1,3 @@
-* Change how summarize videos works, no need for indexes
-* We want to insert after each video is summarized
 * Maybe use another gemini API call for the credits
 
 * Group videos by entity, create taxonomies

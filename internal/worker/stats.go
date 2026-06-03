@@ -14,7 +14,7 @@ type WorkerStats struct {
 	AdoptedDbVideos   int64
 	DeletedDbVideos   []string
 	InsertedDbVideos  int64
-	UpdatedDbVideos   int
+	UpdatedDbVideos   int64
 }
 
 func (ws WorkerStats) Log() {

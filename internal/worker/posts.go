@@ -170,7 +170,6 @@ func (w *Worker) adoptVideos(
 		rowsAffected, err := w.postsRepo.UpdateSource(
 			ctx, dbVideo.VideoID, ytVideo.PlaylistID,
 		)
-
 		w.stats.AdoptedDbVideos += rowsAffected
 
 		if err == nil {
@@ -248,12 +247,20 @@ func (w *Worker) deleteVideos(
 	return validDbVideos, nil
 }
 
-// insertVideos inserts videos in database
-// Exits with error only if context ended, any other error is just logged.
+// insertVideos summarizes videos and inserts them in database
 func (w *Worker) insertVideos(ctx context.Context, videos []*models.Post) error {
 
 	// Insert new videos in DB
 	for _, video := range videos {
+
+		// Check the context first
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+
+		if err := w.summarizeVideo(ctx, video); err != nil {
+			return err
+		}
 
 		rowsAffected, err := w.postsRepo.InsertPost(ctx, video)
 		w.stats.InsertedDbVideos += rowsAffected
@@ -269,6 +276,44 @@ func (w *Worker) insertVideos(ctx context.Context, videos []*models.Post) error 
 
 		log.Printf(
 			"Failed to insert video '%s' in DB; %v",
+			video.VideoID, err,
+		)
+	}
+
+	return nil
+}
+
+// updateVideos summarizes videos and updates them in database
+func (w *Worker) updateVideos(ctx context.Context, videos []*models.Post) error {
+
+	// Insert new videos in DB
+	for _, video := range videos {
+
+		// Check the context first
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+
+		if err := w.summarizeVideo(ctx, video); err != nil {
+			return err
+		}
+
+		// TODO: Needs to skip the update if nothing changed
+
+		rowsAffected, err := w.postsRepo.UpdateGeneratedData(ctx, video)
+		w.stats.UpdatedDbVideos += rowsAffected
+
+		if err == nil {
+			continue
+		}
+
+		// Exit early if context ended
+		if utils.IsContextErr(err) {
+			return err
+		}
+
+		log.Printf(
+			"Failed to update generated data in DB on video '%s'; %v",
 			video.VideoID, err,
 		)
 	}

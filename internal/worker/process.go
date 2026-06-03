@@ -3,12 +3,10 @@ package worker
 import (
 	"context"
 	"fmt"
-	"log"
 	"maps"
 	"slices"
 
 	"github.com/vlatan/video-store/internal/models"
-	"github.com/vlatan/video-store/internal/utils"
 	"google.golang.org/api/youtube/v3"
 )
 
@@ -135,6 +133,7 @@ func (w *Worker) Process(ctx context.Context) error {
 	// DELETE THE OBSOLETE VIDEOS FROM DATABASE
 	// ###################################################################
 
+	// Delete the obsolete videos from DB, return valid, existing ones in DB
 	validDbVideos, err := w.deleteVideos(ctx, dbVideos, ytVideosMap)
 	if err != nil {
 		return err
@@ -143,15 +142,8 @@ func (w *Worker) Process(ctx context.Context) error {
 	// INSERT THE NEW VIDEOS IN DATABASE
 	// ###################################################################
 
-	// Put new YT videos in a slice.
 	// ytVideosMap should now contain only new videos.
 	newVideos := slices.Collect(maps.Values(ytVideosMap))
-
-	// Summarize all new videos in place
-	if _, err = w.summarizeVideos(ctx, newVideos); err != nil {
-		return err
-	}
-
 	if err = w.insertVideos(ctx, newVideos); err != nil {
 		return err
 	}
@@ -159,31 +151,8 @@ func (w *Worker) Process(ctx context.Context) error {
 	// UPDATE THE EXISTING VIDEOS IN DATABASE
 	// ###################################################################
 
-	// Summarize the existing videos in place
-	indexes, err := w.summarizeVideos(ctx, validDbVideos)
-	if err != nil {
+	if err = w.updateVideos(ctx, validDbVideos); err != nil {
 		return err
-	}
-
-	// Update the existing DB videos
-	for _, index := range indexes {
-
-		video := validDbVideos[index]
-		_, err = w.postsRepo.UpdateGeneratedData(ctx, video)
-		if err == nil {
-			w.stats.UpdatedDbVideos++
-			continue
-		}
-
-		// Exit early if context ended
-		if utils.IsContextErr(err) {
-			return err
-		}
-
-		log.Printf(
-			"Failed to update generated data in DB on video '%s'; %v",
-			video.VideoID, err,
-		)
 	}
 
 	return nil
