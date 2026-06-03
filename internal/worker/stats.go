@@ -4,6 +4,11 @@ import (
 	"log"
 )
 
+type stat struct {
+	label string
+	value any
+}
+
 type WorkerStats struct {
 	FetchedDbSources  int
 	FetchedYtSources  int
@@ -19,23 +24,46 @@ type WorkerStats struct {
 
 func (ws WorkerStats) Log() {
 
-	log.Printf("Fetched playlists from DB: %d", ws.FetchedDbSources)
-	log.Printf("Fetched playlists from YouTube: %d", ws.FetchedYtSources)
-	log.Printf("Fetched channels from YouTube: %d", ws.FetchedYtChannels)
-	log.Printf("Updated playlists in DB: %d", ws.UpdatedDbSources)
-	log.Printf("Fetched videos from DB: %d", ws.FetchedDbVideos)
-	log.Printf("Fetched valid videos from YouTube: %d", ws.FetchedYtVideos)
-	log.Printf("Adopted videos in DB: %d", ws.AdoptedDbVideos)
-	log.Printf("Deleted videos in DB: %d; %v", len(ws.DeletedDbVideos), ws.DeletedDbVideos)
-
-	if len(ws.DeletedDbVideos) > 0 && len(ws.DeletedDbVideos) >= deleteLimit {
-		log.Println(
-			"WARNING: HIT MAX DELETION LIMIT.",
-			"If this persists investigate for bugs.",
-		)
+	stats := []stat{
+		{"Fetched playlists from DB", ws.FetchedDbSources},
+		{"Fetched playlists from YT", ws.FetchedYtSources},
+		{"Fetched channels from YT", ws.FetchedYtChannels},
 	}
 
-	log.Printf("Added videos in DB: %d\n", ws.InsertedDbVideos)
-	log.Printf("Updated videos in DB: %d", ws.UpdatedDbVideos)
+	if ws.UpdatedDbSources > 0 {
+		stats = append(stats, stat{"Updated playlists in DB", ws.UpdatedDbSources})
+	}
 
+	stats = append(stats, stat{"Fetched videos from DB", ws.FetchedDbVideos})
+	stats = append(stats, stat{"Fetched videos from YT", ws.FetchedYtVideos})
+
+	if ws.AdoptedDbVideos > 0 {
+		stats = append(stats, stat{"Adopted videos in DB", ws.AdoptedDbVideos})
+	}
+
+	if len(ws.DeletedDbVideos) > 0 {
+		stats = append(stats, stat{"Deleted videos in DB", len(ws.DeletedDbVideos)})
+		stats = append(stats, stat{"Deleted videos ids", ws.DeletedDbVideos})
+	}
+
+	if ws.InsertedDbVideos > 0 {
+		stats = append(stats, stat{"Added videos in DB", ws.InsertedDbVideos})
+	}
+
+	if ws.UpdatedDbVideos > 0 {
+		stats = append(stats, stat{"Updated videos in DB", ws.UpdatedDbVideos})
+	}
+
+	logStats(stats)
+}
+
+func logStats(stats []stat) {
+	maxLabel := 0
+	for _, s := range stats {
+		maxLabel = max(maxLabel, len(s.label))
+	}
+
+	for _, s := range stats {
+		log.Printf("%-*s %v", maxLabel+1, s.label+":", s.value)
+	}
 }
