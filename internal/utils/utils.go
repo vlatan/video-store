@@ -29,7 +29,7 @@ var RootFavicons = []string{
 	"/site.webmanifest",
 }
 
-const UpdateMarker = "<!-- v7 -->" // REMOVE
+const UpdateMarker = "<!-- v8 -->" // REMOVE
 
 // Create canonical URI string
 func CanonicalURL(r *http.Request, protocol string) string {

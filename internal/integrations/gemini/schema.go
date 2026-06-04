@@ -26,7 +26,6 @@ func (s *Service) responseSchema() *genai.Schema {
 			"summary": {
 				Type: genai.TypeString,
 				Description: "Write an engaging one-paragraph blurb in the style of an IMDB film description. " +
-					"Write in present tense, as if inviting the reader to discover the subject. " +
 					"Focus entirely on the subject matter itself - the people, events, or forces at the heart of the story. " +
 					"Do NOT summarize or reference the video. Do NOT write a definition or encyclopedia entry. " +
 					"Make it feel compelling and human, not academic.",
