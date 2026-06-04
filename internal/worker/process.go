@@ -23,7 +23,7 @@ func (w *Worker) Process(ctx context.Context) error {
 	dbSources, err := w.sourcesRepo.GetSources(ctx)
 	if err != nil || len(dbSources) == 0 {
 		return fmt.Errorf(
-			"could not fetch the sources from DB; rows: %v; %w",
+			"could not fetch the sources from DB; rows: %d; %w",
 			len(dbSources), err,
 		)
 	}
@@ -91,7 +91,7 @@ func (w *Worker) Process(ctx context.Context) error {
 	dbVideos, err := w.postsRepo.GetAllPosts(ctx)
 	if err != nil || len(dbVideos) == 0 {
 		return fmt.Errorf(
-			"could not fetch the videos from DB; rows: %v; %w",
+			"could not fetch the videos from DB; rows: %d; %w",
 			len(dbVideos), err,
 		)
 	}
