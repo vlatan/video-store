@@ -14,7 +14,7 @@ func (s *Service) systemInstruction() *genai.Content {
 		"Focus exclusively on the real-world historical figures, locations, and events.",
 		"Start every sentence directly with the subject, event, or person involved.",
 		"Write complex, detailed sentences built entirely from concrete, verifiable facts.",
-		"Omit timestamps, uppercase formatting, and em dashes.",
+		"Omit timestamps, uppercase formatting and em dashes (—).",
 	}
 
 	contentText := strings.Join(content, "\n")
