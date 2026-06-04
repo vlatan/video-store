@@ -798,6 +798,7 @@ button.cancel-button {
 
 .site-footer>* {
 	display: block;
+	line-height: 1;
 }
 
 .site-copy {
@@ -932,13 +933,14 @@ button.cancel-button {
 	.site-footer-wrap {
 		max-width: 100%;
 		align-items: center;
-		border-left: none;
-		border-right: none;
 	}
 
 	.site-footer {
 		width: 100%;
 		flex-wrap: wrap;
+		border-left: none;
+		border-right: none;
+		padding: 0.8rem;
 	}
 
 	.snackbar {

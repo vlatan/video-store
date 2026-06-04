@@ -1,10 +1,10 @@
 * Maybe use another gemini API call for the credits
 
+* User reviews and ratings
+* Search bar on small screens accross entire screen
 * Group videos by entity, create taxonomies
 * Create "Best of" landing pages for these clusters
 * Internal linking
-* Rating
-* User reviews
 
 * Uncomment and remove code in:
   - `internal/integrations/gemini/gemini.go`
