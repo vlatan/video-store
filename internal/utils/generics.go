@@ -41,11 +41,13 @@ func extractRetryDelay(err error) (time.Duration, bool) {
 	return 0, false
 }
 
-// Retry a function
+// Retry retries a callable function with retry config supplied,
+// and conditional exit early.
 func Retry[T any](
 	ctx context.Context,
 	rc *RetryConfig,
 	callable func() (T, error),
+	shouldExitEarly ...func(error) bool,
 ) (T, error) {
 
 	var (
@@ -63,6 +65,13 @@ func Retry[T any](
 		data, err := callable()
 		if err == nil {
 			return data, err
+		}
+
+		// Check if we should exit early
+		for _, predicate := range shouldExitEarly {
+			if predicate(err) {
+				return zero, fmt.Errorf("no retries attempted; %w", err)
+			}
 		}
 
 		// If this is the last iteration break the loop

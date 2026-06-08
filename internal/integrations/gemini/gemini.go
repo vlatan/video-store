@@ -3,6 +3,7 @@ package gemini
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -162,7 +163,7 @@ func (s *Service) generateContent(
 	return response, nil
 }
 
-// Create the prompt and generate content using Gemini
+// Summarize creates the prompt and generates content using Gemini
 // https://ai.google.dev/gemini-api/docs/video-understanding#youtube
 func (s *Service) Summarize(
 	ctx context.Context,
@@ -177,9 +178,14 @@ func (s *Service) Summarize(
 	}
 
 	// Make the API call
-	result, err := utils.Retry(
-		ctx, rc, func() (*genai.GenerateContentResponse, error) {
+	result, err := utils.Retry(ctx, rc,
+		func() (*genai.GenerateContentResponse, error) {
 			return s.generateContent(ctx, contents)
+		},
+		// Exit immediately if no candidates returned
+		func(err error) bool {
+			var target *BlockedErr
+			return errors.As(err, &target)
 		},
 	)
 
