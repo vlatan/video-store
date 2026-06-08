@@ -89,6 +89,7 @@ func New(
 }
 
 // makeContents creates Genai contents
+// https://ai.google.dev/gemini-api/docs/video-understanding#clipping-intervals
 func (s *Service) makeContents(video *models.Post) ([]*genai.Content, error) {
 
 	videoDuration, err := video.Duration.Seconds()
@@ -164,7 +165,6 @@ func (s *Service) generateContent(
 }
 
 // Summarize creates the prompt and generates content using Gemini
-// https://ai.google.dev/gemini-api/docs/video-understanding#youtube
 func (s *Service) Summarize(
 	ctx context.Context,
 	video *models.Post,
