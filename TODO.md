@@ -1,3 +1,5 @@
+* OAuth verification homepage
+* What to do with no candidates videos due to prohibited content?
 * Maybe use another gemini API call for the credits
 
 * User reviews and ratings
