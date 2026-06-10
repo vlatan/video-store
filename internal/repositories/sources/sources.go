@@ -125,7 +125,7 @@ func (r *Repository) GetSources(ctx context.Context) (models.Sources, error) {
 		}
 
 		source.ChannelThumbnails = &channelThumbs
-		source.Thumbnail = channelThumbs.Medium
+		source.Thumbnail = (*models.Thumbnail)(channelThumbs.Medium)
 
 		// Include the category in the result
 		sources = append(sources, source)

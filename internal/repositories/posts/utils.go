@@ -162,7 +162,7 @@ func postProcessPosts(ctx context.Context, posts models.Posts) error {
 				err := json.Unmarshal(post.RawThumbs, &thumbs)
 
 				if err == nil {
-					posts.Items[i].Thumbnail = thumbs.Medium
+					posts.Items[i].Thumbnail = (*models.Thumbnail)(thumbs.Medium)
 					posts.Items[i].Srcset = thumbs.Srcset(480)
 					posts.Items[i].RawThumbs = nil
 					return nil

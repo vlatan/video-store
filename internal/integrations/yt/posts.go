@@ -107,12 +107,7 @@ func (s *Service) NewYouTubePost(video *youtube.Video, playlistID string) *model
 	post.Provider = "YouTube"
 
 	// Assign the thumbnails
-	post.Thumbnails = &models.Thumbnails{}
-	post.Thumbnails.Default = video.Snippet.Thumbnails.Default
-	post.Thumbnails.Medium = video.Snippet.Thumbnails.Medium
-	post.Thumbnails.High = video.Snippet.Thumbnails.High
-	post.Thumbnails.Standard = video.Snippet.Thumbnails.Standard
-	post.Thumbnails.Maxres = video.Snippet.Thumbnails.Maxres
+	post.Thumbnails = (*models.Thumbnails)(video.Snippet.Thumbnails)
 
 	// Normalize title, description and tags
 	post.Title = utils.NormalizeTitle(video.Snippet.Title, utils.VideoTitleCutoffs)

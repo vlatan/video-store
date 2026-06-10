@@ -1,6 +1,10 @@
 package models
 
-import "testing"
+import (
+	"testing"
+
+	"google.golang.org/api/youtube/v3"
+)
 
 func TestThumbnailEqual(t *testing.T) {
 
@@ -23,7 +27,7 @@ func TestThumbnailEqual(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := ThumbnailEqual(tt.a, tt.b); got != tt.expected {
+			if got := tt.a.Equal(tt.b); got != tt.expected {
 				t.Errorf("got %t, want %t", got, tt.expected)
 			}
 		})
@@ -32,7 +36,7 @@ func TestThumbnailEqual(t *testing.T) {
 
 func TestThumbnailsEqual(t *testing.T) {
 
-	a := Thumbnail{Width: 10, Height: 5, Url: "foo"}
+	a := youtube.Thumbnail{Width: 10, Height: 5, Url: "foo"}
 	b := a
 	b.Url = "bar"
 
@@ -62,7 +66,7 @@ func TestThumbnailsEqual(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := ThumbnailsEqual(tt.thumbsA, tt.thumbsB); got != tt.expected {
+			if got := tt.thumbsA.Equal(tt.thumbsB); got != tt.expected {
 				t.Errorf("got %t, want %t", got, tt.expected)
 			}
 		})

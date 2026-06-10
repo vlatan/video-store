@@ -31,7 +31,7 @@ func (w *Worker) updateSources(
 
 		// Check if channel thumbs or title have changed
 		dbChThumbs := dbSources[playlistID].ChannelThumbnails
-		if models.ThumbnailsEqual(dbChThumbs, newSource.ChannelThumbnails) &&
+		if dbChThumbs.Equal(newSource.ChannelThumbnails) &&
 			dbSources[playlistID].ChannelTitle == newSource.ChannelTitle {
 			continue
 		}
