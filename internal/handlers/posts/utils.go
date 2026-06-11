@@ -50,8 +50,16 @@ func (s *Service) generatePostContent(
 	ctx, cancel := context.WithTimeout(detachedCtx, ttl)
 	defer cancel()
 
+	// Create video contents
+	videoContents, err := s.gemini.MakeVideoContents(post)
+	if err != nil {
+		return fmt.Errorf(
+			"could't create gemini contents on video %q; %w",
+			post.VideoID, err)
+	}
+
 	genaiResponse, err := s.gemini.Summarize(
-		ctx, post,
+		ctx, post, videoContents,
 		&utils.RetryConfig{
 			MaxRetries: 1,
 			MaxJitter:  2 * time.Second,

@@ -46,6 +46,14 @@ func (w *Worker) summarizeVideo(
 		return false, err
 	}
 
+	// Create video contents
+	videoContents, err := w.gemini.MakeVideoContents(video)
+	if err != nil {
+		return false, fmt.Errorf(
+			"could't create gemini contents on video '%s'; %v",
+			video.VideoID, err)
+	}
+
 	// Check if the worker still owns the lock before an expensive API call
 	if err := w.lock.CheckLock(ctx); err != nil {
 		return false, fmt.Errorf(
@@ -55,7 +63,7 @@ func (w *Worker) summarizeVideo(
 	}
 
 	// Generate content using Gemini
-	genaiResponse, err := w.gemini.Summarize(ctx, video, w.geminiRetryConfig)
+	genaiResponse, err := w.gemini.Summarize(ctx, video, videoContents, w.geminiRetryConfig)
 
 	// Exit with error if RPD reached or context ended
 	if errors.Is(err, gemini.ErrDailyLimitReached) || utils.IsContextErr(err) {
