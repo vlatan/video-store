@@ -4,12 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"regexp"
 	"strings"
 	"time"
 
+	"github.com/vlatan/video-store/internal/integrations/gemini"
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/utils"
 )
@@ -50,21 +52,37 @@ func (s *Service) generatePostContent(
 	ctx, cancel := context.WithTimeout(detachedCtx, ttl)
 	defer cancel()
 
+	retryConfig := &utils.RetryConfig{
+		MaxRetries: 1,
+		MaxJitter:  2 * time.Second,
+		Delay:      65 * time.Second,
+	}
+
 	// Create video contents
-	videoContents, err := s.gemini.MakeVideoContents(post)
+	contents, err := s.gemini.MakeVideoContents(post)
 	if err != nil {
 		return fmt.Errorf(
 			"could't create gemini contents on video %q; %w",
 			post.VideoID, err)
 	}
 
-	genaiResponse, err := s.gemini.GenerateContent(
-		ctx, post, videoContents,
-		&utils.RetryConfig{
-			MaxRetries: 1,
-			MaxJitter:  2 * time.Second,
-			Delay:      65 * time.Second,
-		})
+	genaiResponse, err := s.gemini.GenerateContent(ctx, post, contents, retryConfig)
+
+	// Check if this is a hard block error by the model.
+	// If so make another gemini API call just with a text contents.
+	var target *gemini.BlockedErr
+	if errors.As(err, &target) {
+		log.Printf(
+			"failed to generate content on video %q, trying again with text contents; %v",
+			post.VideoID, err,
+		)
+
+		// Create text contents
+		contents = s.gemini.MakeTextContents(post)
+
+		// Generate content using Gemini, but now with text contents
+		genaiResponse, err = s.gemini.GenerateContent(ctx, post, contents, retryConfig)
+	}
 
 	if err != nil {
 		return fmt.Errorf(

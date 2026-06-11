@@ -34,21 +34,24 @@ func (s *Service) MakeVideoContents(video *models.Post) ([]*genai.Content, error
 		},
 	}
 
-	// Ready the video OUTRO part.
-	// Passing another genai part with the same URL will cause 500 error on the API.
-	// This needs to be refactored if somehow used in the future.
-
-	// 	parts = append(parts, &genai.Part{
-	// 		FileData: &genai.FileData{FileURI: youtubeURL, MIMEType: "video/*"},
-	// 		VideoMetadata: &genai.VideoMetadata{
-	// 			StartOffset: time.Duration(videoDuration-300) * time.Second,
-	// 			FPS:         &videoFps,
-	// 		},
-	// 	})
-
 	genaiContent := []*genai.Content{
 		genai.NewContentFromParts(parts, genai.RoleUser),
 	}
 
 	return genaiContent, nil
+}
+
+// MakeTextContents creates Genai contents containing just text
+func (s *Service) MakeTextContents(video *models.Post) []*genai.Content {
+
+	youtubeURL := "https://www.youtube.com/watch?v=" + video.VideoID
+	parts := []*genai.Part{
+		genai.NewPartFromText("Title: " + sanitizePrompt(video.Title)),
+		genai.NewPartFromText("Description: " + sanitizePrompt(video.Description)),
+		genai.NewPartFromText("YouTube URL: " + youtubeURL),
+	}
+
+	return []*genai.Content{
+		genai.NewContentFromParts(parts, genai.RoleUser),
+	}
 }

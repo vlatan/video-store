@@ -3,7 +3,7 @@ package gemini
 import "strings"
 
 // sanitizePrompt is replacing visceral/graphic verbs and nouns with synonyms
-func SanitizePrompt(input string) string {
+func sanitizePrompt(input string) string {
 
 	replacer := strings.NewReplacer(
 		"execution", "killing",

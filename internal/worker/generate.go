@@ -47,7 +47,7 @@ func (w *Worker) generateContent(
 	}
 
 	// Create video contents
-	videoContents, err := w.gemini.MakeVideoContents(video)
+	contents, err := w.gemini.MakeVideoContents(video)
 	if err != nil {
 		return false, fmt.Errorf(
 			"could't create gemini contents on video '%s'; %v",
@@ -55,7 +55,7 @@ func (w *Worker) generateContent(
 	}
 
 	// Check if the worker still owns the lock before an expensive API call
-	if err := w.lock.CheckLock(ctx); err != nil {
+	if err = w.lock.CheckLock(ctx); err != nil {
 		return false, fmt.Errorf(
 			"this worker %s does not own the lock anymore; %w",
 			w.id, err,
@@ -63,20 +63,52 @@ func (w *Worker) generateContent(
 	}
 
 	// Generate content using Gemini
-	genaiResponse, err := w.gemini.GenerateContent(ctx, video, videoContents, w.geminiRetryConfig)
+	genaiResponse, err := w.gemini.GenerateContent(ctx, video, contents, w.geminiRetryConfig)
 
 	// Exit with error if RPD reached or context ended
 	if errors.Is(err, gemini.ErrDailyLimitReached) || utils.IsContextErr(err) {
 		return false, fmt.Errorf(
-			"gemini content generation on video '%s' failed; %v",
+			"gemini content generation on video %q failed; %w",
 			video.VideoID, err)
 	}
 
-	// For every other error we just log and exit.
+	// Check if this is a hard block error by the model.
+	// If so make another gemini API call just with a text contents.
+	var target *gemini.BlockedErr
+	if errors.As(err, &target) {
+
+		log.Printf(
+			"failed to generate content on video %q, trying again with text contents; %v",
+			video.VideoID, err,
+		)
+
+		// Create text contents
+		contents = w.gemini.MakeTextContents(video)
+
+		// Check if the worker still owns the lock before an expensive API call
+		if err = w.lock.CheckLock(ctx); err != nil {
+			return false, fmt.Errorf(
+				"this worker %s does not own the lock anymore; %w",
+				w.id, err,
+			)
+		}
+
+		// Generate content using Gemini, but now with text contents
+		genaiResponse, err = w.gemini.GenerateContent(ctx, video, contents, w.geminiRetryConfig)
+
+		// Exit with error if RPD reached or context ended
+		if errors.Is(err, gemini.ErrDailyLimitReached) || utils.IsContextErr(err) {
+			return false, fmt.Errorf(
+				"gemini content generation on video %q failed; %w",
+				video.VideoID, err)
+		}
+	}
+
+	// For every other error we just log and exit with nil error.
 	// The video was not summarized though.
 	if err != nil {
 		log.Printf(
-			"gemini content generation on video '%s' failed; %v",
+			"gemini content generation on video %q failed; %v",
 			video.VideoID, err,
 		)
 		return false, nil
