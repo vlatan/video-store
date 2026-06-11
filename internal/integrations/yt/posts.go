@@ -55,7 +55,7 @@ func (s *Service) GetVideos(ctx context.Context, rc *utils.RetryConfig, videoIDs
 // Validate a YouTube video against custom criteria.
 func (s *Service) ValidateYouTubeVideo(video *youtube.Video) error {
 
-	if video.Status.PrivacyStatus == "private" {
+	if video.Status.PrivacyStatus != "public" {
 		return &ValidationError{"this video is not public"}
 	}
 
