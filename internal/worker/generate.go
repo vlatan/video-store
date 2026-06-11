@@ -14,11 +14,11 @@ import (
 	"github.com/vlatan/video-store/internal/utils"
 )
 
-// summarizeVideo summarizes and categorizes a video in place.
+// generateContent summarizes and categorizes a video in place.
 // In addition to the error it returns a bool flag
 // to signify if the video was indeed summarized,
 // because the error might be nil even if the video was not summarized.
-func (w *Worker) summarizeVideo(
+func (w *Worker) generateContent(
 	ctx context.Context,
 	video *models.Post) (bool, error) {
 
@@ -63,7 +63,7 @@ func (w *Worker) summarizeVideo(
 	}
 
 	// Generate content using Gemini
-	genaiResponse, err := w.gemini.Summarize(ctx, video, videoContents, w.geminiRetryConfig)
+	genaiResponse, err := w.gemini.GenerateContent(ctx, video, videoContents, w.geminiRetryConfig)
 
 	// Exit with error if RPD reached or context ended
 	if errors.Is(err, gemini.ErrDailyLimitReached) || utils.IsContextErr(err) {

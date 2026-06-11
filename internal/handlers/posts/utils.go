@@ -58,7 +58,7 @@ func (s *Service) generatePostContent(
 			post.VideoID, err)
 	}
 
-	genaiResponse, err := s.gemini.Summarize(
+	genaiResponse, err := s.gemini.GenerateContent(
 		ctx, post, videoContents,
 		&utils.RetryConfig{
 			MaxRetries: 1,

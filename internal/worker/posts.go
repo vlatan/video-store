@@ -260,7 +260,7 @@ func (w *Worker) insertVideos(ctx context.Context, videos []*models.Post) error 
 
 		// We don't care if the video was succesfully summarized.
 		// We will insert it regardless.
-		if _, err := w.summarizeVideo(ctx, video); err != nil {
+		if _, err := w.generateContent(ctx, video); err != nil {
 			return err
 		}
 
@@ -296,7 +296,7 @@ func (w *Worker) updateVideos(ctx context.Context, videos []*models.Post) error 
 			return err
 		}
 
-		summarized, err := w.summarizeVideo(ctx, video)
+		summarized, err := w.generateContent(ctx, video)
 
 		if err != nil {
 			return err
