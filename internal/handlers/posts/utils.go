@@ -62,7 +62,7 @@ func (s *Service) generatePostContent(
 	contents, err := s.gemini.MakeVideoContents(post)
 	if err != nil {
 		return fmt.Errorf(
-			"couldn't create gemini contents on video %q; %w",
+			"failed to create gemini contents on video %q; %w",
 			post.VideoID, err)
 	}
 
