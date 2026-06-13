@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
-	"strings"
 	"time"
 
 	"github.com/vlatan/video-store/internal/integrations/gemini"
@@ -22,17 +21,8 @@ func (w *Worker) generateContent(
 	ctx context.Context,
 	video *models.Post) (bool, error) {
 
-	// UNCOMMENT
 	// Nothing to update, summary and category are populated
-	// if video.Summary != "" &&
-	// 	video.Category != nil &&
-	// 	video.Category.Name != "" {
-	// 	return nil
-	// }
-
-	// REMOVE
-	// Nothing to update, summary and category are populated
-	if strings.Contains(video.Summary, utils.UpdateMarker) &&
+	if video.Summary != "" &&
 		video.Category != nil &&
 		video.Category.Name != "" {
 		return false, nil
@@ -50,14 +40,14 @@ func (w *Worker) generateContent(
 	contents, err := w.gemini.MakeVideoContents(video)
 	if err != nil {
 		return false, fmt.Errorf(
-			"could't create gemini contents on video '%s'; %v",
+			"failed to create gemini contents on video %q; %v",
 			video.VideoID, err)
 	}
 
 	// Check if the worker still owns the lock before an expensive API call
 	if err = w.lock.CheckLock(ctx); err != nil {
 		return false, fmt.Errorf(
-			"this worker %s does not own the lock anymore; %w",
+			"this worker %q does not own the lock anymore; %w",
 			w.id, err,
 		)
 	}
@@ -68,7 +58,7 @@ func (w *Worker) generateContent(
 	// Exit with error if RPD reached or context ended
 	if errors.Is(err, gemini.ErrDailyLimitReached) || utils.IsContextErr(err) {
 		return false, fmt.Errorf(
-			"gemini content generation on video %q failed; %w",
+			"failed to generate content on video %q; %w",
 			video.VideoID, err)
 	}
 
@@ -78,7 +68,8 @@ func (w *Worker) generateContent(
 	if errors.As(err, &target) {
 
 		log.Printf(
-			"failed to generate content on video %q, trying again with text contents; %v",
+			"failed to generate content on video %q, "+
+				"trying again with text contents; %v",
 			video.VideoID, err,
 		)
 
@@ -88,7 +79,7 @@ func (w *Worker) generateContent(
 		// Check if the worker still owns the lock before an expensive API call
 		if err = w.lock.CheckLock(ctx); err != nil {
 			return false, fmt.Errorf(
-				"this worker %s does not own the lock anymore; %w",
+				"this worker %q does not own the lock anymore; %w",
 				w.id, err,
 			)
 		}
@@ -99,7 +90,7 @@ func (w *Worker) generateContent(
 		// Exit with error if RPD reached or context ended
 		if errors.Is(err, gemini.ErrDailyLimitReached) || utils.IsContextErr(err) {
 			return false, fmt.Errorf(
-				"gemini content generation on video %q failed; %w",
+				"failed to generate content on video %q; %w",
 				video.VideoID, err)
 		}
 	}
@@ -108,7 +99,7 @@ func (w *Worker) generateContent(
 	// The video was not summarized though.
 	if err != nil {
 		log.Printf(
-			"gemini content generation on video %q failed; %v",
+			"failed to generate content on video %q; %v",
 			video.VideoID, err,
 		)
 		return false, nil

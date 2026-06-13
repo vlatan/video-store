@@ -78,7 +78,6 @@ func (s *Service) GenerateContent(
 	response.Title = utils.NormalizeTitle(response.Title, utils.VideoTitleCutoffs)
 	response.OriginalTitle = utils.NormalizeTitle(response.OriginalTitle, utils.VideoTitleCutoffs)
 	response.Summary = utils.NormalizeDescription(response.Summary)
-	response.Summary += utils.UpdateMarker // REMOVE
 
 	return &response, nil
 }
