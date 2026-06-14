@@ -17,14 +17,14 @@ func (s *Service) getSitemapIndexFromDB(r *http.Request, partSize int) (models.S
 	data, err := s.postsRepo.SitemapData(r.Context())
 	if err != nil {
 		return nil, fmt.Errorf(
-			"was unabale to fetch sitemap data on URI '%s': %w",
+			"was unabale to fetch sitemap data on URI %q: %w",
 			r.RequestURI,
 			err,
 		)
 	}
 
 	if len(data) == 0 {
-		return nil, fmt.Errorf("fetched zero sitemap items on URI '%s'", r.RequestURI)
+		return nil, fmt.Errorf("fetched zero sitemap items on URI %q", r.RequestURI)
 	}
 
 	// Get base absolute URL

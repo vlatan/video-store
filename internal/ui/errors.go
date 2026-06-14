@@ -63,7 +63,7 @@ func (s *service) JSONError(w http.ResponseWriter, r *http.Request, statusCode i
 	// Encode data to JSON
 	jsonData, err := json.Marshal(data)
 	if err != nil {
-		log.Printf("Failed to encode JSON 'error' response on URI '%s': %v", r.RequestURI, err)
+		log.Printf("Failed to encode JSON 'error' response on URI %q: %v", r.RequestURI, err)
 		utils.HttpError(w, statusCode)
 		return
 	}
@@ -74,6 +74,6 @@ func (s *service) JSONError(w http.ResponseWriter, r *http.Request, statusCode i
 
 	if _, err := w.Write(jsonData); err != nil {
 		// Too late for recovery here, just log the error
-		log.Printf("Failed to write JSON 'error' to response on URI '%s': %v", r.RequestURI, err)
+		log.Printf("Failed to write JSON 'error' to response on URI %q: %v", r.RequestURI, err)
 	}
 }

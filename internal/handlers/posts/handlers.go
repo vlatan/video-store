@@ -61,7 +61,7 @@ func (s *Service) HomeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		log.Printf("Was unabale to fetch posts on URI '%s': %v", r.RequestURI, err)
+		log.Printf("Was unabale to fetch posts on URI %q: %v", r.RequestURI, err)
 		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}
@@ -122,7 +122,7 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		log.Printf("Was unabale to fetch posts on URI '%s': %v", r.RequestURI, err)
+		log.Printf("Was unabale to fetch posts on URI %q: %v", r.RequestURI, err)
 		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}
@@ -190,7 +190,7 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 	end := time.Since(start)
 
 	if err != nil {
-		log.Printf("Was unabale to fetch posts on URI '%s': %v", r.RequestURI, err)
+		log.Printf("Was unabale to fetch posts on URI %q: %v", r.RequestURI, err)
 		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}
@@ -281,7 +281,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 		)
 
 		if err != nil {
-			log.Printf("Video '%s': %v", videoID, err)
+			log.Printf("Video %q: %v", videoID, err)
 			formError.Message = "Unable to fetch the video from YouTube"
 			data.Form.Error = &formError
 			s.ui.RenderHTML(w, r, "form.html", data)
@@ -290,7 +290,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Validate the video data
 		if err := s.yt.ValidateYouTubeVideo(metadata[0]); err != nil {
-			log.Printf("Video '%s': %v", videoID, err)
+			log.Printf("Video %q: %v", videoID, err)
 			formError.Message = utils.Capitalize(err.Error())
 			data.Form.Error = &formError
 			s.ui.RenderHTML(w, r, "form.html", data)
@@ -304,7 +304,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 		// Insert the video
 		rowsAffected, err := s.postsRepo.InsertPost(r.Context(), post)
 		if err != nil || rowsAffected == 0 {
-			log.Printf("Could not insert the video '%s' in DB: %v", post.VideoID, err)
+			log.Printf("Could not insert the video %q in DB: %v", post.VideoID, err)
 			formError.Message = "Could not insert the video in DB"
 			data.Form.Error = &formError
 			s.ui.RenderHTML(w, r, "form.html", data)
@@ -370,7 +370,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		log.Printf("Error while getting the video '%s' from DB: %v", videoID, err)
+		log.Printf("Error while getting the video %q from DB: %v", videoID, err)
 		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}
@@ -424,7 +424,7 @@ func (s *Service) PostActionHandler(w http.ResponseWriter, r *http.Request) {
 	action := r.PathValue("action")
 	allowedActions := []string{"like", "unlike", "fave", "unfave", "edit", "delete"}
 	if !slices.Contains(allowedActions, action) {
-		log.Printf("Not a valid action '%s' on video: %s\n", action, videoID)
+		log.Printf("Not a valid action %q on video: %s\n", action, videoID)
 		http.NotFound(w, r)
 		return
 	}

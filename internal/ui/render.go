@@ -17,7 +17,7 @@ func (s *service) WriteJSON(w http.ResponseWriter, r *http.Request, data any) {
 	// Encode data to JSON
 	jsonData, err := json.Marshal(data)
 	if err != nil {
-		log.Printf("Failed to encode JSON response on URI '%s': %v", r.RequestURI, err)
+		log.Printf("Failed to encode JSON response on URI %q: %v", r.RequestURI, err)
 		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}
@@ -26,7 +26,7 @@ func (s *service) WriteJSON(w http.ResponseWriter, r *http.Request, data any) {
 	w.Header().Set("Content-Type", "application/json")
 	if _, err := w.Write(jsonData); err != nil {
 		// Too late for recovery here, just log the error
-		log.Printf("Failed to write JSON to response on URI '%s': %v", r.RequestURI, err)
+		log.Printf("Failed to write JSON to response on URI %q: %v", r.RequestURI, err)
 	}
 }
 
@@ -40,7 +40,7 @@ func (s *service) RenderHTML(
 	tmpl, exists := s.templates[templateName]
 
 	if !exists {
-		log.Printf("Could not find the '%s' template on URI '%s'", templateName, r.RequestURI)
+		log.Printf("Could not find the %q template on URI %q", templateName, r.RequestURI)
 		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}
@@ -61,7 +61,7 @@ func (s *service) RenderHTML(
 	// Write to response
 	if err := tmpl.ExecuteTemplate(w, templateName, data); err != nil {
 		log.Printf(
-			"Failed to execute the HTML template '%s' on URI '%s': %v",
+			"Failed to execute the HTML template %q on URI %q: %v",
 			templateName, r.RequestURI, err,
 		)
 		utils.HttpError(w, http.StatusInternalServerError)

@@ -198,7 +198,7 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.
 	// Unserialize thumbnails
 	var thumbs models.Thumbnails
 	if err = json.Unmarshal(thumbnails, &thumbs); err != nil {
-		return zero, fmt.Errorf("video ID '%s': %w", videoID, err)
+		return zero, fmt.Errorf("video ID %q: %w", videoID, err)
 	}
 
 	// Assign the biggest thumbnail to post

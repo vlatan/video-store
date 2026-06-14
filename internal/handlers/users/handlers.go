@@ -21,7 +21,7 @@ func (s *Service) UserFavoritesHandler(w http.ResponseWriter, r *http.Request) {
 	posts, err := s.postsRepo.GetUserFavedPosts(r.Context(), data.CurrentUser.ID, cursor)
 
 	if err != nil {
-		log.Printf("Was unabale to fetch posts on URI '%s': %v", r.RequestURI, err)
+		log.Printf("Was unabale to fetch posts on URI %q: %v", r.RequestURI, err)
 		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}
@@ -47,7 +47,7 @@ func (s *Service) UsersHandler(w http.ResponseWriter, r *http.Request) {
 
 	users, err := s.usersRepo.GetUsers(r.Context(), page)
 	if err != nil {
-		log.Printf("was unabale to fetch users on URI '%s': %v", r.RequestURI, err)
+		log.Printf("was unabale to fetch users on URI %q: %v", r.RequestURI, err)
 		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}
@@ -64,7 +64,7 @@ func (s *Service) UsersHandler(w http.ResponseWriter, r *http.Request) {
 		models.AvatarAdminPrefix,
 		30*24*time.Hour,
 	); err != nil {
-		log.Printf("was unabale to set users avatars on URI '%s': %v", r.RequestURI, err)
+		log.Printf("was unabale to set users avatars on URI %q: %v", r.RequestURI, err)
 		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}

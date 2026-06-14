@@ -37,7 +37,7 @@ func (s *Service) SourcesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		log.Printf("Was unabale to fetch sources on URI '%s': %v", r.RequestURI, err)
+		log.Printf("Was unabale to fetch sources on URI %q: %v", r.RequestURI, err)
 		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}
@@ -118,7 +118,7 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 			playlistID,
 		)
 		if err != nil {
-			log.Printf("Playlist '%s': %v", playlistID, err)
+			log.Printf("Playlist %q: %v", playlistID, err)
 			formError.Message = "Unable to fetch the playlist from YouTube"
 			data.Form.Error = &formError
 			s.ui.RenderHTML(w, r, "form.html", data)
@@ -137,7 +137,7 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 			channelID,
 		)
 		if err != nil {
-			log.Printf("Channel '%s': %v", channelID, err)
+			log.Printf("Channel %q: %v", channelID, err)
 			formError.Message = "Unable to fetch channel info from YouTube"
 			data.Form.Error = &formError
 			s.ui.RenderHTML(w, r, "form.html", data)
@@ -151,7 +151,7 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 		// Insert the source in DB
 		rowsAffected, err := s.sourcesRepo.InsertSource(r.Context(), source)
 		if err != nil || rowsAffected == 0 {
-			log.Printf("Could not insert the source '%s' in DB: %v", source.PlaylistID, err)
+			log.Printf("Could not insert the source %q in DB: %v", source.PlaylistID, err)
 			formError.Message = "Could not insert the source in DB"
 			data.Form.Error = &formError
 			s.ui.RenderHTML(w, r, "form.html", data)
@@ -210,7 +210,7 @@ func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		log.Printf("Was unabale to fetch posts on URI '%s': %v", r.RequestURI, err)
+		log.Printf("Was unabale to fetch posts on URI %q: %v", r.RequestURI, err)
 		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}

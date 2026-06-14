@@ -54,14 +54,14 @@ func (s *Service) SinglePageHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		log.Printf("Error while getting the page '%s'; %v", pageSlug, err)
+		log.Printf("Error while getting the page %q; %v", pageSlug, err)
 		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}
 
 	var buf bytes.Buffer
 	if err := goldmark.Convert([]byte(page.Content), &buf); err != nil {
-		log.Printf("Could not convert markdown to html on '%s': %v", pageSlug, err)
+		log.Printf("Could not convert markdown to html on %q: %v", pageSlug, err)
 		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}
@@ -90,7 +90,7 @@ func (s *Service) UpdatePageHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		log.Printf("Error while getting the page '%s' from DB: %v", slug, err)
+		log.Printf("Error while getting the page %q from DB: %v", slug, err)
 		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}
@@ -144,7 +144,7 @@ func (s *Service) UpdatePageHandler(w http.ResponseWriter, r *http.Request) {
 		)
 
 		if err != nil || rowsAffected == 0 {
-			log.Printf("Could not update the page '%s' in DB: %v", slug, err)
+			log.Printf("Could not update the page %q in DB: %v", slug, err)
 			formError.Message = "Could not update the page in DB"
 			data.Form.Error = &formError
 			s.ui.RenderHTML(w, r, "form.html", data)
@@ -154,7 +154,7 @@ func (s *Service) UpdatePageHandler(w http.ResponseWriter, r *http.Request) {
 		// Delete the redis cache, ignore the error
 		redisKey := fmt.Sprintf(pageCacheKey, slug)
 		if err = s.rdb.Client.Del(r.Context(), redisKey).Err(); err != nil {
-			log.Printf("could not delete the cache on page '%s'; %v", slug, err)
+			log.Printf("could not delete the cache on page %q; %v", slug, err)
 			formError.Message = "Could not delete the cache on page"
 			data.Form.Error = &formError
 			s.ui.RenderHTML(w, r, "form.html", data)
@@ -223,7 +223,7 @@ func (s *Service) NewPageHandler(w http.ResponseWriter, r *http.Request) {
 		)
 
 		if err != nil || rowsAffected == 0 {
-			log.Printf("Could not insert the page '%s' in DB: %v", pageSlug, err)
+			log.Printf("Could not insert the page %q in DB: %v", pageSlug, err)
 			formError.Message = "Could not insert the page in DB. Try changing the title."
 			data.Form.Error = &formError
 			s.ui.RenderHTML(w, r, "form.html", data)

@@ -72,7 +72,7 @@ func (w *Worker) getValidSourcesVideos(
 		sourceItems, err := w.youtube.GetSourceItems(ctx, w.ytRetryConfig, playlistId)
 		if err != nil {
 			return fmt.Errorf(
-				"couldn't get items from YouTube for source '%s'; %w",
+				"couldn't get items from YouTube for source %q; %w",
 				playlistId, err,
 			)
 		}
@@ -182,7 +182,7 @@ func (w *Worker) adoptVideos(
 		}
 
 		log.Printf(
-			"Failed to update the playlist on video '%s'; %v",
+			"Failed to update the playlist on video %q; %v",
 			dbVideo.VideoID, err,
 		)
 	}
@@ -239,7 +239,7 @@ func (w *Worker) deleteVideos(
 		}
 
 		log.Printf(
-			"Could not delete the video '%s' in DB; %v",
+			"Could not delete the video %q in DB; %v",
 			dbVideo.VideoID, err,
 		)
 	}
@@ -277,7 +277,7 @@ func (w *Worker) insertVideos(ctx context.Context, videos []*models.Post) error 
 		}
 
 		log.Printf(
-			"Failed to insert video '%s' in DB; %v",
+			"Failed to insert video %q in DB; %v",
 			video.VideoID, err,
 		)
 	}
@@ -320,7 +320,7 @@ func (w *Worker) updateVideos(ctx context.Context, videos []*models.Post) error 
 		}
 
 		log.Printf(
-			"Failed to update generated data in DB on video '%s'; %v",
+			"Failed to update generated data in DB on video %q; %v",
 			video.VideoID, err,
 		)
 	}

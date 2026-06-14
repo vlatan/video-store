@@ -100,7 +100,7 @@ func (p *Providers) FetchUserProfile(
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf(
-			"user info request failed on provider '%s' with status: %d",
+			"user info request failed on provider %q with status: %d",
 			provider.Provider, resp.StatusCode,
 		)
 	}

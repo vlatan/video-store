@@ -64,7 +64,7 @@ func parseTemplates(m *minify.M) models.TemplateMap {
 		if !strings.Contains(path, "sitemaps") {
 			baseTmpl, err = baseTemplate.Clone()
 			if err != nil {
-				log.Fatalf("couldn't clone the base '%s' template", base)
+				log.Fatalf("couldn't clone the base %q template", base)
 			}
 		}
 

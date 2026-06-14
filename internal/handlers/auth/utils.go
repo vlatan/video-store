@@ -148,7 +148,7 @@ func (s *Service) revokeLogin(ctx context.Context, user *models.User) error {
 	// Get the provider config
 	provider, exists := s.providers[user.Provider]
 	if !exists {
-		return fmt.Errorf("unexistent provider '%s' on revoke", user.Provider)
+		return fmt.Errorf("unexistent provider %q on revoke", user.Provider)
 	}
 
 	// Create token from user data

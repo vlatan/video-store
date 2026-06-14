@@ -39,7 +39,7 @@ func GetCachedData[T any](
 
 	if err != redis.Nil {
 		log.Printf(
-			"redis error for key '%s': %v",
+			"redis error for key %q: %v",
 			key, err,
 		)
 	}
@@ -55,7 +55,7 @@ func GetCachedData[T any](
 	// the encoding.BinaryMarshaler interface if needed.
 	if err = rdb.Client.Set(ctx, key, data, ttl).Err(); err != nil {
 		// Don't return an error if unable to set redis cache
-		log.Printf("redis error for key '%s': %v", key, err)
+		log.Printf("redis error for key %q: %v", key, err)
 	}
 
 	return data, nil

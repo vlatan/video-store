@@ -50,7 +50,7 @@ func (w *Worker) updateSources(
 
 		// Log the error, do not exit if can't update playlist in DB
 		log.Printf(
-			"Could not update source '%s' in DB; %v",
+			"Could not update source %q in DB; %v",
 			newSource.PlaylistID, err,
 		)
 	}
