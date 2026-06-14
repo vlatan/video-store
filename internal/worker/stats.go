@@ -22,6 +22,7 @@ type WorkerStats struct {
 	UpdatedDbVideos   int64
 }
 
+// Log logs the worker stats
 func (ws WorkerStats) Log() {
 
 	stats := []stat{
@@ -57,12 +58,14 @@ func (ws WorkerStats) Log() {
 	logStats(stats)
 }
 
+// logStats logs the labels and values in stats
 func logStats(stats []stat) {
 	maxLabel := 0
 	for _, s := range stats {
 		maxLabel = max(maxLabel, len(s.label))
 	}
 
+	// Padd the right values to the lenght of the max left string
 	for _, s := range stats {
 		log.Printf("%-*s %v", maxLabel+1, s.label+":", s.value)
 	}
