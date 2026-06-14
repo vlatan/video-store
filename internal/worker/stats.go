@@ -45,6 +45,10 @@ func (ws WorkerStats) Log() {
 	if len(ws.DeletedDbVideos) > 0 {
 		stats = append(stats, stat{"Deleted videos in DB", len(ws.DeletedDbVideos)})
 		stats = append(stats, stat{"Deleted videos ids", ws.DeletedDbVideos})
+
+		if len(ws.DeletedDbVideos) >= deleteLimit {
+			stats = append(stats, stat{"WARNING: MAX DELETE LIMIT REACHED", ""})
+		}
 	}
 
 	if ws.InsertedDbVideos > 0 {
