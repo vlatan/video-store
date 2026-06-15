@@ -69,7 +69,7 @@ func logStats(stats []stat) {
 		maxLabel = max(maxLabel, len(s.label))
 	}
 
-	// Padd the right values to the lenght of the max left string
+	// Pad the left strings to the length of the longest string
 	for _, s := range stats {
 		log.Printf("%-*s %v", maxLabel+1, s.label+":", s.value)
 	}
