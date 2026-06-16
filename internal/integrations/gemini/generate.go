@@ -38,7 +38,7 @@ func (s *Service) generateContent(
 	// Check if there are candidates at all.
 	// Gemini can return zero candidates if it applies hard block.
 	if len(response.Candidates) == 0 {
-		return nil, &BlockedErr{response.PromptFeedback}
+		return nil, &BlockedError{response.PromptFeedback}
 	}
 
 	return response, nil
@@ -61,7 +61,7 @@ func (s *Service) GenerateContent(
 		},
 		// Exit immediately if no candidates returned or RPD limit reached
 		func(err error) bool {
-			var target *BlockedErr
+			var target *BlockedError
 			return errors.As(err, &target) || errors.Is(err, ErrDailyLimitReached)
 		},
 	)

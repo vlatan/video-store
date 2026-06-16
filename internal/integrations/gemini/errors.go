@@ -8,12 +8,12 @@ import (
 
 var ErrDailyLimitReached, ErrMinuteLimitReached error
 
-type BlockedErr struct {
+type BlockedError struct {
 	Feedback *genai.GenerateContentResponsePromptFeedback
 }
 
 // Implement error interface
-func (b *BlockedErr) Error() string {
+func (b *BlockedError) Error() string {
 
 	if b.Feedback == nil {
 		return "gemini returned no candidates with no reason"

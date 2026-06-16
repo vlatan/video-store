@@ -56,7 +56,7 @@ func (w *Worker) generateContent(
 
 	// Check if this is a hard block error by the model.
 	// If so make another gemini API call just with a text contents.
-	var target *gemini.BlockedErr
+	var target *gemini.BlockedError
 	if errors.As(err, &target) {
 		log.Printf(
 			"failed to generate content on video %q, "+
