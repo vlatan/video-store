@@ -29,13 +29,13 @@ func (s *Service) NewLock(key, value string, ttl time.Duration) *RedisLock {
 // Therefore it's a blocking method until it can acquire the lock.
 func (l *RedisLock) Lock(ctx context.Context) error {
 	for {
-		success, err := l.rdb.Client.SetNX(ctx, l.key, l.value, l.ttl).Result()
+		ok, err := l.rdb.Client.SetNX(ctx, l.key, l.value, l.ttl).Result()
 
 		if err != nil {
-			return fmt.Errorf("unexpected error during lock acquire; %w", err)
+			return &LockError{"unexpected error during lock acquire", err}
 		}
 
-		if success {
+		if ok {
 			return nil
 		}
 
@@ -47,7 +47,13 @@ func (l *RedisLock) Lock(ctx context.Context) error {
 // and informs the caller if it was successful or not.
 // It sets key-value ONLY if the key doesn't exist.
 func (l *RedisLock) TryLock(ctx context.Context) (bool, error) {
-	return l.rdb.Client.SetNX(ctx, l.key, l.value, l.ttl).Result()
+	ok, err := l.rdb.Client.SetNX(ctx, l.key, l.value, l.ttl).Result()
+
+	if err != nil {
+		return ok, &LockError{"unexpected error during lock acquire", err}
+	}
+
+	return ok, nil
 }
 
 // CheckLock checks if the caller still owns the lock.
@@ -57,18 +63,18 @@ func (l *RedisLock) CheckLock(ctx context.Context) error {
 	value, err := l.rdb.Client.Get(ctx, l.key).Result()
 
 	if err == redis.Nil {
-		return fmt.Errorf("lock expired or deleted; %w", err)
+		return &LockError{"lock expired or deleted", err}
 	}
 
 	if err != nil {
-		return fmt.Errorf("unexpected error during lock check; %w", err)
+		return &LockError{"unexpected error during lock check", err}
 	}
 
 	if value != l.value {
-		return fmt.Errorf(
+		return &LockError{Msg: fmt.Sprintf(
 			"caller does not own this lock (expected %s, got %s)",
 			l.value, value,
-		)
+		)}
 	}
 
 	return nil
@@ -85,5 +91,10 @@ func (l *RedisLock) Unlock(ctx context.Context) error {
         end
     `
 	_, err := l.rdb.Client.Eval(ctx, script, []string{l.key}, l.value).Result()
-	return err
+
+	if err != nil {
+		return &LockError{"unexpected error during unlock", err}
+	}
+
+	return nil
 }

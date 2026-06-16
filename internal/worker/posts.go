@@ -5,7 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"math/rand"
+	"time"
 
+	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/integrations/yt"
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/utils"
@@ -248,17 +251,24 @@ func (w *Worker) deleteVideos(
 // insertVideos summarizes videos and inserts them in database
 func (w *Worker) insertVideos(ctx context.Context, videos []*models.Post) error {
 
+	var lockError *rdb.LockError
+
 	// Insert new videos in DB
 	for _, video := range videos {
 
-		// Check the context first
-		if err := ctx.Err(); err != nil {
+		// Attempt to generate content
+		_, err := w.generateContent(ctx, video)
+
+		// Exit early if context ended or lock not owned anymore.
+		// Ignore any other error including RPD limit, we'll insert the video in DB regardless.
+		if utils.IsContextErr(err) || errors.As(err, &lockError) {
 			return err
 		}
 
-		// We don't care if the video was succesfully summarized.
-		// We will insert it regardless.
-		if _, err := w.generateContent(ctx, video); err != nil {
+		// Sleep with context in mind for 60-90 seconds.
+		// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
+		sleep := 60*time.Second + time.Duration(rand.Intn(int(30*time.Second))) // #nosec G404
+		if err := utils.SleepContext(ctx, sleep); err != nil {
 			return err
 		}
 
@@ -275,7 +285,7 @@ func (w *Worker) insertVideos(ctx context.Context, videos []*models.Post) error 
 		}
 
 		log.Printf(
-			"Failed to insert video %q in DB; %v",
+			"Failed to insert video %q in DB: %v",
 			video.VideoID, err,
 		)
 	}
@@ -294,14 +304,22 @@ func (w *Worker) updateVideos(ctx context.Context, videos []*models.Post) error 
 			return err
 		}
 
-		summarized, err := w.generateContent(ctx, video)
+		ok, err := w.generateContent(ctx, video)
 
+		// Exit on any error, stop updating
 		if err != nil {
 			return err
 		}
 
+		// Sleep with context in mind for 60-90 seconds.
+		// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
+		sleep := 60*time.Second + time.Duration(rand.Intn(int(30*time.Second))) // #nosec G404
+		if err := utils.SleepContext(ctx, sleep); err != nil {
+			return err
+		}
+
 		// If the video was not summarized, there's nothing to update
-		if !summarized {
+		if !ok {
 			continue
 		}
 
