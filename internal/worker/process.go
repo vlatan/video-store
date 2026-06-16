@@ -123,6 +123,9 @@ func (w *Worker) Process(ctx context.Context) error {
 		return err
 	}
 
+	// Total number of fetched YT videos
+	w.stats.FetchedYtVideos = len(ytVideosMap)
+
 	// ADOPT VIDEOS TO PLAYLISTS IN DATABASE
 	// ###################################################################
 

@@ -36,7 +36,6 @@ func (w *Worker) getValidVideos(
 		// If no error this is a valid video
 		if err == nil {
 			destMap[video.Id] = w.youtube.NewYouTubePost(video, "")
-			w.stats.FetchedYtVideos++
 			continue
 		}
 
@@ -133,7 +132,6 @@ func (w *Worker) getValidSourcesVideos(
 			// we overwrite it, associate it with a YT playlist.
 			// If not we just add new video.
 			destMap[video.Id] = w.youtube.NewYouTubePost(video, playlistId)
-			w.stats.FetchedYtVideos++
 		}
 	}
 
