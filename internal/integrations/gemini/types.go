@@ -2,7 +2,6 @@ package gemini
 
 import (
 	"github.com/vlatan/video-store/internal/config"
-	"github.com/vlatan/video-store/internal/models"
 	"google.golang.org/genai"
 )
 
@@ -12,6 +11,5 @@ type Service struct {
 	genaiConfig *genai.GenerateContentConfig
 	client      *genai.Client
 	limiter     *GeminiLimiter
-	categories  models.Categories
-	catStr      string
+	catNames    []string
 }

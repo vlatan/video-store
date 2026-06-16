@@ -2,7 +2,6 @@ package gemini
 
 import (
 	"context"
-	"strings"
 
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
@@ -52,17 +51,11 @@ func New(
 		return nil, err
 	}
 
-	// Save the slice of categories to this service
-	s.categories = categories
-
 	// Extract the category names
-	catNames := make([]string, len(categories))
+	s.catNames = make([]string, len(categories))
 	for i, cat := range categories {
-		catNames[i] = cat.Name
+		s.catNames[i] = cat.Name
 	}
-
-	// Save the categories string to this service
-	s.catStr = strings.Join(catNames, ", ")
 
 	// Configure genai
 	temp, topP := float32(0.0), float32(0.1)

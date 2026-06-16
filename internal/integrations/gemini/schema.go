@@ -1,8 +1,6 @@
 package gemini
 
 import (
-	"fmt"
-
 	"google.golang.org/genai"
 )
 
@@ -31,11 +29,9 @@ func (s *Service) responseSchema() *genai.Schema {
 					"Make it feel compelling and human, not academic.",
 			},
 			"category": {
-				Type: genai.TypeString,
-				Description: fmt.Sprintf(
-					"Select only ONE category from these categories: %s.",
-					s.catStr,
-				),
+				Type:        genai.TypeString,
+				Enum:        s.catNames,
+				Description: "Select only ONE category.",
 			},
 		},
 		Required: []string{"summary", "category"},
