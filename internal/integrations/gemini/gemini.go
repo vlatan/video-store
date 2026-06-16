@@ -76,10 +76,10 @@ func New(
 	return s, nil
 }
 
-// AcquireQuota attempts to consume 1 request from the daily and minute buckets.
+// ConsumeQuota attempts to consume 1 request from the daily and minute buckets.
 // It returns a sentinel error if any of the quotas are full.
-func (s *Service) AcquireQuota(ctx context.Context) error {
-	return s.limiter.AcquireQuota(ctx)
+func (s *Service) ConsumeQuota(ctx context.Context) error {
+	return s.limiter.ConsumeQuota(ctx)
 }
 
 // Exhausted returns true if the daily limit has already been hit

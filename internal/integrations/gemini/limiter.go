@@ -35,9 +35,9 @@ func NewLimiter(cfg *config.Config, rdb *rdb.Service) (*GeminiLimiter, error) {
 	return &GeminiLimiter{cfg, rdb, loc}, nil
 }
 
-// AcquireQuota attempts to consume 1 request from the daily and minute buckets.
+// ConsumeQuota attempts to consume 1 request from the daily and minute buckets.
 // It returns a sentinel error if any of the quotas are full.
-func (gl *GeminiLimiter) AcquireQuota(ctx context.Context) error {
+func (gl *GeminiLimiter) ConsumeQuota(ctx context.Context) error {
 	now := time.Now().In(gl.loc)
 
 	// Calculate TTL for the Daily Reset (RPD)

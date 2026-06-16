@@ -20,7 +20,7 @@ func (s *Service) generateContent(
 ) (*genai.GenerateContentResponse, error) {
 
 	// Consume minute and daily quotas before calling the API
-	if err := s.AcquireQuota(ctx); err != nil {
+	if err := s.ConsumeQuota(ctx); err != nil {
 		return nil, fmt.Errorf("gemini limit reached: %w", err)
 	}
 
@@ -59,10 +59,10 @@ func (s *Service) GenerateContent(
 		func() (*genai.GenerateContentResponse, error) {
 			return s.generateContent(ctx, contents)
 		},
-		// Exit immediately if no candidates returned
+		// Exit immediately if no candidates returned or RPD limit reached
 		func(err error) bool {
 			var target *BlockedErr
-			return errors.As(err, &target)
+			return errors.As(err, &target) || errors.Is(err, ErrDailyLimitReached)
 		},
 	)
 
