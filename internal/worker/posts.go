@@ -129,8 +129,9 @@ func (w *Worker) getValidSourcesVideos(
 				return err
 			}
 
-			// If the video is already in ytVideosMap as an orphaned video
-			// we overwrite it, associate it with a YT playlist.
+			// If the video is already in ytVideosMap as an orphaned video,
+			// or as a duplicate video in one or more playlists,
+			// we overwrite it, associate it with one YT playlist.
 			// If not we just add new video.
 			destMap[video.Id] = w.youtube.NewYouTubePost(video, playlistId)
 		}
