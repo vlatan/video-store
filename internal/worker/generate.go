@@ -54,6 +54,13 @@ func (w *Worker) generateContent(
 			video.VideoID, err)
 	}
 
+	// Sleep with context in mind for 60-90 seconds.
+	// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
+	sleep := 60*time.Second + time.Duration(rand.Intn(int(30*time.Second))) // #nosec G404
+	if err := utils.SleepContext(ctx, sleep); err != nil {
+		return false, err
+	}
+
 	// Check if this is a hard block error by the model.
 	// If so make another gemini API call just with a text contents.
 	var target *gemini.BlockedError
@@ -66,13 +73,6 @@ func (w *Worker) generateContent(
 
 		// Create text contents
 		contents = w.gemini.MakeTextContents(video)
-
-		// Sleep with context in mind for 60-90 seconds.
-		// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
-		sleep := 60*time.Second + time.Duration(rand.Intn(int(30*time.Second))) // #nosec G404
-		if err := utils.SleepContext(ctx, sleep); err != nil {
-			return false, err
-		}
 
 		// Check if the worker still owns the lock before an expensive API call
 		if err = w.lock.CheckLock(ctx); err != nil {
@@ -90,6 +90,13 @@ func (w *Worker) generateContent(
 			return false, fmt.Errorf(
 				"failed to generate content on video %q; %w",
 				video.VideoID, err)
+		}
+
+		// Sleep with context in mind for 60-90 seconds.
+		// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
+		sleep := 60*time.Second + time.Duration(rand.Intn(int(30*time.Second))) // #nosec G404
+		if err := utils.SleepContext(ctx, sleep); err != nil {
+			return false, err
 		}
 	}
 

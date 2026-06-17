@@ -1,3 +1,5 @@
+* Why orhpan video is overwritten when fetching from YT
+
 * User reviews and ratings
 * Make search bar on small screens accross entire screen
 * Maybe use another gemini API call for the credits

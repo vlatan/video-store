@@ -5,8 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"math/rand"
-	"time"
 
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/integrations/yt"
@@ -129,6 +127,10 @@ func (w *Worker) getValidSourcesVideos(
 			// Exit early if context ended
 			if utils.IsContextErr(err) {
 				return err
+			}
+
+			if _, exists := destMap[video.Id]; exists {
+				log.Println("ORPHAN VIDEO EXISTS:", video.Id)
 			}
 
 			// If the video is already in ytVideosMap as an orphaned video
@@ -265,13 +267,6 @@ func (w *Worker) insertVideos(ctx context.Context, videos []*models.Post) error 
 			return err
 		}
 
-		// Sleep with context in mind for 60-90 seconds.
-		// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
-		sleep := 60*time.Second + time.Duration(rand.Intn(int(30*time.Second))) // #nosec G404
-		if err := utils.SleepContext(ctx, sleep); err != nil {
-			return err
-		}
-
 		rowsAffected, err := w.postsRepo.InsertPost(ctx, video)
 		w.stats.InsertedDbVideos += rowsAffected
 
@@ -308,13 +303,6 @@ func (w *Worker) updateVideos(ctx context.Context, videos []*models.Post) error 
 
 		// Exit on any error, stop updating
 		if err != nil {
-			return err
-		}
-
-		// Sleep with context in mind for 60-90 seconds.
-		// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
-		sleep := 60*time.Second + time.Duration(rand.Intn(int(30*time.Second))) // #nosec G404
-		if err := utils.SleepContext(ctx, sleep); err != nil {
 			return err
 		}
 
