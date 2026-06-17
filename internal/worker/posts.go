@@ -129,10 +129,6 @@ func (w *Worker) getValidSourcesVideos(
 				return err
 			}
 
-			if _, exists := destMap[video.Id]; exists {
-				log.Println("ORPHAN VIDEO EXISTS:", video.Id)
-			}
-
 			// If the video is already in ytVideosMap as an orphaned video
 			// we overwrite it, associate it with a YT playlist.
 			// If not we just add new video.
