@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"math/rand"
+	"math/rand/v2"
 	"time"
 
 	"github.com/vlatan/video-store/internal/integrations/gemini"
@@ -121,6 +121,11 @@ func sleep(ctx context.Context, minSleep, maxSleep time.Duration) error {
 	if maxSleep < minSleep {
 		return errors.New("max sleep time < min sleep time")
 	}
-	sleepTime := minSleep + time.Duration(rand.Intn(int(maxSleep-minSleep)))
+
+	if maxSleep == minSleep {
+		return utils.SleepContext(ctx, minSleep)
+	}
+
+	sleepTime := minSleep + rand.N(maxSleep-minSleep) // #nosec G404
 	return utils.SleepContext(ctx, sleepTime)
 }

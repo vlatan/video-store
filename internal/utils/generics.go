@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
-	"math/rand"
+	"math/rand/v2"
 	"time"
 
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
@@ -80,8 +80,11 @@ func Retry[T any](
 			break
 		}
 
-		// Calculate the backoff (2^i) + jitter of 0-2 seconds
-		jitter := time.Duration(rand.Float64() * float64(rc.MaxJitter)) // #nosec G404
+		// Calculate the backoff (2^i) + jitter
+		var jitter time.Duration
+		if rc.MaxJitter > 0 {
+			jitter = rand.N(rc.MaxJitter) // #nosec G404
+		}
 		sleepTime := rc.Delay*time.Duration(math.Pow(2, float64(i))) + jitter
 
 		// Try to extract a delay value from the error
@@ -96,10 +99,8 @@ func Retry[T any](
 		}
 
 		// Wait for either the sleep time or context to end
-		select {
-		case <-ctx.Done():
+		if err := SleepContext(ctx, sleepTime); err != nil {
 			return zero, errors.Join(ctx.Err(), lastError)
-		case <-time.After(sleepTime):
 		}
 	}
 
