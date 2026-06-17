@@ -56,8 +56,7 @@ func (w *Worker) generateContent(
 
 	// Sleep with context in mind for 60-90 seconds.
 	// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
-	sleep := 60*time.Second + time.Duration(rand.Intn(int(30*time.Second))) // #nosec G404
-	if err := utils.SleepContext(ctx, sleep); err != nil {
+	if err := sleep(ctx, 60*time.Second, 90*time.Second); err != nil {
 		return false, err
 	}
 
@@ -94,8 +93,7 @@ func (w *Worker) generateContent(
 
 		// Sleep with context in mind for 60-90 seconds.
 		// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
-		sleep := 60*time.Second + time.Duration(rand.Intn(int(30*time.Second))) // #nosec G404
-		if err := utils.SleepContext(ctx, sleep); err != nil {
+		if err := sleep(ctx, 60*time.Second, 90*time.Second); err != nil {
 			return false, err
 		}
 	}
@@ -115,4 +113,14 @@ func (w *Worker) generateContent(
 	video.Category = &models.Category{Name: genaiResponse.Category}
 
 	return true, nil
+}
+
+// sleep sleeps with context in mind
+// for a random duration between min and max sleep time
+func sleep(ctx context.Context, minSleep, maxSleep time.Duration) error {
+	if maxSleep < minSleep {
+		return errors.New("max sleep time < min sleep time")
+	}
+	sleepTime := minSleep + time.Duration(rand.Intn(int(maxSleep-minSleep)))
+	return utils.SleepContext(ctx, sleepTime)
 }
