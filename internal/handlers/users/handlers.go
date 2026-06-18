@@ -76,6 +76,6 @@ func (s *Service) UsersHandler(w http.ResponseWriter, r *http.Request) {
 	)
 
 	data.Users = users
-	data.Title = "Admin Dashboard"
+	data.Title = "Users"
 	s.ui.RenderHTML(w, r, "admin.html", data)
 }
