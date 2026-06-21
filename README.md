@@ -194,7 +194,7 @@ go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@lat
 
 Export the database URL in a variable. The empty space at the beginning is important so the command is not saved in the bash history. Change the values in the URL string accordingly.
 ``` bash
- export DATABASE_URL='postgres://postgres:password@localhost:5432/example?sslmode=disable'
+ export DATABASE_URL='postgres://username:password@host:port/database?sslmode=disable'
 ```
 
 You can bind a remote database locally if you have SSH access to the server, that is postgres needs to listen on `5432` on the host, meaning if postgres is a docker container its port needs to be mapped to `127.0.0.1:5432` on the host.
