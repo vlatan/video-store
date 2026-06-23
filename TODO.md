@@ -1,3 +1,5 @@
+* Add cancel button on page edit
+* Make post editable - specifically the original_title, category, and summary
 * User reviews and ratings
 * Make search bar on small screens accross entire screen
 * Maybe use another gemini API call for the credits
@@ -6,10 +8,7 @@
 * Internal linking
 
 * Eventually remove tags and description from search vector
-
 * Write tests
-* Add slug input to page
-* Add form for new category as well as delete, edit category routes
 
 * Minify CSS and JS files during development.
   Calculate just etags on compile or on the fly in the route
