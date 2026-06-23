@@ -16,6 +16,7 @@ const getCategoryPostsQuery = `
 			post.original_title,
 			post.thumbnails,
 			COUNT(pl.id) AS likes,
+			%s AS total_results,
 			post.upload_date
 		FROM post
 		JOIN category AS c ON c.id = post.category_id 
@@ -62,6 +63,7 @@ const getSourcePostsQuery = `
 			post.original_title,
 			post.thumbnails,
 			COUNT(pl.id) AS likes,
+			%s AS total_results,
 			post.upload_date
 		FROM post
 		LEFT JOIN playlist AS p ON p.id = post.playlist_db_id 

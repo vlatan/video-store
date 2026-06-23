@@ -32,6 +32,7 @@ func (r *Repository) queryTaxonomyPosts(
 	// The category slug and limit are the first two arguments ($1 and $2)
 	// Peek for one post beoynd the limit
 	var where string
+	total := "COUNT(*) OVER()"
 	args := []any{taxonomyID, r.config.PostsPerPage + 1}
 	order := "upload_date DESC, id DESC"
 	if orderBy == "likes" {
@@ -41,6 +42,7 @@ func (r *Repository) queryTaxonomyPosts(
 	// Build args and SQL parts
 	if cursor != "" {
 
+		total = "0"
 		cursorParts, err := decodeCursor(cursor)
 		if err != nil {
 			return zero, err
@@ -63,7 +65,7 @@ func (r *Repository) queryTaxonomyPosts(
 	}
 
 	// Get rows from DB
-	query = fmt.Sprintf(query, where, order)
+	query = fmt.Sprintf(query, total, where, order)
 	rows, err := r.db.Pool.Query(ctx, query, args...)
 	if err != nil {
 		return zero, err
@@ -77,6 +79,7 @@ func (r *Repository) queryTaxonomyPosts(
 	for rows.Next() {
 		var post models.Post
 		var originalTitle, playlistTitle sql.NullString
+		var totalNum int
 
 		// Paste post from row to struct, thumbnails in a separate var
 		if err = rows.Scan(
@@ -87,6 +90,7 @@ func (r *Repository) queryTaxonomyPosts(
 			&originalTitle,
 			&post.RawThumbs,
 			&post.Likes,
+			&totalNum,
 			&post.UploadDate,
 		); err != nil {
 			return zero, err
@@ -97,6 +101,11 @@ func (r *Repository) queryTaxonomyPosts(
 
 		// Include the processed post in the result
 		posts.Items = append(posts.Items, post)
+
+		// Include the total amount of posts fetched
+		if totalNum != 0 {
+			posts.TotalNum = totalNum
+		}
 	}
 
 	// If error during iteration

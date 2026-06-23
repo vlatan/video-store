@@ -33,7 +33,7 @@ func (s *Service) UserFavoritesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data.Posts = posts
-	data.Title = "Your Favorite Documentaries:"
+	data.Title = "Your Favorite Documentaries"
 	s.ui.RenderHTML(w, r, "user_library.html", data)
 }
 

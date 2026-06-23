@@ -19,7 +19,12 @@
 {{ end }}
 
 {{ define "content" }}
-<h1 class="content-title">{{ .Title }}</h1>
+<div class="content-title-wrap">
+    <h1 class="content-title">{{ .Title }}</h1>
+    {{ if .Posts.TotalNum }}
+    <span>&ensp;-&ensp;{{ .Posts.TotalNum }} docs</span>
+    {{ end }}
+</div>
 {{ .CSRFField }}
 
 <div id="scroller" class="scroll-content">
