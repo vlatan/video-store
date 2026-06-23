@@ -1,10 +1,8 @@
 package pages
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
-	"html/template"
 	"log"
 	"net/http"
 
@@ -14,8 +12,6 @@ import (
 
 	slugify "github.com/gosimple/slug"
 	"github.com/jackc/pgx/v5"
-	"github.com/microcosm-cc/bluemonday"
-	"github.com/yuin/goldmark"
 )
 
 const pageCacheKey = "page:%s"
@@ -58,16 +54,6 @@ func (s *Service) SinglePageHandler(w http.ResponseWriter, r *http.Request) {
 		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}
-
-	var buf bytes.Buffer
-	if err := goldmark.Convert([]byte(page.Content), &buf); err != nil {
-		log.Printf("Could not convert markdown to html on %q: %v", pageSlug, err)
-		utils.HttpError(w, http.StatusInternalServerError)
-		return
-	}
-
-	html := bluemonday.UGCPolicy().SanitizeBytes(buf.Bytes())
-	page.HTMLContent = template.HTML(html) // #nosec G203
 
 	// Assign the page to data
 	data.CurrentPage = &page

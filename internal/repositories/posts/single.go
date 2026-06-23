@@ -1,6 +1,7 @@
 package posts
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 	"encoding/json"
@@ -8,8 +9,10 @@ import (
 	"html/template"
 	"strings"
 
+	"github.com/microcosm-cc/bluemonday"
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/utils"
+	"github.com/yuin/goldmark"
 )
 
 const postExistsQuery = `
@@ -185,7 +188,18 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.
 
 	// Define summary
 	post.Summary = utils.FromNullString(summary)
-	post.HTMLSummary = template.HTML(post.Summary) // #nosec G203
+
+	// Construct HTML summary
+	var buf bytes.Buffer
+	if err := goldmark.Convert([]byte(post.Summary), &buf); err != nil {
+		return zero, fmt.Errorf(
+			"could not convert markdown to html on %q: %v",
+			post.VideoID, err,
+		)
+	}
+
+	html := bluemonday.UGCPolicy().SanitizeBytes(buf.Bytes())
+	post.HTMLSummary = template.HTML(html) // #nosec G203
 
 	// Like button text
 	post.LikeButtonText = "Like"
