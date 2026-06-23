@@ -128,7 +128,7 @@ func (r *Repository) UpdateSource(ctx context.Context, videoID, playlistID strin
 	return result.RowsAffected(), err
 }
 
-const updateGeneretedDataQuery = `
+const updateGeneratedDataQuery = `
 	UPDATE post
 	SET
 		original_title = $2,
@@ -142,7 +142,7 @@ func (r *Repository) UpdateGeneratedData(ctx context.Context, post *models.Post)
 
 	result, err := r.db.Pool.Exec(
 		ctx,
-		updateGeneretedDataQuery,
+		updateGeneratedDataQuery,
 		post.VideoID,
 		utils.ToNullString(post.OriginalTitle),
 		post.Category.Name,

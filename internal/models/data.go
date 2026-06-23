@@ -72,10 +72,11 @@ func (ft FieldType) IsTextarea() bool {
 }
 
 type Form struct {
-	Legend  string
-	Title   *FormGroup
-	Content *FormGroup
-	Error   *FlashMessage
+	Legend   string
+	Title    *FormGroup
+	Content  *FormGroup
+	Category *FormGroup
+	Error    *FlashMessage
 }
 
 // Data struct to pass to templates

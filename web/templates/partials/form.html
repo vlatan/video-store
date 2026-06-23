@@ -25,16 +25,37 @@
                     value="{{ .Value }}" type="text">
             </div>
             {{ end }}
+            {{ with .Form.Content }}
             <div class="form-group">
-                <label class="form-label" for="content">{{ .Form.Content.Label }}</label>
-                {{ if .Form.Content.Type.IsInput }}
-                <input class="form-input" id="content" name="content" placeholder="{{ .Form.Content.Placeholder }}"
-                    required value="{{ .Form.Content.Value }}" type="text">
-                {{ else if .Form.Content.Type.IsTextarea }}
-                <textarea class="form-input" id="content" name="content" placeholder="{{ .Form.Content.Placeholder }}"
-                    required rows="15">{{ .Form.Content.Value }}</textarea>
+                <label class="form-label" for="content">{{ .Label }}</label>
+                {{ if .Type.IsInput }}
+                <input class="form-input" id="content" name="content" placeholder="{{ .Placeholder }}" required
+                    value="{{ .Value }}" type="text">
+                {{ else if .Type.IsTextarea }}
+                <textarea class="form-input" id="content" name="content" placeholder="{{ .Placeholder }}" required
+                    rows="15">{{ .Value }}</textarea>
                 {{ end }}
             </div>
+            {{ end }}
+            {{ if .Form.Category }}
+            <div class="form-group">
+                <label class="form-label" for="category">{{ .Form.Category.Label }}</label>
+                <select id="category" name="category">
+                    {{ $selected := "" }}
+                    {{ if not .Form.Category.Value }}
+                    {{ $selected = "selected" }}
+                    {{ end }}
+                    <option value="" {{ $selected }}>None</option>
+                    {{range .Categories}}
+                    {{ $selected := "" }}
+                    {{ if eq .Slug $.Form.Category.Value }}
+                    {{ $selected = "selected" }}
+                    {{ end }}
+                    <option value="{{ .Slug }}" {{ $selected }}>{{ .Name }}</option>
+                    {{ end }}
+                </select>
+            </div>
+            {{ end }}
         </fieldset>
         <div class="form-group button-group">
             <input class="form-button" id="submit" name="submit" type="submit" value="Submit">

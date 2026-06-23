@@ -24,6 +24,29 @@
   background-color: var(--secondary-background-color);
 }
 
+.form-content select {
+  background-color: #1e1e1e;
+  color: #e0e0e0;
+  padding: 10px 14px;
+  font-size: 1rem;
+  border: 1px solid #333333;
+  border-radius: 4px;
+  width: 250px;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.form-content select:focus {
+  border-color: #555555;
+}
+
+/* Styles individual options (browser support varies, but works for background/color) */
+.form-content option {
+  background-color: #1e1e1e;
+  color: #e0e0e0;
+}
+
 .form-legend {
   font-weight: bold;
   padding: 0.3rem 1rem;

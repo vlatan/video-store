@@ -215,3 +215,27 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.
 
 	return post, nil
 }
+
+const updatePostQuery = `
+	UPDATE post
+	SET
+		original_title = $2,
+		category_id = (SELECT id FROM category WHERE slug = $3),
+		summary = $4
+	WHERE video_id = $1
+`
+
+func (r *Repository) UpdatePost(
+	ctx context.Context,
+	videoID, originalTitle, categorySlug, summary string,
+) (int64, error) {
+	result, err := r.db.Pool.Exec(
+		ctx,
+		updatePostQuery,
+		videoID,
+		utils.ToNullString(originalTitle),
+		categorySlug,
+		summary,
+	)
+	return result.RowsAffected(), err
+}
