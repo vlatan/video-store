@@ -38,6 +38,11 @@
         </fieldset>
         <div class="form-group button-group">
             <input class="form-button" id="submit" name="submit" type="submit" value="Submit">
+            {{ if .CurrentPage }}
+            <a class="form-button" href="/page/{{ .CurrentPage.Slug }}/">Cancel</a>
+            {{ else if .CurrentPost }}
+            <a class="form-button" href="/video/{{ .CurrentPost.VideoID }}/">Cancel</a>
+            {{ end }}
             <div class="submit-spinner"></div>
             {{ with .Form.Error }}
             <div class="form-invalid-feedback">

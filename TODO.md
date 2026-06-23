@@ -1,4 +1,3 @@
-* Add cancel button on page edit
 * Make post editable - specifically the original_title, category, and summary
 * User reviews and ratings
 * Make search bar on small screens accross entire screen

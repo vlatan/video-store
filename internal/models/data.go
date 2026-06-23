@@ -80,8 +80,6 @@ type Form struct {
 
 // Data struct to pass to templates
 type TemplateData struct {
-	StaticFiles     StaticFiles
-	Config          *config.Config
 	Title           string
 	CurrentPost     *Post
 	CurrentPage     *Page
@@ -95,6 +93,8 @@ type TemplateData struct {
 	CSRFField       template.HTML
 	XMLDeclarations []template.HTML
 	SitemapItems    []*SitemapItem
+	StaticFiles
+	*config.Config
 	*HTMLErrorData
 	*PaginationInfo
 	*Posts

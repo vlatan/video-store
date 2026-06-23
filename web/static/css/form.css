@@ -63,6 +63,7 @@
   border-radius: 5px;
   background-color: var(--secondary-background-color);
   cursor: pointer;
+  line-height: normal;
 }
 
 .form-button:hover {

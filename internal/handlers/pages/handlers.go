@@ -98,6 +98,9 @@ func (s *Service) UpdatePageHandler(w http.ResponseWriter, r *http.Request) {
 	// Default data
 	data := models.GetDataFromContext(r)
 
+	// Assign page data
+	data.CurrentPage = &page
+
 	// Populate needed data for the page form
 	data.Form = &models.Form{
 		Legend: "Edit Page",
@@ -113,6 +116,7 @@ func (s *Service) UpdatePageHandler(w http.ResponseWriter, r *http.Request) {
 			Value:       page.Content,
 		},
 	}
+
 	data.Title = "Edit This Page"
 
 	switch r.Method {
