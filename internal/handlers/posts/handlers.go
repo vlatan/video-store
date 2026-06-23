@@ -15,6 +15,9 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
+const postCacheKey = "post:%s"
+const relatedPostsCacheKey = "post:%s:related_posts"
+
 // Handle the Home page
 func (s *Service) HomeHandler(w http.ResponseWriter, r *http.Request) {
 
@@ -357,7 +360,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 		post, err = rdb.GetCachedData(
 			r.Context(),
 			s.rdb,
-			fmt.Sprintf("post:%s", videoID),
+			fmt.Sprintf(postCacheKey, videoID),
 			s.config.CacheTimeout,
 			func() (models.Post, error) {
 				return s.postsRepo.GetSinglePost(r.Context(), videoID)
@@ -399,7 +402,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 		relatedPosts, _ = rdb.GetCachedData(
 			r.Context(),
 			s.rdb,
-			fmt.Sprintf("post:%s:related_posts", videoID),
+			fmt.Sprintf(relatedPostsCacheKey, videoID),
 			s.config.CacheTimeout,
 			func() (models.Posts, error) {
 				return s.postsRepo.GetRelatedPosts(r.Context(), post.GetTitle())
@@ -500,6 +503,16 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil || rowsAffected == 0 {
 			log.Printf("Could not update the post %q in DB: %v", videoID, err)
 			formError.Message = "Could not update the post in DB"
+			data.Form.Error = &formError
+			s.ui.RenderHTML(w, r, "form.html", data)
+			return
+		}
+
+		// Delete the redis cache
+		redisKey := fmt.Sprintf(postCacheKey, videoID)
+		if err = s.rdb.Client.Del(r.Context(), redisKey).Err(); err != nil {
+			log.Printf("could not delete the cache on post %q; %v", videoID, err)
+			formError.Message = "Could not delete the cache on post"
 			data.Form.Error = &formError
 			s.ui.RenderHTML(w, r, "form.html", data)
 			return

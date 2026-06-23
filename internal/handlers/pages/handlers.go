@@ -155,7 +155,7 @@ func (s *Service) UpdatePageHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// Delete the redis cache, ignore the error
+		// Delete the redis cache
 		redisKey := fmt.Sprintf(pageCacheKey, slug)
 		if err = s.rdb.Client.Del(r.Context(), redisKey).Err(); err != nil {
 			log.Printf("could not delete the cache on page %q; %v", slug, err)
