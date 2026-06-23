@@ -37,18 +37,19 @@
                 {{ end }}
             </div>
             {{ end }}
-            {{ if .Form.Category }}
+            {{ with .Form.Category }}
+            {{ $currentSlug := .Value }}
             <div class="form-group">
-                <label class="form-label" for="category">{{ .Form.Category.Label }}</label>
+                <label class="form-label" for="category">{{ .Label }}</label>
                 <select id="category" name="category">
                     {{ $selected := "" }}
-                    {{ if not .Form.Category.Value }}
+                    {{ if not $currentSlug }}
                     {{ $selected = "selected" }}
                     {{ end }}
                     <option value="" {{ $selected }}>None</option>
-                    {{range .Categories}}
+                    {{range $.Categories}}
                     {{ $selected := "" }}
-                    {{ if eq .Slug $.Form.Category.Value }}
+                    {{ if eq .Slug $currentSlug }}
                     {{ $selected = "selected" }}
                     {{ end }}
                     <option value="{{ .Slug }}" {{ $selected }}>{{ .Name }}</option>
