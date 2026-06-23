@@ -15,17 +15,21 @@
 {{ end }}
 
 {{ define "title_tag" }}
-{{ .Title }} - {{ .Config.AppName }}
+{{ .SearchQuery }} - {{ .Config.AppName }} Search
 {{ end }}
 
 {{ define "content" }}
-<h1 class="content-title">
+<div class="content-title-wrap">
     {{ if .Posts.TotalNum }}
-    <strong>{{ .Posts.TotalNum }}</strong> results <small>({{ .Posts.TimeTook }} seconds)</small>
+    <h1 class="content-title visually-hidden">Search results for: {{ .SearchQuery }}</h1>
+    <span>
+        <strong>{{ .Posts.TotalNum }}</strong> results <small>({{ .Posts.TimeTook }} seconds)</small>
+    </span>
     {{ else }}
-    Sorry, no matching results for this query.
+    <h1 class="content-title visually-hidden">No search results found for: {{ .SearchQuery }}</h1>
+    <span>Sorry, no matching results for this query.</span>
     {{ end }}
-</h1>
+</div>
 {{ template "content.html" . }}
 {{ end }}
 
