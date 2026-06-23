@@ -1,17 +1,13 @@
 package pages
 
 import (
-	"bytes"
 	"context"
 	"database/sql"
 	"fmt"
-	"html/template"
 
-	"github.com/microcosm-cc/bluemonday"
 	"github.com/vlatan/video-store/internal/drivers/database"
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/utils"
-	"github.com/yuin/goldmark"
 )
 
 type Repository struct {
@@ -43,17 +39,13 @@ func (r *Repository) GetSinglePage(ctx context.Context, slug string) (models.Pag
 
 	page.Content = utils.FromNullString(content)
 
-	// Construct HTML page content
-	var buf bytes.Buffer
-	if err := goldmark.Convert([]byte(page.Content), &buf); err != nil {
+	// Parse markdown to HTML
+	if page.HTMLContent, err = utils.ParseMarkdown(page.Content); err != nil {
 		return zero, fmt.Errorf(
 			"could not convert markdown to html on %q: %v",
 			page.Slug, err,
 		)
 	}
-
-	html := bluemonday.UGCPolicy().SanitizeBytes(buf.Bytes())
-	page.HTMLContent = template.HTML(html) // #nosec G203
 
 	return page, nil
 }

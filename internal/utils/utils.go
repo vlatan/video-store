@@ -1,10 +1,12 @@
 package utils
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 	"errors"
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 	"net/url"
@@ -16,6 +18,9 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/microcosm-cc/bluemonday"
+	"github.com/yuin/goldmark"
 )
 
 // Favicons used in the website
@@ -193,4 +198,15 @@ func GetProjectRoot() (string, error) {
 
 		dir = parentDir
 	}
+}
+
+// ParseMarkdown converts markdown to HTML
+func ParseMarkdown(content string) (template.HTML, error) {
+	var buf bytes.Buffer
+	if err := goldmark.Convert([]byte(content), &buf); err != nil {
+		return "", err
+	}
+
+	html := bluemonday.UGCPolicy().SanitizeBytes(buf.Bytes())
+	return template.HTML(html), nil // #nosec G203
 }
