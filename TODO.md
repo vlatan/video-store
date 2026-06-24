@@ -1,6 +1,7 @@
 * Make post editable - specifically the original_title, category, and summary
   Remove JS actions on title and summary, add just edit post button
   Style the category dropdown menu
+  Replace em dashes with normal dashes in description normalization
 
 * Do not allow double slashes in URLs
 
