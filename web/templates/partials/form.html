@@ -33,7 +33,7 @@
                     value="{{ .Value }}" type="text">
                 {{ else if .Type.IsTextarea }}
                 <textarea class="form-input" id="content" name="content" placeholder="{{ .Placeholder }}" required
-                    rows="15">{{ .Value }}</textarea>
+                    rows="10">{{ .Value }}</textarea>
                 {{ end }}
             </div>
             {{ end }}
@@ -41,7 +41,7 @@
             {{ $currentSlug := .Value }}
             <div class="form-group">
                 <label class="form-label" for="category">{{ .Label }}</label>
-                <select id="category" name="category">
+                <select id="category" class="form-select" name="category">
                     {{ $selected := "" }}
                     {{ if not $currentSlug }}
                     {{ $selected = "selected" }}
