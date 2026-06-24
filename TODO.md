@@ -1,8 +1,3 @@
-* Make post editable - specifically the original_title, category, and summary
-  Remove JS actions on title and summary, add just edit post button
-
-* Do not allow double slashes in URLs
-
 * User reviews and ratings
 * Make search bar on small screens accross entire screen
 * Maybe use another gemini API call for the credits
