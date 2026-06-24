@@ -528,7 +528,7 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // Perform an action on a video
-func (s *Service) PostActionHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Service) ActionPostHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Validate the YT ID
 	videoID := r.PathValue("video")
