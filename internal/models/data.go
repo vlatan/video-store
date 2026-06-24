@@ -72,16 +72,15 @@ func (ft FieldType) IsTextarea() bool {
 }
 
 type Form struct {
-	Legend  string
-	Title   *FormGroup
-	Content *FormGroup
-	Error   *FlashMessage
+	Legend   string
+	Title    *FormGroup
+	Content  *FormGroup
+	Category *FormGroup
+	Error    *FlashMessage
 }
 
 // Data struct to pass to templates
 type TemplateData struct {
-	StaticFiles     StaticFiles
-	Config          *config.Config
 	Title           string
 	CurrentPost     *Post
 	CurrentPage     *Page
@@ -95,6 +94,8 @@ type TemplateData struct {
 	CSRFField       template.HTML
 	XMLDeclarations []template.HTML
 	SitemapItems    []*SitemapItem
+	StaticFiles
+	*config.Config
 	*HTMLErrorData
 	*PaginationInfo
 	*Posts

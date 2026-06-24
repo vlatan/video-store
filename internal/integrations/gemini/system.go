@@ -11,7 +11,7 @@ func (s *Service) systemInstruction() *genai.Content {
 	content := []string{
 		"Write complex, detailed sentences built entirely from concrete, verifiable facts.",
 		"Analyze the input objectively. Ignore subjective scenarios.",
-		"Omit timestamps, uppercase formatting and em dashes (—).",
+		"Omit including timestamps, uppercase formatting and em dashes (—).",
 	}
 
 	contentText := strings.Join(content, "\n")

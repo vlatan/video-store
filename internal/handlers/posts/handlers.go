@@ -15,6 +15,9 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
+const postCacheKey = "post:%s"
+const relatedPostsCacheKey = "post:%s:related_posts"
+
 // Handle the Home page
 func (s *Service) HomeHandler(w http.ResponseWriter, r *http.Request) {
 
@@ -332,17 +335,18 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 
 // Handle a single post
 func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
+
 	// Get video id from URL path
 	videoID := r.PathValue("video")
-
-	// Generate the default data
-	data := models.GetDataFromContext(r)
 
 	// Validate the YT ID
 	if validVideoID.FindStringSubmatch(videoID) == nil {
 		http.NotFound(w, r)
 		return
 	}
+
+	// Generate the default data
+	data := models.GetDataFromContext(r)
 
 	var (
 		err  error
@@ -356,7 +360,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 		post, err = rdb.GetCachedData(
 			r.Context(),
 			s.rdb,
-			fmt.Sprintf("post:%s", videoID),
+			fmt.Sprintf(postCacheKey, videoID),
 			s.config.CacheTimeout,
 			func() (models.Post, error) {
 				return s.postsRepo.GetSinglePost(r.Context(), videoID)
@@ -398,7 +402,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 		relatedPosts, _ = rdb.GetCachedData(
 			r.Context(),
 			s.rdb,
-			fmt.Sprintf("post:%s:related_posts", videoID),
+			fmt.Sprintf(relatedPostsCacheKey, videoID),
 			s.config.CacheTimeout,
 			func() (models.Posts, error) {
 				return s.postsRepo.GetRelatedPosts(r.Context(), post.GetTitle())
@@ -410,8 +414,121 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 	s.ui.RenderHTML(w, r, "post.html", data)
 }
 
+// UpdatePostHandler handles the post update
+func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
+
+	// Get video id from URL path
+	videoID := r.PathValue("video")
+
+	// Validate the YT ID
+	if validVideoID.FindStringSubmatch(videoID) == nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	// Get the post data straight from DB
+	post, err := s.postsRepo.GetSinglePost(r.Context(), videoID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		http.NotFound(w, r)
+		return
+	}
+
+	if err != nil {
+		log.Printf("Error while getting the post %q from DB: %v", videoID, err)
+		utils.HttpError(w, http.StatusInternalServerError)
+		return
+	}
+
+	// Generate default data
+	data := models.GetDataFromContext(r)
+
+	// Assign page data
+	data.CurrentPost = &post
+	if data.CurrentPost.Category == nil {
+		data.CurrentPost.Category = &models.Category{}
+	}
+
+	// Populate needed data for the page form
+	data.Form = &models.Form{
+		Legend: "Edit Post",
+		Title: &models.FormGroup{
+			Label:       "Title",
+			Placeholder: "Your title...",
+			Value:       data.CurrentPost.Title,
+		},
+		Content: &models.FormGroup{
+			Type:        models.FieldTypeTextarea,
+			Label:       "Content",
+			Placeholder: "You can use markdown...",
+			Value:       data.CurrentPost.Summary,
+		},
+		Category: &models.FormGroup{
+			Label: "Category",
+			Value: data.CurrentPost.Category.Slug,
+		},
+	}
+
+	data.Title = "Edit This Post"
+
+	switch r.Method {
+	case "GET":
+		// Serve the page with the form
+		s.ui.RenderHTML(w, r, "form.html", data)
+
+	case "POST":
+		var formError models.FlashMessage
+
+		err := r.ParseForm()
+		if err != nil {
+			formError.Message = "Could not parse the form"
+			data.Form.Error = &formError
+			s.ui.RenderHTML(w, r, "form.html", data)
+			return
+		}
+
+		// Get the title and the content from the form
+		data.Form.Title.Value = r.FormValue("title")
+		data.Form.Category.Value = r.FormValue("category")
+		data.Form.Content.Value = r.FormValue("content")
+
+		// Update the page
+		rowsAffected, err := s.postsRepo.UpdatePost(
+			r.Context(),
+			videoID,
+			data.Form.Title.Value,    // original title
+			data.Form.Category.Value, // category slug
+			data.Form.Content.Value,  // summary
+		)
+
+		if err != nil || rowsAffected == 0 {
+			log.Printf("Could not update the post %q in DB: %v", videoID, err)
+			formError.Message = "Could not update the post in DB"
+			data.Form.Error = &formError
+			s.ui.RenderHTML(w, r, "form.html", data)
+			return
+		}
+
+		// Delete the redis cache
+		redisKey := fmt.Sprintf(postCacheKey, videoID)
+		if err = s.rdb.Client.Del(r.Context(), redisKey).Err(); err != nil {
+			log.Printf("could not delete the cache on post %q; %v", videoID, err)
+			formError.Message = "Could not delete the cache on post"
+			data.Form.Error = &formError
+			s.ui.RenderHTML(w, r, "form.html", data)
+			return
+		}
+
+		// Check out the updated page
+		redirectTo := fmt.Sprintf("/video/%s/", videoID)
+		http.Redirect(w, r, redirectTo, http.StatusFound)
+
+	default:
+		utils.HttpError(w, http.StatusMethodNotAllowed)
+	}
+}
+
 // Perform an action on a video
-func (s *Service) PostActionHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Service) ActionPostHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Validate the YT ID
 	videoID := r.PathValue("video")
@@ -422,7 +539,7 @@ func (s *Service) PostActionHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Validate the action
 	action := r.PathValue("action")
-	allowedActions := []string{"like", "unlike", "fave", "unfave", "edit", "delete"}
+	allowedActions := []string{"like", "unlike", "fave", "unfave", "delete"}
 	if !slices.Contains(allowedActions, action) {
 		log.Printf("Not a valid action %q on video: %s\n", action, videoID)
 		http.NotFound(w, r)
@@ -433,7 +550,7 @@ func (s *Service) PostActionHandler(w http.ResponseWriter, r *http.Request) {
 	user := models.GetUserFromContext(r)
 
 	// Check if user is authorized to edit or delete (admin)
-	if (action == "edit" || action == "delete") &&
+	if action == "delete" &&
 		!user.IsAdmin(s.config.AdminProviderUserId, s.config.AdminProvider) {
 		utils.HttpError(w, http.StatusForbidden)
 		return
@@ -448,10 +565,8 @@ func (s *Service) PostActionHandler(w http.ResponseWriter, r *http.Request) {
 		s.handleFave(w, r, user.ID, videoID)
 	case "unfave":
 		s.handleUnfave(w, r, user.ID, videoID)
-	case "edit":
-		s.handleEdit(w, r, videoID, user)
 	case "delete":
-		s.handleBanPost(w, r, user.ID, videoID)
+		s.handleBan(w, r, user.ID, videoID)
 	default:
 		utils.HttpError(w, http.StatusBadRequest)
 	}

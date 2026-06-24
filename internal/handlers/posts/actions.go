@@ -1,18 +1,12 @@
 package posts
 
 import (
-	"encoding/json"
 	"log"
 	"net/http"
 
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/utils"
 )
-
-type bodyData struct {
-	Title       string `json:"title"`
-	Description string `json:"description"`
-}
 
 // Handle a post like from user
 func (s *Service) handleLike(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
@@ -70,42 +64,8 @@ func (s *Service) handleUnfave(w http.ResponseWriter, r *http.Request, userID in
 	}
 }
 
-// Handle a post title update
-func (s *Service) handleUpdateTitle(w http.ResponseWriter, r *http.Request, userID int, videoID, title string) {
-	rowsAffected, err := s.postsRepo.UpdateTitle(r.Context(), videoID, title)
-	if err != nil {
-		log.Printf(
-			"User %d could not update the title of the video %s: %v",
-			userID, videoID, err,
-		)
-		utils.HttpError(w, http.StatusInternalServerError)
-		return
-	}
-
-	if rowsAffected == 0 {
-		http.NotFound(w, r)
-	}
-}
-
-// Handle a post summary update
-func (s *Service) handleUpdateSummary(w http.ResponseWriter, r *http.Request, userID int, videoID, summary string) {
-	rowsAffected, err := s.postsRepo.UpdateSummary(r.Context(), videoID, summary)
-	if err != nil {
-		log.Printf(
-			"User %d could not update the description of the video %s: %v",
-			userID, videoID, err,
-		)
-		utils.HttpError(w, http.StatusInternalServerError)
-		return
-	}
-
-	if rowsAffected == 0 {
-		http.NotFound(w, r)
-	}
-}
-
 // Handle a post ban
-func (s *Service) handleBanPost(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
+func (s *Service) handleBan(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
 	rowsAffected, err := s.postsRepo.BanPost(r.Context(), videoID)
 	if err != nil {
 		log.Printf("User %d could not delete the video %s: %v", userID, videoID, err)
@@ -125,32 +85,4 @@ func (s *Service) handleBanPost(w http.ResponseWriter, r *http.Request, userID i
 
 	s.ui.StoreFlashMessage(w, r, &successDelete)
 	http.Redirect(w, r, "/", http.StatusSeeOther)
-}
-
-// Handle the title or description update
-func (s *Service) handleEdit(w http.ResponseWriter, r *http.Request, videoID string, currentUser *models.User) {
-	var data bodyData
-
-	// Deocode JSON
-	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
-		log.Printf("Could not decode the JSON body on path: %s", r.URL.Path)
-		utils.HttpError(w, http.StatusBadRequest)
-		return
-	}
-
-	// Check for title or description
-	if data.Title == "" && data.Description == "" {
-		log.Printf("No title and description in body on path: %s", r.URL.Path)
-		utils.HttpError(w, http.StatusBadRequest)
-		return
-	}
-
-	if data.Title != "" {
-		s.handleUpdateTitle(w, r, currentUser.ID, videoID, data.Title)
-		return
-	}
-
-	if data.Description != "" {
-		s.handleUpdateSummary(w, r, currentUser.ID, videoID, data.Description)
-	}
 }

@@ -3,6 +3,7 @@ package pages
 import (
 	"context"
 	"database/sql"
+	"fmt"
 
 	"github.com/vlatan/video-store/internal/drivers/database"
 	"github.com/vlatan/video-store/internal/models"
@@ -22,7 +23,7 @@ func New(db *database.Service) *Repository {
 // Get single page from DB
 func (r *Repository) GetSinglePage(ctx context.Context, slug string) (models.Page, error) {
 
-	var page models.Page
+	var zero, page models.Page
 	var content sql.NullString
 
 	// Get single row from DB
@@ -33,10 +34,19 @@ func (r *Repository) GetSinglePage(ctx context.Context, slug string) (models.Pag
 	)
 
 	if err != nil {
-		return models.Page{}, err
+		return zero, err
 	}
 
 	page.Content = utils.FromNullString(content)
+
+	// Parse markdown to HTML
+	if page.HTMLContent, err = utils.ParseMarkdown(page.Content); err != nil {
+		return zero, fmt.Errorf(
+			"could not convert markdown to html on %q: %v",
+			page.Slug, err,
+		)
+	}
+
 	return page, nil
 }
 

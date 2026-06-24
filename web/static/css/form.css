@@ -24,6 +24,79 @@
   background-color: var(--secondary-background-color);
 }
 
+/* Opt-in to the modern customizable select rendering */
+.form-select,
+.form-select::picker(select) {
+  appearance: base-select;
+}
+
+
+/* Remove the picker's default black border and animate on open */
+.form-select::picker(select) {
+  border: none;
+  opacity: 0;
+  transition: all 0.4s allow-discrete;
+}
+
+.form-select:open::picker(select) {
+  opacity: 1;
+}
+
+@starting-style {
+  .form-select:open::picker(select) {
+    opacity: 0;
+  }
+}
+
+/* Style the main button box */
+.form-select {
+  color-scheme: dark;
+  background-color: var(--primary-background-color);
+  color: var(--primary-font-color);
+  padding: 0.35rem 0.75rem;
+  font-size: 1rem;
+  border: 1px solid var(--primary-border-color);
+  border-radius: 0.25rem;
+  width: 250px;
+  cursor: pointer;
+  transition: 0.4s;
+}
+
+.form-select::picker-icon {
+  transition: 0.4s rotate;
+}
+
+.form-select:open::picker-icon {
+  rotate: 180deg;
+}
+
+/* Style individual option items */
+.form-select option {
+  display: flex;
+  justify-content: flex-start;
+  gap: 1rem;
+  border: 1px solid var(--primary-border-color);
+  background-color: var(--primary-background-color);
+  color: var(--primary-font-color);
+  padding: 0.35rem 0.75rem;
+  transition: 0.4s;
+}
+
+/* Style options when hovered, focused or checked */
+.form-select option:hover,
+.form-select option:focus,
+.form-select option:checked {
+  background-color: var(--secondary-background-color);
+  font-weight: bold;
+  color: var(--secondary-font-color);
+}
+
+.form-select option::checkmark {
+  order: 1;
+  margin-left: auto;
+  color: yellow;
+}
+
 .form-legend {
   font-weight: bold;
   padding: 0.3rem 1rem;
@@ -63,6 +136,7 @@
   border-radius: 5px;
   background-color: var(--secondary-background-color);
   cursor: pointer;
+  line-height: normal;
 }
 
 .form-button:hover {

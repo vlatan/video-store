@@ -25,19 +25,46 @@
                     value="{{ .Value }}" type="text">
             </div>
             {{ end }}
+            {{ with .Form.Content }}
             <div class="form-group">
-                <label class="form-label" for="content">{{ .Form.Content.Label }}</label>
-                {{ if .Form.Content.Type.IsInput }}
-                <input class="form-input" id="content" name="content" placeholder="{{ .Form.Content.Placeholder }}"
-                    required value="{{ .Form.Content.Value }}" type="text">
-                {{ else if .Form.Content.Type.IsTextarea }}
-                <textarea class="form-input" id="content" name="content" placeholder="{{ .Form.Content.Placeholder }}"
-                    required rows="15">{{ .Form.Content.Value }}</textarea>
+                <label class="form-label" for="content">{{ .Label }}</label>
+                {{ if .Type.IsInput }}
+                <input class="form-input" id="content" name="content" placeholder="{{ .Placeholder }}" required
+                    value="{{ .Value }}" type="text">
+                {{ else if .Type.IsTextarea }}
+                <textarea class="form-input" id="content" name="content" placeholder="{{ .Placeholder }}" required
+                    rows="10">{{ .Value }}</textarea>
                 {{ end }}
             </div>
+            {{ end }}
+            {{ with .Form.Category }}
+            {{ $currentSlug := .Value }}
+            <div class="form-group">
+                <label class="form-label" for="category">{{ .Label }}</label>
+                <select id="category" class="form-select" name="category">
+                    {{ $selected := "" }}
+                    {{ if not $currentSlug }}
+                    {{ $selected = "selected" }}
+                    {{ end }}
+                    <option value="" {{ $selected }}>None</option>
+                    {{range $.Categories}}
+                    {{ $selected := "" }}
+                    {{ if eq .Slug $currentSlug }}
+                    {{ $selected = "selected" }}
+                    {{ end }}
+                    <option value="{{ .Slug }}" {{ $selected }}>{{ .Name }}</option>
+                    {{ end }}
+                </select>
+            </div>
+            {{ end }}
         </fieldset>
         <div class="form-group button-group">
             <input class="form-button" id="submit" name="submit" type="submit" value="Submit">
+            {{ if .CurrentPage }}
+            <a class="form-button" href="/page/{{ .CurrentPage.Slug }}/">Cancel</a>
+            {{ else if .CurrentPost }}
+            <a class="form-button" href="/video/{{ .CurrentPost.VideoID }}/">Cancel</a>
+            {{ end }}
             <div class="submit-spinner"></div>
             {{ with .Form.Error }}
             <div class="form-invalid-feedback">
