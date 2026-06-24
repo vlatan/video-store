@@ -414,7 +414,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 	s.ui.RenderHTML(w, r, "post.html", data)
 }
 
-// Update page
+// UpdatePostHandler handles the post update
 func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Get video id from URL path
@@ -539,7 +539,7 @@ func (s *Service) PostActionHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Validate the action
 	action := r.PathValue("action")
-	allowedActions := []string{"like", "unlike", "fave", "unfave", "edit", "delete"}
+	allowedActions := []string{"like", "unlike", "fave", "unfave", "delete"}
 	if !slices.Contains(allowedActions, action) {
 		log.Printf("Not a valid action %q on video: %s\n", action, videoID)
 		http.NotFound(w, r)
@@ -550,7 +550,7 @@ func (s *Service) PostActionHandler(w http.ResponseWriter, r *http.Request) {
 	user := models.GetUserFromContext(r)
 
 	// Check if user is authorized to edit or delete (admin)
-	if (action == "edit" || action == "delete") &&
+	if action == "delete" &&
 		!user.IsAdmin(s.config.AdminProviderUserId, s.config.AdminProvider) {
 		utils.HttpError(w, http.StatusForbidden)
 		return
@@ -565,8 +565,6 @@ func (s *Service) PostActionHandler(w http.ResponseWriter, r *http.Request) {
 		s.handleFave(w, r, user.ID, videoID)
 	case "unfave":
 		s.handleUnfave(w, r, user.ID, videoID)
-	case "edit":
-		s.handleEdit(w, r, videoID, user)
 	case "delete":
 		s.handleBanPost(w, r, user.ID, videoID)
 	default:
