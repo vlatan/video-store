@@ -65,7 +65,7 @@ func (s *Service) handleUnfave(w http.ResponseWriter, r *http.Request, userID in
 }
 
 // Handle a post ban
-func (s *Service) handleBanPost(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
+func (s *Service) handleBan(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
 	rowsAffected, err := s.postsRepo.BanPost(r.Context(), videoID)
 	if err != nil {
 		log.Printf("User %d could not delete the video %s: %v", userID, videoID, err)

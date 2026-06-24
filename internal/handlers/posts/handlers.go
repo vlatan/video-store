@@ -566,7 +566,7 @@ func (s *Service) ActionPostHandler(w http.ResponseWriter, r *http.Request) {
 	case "unfave":
 		s.handleUnfave(w, r, user.ID, videoID)
 	case "delete":
-		s.handleBanPost(w, r, user.ID, videoID)
+		s.handleBan(w, r, user.ID, videoID)
 	default:
 		utils.HttpError(w, http.StatusBadRequest)
 	}
