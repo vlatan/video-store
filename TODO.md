@@ -1,3 +1,4 @@
+* Merge more than one slashes to single slash
 * User reviews and ratings
 * Make search bar on small screens accross entire screen
 * Maybe use another gemini API call for the credits
