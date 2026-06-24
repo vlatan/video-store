@@ -50,6 +50,7 @@ var puncts = map[rune]bool{
 	'.':      true,
 	'!':      true,
 	'?':      true,
+	'\u2010': true, // U+2010 hyphen
 	'\u002D': true, // U+002D hyphen-minus
 	'\u2014': true, // U+2014 em dash
 	'\u2013': true, // U+2013 en dash
@@ -217,5 +218,6 @@ func NormalizeTags(tags []string, title, description string) (result string) {
 // normalizeDescription removes URLs and emails from a text
 func NormalizeDescription(text string) string {
 	text = urlRegex.ReplaceAllString(text, "")
-	return emailRegex.ReplaceAllString(text, "")
+	text = emailRegex.ReplaceAllString(text, "")
+	return strings.ReplaceAll(text, "—", " - ")
 }
