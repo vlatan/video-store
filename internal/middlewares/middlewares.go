@@ -286,7 +286,7 @@ func (s *Service) CsrfProtection(next http.Handler) http.Handler {
 			csrf.Path("/"),
 		)
 
-		// Call the pre-created CSRF middleware
+		// Wrap the nex handler and serve http
 		csrfMiddleware(next).ServeHTTP(w, r)
 	})
 }
