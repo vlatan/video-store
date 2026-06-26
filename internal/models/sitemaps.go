@@ -4,6 +4,7 @@ import "encoding/json"
 
 type SitemapItem struct {
 	Type         string
+	BucketId     int
 	Location     string
 	LastModified string
 }

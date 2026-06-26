@@ -17,41 +17,41 @@ const sitemapDataQuery = `
 	-- Posts (last modified = last updated_at)
 	SELECT
 		'post' as type,
+		FLOOR(id / $1) AS bucket_id,
 		CONCAT('/video/', video_id, '/') AS location,
-		updated_at AS last_modified,
-		created_at
+		updated_at AS last_modified
 	FROM post
 
 	UNION ALL
 
 	-- Pages (last modified = last updated_at)
 	SELECT
-		'page' AS type,
+		'misc' AS type,
+		0 AS bucket_id,
 		CONCAT('/page/', slug, '/') AS location,
-		updated_at AS last_modified,
-		created_at
+		updated_at AS last_modified
 	FROM page
 
 	UNION ALL
 
 	-- Playlists (last modified = latest upload date post in playlist)
 	SELECT
-		'source' AS type, 
+		'misc' AS type,
+		0 AS bucket_id,
 		CONCAT('/source/', p.playlist_id, '/') AS location, 
-		MAX(post.upload_date) AS last_modified,
-		MIN(post.created_at)
+		MAX(post.upload_date) AS last_modified
 	FROM playlist AS p
 	INNER JOIN post ON post.playlist_db_id = p.id
-	GROUP BY p.id, p.created_at
+	GROUP BY p.id
 
 	UNION ALL
 
 	-- Orphans (last modified = latest upload date post without playlist)
 	SELECT
-		'source' AS type,
+		'misc' AS type,
+		0 AS bucket_id,
 		'/source/other/' AS location,
-		MAX(upload_date) AS last_modified,
-		MIN(created_at) AS created_at
+		MAX(upload_date) AS last_modified
 	FROM post
 	WHERE playlist_id IS NULL OR playlist_id = ''
 	HAVING COUNT(*) > 0
@@ -60,22 +60,22 @@ const sitemapDataQuery = `
 
 	-- Categories (last modified = latest upload date post in category)
 	SELECT
-		'category' AS type,
+		'misc' AS type,
+		0 AS bucket_id,
 		CONCAT('/category/', c.slug, '/') AS location,
-		MAX(post.upload_date) AS last_modified,
-		MIN(post.created_at)
+		MAX(post.upload_date) AS last_modified
 	FROM category AS c
 	INNER JOIN post ON post.category_id = c.id
-	GROUP BY c.id, c.created_at
+	GROUP BY c.id
 
 	UNION ALL
 
 	-- Homepage (last modified = latest upload date post in DB)
 	SELECT
 		'misc' AS type,
+		0 AS bucket_id,
 		'/' AS location,
-		MAX(upload_date) AS last_modified,
-		MIN(created_at) AS created_at
+		MAX(upload_date) AS last_modified
 	FROM post
 
 	UNION ALL
@@ -83,18 +83,18 @@ const sitemapDataQuery = `
 	-- Playlists page (last modified = newest playlist in DB)
 	SELECT 
 		'misc' AS type,
+		0 AS bucket_id,
 		'/sources/' AS location, 
-		MAX(created_at) AS last_modified,
-		MIN(created_at) AS created_at
+		MAX(created_at) AS last_modified
 	FROM playlist
 
-	ORDER BY created_at ASC, location ASC
+	ORDER BY type, location
 `
 
-func (r *Repository) SitemapData(ctx context.Context) ([]*models.SitemapItem, error) {
+func (r *Repository) SitemapData(ctx context.Context, partSize int) ([]*models.SitemapItem, error) {
 
 	// Get rows from DB
-	rows, err := r.db.Pool.Query(ctx, sitemapDataQuery)
+	rows, err := r.db.Pool.Query(ctx, sitemapDataQuery, partSize)
 	if err != nil {
 		return nil, err
 	}
@@ -106,10 +106,10 @@ func (r *Repository) SitemapData(ctx context.Context) ([]*models.SitemapItem, er
 	var data []*models.SitemapItem
 	for rows.Next() {
 		var item models.SitemapItem
-		var lastModified, createdAt *time.Time
+		var lastModified *time.Time
 
 		// Paste post from row to struct, thumbnails in a separate var
-		if err = rows.Scan(&item.Type, &item.Location, &lastModified, &createdAt); err != nil {
+		if err = rows.Scan(&item.Type, &item.BucketId, &item.Location, &lastModified); err != nil {
 			return nil, err
 		}
 

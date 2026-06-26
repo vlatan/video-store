@@ -45,7 +45,7 @@ func (a *App) RegisterRoutes() *App {
 
 	// Sitemaps
 	mux.HandleFunc("GET /sitemap.xsl", a.mw.PublicCache(a.sitemaps.SitemapStyleHandler))
-	mux.HandleFunc("GET /sitemap/{part}/part.xml", a.mw.PublicCache(a.sitemaps.SitemapPartHandler))
+	mux.HandleFunc("GET /{part}", a.mw.PublicCache(a.sitemaps.SitemapPartHandler))
 	mux.HandleFunc("GET /sitemap.xml", a.mw.PublicCache(a.sitemaps.SitemapIndexHandler))
 
 	// Users

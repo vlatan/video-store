@@ -10,11 +10,11 @@ import (
 )
 
 // Get sitemap data from DB and split it in smaller parts.
-// Return a map of sitemap parts with 01, 02, 03, etc. keys.
+// Return a map of sitemap parts.
 func (s *Service) getSitemapIndexFromDB(r *http.Request, partSize int) (models.SitemapIndex, error) {
 
 	// Fetch the entire sitemap data from DB
-	data, err := s.postsRepo.SitemapData(r.Context())
+	data, err := s.postsRepo.SitemapData(r.Context(), partSize)
 	if err != nil {
 		return nil, fmt.Errorf(
 			"was unabale to fetch sitemap data on URI %q: %w",
@@ -30,36 +30,30 @@ func (s *Service) getSitemapIndexFromDB(r *http.Request, partSize int) (models.S
 	// Get base absolute URL
 	baseURL := fmt.Sprintf("%s://%s", s.config.Protocol, s.config.Domain)
 
-	// Additional processing to get the last modified time for each part
-	// And adjust the location with an absolute URL
+	// Populate the sitemap index map, contenining sitemap parts.
+	// Additionally process the last modified time for each part,
+	// and adjust the item and part location with an absolute URL.
 	result := make(models.SitemapIndex)
-	for i := 0; i < len(data); i += partSize {
+	for _, item := range data {
 
-		end := min(i+partSize, len(data))
-		entries := data[i:end]
+		partKey := fmt.Sprintf("%s-%02d.xml", item.Type, item.BucketId)
+		item.Location = baseURL + item.Location
 
-		var maxTime time.Time
-		for j, entry := range entries {
-
-			currentTime, err := time.Parse("2006-01-02", entry.LastModified)
+		// If part exists adjust last modifed time for that part, and
+		// append the new item its to entries.
+		if part, ok := result[partKey]; ok {
+			part.LastModified, err = maxTime(part.LastModified, item.LastModified)
 			if err != nil {
 				return nil, err
 			}
-
-			if currentTime.After(maxTime) {
-				maxTime = currentTime
-			}
-
-			// Provide absolute URL for an item location
-			entries[j].Location = baseURL + entry.Location
+			part.Entries = append(part.Entries, item)
+			continue
 		}
 
-		key := fmt.Sprintf("%02d", (i/partSize)+1)
-		path := fmt.Sprintf("/sitemap/%s/part.xml", key)
-		result[key] = &models.SitemapPart{
-			Entries:      entries,
-			Location:     baseURL + path,
-			LastModified: maxTime.Format("2006-01-02"),
+		result[partKey] = &models.SitemapPart{
+			Entries:      []*models.SitemapItem{item},
+			Location:     baseURL + fmt.Sprintf("/%s", partKey),
+			LastModified: item.LastModified,
 		}
 	}
 
@@ -142,4 +136,24 @@ func (s *Service) CacheSitemapIndex(ctx context.Context, sitemapKey string, site
 	}
 
 	return nil
+}
+
+// maxTime returns the later time from t1 and t2, all represented as strings
+func maxTime(t1, t2 string) (string, error) {
+
+	t1Time, err := time.Parse("2006-01-02", t1)
+	if err != nil {
+		return "", nil
+	}
+
+	t2Time, err := time.Parse("2006-01-02", t2)
+	if err != nil {
+		return "", nil
+	}
+
+	if t1Time.After(t2Time) {
+		return t1, nil
+	}
+
+	return t2, nil
 }
