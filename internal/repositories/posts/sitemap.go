@@ -17,8 +17,8 @@ const sitemapDataQuery = `
 	-- Posts (last modified = last updated_at)
 	SELECT
 		'post' as type,
-		CONCAT('/video/', video_id, '/') AS url,
-		updated_at,
+		CONCAT('/video/', video_id, '/') AS location,
+		updated_at AS last_modified,
 		created_at
 	FROM post
 
@@ -27,8 +27,8 @@ const sitemapDataQuery = `
 	-- Pages (last modified = last updated_at)
 	SELECT
 		'page' AS type,
-		CONCAT('/page/', slug, '/') AS url,
-		updated_at,
+		CONCAT('/page/', slug, '/') AS location,
+		updated_at AS last_modified,
 		created_at
 	FROM page
 
@@ -37,8 +37,8 @@ const sitemapDataQuery = `
 	-- Playlists (last modified = latest upload date post in playlist)
 	SELECT
 		'source' AS type, 
-		CONCAT('/source/', p.playlist_id, '/') AS url, 
-		MAX(post.upload_date) AS updated_at,
+		CONCAT('/source/', p.playlist_id, '/') AS location, 
+		MAX(post.upload_date) AS last_modified,
 		MIN(post.created_at)
 	FROM playlist AS p
 	INNER JOIN post ON post.playlist_db_id = p.id
@@ -49,8 +49,8 @@ const sitemapDataQuery = `
 	-- Orphans (last modified = latest upload date post without playlist)
 	SELECT
 		'source' AS type,
-		'/source/other/' AS url,
-		MAX(upload_date) AS updated_at,
+		'/source/other/' AS location,
+		MAX(upload_date) AS last_modified,
 		MIN(created_at) AS created_at
 	FROM post
 	WHERE playlist_id IS NULL OR playlist_id = ''
@@ -61,8 +61,8 @@ const sitemapDataQuery = `
 	-- Categories (last modified = latest upload date post in category)
 	SELECT
 		'category' AS type,
-		CONCAT('/category/', c.slug, '/') AS url,
-		MAX(post.upload_date) AS updated_at,
+		CONCAT('/category/', c.slug, '/') AS location,
+		MAX(post.upload_date) AS last_modified,
 		MIN(post.created_at)
 	FROM category AS c
 	INNER JOIN post ON post.category_id = c.id
@@ -73,8 +73,8 @@ const sitemapDataQuery = `
 	-- Homepage (last modified = latest upload date post in DB)
 	SELECT
 		'misc' AS type,
-		'/' AS url,
-		MAX(upload_date) AS updated_at,
+		'/' AS location,
+		MAX(upload_date) AS last_modified,
 		MIN(created_at) AS created_at
 	FROM post
 
@@ -83,12 +83,12 @@ const sitemapDataQuery = `
 	-- Playlists page (last modified = newest playlist in DB)
 	SELECT 
 		'misc' AS type,
-		'/sources/' AS url, 
-		MAX(created_at) AS updated_at,
+		'/sources/' AS location, 
+		MAX(created_at) AS last_modified,
 		MIN(created_at) AS created_at
 	FROM playlist
 
-	ORDER BY created_at ASC, url ASC
+	ORDER BY created_at ASC, location ASC
 `
 
 func (r *Repository) SitemapData(ctx context.Context) ([]*models.SitemapItem, error) {

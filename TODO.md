@@ -1,4 +1,5 @@
 * Restructure sitemap to server deterministic parts
+  Use part numbers in the SQL
 * Merge more than one slashes to single slash
 * User reviews and ratings
 * Make search bar on small screens accross entire screen
