@@ -109,7 +109,7 @@ func (s *Service) CloseBody(next http.Handler) http.Handler {
 }
 
 // RecoverPanic captures panic logs it, and serves 500 error to the client
-func (s *Service) LogPanic(next http.Handler) http.Handler {
+func (s *Service) RecoverPanic(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		// Defer panic recovery
@@ -132,8 +132,7 @@ func (s *Service) LogPanic(next http.Handler) http.Handler {
 				topDivider, r.Method, r.URL.Path, err, debug.Stack(), bottomDivider,
 			)
 
-			//Clear out any headers already set and send a clean 500
-			w.Header().Set("Connection", "close")
+			// Send 500 to client
 			utils.HttpError(w, http.StatusInternalServerError)
 		}()
 
@@ -260,14 +259,6 @@ func (s *Service) HandleErrors(next http.Handler) http.Handler {
 // CsrfProtection creates CSRF middlware with added plain text option for local development
 func (s *Service) CsrfProtection(next http.Handler) http.Handler {
 
-	// Create the csrf middleware as per the gorilla/csrf documentation
-	csrfMiddleware := csrf.Protect(
-		s.config.CsrfKey.Bytes,
-		csrf.CookieName(s.config.CsrfSessionName),
-		csrf.Secure(s.config.Protocol == "https"),
-		csrf.Path("/"),
-	)
-
 	// Return the handler function
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
@@ -287,6 +278,14 @@ func (s *Service) CsrfProtection(next http.Handler) http.Handler {
 			r = csrf.PlaintextHTTPRequest(r)
 		}
 
+		// Create the csrf middleware as per the gorilla/csrf documentation
+		csrfMiddleware := csrf.Protect(
+			s.config.CsrfKey.Bytes,
+			csrf.CookieName(s.config.CsrfSessionName),
+			csrf.Secure(s.config.Protocol == "https"),
+			csrf.Path("/"),
+		)
+
 		// Call the pre-created CSRF middleware
 		csrfMiddleware(next).ServeHTTP(w, r)
 	})
@@ -294,9 +293,6 @@ func (s *Service) CsrfProtection(next http.Handler) http.Handler {
 
 // Compress provides gzip compression to non-static pages
 func (s *Service) Compress(next http.Handler) http.Handler {
-
-	// Create the gzip handler
-	gzipHandler := gzhttp.GzipHandler(next)
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Check if the request serves static files
@@ -312,6 +308,8 @@ func (s *Service) Compress(next http.Handler) http.Handler {
 			return
 		}
 
+		// Create gzip handler and serve http with it
+		gzipHandler := gzhttp.GzipHandler(next)
 		gzipHandler.ServeHTTP(w, r)
 	})
 }
