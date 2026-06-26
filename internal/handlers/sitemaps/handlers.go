@@ -63,7 +63,7 @@ func (s *Service) SitemapIndexHandler(w http.ResponseWriter, r *http.Request) {
 	sitemap, err := s.GetSitemapIndex(r, sitemapRedisKey)
 
 	if err != nil {
-		log.Println(err)
+		log.Printf("Couldn't get sitemap index: %v", err)
 		http.NotFound(w, r)
 		return
 	}

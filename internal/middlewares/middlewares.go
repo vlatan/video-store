@@ -2,7 +2,7 @@ package middlewares
 
 import (
 	"context"
-	"log"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -112,13 +112,6 @@ func (s *Service) CloseBody(next http.Handler) http.Handler {
 func (s *Service) RecoverPanic(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		// Skip if in debug mode (developing localy).
-		// We actually want the panic when developing.
-		if s.config.Debug {
-			next.ServeHTTP(w, r)
-			return
-		}
-
 		// Defer panic recovery
 		defer func() {
 			err := recover()
@@ -126,13 +119,24 @@ func (s *Service) RecoverPanic(next http.Handler) http.Handler {
 				return
 			}
 
-			stack := debug.Stack()
+			const dividerLength = 70
+			const panicText = " PANIC RECOVERED "
+			halfLength := (dividerLength - len(panicText)) / 2
+			halfDivider := strings.Repeat("=", halfLength)
+			topDivider := halfDivider + panicText + halfDivider
+			bottomDivider := strings.Repeat("=", dividerLength)
 
-			// Log the panic with stack trace
-			log.Printf("Panic in %s %s: %v\nStack Trace:\n%s", r.Method, r.URL.Path, err, stack)
-			// log.Printf("Panic in %s %s: %#v", r.Method, r.URL.Path, err)
+			// Log the panic with the stack trace directly to stderr, no JSON logger
+			fmt.Fprintf(os.Stderr,
+				"\n%s"+
+					"\nPath: %s %s"+
+					"\nError: %v\n\n%s"+
+					"\n%s\n",
+				topDivider, r.Method, r.URL.Path, err, debug.Stack(), bottomDivider,
+			)
 
-			// Write 500 to response
+			//Clear out any headers already set and send a clean 500
+			w.Header().Set("Connection", "close")
 			utils.HttpError(w, http.StatusInternalServerError)
 		}()
 
