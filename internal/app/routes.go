@@ -90,7 +90,7 @@ func (a *App) RegisterRoutes() *App {
 	// The order is important.
 	// Use this custom handler as HTTP server handler
 	a.server.Handler = a.mw.ApplyToAll(
-		a.mw.RecoverPanic,
+		a.mw.LogPanic,
 		a.mw.CloseBody,
 		a.mw.WWWRedirect,
 		a.mw.Logging,

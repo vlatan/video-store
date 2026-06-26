@@ -109,7 +109,7 @@ func (s *Service) CloseBody(next http.Handler) http.Handler {
 }
 
 // RecoverPanic captures panic logs it, and serves 500 error to the client
-func (s *Service) RecoverPanic(next http.Handler) http.Handler {
+func (s *Service) LogPanic(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		// Defer panic recovery
