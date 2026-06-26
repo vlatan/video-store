@@ -108,7 +108,7 @@ func (s *Service) CloseBody(next http.Handler) http.Handler {
 	})
 }
 
-// RecoverPanic prevents app crashing, and serves 500 error to the client
+// RecoverPanic captures panic logs it, and serves 500 error to the client
 func (s *Service) RecoverPanic(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
@@ -128,10 +128,7 @@ func (s *Service) RecoverPanic(next http.Handler) http.Handler {
 
 			// Log the panic with the stack trace directly to stderr, no JSON logger
 			fmt.Fprintf(os.Stderr,
-				"\n%s"+
-					"\nPath: %s %s"+
-					"\nError: %v\n\n%s"+
-					"\n%s\n",
+				"\n%s\nPath: %s %s\nError: %v\n\n%s\n%s\n",
 				topDivider, r.Method, r.URL.Path, err, debug.Stack(), bottomDivider,
 			)
 
