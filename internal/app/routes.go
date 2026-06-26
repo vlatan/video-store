@@ -94,11 +94,11 @@ func (a *App) RegisterRoutes() *App {
 		a.mw.Compress,       // Compress the response no matter what is it
 		a.mw.WWWRedirect,    // Redirect www to non-www, nothing to do
 		a.mw.Logging,        // Log the request, unless healthcheck
-		a.mw.LoadUser,       // Load user data
-		a.mw.CsrfProtection, // Provide CSRF protection
-		a.mw.LoadData,       // Load template data
+		a.mw.LoadUser,       // Load user data from seesion into context
+		a.mw.CsrfProtection, // Provide CSRF protection (needs user data)
 		a.mw.AddHeaders,     // Add standard headers to response
-		a.mw.HandleErrors,   // Provide fake writer, inspect it, and if error serve HTML/JSON errors
+		a.mw.LoadData,       // Generate and store template data to context
+		a.mw.HandleErrors,   // Provide response recorder, inspect it, and if error serve HTML/JSON errors
 		a.mw.RecoverPanic,   // Log panic in mux and return 500 error response to client
 	)(mux)
 
