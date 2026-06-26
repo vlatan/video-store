@@ -113,7 +113,9 @@ func (r *Repository) SitemapData(ctx context.Context) ([]*models.SitemapItem, er
 			return nil, err
 		}
 
-		item.LastModified = lastModified.Format("2006-01-02")
+		if lastModified != nil {
+			item.LastModified = lastModified.Format("2006-01-02")
+		}
 
 		// Include the processed post in the result
 		data = append(data, &item)
