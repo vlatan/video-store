@@ -41,7 +41,7 @@ const sitemapDataQuery = `
 		MAX(post.upload_date) AS updated_at,
 		p.created_at
 	FROM playlist AS p
-	LEFT JOIN post ON post.playlist_db_id = p.id
+	INNER JOIN post ON post.playlist_db_id = p.id
 	GROUP BY p.id, p.created_at
 
 	UNION ALL
@@ -64,7 +64,7 @@ const sitemapDataQuery = `
 		MAX(post.upload_date) AS updated_at,
 		c.created_at
 	FROM category AS c
-	LEFT JOIN post ON post.category_id = c.id
+	INNER JOIN post ON post.category_id = c.id
 	GROUP BY c.id, c.created_at
 
 	UNION ALL
