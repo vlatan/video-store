@@ -103,6 +103,7 @@ func (s *Service) GetSitemapIndex(r *http.Request, sitemapKey string) (models.Si
 // Get sitemap part either from Redis or DB
 func (s *Service) GetSitemapPart(r *http.Request, sitemapKey, partKey string) (*models.SitemapPart, error) {
 
+	// Try to get the sitemap part from Redis cache
 	var part models.SitemapPart
 	err := s.rdb.Client.HGet(r.Context(), sitemapKey, partKey).Scan(&part)
 	if err == nil {
