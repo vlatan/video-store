@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"runtime/debug"
 	"strings"
 
 	"github.com/vlatan/video-store/internal/config"
@@ -124,8 +125,12 @@ func (s *Service) RecoverPanic(next http.Handler) http.Handler {
 			if err == nil {
 				return
 			}
+
+			stack := debug.Stack()
+
 			// Log the panic with stack trace
-			log.Printf("Panic in %s %s: %#v", r.Method, r.URL.Path, err)
+			log.Printf("Panic in %s %s: %v\nStack Trace:\n%s", r.Method, r.URL.Path, err, stack)
+			// log.Printf("Panic in %s %s: %#v", r.Method, r.URL.Path, err)
 
 			// Write 500 to response
 			utils.HttpError(w, http.StatusInternalServerError)
