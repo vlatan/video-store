@@ -130,6 +130,11 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if len(posts.Items) == 0 {
+		http.NotFound(w, r)
+		return
+	}
+
 	// If there's a cursor this is not the first page, return JSON
 	if cursor != "" {
 		s.ui.WriteJSON(w, r, posts)

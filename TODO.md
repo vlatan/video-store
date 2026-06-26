@@ -1,4 +1,3 @@
-* Return 404 for empty playlist or category
 * Restructure sitemap to server deterministic parts
 * Merge more than one slashes to single slash
 * User reviews and ratings
