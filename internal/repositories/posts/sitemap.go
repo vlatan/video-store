@@ -39,7 +39,7 @@ const sitemapDataQuery = `
 		'source' AS type, 
 		CONCAT('/source/', p.playlist_id, '/') AS url, 
 		MAX(post.upload_date) AS updated_at,
-		p.created_at
+		MIN(post.created_at)
 	FROM playlist AS p
 	INNER JOIN post ON post.playlist_db_id = p.id
 	GROUP BY p.id, p.created_at
@@ -54,6 +54,7 @@ const sitemapDataQuery = `
 		MIN(created_at) AS created_at
 	FROM post
 	WHERE playlist_id IS NULL OR playlist_id = ''
+	HAVING COUNT(*) > 0
 
 	UNION ALL
 
@@ -62,7 +63,7 @@ const sitemapDataQuery = `
 		'category' AS type,
 		CONCAT('/category/', c.slug, '/') AS url,
 		MAX(post.upload_date) AS updated_at,
-		c.created_at
+		MIN(post.created_at)
 	FROM category AS c
 	INNER JOIN post ON post.category_id = c.id
 	GROUP BY c.id, c.created_at
