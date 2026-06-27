@@ -459,7 +459,7 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 		Title: &models.FormGroup{
 			Label:       "Title",
 			Placeholder: "Your title...",
-			Value:       data.CurrentPost.Title,
+			Value:       data.CurrentPost.GetTitle(),
 		},
 		Content: &models.FormGroup{
 			Type:        models.FieldTypeTextarea,

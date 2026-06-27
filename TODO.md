@@ -1,3 +1,4 @@
+* Make sitema parts more deterministic, there's a part with just one url
 * Merge more than one slashes to single slash
 * User reviews and ratings
 * Make search bar on small screens accross entire screen
