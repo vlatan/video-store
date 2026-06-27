@@ -17,7 +17,7 @@ const sitemapDataQuery = `
 	-- Posts (last modified = last updated_at)
 	SELECT
 		'post' as type,
-		FLOOR(id / $1) AS bucket_id,
+		(id % $1) AS bucket_id,
 		CONCAT('/video/', video_id, '/') AS location,
 		updated_at AS last_modified
 	FROM post
@@ -91,10 +91,10 @@ const sitemapDataQuery = `
 	ORDER BY type, location
 `
 
-func (r *Repository) SitemapData(ctx context.Context, partSize int) ([]*models.SitemapItem, error) {
+func (r *Repository) SitemapData(ctx context.Context, partsNum int) ([]*models.SitemapItem, error) {
 
 	// Get rows from DB
-	rows, err := r.db.Pool.Query(ctx, sitemapDataQuery, partSize)
+	rows, err := r.db.Pool.Query(ctx, sitemapDataQuery, partsNum)
 	if err != nil {
 		return nil, err
 	}

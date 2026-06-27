@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	sitemapPartSize = 500
+	sitemapPartsNum = 20
 	sitemapRedisKey = "sitemap:data"
 )
 
