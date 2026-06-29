@@ -32,7 +32,7 @@ var needsContent = []string{
 func parseTemplates(m *minify.M) models.TemplateMap {
 
 	templateMap := make(models.TemplateMap)
-	baseTemplate := template.Must(parseTemplateFiles(m, nil, base))
+	baseTemplate := template.Must(parseTemplate(m, nil, base))
 
 	// Function used to process each file/dir in the root, including the root
 	walkDirFunc := func(path string, info fs.DirEntry, err error) error {
@@ -68,7 +68,7 @@ func parseTemplates(m *minify.M) models.TemplateMap {
 			}
 		}
 
-		templateMap[name] = template.Must(parseTemplateFiles(m, baseTmpl, part...))
+		templateMap[name] = template.Must(parseTemplate(m, baseTmpl, part...))
 		return nil
 	}
 
@@ -86,7 +86,7 @@ func parseTemplates(m *minify.M) models.TemplateMap {
 }
 
 // Minify and parse the HTML templates as per the tdewolff/minify docs.
-func parseTemplateFiles(m *minify.M, tmpl *template.Template, filepaths ...string) (*template.Template, error) {
+func parseTemplate(m *minify.M, tmpl *template.Template, filepaths ...string) (*template.Template, error) {
 
 	for _, fp := range filepaths {
 
