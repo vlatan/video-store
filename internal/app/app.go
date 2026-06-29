@@ -75,7 +75,12 @@ func New() (*App, error) {
 	// Create DB repositories
 	catsRepo := catsRepo.New(db)
 	usersRepo := usersRepo.New(db, cfg)
-	postsRepo := postsRepo.New(db, cfg)
+
+	postsRepo, err := postsRepo.New(db, cfg)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't create posts repo: %w", err)
+	}
+
 	pagesRepo := pagesRepo.New(db)
 	sourcesRepo := sourcesRepo.New(db)
 

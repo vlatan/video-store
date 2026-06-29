@@ -13,68 +13,6 @@ import (
 	"github.com/vlatan/video-store/internal/utils"
 )
 
-const searchPostsQuery = `
-WITH
-    -- Construct AND, OR and RAW queries from the input search phrase
-    search_terms AS (
-        SELECT
-            lexeme AS and_query,
-            to_tsquery('english', replace(lexeme::text, ' & ', ' | ')) AS or_query,
-            replace(lexeme::text, ' & ', ' ') AS raw_query
-        FROM plainto_tsquery('english', $1) AS lexeme
-    ),
-    -- Isolated GIN scan #1 - match posts
-    post_matches AS (
-        SELECT 
-            p.id,
-            (ts_rank(p.search_vector, st.and_query, 32) * 2) + 
-            ts_rank(p.search_vector, st.or_query, 32) +
-            (similarity(p.title, st.raw_query) * 0.25) + 
-            (COALESCE(similarity(p.original_title, st.raw_query), 0) * 0.25) AS post_score
-        FROM post AS p
-        CROSS JOIN search_terms AS st
-        -- If st.or_query is matched no need to look for st.and_query match
-        WHERE p.search_vector @@ st.or_query
-    ),
-    -- Isolated GIN scan #2 - match reviews and calculate scores
-    review_matches AS (
-        SELECT
-            pr.post_id,
-            (MAX(ts_rank(pr.search_vector, st.and_query, 32)) * 1.5) +
-            (MAX(ts_rank(pr.search_vector, st.or_query, 32)) * 0.75) +
-            (MAX(COALESCE(similarity(pr.title, st.raw_query), 0) * 0.25)) AS review_score
-        FROM post_review AS pr
-        CROSS JOIN search_terms AS st
-        WHERE pr.search_vector @@ st.or_query
-        GROUP BY pr.post_id
-    ),
-    -- Merge the IDs and save the total score
-    combined_matches AS (
-        SELECT 
-            COALESCE(pm.id, rm.post_id) AS post_id,
-            COALESCE(pm.post_score, 0) + COALESCE(rm.review_score, 0) AS total_score
-        FROM post_matches AS pm
-        FULL OUTER JOIN review_matches AS rm ON pm.id = rm.post_id
-    )
-    SELECT
-        p.id,
-        p.video_id,
-        p.title,
-        p.original_title,
-        p.thumbnails,
-        COUNT(pl.id) AS likes,
-        %s AS total_results,
-        p.upload_date,
-        cm.total_score AS score
-    FROM combined_matches AS cm
-    JOIN post AS p ON p.id = cm.post_id 
-    LEFT JOIN post_like AS pl ON pl.post_id = p.id
-    GROUP BY p.id, cm.total_score
-    %s --- the WHERE clause
-    ORDER BY score DESC, likes DESC, upload_date DESC, id DESC
-    LIMIT $2;
-`
-
 // Get posts based on a user search query using a cursor
 // Transform the user query into two queries with words separated by '&' and '|'
 func (r *Repository) SearchPosts(
@@ -116,7 +54,11 @@ func (r *Repository) SearchPosts(
 		args = append(args, score, cursorParts[1], cursorParts[2], cursorParts[3])
 	}
 
-	query := fmt.Sprintf(searchPostsQuery, total, where)
+	data := struct{ Total, WhereCondition string }{total, where}
+	query, err := r.queryCache.Render("search_posts.sql", data)
+	if err != nil {
+		return zero, err
+	}
 
 	// Get rows from DB
 	rows, err := r.db.Pool.Query(ctx, query, args...)
