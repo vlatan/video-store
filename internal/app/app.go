@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/gob"
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 
@@ -60,13 +59,13 @@ func New() (*App, error) {
 	// Create database service
 	db, err := database.New(cfg)
 	if err != nil {
-		log.Fatalf("couldn't create DB service; %v", err)
+		return nil, fmt.Errorf("couldn't create DB service: %w", err)
 	}
 
 	// Create Redis service
 	rdb, err := rdb.New(cfg)
 	if err != nil {
-		log.Fatalf("couldn't create Redis service; %v", err)
+		return nil, fmt.Errorf("couldn't create Redis service: %w", err)
 	}
 
 	// Create session store
@@ -88,13 +87,13 @@ func New() (*App, error) {
 	ctx := context.Background()
 	yt, err := yt.New(ctx, cfg)
 	if err != nil {
-		log.Fatalf("couldn't create YouTube service: %v", err)
+		return nil, fmt.Errorf("couldn't create YouTube service: %w", err)
 	}
 
 	// Create Gemini client
 	gemini, err := gemini.New(ctx, cfg, rdb, catsRepo)
 	if err != nil {
-		log.Fatalf("couldn't create Gemini service: %v", err)
+		return nil, fmt.Errorf("couldn't create Gemini service: %w", err)
 	}
 
 	// Create Cloudflare R2 service
@@ -103,7 +102,7 @@ func New() (*App, error) {
 	// Create user interface service
 	ui, err := ui.New(usersRepo, catsRepo, rdb, r2s, store, cfg)
 	if err != nil {
-		log.Fatalf("couldn't create UI service: %v", err)
+		return nil, fmt.Errorf("couldn't create UI service: %w", err)
 	}
 
 	// Create new app service
