@@ -6,7 +6,6 @@ import (
 	"crypto/md5" // #nosec G501
 	"fmt"
 	"io/fs"
-	"log"
 	"strings"
 
 	"github.com/tdewolff/minify"
@@ -20,7 +19,7 @@ func (s *service) StaticFiles() models.StaticFiles {
 }
 
 // Create minified versions of the static files and cache them in memory.
-func parseStaticFiles(m *minify.M, dir string) models.StaticFiles {
+func parseStaticFiles(m *minify.M, dir string) (models.StaticFiles, error) {
 
 	sf := make(models.StaticFiles)
 
@@ -120,8 +119,8 @@ func parseStaticFiles(m *minify.M, dir string) models.StaticFiles {
 
 	// Walk the directory and process each file
 	if err := fs.WalkDir(web.Files, dir, walkDirFunc); err != nil {
-		log.Println(err)
+		return nil, err
 	}
 
-	return sf
+	return sf, nil
 }

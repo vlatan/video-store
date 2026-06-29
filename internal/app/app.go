@@ -48,7 +48,7 @@ type App struct {
 
 // New creates new app.
 // Holds handler services and a HTTP server.
-func New() *App {
+func New() (*App, error) {
 
 	// Register types with gob to be able to use them in sessions
 	gob.Register(&models.FlashMessage{})
@@ -96,7 +96,10 @@ func New() *App {
 	r2s := r2.New(ctx, cfg)
 
 	// Create user interface service
-	ui := ui.New(usersRepo, catsRepo, rdb, r2s, store, cfg)
+	ui, err := ui.New(usersRepo, catsRepo, rdb, r2s, store, cfg)
+	if err != nil {
+		log.Fatalf("couldn't create UI service: %v", err)
+	}
 
 	// Create new app service
 	a := &App{
@@ -121,5 +124,5 @@ func New() *App {
 		},
 	}
 
-	return a
+	return a, nil
 }

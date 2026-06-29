@@ -29,7 +29,7 @@ var needsContent = []string{
 }
 
 // Parse the templates and create a template map
-func parseTemplates(m *minify.M) models.TemplateMap {
+func parseTemplates(m *minify.M) (models.TemplateMap, error) {
 
 	templateMap := make(models.TemplateMap)
 	baseTemplate := template.Must(parseTemplate(m, nil, base))
@@ -54,9 +54,9 @@ func parseTemplates(m *minify.M) models.TemplateMap {
 		name := filepath.Base(path)
 
 		// Include the "content" if needed
-		part := []string{path}
+		filepaths := []string{path}
 		if slices.Contains(needsContent, name) {
-			part = append(part, content)
+			filepaths = append(filepaths, content)
 		}
 
 		// Clone the base if needed
@@ -68,21 +68,21 @@ func parseTemplates(m *minify.M) models.TemplateMap {
 			}
 		}
 
-		templateMap[name] = template.Must(parseTemplate(m, baseTmpl, part...))
+		templateMap[name] = template.Must(parseTemplate(m, baseTmpl, filepaths...))
 		return nil
 	}
 
 	// Walk the directory and parse each template in partials
 	if err := fs.WalkDir(web.Files, partials, walkDirFunc); err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
 	// Walk the directory and parse each template in sitemaps
 	if err := fs.WalkDir(web.Files, sitemaps, walkDirFunc); err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
-	return templateMap
+	return templateMap, nil
 }
 
 // Minify and parse the HTML templates as per the tdewolff/minify docs.
