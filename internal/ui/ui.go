@@ -75,12 +75,12 @@ func New(
 	m.AddFuncRegexp(validXML, xml.Minify)
 	m.AddFunc("application/manifest+json", json.Minify)
 
-	templates, err := parseTemplates(m)
+	templates, err := loadTemplates(m)
 	if err != nil {
 		return nil, err
 	}
 
-	staticFiles, err := parseStaticFiles(m, "static")
+	staticFiles, err := loadStaticFiles(m, "static")
 	if err != nil {
 		return nil, err
 	}

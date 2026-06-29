@@ -19,7 +19,7 @@ func (s *service) StaticFiles() models.StaticFiles {
 }
 
 // Create minified versions of the static files and cache them in memory.
-func parseStaticFiles(m *minify.M, dir string) (models.StaticFiles, error) {
+func loadStaticFiles(m *minify.M, dir string) (models.StaticFiles, error) {
 
 	sf := make(models.StaticFiles)
 

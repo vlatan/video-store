@@ -1,6 +1,8 @@
 package posts
 
 import (
+	"embed"
+
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/drivers/database"
 )
@@ -16,3 +18,9 @@ func New(db *database.Service, config *config.Config) *Repository {
 		config: config,
 	}
 }
+
+//go:embed *.sql
+var localQueries embed.FS
+
+// Packaged private query cache
+// var queryCache *sqlutils.Cache
