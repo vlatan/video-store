@@ -55,7 +55,7 @@ WITH
         FROM combined_matches AS cm
         JOIN post AS p ON p.id = cm.post_id 
         LEFT JOIN post_like AS pl ON pl.post_id = p.id
-        GROUP BY p.id
+        GROUP BY p.id, cm.total_score
     )
     --- Filter posts
 	SELECT * FROM scored_posts
