@@ -101,12 +101,7 @@ func (r *Repository) BanPost(ctx context.Context, videoID string) (int64, error)
 
 // Delete a post
 func (r *Repository) DeletePost(ctx context.Context, videoID string) (int64, error) {
-
-	query, err := r.queryCache.Render("delete_post.sql", nil)
-	if err != nil {
-		return 0, err
-	}
-
+	const query = "DELETE FROM post WHERE video_id = $1;"
 	result, err := r.db.Pool.Exec(ctx, query, videoID)
 	return result.RowsAffected(), err
 }

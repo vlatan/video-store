@@ -11,26 +11,18 @@ import (
 	"github.com/vlatan/video-store/internal/utils"
 )
 
-const postExistsQuery = `
-	SELECT 1 FROM post
-	WHERE video_id = $1
-`
-
 // Check if the post exists
 func (r *Repository) PostExists(ctx context.Context, videoID string) error {
 	var result int
-	return r.db.Pool.QueryRow(ctx, postExistsQuery, videoID).Scan(&result)
+	const query = "SELECT 1 FROM post	WHERE video_id = $1;"
+	return r.db.Pool.QueryRow(ctx, query, videoID).Scan(&result)
 }
-
-const isPostBanneddQuery = `
-	SELECT 1 FROM deleted_post
-	WHERE video_id = $1
-`
 
 // Check if the post is deleted
 func (r *Repository) IsPostBanned(ctx context.Context, videoID string) error {
 	var result int
-	return r.db.Pool.QueryRow(ctx, isPostBanneddQuery, videoID).Scan(&result)
+	const query = "SELECT 1 FROM deleted_post WHERE video_id = $1;"
+	return r.db.Pool.QueryRow(ctx, query, videoID).Scan(&result)
 }
 
 const insertPostQuery = `
