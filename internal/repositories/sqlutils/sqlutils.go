@@ -18,7 +18,7 @@ type Cache struct {
 func (c *Cache) Render(fileName string, data any) (string, error) {
 	tmpl, exists := c.templates[fileName]
 	if !exists {
-		return "", fmt.Errorf("sql template %s not found in this repository package", fileName)
+		return "", fmt.Errorf("sql template %s not found", fileName)
 	}
 
 	var buf bytes.Buffer
