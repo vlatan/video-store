@@ -469,7 +469,7 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 		},
 		Category: &models.FormGroup{
 			Label: "Category",
-			Value: data.CurrentPost.Category.Slug,
+			Value: data.CurrentPost.Category.Name,
 		},
 	}
 
@@ -501,7 +501,7 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 			r.Context(),
 			videoID,
 			data.Form.Title.Value,    // original title
-			data.Form.Category.Value, // category slug
+			data.Form.Category.Value, // category name
 			data.Form.Content.Value,  // summary
 		)
 
