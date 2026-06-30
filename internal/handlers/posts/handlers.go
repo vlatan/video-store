@@ -41,7 +41,7 @@ func (s *Service) HomeHandler(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		err   error
-		posts models.Posts
+		posts *models.Posts
 	)
 
 	// Don't cache the home results only for the admin
@@ -55,7 +55,7 @@ func (s *Service) HomeHandler(w http.ResponseWriter, r *http.Request) {
 			s.rdb,
 			redisKey,
 			s.config.CacheTimeout,
-			func() (models.Posts, error) {
+			func() (*models.Posts, error) {
 				return s.postsRepo.GetHomePosts(
 					r.Context(), cursor, orderBy,
 				)
@@ -75,7 +75,7 @@ func (s *Service) HomeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data.Posts = &posts
+	data.Posts = posts
 	s.ui.RenderHTML(w, r, "home.html", data)
 }
 
