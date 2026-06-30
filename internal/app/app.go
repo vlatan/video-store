@@ -109,7 +109,7 @@ func New() (*App, error) {
 	a := &App{
 		auth:     auth.New(usersRepo, store, rdb, r2s, ui, cfg),
 		users:    users.New(usersRepo, postsRepo, rdb, r2s, ui, cfg),
-		posts:    posts.New(postsRepo, rdb, ui, cfg, yt, gemini),
+		posts:    posts.New(postsRepo, usersRepo, rdb, ui, cfg, yt, gemini),
 		pages:    pages.New(pagesRepo, rdb, ui, cfg),
 		sources:  sources.New(postsRepo, sourcesRepo, rdb, ui, cfg, yt),
 		sitemaps: sitemaps.New(postsRepo, rdb, ui, cfg),

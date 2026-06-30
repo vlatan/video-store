@@ -7,26 +7,6 @@ import (
 	"github.com/vlatan/video-store/internal/utils"
 )
 
-const userActionsQuery = `
-	SELECT 
-		EXISTS (
-			SELECT 1 FROM post_like
-			WHERE user_id = $1 AND post_id = $2
-		) AS liked,
-		EXISTS (
-			SELECT 1 FROM post_fave
-			WHERE user_id = $1 AND post_id = $2
-		) AS faved
-`
-
-// Check if the user liked and/or faved a post
-func (r *Repository) GetUserActions(ctx context.Context, userID, postID int) (*models.Actions, error) {
-	row := r.db.Pool.QueryRow(ctx, userActionsQuery, userID, postID)
-	var actions models.Actions
-	err := row.Scan(&actions.Liked, &actions.Faved)
-	return &actions, err
-}
-
 const likeQuery = `
 	INSERT INTO post_like (user_id, post_id)
 	SELECT $1, p.id 

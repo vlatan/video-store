@@ -111,3 +111,11 @@ func (r *Repository) GetUsers(ctx context.Context, page int) (*models.Users, err
 
 	return &users, nil
 }
+
+// Check if the user liked and/or faved a post
+func (r *Repository) GetUserActions(ctx context.Context, userID, postID int) (*models.Actions, error) {
+	row := r.db.Pool.QueryRow(ctx, userActionsQuery, userID, postID)
+	var actions models.Actions
+	err := row.Scan(&actions.Liked, &actions.Faved)
+	return &actions, err
+}
