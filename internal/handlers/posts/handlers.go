@@ -173,7 +173,7 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		err   error
-		posts models.Posts
+		posts *models.Posts
 	)
 
 	// Don't cache the search results only for the admin
@@ -187,7 +187,7 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 			s.rdb,
 			redisKey,
 			s.config.CacheTimeout,
-			func() (models.Posts, error) {
+			func() (*models.Posts, error) {
 				return s.postsRepo.SearchPosts(
 					r.Context(), searchQuery, s.config.PostsPerPage, cursor,
 				)
@@ -209,7 +209,7 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data.Posts = &posts
+	data.Posts = posts
 	data.Posts.TimeTook = fmt.Sprintf("%.2f", end.Seconds())
 	data.Title = "Search"
 	s.ui.RenderHTML(w, r, "search.html", data)

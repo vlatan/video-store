@@ -12,30 +12,6 @@ import (
 	"github.com/vlatan/video-store/internal/utils"
 )
 
-const getUserFavedPostsQuery = `
-	WITH faved_posts AS (
-		SELECT
-			p.id,
-			p.video_id,
-			p.title,
-			p.original_title,
-			p.thumbnails,
-			COUNT(pl.id) AS likes,
-			%s AS total_results,
-			p.upload_date,
-			pf.created_at AS when_faved
-		FROM post AS p
-		LEFT JOIN post_like AS pl ON pl.post_id = p.id
-		LEFT JOIN post_fave AS pf ON pf.post_id = p.id
-		WHERE pf.user_id = $1
-		GROUP BY p.id, pf.id
-	)
-	SELECT * FROM faved_posts
-	%s --- the WHERE clause
-	ORDER BY when_faved DESC, likes DESC, upload_date DESC, id DESC
-	LIMIT $2
-`
-
 // Get user's favorited posts
 func (r *Repository) GetUserFavedPosts(
 	ctx context.Context,
@@ -69,7 +45,11 @@ func (r *Repository) GetUserFavedPosts(
 		args = append(args, cursorParts[0], cursorParts[1], cursorParts[2], cursorParts[3])
 	}
 
-	query := fmt.Sprintf(getUserFavedPostsQuery, totalCount, where)
+	data := struct{ TotalCount, WhereCondition string }{totalCount, where}
+	query, err := r.queryCache.Render("faved_posts.sql", data)
+	if err != nil {
+		return nil, err
+	}
 
 	// Get rows from DB
 	rows, err := r.db.Pool.Query(ctx, query, args...)
