@@ -73,3 +73,4 @@
 	FROM playlist
 
 	ORDER BY type, location;
+	

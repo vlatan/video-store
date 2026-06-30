@@ -59,6 +59,6 @@ WITH
     )
     --- Filter posts
 	SELECT * FROM scored_posts
-    {{ .WhereCondition }} -- the WHERE condition
+    {{ .WhereCondition }} -- the WHERE condition if any
     ORDER BY score DESC, likes DESC, upload_date DESC, id DESC
     LIMIT $2;

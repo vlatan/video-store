@@ -102,7 +102,7 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		err   error
-		posts models.Posts
+		posts *models.Posts
 	)
 
 	// Don't cache the category posts only for the admin
@@ -116,7 +116,7 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 			s.rdb,
 			redisKey,
 			s.config.CacheTimeout,
-			func() (models.Posts, error) {
+			func() (*models.Posts, error) {
 				return s.postsRepo.GetCategoryPosts(
 					r.Context(), slug, cursor, orderBy,
 				)
@@ -141,7 +141,7 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data.Posts = &posts
+	data.Posts = posts
 	data.Title = data.Posts.Title
 	s.ui.RenderHTML(w, r, "category.html", data)
 }
