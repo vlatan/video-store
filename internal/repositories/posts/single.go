@@ -14,7 +14,7 @@ import (
 // Check if the post exists
 func (r *Repository) PostExists(ctx context.Context, videoID string) error {
 	var result int
-	const query = "SELECT 1 FROM post	WHERE video_id = $1;"
+	const query = "SELECT 1 FROM post WHERE video_id = $1;"
 	return r.db.Pool.QueryRow(ctx, query, videoID).Scan(&result)
 }
 
