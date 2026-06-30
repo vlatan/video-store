@@ -49,7 +49,7 @@ WITH
             p.original_title,
             p.thumbnails,
             COUNT(pl.id) AS likes,
-            {{ .Total }} AS total_results,
+            {{ .TotalCount }} AS total_results,
             p.upload_date,
             cm.total_score AS score
         FROM combined_matches AS cm

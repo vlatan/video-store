@@ -25,7 +25,7 @@ func (r *Repository) SearchPosts(
 	// The search term and limit are the first two arguments ($1 and $2)
 	// Peek for one post beoynd the limit
 	var where string
-	totalCount := "COUNT(*) OVER()"
+	total := "COUNT(*) OVER()"
 	args := []any{searchTerm, limit + 1}
 
 	// Build args and SQL parts
@@ -33,7 +33,7 @@ func (r *Repository) SearchPosts(
 	if cursor != "" {
 
 		// SQL parts
-		totalCount = "0"
+		total = "0"
 		where = "WHERE (score, likes, upload_date, id) < ($3, $4, $5, $6)"
 
 		cursorParts, err := decodeCursor(cursor)
@@ -53,7 +53,7 @@ func (r *Repository) SearchPosts(
 		args = append(args, score, cursorParts[1], cursorParts[2], cursorParts[3])
 	}
 
-	data := struct{ Total, WhereCondition string }{totalCount, where}
+	data := struct{ TotalCount, WhereCondition string }{total, where}
 	query, err := r.queryCache.Render("search_posts.sql", data)
 	if err != nil {
 		return nil, err

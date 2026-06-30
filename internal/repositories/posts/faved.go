@@ -22,7 +22,7 @@ func (r *Repository) GetUserFavedPosts(
 	// The user ID and the limit are the first two arguments ($1 and $2)
 	// Peek for one post beoynd the limit
 	var where string
-	totalCount := "COUNT(*) OVER()"
+	total := "COUNT(*) OVER()"
 	args := []any{userID, r.config.PostsPerPage + 1}
 
 	// Build args and SQL parts
@@ -30,7 +30,7 @@ func (r *Repository) GetUserFavedPosts(
 	if cursor != "" {
 
 		// SQL parts
-		totalCount = "0"
+		total = "0"
 		where = "WHERE (when_faved, likes, upload_date, id) < ($3, $4, $5, $6)"
 
 		cursorParts, err := decodeCursor(cursor)
@@ -45,7 +45,7 @@ func (r *Repository) GetUserFavedPosts(
 		args = append(args, cursorParts[0], cursorParts[1], cursorParts[2], cursorParts[3])
 	}
 
-	data := struct{ TotalCount, WhereCondition string }{totalCount, where}
+	data := struct{ TotalCount, WhereCondition string }{total, where}
 	query, err := r.queryCache.Render("faved_posts.sql", data)
 	if err != nil {
 		return nil, err
