@@ -70,7 +70,7 @@ func (r *Repository) UpdateSource(ctx context.Context, videoID, playlistID strin
 // Update post description
 func (r *Repository) UpdateGeneratedData(ctx context.Context, post *models.Post) (int64, error) {
 
-	query, err := r.queryCache.Render("update_post_data.sql", nil)
+	query, err := r.queryCache.Render("update_post.sql", nil)
 	if err != nil {
 		return 0, err
 	}
