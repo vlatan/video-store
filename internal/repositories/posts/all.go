@@ -8,27 +8,16 @@ import (
 	"github.com/vlatan/video-store/internal/utils"
 )
 
-const getAllPostsQuery = `
-	SELECT
-		post.id,
-		video_id,
-		playlist_id,
-		title,
-		original_title,
-		summary,
-		duration,
-		upload_date,
-		cat.name AS category_name
-	FROM post
-	LEFT JOIN category AS cat ON cat.id = post.category_id
-	ORDER BY upload_date DESC, post.id DESC
-`
-
 // Get all the posts from DB
 func (r *Repository) GetAllPosts(ctx context.Context) ([]*models.Post, error) {
 
+	query, err := r.queryCache.Render("all_posts.sql", nil)
+	if err != nil {
+		return nil, err
+	}
+
 	// Get rows from DB
-	rows, err := r.db.Pool.Query(ctx, getAllPostsQuery)
+	rows, err := r.db.Pool.Query(ctx, query)
 	if err != nil {
 		return nil, err
 	}
