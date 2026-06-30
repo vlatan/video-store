@@ -355,7 +355,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		err  error
-		post models.Post
+		post *models.Post
 	)
 
 	// Don't cache single post for logged in users
@@ -367,7 +367,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 			s.rdb,
 			fmt.Sprintf(postCacheKey, videoID),
 			s.config.CacheTimeout,
-			func() (models.Post, error) {
+			func() (*models.Post, error) {
 				return s.postsRepo.GetSinglePost(r.Context(), videoID)
 			},
 		)
@@ -385,7 +385,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Assign the post to data
-	data.CurrentPost = &post
+	data.CurrentPost = post
 
 	// Check whether the current user liked and/or faved the post
 	if data.CurrentUser.IsAuthenticated() {
@@ -448,7 +448,7 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 	data := models.GetDataFromContext(r)
 
 	// Assign page data
-	data.CurrentPost = &post
+	data.CurrentPost = post
 	if data.CurrentPost.Category == nil {
 		data.CurrentPost.Category = &models.Category{}
 	}
