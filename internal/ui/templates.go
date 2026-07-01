@@ -31,7 +31,10 @@ var needsContent = []string{
 func loadTemplates(m *minify.M) (models.TemplateMap, error) {
 
 	templateMap := make(models.TemplateMap)
-	baseTemplate := template.Must(parseTemplate(m, nil, base))
+	baseTemplate, err := parseTemplate(m, nil, base)
+	if err != nil {
+		return nil, err
+	}
 
 	// Function used to process each file/dir in the root, including the root
 	walkDirFunc := func(path string, info fs.DirEntry, err error) error {
