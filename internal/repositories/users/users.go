@@ -24,7 +24,7 @@ func New(db *database.Service, config *config.Config) *Repository {
 // Add or update a user
 func (r *Repository) UpsertUser(ctx context.Context, u *models.User) (int, error) {
 
-	query, err := queries.GetQuery("upsert_user.sql", nil)
+	query, err := queries.Users.Get("upsert_user.sql", nil)
 	if err != nil {
 		return 0, err
 	}
@@ -63,7 +63,7 @@ func (r *Repository) GetUsers(ctx context.Context, page int) (*models.Users, err
 	limit := r.config.PostsPerPage
 	offset := (page - 1) * limit
 
-	query, err := queries.GetQuery("offset_users.sql", nil)
+	query, err := queries.Users.Get("offset_users.sql", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -124,7 +124,7 @@ func (r *Repository) GetUsers(ctx context.Context, page int) (*models.Users, err
 // Check if the user liked and/or faved a post
 func (r *Repository) GetUserActions(ctx context.Context, userID, postID int) (*models.Actions, error) {
 
-	query, err := queries.GetQuery("actions_user.sql", nil)
+	query, err := queries.Users.Get("actions_user.sql", nil)
 	if err != nil {
 		return nil, err
 	}

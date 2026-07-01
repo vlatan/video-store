@@ -11,7 +11,7 @@ import (
 func (r *Repository) SitemapData(ctx context.Context, partsNum int) ([]*models.SitemapItem, error) {
 
 	// Get query
-	query, err := queries.GetQuery("sitemap_data.sql", nil)
+	query, err := queries.Posts.Get("sitemap_data.sql", nil)
 	if err != nil {
 		return nil, err
 	}

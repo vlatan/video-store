@@ -3,28 +3,47 @@ package queries
 import (
 	"bytes"
 	"embed"
-	"log"
+	"sync"
 	"text/template"
 )
 
 //go:embed sql
 var sqlFS embed.FS
 
-var tmpl *template.Template
-
-func init() {
-	var err error
-	tmpl, err = template.ParseFS(sqlFS, "sql/*.sql")
-	if err != nil {
-		log.Fatalf("failed to load SQL queries; %v", err)
-	}
+// Domain represents an isolated, lazily-loaded template group
+type domain struct {
+	pattern   string
+	initCache func() *template.Template
 }
 
-// Render executes a specific template from the local cache
-func GetQuery(name string, data any) (string, error) {
+// Get executes a template within this specific domain.
+func (d *domain) Get(filename string, data any) (string, error) {
+
+	// This initializes just once
+	cache := d.initCache()
+
 	var buf bytes.Buffer
-	if err := tmpl.ExecuteTemplate(&buf, name, data); err != nil {
+	if err := cache.ExecuteTemplate(&buf, filename, data); err != nil {
 		return "", err
 	}
 	return buf.String(), nil
 }
+
+// Helper to set up the lazy initializer
+func newDomain(pattern string) *domain {
+	d := &domain{pattern: pattern}
+
+	// Define the loading logic, but DO NOT run it yet.
+	d.initCache = sync.OnceValue(func() *template.Template {
+		return template.Must(template.ParseFS(sqlFS, d.pattern))
+	})
+
+	return d
+}
+
+var (
+	Posts      = newDomain("sql/posts/*.sql")
+	Sources    = newDomain("sql/sources/*.sql")
+	Users      = newDomain("sql/users/*.sql")
+	Categories = newDomain("sql/categories/*.sql")
+)

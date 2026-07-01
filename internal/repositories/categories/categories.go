@@ -19,7 +19,7 @@ func New(db *database.Service) *Repository {
 // Get all valid categories
 func (r *Repository) GetCategories(ctx context.Context) (models.Categories, error) {
 
-	query, err := queries.GetQuery("all_categories.sql", nil)
+	query, err := queries.Categories.Get("all_categories.sql", nil)
 	if err != nil {
 		return nil, err
 	}

@@ -12,7 +12,7 @@ import (
 // Get all the posts from DB
 func (r *Repository) GetAllPosts(ctx context.Context) ([]*models.Post, error) {
 
-	query, err := queries.GetQuery("all_posts.sql", nil)
+	query, err := queries.Posts.Get("all_posts.sql", nil)
 	if err != nil {
 		return nil, err
 	}

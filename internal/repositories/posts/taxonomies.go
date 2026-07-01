@@ -94,7 +94,7 @@ func (r *Repository) queryTaxonomyPosts(
 	}
 
 	data := struct{ TotalCount, WhereCondition, OrderByWhat string }{total, where, order}
-	query, err := queries.GetQuery(queryFilename, data)
+	query, err := queries.Posts.Get(queryFilename, data)
 	if err != nil {
 		return nil, err
 	}

@@ -47,7 +47,7 @@ func (r *Repository) GetUserFavedPosts(
 	}
 
 	data := struct{ TotalCount, WhereCondition string }{total, where}
-	query, err := queries.GetQuery("faved_posts.sql", data)
+	query, err := queries.Posts.Get("faved_posts.sql", data)
 	if err != nil {
 		return nil, err
 	}
