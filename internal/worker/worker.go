@@ -59,7 +59,10 @@ func New(cfg *config.Config, ctx context.Context) (*Worker, error) {
 		return nil, fmt.Errorf("couldn't create sources repo: %w", err)
 	}
 
-	catsRepo := categories.New(db)
+	catsRepo, err := categories.New(db)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't create categories repo: %w", err)
+	}
 
 	// Create YouTube service
 	yt, err := yt.New(ctx, cfg)
