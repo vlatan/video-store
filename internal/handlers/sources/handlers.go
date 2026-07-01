@@ -23,7 +23,7 @@ func (s *Service) SourcesHandler(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if data.IsCurrentUserAdmin() {
-		sources, err = s.sourcesRepo.GetSources(r.Context())
+		sources, err = s.sourcesRepo.GetAllSources(r.Context())
 	} else {
 		sources, err = rdb.GetCachedData(
 			r.Context(),
@@ -31,7 +31,7 @@ func (s *Service) SourcesHandler(w http.ResponseWriter, r *http.Request) {
 			"sources",
 			s.config.CacheTimeout,
 			func() (models.Sources, error) {
-				return s.sourcesRepo.GetSources(r.Context())
+				return s.sourcesRepo.GetAllSources(r.Context())
 			},
 		)
 	}

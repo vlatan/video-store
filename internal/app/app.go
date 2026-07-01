@@ -81,7 +81,11 @@ func New() (*App, error) {
 	}
 
 	pagesRepo := pagesRepo.New(db)
-	sourcesRepo := sourcesRepo.New(db)
+
+	sourcesRepo, err := sourcesRepo.New(db)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't create sources repo: %w", err)
+	}
 
 	// Create YouTube service
 	ctx := context.Background()
