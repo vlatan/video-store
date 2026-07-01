@@ -36,10 +36,15 @@ func New(db *database.Service, config *config.Config) (*Repository, error) {
 // Add or update a user
 func (r *Repository) UpsertUser(ctx context.Context, u *models.User) (int, error) {
 
+	query, err := r.queryCache.Render("upsert_user.sql", nil)
+	if err != nil {
+		return 0, err
+	}
+
 	var id int
-	err := r.db.Pool.QueryRow(
+	err = r.db.Pool.QueryRow(
 		ctx,
-		upsertUserQuery,
+		query,
 		u.ProviderUserId,
 		u.Provider,
 		utils.ToNullString(u.AnalyticsID),
@@ -52,26 +57,31 @@ func (r *Repository) UpsertUser(ctx context.Context, u *models.User) (int, error
 }
 
 func (r *Repository) DeleteUser(ctx context.Context, userID int) (int64, error) {
-	result, err := r.db.Pool.Exec(ctx, deleteUserQuery, userID)
+	const query = "DELETE FROM app_user WHERE id = $1;"
+	result, err := r.db.Pool.Exec(ctx, query, userID)
 	return result.RowsAffected(), err
 }
 
 func (r *Repository) UpdateLastUserSeen(ctx context.Context, userID int, now time.Time) (int64, error) {
-	result, err := r.db.Pool.Exec(ctx, updateLastUserSeenQuery, userID, now)
+	const query = "UPDATE app_user SET last_seen = $2 WHERE id = $1"
+	result, err := r.db.Pool.Exec(ctx, query, userID, now)
 	return result.RowsAffected(), err
 }
 
 // Get users with limit and offset
 func (r *Repository) GetUsers(ctx context.Context, page int) (*models.Users, error) {
 
-	var users models.Users
-
 	// Calculate the limit and offset
 	limit := r.config.PostsPerPage
 	offset := (page - 1) * limit
 
+	query, err := r.queryCache.Render("offset_users.sql", nil)
+	if err != nil {
+		return nil, err
+	}
+
 	// Get rows from DB
-	rows, err := r.db.Pool.Query(ctx, getUsersQuery, limit, offset)
+	rows, err := r.db.Pool.Query(ctx, query, limit, offset)
 	if err != nil {
 		return nil, err
 	}
@@ -80,6 +90,7 @@ func (r *Repository) GetUsers(ctx context.Context, page int) (*models.Users, err
 	defer rows.Close()
 
 	// Iterate over the rows
+	var users models.Users
 	for rows.Next() {
 
 		var totalNum int
@@ -124,8 +135,14 @@ func (r *Repository) GetUsers(ctx context.Context, page int) (*models.Users, err
 
 // Check if the user liked and/or faved a post
 func (r *Repository) GetUserActions(ctx context.Context, userID, postID int) (*models.Actions, error) {
-	row := r.db.Pool.QueryRow(ctx, userActionsQuery, userID, postID)
+
+	query, err := r.queryCache.Render("actions_user.sql", nil)
+	if err != nil {
+		return nil, err
+	}
+
 	var actions models.Actions
-	err := row.Scan(&actions.Liked, &actions.Faved)
+	row := r.db.Pool.QueryRow(ctx, query, userID, postID)
+	err = row.Scan(&actions.Liked, &actions.Faved)
 	return &actions, err
 }
