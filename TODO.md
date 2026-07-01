@@ -1,3 +1,4 @@
+* Use t.Fatalf in tests
 * Build the JS and backend review/rating part
 * Possibly move queries to SQL files
 
