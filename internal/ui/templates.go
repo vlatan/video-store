@@ -70,7 +70,12 @@ func loadTemplates(m *minify.M) (models.TemplateMap, error) {
 			}
 		}
 
-		templateMap[name] = template.Must(parseFiles(m, baseTmpl, filepaths...))
+		tmpl, err := parseFiles(m, baseTmpl, filepaths...)
+		if err != nil {
+			return err
+		}
+
+		templateMap[name] = tmpl
 		return nil
 	}
 
