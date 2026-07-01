@@ -22,7 +22,7 @@ func New(db *database.Service, config *config.Config) (*Repository, error) {
 
 	queryCache, err := sqlutils.LoadTemplates(localQueries, nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to load the sql queries")
+		return nil, fmt.Errorf("failed to load posts SQL queries")
 	}
 
 	return &Repository{db, config, queryCache}, nil

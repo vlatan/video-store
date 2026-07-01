@@ -3,24 +3,34 @@ package users
 import (
 	"context"
 	"database/sql"
+	"embed"
+	"fmt"
 	"time"
 
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/drivers/database"
 	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/repositories/sqlutils"
 	"github.com/vlatan/video-store/internal/utils"
 )
 
 type Repository struct {
-	db     *database.Service
-	config *config.Config
+	db         *database.Service
+	config     *config.Config
+	queryCache *sqlutils.Cache
 }
 
-func New(db *database.Service, config *config.Config) *Repository {
-	return &Repository{
-		db:     db,
-		config: config,
+//go:embed sql
+var localQueries embed.FS
+
+func New(db *database.Service, config *config.Config) (*Repository, error) {
+
+	queryCache, err := sqlutils.LoadTemplates(localQueries, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load users SQL queries")
 	}
+
+	return &Repository{db, config, queryCache}, nil
 }
 
 // Add or update a user
