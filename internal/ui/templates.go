@@ -31,7 +31,7 @@ var needsContent = []string{
 func loadTemplates(m *minify.M) (models.TemplateMap, error) {
 
 	templateMap := make(models.TemplateMap)
-	baseTemplate, err := parseTemplate(m, nil, base)
+	baseTemplate, err := parseFiles(m, nil, base)
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +70,7 @@ func loadTemplates(m *minify.M) (models.TemplateMap, error) {
 			}
 		}
 
-		templateMap[name] = template.Must(parseTemplate(m, baseTmpl, filepaths...))
+		templateMap[name] = template.Must(parseFiles(m, baseTmpl, filepaths...))
 		return nil
 	}
 
@@ -88,7 +88,7 @@ func loadTemplates(m *minify.M) (models.TemplateMap, error) {
 }
 
 // parseTemplate minifies and parses HTML template as per the tdewolff/minify docs.
-func parseTemplate(m *minify.M, tmpl *template.Template, filepaths ...string) (*template.Template, error) {
+func parseFiles(m *minify.M, tmpl *template.Template, filepaths ...string) (*template.Template, error) {
 
 	for _, fp := range filepaths {
 
