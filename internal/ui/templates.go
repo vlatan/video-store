@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"html/template"
 	"io/fs"
-	"log"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -64,7 +63,7 @@ func loadTemplates(m *minify.M) (models.TemplateMap, error) {
 		if !strings.Contains(path, "sitemaps") {
 			baseTmpl, err = baseTemplate.Clone()
 			if err != nil {
-				log.Fatalf("couldn't clone the base %q template", base)
+				return fmt.Errorf("couldn't clone the base %q template: %w", base, err)
 			}
 		}
 
