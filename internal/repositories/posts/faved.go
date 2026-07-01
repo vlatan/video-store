@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/repositories/queries"
 	"github.com/vlatan/video-store/internal/utils"
 )
 
@@ -46,7 +47,7 @@ func (r *Repository) GetUserFavedPosts(
 	}
 
 	data := struct{ TotalCount, WhereCondition string }{total, where}
-	query, err := r.queryCache.Render("faved_posts.sql", data)
+	query, err := queries.GetQuery("faved_posts.sql", data)
 	if err != nil {
 		return nil, err
 	}

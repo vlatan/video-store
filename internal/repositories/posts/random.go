@@ -6,13 +6,14 @@ import (
 	"errors"
 
 	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/repositories/queries"
 	"github.com/vlatan/video-store/internal/utils"
 )
 
 // Get random posts, but exclude posts with the exact title match
 func (r *Repository) GetRandomPosts(ctx context.Context, title string, limit int) (*models.Posts, error) {
 
-	query, err := r.queryCache.Render("random_posts.sql", nil)
+	query, err := queries.GetQuery("random_posts.sql", nil)
 	if err != nil {
 		return nil, err
 	}

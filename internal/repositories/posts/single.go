@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/repositories/queries"
 	"github.com/vlatan/video-store/internal/utils"
 )
 
@@ -38,7 +39,7 @@ func (r *Repository) InsertPost(ctx context.Context, post *models.Post) (int64, 
 		post.Category = &models.Category{}
 	}
 
-	query, err := r.queryCache.Render("insert_post.sql", nil)
+	query, err := queries.GetQuery("insert_post.sql", nil)
 	if err != nil {
 		return 0, err
 	}
@@ -68,7 +69,7 @@ func (r *Repository) InsertPost(ctx context.Context, post *models.Post) (int64, 
 // Get single post from DB based on a video ID
 func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (*models.Post, error) {
 
-	query, err := r.queryCache.Render("single_post.sql", nil)
+	query, err := queries.GetQuery("single_post.sql", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -177,7 +178,7 @@ func (r *Repository) UpdatePost(
 	videoID, originalTitle, categorySlug, summary string,
 ) (int64, error) {
 
-	query, err := r.queryCache.Render("update_post.sql", nil)
+	query, err := queries.GetQuery("update_post.sql", nil)
 	if err != nil {
 		return 0, err
 	}

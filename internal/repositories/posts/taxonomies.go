@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/repositories/queries"
 	"github.com/vlatan/video-store/internal/utils"
 )
 
@@ -93,7 +94,7 @@ func (r *Repository) queryTaxonomyPosts(
 	}
 
 	data := struct{ TotalCount, WhereCondition, OrderByWhat string }{total, where, order}
-	query, err := r.queryCache.Render(queryFilename, data)
+	query, err := queries.GetQuery(queryFilename, data)
 	if err != nil {
 		return nil, err
 	}

@@ -2,32 +2,21 @@ package sources
 
 import (
 	"context"
-	"embed"
 	"encoding/json"
 	"fmt"
 
 	"github.com/vlatan/video-store/internal/drivers/database"
 	"github.com/vlatan/video-store/internal/models"
-	"github.com/vlatan/video-store/internal/repositories/sqlutils"
+	"github.com/vlatan/video-store/internal/repositories/queries"
 	"github.com/vlatan/video-store/internal/utils"
 )
 
 type Repository struct {
-	db         *database.Service
-	queryCache *sqlutils.Cache
+	db *database.Service
 }
 
-//go:embed sql
-var localQueries embed.FS
-
-func New(db *database.Service) (*Repository, error) {
-
-	queryCache, err := sqlutils.LoadTemplates(localQueries, nil)
-	if err != nil {
-		return nil, fmt.Errorf("failed to load sources SQL queries")
-	}
-
-	return &Repository{db, queryCache}, nil
+func New(db *database.Service) *Repository {
+	return &Repository{db}
 }
 
 // Check if source exists
@@ -52,7 +41,7 @@ func (r *Repository) InsertSource(ctx context.Context, source *models.Source) (i
 		return 0, err
 	}
 
-	query, err := r.queryCache.Render("insert_source.sql", nil)
+	query, err := queries.GetQuery("insert_source.sql", nil)
 	if err != nil {
 		return 0, err
 	}
@@ -89,7 +78,7 @@ func (r *Repository) UpdateSource(ctx context.Context, source *models.Source) (i
 		return 0, err
 	}
 
-	query, err := r.queryCache.Render("update_source.sql", nil)
+	query, err := queries.GetQuery("update_source.sql", nil)
 	if err != nil {
 		return 0, err
 	}
@@ -114,7 +103,7 @@ func (r *Repository) UpdateSource(ctx context.Context, source *models.Source) (i
 // Get a limited number of sources with offset
 func (r *Repository) GetAllSources(ctx context.Context) (models.Sources, error) {
 
-	query, err := r.queryCache.Render("all_sources.sql", nil)
+	query, err := queries.GetQuery("all_sources.sql", nil)
 	if err != nil {
 		return nil, err
 	}

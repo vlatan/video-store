@@ -75,27 +75,11 @@ func New() (*App, error) {
 	store := redisStore.New(cfg, rdb, "session", 86400*30)
 
 	// Create DB repositories
-	catsRepo, err := catsRepo.New(db)
-	if err != nil {
-		return nil, fmt.Errorf("couldn't create categories repo: %w", err)
-	}
-
-	usersRepo, err := usersRepo.New(db, cfg)
-	if err != nil {
-		return nil, fmt.Errorf("couldn't create users repo: %w", err)
-	}
-
-	postsRepo, err := postsRepo.New(db, cfg)
-	if err != nil {
-		return nil, fmt.Errorf("couldn't create posts repo: %w", err)
-	}
-
+	catsRepo := catsRepo.New(db)
+	usersRepo := usersRepo.New(db, cfg)
+	postsRepo := postsRepo.New(db, cfg)
 	pagesRepo := pagesRepo.New(db)
-
-	sourcesRepo, err := sourcesRepo.New(db)
-	if err != nil {
-		return nil, fmt.Errorf("couldn't create sources repo: %w", err)
-	}
+	sourcesRepo := sourcesRepo.New(db)
 
 	// Create YouTube service
 	ctx := context.Background()

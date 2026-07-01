@@ -3,40 +3,28 @@ package users
 import (
 	"context"
 	"database/sql"
-	"embed"
-	"fmt"
 	"time"
 
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/drivers/database"
 	"github.com/vlatan/video-store/internal/models"
-	"github.com/vlatan/video-store/internal/repositories/sqlutils"
+	"github.com/vlatan/video-store/internal/repositories/queries"
 	"github.com/vlatan/video-store/internal/utils"
 )
 
 type Repository struct {
-	db         *database.Service
-	config     *config.Config
-	queryCache *sqlutils.Cache
+	db     *database.Service
+	config *config.Config
 }
 
-//go:embed sql
-var localQueries embed.FS
-
-func New(db *database.Service, config *config.Config) (*Repository, error) {
-
-	queryCache, err := sqlutils.LoadTemplates(localQueries, nil)
-	if err != nil {
-		return nil, fmt.Errorf("failed to load users SQL queries")
-	}
-
-	return &Repository{db, config, queryCache}, nil
+func New(db *database.Service, config *config.Config) *Repository {
+	return &Repository{db, config}
 }
 
 // Add or update a user
 func (r *Repository) UpsertUser(ctx context.Context, u *models.User) (int, error) {
 
-	query, err := r.queryCache.Render("upsert_user.sql", nil)
+	query, err := queries.GetQuery("upsert_user.sql", nil)
 	if err != nil {
 		return 0, err
 	}
@@ -75,7 +63,7 @@ func (r *Repository) GetUsers(ctx context.Context, page int) (*models.Users, err
 	limit := r.config.PostsPerPage
 	offset := (page - 1) * limit
 
-	query, err := r.queryCache.Render("offset_users.sql", nil)
+	query, err := queries.GetQuery("offset_users.sql", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -136,7 +124,7 @@ func (r *Repository) GetUsers(ctx context.Context, page int) (*models.Users, err
 // Check if the user liked and/or faved a post
 func (r *Repository) GetUserActions(ctx context.Context, userID, postID int) (*models.Actions, error) {
 
-	query, err := r.queryCache.Render("actions_user.sql", nil)
+	query, err := queries.GetQuery("actions_user.sql", nil)
 	if err != nil {
 		return nil, err
 	}

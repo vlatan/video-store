@@ -5,13 +5,14 @@ import (
 	"database/sql"
 
 	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/repositories/queries"
 	"github.com/vlatan/video-store/internal/utils"
 )
 
 // Get all the posts from DB
 func (r *Repository) GetAllPosts(ctx context.Context) ([]*models.Post, error) {
 
-	query, err := r.queryCache.Render("all_posts.sql", nil)
+	query, err := queries.GetQuery("all_posts.sql", nil)
 	if err != nil {
 		return nil, err
 	}

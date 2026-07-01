@@ -2,36 +2,24 @@ package categories
 
 import (
 	"context"
-	"embed"
-	"fmt"
 
 	"github.com/vlatan/video-store/internal/drivers/database"
 	"github.com/vlatan/video-store/internal/models"
-	"github.com/vlatan/video-store/internal/repositories/sqlutils"
+	"github.com/vlatan/video-store/internal/repositories/queries"
 )
 
 type Repository struct {
-	db         *database.Service
-	queryCache *sqlutils.Cache
+	db *database.Service
 }
 
-//go:embed sql
-var localQueries embed.FS
-
-func New(db *database.Service) (*Repository, error) {
-
-	queryCache, err := sqlutils.LoadTemplates(localQueries, nil)
-	if err != nil {
-		return nil, fmt.Errorf("failed to load categories SQL queries")
-	}
-
-	return &Repository{db, queryCache}, nil
+func New(db *database.Service) *Repository {
+	return &Repository{db}
 }
 
 // Get all valid categories
 func (r *Repository) GetCategories(ctx context.Context) (models.Categories, error) {
 
-	query, err := r.queryCache.Render("all_categories.sql", nil)
+	query, err := queries.GetQuery("all_categories.sql", nil)
 	if err != nil {
 		return nil, err
 	}

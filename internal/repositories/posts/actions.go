@@ -4,13 +4,14 @@ import (
 	"context"
 
 	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/repositories/queries"
 	"github.com/vlatan/video-store/internal/utils"
 )
 
 // User likes a post
 func (r *Repository) Like(ctx context.Context, userID int, videoID string) (int64, error) {
 
-	query, err := r.queryCache.Render("like_post.sql", nil)
+	query, err := queries.GetQuery("like_post.sql", nil)
 	if err != nil {
 		return 0, err
 	}
@@ -22,7 +23,7 @@ func (r *Repository) Like(ctx context.Context, userID int, videoID string) (int6
 // User unlikes a post
 func (r *Repository) Unlike(ctx context.Context, userID int, videoID string) (int64, error) {
 
-	query, err := r.queryCache.Render("unlike_post.sql", nil)
+	query, err := queries.GetQuery("unlike_post.sql", nil)
 	if err != nil {
 		return 0, err
 	}
@@ -34,7 +35,7 @@ func (r *Repository) Unlike(ctx context.Context, userID int, videoID string) (in
 // User favorites a post
 func (r *Repository) Fave(ctx context.Context, userID int, videoID string) (int64, error) {
 
-	query, err := r.queryCache.Render("fave_post.sql", nil)
+	query, err := queries.GetQuery("fave_post.sql", nil)
 	if err != nil {
 		return 0, err
 	}
@@ -46,7 +47,7 @@ func (r *Repository) Fave(ctx context.Context, userID int, videoID string) (int6
 // User unfavorites a post
 func (r *Repository) Unfave(ctx context.Context, userID int, videoID string) (int64, error) {
 
-	query, err := r.queryCache.Render("unfave_post.sql", nil)
+	query, err := queries.GetQuery("unfave_post.sql", nil)
 	if err != nil {
 		return 0, err
 	}
@@ -58,7 +59,7 @@ func (r *Repository) Unfave(ctx context.Context, userID int, videoID string) (in
 // Update a playlist
 func (r *Repository) UpdateSource(ctx context.Context, videoID, playlistID string) (int64, error) {
 
-	query, err := r.queryCache.Render("update_post_source.sql", nil)
+	query, err := queries.GetQuery("update_post_source.sql", nil)
 	if err != nil {
 		return 0, err
 	}
@@ -70,7 +71,7 @@ func (r *Repository) UpdateSource(ctx context.Context, videoID, playlistID strin
 // Update post description
 func (r *Repository) UpdateGeneratedData(ctx context.Context, post *models.Post) (int64, error) {
 
-	query, err := r.queryCache.Render("update_post.sql", nil)
+	query, err := queries.GetQuery("update_post.sql", nil)
 	if err != nil {
 		return 0, err
 	}
@@ -90,7 +91,7 @@ func (r *Repository) UpdateGeneratedData(ctx context.Context, post *models.Post)
 // Ban a post (move it to deleted table)
 func (r *Repository) BanPost(ctx context.Context, videoID string) (int64, error) {
 
-	query, err := r.queryCache.Render("ban_post.sql", nil)
+	query, err := queries.GetQuery("ban_post.sql", nil)
 	if err != nil {
 		return 0, err
 	}

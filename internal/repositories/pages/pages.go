@@ -15,9 +15,7 @@ type Repository struct {
 }
 
 func New(db *database.Service) *Repository {
-	return &Repository{
-		db: db,
-	}
+	return &Repository{db}
 }
 
 // Get single page from DB
