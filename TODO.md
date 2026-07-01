@@ -1,7 +1,4 @@
-* Use t.Fatalf in tests
-* Build the JS and backend review/rating part
-* Possibly move queries to SQL files
-
+* Build the JS and backend review/rating system
 * Merge more than one slashes to single slash
 * User reviews and ratings
 * Make search bar on small screens accross entire screen
