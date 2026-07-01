@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"time"
 
@@ -45,7 +44,7 @@ type service struct {
 }
 
 // New creates a new R2 client
-func New(ctx context.Context, cfg *config.Config) Service {
+func New(ctx context.Context, cfg *config.Config) (Service, error) {
 
 	// Create SDK config for an R2 service
 	// An ordinary AWS SDK config would look like:
@@ -59,7 +58,7 @@ func New(ctx context.Context, cfg *config.Config) Service {
 	)
 
 	if err != nil {
-		log.Fatalf("failed to load AWS/R2 SDK configuration, %v", err)
+		return nil, fmt.Errorf("failed to load AWS/R2 SDK configuration: %w", err)
 	}
 
 	// Create the R2 client
@@ -70,7 +69,7 @@ func New(ctx context.Context, cfg *config.Config) Service {
 		o.BaseEndpoint = aws.String(baseEndpoint)
 	})
 
-	return &service{client}
+	return &service{client}, nil
 }
 
 // DeleteObject removes an object from bucket

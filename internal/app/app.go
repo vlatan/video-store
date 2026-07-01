@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/gob"
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 
@@ -48,61 +47,86 @@ type App struct {
 
 // New creates new app.
 // Holds handler services and a HTTP server.
-func New() *App {
+func New() (*App, error) {
 
 	// Register types with gob to be able to use them in sessions
 	gob.Register(&models.FlashMessage{})
 	gob.Register(time.Time{})
 
 	// Init config
-	cfg := config.New()
+	cfg, err := config.New()
+	if err != nil {
+		return nil, fmt.Errorf("couldn't create config: %w", err)
+	}
 
 	// Create database service
 	db, err := database.New(cfg)
 	if err != nil {
-		log.Fatalf("couldn't create DB service; %v", err)
+		return nil, fmt.Errorf("couldn't create DB service: %w", err)
 	}
 
 	// Create Redis service
 	rdb, err := rdb.New(cfg)
 	if err != nil {
-		log.Fatalf("couldn't create Redis service; %v", err)
+		return nil, fmt.Errorf("couldn't create Redis service: %w", err)
 	}
 
 	// Create session store
 	store := redisStore.New(cfg, rdb, "session", 86400*30)
 
 	// Create DB repositories
-	catsRepo := catsRepo.New(db)
-	usersRepo := usersRepo.New(db, cfg)
-	postsRepo := postsRepo.New(db, cfg)
+	catsRepo, err := catsRepo.New(db)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't create categories repo: %w", err)
+	}
+
+	usersRepo, err := usersRepo.New(db, cfg)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't create users repo: %w", err)
+	}
+
+	postsRepo, err := postsRepo.New(db, cfg)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't create posts repo: %w", err)
+	}
+
 	pagesRepo := pagesRepo.New(db)
-	sourcesRepo := sourcesRepo.New(db)
+
+	sourcesRepo, err := sourcesRepo.New(db)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't create sources repo: %w", err)
+	}
 
 	// Create YouTube service
 	ctx := context.Background()
 	yt, err := yt.New(ctx, cfg)
 	if err != nil {
-		log.Fatalf("couldn't create YouTube service: %v", err)
+		return nil, fmt.Errorf("couldn't create YouTube service: %w", err)
 	}
 
 	// Create Gemini client
 	gemini, err := gemini.New(ctx, cfg, rdb, catsRepo)
 	if err != nil {
-		log.Fatalf("couldn't create Gemini service: %v", err)
+		return nil, fmt.Errorf("couldn't create Gemini service: %w", err)
 	}
 
 	// Create Cloudflare R2 service
-	r2s := r2.New(ctx, cfg)
+	r2s, err := r2.New(ctx, cfg)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't create R2 service: %w", err)
+	}
 
 	// Create user interface service
-	ui := ui.New(usersRepo, catsRepo, rdb, r2s, store, cfg)
+	ui, err := ui.New(usersRepo, catsRepo, rdb, r2s, store, cfg)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't create UI service: %w", err)
+	}
 
 	// Create new app service
 	a := &App{
 		auth:     auth.New(usersRepo, store, rdb, r2s, ui, cfg),
 		users:    users.New(usersRepo, postsRepo, rdb, r2s, ui, cfg),
-		posts:    posts.New(postsRepo, rdb, ui, cfg, yt, gemini),
+		posts:    posts.New(postsRepo, usersRepo, rdb, ui, cfg, yt, gemini),
 		pages:    pages.New(pagesRepo, rdb, ui, cfg),
 		sources:  sources.New(postsRepo, sourcesRepo, rdb, ui, cfg, yt),
 		sitemaps: sitemaps.New(postsRepo, rdb, ui, cfg),
@@ -121,5 +145,5 @@ func New() *App {
 		},
 	}
 
-	return a
+	return a, nil
 }

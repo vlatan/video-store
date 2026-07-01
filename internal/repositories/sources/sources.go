@@ -2,28 +2,39 @@ package sources
 
 import (
 	"context"
+	"embed"
 	"encoding/json"
 	"fmt"
 
 	"github.com/vlatan/video-store/internal/drivers/database"
 	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/repositories/sqlutils"
 	"github.com/vlatan/video-store/internal/utils"
 )
 
 type Repository struct {
-	db *database.Service
+	db         *database.Service
+	queryCache *sqlutils.Cache
 }
 
-func New(db *database.Service) *Repository {
-	return &Repository{
-		db: db,
+//go:embed sql
+var localQueries embed.FS
+
+func New(db *database.Service) (*Repository, error) {
+
+	queryCache, err := sqlutils.LoadTemplates(localQueries, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load sources SQL queries")
 	}
+
+	return &Repository{db, queryCache}, nil
 }
 
 // Check if source exists
 func (r *Repository) SourceExists(ctx context.Context, playlistID string) bool {
 	var result int
-	err := r.db.Pool.QueryRow(ctx, sourceExistsQuery, playlistID).Scan(&result)
+	const query = "SELECT 1 FROM playlist WHERE playlist_id = $1;"
+	err := r.db.Pool.QueryRow(ctx, query, playlistID).Scan(&result)
 	return err == nil
 }
 
@@ -41,10 +52,15 @@ func (r *Repository) InsertSource(ctx context.Context, source *models.Source) (i
 		return 0, err
 	}
 
+	query, err := r.queryCache.Render("insert_source.sql", nil)
+	if err != nil {
+		return 0, err
+	}
+
 	// Execute the query
 	result, err := r.db.Pool.Exec(
 		ctx,
-		insertSourceQuery,
+		query,
 		source.PlaylistID,
 		source.ChannelID,
 		source.Title,
@@ -73,10 +89,15 @@ func (r *Repository) UpdateSource(ctx context.Context, source *models.Source) (i
 		return 0, err
 	}
 
+	query, err := r.queryCache.Render("update_source.sql", nil)
+	if err != nil {
+		return 0, err
+	}
+
 	// Execute the query
 	result, err := r.db.Pool.Exec(
 		ctx,
-		updateSourceQuery,
+		query,
 		source.PlaylistID,
 		source.ChannelID,
 		source.Title,
@@ -91,16 +112,21 @@ func (r *Repository) UpdateSource(ctx context.Context, source *models.Source) (i
 }
 
 // Get a limited number of sources with offset
-func (r *Repository) GetSources(ctx context.Context) (models.Sources, error) {
+func (r *Repository) GetAllSources(ctx context.Context) (models.Sources, error) {
 
-	var zero, sources models.Sources
-
-	rows, err := r.db.Pool.Query(ctx, getSourcesQuery)
+	query, err := r.queryCache.Render("all_sources.sql", nil)
 	if err != nil {
-		return zero, err
+		return nil, err
 	}
+
+	rows, err := r.db.Pool.Query(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+
 	defer rows.Close()
 
+	var sources models.Sources
 	for rows.Next() {
 		// Get categories from DB
 		var source models.Source
@@ -114,14 +140,14 @@ func (r *Repository) GetSources(ctx context.Context) (models.Sources, error) {
 			&thumbnails,
 			&source.UpdatedAt,
 		); err != nil {
-			return zero, err
+			return nil, err
 		}
 
 		// Unserialize thumbnails
 		var channelThumbs models.Thumbnails
 		if err = json.Unmarshal(thumbnails, &channelThumbs); err != nil {
 			msg := "could not ummarshal the channel thumbs on playlist"
-			return zero, fmt.Errorf("%s: %q: %w", msg, source.PlaylistID, err)
+			return nil, fmt.Errorf("%s: %q: %w", msg, source.PlaylistID, err)
 		}
 
 		source.ChannelThumbnails = &channelThumbs
@@ -132,7 +158,7 @@ func (r *Repository) GetSources(ctx context.Context) (models.Sources, error) {
 	}
 
 	if err = rows.Err(); err != nil {
-		return zero, err
+		return nil, err
 	}
 
 	return sources, nil

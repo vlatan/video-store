@@ -21,8 +21,16 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	cfg := config.New()
-	r2Service := r2.New(ctx, cfg)
+	cfg, err := config.New()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	r2Service, err := r2.New(ctx, cfg)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	backupService := backup.New(cfg, r2Service)
 	if err := backupService.Run(ctx); err != nil {
 		log.Println(err)

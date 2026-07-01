@@ -8,11 +8,17 @@ import (
 
 func main() {
 
-	// Create new app, register routes
-	a := app.New().RegisterRoutes()
+	// Create new app
+	a, err := app.New()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Register routes
+	a.RegisterRoutes()
 
 	// Run tne app
-	if err := a.Run(); err != nil {
+	if err = a.Run(); err != nil {
 		log.Println(err)
 	}
 }

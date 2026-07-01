@@ -7,94 +7,16 @@ import (
 	"github.com/vlatan/video-store/internal/models"
 )
 
-// The query selects the entire DB data.
-// Also it forms pages that are not in DB but created on the fly by the app.
-// The data is sorted by the created_at column which creates a stable table each time,
-// appending the newest additions at the end.
-// So when this data is split in parts each part always has the same data,
-// except the last part which swells.
-const sitemapDataQuery = `
-	-- Posts (last modified = last updated_at)
-	SELECT
-		'post' as type,
-		(id % $1) AS bucket_id,
-		CONCAT('/video/', video_id, '/') AS location,
-		updated_at AS last_modified
-	FROM post
-
-	UNION ALL
-
-	-- Pages (last modified = last updated_at)
-	SELECT
-		'misc' AS type,
-		0 AS bucket_id,
-		CONCAT('/page/', slug, '/') AS location,
-		updated_at AS last_modified
-	FROM page
-
-	UNION ALL
-
-	-- Playlists (last modified = latest upload date post in playlist)
-	SELECT
-		'misc' AS type,
-		0 AS bucket_id,
-		CONCAT('/source/', p.playlist_id, '/') AS location, 
-		MAX(post.upload_date) AS last_modified
-	FROM playlist AS p
-	INNER JOIN post ON post.playlist_db_id = p.id
-	GROUP BY p.id
-
-	UNION ALL
-
-	-- Orphans (last modified = latest upload date post without playlist)
-	SELECT
-		'misc' AS type,
-		0 AS bucket_id,
-		'/source/other/' AS location,
-		MAX(upload_date) AS last_modified
-	FROM post
-	WHERE playlist_id IS NULL OR playlist_id = ''
-	HAVING COUNT(*) > 0
-
-	UNION ALL
-
-	-- Categories (last modified = latest upload date post in category)
-	SELECT
-		'misc' AS type,
-		0 AS bucket_id,
-		CONCAT('/category/', c.slug, '/') AS location,
-		MAX(post.upload_date) AS last_modified
-	FROM category AS c
-	INNER JOIN post ON post.category_id = c.id
-	GROUP BY c.id
-
-	UNION ALL
-
-	-- Homepage (last modified = latest upload date post in DB)
-	SELECT
-		'misc' AS type,
-		0 AS bucket_id,
-		'/' AS location,
-		MAX(upload_date) AS last_modified
-	FROM post
-
-	UNION ALL
-
-	-- Playlists page (last modified = newest playlist in DB)
-	SELECT 
-		'misc' AS type,
-		0 AS bucket_id,
-		'/sources/' AS location, 
-		MAX(created_at) AS last_modified
-	FROM playlist
-
-	ORDER BY type, location
-`
-
 func (r *Repository) SitemapData(ctx context.Context, partsNum int) ([]*models.SitemapItem, error) {
 
+	// Get query
+	query, err := r.queryCache.Render("sitemap_data.sql", nil)
+	if err != nil {
+		return nil, err
+	}
+
 	// Get rows from DB
-	rows, err := r.db.Pool.Query(ctx, sitemapDataQuery, partsNum)
+	rows, err := r.db.Pool.Query(ctx, query, partsNum)
 	if err != nil {
 		return nil, err
 	}

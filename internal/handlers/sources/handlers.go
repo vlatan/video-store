@@ -23,7 +23,7 @@ func (s *Service) SourcesHandler(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if data.IsCurrentUserAdmin() {
-		sources, err = s.sourcesRepo.GetSources(r.Context())
+		sources, err = s.sourcesRepo.GetAllSources(r.Context())
 	} else {
 		sources, err = rdb.GetCachedData(
 			r.Context(),
@@ -31,7 +31,7 @@ func (s *Service) SourcesHandler(w http.ResponseWriter, r *http.Request) {
 			"sources",
 			s.config.CacheTimeout,
 			func() (models.Sources, error) {
-				return s.sourcesRepo.GetSources(r.Context())
+				return s.sourcesRepo.GetAllSources(r.Context())
 			},
 		)
 	}
@@ -188,7 +188,7 @@ func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		err   error
-		posts models.Posts
+		posts *models.Posts
 	)
 
 	if data.IsCurrentUserAdmin() {
@@ -201,7 +201,7 @@ func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
 			s.rdb,
 			redisKey,
 			s.config.CacheTimeout,
-			func() (models.Posts, error) {
+			func() (*models.Posts, error) {
 				return s.postsRepo.GetSourcePosts(
 					r.Context(), sourceID, cursor, orderBy,
 				)
@@ -226,7 +226,7 @@ func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data.Posts = &posts
+	data.Posts = posts
 	if sourceID == "other" {
 		data.Posts.Title = "Other Uploads"
 	}

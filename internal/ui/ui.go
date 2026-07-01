@@ -67,7 +67,7 @@ func New(
 	r2s r2.Service,
 	store sessions.Store,
 	config *config.Config,
-) Service {
+) (Service, error) {
 	m := minify.New()
 	m.AddFunc("text/css", css.Minify)
 	m.AddFunc("text/html", html.Minify)
@@ -75,9 +75,19 @@ func New(
 	m.AddFuncRegexp(validXML, xml.Minify)
 	m.AddFunc("application/manifest+json", json.Minify)
 
+	templates, err := loadTemplates(m)
+	if err != nil {
+		return nil, err
+	}
+
+	staticFiles, err := loadStaticFiles(m, "static")
+	if err != nil {
+		return nil, err
+	}
+
 	return &service{
-		templates:   parseTemplates(m),
-		staticFiles: parseStaticFiles(m, "static"),
+		templates:   templates,
+		staticFiles: staticFiles,
 		textFiles:   parseTextFiles(config),
 		rdb:         rdb,
 		r2s:         r2s,
@@ -85,5 +95,5 @@ func New(
 		store:       store,
 		catsRepo:    catsRepo,
 		usersRepo:   usersRepo,
-	}
+	}, nil
 }

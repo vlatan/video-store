@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"html/template"
 	"io/fs"
-	"log"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -28,11 +27,14 @@ var needsContent = []string{
 	"source.html",
 }
 
-// Parse the templates and create a template map
-func parseTemplates(m *minify.M) models.TemplateMap {
+// loadTemplates parses the templates and create a template map
+func loadTemplates(m *minify.M) (models.TemplateMap, error) {
 
 	templateMap := make(models.TemplateMap)
-	baseTemplate := template.Must(parseTemplateFiles(m, nil, base))
+	baseTemplate, err := parseFiles(m, nil, base)
+	if err != nil {
+		return nil, err
+	}
 
 	// Function used to process each file/dir in the root, including the root
 	walkDirFunc := func(path string, info fs.DirEntry, err error) error {
@@ -54,9 +56,9 @@ func parseTemplates(m *minify.M) models.TemplateMap {
 		name := filepath.Base(path)
 
 		// Include the "content" if needed
-		part := []string{path}
+		filepaths := []string{path}
 		if slices.Contains(needsContent, name) {
-			part = append(part, content)
+			filepaths = append(filepaths, content)
 		}
 
 		// Clone the base if needed
@@ -64,29 +66,34 @@ func parseTemplates(m *minify.M) models.TemplateMap {
 		if !strings.Contains(path, "sitemaps") {
 			baseTmpl, err = baseTemplate.Clone()
 			if err != nil {
-				log.Fatalf("couldn't clone the base %q template", base)
+				return fmt.Errorf("couldn't clone the base %q template: %w", base, err)
 			}
 		}
 
-		templateMap[name] = template.Must(parseTemplateFiles(m, baseTmpl, part...))
+		tmpl, err := parseFiles(m, baseTmpl, filepaths...)
+		if err != nil {
+			return err
+		}
+
+		templateMap[name] = tmpl
 		return nil
 	}
 
 	// Walk the directory and parse each template in partials
 	if err := fs.WalkDir(web.Files, partials, walkDirFunc); err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
 	// Walk the directory and parse each template in sitemaps
 	if err := fs.WalkDir(web.Files, sitemaps, walkDirFunc); err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
-	return templateMap
+	return templateMap, nil
 }
 
-// Minify and parse the HTML templates as per the tdewolff/minify docs.
-func parseTemplateFiles(m *minify.M, tmpl *template.Template, filepaths ...string) (*template.Template, error) {
+// parseTemplate minifies and parses HTML template as per the tdewolff/minify docs.
+func parseFiles(m *minify.M, tmpl *template.Template, filepaths ...string) (*template.Template, error) {
 
 	for _, fp := range filepaths {
 

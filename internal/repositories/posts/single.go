@@ -11,58 +11,23 @@ import (
 	"github.com/vlatan/video-store/internal/utils"
 )
 
-const postExistsQuery = `
-	SELECT 1 FROM post
-	WHERE video_id = $1
-`
-
 // Check if the post exists
 func (r *Repository) PostExists(ctx context.Context, videoID string) error {
 	var result int
-	return r.db.Pool.QueryRow(ctx, postExistsQuery, videoID).Scan(&result)
+	const query = "SELECT 1 FROM post WHERE video_id = $1;"
+	return r.db.Pool.QueryRow(ctx, query, videoID).Scan(&result)
 }
-
-const isPostBanneddQuery = `
-	SELECT 1 FROM deleted_post
-	WHERE video_id = $1
-`
 
 // Check if the post is deleted
 func (r *Repository) IsPostBanned(ctx context.Context, videoID string) error {
 	var result int
-	return r.db.Pool.QueryRow(ctx, isPostBanneddQuery, videoID).Scan(&result)
+	const query = "SELECT 1 FROM deleted_post WHERE video_id = $1;"
+	return r.db.Pool.QueryRow(ctx, query, videoID).Scan(&result)
 }
-
-const insertPostQuery = `
-	WITH deleted_rows AS (
-		DELETE FROM deleted_post
-		WHERE video_id = $1
-	)
-	INSERT INTO post (
-		video_id, 
-		provider,
-		playlist_id, 
-		title,
-		original_title,
-		thumbnails, 
-		description, 
-		summary,
-		tags, 
-		duration, 
-		upload_date, 
-		user_id,
-		category_id,
-		playlist_db_id
-	)
-	VALUES (
-		$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12,
-		(SELECT id FROM category WHERE name = $13),
-		(SELECT id FROM playlist WHERE playlist_id = $3::varchar(50))
-	)
-`
 
 // Insert post in DB
 func (r *Repository) InsertPost(ctx context.Context, post *models.Post) (int64, error) {
+
 	// Marshal the thumbnails
 	thumbnails, err := json.Marshal(post.Thumbnails)
 	if err != nil {
@@ -73,10 +38,15 @@ func (r *Repository) InsertPost(ctx context.Context, post *models.Post) (int64, 
 		post.Category = &models.Category{}
 	}
 
+	query, err := r.queryCache.Render("insert_post.sql", nil)
+	if err != nil {
+		return 0, err
+	}
+
 	// Execute the query
 	result, err := r.db.Pool.Exec(
 		ctx,
-		insertPostQuery,
+		query,
 		post.VideoID,
 		post.Provider,
 		utils.ToNullString(post.PlaylistID),
@@ -95,36 +65,16 @@ func (r *Repository) InsertPost(ctx context.Context, post *models.Post) (int64, 
 	return result.RowsAffected(), err
 }
 
-const getSinglePostQuery = `
-	SELECT 
-		post.id,
-		post.video_id,
-		post.title,
-		post.original_title,
-		post.thumbnails,
-		COUNT(pl.id) AS likes,
-		post.description,
-		post.summary,
-		playlist.playlist_id,
-		playlist.title,
-		playlist.channel_title,
-		category.slug,
-		category.name,
-		post.upload_date,
-		post.duration
-	FROM post 
-	LEFT JOIN post_like AS pl ON pl.post_id = post.id
-	LEFT JOIN category ON category.id = post.category_id
-	LEFT JOIN playlist ON playlist.id = post.playlist_db_id
-	WHERE video_id = $1
-	GROUP BY post.id, category.id, playlist.id
-`
-
 // Get single post from DB based on a video ID
-func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.Post, error) {
+func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (*models.Post, error) {
+
+	query, err := r.queryCache.Render("single_post.sql", nil)
+	if err != nil {
+		return nil, err
+	}
 
 	// Initialize vars
-	var zero, post models.Post
+	var post models.Post
 	var thumbnails []byte
 	var (
 		originalTitle,
@@ -137,7 +87,7 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.
 	)
 
 	// Get single row from DB
-	err := r.db.Pool.QueryRow(ctx, getSinglePostQuery, videoID).Scan(
+	err = r.db.Pool.QueryRow(ctx, query, videoID).Scan(
 		&post.ID,
 		&post.VideoID,
 		&post.Title,
@@ -156,7 +106,7 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.
 	)
 
 	if err != nil {
-		return zero, err
+		return nil, err
 	}
 
 	// Assign the original title if any
@@ -187,7 +137,7 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.
 
 	// Parse markdown to HTML
 	if post.HTMLSummary, err = utils.ParseMarkdown(post.Summary); err != nil {
-		return zero, fmt.Errorf(
+		return nil, fmt.Errorf(
 			"could not convert markdown to html on %q: %v",
 			post.VideoID, err,
 		)
@@ -204,7 +154,7 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.
 	// Unserialize thumbnails
 	var thumbs models.Thumbnails
 	if err = json.Unmarshal(thumbnails, &thumbs); err != nil {
-		return zero, fmt.Errorf("video ID %q: %w", videoID, err)
+		return nil, fmt.Errorf("video ID %q: %w", videoID, err)
 	}
 
 	// Assign the biggest thumbnail to post
@@ -219,25 +169,22 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.
 	// Make srcset string
 	post.Srcset = thumbs.Srcset(maxThumb.Width)
 
-	return post, nil
+	return &post, nil
 }
-
-const updatePostQuery = `
-	UPDATE post
-	SET
-		original_title = $2,
-		category_id = (SELECT id FROM category WHERE slug = $3),
-		summary = $4
-	WHERE video_id = $1
-`
 
 func (r *Repository) UpdatePost(
 	ctx context.Context,
 	videoID, originalTitle, categorySlug, summary string,
 ) (int64, error) {
+
+	query, err := r.queryCache.Render("update_post.sql", nil)
+	if err != nil {
+		return 0, err
+	}
+
 	result, err := r.db.Pool.Exec(
 		ctx,
-		updatePostQuery,
+		query,
 		videoID,
 		utils.ToNullString(originalTitle),
 		categorySlug,

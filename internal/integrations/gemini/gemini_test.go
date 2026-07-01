@@ -32,14 +32,15 @@ func runTests(m *testing.M) int {
 	// Get the project root
 	projectRoot, err := utils.GetProjectRoot()
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("Failed to get the project root; %v", err)
+		return 1
 	}
 
 	// Get the path to project's .env file and load the env vars
 	// This is valid only for local test runs
 	envPath := filepath.Join(projectRoot, ".env")
 	if err := godotenv.Load(envPath); err != nil {
-		log.Printf("failed to load .env file; %v", err)
+		log.Printf("No .env file loaded; %v", err)
 	}
 
 	// Main context - globaly available for package's tests

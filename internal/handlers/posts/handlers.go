@@ -41,7 +41,7 @@ func (s *Service) HomeHandler(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		err   error
-		posts models.Posts
+		posts *models.Posts
 	)
 
 	// Don't cache the home results only for the admin
@@ -55,7 +55,7 @@ func (s *Service) HomeHandler(w http.ResponseWriter, r *http.Request) {
 			s.rdb,
 			redisKey,
 			s.config.CacheTimeout,
-			func() (models.Posts, error) {
+			func() (*models.Posts, error) {
 				return s.postsRepo.GetHomePosts(
 					r.Context(), cursor, orderBy,
 				)
@@ -75,7 +75,7 @@ func (s *Service) HomeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data.Posts = &posts
+	data.Posts = posts
 	s.ui.RenderHTML(w, r, "home.html", data)
 }
 
@@ -102,7 +102,7 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		err   error
-		posts models.Posts
+		posts *models.Posts
 	)
 
 	// Don't cache the category posts only for the admin
@@ -116,7 +116,7 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 			s.rdb,
 			redisKey,
 			s.config.CacheTimeout,
-			func() (models.Posts, error) {
+			func() (*models.Posts, error) {
 				return s.postsRepo.GetCategoryPosts(
 					r.Context(), slug, cursor, orderBy,
 				)
@@ -141,7 +141,7 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data.Posts = &posts
+	data.Posts = posts
 	data.Title = data.Posts.Title
 	s.ui.RenderHTML(w, r, "category.html", data)
 }
@@ -173,7 +173,7 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		err   error
-		posts models.Posts
+		posts *models.Posts
 	)
 
 	// Don't cache the search results only for the admin
@@ -187,7 +187,7 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 			s.rdb,
 			redisKey,
 			s.config.CacheTimeout,
-			func() (models.Posts, error) {
+			func() (*models.Posts, error) {
 				return s.postsRepo.SearchPosts(
 					r.Context(), searchQuery, s.config.PostsPerPage, cursor,
 				)
@@ -209,7 +209,7 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data.Posts = &posts
+	data.Posts = posts
 	data.Posts.TimeTook = fmt.Sprintf("%.2f", end.Seconds())
 	data.Title = "Search"
 	s.ui.RenderHTML(w, r, "search.html", data)
@@ -355,7 +355,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		err  error
-		post models.Post
+		post *models.Post
 	)
 
 	// Don't cache single post for logged in users
@@ -367,7 +367,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 			s.rdb,
 			fmt.Sprintf(postCacheKey, videoID),
 			s.config.CacheTimeout,
-			func() (models.Post, error) {
+			func() (*models.Post, error) {
 				return s.postsRepo.GetSinglePost(r.Context(), videoID)
 			},
 		)
@@ -385,11 +385,11 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Assign the post to data
-	data.CurrentPost = &post
+	data.CurrentPost = post
 
 	// Check whether the current user liked and/or faved the post
 	if data.CurrentUser.IsAuthenticated() {
-		userActions, _ := s.postsRepo.GetUserActions(
+		userActions, _ := s.usersRepo.GetUserActions(
 			r.Context(),
 			data.CurrentUser.ID,
 			data.CurrentPost.ID,
@@ -448,7 +448,7 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 	data := models.GetDataFromContext(r)
 
 	// Assign page data
-	data.CurrentPost = &post
+	data.CurrentPost = post
 	if data.CurrentPost.Category == nil {
 		data.CurrentPost.Category = &models.Category{}
 	}
@@ -469,7 +469,7 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 		},
 		Category: &models.FormGroup{
 			Label: "Category",
-			Value: data.CurrentPost.Category.Slug,
+			Value: data.CurrentPost.Category.Name,
 		},
 	}
 
@@ -501,7 +501,7 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 			r.Context(),
 			videoID,
 			data.Form.Title.Value,    // original title
-			data.Form.Category.Value, // category slug
+			data.Form.Category.Value, // category name
 			data.Form.Content.Value,  // summary
 		)
 

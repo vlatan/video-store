@@ -13,49 +13,13 @@ import (
 	"github.com/vlatan/video-store/internal/utils"
 )
 
-const searchPostsQuery = `
-	WITH search_terms AS (
-		SELECT
-			lexeme AS and_query,
-			to_tsquery('english', replace(lexeme::text, ' & ', ' | ')) AS or_query,
-			replace(lexeme::text, ' & ', ' ') AS raw_query
-		FROM plainto_tsquery('english', $1) AS lexeme
-	),
-	scored_posts AS (
-		SELECT
-			p.id,
-			p.video_id,
-			p.title,
-			p.original_title,
-			p.thumbnails,
-			COUNT(pl.id) AS likes,
-			%s AS total_results,
-			p.upload_date,
-			(ts_rank(p.search_vector, st.and_query, 32) * 2) + 
-			ts_rank(p.search_vector, st.or_query, 32) +
-			(similarity(p.title, st.raw_query) * 0.25) + 
-			(COALESCE(similarity(p.original_title, st.raw_query), 0) * 0.25) AS score
-		FROM post AS p
-		CROSS JOIN search_terms AS st
-		LEFT JOIN post_like AS pl ON pl.post_id = p.id
-		WHERE p.search_vector @@ st.and_query OR p.search_vector @@ st.or_query
-		GROUP BY p.id, st.and_query, st.or_query, st.raw_query
-	)
-	SELECT * FROM scored_posts
-	%s --- the WHERE clause
-	ORDER BY score DESC, likes DESC, upload_date DESC, id DESC
-	LIMIT $2;
-`
-
 // Get posts based on a user search query using a cursor
 // Transform the user query into two queries with words separated by '&' and '|'
 func (r *Repository) SearchPosts(
 	ctx context.Context,
 	searchTerm string,
 	limit int,
-	cursor string) (models.Posts, error) {
-
-	var zero models.Posts
+	cursor string) (*models.Posts, error) {
 
 	// Construct the SQL parts as well as the arguments
 	// The search term and limit are the first two arguments ($1 and $2)
@@ -65,6 +29,7 @@ func (r *Repository) SearchPosts(
 	args := []any{searchTerm, limit + 1}
 
 	// Build args and SQL parts
+	// No cursor on the first page, no need for total and the WHERE clause
 	if cursor != "" {
 
 		// SQL parts
@@ -73,27 +38,31 @@ func (r *Repository) SearchPosts(
 
 		cursorParts, err := decodeCursor(cursor)
 		if err != nil {
-			return zero, err
+			return nil, err
 		}
 
 		if len(cursorParts) != 4 {
-			return zero, errors.New("invalid cursor components")
+			return nil, errors.New("invalid cursor components")
 		}
 
 		score, err := strconv.ParseFloat(cursorParts[0], 64)
 		if err != nil {
-			return zero, err
+			return nil, err
 		}
 
 		args = append(args, score, cursorParts[1], cursorParts[2], cursorParts[3])
 	}
 
-	query := fmt.Sprintf(searchPostsQuery, total, where)
+	data := struct{ TotalCount, WhereCondition string }{total, where}
+	query, err := r.queryCache.Render("search_posts.sql", data)
+	if err != nil {
+		return nil, err
+	}
 
 	// Get rows from DB
 	rows, err := r.db.Pool.Query(ctx, query, args...)
 	if err != nil {
-		return zero, err
+		return nil, err
 	}
 
 	// Close rows on exit
@@ -118,7 +87,7 @@ func (r *Repository) SearchPosts(
 			&post.UploadDate,
 			&post.Score,
 		); err != nil {
-			return zero, err
+			return nil, err
 		}
 
 		// Include the processed post in the result
@@ -131,17 +100,17 @@ func (r *Repository) SearchPosts(
 
 	// If error during iteration
 	if err = rows.Err(); err != nil {
-		return zero, err
+		return nil, err
 	}
 
 	// Post-process the posts, prepare the thumbnail
 	if err = postProcessPosts(ctx, posts); err != nil {
-		return zero, err
+		return nil, err
 	}
 
 	// This is the last page
 	if len(posts.Items) <= limit {
-		return posts, nil
+		return &posts, nil
 	}
 
 	// Exclude the last post
@@ -155,5 +124,5 @@ func (r *Repository) SearchPosts(
 	cursorStr := fmt.Sprintf("%.17g,%d,%s,%d", lastPost.Score, lastPost.Likes, uploadDate, lastPost.ID)
 	posts.NextCursor = base64.StdEncoding.EncodeToString([]byte(cursorStr))
 
-	return posts, nil
+	return &posts, nil
 }

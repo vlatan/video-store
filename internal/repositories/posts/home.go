@@ -12,30 +12,8 @@ import (
 	"github.com/vlatan/video-store/internal/utils"
 )
 
-const getHomePostsQuery = `
-	WITH posts_with_likes AS (
-		SELECT
-			post.id,
-			video_id, 
-			title,
-			original_title, 
-			thumbnails,
-			COUNT(pl.id) AS likes,
-			upload_date
-		FROM post
-		LEFT JOIN post_like AS pl ON pl.post_id = post.id
-		GROUP BY post.id
-	)
-	SELECT * FROM posts_with_likes
-	%s --- the WHERE clause
-	ORDER BY %s
-	LIMIT $1
-`
-
 // Get a limited number of posts with cursor
-func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (models.Posts, error) {
-
-	var zero models.Posts
+func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (*models.Posts, error) {
 
 	// Construct the SQL parts as well as the arguments
 	// The limit is the first argument ($1)
@@ -53,31 +31,35 @@ func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (
 
 		cursorParts, err := decodeCursor(cursor)
 		if err != nil {
-			return zero, err
+			return nil, err
 		}
 
 		switch orderBy {
 		case "likes":
 			if len(cursorParts) != 3 {
-				return zero, errors.New("invalid cursor components")
+				return nil, errors.New("invalid cursor components")
 			}
 			args = append(args, cursorParts[0], cursorParts[1], cursorParts[2])
 			where = "WHERE (likes, upload_date, id) < ($2, $3, $4)"
 		default:
 			if len(cursorParts) != 2 {
-				return zero, fmt.Errorf("invalid cursor components")
+				return nil, fmt.Errorf("invalid cursor components")
 			}
 			args = append(args, cursorParts[0], cursorParts[1])
 			where = "WHERE (upload_date, id) < ($2, $3)"
 		}
 	}
 
-	query := fmt.Sprintf(getHomePostsQuery, where, order)
+	data := struct{ WhereCondition, OrderByWhat string }{where, order}
+	query, err := r.queryCache.Render("home_posts.sql", data)
+	if err != nil {
+		return nil, err
+	}
 
 	// Get rows from DB
 	rows, err := r.db.Pool.Query(ctx, query, args...)
 	if err != nil {
-		return zero, err
+		return nil, err
 	}
 
 	// Close rows on exit
@@ -101,7 +83,7 @@ func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (
 		)
 
 		if err != nil {
-			return zero, err
+			return nil, err
 		}
 
 		post.OriginalTitle = utils.FromNullString(originalTitle)
@@ -110,17 +92,17 @@ func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (
 
 	// If error during iteration
 	if err = rows.Err(); err != nil {
-		return zero, err
+		return nil, err
 	}
 
 	// Post-process the posts, prepare the thumbnail
 	if err = postProcessPosts(ctx, posts); err != nil {
-		return zero, err
+		return nil, err
 	}
 
 	// This is the last page
 	if len(posts.Items) <= r.config.PostsPerPage {
-		return posts, nil
+		return &posts, nil
 	}
 
 	// Exclude the last post
@@ -138,5 +120,5 @@ func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (
 
 	posts.NextCursor = base64.StdEncoding.EncodeToString([]byte(cursorStr))
 
-	return posts, nil
+	return &posts, nil
 }
