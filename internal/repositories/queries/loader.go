@@ -41,6 +41,7 @@ func newDomain(pattern string) *domain {
 	return d
 }
 
+// Get ready the domains
 var (
 	Posts      = newDomain("sql/posts/*.sql")
 	Sources    = newDomain("sql/sources/*.sql")
