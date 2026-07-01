@@ -3,7 +3,6 @@ package rdb
 import (
 	"context"
 	"errors"
-	"log"
 	"testing"
 	"time"
 )
@@ -15,13 +14,13 @@ func TestGetCachedData(t *testing.T) {
 
 	errorRdb, err := New(testCfg)
 	if err != nil {
-		log.Fatalf("failed to create Redis client; %v", err)
+		t.Fatalf("failed to create Redis client; %v", err)
 	}
 
 	// Close this Redis client so we can use it
 	// to force an error on GET/SET.
 	if err = errorRdb.Client.Close(); err != nil {
-		log.Fatalf("failed to close the Redis client; %v", err)
+		t.Fatalf("failed to close the Redis client; %v", err)
 	}
 
 	tests := []struct {

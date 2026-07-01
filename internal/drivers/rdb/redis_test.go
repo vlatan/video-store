@@ -38,7 +38,8 @@ func runTests(m *testing.M) int {
 	// Get the project root
 	projectRoot, err := utils.GetProjectRoot()
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("Failed to get the project root; %v", err)
+		return 1
 	}
 
 	// Get the path to project's .env file and load the env vars
@@ -65,7 +66,8 @@ func runTests(m *testing.M) int {
 	// Spin up Redis container
 	container, err := containers.SetupTestRedis(setupCtx, testCfg)
 	if err != nil {
-		log.Fatalf("failed to create Redis container; %v", err)
+		log.Printf("Failed to create Redis container; %v", err)
+		return 1
 	}
 
 	// Terminate the container on exit
@@ -74,7 +76,8 @@ func runTests(m *testing.M) int {
 	// Redis service - globaly available for package's tests
 	testRdb, err = New(testCfg)
 	if err != nil {
-		log.Fatalf("failed to create Redis client; %v", err)
+		log.Printf("Failed to create Redis client; %v", err)
+		return 1
 	}
 
 	defer func() { testRdb.Client.Close() }()
