@@ -21,8 +21,12 @@ func main() {
 	sigCtx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
+	cfg, err := config.New()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	// Give the worker a reasonable time to finish
-	cfg := config.New()
 	ctx, cancel := context.WithTimeout(sigCtx, cfg.WorkerExpectedRuntime)
 	defer cancel()
 

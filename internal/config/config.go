@@ -3,7 +3,6 @@ package config
 import (
 	"encoding/base64"
 	"fmt"
-	"log"
 	"math"
 	"runtime"
 	"time"
@@ -111,17 +110,17 @@ type Config struct {
 }
 
 // New creates new config object
-func New() *Config {
+func New() (*Config, error) {
 
 	// Parse the config from the environment
 	var cfg Config
 	if err := env.Parse(&cfg); err != nil {
-		log.Fatalf("failed to parse the config; %v", err)
+		return nil, fmt.Errorf("failed to parse the config: %w", err)
 	}
 
 	numCPU := runtime.NumCPU()
 	if numCPU > math.MaxInt32 || numCPU < math.MinInt32 {
-		log.Fatalf("failed to get proper CPU cores count: %d", numCPU)
+		return nil, fmt.Errorf("failed to get proper CPU cores count: %d", numCPU)
 	}
 
 	// Cap the DBMaxConns to the number of cores
@@ -132,12 +131,12 @@ func New() *Config {
 		secrets := []Secret{cfg.CsrfKey, cfg.AuthKey, cfg.EncryptionKey}
 		for _, secret := range secrets {
 			if len(secret.Bytes) == 0 {
-				log.Fatalf("empty or no secret key defined in env: %s", secret)
+				return nil, fmt.Errorf("empty or no secret key defined in env: %s", secret)
 			}
 		}
 	}
 
-	return &cfg
+	return &cfg, nil
 }
 
 // UnmarshalText implements the encoding.TextUnmarshaler interface.

@@ -54,7 +54,10 @@ func New() (*App, error) {
 	gob.Register(time.Time{})
 
 	// Init config
-	cfg := config.New()
+	cfg, err := config.New()
+	if err != nil {
+		return nil, fmt.Errorf("couldn't create config: %w", err)
+	}
 
 	// Create database service
 	db, err := database.New(cfg)
@@ -108,7 +111,10 @@ func New() (*App, error) {
 	}
 
 	// Create Cloudflare R2 service
-	r2s := r2.New(ctx, cfg)
+	r2s, err := r2.New(ctx, cfg)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't create R2 service: %w", err)
+	}
 
 	// Create user interface service
 	ui, err := ui.New(usersRepo, catsRepo, rdb, r2s, store, cfg)
