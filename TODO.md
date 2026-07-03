@@ -1,3 +1,6 @@
+* There's a panic in /{part} when a bogus url is accessed
+  internal/handlers/sitemaps/handlers.go:47
+
 * Build the JS and backend review/rating system
 * Merge more than one slashes to single slash
 * User reviews and ratings
