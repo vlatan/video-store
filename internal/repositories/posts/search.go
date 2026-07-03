@@ -53,8 +53,8 @@ func (r *Repository) SearchPosts(
 		args = append(args, score, cursorParts[1], cursorParts[2], cursorParts[3])
 	}
 
-	data := struct{ TotalCount, WhereCondition string }{total, where}
-	query, err := r.GetQuery("search_posts.sql", data)
+	sqlParts := struct{ TotalCount, WhereCondition string }{total, where}
+	query, err := r.GetQuery("search_posts.sql", sqlParts)
 	if err != nil {
 		return nil, err
 	}
