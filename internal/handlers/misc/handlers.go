@@ -3,7 +3,7 @@ package misc
 import (
 	"bytes"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"path/filepath"
 	"slices"
@@ -31,7 +31,11 @@ func (s *Service) TextHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	if _, err := w.Write(textFile.Bytes); err != nil {
-		log.Printf("Failed to write response to %q: %v", r.URL.Path, err)
+		slog.ErrorContext(
+			r.Context(), "failed to write response",
+			"path", r.URL.Path,
+			"error", err,
+		)
 	}
 }
 

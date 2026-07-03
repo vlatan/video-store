@@ -2,6 +2,7 @@ package auth
 
 import (
 	"log"
+	"log/slog"
 	"net/http"
 
 	"github.com/vlatan/video-store/internal/models"
@@ -101,11 +102,19 @@ func (s *Service) AuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	state := r.URL.Query().Get("state")
 
 	if code == "" {
-		log.Printf("No authorization code received from provider %s", providerName)
+		slog.InfoContext(
+			r.Context(), "no authorization code received",
+			"path", r.URL.Path,
+			"provider", providerName,
+		)
 	}
 
 	if state == "" {
-		log.Printf("No state parameter received from provider %s", providerName)
+		slog.InfoContext(
+			r.Context(), "no state parameter received",
+			"path", r.URL.Path,
+			"provider", providerName,
+		)
 	}
 
 	if code == "" || state == "" {
@@ -127,7 +136,11 @@ func (s *Service) AuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Check the state parameter
 	if sessionState != state {
-		log.Printf("Invalide state parameter on provider %s", providerName)
+		slog.InfoContext(
+			r.Context(), "invalide state parameter",
+			"path", r.URL.Path,
+			"provider", providerName,
+		)
 		s.ui.StoreFlashMessage(w, r, &failedLogin)
 		http.Redirect(w, r, redirectTo, http.StatusSeeOther)
 		return
@@ -146,7 +159,12 @@ func (s *Service) AuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		log.Printf("Token exchange failed on provider %s: %v", providerName, err)
+		slog.ErrorContext(
+			r.Context(), "token exchange failed",
+			"path", r.URL.Path,
+			"provider", providerName,
+			"error", err,
+		)
 		s.ui.StoreFlashMessage(w, r, &failedLogin)
 		http.Redirect(w, r, redirectTo, http.StatusSeeOther)
 		return
@@ -155,14 +173,23 @@ func (s *Service) AuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	// Fetch user info
 	user, err := s.providers.FetchUserProfile(r.Context(), provider, token)
 	if err != nil {
-		log.Printf("Failed to fetch user profile from provider %s: %v", providerName, err)
+		slog.ErrorContext(
+			r.Context(), "failed to fetch user profile",
+			"path", r.URL.Path,
+			"provider", providerName,
+			"error", err,
+		)
 		s.ui.StoreFlashMessage(w, r, &failedLogin)
 		http.Redirect(w, r, redirectTo, http.StatusSeeOther)
 		return
 	}
 
 	if user.ProviderUserId == "" {
-		log.Printf("Failed to get the user ID from provider %s", providerName)
+		slog.InfoContext(
+			r.Context(), "failed to get the user ID",
+			"path", r.URL.Path,
+			"provider", providerName,
+		)
 		s.ui.StoreFlashMessage(w, r, &failedLogin)
 		http.Redirect(w, r, redirectTo, http.StatusSeeOther)
 		return
@@ -226,14 +253,23 @@ func (s *Service) DeleteAccountHandler(w http.ResponseWriter, r *http.Request) {
 	// Delete the user from DB
 	rowsAffected, err := s.usersRepo.DeleteUser(r.Context(), currentUser.ID)
 	if err != nil {
-		log.Printf("Could not delete user %d: %v", currentUser.ID, err)
+		slog.ErrorContext(
+			r.Context(), "could not delete user from DB",
+			"path", r.URL.Path,
+			"userId", currentUser.ID,
+			"error", err,
+		)
 		s.ui.StoreFlashMessage(w, r, &failedDeleteAccount)
 		http.Redirect(w, r, redirectTo, http.StatusFound)
 		return
 	}
 
 	if rowsAffected == 0 {
-		log.Printf("No such user %d to delete", currentUser.ID)
+		slog.InfoContext(
+			r.Context(), "no such user to delete from DB",
+			"path", r.URL.Path,
+			"userId", currentUser.ID,
+		)
 		s.ui.StoreFlashMessage(w, r, &failedDeleteAccount)
 		http.Redirect(w, r, redirectTo, http.StatusFound)
 		return
