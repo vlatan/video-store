@@ -54,7 +54,7 @@ func New(cfg *config.Config, ctx context.Context) (*Worker, error) {
 		return nil, fmt.Errorf("couldn't create posts repo: %w", err)
 	}
 
-	sourcesRepo, err := sources.New(db)
+	sourcesRepo, err := sources.New(db, nil)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create sources repo: %w", err)
 	}

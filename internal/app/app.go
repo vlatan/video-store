@@ -80,7 +80,7 @@ func New() (*App, error) {
 		return nil, fmt.Errorf("couldn't create categories repo: %w", err)
 	}
 
-	usersRepo, err := usersRepo.New(db, cfg)
+	usersRepo, err := usersRepo.New(db, cfg, nil)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create users repo: %w", err)
 	}
@@ -92,7 +92,7 @@ func New() (*App, error) {
 
 	pagesRepo := pagesRepo.New(db)
 
-	sourcesRepo, err := sourcesRepo.New(db)
+	sourcesRepo, err := sourcesRepo.New(db, nil)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create sources repo: %w", err)
 	}
