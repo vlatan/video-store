@@ -9,4 +9,4 @@ INSERT INTO playlist (
     channel_description,
     user_id
 )
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NULLIF($9, 0));
+VALUES ( $1, $2, $3, $4, $5, $6, $7, $8, NULLIF($9, 0) );

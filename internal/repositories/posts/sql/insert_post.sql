@@ -21,4 +21,5 @@ INSERT INTO post (
 VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12,
     (SELECT id FROM category WHERE name = $13),
-    (SELECT id FROM playlist WHERE playlist_id = $3::varchar(50));
+    (SELECT id FROM playlist WHERE playlist_id = $3::varchar(50))
+);
