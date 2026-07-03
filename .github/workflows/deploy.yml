@@ -59,7 +59,7 @@ jobs:
         env:
           GOTOOLCHAIN: auto
           GO111MODULE: on
-        uses: securego/gosec@v2
+        uses: securego/gosec@v2.27.1
         with:
           args: ./...
   
