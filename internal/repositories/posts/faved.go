@@ -45,8 +45,8 @@ func (r *Repository) GetUserFavedPosts(
 		args = append(args, cursorParts[0], cursorParts[1], cursorParts[2], cursorParts[3])
 	}
 
-	data := struct{ TotalCount, WhereCondition string }{total, where}
-	query, err := r.queryCache.Render("faved_posts.sql", data)
+	sqlParts := struct{ TotalCount, WhereCondition string }{total, where}
+	query, err := r.GetQuery("faved_posts.sql", sqlParts)
 	if err != nil {
 		return nil, err
 	}

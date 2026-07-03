@@ -2,28 +2,37 @@ package posts
 
 import (
 	"embed"
-	"fmt"
+	"io/fs"
+	"text/template"
 
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/drivers/database"
-	"github.com/vlatan/video-store/internal/repositories/sqlutils"
+	repo "github.com/vlatan/video-store/internal/repositories"
 )
 
+//go:embed sql/*.sql
+var sqlFS embed.FS
+
 type Repository struct {
-	db         *database.Service
-	config     *config.Config
-	queryCache *sqlutils.Cache
+	db      *database.Service
+	config  *config.Config
+	queries *template.Template
 }
 
-//go:embed sql
-var localQueries embed.FS
+func New(db *database.Service, config *config.Config, fsys fs.FS) (*Repository, error) {
 
-func New(db *database.Service, config *config.Config) (*Repository, error) {
-
-	queryCache, err := sqlutils.LoadTemplates(localQueries, nil)
-	if err != nil {
-		return nil, fmt.Errorf("failed to load posts SQL queries")
+	if fsys == nil {
+		fsys = sqlFS
 	}
 
-	return &Repository{db, config, queryCache}, nil
+	queries, err := template.ParseFS(fsys, "sql/*.sql")
+	if err != nil {
+		return nil, err
+	}
+
+	return &Repository{db, config, queries}, nil
+}
+
+func (r *Repository) GetQuery(name string, sqlParts any) (string, error) {
+	return repo.GetQuery(r.queries, name, sqlParts)
 }

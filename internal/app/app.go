@@ -75,24 +75,24 @@ func New() (*App, error) {
 	store := redisStore.New(cfg, rdb, "session", 86400*30)
 
 	// Create DB repositories
-	catsRepo, err := catsRepo.New(db)
+	catsRepo, err := catsRepo.New(db, nil)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create categories repo: %w", err)
 	}
 
-	usersRepo, err := usersRepo.New(db, cfg)
+	usersRepo, err := usersRepo.New(db, cfg, nil)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create users repo: %w", err)
 	}
 
-	postsRepo, err := postsRepo.New(db, cfg)
+	postsRepo, err := postsRepo.New(db, cfg, nil)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create posts repo: %w", err)
 	}
 
 	pagesRepo := pagesRepo.New(db)
 
-	sourcesRepo, err := sourcesRepo.New(db)
+	sourcesRepo, err := sourcesRepo.New(db, nil)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create sources repo: %w", err)
 	}
