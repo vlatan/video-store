@@ -11,7 +11,7 @@ import (
 // Get all the posts from DB
 func (r *Repository) GetAllPosts(ctx context.Context) ([]*models.Post, error) {
 
-	query, err := r.queryCache.Render("all_posts.sql", nil)
+	query, err := r.GetQuery("all_posts.sql", nil)
 	if err != nil {
 		return nil, err
 	}

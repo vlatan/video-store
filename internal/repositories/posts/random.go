@@ -12,7 +12,7 @@ import (
 // Get random posts, but exclude posts with the exact title match
 func (r *Repository) GetRandomPosts(ctx context.Context, title string, limit int) (*models.Posts, error) {
 
-	query, err := r.queryCache.Render("random_posts.sql", nil)
+	query, err := r.GetQuery("random_posts.sql", nil)
 	if err != nil {
 		return nil, err
 	}

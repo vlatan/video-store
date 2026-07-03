@@ -10,7 +10,7 @@ import (
 func (r *Repository) SitemapData(ctx context.Context, partsNum int) ([]*models.SitemapItem, error) {
 
 	// Get query
-	query, err := r.queryCache.Render("sitemap_data.sql", nil)
+	query, err := r.GetQuery("sitemap_data.sql", nil)
 	if err != nil {
 		return nil, err
 	}

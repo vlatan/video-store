@@ -85,7 +85,7 @@ func New() (*App, error) {
 		return nil, fmt.Errorf("couldn't create users repo: %w", err)
 	}
 
-	postsRepo, err := postsRepo.New(db, cfg)
+	postsRepo, err := postsRepo.New(db, cfg, nil)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create posts repo: %w", err)
 	}

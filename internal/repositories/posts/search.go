@@ -54,7 +54,7 @@ func (r *Repository) SearchPosts(
 	}
 
 	data := struct{ TotalCount, WhereCondition string }{total, where}
-	query, err := r.queryCache.Render("search_posts.sql", data)
+	query, err := r.GetQuery("search_posts.sql", data)
 	if err != nil {
 		return nil, err
 	}

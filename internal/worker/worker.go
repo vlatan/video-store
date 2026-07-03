@@ -49,7 +49,7 @@ func New(cfg *config.Config, ctx context.Context) (*Worker, error) {
 	}
 
 	// Create DB repositories
-	postsRepo, err := posts.New(db, cfg)
+	postsRepo, err := posts.New(db, cfg, nil)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create posts repo: %w", err)
 	}
