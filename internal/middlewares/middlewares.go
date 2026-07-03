@@ -346,7 +346,7 @@ func (s *Service) Logging(next http.Handler) http.Handler {
 
 		slog.InfoContext(
 			r.Context(),
-			"Request Info",
+			"request info",
 			"method", r.Method,
 			"path", r.URL.Path,
 			"host", r.Host,

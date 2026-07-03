@@ -1,7 +1,7 @@
 package app
 
 import (
-	"log"
+	"log/slog"
 	"net/http"
 	"runtime"
 	"runtime/pprof"
@@ -82,7 +82,12 @@ func (a *App) RegisterRoutes() *App {
 		w.Header().Set("X-Robots-Tag", "noindex")
 		w.WriteHeader(http.StatusOK)
 		if _, err := w.Write([]byte("OK")); err != nil {
-			log.Printf("Failed to write response on %q; %v", r.URL.Path, err)
+			slog.ErrorContext(
+				r.Context(),
+				"failed to write response",
+				"path", r.URL.Path,
+				"error", err,
+			)
 		}
 	})
 

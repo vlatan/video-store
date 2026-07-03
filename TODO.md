@@ -1,3 +1,6 @@
+* Fix gosec log injection warnings
+  Use slog.
+
 * There's a panic in /{part} when a bogus url is accessed
   internal/handlers/sitemaps/handlers.go:47
 
