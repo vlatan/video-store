@@ -2,7 +2,7 @@
 # https://docs.docker.com/build/building/variables/#scoping
 ARG TARGET="app"
 
-FROM golang:1.25-alpine AS builder
+FROM golang:1.26-alpine AS builder
 
 # Consume the TARGET build argument in the build stage
 ARG TARGET
