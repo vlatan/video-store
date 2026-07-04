@@ -129,9 +129,9 @@ func (rs *redisStore) Save(r *http.Request, w http.ResponseWriter, session *sess
 		Path:     session.Options.Path,
 		Domain:   session.Options.Domain,
 		MaxAge:   session.Options.MaxAge,
-		Secure:   session.Options.Secure,
-		HttpOnly: session.Options.HttpOnly,
-		SameSite: session.Options.SameSite,
+		Secure:   true,
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
 	})
 
 	return nil
@@ -151,7 +151,7 @@ func (rs *redisStore) newSession(name string) *sessions.Session {
 	session.Options = &sessions.Options{
 		Path:     "/",
 		MaxAge:   maxAge,
-		Secure:   rs.config.Protocol == "https",
+		Secure:   true,
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
 	}
@@ -183,9 +183,9 @@ func (rs *redisStore) deleteSession(
 		Path:     session.Options.Path,
 		Domain:   session.Options.Domain,
 		MaxAge:   -1,
-		Secure:   session.Options.Secure,
-		HttpOnly: session.Options.HttpOnly,
-		SameSite: session.Options.SameSite,
+		Secure:   true,
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
 	})
 
 	return nil
