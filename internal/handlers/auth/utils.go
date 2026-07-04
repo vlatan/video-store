@@ -47,8 +47,8 @@ func isProtectedRoute(path string) bool {
 
 // Extracts the value from the query param "redirect"
 func getRedirectPath(r *http.Request) string {
-	redirectURI := r.URL.Query().Get("redirect")
 
+	redirectURI := r.URL.Query().Get("redirect")
 	if redirectURI == "" {
 		return "/"
 	}
