@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -70,11 +70,11 @@ func (s *Service) generatePostContent(
 
 	// Check if this is a hard block error by the model.
 	// If so make another gemini API call just with a text contents.
-	var target *gemini.BlockedError
-	if errors.As(err, &target) {
-		log.Printf(
-			"failed to generate content on video %q, trying again with text contents; %v",
-			post.VideoID, err,
+	if _, ok := errors.AsType[*gemini.BlockedError](err); ok {
+		slog.ErrorContext(
+			ctx, "failed to generate LLM content, trying again with text input",
+			"path", r.URL.Path,
+			"error", err,
 		)
 
 		// Create text contents
@@ -86,7 +86,7 @@ func (s *Service) generatePostContent(
 
 	if err != nil {
 		return fmt.Errorf(
-			"failed to generate content on video %q; %w",
+			"failed to generate LLM content on video %q: %w",
 			post.VideoID, err,
 		)
 	}
@@ -98,7 +98,7 @@ func (s *Service) generatePostContent(
 	_, err = s.postsRepo.UpdateGeneratedData(ctx, post)
 	if err != nil {
 		return fmt.Errorf(
-			"failed to update generated data on video %q; %v",
+			"failed to update the LLM data in DB on video %q: %w",
 			post.VideoID, err)
 	}
 
