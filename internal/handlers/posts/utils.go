@@ -86,8 +86,8 @@ func (s *Service) generatePostContent(
 
 	if err != nil {
 		return fmt.Errorf(
-			"failed to generate LLM content on video %q: %w",
-			post.VideoID, err,
+			"failed to generate LLM content on path %q: %w",
+			r.URL.Path, err,
 		)
 	}
 
