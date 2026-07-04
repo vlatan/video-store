@@ -47,22 +47,32 @@ func isProtectedRoute(path string) bool {
 
 // Extracts the value from the query param "redirect"
 func getRedirectPath(r *http.Request) string {
-	redirectParam := r.URL.Query().Get("redirect")
+	redirectURI := r.URL.Query().Get("redirect")
 
-	if redirectParam == "" {
+	if redirectURI == "" {
 		return "/"
 	}
 
-	parsedURL, err := url.Parse(redirectParam)
+	parsedURL, err := url.Parse(redirectURI)
 	if err != nil {
 		return "/"
 	}
 
-	if isProtectedRoute(parsedURL.Path) {
+	// Force the redirect to stay strictly on the app domain
+	parsedURL.Host, parsedURL.Scheme = "", ""
+
+	// Protect against protocol-relative URLs (e.g., "//evil.com")
+	path := parsedURL.Path
+	if !strings.HasPrefix(path, "/") || strings.HasPrefix(path, "//") {
 		return "/"
 	}
 
-	return redirectParam
+	if isProtectedRoute(path) {
+		return "/"
+	}
+
+	// Reconstruct only the safe internal components (path + query parameters)
+	return parsedURL.String()
 }
 
 // Store user info in our own session
