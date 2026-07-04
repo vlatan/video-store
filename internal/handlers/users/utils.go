@@ -38,7 +38,7 @@ func (s *Service) SetAvatars(
 				// Just log a non-breaking error
 				if err != nil {
 					slog.ErrorContext(
-						ctx, "failed to get user's avatar",
+						ctx, "failed to set user's avatar",
 						"path", r.URL.Path,
 						"userId", user.ID,
 						"error", err,

@@ -2,6 +2,7 @@ package ui
 
 import (
 	"log"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -61,7 +62,12 @@ func (s *service) GetUserFromSession(w http.ResponseWriter, r *http.Request) *mo
 	// Check if the last seen is out of sync for an entire day
 	if !sameDate(lastSeenDB, now) {
 		if _, err := s.usersRepo.UpdateLastUserSeen(r.Context(), id, now); err != nil {
-			log.Printf("couldn't update the last seen in DB on user '%d': %v", id, err)
+			slog.ErrorContext(
+				r.Context(), "failed to update user's last seen in DB",
+				"path", r.URL.Path,
+				"userId", id,
+				"error", err,
+			)
 		}
 		session.Values["LastSeenDB"] = now
 	}
@@ -97,7 +103,12 @@ func (s *service) GetUserFromSession(w http.ResponseWriter, r *http.Request) *mo
 		s.r2s,
 		models.AvatarUserPrefix,
 	); err != nil {
-		log.Printf("couldn't set local avatar for user; %v", err)
+		slog.ErrorContext(
+			r.Context(), "failed to set user's avatar",
+			"path", r.URL.Path,
+			"userId", user.ID,
+			"error", err,
+		)
 	}
 
 	return &user
