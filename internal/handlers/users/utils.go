@@ -1,8 +1,8 @@
 package users
 
 import (
-	"context"
-	"log"
+	"log/slog"
+	"net/http"
 	"runtime"
 	"time"
 
@@ -13,11 +13,12 @@ import (
 
 // SetAvatars sets users avatars in parallel
 func (s *Service) SetAvatars(
-	ctx context.Context,
+	r *http.Request,
 	users []models.User,
 	keyPrefix string,
 	ttl time.Duration) error {
 
+	ctx := r.Context()
 	g := new(errgroup.Group)
 	semaphore := make(chan struct{}, runtime.GOMAXPROCS(0))
 	for i, user := range users {
@@ -36,9 +37,11 @@ func (s *Service) SetAvatars(
 
 				// Just log a non-breaking error
 				if err != nil {
-					log.Printf(
-						"couldn't get avatar on user %s while iterating users; %v",
-						user.Email, err,
+					slog.ErrorContext(
+						ctx, "failed to get user's avatar",
+						"path", r.URL.Path,
+						"userId", user.ID,
+						"error", err,
 					)
 				}
 

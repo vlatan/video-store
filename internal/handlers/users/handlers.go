@@ -1,7 +1,7 @@
 package users
 
 import (
-	"log"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -21,7 +21,12 @@ func (s *Service) UserFavoritesHandler(w http.ResponseWriter, r *http.Request) {
 	posts, err := s.postsRepo.GetUserFavedPosts(r.Context(), data.CurrentUser.ID, cursor)
 
 	if err != nil {
-		log.Printf("Was unabale to fetch posts on URI %q: %v", r.RequestURI, err)
+		slog.ErrorContext(
+			r.Context(), "failed to get user's favorited posts from DB",
+			"path", r.URL.Path,
+			"userId", data.CurrentUser.ID,
+			"error", err,
+		)
 		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}
@@ -47,7 +52,11 @@ func (s *Service) UsersHandler(w http.ResponseWriter, r *http.Request) {
 
 	users, err := s.usersRepo.GetUsers(r.Context(), page)
 	if err != nil {
-		log.Printf("was unabale to fetch users on URI %q: %v", r.RequestURI, err)
+		slog.ErrorContext(
+			r.Context(), "failed to get users from DB",
+			"path", r.URL.Path,
+			"error", err,
+		)
 		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}
@@ -57,14 +66,17 @@ func (s *Service) UsersHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Assign local avatars to users
+	// Assign avatars to users
 	if err = s.SetAvatars(
-		r.Context(),
-		users.Items,
+		r, users.Items,
 		models.AvatarAdminPrefix,
 		30*24*time.Hour,
 	); err != nil {
-		log.Printf("was unabale to set users avatars on URI %q: %v", r.RequestURI, err)
+		slog.ErrorContext(
+			r.Context(), "failed to set users' avatars",
+			"path", r.URL.Path,
+			"error", err,
+		)
 		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}

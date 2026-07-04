@@ -124,6 +124,7 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			slog.ErrorContext(
 				r.Context(), "failed to get source metadata from YouTube",
+				"path", r.URL.Path,
 				"sourceId", playlistID,
 				"error", err,
 			)
@@ -147,6 +148,7 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			slog.ErrorContext(
 				r.Context(), "failed to get channel metadata from YouTube",
+				"path", r.URL.Path,
 				"channelId", channelID,
 				"error", err,
 			)
@@ -165,6 +167,7 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil || rowsAffected == 0 {
 			slog.ErrorContext(
 				r.Context(), "failed to insert source in DB",
+				"path", r.URL.Path,
 				"sourceId", source.PlaylistID,
 				"error", err,
 			)
