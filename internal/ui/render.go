@@ -3,7 +3,7 @@ package ui
 import (
 	"encoding/json"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"path/filepath"
 
@@ -17,7 +17,11 @@ func (s *service) WriteJSON(w http.ResponseWriter, r *http.Request, data any) {
 	// Encode data to JSON
 	jsonData, err := json.Marshal(data)
 	if err != nil {
-		log.Printf("Failed to encode JSON response on URI %q: %v", r.RequestURI, err)
+		slog.ErrorContext(
+			r.Context(), "failed to encode JSON response",
+			"path", r.URL.Path,
+			"error", err,
+		)
 		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}
@@ -26,7 +30,11 @@ func (s *service) WriteJSON(w http.ResponseWriter, r *http.Request, data any) {
 	w.Header().Set("Content-Type", "application/json")
 	if _, err := w.Write(jsonData); err != nil {
 		// Too late for recovery here, just log the error
-		log.Printf("Failed to write JSON to response on URI %q: %v", r.RequestURI, err)
+		slog.ErrorContext(
+			r.Context(), "failed to write data to response",
+			"path", r.URL.Path,
+			"error", err,
+		)
 	}
 }
 
@@ -37,10 +45,14 @@ func (s *service) RenderHTML(
 	r *http.Request,
 	templateName string,
 	data *models.TemplateData) {
-	tmpl, exists := s.templates[templateName]
 
+	tmpl, exists := s.templates[templateName]
 	if !exists {
-		log.Printf("Could not find the %q template on URI %q", templateName, r.RequestURI)
+		slog.ErrorContext(
+			r.Context(), "failed to find HTML template",
+			"path", r.URL.Path,
+			"template", templateName,
+		)
 		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}
@@ -60,9 +72,11 @@ func (s *service) RenderHTML(
 
 	// Write to response
 	if err := tmpl.ExecuteTemplate(w, templateName, data); err != nil {
-		log.Printf(
-			"Failed to execute the HTML template %q on URI %q: %v",
-			templateName, r.RequestURI, err,
+		slog.ErrorContext(
+			r.Context(), "failed to execute HTML template",
+			"path", r.URL.Path,
+			"template", templateName,
+			"error", err,
 		)
 		utils.HttpError(w, http.StatusInternalServerError)
 	}

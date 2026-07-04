@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
+	"log/slog"
 	"net/http"
 	"strconv"
 
@@ -63,7 +63,11 @@ func (s *service) JSONError(w http.ResponseWriter, r *http.Request, statusCode i
 	// Encode data to JSON
 	jsonData, err := json.Marshal(data)
 	if err != nil {
-		log.Printf("Failed to encode JSON 'error' response on URI %q: %v", r.RequestURI, err)
+		slog.ErrorContext(
+			r.Context(), "failed to encode JSON error",
+			"path", r.URL.Path,
+			"error", err,
+		)
 		utils.HttpError(w, statusCode)
 		return
 	}
@@ -73,7 +77,12 @@ func (s *service) JSONError(w http.ResponseWriter, r *http.Request, statusCode i
 	w.Header().Set("Content-Type", "application/json")
 
 	if _, err := w.Write(jsonData); err != nil {
-		// Too late for recovery here, just log the error
-		log.Printf("Failed to write JSON 'error' to response on URI %q: %v", r.RequestURI, err)
+		// Too late for recovery here.
+		// Partial data already written to response, just log the error.
+		slog.ErrorContext(
+			r.Context(), "failed to write data to response",
+			"path", r.URL.Path,
+			"error", err,
+		)
 	}
 }
