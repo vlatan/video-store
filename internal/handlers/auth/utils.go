@@ -58,21 +58,17 @@ func getRedirectPath(r *http.Request) string {
 		return "/"
 	}
 
-	// Force the redirect to stay strictly on the app domain
-	parsedURL.Host, parsedURL.Scheme = "", ""
-
-	// Protect against protocol-relative URLs (e.g., "//evil.com")
-	path := parsedURL.Path
-	if !strings.HasPrefix(path, "/") || strings.HasPrefix(path, "//") {
-		return "/"
-	}
-
-	if isProtectedRoute(path) {
+	if isProtectedRoute(parsedURL.Path) {
 		return "/"
 	}
 
 	// Reconstruct only the safe internal components (path + query parameters)
-	return parsedURL.String()
+	safeURL := url.URL{
+		Path:     parsedURL.Path,
+		RawQuery: parsedURL.RawQuery,
+	}
+
+	return safeURL.String()
 }
 
 // Store user info in our own session
