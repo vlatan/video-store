@@ -177,7 +177,8 @@ func (s *Service) revokeLogin(ctx context.Context, user *models.User) error {
 	}
 
 	var client = &http.Client{}
-	resp, err := client.Do(req)
+	// False positive: URL in req is hardcoded, user data only exists in the request body
+	resp, err := client.Do(req) // #nosec G704
 	if err != nil {
 		return fmt.Errorf(
 			"failed to return a response on %s revoke: %w",
@@ -197,7 +198,7 @@ func (s *Service) revokeLogin(ctx context.Context, user *models.User) error {
 	return nil
 }
 
-// googleRevoke deletes Google OAuth app authorization
+// googleRevokeRequest deletes Google OAuth app authorization
 func (s *Service) googleRevokeRequest(
 	ctx context.Context,
 	user *models.User) (*http.Request, error) {
@@ -218,7 +219,7 @@ func (s *Service) googleRevokeRequest(
 	return req, nil
 }
 
-// githubRevoke deletes GitHub OAuth app authorization
+// githubRevokeRequest deletes GitHub OAuth app authorization
 func (s *Service) githubRevokeRequest(
 	ctx context.Context,
 	user *models.User) (*http.Request, error) {
