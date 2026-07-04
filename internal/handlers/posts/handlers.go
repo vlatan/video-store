@@ -66,7 +66,7 @@ func (s *Service) HomeHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		slog.ErrorContext(
-			r.Context(), "failed get posts from DB",
+			r.Context(), "failed to get posts from DB",
 			"path", r.URL.Path,
 			"error", err,
 		)
