@@ -7,7 +7,9 @@ import (
 	"time"
 
 	"github.com/vlatan/video-store/internal/drivers/rdb"
+	"github.com/vlatan/video-store/internal/handlers/auth"
 	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/redirect"
 	"github.com/vlatan/video-store/internal/utils"
 )
 
@@ -178,8 +180,9 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Check out the souurce
-		redirectTo := fmt.Sprintf("/source/%s/", playlistID)
-		http.Redirect(w, r, redirectTo, http.StatusFound)
+		redirectURL := fmt.Sprintf("/source/%s/", playlistID)
+		redirectTo := redirect.Sanitize(redirectURL, auth.IsProtectedRoute)
+		redirect.Execute(w, r, redirectTo, http.StatusFound)
 
 	default:
 		utils.HttpError(w, http.StatusMethodNotAllowed)

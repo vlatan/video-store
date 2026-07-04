@@ -10,7 +10,9 @@ import (
 	"time"
 
 	"github.com/vlatan/video-store/internal/drivers/rdb"
+	"github.com/vlatan/video-store/internal/handlers/auth"
 	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/redirect"
 	"github.com/vlatan/video-store/internal/utils"
 
 	"github.com/jackc/pgx/v5"
@@ -355,8 +357,9 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 		}()
 
 		// Check out the video
-		redirectTo := fmt.Sprintf("/video/%s/", videoID)
-		http.Redirect(w, r, redirectTo, http.StatusFound)
+		redirectURL := fmt.Sprintf("/video/%s/", videoID)
+		redirectTo := redirect.Sanitize(redirectURL, auth.IsProtectedRoute)
+		redirect.Execute(w, r, redirectTo, http.StatusFound)
 
 	default:
 		utils.HttpError(w, http.StatusMethodNotAllowed)
@@ -565,8 +568,9 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Check out the updated page
-		redirectTo := fmt.Sprintf("/video/%s/", videoID)
-		http.Redirect(w, r, redirectTo, http.StatusFound)
+		redirectURL := fmt.Sprintf("/video/%s/", videoID)
+		redirectTo := redirect.Sanitize(redirectURL, auth.IsProtectedRoute)
+		redirect.Execute(w, r, redirectTo, http.StatusFound)
 
 	default:
 		utils.HttpError(w, http.StatusMethodNotAllowed)

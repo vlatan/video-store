@@ -7,7 +7,9 @@ import (
 	"net/http"
 
 	"github.com/vlatan/video-store/internal/drivers/rdb"
+	"github.com/vlatan/video-store/internal/handlers/auth"
 	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/redirect"
 	"github.com/vlatan/video-store/internal/utils"
 
 	slugify "github.com/gosimple/slug"
@@ -168,8 +170,9 @@ func (s *Service) UpdatePageHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Check out the updated page
-		redirectTo := fmt.Sprintf("/page/%s/", slug)
-		http.Redirect(w, r, redirectTo, http.StatusFound)
+		redirectURL := fmt.Sprintf("/page/%s/", slug)
+		redirectTo := redirect.Sanitize(redirectURL, auth.IsProtectedRoute)
+		redirect.Execute(w, r, redirectTo, http.StatusFound)
 
 	default:
 		utils.HttpError(w, http.StatusMethodNotAllowed)
@@ -241,8 +244,9 @@ func (s *Service) NewPageHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Check out the updated page
-		redirectTo := fmt.Sprintf("/page/%s/", pageSlug)
-		http.Redirect(w, r, redirectTo, http.StatusFound)
+		redirectURL := fmt.Sprintf("/page/%s/", pageSlug)
+		redirectTo := redirect.Sanitize(redirectURL, auth.IsProtectedRoute)
+		redirect.Execute(w, r, redirectTo, http.StatusFound)
 
 	default:
 		utils.HttpError(w, http.StatusMethodNotAllowed)

@@ -204,7 +204,8 @@ func (s *Service) WWWRedirect(next http.Handler) http.Handler {
 		u.Scheme = s.config.Protocol
 
 		// Redirect
-		http.Redirect(w, r, u.String(), http.StatusMovedPermanently)
+		// Safe: Internal domain canonicalization (www to non-www)
+		http.Redirect(w, r, u.String(), http.StatusMovedPermanently) // #nosec G710
 	})
 }
 

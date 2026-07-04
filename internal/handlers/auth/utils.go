@@ -8,7 +8,6 @@ import (
 	"log"
 	"log/slog"
 	"net/http"
-	"net/url"
 	"strings"
 	"time"
 
@@ -29,7 +28,7 @@ var staticProtectedPaths = map[string]bool{
 }
 
 // Detect if it's a protected route
-func isProtectedRoute(path string) bool {
+func IsProtectedRoute(path string) bool {
 
 	// The logout path
 	if strings.HasPrefix(path, "/logout/") {
@@ -43,32 +42,6 @@ func isProtectedRoute(path string) bool {
 	}
 
 	return staticProtectedPaths[path]
-}
-
-// Extracts the value from the query param "redirect"
-func getRedirectPath(r *http.Request) string {
-
-	redirectURI := r.URL.Query().Get("redirect")
-	if redirectURI == "" {
-		return "/"
-	}
-
-	parsedURL, err := url.Parse(redirectURI)
-	if err != nil {
-		return "/"
-	}
-
-	if isProtectedRoute(parsedURL.Path) {
-		return "/"
-	}
-
-	// Reconstruct only the safe internal components (path + query parameters)
-	safeURL := url.URL{
-		Path:     parsedURL.Path,
-		RawQuery: parsedURL.RawQuery,
-	}
-
-	return safeURL.String()
 }
 
 // Store user info in our own session
@@ -110,7 +83,7 @@ func (s *Service) loginUser(w http.ResponseWriter, r *http.Request, user *models
 }
 
 // Retrieve the user final redirect value
-func (s *Service) getUserFinalRedirect(w http.ResponseWriter, r *http.Request) string {
+func (s *Service) getRedirectFromSession(w http.ResponseWriter, r *http.Request) string {
 
 	// Check for flash cookie
 	if _, err := r.Cookie(s.config.RedirectSessionName); err != nil {

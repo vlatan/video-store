@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/redirect"
 	"github.com/vlatan/video-store/internal/utils"
 
 	"golang.org/x/oauth2"
@@ -23,11 +24,12 @@ func (s *Service) AuthHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Where we should redirect the user when the login finishes
-	redirectTo := getRedirectPath(r)
+	redirectURL := r.URL.Query().Get("redirect")
+	redirectTo := redirect.Sanitize(redirectURL, IsProtectedRoute)
 
 	// Check if the user is already logged in
 	if user := models.GetUserFromContext(r); user.IsAuthenticated() {
-		http.Redirect(w, r, redirectTo, http.StatusSeeOther)
+		redirect.Execute(w, r, redirectTo, http.StatusSeeOther)
 		return
 	}
 
@@ -68,7 +70,7 @@ func (s *Service) AuthHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Store this redirect URL in a flash session
 	redirectSession, _ := s.store.Get(r, s.config.RedirectSessionName)
-	redirectSession.Values["redirect"] = redirectTo
+	redirectSession.Values["redirect"] = redirectTo.String()
 	if err = redirectSession.Save(r, w); err != nil {
 		log.Printf("failed to save the redirect session; %v", err)
 	}
@@ -89,11 +91,12 @@ func (s *Service) AuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// The origin URL of the user
-	redirectTo := s.getUserFinalRedirect(w, r)
+	redirectURL := s.getRedirectFromSession(w, r)
+	redirectTo := redirect.Sanitize(redirectURL, IsProtectedRoute)
 
 	// Check if the user is already logged in
 	if user := models.GetUserFromContext(r); user.IsAuthenticated() {
-		http.Redirect(w, r, redirectTo, http.StatusSeeOther)
+		redirect.Execute(w, r, redirectTo, http.StatusSeeOther)
 		return
 	}
 
@@ -119,7 +122,7 @@ func (s *Service) AuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 
 	if code == "" || state == "" {
 		s.ui.StoreFlashMessage(w, r, &failedLogin)
-		http.Redirect(w, r, redirectTo, http.StatusSeeOther)
+		redirect.Execute(w, r, redirectTo, http.StatusSeeOther)
 		return
 	}
 
@@ -142,7 +145,7 @@ func (s *Service) AuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 			"provider", providerName,
 		)
 		s.ui.StoreFlashMessage(w, r, &failedLogin)
-		http.Redirect(w, r, redirectTo, http.StatusSeeOther)
+		redirect.Execute(w, r, redirectTo, http.StatusSeeOther)
 		return
 	}
 
@@ -166,7 +169,7 @@ func (s *Service) AuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 			"error", err,
 		)
 		s.ui.StoreFlashMessage(w, r, &failedLogin)
-		http.Redirect(w, r, redirectTo, http.StatusSeeOther)
+		redirect.Execute(w, r, redirectTo, http.StatusSeeOther)
 		return
 	}
 
@@ -180,7 +183,7 @@ func (s *Service) AuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 			"error", err,
 		)
 		s.ui.StoreFlashMessage(w, r, &failedLogin)
-		http.Redirect(w, r, redirectTo, http.StatusSeeOther)
+		redirect.Execute(w, r, redirectTo, http.StatusSeeOther)
 		return
 	}
 
@@ -191,7 +194,7 @@ func (s *Service) AuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 			"provider", providerName,
 		)
 		s.ui.StoreFlashMessage(w, r, &failedLogin)
-		http.Redirect(w, r, redirectTo, http.StatusSeeOther)
+		redirect.Execute(w, r, redirectTo, http.StatusSeeOther)
 		return
 	}
 
@@ -199,26 +202,27 @@ func (s *Service) AuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	if err = s.loginUser(w, r, user); err != nil {
 		log.Printf("Error logging in the user: %v", err)
 		s.ui.StoreFlashMessage(w, r, &failedLogin)
-		http.Redirect(w, r, redirectTo, http.StatusSeeOther)
+		redirect.Execute(w, r, redirectTo, http.StatusSeeOther)
 		return
 	}
 
 	s.ui.StoreFlashMessage(w, r, &successLogin)
-	http.Redirect(w, r, redirectTo, http.StatusSeeOther)
+	redirect.Execute(w, r, redirectTo, http.StatusSeeOther)
 }
 
-// Logout user, delete sessions
-// Wrap this with middleware to allow only authnenticated users
+// Logout user, delete sessions.
+// Wrap this with middleware to allow only authnenticated users.
 func (s *Service) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 
 	// The origin URL of the user
-	redirectTo := getRedirectPath(r)
+	redirectURL := r.URL.Query().Get("redirect")
+	redirectTo := redirect.Sanitize(redirectURL, IsProtectedRoute)
 
 	// Remove user's session
 	if err := s.logoutUser(w, r); err != nil {
 		log.Printf("Error loging out the user: %v", err)
 		s.ui.StoreFlashMessage(w, r, &failedLogout)
-		http.Redirect(w, r, redirectTo, http.StatusSeeOther)
+		redirect.Execute(w, r, redirectTo, http.StatusSeeOther)
 		return
 	}
 
@@ -226,7 +230,7 @@ func (s *Service) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	s.clearCSRFCookie(w)
 
 	s.ui.StoreFlashMessage(w, r, &successLogout)
-	http.Redirect(w, r, redirectTo, http.StatusSeeOther)
+	redirect.Execute(w, r, redirectTo, http.StatusSeeOther)
 }
 
 // Delete the user account
@@ -234,7 +238,8 @@ func (s *Service) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Service) DeleteAccountHandler(w http.ResponseWriter, r *http.Request) {
 
 	// The origin URL of the user
-	redirectTo := getRedirectPath(r)
+	redirectURL := r.URL.Query().Get("redirect")
+	redirectTo := redirect.Sanitize(redirectURL, IsProtectedRoute)
 
 	// Get the current user
 	currentUser := models.GetUserFromContext(r)
@@ -243,7 +248,7 @@ func (s *Service) DeleteAccountHandler(w http.ResponseWriter, r *http.Request) {
 	if err := s.logoutUser(w, r); err != nil {
 		log.Printf("Error loging out the user: %v", err)
 		s.ui.StoreFlashMessage(w, r, &failedDeleteAccount)
-		http.Redirect(w, r, redirectTo, http.StatusFound)
+		redirect.Execute(w, r, redirectTo, http.StatusFound)
 		return
 	}
 
@@ -260,7 +265,7 @@ func (s *Service) DeleteAccountHandler(w http.ResponseWriter, r *http.Request) {
 			"error", err,
 		)
 		s.ui.StoreFlashMessage(w, r, &failedDeleteAccount)
-		http.Redirect(w, r, redirectTo, http.StatusFound)
+		redirect.Execute(w, r, redirectTo, http.StatusFound)
 		return
 	}
 
@@ -271,7 +276,7 @@ func (s *Service) DeleteAccountHandler(w http.ResponseWriter, r *http.Request) {
 			"userId", currentUser.ID,
 		)
 		s.ui.StoreFlashMessage(w, r, &failedDeleteAccount)
-		http.Redirect(w, r, redirectTo, http.StatusFound)
+		redirect.Execute(w, r, redirectTo, http.StatusFound)
 		return
 	}
 
@@ -290,6 +295,5 @@ func (s *Service) DeleteAccountHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s.ui.StoreFlashMessage(w, r, &successDeleteAccount)
-	http.Redirect(w, r, redirectTo, http.StatusFound)
-
+	redirect.Execute(w, r, redirectTo, http.StatusFound)
 }
