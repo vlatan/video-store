@@ -3,7 +3,7 @@ package pages
 import (
 	"errors"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 
 	"github.com/vlatan/video-store/internal/drivers/rdb"
@@ -50,7 +50,11 @@ func (s *Service) SinglePageHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		log.Printf("Error while getting the page %q; %v", pageSlug, err)
+		slog.ErrorContext(
+			r.Context(), "failed to get the page from cache or DB",
+			"path", r.URL.Path,
+			"error", err,
+		)
 		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}
@@ -76,7 +80,11 @@ func (s *Service) UpdatePageHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		log.Printf("Error while getting the page %q from DB: %v", slug, err)
+		slog.ErrorContext(
+			r.Context(), "failed to get the page from DB",
+			"path", r.URL.Path,
+			"error", err,
+		)
 		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}
@@ -134,8 +142,12 @@ func (s *Service) UpdatePageHandler(w http.ResponseWriter, r *http.Request) {
 		)
 
 		if err != nil || rowsAffected == 0 {
-			log.Printf("Could not update the page %q in DB: %v", slug, err)
-			formError.Message = "Could not update the page in DB"
+			slog.ErrorContext(
+				r.Context(), "failed to update the page in DB",
+				"path", r.URL.Path,
+				"error", err,
+			)
+			formError.Message = "Could not update the page"
 			data.Form.Error = &formError
 			s.ui.RenderHTML(w, r, "form.html", data)
 			return
@@ -144,7 +156,11 @@ func (s *Service) UpdatePageHandler(w http.ResponseWriter, r *http.Request) {
 		// Delete the redis cache
 		redisKey := fmt.Sprintf(pageCacheKey, slug)
 		if err = s.rdb.Client.Del(r.Context(), redisKey).Err(); err != nil {
-			log.Printf("could not delete the cache on page %q; %v", slug, err)
+			slog.ErrorContext(
+				r.Context(), "failed to delete the cache on page",
+				"path", r.URL.Path,
+				"error", err,
+			)
 			formError.Message = "Could not delete the cache on page"
 			data.Form.Error = &formError
 			s.ui.RenderHTML(w, r, "form.html", data)
@@ -213,8 +229,12 @@ func (s *Service) NewPageHandler(w http.ResponseWriter, r *http.Request) {
 		)
 
 		if err != nil || rowsAffected == 0 {
-			log.Printf("Could not insert the page %q in DB: %v", pageSlug, err)
-			formError.Message = "Could not insert the page in DB. Try changing the title."
+			slog.ErrorContext(
+				r.Context(), "failed to insert the page in DB",
+				"path", r.URL.Path,
+				"error", err,
+			)
+			formError.Message = "Could not create this page. Try changing the title."
 			data.Form.Error = &formError
 			s.ui.RenderHTML(w, r, "form.html", data)
 			return
@@ -238,7 +258,12 @@ func (s *Service) DeletePageHandler(w http.ResponseWriter, r *http.Request) {
 
 	rowsAffected, err := s.pagesRepo.DeletePage(r.Context(), pageSlug)
 	if err != nil {
-		log.Printf("User %d could not delete page %s: %v", currentUser.ID, pageSlug, err)
+		slog.ErrorContext(
+			r.Context(), "failed to delete the page from DB",
+			"path", r.URL.Path,
+			"userID", currentUser.ID,
+			"error", err,
+		)
 		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}
