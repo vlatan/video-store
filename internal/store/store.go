@@ -183,8 +183,8 @@ func (rs *redisStore) deleteSession(
 		Path:     session.Options.Path,
 		Domain:   session.Options.Domain,
 		MaxAge:   -1,
-		HttpOnly: session.Options.HttpOnly,
 		Secure:   session.Options.Secure,
+		HttpOnly: session.Options.HttpOnly,
 		SameSite: session.Options.SameSite,
 	})
 
