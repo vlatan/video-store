@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"log/slog"
 	"net/http"
 	"slices"
 	"time"
@@ -64,7 +65,11 @@ func (s *Service) HomeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		log.Printf("Was unabale to fetch posts on URI %q: %v", r.RequestURI, err)
+		slog.ErrorContext(
+			r.Context(), "failed get posts from DB",
+			"path", r.URL.Path,
+			"error", err,
+		)
 		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}
@@ -125,7 +130,11 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		log.Printf("Was unabale to fetch posts on URI %q: %v", r.RequestURI, err)
+		slog.ErrorContext(
+			r.Context(), "failed get posts from DB",
+			"path", r.URL.Path,
+			"error", err,
+		)
 		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}
@@ -198,7 +207,11 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 	end := time.Since(start)
 
 	if err != nil {
-		log.Printf("Was unabale to fetch posts on URI %q: %v", r.RequestURI, err)
+		slog.ErrorContext(
+			r.Context(), "failed get posts from DB",
+			"path", r.URL.Path,
+			"error", err,
+		)
 		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}
@@ -289,7 +302,11 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 		)
 
 		if err != nil {
-			log.Printf("Video %q: %v", videoID, err)
+			slog.ErrorContext(
+				r.Context(), "failed get video data from YouTube",
+				"path", r.URL.Path,
+				"error", err,
+			)
 			formError.Message = "Unable to fetch the video from YouTube"
 			data.Form.Error = &formError
 			s.ui.RenderHTML(w, r, "form.html", data)
@@ -298,7 +315,11 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Validate the video data
 		if err := s.yt.ValidateYouTubeVideo(metadata[0]); err != nil {
-			log.Printf("Video %q: %v", videoID, err)
+			slog.ErrorContext(
+				r.Context(), "failed get validate this video",
+				"path", r.URL.Path,
+				"error", err,
+			)
 			formError.Message = utils.Capitalize(err.Error())
 			data.Form.Error = &formError
 			s.ui.RenderHTML(w, r, "form.html", data)
@@ -312,7 +333,11 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 		// Insert the video
 		rowsAffected, err := s.postsRepo.InsertPost(r.Context(), post)
 		if err != nil || rowsAffected == 0 {
-			log.Printf("Could not insert the video %q in DB: %v", post.VideoID, err)
+			slog.ErrorContext(
+				r.Context(), "failed to insert the post in DB",
+				"path", r.URL.Path,
+				"error", err,
+			)
 			formError.Message = "Could not insert the video in DB"
 			data.Form.Error = &formError
 			s.ui.RenderHTML(w, r, "form.html", data)
@@ -379,7 +404,11 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		log.Printf("Error while getting the video %q from DB: %v", videoID, err)
+		slog.ErrorContext(
+			r.Context(), "failed to get the post from DB",
+			"path", r.URL.Path,
+			"error", err,
+		)
 		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}
@@ -439,7 +468,11 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		log.Printf("Error while getting the post %q from DB: %v", videoID, err)
+		slog.ErrorContext(
+			r.Context(), "failed to get the post from DB",
+			"path", r.URL.Path,
+			"error", err,
+		)
 		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}
@@ -506,7 +539,11 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 		)
 
 		if err != nil || rowsAffected == 0 {
-			log.Printf("Could not update the post %q in DB: %v", videoID, err)
+			slog.ErrorContext(
+				r.Context(), "failed to update the post in DB",
+				"path", r.URL.Path,
+				"error", err,
+			)
 			formError.Message = "Could not update the post in DB"
 			data.Form.Error = &formError
 			s.ui.RenderHTML(w, r, "form.html", data)
@@ -516,7 +553,11 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 		// Delete the redis cache
 		redisKey := fmt.Sprintf(postCacheKey, videoID)
 		if err = s.rdb.Client.Del(r.Context(), redisKey).Err(); err != nil {
-			log.Printf("could not delete the cache on post %q; %v", videoID, err)
+			slog.ErrorContext(
+				r.Context(), "failed to delete the cache on post",
+				"path", r.URL.Path,
+				"error", err,
+			)
 			formError.Message = "Could not delete the cache on post"
 			data.Form.Error = &formError
 			s.ui.RenderHTML(w, r, "form.html", data)
@@ -546,7 +587,10 @@ func (s *Service) ActionPostHandler(w http.ResponseWriter, r *http.Request) {
 	action := r.PathValue("action")
 	allowedActions := []string{"like", "unlike", "fave", "unfave", "delete"}
 	if !slices.Contains(allowedActions, action) {
-		log.Printf("Not a valid action %q on video: %s\n", action, videoID)
+		slog.InfoContext(
+			r.Context(), "not a valid action on post",
+			"path", r.URL.Path,
+		)
 		http.NotFound(w, r)
 		return
 	}

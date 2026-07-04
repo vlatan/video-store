@@ -51,7 +51,7 @@ func (s *Service) SinglePageHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		slog.ErrorContext(
-			r.Context(), "failed to get the page from cache or DB",
+			r.Context(), "failed to get the page from DB",
 			"path", r.URL.Path,
 			"error", err,
 		)
