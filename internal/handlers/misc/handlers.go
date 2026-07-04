@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"path"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -110,11 +111,11 @@ func (s *Service) StaticHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Serve favicon from the embedded FS if accessed in the root, i.e. /favicon.ico
 	if slices.Contains(utils.RootFavicons, r.URL.Path) {
-		filePath := filepath.Join("/static/favicons", r.URL.Path)
+		filePath := filepath.Join("/static/favicons", path.Clean(r.URL.Path))
 		http.ServeFileFS(w, r, web.Files, filePath)
 		return
 	}
 
 	// Serve from the embedded FS
-	http.ServeFileFS(w, r, web.Files, r.URL.Path)
+	http.ServeFileFS(w, r, web.Files, path.Clean(r.URL.Path))
 }
