@@ -2,7 +2,7 @@ package sources
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -37,7 +37,11 @@ func (s *Service) SourcesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		log.Printf("Was unabale to fetch sources on URI %q: %v", r.RequestURI, err)
+		slog.ErrorContext(
+			r.Context(), "failed to get sources from DB",
+			"path", r.URL.Path,
+			"error", err,
+		)
 		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}
@@ -118,7 +122,11 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 			playlistID,
 		)
 		if err != nil {
-			log.Printf("Playlist %q: %v", playlistID, err)
+			slog.ErrorContext(
+				r.Context(), "failed to get source metadata from YouTube",
+				"sourceId", playlistID,
+				"error", err,
+			)
 			formError.Message = "Unable to fetch the playlist from YouTube"
 			data.Form.Error = &formError
 			s.ui.RenderHTML(w, r, "form.html", data)
@@ -137,7 +145,11 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 			channelID,
 		)
 		if err != nil {
-			log.Printf("Channel %q: %v", channelID, err)
+			slog.ErrorContext(
+				r.Context(), "failed to get channel metadata from YouTube",
+				"channelId", channelID,
+				"error", err,
+			)
 			formError.Message = "Unable to fetch channel info from YouTube"
 			data.Form.Error = &formError
 			s.ui.RenderHTML(w, r, "form.html", data)
@@ -151,8 +163,12 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 		// Insert the source in DB
 		rowsAffected, err := s.sourcesRepo.InsertSource(r.Context(), source)
 		if err != nil || rowsAffected == 0 {
-			log.Printf("Could not insert the source %q in DB: %v", source.PlaylistID, err)
-			formError.Message = "Could not insert the source in DB"
+			slog.ErrorContext(
+				r.Context(), "failed to insert source in DB",
+				"sourceId", source.PlaylistID,
+				"error", err,
+			)
+			formError.Message = "Could not create source"
 			data.Form.Error = &formError
 			s.ui.RenderHTML(w, r, "form.html", data)
 			return
@@ -210,7 +226,11 @@ func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		log.Printf("Was unabale to fetch posts on URI %q: %v", r.RequestURI, err)
+		slog.ErrorContext(
+			r.Context(), "failed to get source posts from DB",
+			"path", r.URL.Path,
+			"error", err,
+		)
 		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}
