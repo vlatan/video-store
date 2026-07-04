@@ -3,6 +3,7 @@ package rdb
 import (
 	"context"
 	"log"
+	"log/slog"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -37,10 +38,12 @@ func GetCachedData[T any](
 		return zero, err
 	}
 
+	// Ignore/log non-nil errors
 	if err != redis.Nil {
-		log.Printf(
-			"redis error for key %q: %v",
-			key, err,
+		slog.ErrorContext(
+			ctx, "failed to get data from Redis",
+			"key", key,
+			"error", err,
 		)
 	}
 
