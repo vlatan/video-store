@@ -1,4 +1,3 @@
-* Fix gosec taint analysis warnings
 * Fix can't unmarshal **models.Posts (consider implementing BinaryUnmarshaler)
 
 * There's a panic in /{part} when a bogus url is accessed
