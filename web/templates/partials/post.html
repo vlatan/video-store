@@ -188,10 +188,6 @@
 {{ define "extra_scripts" }}
 {{ if .CurrentUser.IsAuthenticated }}
 <script defer src='{{ .AddVersion "/static/js/likes.js" }}'></script>
-{{ if .IsCurrentUserAdmin }}
-<script defer src='{{ .AddVersion "/static/js/title.js" }}'></script>
-<script defer src='{{ .AddVersion "/static/js/description.js" }}'></script>
-{{ end }}
 {{ else }}
 <script defer src='{{ .AddVersion "/static/js/login.js" }}'></script>
 {{ end }}
