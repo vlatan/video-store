@@ -2,7 +2,6 @@ package middlewares
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -119,17 +118,25 @@ func (s *Service) RecoverPanic(next http.Handler) http.Handler {
 				return
 			}
 
-			const dividerLength = 70
-			const panicText = " PANIC RECOVERED "
-			halfLength := (dividerLength - len(panicText)) / 2
-			halfDivider := strings.Repeat("=", halfLength)
-			topDivider := halfDivider + panicText + halfDivider
-			bottomDivider := strings.Repeat("=", dividerLength)
+			stackLines := strings.Split(string(debug.Stack()), "\n")
 
-			// Log the panic with the stack trace directly to stderr, no JSON logger
-			fmt.Fprintf(os.Stderr,
-				"\n%s\nPath: %s %s\nError: %v\n\n%s\n%s\n",
-				topDivider, r.Method, r.URL.Path, err, debug.Stack(), bottomDivider,
+			// Clean up the stack
+			var cleanLines []string
+			for _, line := range stackLines {
+				if line == "" {
+					continue
+				}
+				// Remove the tab character at the start
+				cleanLine := strings.TrimSpace(line)
+				cleanLines = append(cleanLines, cleanLine)
+			}
+
+			slog.ErrorContext(
+				r.Context(), "panic recovered",
+				slog.String("method", r.Method),
+				slog.String("path", r.URL.Path),
+				slog.Any("error", err),
+				slog.Any("stack", cleanLines),
 			)
 
 			// Send 500 to client
