@@ -24,7 +24,9 @@ func GetCachedData[T any](
 	var zero, data T
 	var target any = &data
 
-	// If T is a pointer type (e.g. *models.Posts), unpack it to avoid the double-pointer error.
+	// If T is a pointer type (e.g. *models.Posts), unpack it to avoid the double-pointer error in the Redis scan.
+	// Change data from being a nil pointer to point to an empty struct - &models.Posts{}.
+	// Make target also point to the same empty struct. Now when target is scanned it fills this empty struct.
 	// If T is not a pointer this is skipped entirely and target remains &data.
 	if val := reflect.ValueOf(&data).Elem(); val.Kind() == reflect.Pointer {
 		val.Set(reflect.New(val.Type().Elem()))
