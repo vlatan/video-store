@@ -12,7 +12,7 @@ const (
 	sitemapRedisKey = "sitemap:data"
 )
 
-var sitemapTypes = []string{
+var sitemapPartTypes = []string{
 	"post",
 	"misc",
 }
@@ -32,9 +32,9 @@ func New(
 	config *config.Config,
 ) *Service {
 
-	args := make([]any, 0, 1+len(sitemapTypes))
+	args := make([]any, 0, 1+len(sitemapPartTypes))
 	args = append(args, sitemapPartsNum)
-	for _, t := range sitemapTypes {
+	for _, t := range sitemapPartTypes {
 		args = append(args, t)
 	}
 

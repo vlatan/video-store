@@ -47,7 +47,7 @@ func (s *Service) SitemapPartHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Validate the sitemap part type
 	prefix := base[:dashIdx]
-	if !slices.Contains(sitemapTypes, prefix) {
+	if !slices.Contains(sitemapPartTypes, prefix) {
 		http.NotFound(w, r)
 		return
 	}
