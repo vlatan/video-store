@@ -7,7 +7,7 @@ import (
 	"github.com/vlatan/video-store/internal/models"
 )
 
-func (r *Repository) SitemapData(ctx context.Context, partsNum int) ([]*models.SitemapItem, error) {
+func (r *Repository) SitemapData(ctx context.Context, args ...any) ([]*models.SitemapItem, error) {
 
 	// Get query
 	query, err := r.GetQuery("sitemap_data.sql", nil)
@@ -16,7 +16,7 @@ func (r *Repository) SitemapData(ctx context.Context, partsNum int) ([]*models.S
 	}
 
 	// Get rows from DB
-	rows, err := r.db.Pool.Query(ctx, query, partsNum)
+	rows, err := r.db.Pool.Query(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}

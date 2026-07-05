@@ -1,7 +1,7 @@
-* There's a panic in /{part} when a bogus url is accessed
-  internal/handlers/sitemaps/handlers.go:47
+* Add status to the slog
 
 * Make functions not return pointer type when wrapped with GetCachedData.
+* Bump dependabot alerts versions
 
 * Build the JS and backend review/rating system
 * Merge more than one slashes to single slash
