@@ -4,31 +4,37 @@ import (
 	"context"
 	"log"
 	"log/slog"
+	"reflect"
 	"time"
 
 	"github.com/redis/go-redis/v9"
 	"github.com/vlatan/video-store/internal/utils"
 )
 
-// Generic wrapper getting and setting from cache,
-// with provided anonymous function which in implementation will
-// call an underlying method
-// It can bypass the call to redis altogether and go straight to database,
-// if the flag cached is false.
+// GetCachedData is generic wrapper getting and setting from cache,
+// with provided function to call if data not in Redis cache.
 func GetCachedData[T any](
 	ctx context.Context,
 	rdb *Service,
 	key string,
 	ttl time.Duration,
-	callable func() (T, error), // Function to call if cache miss
+	callable func() (T, error), // Function to call if cache misses
 ) (T, error) {
 
 	var zero, data T
+	var target any = &data
+
+	// If T is a pointer type (e.g. *models.Posts), unpack it to avoid the double-pointer error.
+	// If T is not a pointer this is skipped entirely and target remains &data.
+	if val := reflect.ValueOf(&data).Elem(); val.Kind() == reflect.Pointer {
+		val.Set(reflect.New(val.Type().Elem()))
+		target = val.Interface()
+	}
 
 	// Try to get value from Redis cache.
 	// The underlying data type needs to implement
 	// the encoding.BinaryUnmarshaler interface if needed.
-	err := rdb.Client.Get(ctx, key).Scan(&data)
+	err := rdb.Client.Get(ctx, key).Scan(target)
 	if err == nil {
 		return data, nil
 	}
