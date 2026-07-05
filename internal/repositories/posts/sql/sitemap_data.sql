@@ -1,8 +1,8 @@
     -- Posts (last modified = last updated_at)
 	SELECT
-		'post' as type,
+		$2 as part_type,
 		(id % $1) AS bucket_id,
-		CONCAT('/video/', video_id, '/') AS location,
+		CONCAT('/video/', video_id, '/') AS item_location,
 		updated_at AS last_modified
 	FROM post
 
@@ -10,9 +10,9 @@
 
 	-- Pages (last modified = last updated_at)
 	SELECT
-		'misc' AS type,
+		$3 AS part_type,
 		0 AS bucket_id,
-		CONCAT('/page/', slug, '/') AS location,
+		CONCAT('/page/', slug, '/') AS item_location,
 		updated_at AS last_modified
 	FROM page
 
@@ -20,9 +20,9 @@
 
 	-- Playlists (last modified = latest upload date post in playlist)
 	SELECT
-		'misc' AS type,
+		$3 AS part_type,
 		0 AS bucket_id,
-		CONCAT('/source/', p.playlist_id, '/') AS location, 
+		CONCAT('/source/', p.playlist_id, '/') AS item_location, 
 		MAX(post.upload_date) AS last_modified
 	FROM playlist AS p
 	INNER JOIN post ON post.playlist_db_id = p.id
@@ -32,9 +32,9 @@
 
 	-- Orphans (last modified = latest upload date post without playlist)
 	SELECT
-		'misc' AS type,
+		$3 AS part_type,
 		0 AS bucket_id,
-		'/source/other/' AS location,
+		'/source/other/' AS item_location,
 		MAX(upload_date) AS last_modified
 	FROM post
 	WHERE playlist_id IS NULL OR playlist_id = ''
@@ -44,9 +44,9 @@
 
 	-- Categories (last modified = latest upload date post in category)
 	SELECT
-		'misc' AS type,
+		$3 AS part_type,
 		0 AS bucket_id,
-		CONCAT('/category/', c.slug, '/') AS location,
+		CONCAT('/category/', c.slug, '/') AS item_location,
 		MAX(post.upload_date) AS last_modified
 	FROM category AS c
 	INNER JOIN post ON post.category_id = c.id
@@ -56,9 +56,9 @@
 
 	-- Homepage (last modified = latest upload date post in DB)
 	SELECT
-		'misc' AS type,
+		$3 AS part_type,
 		0 AS bucket_id,
-		'/' AS location,
+		'/' AS item_location,
 		MAX(upload_date) AS last_modified
 	FROM post
 
@@ -66,11 +66,11 @@
 
 	-- Playlists page (last modified = newest playlist in DB)
 	SELECT 
-		'misc' AS type,
+		$3 AS part_type,
 		0 AS bucket_id,
-		'/sources/' AS location, 
+		'/sources/' AS item_location, 
 		MAX(created_at) AS last_modified
 	FROM playlist
 
-	ORDER BY type, location;
+	ORDER BY part_type, item_location;
 	

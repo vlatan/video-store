@@ -11,10 +11,10 @@ import (
 
 // Get sitemap data from DB and split it in smaller parts.
 // Return a map of sitemap parts.
-func (s *Service) getSitemapIndexFromDB(r *http.Request, partsNum int) (models.SitemapIndex, error) {
+func (s *Service) getSitemapIndexFromDB(r *http.Request, args ...any) (models.SitemapIndex, error) {
 
 	// Fetch the entire sitemap data from DB
-	data, err := s.postsRepo.SitemapData(r.Context(), partsNum)
+	data, err := s.postsRepo.SitemapData(r.Context(), args...)
 	if err != nil {
 		return nil, fmt.Errorf(
 			"was unabale to fetch sitemap data on URI %q: %w",
@@ -81,7 +81,7 @@ func (s *Service) GetSitemapIndex(r *http.Request, sitemapKey string) (models.Si
 	}
 
 	// Get data from DB and construct a sitemap
-	sitemapIndex, err := s.getSitemapIndexFromDB(r, sitemapPartsNum)
+	sitemapIndex, err := s.getSitemapIndexFromDB(r, s.sqlArgs...)
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +105,7 @@ func (s *Service) GetSitemapPart(r *http.Request, sitemapKey, partKey string) (*
 	}
 
 	// Get data from DB and construct a sitemap
-	sitemapIndex, err := s.getSitemapIndexFromDB(r, sitemapPartsNum)
+	sitemapIndex, err := s.getSitemapIndexFromDB(r, s.sqlArgs...)
 	if err != nil {
 		return nil, err
 	}

@@ -5,6 +5,7 @@ import (
 	"log"
 	"log/slog"
 	"net/http"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -12,17 +13,11 @@ import (
 	"github.com/vlatan/video-store/internal/models"
 )
 
-const (
-	sitemapPartsNum = 20
-	sitemapRedisKey = "sitemap:data"
-)
-
 // Serve the xml style, whixh is xsl
 func (s *Service) SitemapStyleHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Get data from context
 	data := models.GetDataFromContext(r)
-
 	data.XMLDeclarations = []template.HTML{
 		template.HTML(`<?xml version="1.0" encoding="UTF-8"?>`),
 	}
@@ -50,9 +45,9 @@ func (s *Service) SitemapPartHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Extract the prefix -> "post" or "misc"
+	// Validate the sitemap part type
 	prefix := base[:dashIdx]
-	if prefix != "post" && prefix != "misc" {
+	if !slices.Contains(sitemapTypes, prefix) {
 		http.NotFound(w, r)
 		return
 	}
@@ -96,9 +91,6 @@ func (s *Service) SitemapPartHandler(w http.ResponseWriter, r *http.Request) {
 // Handle the sitemap index
 func (s *Service) SitemapIndexHandler(w http.ResponseWriter, r *http.Request) {
 
-	// Get data from context
-	data := models.GetDataFromContext(r)
-
 	sitemap, err := s.GetSitemapIndex(r, sitemapRedisKey)
 
 	if err != nil {
@@ -107,6 +99,8 @@ func (s *Service) SitemapIndexHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Get data from context
+	data := models.GetDataFromContext(r)
 	for _, value := range sitemap {
 		data.SitemapItems = append(data.SitemapItems, &models.SitemapItem{
 			Location:     value.Location,

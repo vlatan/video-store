@@ -1,4 +1,3 @@
-* Check for allowed sitemap prefix word
 * Add status to the slog
 
 * Make functions not return pointer type when wrapped with GetCachedData.
