@@ -3,6 +3,7 @@ package sitemaps
 import (
 	"html/template"
 	"log"
+	"log/slog"
 	"net/http"
 	"sort"
 
@@ -39,7 +40,14 @@ func (s *Service) SitemapPartHandler(w http.ResponseWriter, r *http.Request) {
 	sitemapPart, err := s.GetSitemapPart(r, sitemapRedisKey, partKey)
 
 	if err != nil {
-		log.Println(err)
+		slog.ErrorContext(
+			r.Context(), "failed to get sitemap part from Redis",
+			"method", r.Method,
+			"path", r.URL.Path,
+		)
+	}
+
+	if err != nil || sitemapPart == nil {
 		http.NotFound(w, r)
 		return
 	}
