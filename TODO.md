@@ -1,5 +1,4 @@
 * Make functions not return pointer type when wrapped with GetCachedData.
-* Bump dependabot alerts versions
 
 * Build the JS and backend review/rating system
 * Merge more than one slashes to single slash
