@@ -1,5 +1,5 @@
-* There's a panic in /{part} when a bogus url is accessed
-  internal/handlers/sitemaps/handlers.go:47
+* Check for allowed sitemap prefix word
+* Add status to the slog
 
 * Make functions not return pointer type when wrapped with GetCachedData.
 * Bump dependabot alerts versions

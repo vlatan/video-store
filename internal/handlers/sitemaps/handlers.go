@@ -33,21 +33,26 @@ func (s *Service) SitemapStyleHandler(w http.ResponseWriter, r *http.Request) {
 // Handle a sitemap part
 func (s *Service) SitemapPartHandler(w http.ResponseWriter, r *http.Request) {
 
-	// Check if this is xml page
-	if !strings.HasSuffix(r.URL.Path, ".xml") {
+	// Extract the part from URL, i.e. "post-19.xml"
+	partKey := r.PathValue("part")
+
+	// Check if this is xml page, base is now -> "post-19"
+	base, ok := strings.CutSuffix(partKey, ".xml")
+	if !ok {
 		http.NotFound(w, r)
 		return
 	}
 
-	// Extract the part from URL
-	partKey := r.PathValue("part")
-
-	// Strip ".xml" -> "post-19"
-	base := strings.TrimSuffix(partKey, ".xml")
-
 	// Find the last "-"
 	dashIdx := strings.LastIndex(base, "-")
 	if dashIdx == -1 {
+		http.NotFound(w, r)
+		return
+	}
+
+	// Extract the prefix -> "post" or "misc"
+	prefix := base[:dashIdx]
+	if prefix != "post" && prefix != "misc" {
 		http.NotFound(w, r)
 		return
 	}
