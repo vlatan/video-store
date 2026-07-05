@@ -351,6 +351,9 @@ func (s *Service) Logging(next http.Handler) http.Handler {
 			srcIp = r.RemoteAddr
 		}
 
+		st := NewStatusTracker(w)
+		next.ServeHTTP(st, r)
+
 		slog.InfoContext(
 			r.Context(),
 			"request info",
@@ -359,9 +362,8 @@ func (s *Service) Logging(next http.Handler) http.Handler {
 			"host", r.Host,
 			"clientUa", r.Header.Get("User-Agent"),
 			"srcIp", srcIp,
+			"status", st.status,
 		)
-
-		next.ServeHTTP(w, r)
 	})
 }
 
