@@ -21,9 +21,9 @@ func New(db *database.Service) *Repository {
 }
 
 // Get single page from DB
-func (r *Repository) GetSinglePage(ctx context.Context, slug string) (*models.Page, error) {
+func (r *Repository) GetSinglePage(ctx context.Context, slug string) (models.Page, error) {
 
-	var page models.Page
+	var zero, page models.Page
 	var content sql.NullString
 
 	// Get single row from DB
@@ -35,20 +35,20 @@ func (r *Repository) GetSinglePage(ctx context.Context, slug string) (*models.Pa
 	)
 
 	if err != nil {
-		return nil, err
+		return zero, err
 	}
 
 	page.Content = utils.FromNullString(content)
 
 	// Parse markdown to HTML
 	if page.HTMLContent, err = utils.ParseMarkdown(page.Content); err != nil {
-		return nil, fmt.Errorf(
+		return zero, fmt.Errorf(
 			"could not convert markdown to html on %q: %w",
 			page.Slug, err,
 		)
 	}
 
-	return &page, nil
+	return page, nil
 }
 
 // Update page

@@ -16,7 +16,7 @@ import (
 func (r *Repository) GetUserFavedPosts(
 	ctx context.Context,
 	userID int,
-	cursor string) (*models.Posts, error) {
+	cursor string) (models.Posts, error) {
 
 	// Construct the SQL parts as well as the arguments
 	// The user ID and the limit are the first two arguments ($1 and $2)
@@ -24,6 +24,8 @@ func (r *Repository) GetUserFavedPosts(
 	var where string
 	total := "COUNT(*) OVER()"
 	args := []any{userID, r.config.PostsPerPage + 1}
+
+	var zero, posts models.Posts
 
 	// Build args and SQL parts
 	// No cursor on the first page, no need for total and the WHERE clause
@@ -35,11 +37,11 @@ func (r *Repository) GetUserFavedPosts(
 
 		cursorParts, err := decodeCursor(cursor)
 		if err != nil {
-			return nil, err
+			return zero, err
 		}
 
 		if len(cursorParts) != 4 {
-			return nil, errors.New("invalid cursor components")
+			return zero, errors.New("invalid cursor components")
 		}
 
 		args = append(args, cursorParts[0], cursorParts[1], cursorParts[2], cursorParts[3])
@@ -48,20 +50,19 @@ func (r *Repository) GetUserFavedPosts(
 	sqlParts := struct{ TotalCount, WhereCondition string }{total, where}
 	query, err := r.GetQuery("faved_posts.sql", sqlParts)
 	if err != nil {
-		return nil, err
+		return zero, err
 	}
 
 	// Get rows from DB
 	rows, err := r.db.Pool.Query(ctx, query, args...)
 	if err != nil {
-		return nil, err
+		return zero, err
 	}
 
 	// Close rows on exit
 	defer rows.Close()
 
 	// Iterate over the rows
-	var posts models.Posts
 	for rows.Next() {
 		var post models.Post
 		var totalNum int
@@ -79,7 +80,7 @@ func (r *Repository) GetUserFavedPosts(
 			&post.UploadDate,
 			&post.WhenUserFaved,
 		); err != nil {
-			return nil, err
+			return zero, err
 		}
 
 		// Assing the original title
@@ -92,17 +93,17 @@ func (r *Repository) GetUserFavedPosts(
 
 	// If error during iteration
 	if err = rows.Err(); err != nil {
-		return nil, err
+		return zero, err
 	}
 
 	// Post-process the posts, prepare the thumbnail
 	if err = postProcessPosts(ctx, posts); err != nil {
-		return nil, err
+		return zero, err
 	}
 
 	// This is the last page
 	if len(posts.Items) <= r.config.PostsPerPage {
-		return &posts, nil
+		return posts, nil
 	}
 
 	// Exclude the last post
@@ -115,5 +116,5 @@ func (r *Repository) GetUserFavedPosts(
 	cursorStr := fmt.Sprintf("%s,%d,%s,%d", whenFaved, lastPost.Likes, uploadDate, lastPost.ID)
 	posts.NextCursor = base64.StdEncoding.EncodeToString([]byte(cursorStr))
 
-	return &posts, nil
+	return posts, nil
 }

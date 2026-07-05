@@ -210,7 +210,7 @@ func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		err   error
-		posts *models.Posts
+		posts models.Posts
 	)
 
 	if data.IsCurrentUserAdmin() {
@@ -223,7 +223,7 @@ func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
 			s.rdb,
 			redisKey,
 			s.config.CacheTimeout,
-			func() (*models.Posts, error) {
+			func() (models.Posts, error) {
 				return s.postsRepo.GetSourcePosts(
 					r.Context(), sourceID, cursor, orderBy,
 				)
@@ -252,7 +252,7 @@ func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data.Posts = posts
+	data.Posts = &posts
 	if sourceID == "other" {
 		data.Posts.Title = "Other Uploads"
 	}

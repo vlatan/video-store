@@ -19,7 +19,7 @@ func (r *Repository) GetCategoryPosts(
 	categorySlug,
 	cursor,
 	orderBy string,
-) (*models.Posts, error) {
+) (models.Posts, error) {
 
 	return r.queryTaxonomyPosts(
 		ctx,
@@ -36,7 +36,7 @@ func (r *Repository) GetSourcePosts(
 	playlistID,
 	cursor,
 	orderBy string,
-) (*models.Posts, error) {
+) (models.Posts, error) {
 
 	return r.queryTaxonomyPosts(
 		ctx,
@@ -54,7 +54,7 @@ func (r *Repository) queryTaxonomyPosts(
 	taxonomyID,
 	cursor,
 	orderBy string,
-) (*models.Posts, error) {
+) (models.Posts, error) {
 
 	// Construct the SQL parts as well as the arguments
 	// The category slug and limit are the first two arguments ($1 and $2)
@@ -67,25 +67,27 @@ func (r *Repository) queryTaxonomyPosts(
 		order = "likes DESC, " + order
 	}
 
+	var zero, posts models.Posts
+
 	// Build args and SQL parts
 	if cursor != "" {
 
 		total = "0"
 		cursorParts, err := decodeCursor(cursor)
 		if err != nil {
-			return nil, err
+			return zero, err
 		}
 
 		switch orderBy {
 		case "likes":
 			if len(cursorParts) != 3 {
-				return nil, errors.New("invalid cursor components")
+				return zero, errors.New("invalid cursor components")
 			}
 			args = append(args, cursorParts[0], cursorParts[1], cursorParts[2])
 			where = "WHERE (likes, upload_date, id) < ($3, $4, $5)"
 		default:
 			if len(cursorParts) != 2 {
-				return nil, fmt.Errorf("invalid cursor components")
+				return zero, fmt.Errorf("invalid cursor components")
 			}
 			args = append(args, cursorParts[0], cursorParts[1])
 			where = "WHERE (upload_date, id) < ($3, $4)"
@@ -95,19 +97,18 @@ func (r *Repository) queryTaxonomyPosts(
 	sqlParts := struct{ TotalCount, WhereCondition, OrderByWhat string }{total, where, order}
 	query, err := r.GetQuery(queryFilename, sqlParts)
 	if err != nil {
-		return nil, err
+		return zero, err
 	}
 
 	rows, err := r.db.Pool.Query(ctx, query, args...)
 	if err != nil {
-		return nil, err
+		return zero, err
 	}
 
 	// Close rows on exit
 	defer rows.Close()
 
 	// Iterate over the rows
-	var posts models.Posts
 	for rows.Next() {
 		var post models.Post
 		var originalTitle, playlistTitle sql.NullString
@@ -125,7 +126,7 @@ func (r *Repository) queryTaxonomyPosts(
 			&totalNum,
 			&post.UploadDate,
 		); err != nil {
-			return nil, err
+			return zero, err
 		}
 
 		post.OriginalTitle = utils.FromNullString(originalTitle)
@@ -142,17 +143,17 @@ func (r *Repository) queryTaxonomyPosts(
 
 	// If error during iteration
 	if err = rows.Err(); err != nil {
-		return nil, err
+		return zero, err
 	}
 
 	// Post-process the posts, prepare the thumbnail
 	if err = postProcessPosts(ctx, posts); err != nil {
-		return nil, err
+		return zero, err
 	}
 
 	// This is the last page
 	if len(posts.Items) <= r.config.PostsPerPage {
-		return &posts, nil
+		return posts, nil
 	}
 
 	// Exclude the last post
@@ -170,7 +171,7 @@ func (r *Repository) queryTaxonomyPosts(
 
 	posts.NextCursor = base64.StdEncoding.EncodeToString([]byte(cursorStr))
 
-	return &posts, nil
+	return posts, nil
 }
 
 // decodeCursor decodes base64 string, splits the string on comma

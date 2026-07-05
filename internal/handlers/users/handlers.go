@@ -37,7 +37,7 @@ func (s *Service) UserFavoritesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data.Posts = posts
+	data.Posts = &posts
 	data.Title = "Your Favorite Documentaries"
 	s.ui.RenderHTML(w, r, "user_library.html", data)
 }
@@ -87,7 +87,7 @@ func (s *Service) UsersHandler(w http.ResponseWriter, r *http.Request) {
 		s.config.PostsPerPage,
 	)
 
-	data.Users = users
+	data.Users = &users
 	data.Title = "Users"
 	s.ui.RenderHTML(w, r, "admin.html", data)
 }

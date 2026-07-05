@@ -66,15 +66,15 @@ func (r *Repository) InsertPost(ctx context.Context, post *models.Post) (int64, 
 }
 
 // Get single post from DB based on a video ID
-func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (*models.Post, error) {
+func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.Post, error) {
 
+	var zero, post models.Post
 	query, err := r.GetQuery("single_post.sql", nil)
 	if err != nil {
-		return nil, err
+		return zero, err
 	}
 
 	// Initialize vars
-	var post models.Post
 	var thumbnails []byte
 	var (
 		originalTitle,
@@ -106,7 +106,7 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (*models
 	)
 
 	if err != nil {
-		return nil, err
+		return zero, err
 	}
 
 	// Assign the original title if any
@@ -137,7 +137,7 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (*models
 
 	// Parse markdown to HTML
 	if post.HTMLSummary, err = utils.ParseMarkdown(post.Summary); err != nil {
-		return nil, fmt.Errorf(
+		return zero, fmt.Errorf(
 			"could not convert markdown to html on %q: %v",
 			post.VideoID, err,
 		)
@@ -154,7 +154,7 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (*models
 	// Unserialize thumbnails
 	var thumbs models.Thumbnails
 	if err = json.Unmarshal(thumbnails, &thumbs); err != nil {
-		return nil, fmt.Errorf("video ID %q: %w", videoID, err)
+		return zero, fmt.Errorf("video ID %q: %w", videoID, err)
 	}
 
 	// Assign the biggest thumbnail to post
@@ -169,7 +169,7 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (*models
 	// Make srcset string
 	post.Srcset = thumbs.Srcset(maxThumb.Width)
 
-	return &post, nil
+	return post, nil
 }
 
 func (r *Repository) UpdatePost(

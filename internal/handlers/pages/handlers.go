@@ -29,7 +29,7 @@ func (s *Service) SinglePageHandler(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		err  error
-		page *models.Page
+		page models.Page
 	)
 
 	if data.IsCurrentUserAdmin() {
@@ -40,7 +40,7 @@ func (s *Service) SinglePageHandler(w http.ResponseWriter, r *http.Request) {
 			s.rdb,
 			fmt.Sprintf(pageCacheKey, pageSlug),
 			s.config.CacheTimeout,
-			func() (*models.Page, error) {
+			func() (models.Page, error) {
 				return s.pagesRepo.GetSinglePage(r.Context(), pageSlug)
 			},
 		)
@@ -62,7 +62,7 @@ func (s *Service) SinglePageHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Assign the page to data
-	data.CurrentPage = page
+	data.CurrentPage = &page
 	data.Title = page.Title
 
 	s.ui.RenderHTML(w, r, "page.html", data)
@@ -95,7 +95,7 @@ func (s *Service) UpdatePageHandler(w http.ResponseWriter, r *http.Request) {
 	data := models.GetDataFromContext(r)
 
 	// Assign page data
-	data.CurrentPage = page
+	data.CurrentPage = &page
 
 	// Populate needed data for the page form
 	data.Form = &models.Form{

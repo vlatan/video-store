@@ -9,28 +9,29 @@ import (
 )
 
 // Get users with limit and offset
-func (r *Repository) GetUsers(ctx context.Context, page int) (*models.Users, error) {
+func (r *Repository) GetUsers(ctx context.Context, page int) (models.Users, error) {
 
 	// Calculate the limit and offset
 	limit := r.config.PostsPerPage
 	offset := (page - 1) * limit
 
+	var zero, users models.Users
+
 	query, err := r.GetQuery("offset_users.sql", nil)
 	if err != nil {
-		return nil, err
+		return zero, err
 	}
 
 	// Get rows from DB
 	rows, err := r.db.Pool.Query(ctx, query, limit, offset)
 	if err != nil {
-		return nil, err
+		return zero, err
 	}
 
 	// Close rows on exit
 	defer rows.Close()
 
 	// Iterate over the rows
-	var users models.Users
 	for rows.Next() {
 
 		var totalNum int
@@ -49,7 +50,7 @@ func (r *Repository) GetUsers(ctx context.Context, page int) (*models.Users, err
 			&user.CreatedAt,
 			&totalNum,
 		); err != nil {
-			return nil, err
+			return zero, err
 		}
 
 		// Convert the NullString back to string
@@ -67,8 +68,8 @@ func (r *Repository) GetUsers(ctx context.Context, page int) (*models.Users, err
 
 	// If error during iteration
 	if err = rows.Err(); err != nil {
-		return nil, err
+		return zero, err
 	}
 
-	return &users, nil
+	return users, nil
 }
