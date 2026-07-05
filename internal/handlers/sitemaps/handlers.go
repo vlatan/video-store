@@ -6,6 +6,8 @@ import (
 	"log/slog"
 	"net/http"
 	"sort"
+	"strconv"
+	"strings"
 
 	"github.com/vlatan/video-store/internal/models"
 )
@@ -31,19 +33,42 @@ func (s *Service) SitemapStyleHandler(w http.ResponseWriter, r *http.Request) {
 // Handle a sitemap part
 func (s *Service) SitemapPartHandler(w http.ResponseWriter, r *http.Request) {
 
-	// Get data from context
-	data := models.GetDataFromContext(r)
+	// Check if this is xml page
+	if !strings.HasSuffix(r.URL.Path, ".xml") {
+		http.NotFound(w, r)
+		return
+	}
 
 	// Extract the part from URL
 	partKey := r.PathValue("part")
 
+	// Strip ".xml" -> "post-19"
+	base := strings.TrimSuffix(partKey, ".xml")
+
+	// Find the last "-"
+	dashIdx := strings.LastIndex(base, "-")
+	if dashIdx == -1 {
+		http.NotFound(w, r)
+		return
+	}
+
+	// Extract and validate the number -> "19"
+	numStr := base[dashIdx+1:]
+	partNum, err := strconv.Atoi(numStr)
+	if err != nil || partNum < 0 || partNum >= sitemapPartsNum {
+		http.NotFound(w, r)
+		return
+	}
+
+	// Get sitemap part from Redis cache or fetch the entire index from DB
 	sitemapPart, err := s.GetSitemapPart(r, sitemapRedisKey, partKey)
 
 	if err != nil {
 		slog.ErrorContext(
-			r.Context(), "failed to get sitemap part from Redis",
+			r.Context(), "failed to get the sitemap part",
 			"method", r.Method,
 			"path", r.URL.Path,
+			"error", err,
 		)
 	}
 
@@ -52,8 +77,9 @@ func (s *Service) SitemapPartHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Get data from context and populate sitemap data
+	data := models.GetDataFromContext(r)
 	data.SitemapItems = sitemapPart.Entries
-
 	data.XMLDeclarations = []template.HTML{
 		template.HTML(`<?xml version="1.0" encoding="UTF-8"?>`),
 		template.HTML(`<?xml-stylesheet type="text/xsl" href="/sitemap.xsl"?>`),
