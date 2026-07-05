@@ -1,6 +1,8 @@
 * There's a panic in /{part} when a bogus url is accessed
   internal/handlers/sitemaps/handlers.go:47
 
+* Make functions not return pointer type when wrapped with GetCachedData.
+
 * Build the JS and backend review/rating system
 * Merge more than one slashes to single slash
 * User reviews and ratings
