@@ -43,6 +43,10 @@ func GetCachedData[T any](
 		target = data
 	}
 
+	// At this point the target var is a pointer to the zero value of T.
+	// target is either a pointer to data, or it is equivalent to data which in that case is a pointer.
+	// In any case we're passing target to the Scan, but ultimately the data object is being filled.
+
 	// Try to get value from Redis cache.
 	// The underlying data type needs to implement
 	// the encoding.BinaryUnmarshaler interface if needed.
