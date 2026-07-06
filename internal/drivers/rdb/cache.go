@@ -24,13 +24,23 @@ func GetCachedData[T any](
 	var zero, data T
 	var target any = &data
 
-	// If T is a pointer type (e.g. *models.Posts), unpack it to avoid the double-pointer error in the Redis scan.
-	// Change data from being a nil pointer to point to an empty struct - &models.Posts{}.
-	// Make target also point to the same empty struct. Now when target is scanned it fills this empty struct.
-	// If T is not a pointer this is skipped entirely and target remains &data.
-	if val := reflect.ValueOf(&data).Elem(); val.Kind() == reflect.Pointer {
-		val.Set(reflect.New(val.Type().Elem()))
-		target = val.Interface()
+	// Check if T is a pointer type (e.g., *Post).
+	// We need this to avoid passing a double pointer in the Scan below,
+	// if we were to pass &data, namely **Post.
+	if tType := reflect.TypeFor[T](); tType.Kind() == reflect.Pointer {
+
+		// tType.Elem() returns the type of the element of tType, which is Post.
+		// For example if tType was []string the type of its element would be string.
+		// reflect.New returns a reflect.Value wrapping a pointer to the zero value of Post, namely &Post{}.
+		val := reflect.New(tType.Elem())
+
+		// Unwraps the pointer from the reflect.Value as an `any` interface,
+		// then type-asserts it back to the generic type T, which is *Post.
+		// data is now a valid pointer to that new Post, namely &Post{}.
+		data = val.Interface().(T)
+
+		// target is now equivalent to data and it's safe for the Scan below
+		target = data
 	}
 
 	// Try to get value from Redis cache.
