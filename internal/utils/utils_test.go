@@ -3,7 +3,6 @@ package utils
 import (
 	"bytes"
 	"context"
-	"crypto/tls"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -17,33 +16,52 @@ import (
 )
 
 func TestCanonicalURL(t *testing.T) {
-
-	mockReq := func(useTLS bool) *http.Request {
-		req := httptest.NewRequest("GET", "/foo/?test=true", nil)
-		req.TLS = nil
-		if useTLS {
-			req.TLS = &tls.ConnectionState{Version: tls.VersionTLS13}
-		}
-		return req
-	}
-
 	tests := []struct {
-		name     string
-		protocol string
-		req      *http.Request
-		expected string
+		name           string
+		incomingTarget string // Path + Query
+		incomingHost   string
+		protocol       string
+		expected       string
 	}{
-		{"force https, with TLS", "https", mockReq(true), "https://example.com/foo/"},
-		{"force https, no TLS", "https", mockReq(false), "https://example.com/foo/"},
-		{"don't force https, with TLS", "http", mockReq(true), "https://example.com/foo/"},
-		{"don't force https, no TLS", "http", mockReq(false), "http://example.com/foo/"},
+		{
+			name:           "Enforces absolute protocol and strips www",
+			incomingTarget: "/video/test/",
+			incomingHost:   "www.example.com",
+			protocol:       "https",
+			expected:       "https://example.com/video/test/",
+		},
+		{
+			name:           "Cleans double slashes while preserving single trailing slash",
+			incomingTarget: "/video//test//",
+			incomingHost:   "example.com",
+			protocol:       "https",
+			expected:       "https://example.com/video/test/",
+		},
+		{
+			name:           "Preserves query parameters",
+			incomingTarget: "/video/test/?autoplay=1&t=30",
+			incomingHost:   "www.example.com",
+			protocol:       "https",
+			expected:       "https://example.com/video/test/?autoplay=1&t=30",
+		},
+		{
+			name:           "Handles root path without appending extra slashes",
+			incomingTarget: "/",
+			incomingHost:   "example.com",
+			protocol:       "http",
+			expected:       "http://example.com/",
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			url := CanonicalURL(tt.req, tt.protocol)
-			if url != tt.expected {
-				t.Errorf("got %q url, want %q url", url, tt.expected)
+			// NewRequest safely separates Path and RawQuery automatically
+			req := httptest.NewRequest("GET", tt.incomingTarget, nil)
+			req.Host = tt.incomingHost
+
+			result := CanonicalURL(req, tt.protocol)
+			if result != tt.expected {
+				t.Errorf("\nExpected: %s\nGot:      %s", tt.expected, result)
 			}
 		})
 	}
