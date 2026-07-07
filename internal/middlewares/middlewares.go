@@ -2,7 +2,6 @@ package middlewares
 
 import (
 	"context"
-	"log"
 	"log/slog"
 	"net/http"
 	"os"
@@ -216,8 +215,6 @@ func (s *Service) CanonicalRedirect(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 			return
 		}
-
-		log.Println("BINGOO", actual, canonical)
 
 		// Safe Redirect: Internal domain canonicalization
 		http.Redirect(w, r, canonical, http.StatusPermanentRedirect) // #nosec G710
