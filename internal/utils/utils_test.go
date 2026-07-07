@@ -33,10 +33,10 @@ func TestCanonicalURL(t *testing.T) {
 		req      *http.Request
 		expected string
 	}{
-		{"force https, with TLS", "https", mockReq(true), "https://example.com/foo/"},
-		{"force https, no TLS", "https", mockReq(false), "https://example.com/foo/"},
-		{"don't force https, with TLS", "http", mockReq(true), "https://example.com/foo/"},
-		{"don't force https, no TLS", "http", mockReq(false), "http://example.com/foo/"},
+		{"force https, with TLS", "https", mockReq(true), "https://example.com/foo/?test=true"},
+		{"force https, no TLS", "https", mockReq(false), "https://example.com/foo/?test=true"},
+		{"don't force https, with TLS", "http", mockReq(true), "https://example.com/foo/?test=true"},
+		{"don't force https, no TLS", "http", mockReq(false), "http://example.com/foo/?test=true"},
 	}
 
 	for _, tt := range tests {

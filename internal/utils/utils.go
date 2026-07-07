@@ -34,20 +34,29 @@ var RootFavicons = []string{
 	"/site.webmanifest",
 }
 
-// Create canonical URI string
+// CanonicalURL creates canonical URI string
 func CanonicalURL(r *http.Request, protocol string) string {
 
-	if r.TLS != nil {
-		protocol = "https"
+	// Clone the URL
+	u := *r.URL
+	u.Scheme = protocol // Always force absolute scheme
+
+	// Remove www prefix
+	u.Host = r.Host
+	if host, ok := strings.CutPrefix(r.Host, "www."); ok {
+		u.Host = host
 	}
 
-	url := url.URL{
-		Scheme: protocol,
-		Host:   r.Host,
-		Path:   r.URL.Path,
+	// Clean the path
+	cleanedPath := path.Clean(r.URL.Path)
+	if strings.HasSuffix(r.URL.Path, "/") &&
+		!strings.HasSuffix(cleanedPath, "/") &&
+		cleanedPath != "/" {
+		cleanedPath += "/"
 	}
+	u.Path = cleanedPath
 
-	return url.String()
+	return u.String()
 }
 
 // Validates a path

@@ -192,26 +192,26 @@ func (s *Service) AddHeaders(next http.Handler) http.Handler {
 	})
 }
 
-// WWWRedirect redirects WWW to non-WWW requests
-func (s *Service) WWWRedirect(next http.Handler) http.Handler {
+// CanonicalRedirect cleans non-canonical URI and redirects to the clean cannonical version
+func (s *Service) CanonicalRedirect(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Check for 'www.' prefix
-		if !strings.HasPrefix(r.Host, "www.") {
+
+		canonical := utils.CanonicalURL(r, s.config.Protocol)
+
+		// Reconstruct the actual incoming absolute URL
+		scheme := "http"
+		if isHTTPS := r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https"; isHTTPS {
+			scheme = "https"
+		}
+		actual := scheme + "://" + r.Host + r.RequestURI
+
+		if actual == canonical {
 			next.ServeHTTP(w, r)
 			return
 		}
 
-		// Clone the URL
-		u := *r.URL
-
-		// Modify the host
-		u.Host = strings.TrimPrefix(r.Host, "www.")
-
-		// Modify the scheme
-		u.Scheme = s.config.Protocol
-
-		// Safe Redirect: Internal domain canonicalization (www to non-www)
-		http.Redirect(w, r, u.String(), http.StatusMovedPermanently) // #nosec G710
+		// Safe Redirect: Internal domain canonicalization
+		http.Redirect(w, r, canonical, http.StatusPermanentRedirect) // #nosec G710
 	})
 }
 
