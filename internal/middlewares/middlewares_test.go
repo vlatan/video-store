@@ -85,6 +85,15 @@ func TestCanonicalRedirect(t *testing.T) {
 			expectedStatus: http.StatusPermanentRedirect,
 			expectedLoc:    "https://example.com/video/abc/",
 		},
+		{
+			name:           "Healthcheck bypasses protocol and domain checks",
+			incomingMethod: "GET",
+			incomingURL:    "/healthcheck",
+			incomingHost:   "localhost:5000",
+			headers:        map[string]string{},
+			expectedStatus: http.StatusOK,
+			expectedLoc:    "",
+		},
 	}
 
 	for _, tt := range tests {

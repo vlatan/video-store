@@ -2,6 +2,7 @@ package middlewares
 
 import (
 	"context"
+	"log"
 	"log/slog"
 	"net/http"
 	"os"
@@ -196,6 +197,12 @@ func (s *Service) AddHeaders(next http.Handler) http.Handler {
 func (s *Service) CanonicalRedirect(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
+		// Skip internal container healtcheck
+		if r.URL.Path == "/healthcheck" {
+			next.ServeHTTP(w, r)
+			return
+		}
+
 		canonical := utils.CanonicalURL(r, s.config.Protocol)
 
 		// Reconstruct the actual incoming absolute URL
@@ -209,6 +216,8 @@ func (s *Service) CanonicalRedirect(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 			return
 		}
+
+		log.Println("BINGOO", actual, canonical)
 
 		// Safe Redirect: Internal domain canonicalization
 		http.Redirect(w, r, canonical, http.StatusPermanentRedirect) // #nosec G710
