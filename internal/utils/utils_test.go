@@ -25,24 +25,24 @@ func TestCanonicalURL(t *testing.T) {
 	}{
 		{
 			name:           "Enforces absolute protocol and strips www",
-			incomingTarget: "/video/pWiSgUtSU7Q/",
+			incomingTarget: "/video/test/",
 			incomingHost:   "www.example.com",
 			protocol:       "https",
-			expected:       "https://example.com/video/pWiSgUtSU7Q/",
+			expected:       "https://example.com/video/test/",
 		},
 		{
 			name:           "Cleans double slashes while preserving single trailing slash",
-			incomingTarget: "/video//pWiSgUtSU7Q//",
+			incomingTarget: "/video//test//",
 			incomingHost:   "example.com",
 			protocol:       "https",
-			expected:       "https://example.com/video/pWiSgUtSU7Q/",
+			expected:       "https://example.com/video/test/",
 		},
 		{
-			name:           "Preserves query parameters perfectly",
-			incomingTarget: "/video/pWiSgUtSU7Q/?autoplay=1&t=30",
+			name:           "Preserves query parameters",
+			incomingTarget: "/video/test/?autoplay=1&t=30",
 			incomingHost:   "www.example.com",
 			protocol:       "https",
-			expected:       "https://example.com/video/pWiSgUtSU7Q/?autoplay=1&t=30",
+			expected:       "https://example.com/video/test/?autoplay=1&t=30",
 		},
 		{
 			name:           "Handles root path without appending extra slashes",
