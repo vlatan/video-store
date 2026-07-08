@@ -114,6 +114,14 @@ h1.video-title {
   gap: var(--content-padding);
 }
 
+.ui-inner-metadata-block {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+}
+
 .inner-metadata-block {
   display: flex;
   flex-wrap: wrap;
@@ -229,12 +237,15 @@ h1.video-title {
 /* ############# Ratings ############# */
 
 .rate-widget {
+  /* align-self: flex-start; */
   display: flex;
   align-items: center;
   gap: calc(var(--content-padding) / 2);
 }
 
 .btn-open-rate {
+  display: flex;
+  align-items: center;
   background: none;
   border: none;
   color: #5799ef;

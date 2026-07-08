@@ -63,70 +63,73 @@
 		</div>
 
 		<header class="metadata">
+
 			<div class="metadata-block">
 				<h1 class="video-title" itemprop="name">{{ .CurrentPost.GetTitle }}</h1>
-				<div class="social">
-					{{ if .CurrentUser.IsAuthenticated }}
-					{{ if .CurrentPost.UserLiked }}
-					<button class="like like-yes">
-						<span data-liked>&#10003;</span>
-						<span data-likes>{{ .CurrentPost.LikeButtonText }}</span>
-					</button>
-					{{ else }}
-					<button class="like like-no">
-						<span data-likes>{{ .CurrentPost.LikeButtonText }}</span>
-					</button>
-					{{ end }}
-					{{ else }}
-					<button data-auth class="like like-no">
-						<span>{{ .CurrentPost.LikeButtonText }}</span>
-					</button>
-					{{ end }}
+				<div class="ui-inner-metadata-block">
+					<div class="social">
+						{{ if .CurrentUser.IsAuthenticated }}
+						{{ if .CurrentPost.UserLiked }}
+						<button class="like like-yes">
+							<span data-liked>&#10003;</span>
+							<span data-likes>{{ .CurrentPost.LikeButtonText }}</span>
+						</button>
+						{{ else }}
+						<button class="like like-no">
+							<span data-likes>{{ .CurrentPost.LikeButtonText }}</span>
+						</button>
+						{{ end }}
+						{{ else }}
+						<button data-auth class="like like-no">
+							<span>{{ .CurrentPost.LikeButtonText }}</span>
+						</button>
+						{{ end }}
+
+						{{ if .CurrentUser.IsAuthenticated }}
+						{{ if .CurrentPost.UserFaved }}
+						<button data-status class="fave fave-yes">&#10003; Saved</button>
+						{{ else }}
+						<button data-status class="fave fave-no">Save</button>
+						{{ end }}
+						{{ else }}
+						<button data-auth class="fave fave-no">Save</button>
+						{{ end }}
+					</div>
 
 					{{ if .CurrentUser.IsAuthenticated }}
-					{{ if .CurrentPost.UserFaved }}
-					<button data-status class="fave fave-yes">&#10003; Saved</button>
+					<div class="rate-widget" data-url="/video/{{ .CurrentPost.VideoID }}/rate">
+						{{ .CSRFField }}
+						<button type="button" class="btn-open-rate" aria-haspopup="dialog">
+							<span class="star-icon">☆</span> Rate
+						</button>
+						<div class="rate-error" hidden>Failed to rate.</div>
+
+						<dialog class="rate-dialog">
+							<button type="button" class="btn-close-rate">&times;</button>
+							<h3 class="rate-title">RATE THIS</h3>
+							<div class="rate-stars">
+								<label><input type="radio" name="rating" value="10"><span>★</span></label>
+								<label><input type="radio" name="rating" value="9"><span>★</span></label>
+								<label><input type="radio" name="rating" value="8"><span>★</span></label>
+								<label><input type="radio" name="rating" value="7"><span>★</span></label>
+								<label><input type="radio" name="rating" value="6"><span>★</span></label>
+								<label><input type="radio" name="rating" value="5"><span>★</span></label>
+								<label><input type="radio" name="rating" value="4"><span>★</span></label>
+								<label><input type="radio" name="rating" value="3"><span>★</span></label>
+								<label><input type="radio" name="rating" value="2"><span>★</span></label>
+								<label><input type="radio" name="rating" value="1"><span>★</span></label>
+							</div>
+						</dialog>
+					</div>
 					{{ else }}
-					<button data-status class="fave fave-no">Save</button>
-					{{ end }}
-					{{ else }}
-					<button data-auth class="fave fave-no">Save</button>
+					<div class="rate-widget">
+						<button data-auth type="button" class="btn-open-rate">
+							<span class="star-icon">☆</span> Rate
+						</button>
+					</div>
 					{{ end }}
 				</div>
 			</div>
-
-			{{ if .CurrentUser.IsAuthenticated }}
-			<div class="rate-widget" data-url="/video/{{ .CurrentPost.VideoID }}/rate">
-				{{ .CSRFField }}
-				<button type="button" class="btn-open-rate" aria-haspopup="dialog">
-					<span class="star-icon">☆</span> Rate
-				</button>
-				<div class="rate-error" hidden>Failed to rate.</div>
-
-				<dialog class="rate-dialog">
-					<button type="button" class="btn-close-rate">&times;</button>
-					<h3 class="rate-title">RATE THIS</h3>
-					<div class="rate-stars">
-						<label><input type="radio" name="rating" value="10"><span>★</span></label>
-						<label><input type="radio" name="rating" value="9"><span>★</span></label>
-						<label><input type="radio" name="rating" value="8"><span>★</span></label>
-						<label><input type="radio" name="rating" value="7"><span>★</span></label>
-						<label><input type="radio" name="rating" value="6"><span>★</span></label>
-						<label><input type="radio" name="rating" value="5"><span>★</span></label>
-						<label><input type="radio" name="rating" value="4"><span>★</span></label>
-						<label><input type="radio" name="rating" value="3"><span>★</span></label>
-						<label><input type="radio" name="rating" value="2"><span>★</span></label>
-						<label><input type="radio" name="rating" value="1"><span>★</span></label>
-					</div>
-				</dialog>
-			</div>
-			{{ else }}
-			<div class="rate-widget">
-				<button data-auth type="button" class="btn-open-rate">
-					<span class="star-icon">☆</span> Rate
-				</button>
-			</div>
-			{{ end }}
 
 			<div class="metadata-block">
 				<div class="inner-metadata-block">
@@ -149,12 +152,6 @@
 					</span>
 					{{ end }}
 				</div>
-				{{ if .IsCurrentUserAdmin }}
-				<span class="admin-buttons">
-					<button data-modal="video" class="modal-button">Delete</button>
-					<a href="/video/{{ .CurrentPost.VideoID }}/edit" class="modal-button edit-content">Edit</a>
-				</span>
-				{{ end }}
 			</div>
 		</header>
 
@@ -176,8 +173,13 @@
 				{{ .CurrentPost.Description }}
 			</div>
 		</div>
-		<button class="modal-button edit-description edit-content">Edit Desc</button>
+		{{ end }}
 
+		{{ if .IsCurrentUserAdmin }}
+		<span class="admin-buttons">
+			<button data-modal="video" class="modal-button">Delete</button>
+			<a href="/video/{{ .CurrentPost.VideoID }}/edit" class="modal-button edit-content">Edit</a>
+		</span>
 		{{ end }}
 
 	</div>
