@@ -228,6 +228,12 @@ h1.video-title {
 
 /* ############# Ratings ############# */
 
+.rate-widget {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--content-padding) / 2);
+}
+
 .btn-open-rate {
   background: none;
   border: none;
@@ -245,7 +251,6 @@ h1.video-title {
 .rate-error {
   color: #ff4444;
   font-size: 0.85rem;
-  margin-top: 4px;
 }
 
 .rate-dialog {
