@@ -95,6 +95,7 @@
 				</div>
 			</div>
 
+			{{ if .CurrentUser.IsAuthenticated }}
 			<div class="rate-widget" data-url="/video/{{ .CurrentPost.VideoID }}/rate">
 				{{ .CSRFField }}
 				<button type="button" class="btn-open-rate" aria-haspopup="dialog">
@@ -119,6 +120,13 @@
 					</div>
 				</dialog>
 			</div>
+			{{ else }}
+			<div class="rate-widget">
+				<button data-auth type="button" class="btn-open-rate">
+					<span class="star-icon">☆</span> Rate
+				</button>
+			</div>
+			{{ end }}
 
 			<div class="metadata-block">
 				<div class="inner-metadata-block">
