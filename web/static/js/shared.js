@@ -11,9 +11,7 @@ const postData = async (url = '', data = {}) => {
 
     // If CSRF Token send with the POST request
     let csrfToken = document.getElementsByName("gorilla.csrf.Token");
-    if (csrfToken) {
-        headers.append("X-CSRF-Token", csrfToken[0].value);
-    }
+    if (csrfToken) { headers.append("X-CSRF-Token", csrfToken[0].value); }
 
     const response = await fetch(url, {
         method: 'POST',

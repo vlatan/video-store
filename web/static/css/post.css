@@ -1,3 +1,16 @@
+:root {
+  --bg-color: #121212;
+  --card-bg: #1e1e1e;
+  --border-color: #333;
+  --text-main: #e0e0e0;
+  --text-muted: #a0a0a0;
+  --accent: #bb86fc;
+  --accent-hover: #9965f4;
+  --star-active: #ffc107;
+  --star-inactive: #444;
+  --success-text: #81c784;
+}
+
 .media-content {
   display: grid;
   grid-template-columns: auto 32%;
@@ -210,6 +223,94 @@ h1.video-title {
 .like:hover,
 .fave:hover {
   background: var(--primary-background-color);
+}
+
+
+/* ############# Ratings ############# */
+
+.btn-open-rate {
+  background: none;
+  border: none;
+  color: #5799ef;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.star-icon {
+  color: #f5c518;
+  margin-right: 4px;
+}
+
+.rate-error {
+  color: #ff4444;
+  font-size: 0.85rem;
+  margin-top: 4px;
+}
+
+.rate-dialog {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  background: #1f1f1f;
+  border: none;
+  border-radius: 8px;
+  padding: 1.5rem 2rem;
+  color: white;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+  width: fit-content;
+  max-width: 95vw;
+}
+
+.rate-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.75);
+}
+
+.btn-close-rate {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.btn-close-rate:hover {
+  color: white;
+}
+
+.rate-title {
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  letter-spacing: 1px;
+  color: #f5c518;
+}
+
+.rate-stars {
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: center;
+}
+
+.rate-stars input {
+  display: none;
+}
+
+.rate-stars span {
+  cursor: pointer;
+  font-size: 2rem;
+  color: #444;
+  transition: color 0.1s;
+}
+
+.rate-stars label:hover span,
+.rate-stars label:hover~label span,
+.rate-stars label:has(input:checked) span,
+.rate-stars label:has(input:checked)~label span {
+  color: #f5c518;
 }
 
 /* ############# Sidebar ############# */

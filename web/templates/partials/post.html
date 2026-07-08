@@ -94,6 +94,33 @@
 					{{ end }}
 				</div>
 			</div>
+
+			<div class="rate-widget" data-url="/video/{{ .CurrentPost.VideoID }}/rate">
+				{{ .CSRFField }}
+				<button type="button" class="btn-open-rate" aria-haspopup="dialog">
+					<span class="star-icon">☆</span> Rate
+				</button>
+				<div class="rate-error" hidden>Failed to save.</div>
+
+				<dialog class="rate-dialog">
+					<button type="button" class="btn-close-rate">&times;</button>
+					<h3 class="rate-title">RATE THIS</h3>
+
+					<div class="rate-stars">
+						<label><input type="radio" name="rating" value="10"><span>★</span></label>
+						<label><input type="radio" name="rating" value="9"><span>★</span></label>
+						<label><input type="radio" name="rating" value="8"><span>★</span></label>
+						<label><input type="radio" name="rating" value="7"><span>★</span></label>
+						<label><input type="radio" name="rating" value="6"><span>★</span></label>
+						<label><input type="radio" name="rating" value="5"><span>★</span></label>
+						<label><input type="radio" name="rating" value="4"><span>★</span></label>
+						<label><input type="radio" name="rating" value="3"><span>★</span></label>
+						<label><input type="radio" name="rating" value="2"><span>★</span></label>
+						<label><input type="radio" name="rating" value="1"><span>★</span></label>
+					</div>
+				</dialog>
+			</div>
+
 			<div class="metadata-block">
 				<div class="inner-metadata-block">
 					<span>
@@ -188,6 +215,7 @@
 {{ define "extra_scripts" }}
 {{ if .CurrentUser.IsAuthenticated }}
 <script defer src='{{ .AddVersion "/static/js/likes.js" }}'></script>
+<script defer src='{{ .AddVersion "/static/js/rating.js" }}'></script>
 {{ else }}
 <script defer src='{{ .AddVersion "/static/js/login.js" }}'></script>
 {{ end }}
