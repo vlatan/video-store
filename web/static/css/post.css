@@ -257,7 +257,6 @@ h1.video-title {
   border-radius: 8px;
   padding: 1.5rem 2rem;
   color: white;
-  text-align: center;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
   width: fit-content;
   max-width: 95vw;
@@ -267,14 +266,24 @@ h1.video-title {
   background: rgba(0, 0, 0, 0.75);
 }
 
+.rate-dialog:open {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  gap: calc(var(--content-padding) / 2);
+  padding: var(--modal-padding);
+}
+
 .btn-close-rate {
   position: absolute;
-  right: 10px;
+  right: 20px;
   top: 10px;
   background: none;
   border: none;
   color: #888;
-  font-size: 1.5rem;
+  font-size: 2rem;
   cursor: pointer;
 }
 
@@ -283,7 +292,6 @@ h1.video-title {
 }
 
 .rate-title {
-  margin: 0 0 1rem 0;
   font-size: 1rem;
   letter-spacing: 1px;
   color: #f5c518;
