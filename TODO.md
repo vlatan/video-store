@@ -1,5 +1,6 @@
 * Adapt rating modal on small screens
-* Solve "new row for relation \"post_rating\" violates check constraint \"post_rating_rating_check\"
+* Persist the average rating in HTML
+* Add numbers bellow stars on hover for user to see what rating they are giving
 
 * Build the JS and backend review/rating system
 * Make search bar on small screens accross entire screen

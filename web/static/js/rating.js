@@ -10,11 +10,11 @@ document.querySelectorAll('.rate-widget').forEach(widget => {
 
     widget.querySelectorAll('input[type="radio"]').forEach(input => {
         input.addEventListener('change', async (e) => {
-            const rating = e.target.value;
+            const rating = Number(e.target.value);
             rateDialog.close();
 
             try {
-                const res = postData(rateURL, { 'rating': rating });
+                const res = await postData(rateURL, { 'rating': rating });
                 if (!res.ok) throw new Error();
                 rateBtnOpen.innerHTML = `<span class="star-icon">★</span> <span style="color:#fff">${rating}</span>/10`;
             } catch {

@@ -621,9 +621,8 @@ func (s *Service) ActionPostHandler(w http.ResponseWriter, r *http.Request) {
 		s.handleUnfave(w, r, user.ID, videoID)
 	case "rate":
 		var data struct {
-			rating int
+			Rating int `json:"rating"`
 		}
-
 		if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
 			slog.ErrorContext(
 				r.Context(), "failed to decode post rating",
@@ -634,7 +633,7 @@ func (s *Service) ActionPostHandler(w http.ResponseWriter, r *http.Request) {
 			utils.HttpError(w, http.StatusInternalServerError)
 			return
 		}
-		s.handleRate(w, r, data.rating, user.ID, videoID)
+		s.handleRate(w, r, data.Rating, user.ID, videoID)
 	case "delete":
 		s.handleBan(w, r, user.ID, videoID)
 	default:
