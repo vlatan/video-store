@@ -1,6 +1,7 @@
 package posts
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -589,7 +590,7 @@ func (s *Service) ActionPostHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Validate the action
 	action := r.PathValue("action")
-	allowedActions := []string{"like", "unlike", "fave", "unfave", "delete"}
+	allowedActions := []string{"like", "unlike", "fave", "unfave", "rate", "delete"}
 	if !slices.Contains(allowedActions, action) {
 		slog.InfoContext(
 			r.Context(), "not a valid action on post",
@@ -618,6 +619,22 @@ func (s *Service) ActionPostHandler(w http.ResponseWriter, r *http.Request) {
 		s.handleFave(w, r, user.ID, videoID)
 	case "unfave":
 		s.handleUnfave(w, r, user.ID, videoID)
+	case "rate":
+		var data struct {
+			rating int
+		}
+
+		if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
+			slog.ErrorContext(
+				r.Context(), "failed to decode post rating",
+				"path", r.URL.Path,
+				"userId", user.ID,
+				"error", err,
+			)
+			utils.HttpError(w, http.StatusInternalServerError)
+			return
+		}
+		s.handleRate(w, r, data.rating, user.ID, videoID)
 	case "delete":
 		s.handleBan(w, r, user.ID, videoID)
 	default:

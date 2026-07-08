@@ -84,6 +84,25 @@ func (s *Service) handleUnfave(w http.ResponseWriter, r *http.Request, userID in
 	}
 }
 
+// Handle a post favorite from user
+func (s *Service) handleRate(w http.ResponseWriter, r *http.Request, rating, userID int, videoID string) {
+	rowsAffected, err := s.postsRepo.Rate(r.Context(), rating, userID, videoID)
+	if err != nil {
+		slog.ErrorContext(
+			r.Context(), "user failed to rate the video",
+			"path", r.URL.Path,
+			"userId", userID,
+			"error", err,
+		)
+		utils.HttpError(w, http.StatusInternalServerError)
+		return
+	}
+
+	if rowsAffected == 0 {
+		http.NotFound(w, r)
+	}
+}
+
 // Handle a post ban
 func (s *Service) handleBan(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
 	rowsAffected, err := s.postsRepo.BanPost(r.Context(), videoID)

@@ -55,6 +55,18 @@ func (r *Repository) Unfave(ctx context.Context, userID int, videoID string) (in
 	return result.RowsAffected(), err
 }
 
+// Rate records user's post rating
+func (r *Repository) Rate(ctx context.Context, rating, userID int, videoID string) (int64, error) {
+
+	query, err := r.GetQuery("rate_post.sql", nil)
+	if err != nil {
+		return 0, err
+	}
+
+	result, err := r.db.Pool.Exec(ctx, query, rating, userID, videoID)
+	return result.RowsAffected(), err
+}
+
 // Update a playlist
 func (r *Repository) UpdateSource(ctx context.Context, videoID, playlistID string) (int64, error) {
 
