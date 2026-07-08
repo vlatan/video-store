@@ -264,13 +264,16 @@ h1.video-title {
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
   width: fit-content;
   max-width: 95vw;
-}
 
-.rate-dialog::backdrop {
-  background: rgba(0, 0, 0, 0.75);
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.3s ease, transform 0.3s ease, overlay 0.3s ease, display 0.3s ease;
+  transition-behavior: allow-discrete;
 }
 
 .rate-dialog:open {
+  opacity: 1;
+  transform: translateY(0);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -278,6 +281,28 @@ h1.video-title {
   text-align: center;
   gap: calc(var(--content-padding) / 2);
   padding: var(--modal-padding);
+}
+
+@starting-style {
+  .rate-dialog[open] {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+}
+
+.rate-dialog::backdrop {
+  background-color: rgba(0, 0, 0, 0);
+  transition: background-color 0.3s ease;
+}
+
+.rate-dialog[open]::backdrop {
+  background-color: rgba(0, 0, 0, 0.75);
+}
+
+@starting-style {
+  .rate-dialog[open]::backdrop {
+    background-color: rgba(0, 0, 0, 0);
+  }
 }
 
 .btn-close-rate {
