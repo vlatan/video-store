@@ -276,28 +276,29 @@ h1.video-title {
   width: fit-content;
   max-width: 95vw;
 
-  opacity: 0;
-  transform: translateY(20px);
-  transition: opacity 0.3s ease, transform 0.3s ease, overlay 0.3s ease, display 0.3s ease;
-  transition-behavior: allow-discrete;
-}
-
-.rate-dialog:open {
-  opacity: 1;
-  transform: translateY(0);
-  display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   text-align: center;
   gap: calc(var(--content-padding) / 2);
   padding: var(--modal-padding);
+
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.3s ease, transform 0.3s ease, overlay 0.3s ease, display 0.3s ease;
+  transition-behavior: allow-discrete;
+}
+
+.rate-dialog:open {
+  display: flex;
+  opacity: 1;
+  transform: translateY(0);
 }
 
 @starting-style {
   .rate-dialog[open] {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(30px);
   }
 }
 

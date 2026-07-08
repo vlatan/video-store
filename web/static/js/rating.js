@@ -7,7 +7,6 @@ document.querySelectorAll('.rate-widget').forEach(widget => {
 
     rateBtnOpen.addEventListener('click', () => { rateErrBox.hidden = true; rateDialog.showModal(); });
     rateBtnClose.addEventListener('click', () => rateDialog.close());
-    rateDialog.addEventListener('click', e => { if (e.target === rateDialog) rateDialog.close(); });
 
     widget.querySelectorAll('input[type="radio"]').forEach(input => {
         input.addEventListener('change', async (e) => {
