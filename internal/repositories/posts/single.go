@@ -58,7 +58,7 @@ func (r *Repository) InsertPost(ctx context.Context, post *models.Post) (int64, 
 		utils.ToNullString(post.Tags),
 		post.Duration,
 		post.UploadDate,
-		utils.ToNullInt64(post.UserID),
+		utils.ToNullInt64(int64(post.UserID)),
 		utils.ToNullString(post.Category.Name),
 	)
 
@@ -75,8 +75,8 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.
 	}
 
 	// Initialize vars
-	var thumbnails []byte
 	var (
+		thumbnails []byte
 		originalTitle,
 		summary,
 		categorySlug,
@@ -84,6 +84,8 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.
 		playlistID,
 		playlistTitle,
 		channelTitle sql.NullString
+		avgRating   sql.NullFloat64
+		ratingCount sql.NullInt64
 	)
 
 	// Get single row from DB
@@ -94,6 +96,8 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.
 		&originalTitle,
 		&thumbnails,
 		&post.Likes,
+		&avgRating,
+		&ratingCount,
 		&post.Description,
 		&summary,
 		&playlistID,
@@ -127,9 +131,10 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.
 
 	// Define category if valid
 	if categorySlug.Valid && categoryName.Valid {
-		post.Category = &models.Category{}
-		post.Category.Slug = utils.FromNullString(categorySlug)
-		post.Category.Name = utils.FromNullString(categoryName)
+		post.Category = &models.Category{
+			Slug: utils.FromNullString(categorySlug),
+			Name: utils.FromNullString(categoryName),
+		}
 	}
 
 	// Define summary
@@ -149,6 +154,14 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.
 		post.LikeButtonText = "1 Like"
 	} else if post.Likes > 1 {
 		post.LikeButtonText = fmt.Sprintf("%d Likes", post.Likes)
+	}
+
+	// Attach ratings if any
+	if avgRating.Valid && ratingCount.Valid {
+		post.Rating = &models.Rating{
+			AvgRating:   utils.FromNullFloat64(avgRating),
+			RatingCount: utils.FromNullInt64(ratingCount),
+		}
 	}
 
 	// Unserialize thumbnails
