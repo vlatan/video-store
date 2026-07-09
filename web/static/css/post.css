@@ -259,11 +259,6 @@ h1.video-title {
   margin-right: 4px;
 }
 
-.rate-error {
-  color: #ff4444;
-  font-size: 0.85rem;
-}
-
 .rate-dialog {
   position: fixed;
   inset: 0;

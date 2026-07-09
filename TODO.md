@@ -1,4 +1,6 @@
 * Adapt rating modal on small screens
+* Use try/catch on PostData in JS
+* Persist filled out stars if user rated
 * Add numbers bellow stars on hover for user to see what rating they are giving
 * Write JSON error whwre the response should be JSON
 

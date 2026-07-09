@@ -523,7 +523,7 @@ a.nav-item:hover::after {
 
 .alert {
 	visibility: visible;
-	animation: fadeOut 2s ease-in forwards;
+	animation: fadeOut 4s ease-in forwards;
 	animation-delay: 0.5s;
 	border-radius: 1rem;
 	padding: 0.75rem 2rem;
