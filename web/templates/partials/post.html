@@ -128,12 +128,13 @@
 					</div>
 					{{ else }}
 					<div class="rate-widget">
-						{{ if .CurrentPost.Rating }}
-						<span class="star-icon">★</span>
-						<span style="color:#fff">{{ .CurrentPost.Rating.AvgRating }}</span>/10
-						{{ else }}
-						<span class="star-icon">☆</span> Rate
-						{{ end }}
+						<button data-auth type="button" class="btn-open-rate">
+							{{ if .CurrentPost.Rating }}
+							<span class="star-icon">★</span>
+							<span style="color:#fff">{{ .CurrentPost.Rating.AvgRating }}</span>/10
+							{{ else }}
+							<span class="star-icon">☆</span> Rate
+							{{ end }}
 						</button>
 					</div>
 					{{ end }}
