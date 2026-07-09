@@ -356,9 +356,14 @@ h1.video-title {
 }
 
 .rate-stars label:hover span,
+.rate-stars label:focus span,
 .rate-stars label:hover~label span,
-.rate-stars label:has(input:checked) span,
-.rate-stars label:has(input:checked)~label span {
+.rate-stars label:focus~label span {
+  color: #f5c518;
+}
+
+.rate-stars:not(:hover) label:has(input:checked) span,
+.rate-stars:not(:hover) label:has(input:checked)~label span {
   color: #f5c518;
 }
 
