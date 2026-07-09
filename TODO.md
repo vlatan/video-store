@@ -1,5 +1,4 @@
 * Adapt rating modal on small screens
-* Persist the average rating in HTML
 * Add numbers bellow stars on hover for user to see what rating they are giving
 * Write JSON error whwre the response should be JSON
 
