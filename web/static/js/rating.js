@@ -15,7 +15,6 @@ document.querySelectorAll('.rate-widget').forEach(widget => {
                 const res = await postData(rateURL, { 'rating': rating });
                 if (!res.ok) throw new Error(`HTTP error! Status: ${response.status}`);
                 const data = await res.json();
-                throw new Error()
                 rateBtnOpen.innerHTML = `<span class="star-icon">★</span> <span style="color:#fff">${data.avg_rating}</span>/10`;
             } catch (error) {
                 e.target.checked = false;
