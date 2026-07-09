@@ -15,11 +15,13 @@ document.querySelectorAll('.rate-widget').forEach(widget => {
 
             try {
                 const res = await postData(rateURL, { 'rating': rating });
-                if (!res.ok) throw new Error();
-                rateBtnOpen.innerHTML = `<span class="star-icon">★</span> <span style="color:#fff">${rating}</span>/10`;
-            } catch {
+                if (!res.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                const data = await res.json();
+                rateBtnOpen.innerHTML = `<span class="star-icon">★</span> <span style="color:#fff">${data.avg_rating}</span>/10`;
+            } catch (error) {
                 rateErrBox.hidden = false;
                 e.target.checked = false;
+                console.error("Failed to fetch or parse JSON:", error);
             }
         });
     });
