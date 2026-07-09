@@ -526,7 +526,7 @@ a.nav-item:hover::after {
 	animation: fadeOut 4s ease-in forwards;
 	animation-delay: 0.5s;
 	border-radius: 1rem;
-	padding: 0.75rem 2rem;
+	padding: 0.75rem 1rem;
 	color: black;
 	background: white;
 	border: 2px solid var(--secondary-background-color);
