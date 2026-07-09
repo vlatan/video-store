@@ -19,7 +19,7 @@ type Post struct {
 	Category        *Category       `json:"category,omitempty"`
 	Source          *Source         `json:"source,omitempty"`
 	Likes           int             `json:"likes,omitempty"`
-	Score           float64         `json:"score,omitempty"`
+	SearchScore     float64         `json:"search_score,omitempty"`
 	LikeButtonText  string          `json:"like_button_text,omitempty"`
 	Description     string          `json:"description,omitempty"`
 	Summary         string          `json:"summary,omitempty"`

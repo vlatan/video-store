@@ -56,15 +56,20 @@ func (r *Repository) Unfave(ctx context.Context, userID int, videoID string) (in
 }
 
 // Rate records user's post rating
-func (r *Repository) Rate(ctx context.Context, rating, userID int, videoID string) (int64, error) {
+func (r *Repository) Rate(ctx context.Context, rating, userID int, videoID string) (models.Rating, error) {
 
+	var zero, rd models.Rating
 	query, err := r.GetQuery("rate_post.sql", nil)
 	if err != nil {
-		return 0, err
+		return zero, err
 	}
 
-	result, err := r.db.Pool.Exec(ctx, query, rating, userID, videoID)
-	return result.RowsAffected(), err
+	err = r.db.Pool.QueryRow(ctx, query, rating, userID, videoID).Scan(&rd.AvgRating, &rd.RatingCount)
+	if err != nil {
+		return zero, err
+	}
+
+	return rd, nil
 }
 
 // Update a playlist

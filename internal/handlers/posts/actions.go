@@ -1,9 +1,11 @@
 package posts
 
 import (
+	"errors"
 	"log/slog"
 	"net/http"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/utils"
 )
@@ -86,7 +88,14 @@ func (s *Service) handleUnfave(w http.ResponseWriter, r *http.Request, userID in
 
 // Handle a post favorite from user
 func (s *Service) handleRate(w http.ResponseWriter, r *http.Request, rating, userID int, videoID string) {
-	rowsAffected, err := s.postsRepo.Rate(r.Context(), rating, userID, videoID)
+
+	ratingData, err := s.postsRepo.Rate(r.Context(), rating, userID, videoID)
+
+	if errors.Is(err, pgx.ErrNoRows) {
+		s.ui.JSONError(w, r, http.StatusNotFound)
+		return
+	}
+
 	if err != nil {
 		slog.ErrorContext(
 			r.Context(), "user failed to rate the video",
@@ -94,13 +103,11 @@ func (s *Service) handleRate(w http.ResponseWriter, r *http.Request, rating, use
 			"userId", userID,
 			"error", err,
 		)
-		utils.HttpError(w, http.StatusInternalServerError)
+		s.ui.JSONError(w, r, http.StatusInternalServerError)
 		return
 	}
 
-	if rowsAffected == 0 {
-		http.NotFound(w, r)
-	}
+	s.ui.WriteJSON(w, r, ratingData)
 }
 
 // Handle a post ban
