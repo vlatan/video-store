@@ -13,13 +13,13 @@ document.querySelectorAll('.rate-widget').forEach(widget => {
             rateDialog.close();
             try {
                 const res = await postData(rateURL, { 'rating': rating });
-                if (!res.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
                 const data = await res.json();
                 rateBtnOpen.innerHTML = `<span class="star-icon">★</span> <span style="color:#fff">${data.avg_rating}</span>/10`;
             } catch (error) {
                 e.target.checked = false;
                 console.error("Failed to fetch or parse JSON:", error);
-                setAlert("Rating not recorded. Something went wrong!")
+                setAlert("Something went wrong!")
             }
         });
     });
