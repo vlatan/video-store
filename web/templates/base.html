@@ -250,7 +250,8 @@
 	<div id="footer" class="site-footer-wrap">
 		{{ range .FlashMessages }}
 		<div class="alert alert-{{ .Category }}">
-			{{ .Message }}
+			<span class="alert-text">{{ .Message }}</span>
+			<span class="alert-close">&times;</span>
 		</div>
 		{{ end }}
 

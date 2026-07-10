@@ -37,6 +37,14 @@ const getData = async (url, cursor = "") => {
     return await fetch(currenURL.toString());
 };
 
+// Alert helper
+const dismissAlert = (alertEl) => {
+    const closeBtn = alertEl.querySelector('.alert-close');
+    closeBtn.addEventListener('click', () => alertEl.remove());
+    sleep(6000).then(() => alertEl.remove());
+};
+
+
 // Set alert message
 const setAlert = message => {
     const alert = document.createElement('div');
@@ -50,12 +58,16 @@ const setAlert = message => {
 
     const alertClose = document.createElement('span')
     alertClose.className = 'alert-close';
-    alertClose.innerHTML = '&times';
+    alertClose.innerHTML = '&times;';
     alert.appendChild(alertClose);
 
-    alertClose.addEventListener('click', () => alert.remove());
-    sleep(6000).then(() => alert.remove());
+    dismissAlert(alert)
 };
+
+
+// Event listener for static HTML alert messages
+document.querySelectorAll('.alert').forEach(a => dismissAlert(a));
+
 
 document.addEventListener('click', event => {
 
