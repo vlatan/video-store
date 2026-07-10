@@ -236,7 +236,6 @@ h1.video-title {
 
 /* ############# Ratings ############# */
 
-
 .rate-widget {
   display: flex;
   align-items: center;
@@ -397,14 +396,15 @@ h1.video-title {
 }
 
 .rate-subtitle {
-  font-size: 0.8rem;
-  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 1px;
   color: #f5c518;
   margin: 0 0 6px;
 }
 
 .rate-title {
-  font-size: 1.6rem;
+  font-size: 1rem;
   font-weight: normal;
   margin: 0 0 24px;
 }
@@ -413,8 +413,17 @@ h1.video-title {
   display: flex;
   flex-direction: row-reverse;
   justify-content: center;
-  gap: 5px;
   margin-bottom: 28px;
+}
+
+.rate-stars label {
+  cursor: pointer;
+  padding-right: 0.5rem;
+}
+
+/* We target the first child beacause the flex direction is row-reverse */
+.rate-stars label:first-child {
+  padding: 0;
 }
 
 .rate-stars input {
