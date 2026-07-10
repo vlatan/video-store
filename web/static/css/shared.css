@@ -555,7 +555,6 @@ a.nav-item:hover::after {
 	background-color: var(--secondary-background-color);
 }
 
-
 @keyframes fadeOut {
 	to {
 		opacity: 0;
