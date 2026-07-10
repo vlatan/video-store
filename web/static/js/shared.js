@@ -40,12 +40,21 @@ const getData = async (url, cursor = "") => {
 // Set alert message
 const setAlert = message => {
     const alert = document.createElement('div');
-    alert.classList.add('alert');
-    alert.innerText = message;
+    alert.className = 'alert';
     document.getElementById('footer').prepend(alert);
-    sleep(6000).then(() => {
-        alert.remove();
-    });
+
+    const alertText = document.createElement('span')
+    alertText.className = 'alert-text';
+    alertText.innerText = message;
+    alert.appendChild(alertText);
+
+    const alertClose = document.createElement('span')
+    alertClose.className = 'alert-close';
+    alertClose.innerHTML = '&times';
+    alert.appendChild(alertClose);
+
+    alertClose.addEventListener('click', () => alert.remove());
+    sleep(6000).then(() => alert.remove());
 };
 
 document.addEventListener('click', event => {
