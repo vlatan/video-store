@@ -41,7 +41,6 @@ document.querySelectorAll('.rate-widget').forEach(widget => {
         try {
             const res = await postData(rateURL, { 'rating': currentRating });
             if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
-
             const data = await res.json();
 
             // Update the distinct Video Rating value panel dynamically

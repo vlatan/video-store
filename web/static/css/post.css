@@ -327,7 +327,7 @@ h1.video-title {
   margin: auto;
   background-color: var(--secondary-background-color);
   border: none;
-  border-radius: 8px;
+  border-radius: 0.5rem;
   color: var(--primary-font-color);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
   width: 620px;
@@ -338,6 +338,12 @@ h1.video-title {
   transform: scale(0);
   transition: opacity 0.3s ease, transform 0.3s ease, overlay 0.3s ease, display 0.3s ease;
   transition-behavior: allow-discrete;
+}
+
+@media screen and (max-width: 630px) {
+  .rate-dialog {
+    border-radius: 0;
+  }
 }
 
 .rate-dialog[open] {
