@@ -8,16 +8,24 @@ document.querySelectorAll('.rate-widget').forEach(widget => {
     const rateURL = widget.dataset.url || `${window.location.pathname}/rate`;
 
     let currentRating = null;
+    let selectedStar = null;
+    const bigStarOriginalTextContent = bigStarValue.textContent;
 
-    rateBtnOpen.addEventListener('click', () => { rateDialog?.showModal(); });
-    rateBtnClose.addEventListener('click', () => rateDialog?.close());
+    rateBtnOpen.addEventListener('click', () => { rateDialog.showModal(); });
+    rateBtnClose.addEventListener('click', () => {
+        rateDialog.close()
+        rateBtnSubmit.disabled = true;
+        if (selectedStar) selectedStar.checked = false;
+        bigStarValue.textContent = bigStarOriginalTextContent;
+    });
 
     // Handle interactive star adjustments inside the modal
     widget.querySelectorAll('input[type="radio"]').forEach(input => {
         input.addEventListener('change', (e) => {
-            currentRating = Number(e.target.value);
+            selectedStar = e.target;
+            currentRating = Number(selectedStar.value);
             bigStarValue.textContent = currentRating;
-            if (rateBtnSubmit) rateBtnSubmit.disabled = false;
+            rateBtnSubmit.disabled = false;
         });
     });
 
@@ -26,6 +34,9 @@ document.querySelectorAll('.rate-widget').forEach(widget => {
     rateBtnSubmit.addEventListener('click', async () => {
         if (!currentRating) return;
         rateDialog.close();
+        rateBtnSubmit.disabled = true;
+        if (selectedStar) selectedStar.checked = false;
+        bigStarValue.textContent = bigStarOriginalTextContent;
 
         try {
             const res = await postData(rateURL, { 'rating': currentRating });
