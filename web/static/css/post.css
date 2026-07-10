@@ -322,7 +322,7 @@ h1.video-title {
   position: fixed;
   inset: 0;
   margin: auto;
-  background: #202020;
+  background-color: var(--secondary-background-color);
   border: none;
   border-radius: 8px;
   color: var(--primary-font-color);
