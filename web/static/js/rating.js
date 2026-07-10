@@ -22,29 +22,27 @@ document.querySelectorAll('.rate-widget').forEach(widget => {
     });
 
     // Handle submission workflow via the dedicated Rate CTA
-    if (rateBtnSubmit) {
-        rateBtnSubmit.addEventListener('click', async () => {
-            if (!currentRating) return;
+    if (!rateBtnSubmit) return;
+    rateBtnSubmit.addEventListener('click', async () => {
+        if (!currentRating) return;
+        rateDialog.close();
 
-            rateDialog.close();
+        try {
+            const res = await postData(rateURL, { 'rating': currentRating });
+            if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
 
-            try {
-                const res = await postData(rateURL, { 'rating': currentRating });
-                if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
+            const data = await res.json();
 
-                const data = await res.json();
-
-                // Update the distinct Video Rating value panel dynamically
-                if (avgValDisplay && data.avg_rating) {
-                    avgValDisplay.textContent = data.avg_rating;
-                }
-
-                // Transition the User Rating trigger state to confirm submission visually
-                rateBtnOpen.innerHTML = `<span class="rating-user-star " style="color: #5799ef;">★</span> ${currentRating}`;
-            } catch (error) {
-                console.error("Failed to fetch or parse JSON:", error);
-                setAlert("Something went wrong!");
+            // Update the distinct Video Rating value panel dynamically
+            if (avgValDisplay && data.avg_rating) {
+                avgValDisplay.textContent = data.avg_rating;
             }
-        });
-    }
+
+            // Transition the User Rating trigger state to confirm submission visually
+            rateBtnOpen.innerHTML = `<span class="rating-user-star " style="color: #5799ef;">★</span> ${currentRating}`;
+        } catch (error) {
+            console.error("Failed to fetch or parse JSON:", error);
+            setAlert("Something went wrong!");
+        }
+    });
 });

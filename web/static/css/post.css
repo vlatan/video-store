@@ -321,16 +321,17 @@ h1.video-title {
 .rate-dialog {
   position: fixed;
   inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin: auto;
   background-color: var(--secondary-background-color);
   border: none;
   border-radius: 8px;
   color: var(--primary-font-color);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
-  width: 420px;
-  max-width: 95vw;
-  text-align: center;
-  padding: 60px 30px 30px;
+  width: 620px;
+  max-width: 100%;
   overflow: visible;
 
   opacity: 0;
@@ -364,6 +365,17 @@ h1.video-title {
   .rate-dialog[open]::backdrop {
     background-color: rgba(0, 0, 0, 0);
   }
+}
+
+.rate-dialog-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  padding: 60px 2rem 2.5rem 2rem;
+  width: 420px;
+  max-width: 100%;
 }
 
 .rating-big-star-wrapper {
@@ -417,30 +429,39 @@ h1.video-title {
   color: var(--secondary-font-color);
 }
 
+.rating-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
 .rate-subtitle {
   text-transform: uppercase;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   letter-spacing: 1px;
   color: #f5c518;
-  margin: 0 0 6px;
 }
 
 .rate-title {
+  text-align: center;
   font-size: 1rem;
   font-weight: normal;
-  margin: 0 0 24px;
+  line-height: 1.3;
 }
 
 .rate-stars {
   display: flex;
+  flex-wrap: wrap-reverse;
   flex-direction: row-reverse;
   justify-content: center;
-  margin-bottom: 28px;
 }
 
 .rate-stars label {
   cursor: pointer;
   padding-right: 0.5rem;
+  line-height: 1;
 }
 
 /* We target the first child beacause the flex direction is row-reverse */
