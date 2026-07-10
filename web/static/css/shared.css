@@ -522,6 +522,7 @@ a.nav-item:hover::after {
 }
 
 .alert {
+	align-self: flex-end;
 	display: flex;
 	align-items: center;
 	gap: 0.5rem;
