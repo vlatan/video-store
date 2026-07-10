@@ -3,7 +3,7 @@ document.querySelectorAll('.rate-widget').forEach(widget => {
     const rateBtnOpen = widget.querySelector('.btn-open-rate');
     const rateBtnClose = widget.querySelector('.btn-close-rate');
     const rateBtnSubmit = widget.querySelector('.btn-submit-rate');
-    const bigStarValue = widget.querySelector('.big-star-value');
+    const bigStarValue = widget.querySelector('.rating-big-star-value');
     const avgValDisplay = widget.querySelector('.avg-val');
     const rateURL = widget.dataset.url || `${window.location.pathname}/rate`;
 
@@ -40,7 +40,7 @@ document.querySelectorAll('.rate-widget').forEach(widget => {
                 }
 
                 // Transition the User Rating trigger state to confirm submission visually
-                rateBtnOpen.innerHTML = `<span class="user-star" style="color: #5799ef;">★</span> ${currentRating}`;
+                rateBtnOpen.innerHTML = `<span class="rating-user-star " style="color: #5799ef;">★</span> ${currentRating}`;
             } catch (error) {
                 console.error("Failed to fetch or parse JSON:", error);
                 setAlert("Something went wrong!");

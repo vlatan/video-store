@@ -251,7 +251,7 @@ h1.video-title {
   gap: 6px;
 }
 
-.column-label {
+.rating-column-label {
   font-size: 0.75rem;
   color: #999;
   letter-spacing: 1.5px;
@@ -265,7 +265,7 @@ h1.video-title {
   gap: 8px;
 }
 
-.global-star {
+.rating-global-star {
   color: #f5c518;
   font-size: 1.75rem;
 }
@@ -312,7 +312,7 @@ h1.video-title {
   background: rgba(87, 153, 239, 0.1);
 }
 
-.user-star {
+.rating-user-star {
   font-size: 1.5rem;
   line-height: 1;
 }
@@ -325,7 +325,7 @@ h1.video-title {
   background: #202020;
   border: none;
   border-radius: 8px;
-  color: white;
+  color: var(--primary-font-color);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
   width: 420px;
   max-width: 95vw;
@@ -366,7 +366,7 @@ h1.video-title {
   }
 }
 
-.big-star-wrapper {
+.rating-big-star-wrapper {
   position: absolute;
   top: -60px;
   left: 50%;
@@ -378,14 +378,14 @@ h1.video-title {
   align-items: center;
 }
 
-.big-star-wrapper svg {
+.rating-big-star-wrapper svg {
   position: absolute;
   width: 100%;
   height: 100%;
   fill: #5799ef;
 }
 
-.big-star-value {
+.rating-big-star-value {
   position: relative;
   font-size: 1.25rem;
   font-weight: bold;

@@ -102,9 +102,9 @@
 
 						<!-- Platform / Post Rating Column -->
 						<div class="rating-column">
-							<span class="column-label">VIDEO RATING</span>
+							<span class="rating-column-label">VIDEO RATING</span>
 							<div class="rating-display">
-								<span class="global-star">★</span>
+								<span class="rating-global-star">★</span>
 								<div class="rating-meta">
 									{{ if .CurrentPost.Rating }}
 									<div class="rating-score">
@@ -123,20 +123,20 @@
 
 						<!-- Your Rating Column -->
 						<div class="rating-column">
-							<span class="column-label">YOUR RATING</span>
+							<span class="rating-column-label">YOUR RATING</span>
 							<button type="button" class="btn-open-rate" aria-haspopup="dialog">
-								<span class="user-star">☆</span> Rate
+								<span class="rating-user-star ">☆</span> Rate
 							</button>
 						</div>
 
 						<!-- Rating Dialog -->
 						<dialog class="rate-dialog" closedby="any">
-							<div class="big-star-wrapper">
+							<div class="rating-big-star-wrapper">
 								<svg viewBox="0 0 24 24">
 									<path
 										d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
 								</svg>
-								<span class="big-star-value">?</span>
+								<span class="rating-big-star-value">?</span>
 							</div>
 
 							<button type="button" class="btn-close-rate">&times;</button>
@@ -162,9 +162,9 @@
 					{{ else }}
 					<div class="rate-widget">
 						<div class="rating-column">
-							<span class="column-label">VIDEO RATING</span>
+							<span class="rating-column-label">VIDEO RATING</span>
 							<div class="rating-display">
-								<span class="global-star">★</span>
+								<span class="rating-global-star">★</span>
 								<div class="rating-meta">
 									{{ if .CurrentPost.Rating }}
 									<div class="rating-score"><span class="avg-val">{{ .CurrentPost.Rating.AvgRating
@@ -179,9 +179,9 @@
 						</div>
 
 						<div class="rating-column">
-							<span class="column-label">YOUR RATING</span>
+							<span class="rating-column-label">YOUR RATING</span>
 							<button data-auth type="button" class="btn-open-rate">
-								<span class="user-star">☆</span> Rate
+								<span class="rating-user-star ">☆</span> Rate
 							</button>
 						</div>
 					</div>
