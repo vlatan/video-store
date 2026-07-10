@@ -43,7 +43,7 @@ const setAlert = message => {
     alert.classList.add('alert');
     alert.innerText = message;
     document.getElementById('footer').prepend(alert);
-    sleep(4000).then(() => {
+    sleep(6000).then(() => {
         alert.remove();
     });
 };

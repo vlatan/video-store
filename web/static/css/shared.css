@@ -522,13 +522,14 @@ a.nav-item:hover::after {
 }
 
 .alert {
+	font-size: 0.85rem;
 	visibility: visible;
-	animation: fadeOut 4s ease-in forwards;
-	animation-delay: 0.5s;
-	border-radius: 1rem;
-	padding: 0.75rem 1rem;
+	animation: fadeOut 1s ease-in forwards;
+	animation-delay: 5s;
+	border-radius: 0.5rem;
+	padding: 0.5rem 1rem;
 	color: black;
-	background: white;
+	background-color: white;
 	border: 2px solid var(--secondary-background-color);
 }
 
