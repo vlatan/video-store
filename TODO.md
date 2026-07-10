@@ -1,6 +1,5 @@
-* Adapt rating modal on small screens
-* Persist filled out stars if user rated
-* Add numbers bellow stars on hover for user to see what rating they are giving
+* Persist user rating value
+* Style and postition rating buttons and stats
 * Write JSON error where the response should be JSON
 
 * Build the JS and backend review/rating system
