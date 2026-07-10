@@ -1,5 +1,6 @@
-* Persist user rating value
+* Persist user post rating value
 * Style and postition rating buttons and stats
+* Use schema on rating if any
 * Write JSON error where the response should be JSON
 
 * Build the JS and backend review/rating system

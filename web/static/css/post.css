@@ -239,7 +239,7 @@ h1.video-title {
 .rate-widget {
   display: flex;
   align-items: center;
-  gap: 32px;
+  gap: 1rem;
   background: transparent;
   font-family: sans-serif;
 }
@@ -247,12 +247,12 @@ h1.video-title {
 .rating-column {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   gap: 6px;
 }
 
 .rating-column-label {
-  font-size: 0.75rem;
+  font-size: 0.6rem;
   color: #999;
   letter-spacing: 1.5px;
   font-weight: bold;
@@ -262,6 +262,11 @@ h1.video-title {
 .rating-display {
   display: flex;
   align-items: center;
+  line-height: 1;
+  background-color: var(--secondary-background-color);
+  border: 1px solid var(--primary-border-color);
+  padding: 0.5rem 1rem;
+  border-radius: 1rem;
   gap: 8px;
 }
 
@@ -273,7 +278,6 @@ h1.video-title {
 .rating-meta {
   display: flex;
   flex-direction: column;
-  line-height: 1.2;
 }
 
 .rating-score {
@@ -296,15 +300,15 @@ h1.video-title {
 .btn-open-rate {
   display: flex;
   align-items: center;
-  gap: 6px;
-  background: transparent;
-  border: none;
+  gap: 8px;
+  background-color: var(--secondary-background-color);
+  border: 1px solid var(--primary-border-color);
   color: #5799ef;
   cursor: pointer;
   font-weight: bold;
   font-size: 1.15rem;
-  padding: 4px 8px;
-  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  border-radius: 1rem;
   transition: background 0.2s;
 }
 
@@ -313,7 +317,7 @@ h1.video-title {
 }
 
 .rating-user-star {
-  font-size: 1.5rem;
+  font-size: 1.75rem;
   line-height: 1;
 }
 
