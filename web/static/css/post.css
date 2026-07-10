@@ -334,25 +334,36 @@ h1.video-title {
   overflow: visible;
 
   opacity: 0;
-  transform: translateY(30px);
+  transform: scale(0);
   transition: opacity 0.3s ease, transform 0.3s ease, overlay 0.3s ease, display 0.3s ease;
   transition-behavior: allow-discrete;
 }
 
 .rate-dialog[open] {
   opacity: 1;
-  transform: translateY(0);
+  transform: scale(1);
 }
 
 @starting-style {
   .rate-dialog[open] {
     opacity: 0;
-    transform: translateY(30px);
+    transform: scale(0);
   }
 }
 
 .rate-dialog::backdrop {
+  background-color: rgba(0, 0, 0, 0);
+  transition: background-color 0.3s ease;
+}
+
+.rate-dialog[open]::backdrop {
   background-color: rgba(0, 0, 0, 0.75);
+}
+
+@starting-style {
+  .rate-dialog[open]::backdrop {
+    background-color: rgba(0, 0, 0, 0);
+  }
 }
 
 .big-star-wrapper {
