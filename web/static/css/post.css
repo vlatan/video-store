@@ -396,14 +396,25 @@ h1.video-title {
 
 .btn-close-rate {
   position: absolute;
-  right: 15px;
   top: 15px;
-  background: none;
-  border: none;
-  color: #fff;
-  font-size: 1.75rem;
-  cursor: pointer;
+  right: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary-font-color);
+  background-color: var(--primary-background-color);
+  border: 1px solid var(--secondary-border-color);
   line-height: 1;
+  font-size: 1.2rem;
+  z-index: 1;
+  cursor: pointer;
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+}
+
+.btn-close-rate:hover {
+  color: var(--secondary-font-color);
 }
 
 .rate-subtitle {
