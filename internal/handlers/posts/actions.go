@@ -92,7 +92,7 @@ func (s *Service) handleRate(w http.ResponseWriter, r *http.Request, rating, use
 	ratingData, err := s.postsRepo.Rate(r.Context(), rating, userID, videoID)
 
 	if errors.Is(err, pgx.ErrNoRows) {
-		s.ui.JSONError(w, r, http.StatusNotFound)
+		http.NotFound(w, r)
 		return
 	}
 
@@ -103,7 +103,7 @@ func (s *Service) handleRate(w http.ResponseWriter, r *http.Request, rating, use
 			"userId", userID,
 			"error", err,
 		)
-		s.ui.JSONError(w, r, http.StatusInternalServerError)
+		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}
 
