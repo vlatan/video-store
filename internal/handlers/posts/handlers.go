@@ -1,13 +1,11 @@
 package posts
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
 	"log/slog"
 	"net/http"
-	"slices"
 	"time"
 
 	"github.com/vlatan/video-store/internal/drivers/rdb"
@@ -25,11 +23,6 @@ const relatedPostsCacheKey = "post:%s:related_posts"
 // Handle the Home page
 func (s *Service) HomeHandler(w http.ResponseWriter, r *http.Request) {
 
-	// Generate template data
-	data := models.GetDataFromContext(r)
-
-	// Get the cursor from a query param
-	cursor := r.URL.Query().Get("cursor")
 	// Get the order_by query param if any
 	orderBy := r.URL.Query().Get("order_by")
 
@@ -39,9 +32,8 @@ func (s *Service) HomeHandler(w http.ResponseWriter, r *http.Request) {
 		redisKey += ":likes"
 	}
 
-	if cursor != "" {
-		redisKey += fmt.Sprintf(":cursor:%s", cursor)
-	}
+	// Generate template data
+	data := models.GetDataFromContext(r)
 
 	var (
 		err   error
@@ -51,7 +43,7 @@ func (s *Service) HomeHandler(w http.ResponseWriter, r *http.Request) {
 	// Don't cache the home results only for the admin
 	if data.IsCurrentUserAdmin() {
 		posts, err = s.postsRepo.GetHomePosts(
-			r.Context(), cursor, orderBy,
+			r.Context(), "", orderBy,
 		)
 	} else {
 		posts, err = rdb.GetCachedData(
@@ -61,7 +53,7 @@ func (s *Service) HomeHandler(w http.ResponseWriter, r *http.Request) {
 			s.config.CacheTimeout,
 			func() (models.Posts, error) {
 				return s.postsRepo.GetHomePosts(
-					r.Context(), cursor, orderBy,
+					r.Context(), "", orderBy,
 				)
 			},
 		)
@@ -77,12 +69,6 @@ func (s *Service) HomeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// If there's a cursor this is not the first page, return JSON
-	if cursor != "" {
-		s.ui.WriteJSON(w, r, posts)
-		return
-	}
-
 	data.Posts = &posts
 	s.ui.RenderHTML(w, r, "home.html", data)
 }
@@ -91,12 +77,7 @@ func (s *Service) HomeHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	slug := r.PathValue("category")
-	cursor := r.URL.Query().Get("cursor")
 	orderBy := r.URL.Query().Get("order_by")
-
-	// Generate template data (it gets all the categories too)
-	// This is probably wasteful for non-existing category
-	data := models.GetDataFromContext(r)
 
 	// Construct the Redis key
 	redisKey := fmt.Sprintf("category:%s:posts", slug)
@@ -104,9 +85,9 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 		redisKey += ":likes"
 	}
 
-	if cursor != "" {
-		redisKey += fmt.Sprintf(":cursor:%s", cursor)
-	}
+	// Generate template data (it gets all the categories too)
+	// This is probably wasteful for non-existing category
+	data := models.GetDataFromContext(r)
 
 	var (
 		err   error
@@ -116,7 +97,7 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 	// Don't cache the category posts only for the admin
 	if data.IsCurrentUserAdmin() {
 		posts, err = s.postsRepo.GetCategoryPosts(
-			r.Context(), slug, cursor, orderBy,
+			r.Context(), slug, "", orderBy,
 		)
 	} else {
 		posts, err = rdb.GetCachedData(
@@ -126,7 +107,7 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 			s.config.CacheTimeout,
 			func() (models.Posts, error) {
 				return s.postsRepo.GetCategoryPosts(
-					r.Context(), slug, cursor, orderBy,
+					r.Context(), slug, "", orderBy,
 				)
 			},
 		)
@@ -147,12 +128,6 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// If there's a cursor this is not the first page, return JSON
-	if cursor != "" {
-		s.ui.WriteJSON(w, r, posts)
-		return
-	}
-
 	data.Posts = &posts
 	data.Title = data.Posts.Title
 	s.ui.RenderHTML(w, r, "category.html", data)
@@ -160,15 +135,13 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 
 // Handle the requests from the searchform
 func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
+
 	// Get the search query
 	searchQuery := r.URL.Query().Get("q")
 	if searchQuery == "" {
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
 	}
-
-	// Get the cursor if any
-	cursor := r.URL.Query().Get("cursor")
 
 	// Generate the default data
 	data := models.GetDataFromContext(r)
@@ -179,9 +152,6 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Construct the Redis key
 	redisKey := fmt.Sprintf("posts:search:%s", encodedSearchQuery)
-	if cursor != "" {
-		redisKey += fmt.Sprintf(":cursor:%s", cursor)
-	}
 
 	var (
 		err   error
@@ -191,7 +161,7 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 	// Don't cache the search results only for the admin
 	if data.IsCurrentUserAdmin() {
 		posts, err = s.postsRepo.SearchPosts(
-			r.Context(), searchQuery, s.config.PostsPerPage, cursor,
+			r.Context(), searchQuery, s.config.PostsPerPage, "",
 		)
 	} else {
 		posts, err = rdb.GetCachedData(
@@ -201,7 +171,7 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 			s.config.CacheTimeout,
 			func() (models.Posts, error) {
 				return s.postsRepo.SearchPosts(
-					r.Context(), searchQuery, s.config.PostsPerPage, cursor,
+					r.Context(), searchQuery, s.config.PostsPerPage, "",
 				)
 			},
 		)
@@ -216,12 +186,6 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 			"error", err,
 		)
 		utils.HttpError(w, http.StatusInternalServerError)
-		return
-	}
-
-	// If there's a cursor this is not the first page, return JSON
-	if cursor != "" {
-		s.ui.WriteJSON(w, r, posts)
 		return
 	}
 
@@ -484,13 +448,13 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 	// Generate default data
 	data := models.GetDataFromContext(r)
 
-	// Assign page data
+	// Assign post data
 	data.CurrentPost = &post
 	if data.CurrentPost.Category == nil {
 		data.CurrentPost.Category = &models.Category{}
 	}
 
-	// Populate needed data for the page form
+	// Populate needed data for the post form
 	data.Form = &models.Form{
 		Legend: "Edit Post",
 		Title: &models.FormGroup{
@@ -578,8 +542,8 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Perform an action on a video
-func (s *Service) ActionPostHandler(w http.ResponseWriter, r *http.Request) {
+// Handle a post ban
+func (s *Service) BanPostHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Validate the YT ID
 	videoID := r.PathValue("video")
@@ -588,55 +552,31 @@ func (s *Service) ActionPostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Validate the action
-	action := r.PathValue("action")
-	allowedActions := []string{"like", "unlike", "fave", "unfave", "rate", "delete"}
-	if !slices.Contains(allowedActions, action) {
-		slog.InfoContext(
-			r.Context(), "not a valid action on post",
+	// Get the current user
+	user := models.GetUserFromContext(r)
+
+	rowsAffected, err := s.postsRepo.BanPost(r.Context(), videoID)
+	if err != nil {
+		slog.ErrorContext(
+			r.Context(), "user failed to ban/delete the video",
 			"path", r.URL.Path,
+			"userId", user.ID,
+			"error", err,
 		)
+		utils.HttpError(w, http.StatusInternalServerError)
+		return
+	}
+
+	if rowsAffected == 0 {
 		http.NotFound(w, r)
 		return
 	}
 
-	// Get the current user
-	user := models.GetUserFromContext(r)
-
-	// Check if user is authorized to edit or delete (admin)
-	if action == "delete" &&
-		!user.IsAdmin(s.config.AdminProviderUserId, s.config.AdminProvider) {
-		utils.HttpError(w, http.StatusForbidden)
-		return
+	successDelete := models.FlashMessage{
+		Message:  "The video has been deleted!",
+		Category: "info",
 	}
 
-	switch action {
-	case "like":
-		s.handleLike(w, r, user.ID, videoID)
-	case "unlike":
-		s.handleUnlike(w, r, user.ID, videoID)
-	case "fave":
-		s.handleFave(w, r, user.ID, videoID)
-	case "unfave":
-		s.handleUnfave(w, r, user.ID, videoID)
-	case "rate":
-		var data struct {
-			Rating int `json:"rating"`
-		}
-		if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
-			slog.ErrorContext(
-				r.Context(), "failed to decode post rating",
-				"path", r.URL.Path,
-				"userId", user.ID,
-				"error", err,
-			)
-			utils.HttpError(w, http.StatusInternalServerError)
-			return
-		}
-		s.handleRate(w, r, data.Rating, user.ID, videoID)
-	case "delete":
-		s.handleBan(w, r, user.ID, videoID)
-	default:
-		utils.HttpError(w, http.StatusBadRequest)
-	}
+	s.ui.StoreFlashMessage(w, r, &successDelete)
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }

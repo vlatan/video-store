@@ -42,7 +42,7 @@ func (s *Service) TextHandler(w http.ResponseWriter, r *http.Request) {
 
 // DB and Redis health status
 // Wrap this with middlware that allows only admins
-func (s *Service) HealthHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Service) HealthAPI(w http.ResponseWriter, r *http.Request) {
 
 	// Construct joined map
 	data := map[string]any{

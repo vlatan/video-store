@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/utils"
 )
 
@@ -108,32 +107,4 @@ func (s *Service) handleRate(w http.ResponseWriter, r *http.Request, rating, use
 	}
 
 	s.ui.WriteJSON(w, r, ratingData)
-}
-
-// Handle a post ban
-func (s *Service) handleBan(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
-	rowsAffected, err := s.postsRepo.BanPost(r.Context(), videoID)
-	if err != nil {
-		slog.ErrorContext(
-			r.Context(), "user failed to ban/delete the video",
-			"path", r.URL.Path,
-			"userId", userID,
-			"error", err,
-		)
-		utils.HttpError(w, http.StatusInternalServerError)
-		return
-	}
-
-	if rowsAffected == 0 {
-		http.NotFound(w, r)
-		return
-	}
-
-	successDelete := models.FlashMessage{
-		Message:  "The video has been deleted!",
-		Category: "info",
-	}
-
-	s.ui.StoreFlashMessage(w, r, &successDelete)
-	http.Redirect(w, r, "/", http.StatusSeeOther)
 }

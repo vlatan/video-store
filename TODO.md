@@ -1,6 +1,5 @@
 * Use api prefix for JSON responses
-  Use user data instead of template data there
-  Move ban post out of actions
+  Adapt JS for this changes
 
 * Persist user post rating value
 * Style and postition rating buttons and stats

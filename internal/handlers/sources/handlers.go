@@ -193,7 +193,6 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	sourceID := r.PathValue("source")
-	cursor := r.URL.Query().Get("cursor")
 	orderBy := r.URL.Query().Get("order_by")
 
 	// Generate template data
@@ -204,9 +203,6 @@ func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
 	if orderBy == "likes" {
 		redisKey += ":likes"
 	}
-	if cursor != "" {
-		redisKey += fmt.Sprintf(":cursor:%s", cursor)
-	}
 
 	var (
 		err   error
@@ -215,7 +211,7 @@ func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	if data.IsCurrentUserAdmin() {
 		posts, err = s.postsRepo.GetSourcePosts(
-			r.Context(), sourceID, cursor, orderBy,
+			r.Context(), sourceID, "", orderBy,
 		)
 	} else {
 		posts, err = rdb.GetCachedData(
@@ -225,7 +221,7 @@ func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
 			s.config.CacheTimeout,
 			func() (models.Posts, error) {
 				return s.postsRepo.GetSourcePosts(
-					r.Context(), sourceID, cursor, orderBy,
+					r.Context(), sourceID, "", orderBy,
 				)
 			},
 		)
@@ -243,12 +239,6 @@ func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	if len(posts.Items) == 0 {
 		http.NotFound(w, r)
-		return
-	}
-
-	// If there's a cursor this is not the first page, return JSON
-	if cursor != "" {
-		s.ui.WriteJSON(w, r, posts)
 		return
 	}
 
