@@ -1,5 +1,4 @@
-* Use api prefix for JSON responses
-  Adapt JS for this changes
+* Use data to hardcode the API urls for JS
 
 * Persist user post rating value
 * Style and postition rating buttons and stats

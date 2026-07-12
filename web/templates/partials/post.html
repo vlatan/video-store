@@ -122,7 +122,7 @@
 				</div>
 
 				{{ if .CurrentUser.IsAuthenticated }}
-				<div class="rate-widget" data-url="/video/{{ .CurrentPost.VideoID }}/rate">
+				<div class="rate-widget" data-url="/api/video/{{ .CurrentPost.VideoID }}/rate">
 					{{ .CSRFField }}
 
 					<!-- Platform / Post Rating Column -->

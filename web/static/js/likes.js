@@ -40,7 +40,7 @@ const listenForAction = async (event, action) => {
     actionElement.classList.toggle(`${action}-yes`);
     let currentAction = action;
     if (actionElement.classList.contains(`${action}-no`)) currentAction = `un${action}`;
-    const url = `${window.location.pathname}${currentAction}`;
+    const url = `/api${window.location.pathname}${currentAction}`;
     try {
         const res = await postData(url);
         if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);

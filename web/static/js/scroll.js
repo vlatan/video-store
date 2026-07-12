@@ -76,8 +76,10 @@ if ('IntersectionObserver' in window) {
         // If there is next page and the entry is intersecting
         if (state.hasMore && entry.isIntersecting) {
 
+            const pathWithQueries = window.location.pathname + window.location.search + window.location.hash;
+
             // Call the loadItems function
-            loadItems(`${window.location.href}`, state.nextCursor);
+            loadItems(`/api${pathWithQueries}`, state.nextCursor);
         }
         // add root margin for earlier intersection detecetion
     }, { rootMargin: "200px 0px" });

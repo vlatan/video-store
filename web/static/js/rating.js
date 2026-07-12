@@ -5,7 +5,7 @@ document.querySelectorAll('.rate-widget').forEach(widget => {
     const rateBtnSubmit = widget.querySelector('.btn-submit-rate');
     const bigStarValue = widget.querySelector('.rating-big-star-value');
     const avgValDisplay = widget.querySelector('.avg-val');
-    const rateURL = widget.dataset.url || `${window.location.pathname}/rate`;
+    const rateURL = widget.dataset.url || `/api${window.location.pathname}/rate`;
 
     let currentRating = null;
     let selectedStar = null;

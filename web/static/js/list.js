@@ -7,7 +7,7 @@ document.addEventListener('click', async (event) => {
         action = 'unfave';
         messageText = "Succesfully removed.";
     }
-    const url = `/video/${remove.dataset.id}/${action}`;
+    const url = `/api/video/${remove.dataset.id}/${action}`;
     try {
         const res = await postData(url);
         if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);

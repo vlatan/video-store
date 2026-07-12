@@ -16,7 +16,7 @@ func (a *App) RegisterRoutes() *App {
 
 	// Home
 	mux.HandleFunc("GET /{$}", a.posts.HomeHandler)
-	mux.HandleFunc("GET /api/home/{$}", a.posts.HomeAPI)
+	mux.HandleFunc("GET /api/{$}", a.posts.HomeAPI)
 
 	// Videos
 	mux.HandleFunc("/video/new", a.mw.IsAdmin(a.posts.NewPostHandler))

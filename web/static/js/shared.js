@@ -24,17 +24,10 @@ const postData = async (url = '', data = {}) => {
 
 // Send GET request to backend
 const getData = async (url, cursor = "") => {
-    if (!cursor) {
-        return await fetch(url);
-    }
-
-    // set cursor query param to url
-    // https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams/set
-    const currenURL = new URL(url);
-    const params = new URLSearchParams(currenURL.search);
-    params.set("cursor", cursor);
-    currenURL.search = params.toString();
-    return await fetch(currenURL.toString());
+    if (!cursor) return await fetch(url);
+    const currentURL = new URL(url, window.location.origin);
+    currentURL.searchParams.set("cursor", cursor);
+    return await fetch(currentURL.toString());
 };
 
 // Alert helper
