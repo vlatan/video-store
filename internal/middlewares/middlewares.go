@@ -246,9 +246,8 @@ func (s *Service) HandleErrors(next http.Handler) http.Handler {
 		// Clear any previously buffered body
 		recorder.body.Reset()
 
-		// Client probably does not want HTML, serve JSON error
-		acceptHeader := r.Header.Get("Accept")
-		if !strings.Contains(acceptHeader, "text/html") {
+		// Serve JSON error on API path
+		if strings.HasPrefix(r.URL.Path, "/api/") {
 			s.ui.JSONError(recorder, r, recorder.status)
 			return
 		}
