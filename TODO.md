@@ -1,7 +1,12 @@
+* Use api prefix for JSON responses
+  Use user data instead of template data there
+  Move ban post out of actions
+
 * Persist user post rating value
 * Style and postition rating buttons and stats
 * Use schema on rating if any
-* Write JSON error where the response should be JSON
+
+* Fly in the login modal instead of pointing to login button
 
 * Build the JS and backend review/rating system
 * Make search bar on small screens accross entire screen
