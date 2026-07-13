@@ -38,6 +38,10 @@ func (r *Repository) InsertPost(ctx context.Context, post *models.Post) (int64, 
 		post.Category = &models.Category{}
 	}
 
+	if post.UserActions == nil {
+		post.UserActions = &models.Actions{}
+	}
+
 	query, err := r.GetQuery("insert_post.sql", nil)
 	if err != nil {
 		return 0, err
@@ -58,7 +62,7 @@ func (r *Repository) InsertPost(ctx context.Context, post *models.Post) (int64, 
 		utils.ToNullString(post.Tags),
 		post.Duration,
 		post.UploadDate,
-		utils.ToNullInt64(int64(post.UserID)),
+		utils.ToNullInt64(int64(post.UserActions.UserID)),
 		utils.ToNullString(post.Category.Name),
 	)
 

@@ -295,7 +295,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Create post object
 		post := s.yt.NewYouTubePost(metadata[0], "")
-		post.UserID = data.CurrentUser.ID
+		post.UserActions = &models.Actions{UserID: data.CurrentUser.ID}
 
 		// Insert the video
 		rowsAffected, err := s.postsRepo.InsertPost(r.Context(), post)
@@ -391,8 +391,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 			data.CurrentUser.ID,
 			data.CurrentPost.ID,
 		)
-		data.CurrentPost.UserLiked = userActions.Liked
-		data.CurrentPost.UserFaved = userActions.Faved
+		data.CurrentPost.UserActions = &userActions
 	}
 
 	// Don't cache the related posts only for the admin.

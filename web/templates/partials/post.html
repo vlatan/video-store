@@ -68,8 +68,10 @@
 				<h1 class="video-title" itemprop="name">{{ .CurrentPost.GetTitle }}</h1>
 				<div class="ui-inner-metadata-block">
 					<div class="social">
+						{{ $actions := .CurrentPost.UserActions }}
+
 						{{ if .CurrentUser.IsAuthenticated }}
-						{{ if .CurrentPost.UserLiked }}
+						{{ if and $actions $actions.Liked }}
 						<button class="like like-yes">
 							<span data-liked>&#10003;</span>
 							<span data-likes>{{ .CurrentPost.LikeButtonText }}</span>
@@ -86,7 +88,7 @@
 						{{ end }}
 
 						{{ if .CurrentUser.IsAuthenticated }}
-						{{ if .CurrentPost.UserFaved }}
+						{{ if and $actions $actions.Faved }}
 						<button data-status class="fave fave-yes">&#10003; Saved</button>
 						{{ else }}
 						<button data-status class="fave fave-no">Save</button>
@@ -94,6 +96,7 @@
 						{{ else }}
 						<button data-auth class="fave fave-no">Save</button>
 						{{ end }}
+
 					</div>
 				</div>
 			</div>

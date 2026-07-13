@@ -19,6 +19,7 @@ type Post struct {
 	Category        *Category       `json:"category,omitempty"`
 	Source          *Source         `json:"source,omitempty"`
 	Likes           int             `json:"likes,omitempty"`
+	UserActions     *Actions        `json:"user_actions,omitempty"`
 	Rating          *Rating         `json:"rating,omitempty"`
 	SearchScore     float64         `json:"search_score,omitempty"`
 	LikeButtonText  string          `json:"like_button_text,omitempty"`
@@ -29,17 +30,10 @@ type Post struct {
 	Tags            string          `json:"tags,omitempty"`
 	PlaylistID      string          `json:"playlist_id,omitempty"`
 	RelatedPosts    []Post          `json:"related_posts,omitempty"`
-	UploadDate      *time.Time      `json:"upload_date,omitempty"` // needs pointer to omit the date
+	UploadDate      *time.Time      `json:"upload_date,omitempty"`
 	CreatedAt       *time.Time      `json:"created_at,omitempty"`
 	UpdatedAt       *time.Time      `json:"updated_at,omitempty"`
 	Duration        ISO8601Duration `json:"duration,omitempty"`
-
-	// Fields used when the current user is creating, faving or liking a post.
-	// Or when listing the current user faved posts.
-	UserID        int        `json:"user_id,omitempty"`
-	UserLiked     bool       `json:"current_user_liked,omitempty"`
-	UserFaved     bool       `json:"current_user_faved,omitempty"`
-	WhenUserFaved *time.Time `json:"when_current_user_faved,omitempty"`
 }
 
 // MarshalBinary implements the encoding.BinaryMarshaler interface

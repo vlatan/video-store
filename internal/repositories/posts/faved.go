@@ -65,6 +65,7 @@ func (r *Repository) GetUserFavedPosts(
 	// Iterate over the rows
 	for rows.Next() {
 		var post models.Post
+		post.UserActions = &models.Actions{}
 		var totalNum int
 		var originalTitle sql.NullString
 
@@ -78,7 +79,7 @@ func (r *Repository) GetUserFavedPosts(
 			&post.Likes,
 			&totalNum,
 			&post.UploadDate,
-			&post.WhenUserFaved,
+			&post.UserActions.WhenFaved,
 		); err != nil {
 			return zero, err
 		}
@@ -112,7 +113,7 @@ func (r *Repository) GetUserFavedPosts(
 	// Determine the next cursor
 	lastPost := posts.Items[len(posts.Items)-1]
 	uploadDate := lastPost.UploadDate.Format(time.RFC3339Nano)
-	whenFaved := lastPost.WhenUserFaved.Format(time.RFC3339Nano)
+	whenFaved := lastPost.UserActions.WhenFaved.Format(time.RFC3339Nano)
 	cursorStr := fmt.Sprintf("%s,%d,%s,%d", whenFaved, lastPost.Likes, uploadDate, lastPost.ID)
 	posts.NextCursor = base64.StdEncoding.EncodeToString([]byte(cursorStr))
 
