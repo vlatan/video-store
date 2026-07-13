@@ -143,13 +143,13 @@
 							<div class="rating-meta">
 								{{ if .CurrentPost.Rating }}
 								<div class="rating-score">
-									<span class="rating-avg-val">
-										{{ .CurrentPost.Rating.Avg }}
-									</span> / 10
+									<span class="rating-avg-val">{{ .CurrentPost.Rating.Avg }}</span> / 10
 								</div>
 								<!-- <div class="rating-count">.CurrentPost.Rating.Count</div> -->
 								{{ else }}
-								<div class="rating-score"><span class="rating-avg-val">0</span> / 10</div>
+								<div class="rating-score">
+									<span class="rating-avg-val">0</span> / 10
+								</div>
 								<!-- <div class="rating-count">0</div> -->
 								{{ end }}
 							</div>
@@ -160,11 +160,11 @@
 					<div class="rating-column">
 						<span class="rating-column-label">YOUR RATING</span>
 						<button type="button" class="btn-open-rate" aria-haspopup="dialog">
-							<span class="rating-user-star ">☆</span>
 							{{ if and $actions $actions.Rating }}
+							<span class="rating-user-star ">★</span>
 							{{ $actions.Rating }}
 							{{ else }}
-							Rate
+							<span class="rating-user-star ">☆</span> Rate
 							{{ end }}
 						</button>
 					</div>
@@ -216,13 +216,13 @@
 							<div class="rating-meta">
 								{{ if .CurrentPost.Rating }}
 								<div class="rating-score">
-									<span class="rating-avg-val">
-										{{ .CurrentPost.Rating.Avg }}
-									</span> / 10
+									<span class="rating-avg-val">{{ .CurrentPost.Rating.Avg }}</span> / 10
 								</div>
 								<!-- <div class="rating-count">.CurrentPost.Rating.Count</div> -->
 								{{ else }}
-								<div class="rating-score"><span class="rating-avg-val">0</span> / 10</div>
+								<div class="rating-score">
+									<span class="rating-avg-val">0</span> / 10
+								</div>
 								<!-- <div class="rating-count">0</div> -->
 								{{ end }}
 							</div>

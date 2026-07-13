@@ -206,7 +206,9 @@ h1.video-title {
   }
 }
 
+
 /* ############# Social (Likes and Faves) ############# */
+
 .social {
   align-self: flex-start;
   display: flex;
@@ -216,14 +218,14 @@ h1.video-title {
 
 .like,
 .fave {
-  cursor: pointer;
-  border: 1px solid var(--primary-border-color);
-  border-radius: 1rem;
-  background: var(--secondary-background-color);
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
+  cursor: pointer;
+  border: 1px solid var(--primary-border-color);
+  border-radius: 1rem;
+  background: var(--secondary-background-color);
   min-height: 2rem;
   min-width: 5.5rem;
 }
@@ -259,26 +261,29 @@ h1.video-title {
 .rating-column-label {
   font-size: 0.6rem;
   color: #999;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
   font-weight: bold;
   text-transform: uppercase;
 }
 
-.rating-display {
+.rating-display,
+.btn-open-rate {
   display: flex;
   align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
   line-height: 1;
   background-color: var(--secondary-background-color);
   border: 1px solid var(--primary-border-color);
-  padding: 0.25rem 0.75rem;
+  padding: 0.35rem 0.75rem;
   border-radius: 1rem;
-  gap: 8px;
+  min-width: 5.5rem;
 }
 
 .rating-global-star {
   color: #f5c518;
   line-height: 1;
-  font-size: 1.25rem;
+  font-size: 1.20rem;
 }
 
 .rating-meta {
@@ -302,16 +307,9 @@ h1.video-title {
 
 /* User Interaction Button Trigger */
 .btn-open-rate {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background-color: var(--secondary-background-color);
-  border: 1px solid var(--primary-border-color);
   color: #5799ef;
   cursor: pointer;
   font-weight: bold;
-  padding: 0.25rem 0.75rem;
-  border-radius: 1rem;
   transition: background 0.2s;
 }
 
@@ -320,7 +318,7 @@ h1.video-title {
 }
 
 .rating-user-star {
-  font-size: 1.25rem;
+  font-size: 1.15rem;
   line-height: 1;
 }
 

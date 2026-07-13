@@ -1,5 +1,4 @@
-* Persist user post rating value
-* Style and postition rating buttons and stats
+* Show rating count
 * Use schema on rating if any
 * Fly in the login modal instead of pointing to login button
 
