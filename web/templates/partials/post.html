@@ -130,19 +130,19 @@
 
 					<!-- Platform / Post Rating Column -->
 					<div class="rating-column">
-						<span class="rating-column-label">VIDEO RATING</span>
+						<span class="rating-column-label">AVG RATING</span>
 						<div class="rating-display">
 							<span class="rating-global-star">★</span>
 							<div class="rating-meta">
 								{{ if .CurrentPost.Rating }}
 								<div class="rating-score">
-									<span class="avg-val">
-										{{ .CurrentPost.Rating.AvgRating }}
-									</span>/10
+									<span class="rating-avg-val">
+										{{ .CurrentPost.Rating.Avg }}
+									</span> / 10
 								</div>
-								<!-- <div class="rating-count">317K</div> -->
+								<!-- <div class="rating-count">.CurrentPost.Rating.Avg</div> -->
 								{{ else }}
-								<div class="rating-score"><span class="avg-val">-</span>/10</div>
+								<div class="rating-score"><span class="rating-avg-val">0</span> / 10</div>
 								<!-- <div class="rating-count">0</div> -->
 								{{ end }}
 							</div>
@@ -199,11 +199,11 @@
 							<span class="rating-global-star">★</span>
 							<div class="rating-meta">
 								{{ if .CurrentPost.Rating }}
-								<div class="rating-score"><span class="avg-val">{{ .CurrentPost.Rating.AvgRating
+								<div class="rating-score"><span class="rating-avg-val">{{ .CurrentPost.Rating.AvgRating
 										}}</span>/10</div>
 								<!-- <div class="rating-count">317K</div> -->
 								{{ else }}
-								<div class="rating-score"><span class="avg-val">-</span>/10</div>
+								<div class="rating-score"><span class="rating-avg-val">-</span>/10</div>
 								<!-- <div class="rating-count">0</div> -->
 								{{ end }}
 							</div>

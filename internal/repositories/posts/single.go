@@ -163,8 +163,8 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.
 	// Attach ratings if any
 	if avgRating.Valid && ratingCount.Valid {
 		post.Rating = &models.Rating{
-			AvgRating:   utils.FromNullFloat64(avgRating),
-			RatingCount: utils.FromNullInt64(ratingCount),
+			Avg:   utils.FromNullFloat64(avgRating),
+			Count: utils.FromNullInt64(ratingCount),
 		}
 	}
 

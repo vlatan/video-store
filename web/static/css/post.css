@@ -244,6 +244,11 @@ h1.video-title {
   font-family: sans-serif;
 }
 
+.rate-widget,
+.rate-widget .btn-open-rate {
+  font-size: 0.85rem;
+}
+
 .rating-column {
   display: flex;
   flex-direction: column;
@@ -272,7 +277,8 @@ h1.video-title {
 
 .rating-global-star {
   color: #f5c518;
-  font-size: 1.75rem;
+  line-height: 1;
+  font-size: 1.25rem;
 }
 
 .rating-meta {
@@ -282,12 +288,10 @@ h1.video-title {
 
 .rating-score {
   color: #aaa;
-  font-size: 0.9rem;
 }
 
-.rating-score .avg-val {
+.rating-score .rating-avg-val {
   color: #fff;
-  font-size: 1.25rem;
   font-weight: bold;
 }
 
@@ -306,7 +310,6 @@ h1.video-title {
   color: #5799ef;
   cursor: pointer;
   font-weight: bold;
-  font-size: 1.15rem;
   padding: 0.5rem 1rem;
   border-radius: 1rem;
   transition: background 0.2s;
@@ -317,7 +320,7 @@ h1.video-title {
 }
 
 .rating-user-star {
-  font-size: 1.75rem;
+  font-size: 1.25rem;
   line-height: 1;
 }
 

@@ -98,7 +98,7 @@ func (r *Repository) Rate(ctx context.Context, rating, userID int, videoID strin
 		SELECT ROUND(AVG(rating), 2)::float8, COUNT(*)
 		FROM post_rating WHERE post_id = $1
 	`
-	err = tx.QueryRow(ctx, query, postId).Scan(&rd.AvgRating, &rd.RatingCount)
+	err = tx.QueryRow(ctx, query, postId).Scan(&rd.Avg, &rd.Count)
 	if err != nil {
 		return zero, err
 	}

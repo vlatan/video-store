@@ -25,8 +25,8 @@ func (a *Actions) UnmarshalBinary(data []byte) error {
 }
 
 type Rating struct {
-	AvgRating   float64 `json:"avg_rating,omitempty"`
-	RatingCount int64   `json:"rating_count,omitempty"`
+	Avg   float64 `json:"avg_rating,omitempty"`
+	Count int64   `json:"rating_count,omitempty"`
 }
 
 // MarshalBinary implements the encoding.BinaryMarshaler interface
