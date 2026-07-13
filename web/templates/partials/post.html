@@ -128,7 +128,7 @@
 				<div class="rate-widget" data-url="/api/video/{{ .CurrentPost.VideoID }}/rate">
 					{{ .CSRFField }}
 
-					<!-- Platform / Post Rating Column -->
+					<!-- Avg Rating Column -->
 					<div class="rating-column">
 						<span class="rating-column-label">AVG RATING</span>
 						<div class="rating-display">
@@ -191,10 +191,14 @@
 						</div>
 					</dialog>
 				</div>
+
 				{{ else }}
+
 				<div class="rate-widget">
+
+					<!-- Avg Rating Column -->
 					<div class="rating-column">
-						<span class="rating-column-label">VIDEO RATING</span>
+						<span class="rating-column-label">AVG RATING</span>
 						<div class="rating-display">
 							<span class="rating-global-star">★</span>
 							<div class="rating-meta">
@@ -213,6 +217,7 @@
 						</div>
 					</div>
 
+					<!-- Your Rating Column -->
 					<div class="rating-column">
 						<span class="rating-column-label">YOUR RATING</span>
 						<button data-auth type="button" class="btn-open-rate">
