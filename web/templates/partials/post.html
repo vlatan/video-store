@@ -140,7 +140,7 @@
 										{{ .CurrentPost.Rating.Avg }}
 									</span> / 10
 								</div>
-								<!-- <div class="rating-count">.CurrentPost.Rating.Avg</div> -->
+								<!-- <div class="rating-count">.CurrentPost.Rating.Count</div> -->
 								{{ else }}
 								<div class="rating-score"><span class="rating-avg-val">0</span> / 10</div>
 								<!-- <div class="rating-count">0</div> -->
@@ -199,11 +199,14 @@
 							<span class="rating-global-star">★</span>
 							<div class="rating-meta">
 								{{ if .CurrentPost.Rating }}
-								<div class="rating-score"><span class="rating-avg-val">{{ .CurrentPost.Rating.AvgRating
-										}}</span>/10</div>
-								<!-- <div class="rating-count">317K</div> -->
+								<div class="rating-score">
+									<span class="rating-avg-val">
+										{{ .CurrentPost.Rating.Avg }}
+									</span> / 10
+								</div>
+								<!-- <div class="rating-count">.CurrentPost.Rating.Count</div> -->
 								{{ else }}
-								<div class="rating-score"><span class="rating-avg-val">-</span>/10</div>
+								<div class="rating-score"><span class="rating-avg-val">0</span> / 10</div>
 								<!-- <div class="rating-count">0</div> -->
 								{{ end }}
 							</div>

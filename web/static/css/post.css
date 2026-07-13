@@ -259,7 +259,7 @@ h1.video-title {
 .rating-column-label {
   font-size: 0.6rem;
   color: #999;
-  letter-spacing: 1.5px;
+  letter-spacing: 1px;
   font-weight: bold;
   text-transform: uppercase;
 }
@@ -270,7 +270,7 @@ h1.video-title {
   line-height: 1;
   background-color: var(--secondary-background-color);
   border: 1px solid var(--primary-border-color);
-  padding: 0.5rem 1rem;
+  padding: 0.25rem 0.75rem;
   border-radius: 1rem;
   gap: 8px;
 }
@@ -310,13 +310,13 @@ h1.video-title {
   color: #5799ef;
   cursor: pointer;
   font-weight: bold;
-  padding: 0.5rem 1rem;
+  padding: 0.25rem 0.75rem;
   border-radius: 1rem;
   transition: background 0.2s;
 }
 
 .btn-open-rate:hover {
-  background: rgba(87, 153, 239, 0.1);
+  background: var(--primary-background-color);
 }
 
 .rating-user-star {
