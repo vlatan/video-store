@@ -223,7 +223,7 @@ h1.video-title {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 0.5rem;
   min-height: 2rem;
   min-width: 5.5rem;
 }

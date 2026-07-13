@@ -64,12 +64,12 @@
 
 		<header class="metadata">
 
+			{{ $actions := .CurrentPost.UserActions }}
+
 			<div class="metadata-block">
 				<h1 class="video-title" itemprop="name">{{ .CurrentPost.GetTitle }}</h1>
 				<div class="ui-inner-metadata-block">
 					<div class="social">
-						{{ $actions := .CurrentPost.UserActions }}
-
 						{{ if .CurrentUser.IsAuthenticated }}
 						{{ if and $actions $actions.Liked }}
 						<button class="like like-yes">
@@ -89,12 +89,19 @@
 
 						{{ if .CurrentUser.IsAuthenticated }}
 						{{ if and $actions $actions.Faved }}
-						<button data-status class="fave fave-yes">&#10003; Saved</button>
+						<button class="fave fave-yes">
+							<span data-saved>&#10003;</span>
+							<span data-saves>Saved</span>
+						</button>
 						{{ else }}
-						<button data-status class="fave fave-no">Save</button>
+						<button class="fave fave-no">
+							<span data-saves>Save</span>
+						</button>
 						{{ end }}
 						{{ else }}
-						<button data-auth class="fave fave-no">Save</button>
+						<button data-auth class="fave fave-no">
+							<span data-saves>Save</span>
+						</button>
 						{{ end }}
 
 					</div>
@@ -153,7 +160,12 @@
 					<div class="rating-column">
 						<span class="rating-column-label">YOUR RATING</span>
 						<button type="button" class="btn-open-rate" aria-haspopup="dialog">
-							<span class="rating-user-star ">☆</span> Rate
+							<span class="rating-user-star ">☆</span>
+							{{ if and $actions $actions.Rating }}
+							{{ $actions.Rating }}
+							{{ else }}
+							Rate
+							{{ end }}
 						</button>
 					</div>
 

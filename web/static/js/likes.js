@@ -1,10 +1,18 @@
 const setFaveStatus = action => {
-    let text = 'Save';
+    let saves = document.querySelector('[data-saves]');
+    let text = saves.textContent.trim();
     if (action === 'fave') {
-        text = '&#10003; Saved';
+        text = 'Saved';
+        let saved = document.createElement('span');
+        saved.innerHTML = '&#10003;';
+        saved.setAttribute('data-saved', '');
+        saves.before(saved);
+    } else {
+        text = 'Save';
+        document.querySelector('[data-saved]').remove();
     }
-    document.querySelector('[data-status]').innerHTML = text;
-};
+    saves.textContent = text;
+}
 
 const setLikeCounter = action => {
     let likes = document.querySelector('[data-likes]');
