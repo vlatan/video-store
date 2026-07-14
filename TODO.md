@@ -1,3 +1,5 @@
+* Modernize modals to dialogs
+
 * Build the JS and backend review/rating system
 * Make search bar on small screens accross entire screen
 * Maybe use another gemini API call for the credits
