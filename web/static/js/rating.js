@@ -43,8 +43,6 @@ document.querySelectorAll('.rate-widget').forEach(widget => {
             if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
             const data = await res.json();
 
-            // Replace or insert average rating
-
             let votesText = "votes";
             if (data.rating_count === 1) votesText = "vote";
 
@@ -65,6 +63,7 @@ document.querySelectorAll('.rate-widget').forEach(widget => {
                 </div>
             `;
 
+            // Replace or insert average rating
             const avgRatingColumn = widget.querySelector('#average-rating-column');
             if (avgRatingColumn) {
                 avgRatingColumn.outerHTML = avgRatingHTML;
@@ -72,7 +71,7 @@ document.querySelectorAll('.rate-widget').forEach(widget => {
                 userRatingColumn.insertAdjacentHTML('beforebegin', avgRatingHTML);
             }
 
-            // Transform the user rating button visually
+            // Transform the user rating button
             rateBtnOpen.innerHTML = `<span class="rating-user-star">&#9733;</span> ${currentRating}`;
         } catch (error) {
             console.error("Failed to fetch or parse JSON:", error);
