@@ -145,12 +145,16 @@
 								<div class="rating-score">
 									<span class="rating-avg-val">{{ .CurrentPost.Rating.Avg }}</span> / 10
 								</div>
-								<!-- <div class="rating-count">.CurrentPost.Rating.Count</div> -->
+								{{ $votesText := "votes" }}
+								{{ if eq .CurrentPost.Rating.Count 1 }}
+								{{ $votesText = "vote" }}
+								{{ end }}
+								<div class="rating-count">{{ .CurrentPost.Rating.Count }} {{ $votesText }}</div>
 								{{ else }}
 								<div class="rating-score">
 									<span class="rating-avg-val">0</span> / 10
 								</div>
-								<!-- <div class="rating-count">0</div> -->
+								<div class="rating-count">0 votes</div>
 								{{ end }}
 							</div>
 						</div>
@@ -207,7 +211,6 @@
 				{{ else }}
 
 				<div class="rate-widget">
-
 					<!-- Avg Rating Column -->
 					<div class="rating-column">
 						<span class="rating-column-label">AVG RATING</span>
@@ -218,12 +221,16 @@
 								<div class="rating-score">
 									<span class="rating-avg-val">{{ .CurrentPost.Rating.Avg }}</span> / 10
 								</div>
-								<!-- <div class="rating-count">.CurrentPost.Rating.Count</div> -->
+								{{ $votesText := "votes" }}
+								{{ if eq .CurrentPost.Rating.Count 1 }}
+								{{ $votesText = "vote" }}
+								{{ end }}
+								<div class="rating-count">{{ .CurrentPost.Rating.Count }} {{ $votesText }}</div>
 								{{ else }}
 								<div class="rating-score">
 									<span class="rating-avg-val">0</span> / 10
 								</div>
-								<!-- <div class="rating-count">0</div> -->
+								<div class="rating-count">0 votes</div>
 								{{ end }}
 							</div>
 						</div>

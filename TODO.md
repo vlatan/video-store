@@ -1,4 +1,4 @@
-* Show rating count
+* Show rating count, update when rated via JS
 * Use schema on rating if any
 * Fly in the login modal instead of pointing to login button
 
