@@ -1,5 +1,4 @@
 document.querySelectorAll('.rate-widget').forEach(widget => {
-    const avgRatingColumn = widget.querySelector('#average-rating-column');
     const userRatingColumn = widget.querySelector('#user-rating-column');
     const rateDialog = widget.querySelector('.rate-dialog');
     const rateBtnOpen = widget.querySelector('.btn-open-rate');
@@ -66,6 +65,7 @@ document.querySelectorAll('.rate-widget').forEach(widget => {
                 </div>
             `;
 
+            const avgRatingColumn = widget.querySelector('#average-rating-column');
             if (avgRatingColumn) {
                 avgRatingColumn.outerHTML = avgRatingHTML;
             } else if (userRatingColumn) {
