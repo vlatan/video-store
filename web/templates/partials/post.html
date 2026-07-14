@@ -136,12 +136,12 @@
 					{{ .CSRFField }}
 
 					<!-- Avg Rating Column -->
+					{{ if .CurrentPost.Rating }}
 					<div class="rating-column">
 						<span class="rating-column-label">AVG RATING</span>
 						<div class="rating-display">
-							<span class="rating-global-star">★</span>
+							<span class="rating-global-star">&#9733;</span>
 							<div class="rating-meta">
-								{{ if .CurrentPost.Rating }}
 								<div class="rating-score">
 									<span class="rating-avg-val">{{ .CurrentPost.Rating.Avg }}</span> / 10
 								</div>
@@ -150,15 +150,10 @@
 								{{ $votesText = "vote" }}
 								{{ end }}
 								<div class="rating-count">{{ .CurrentPost.Rating.Count }} {{ $votesText }}</div>
-								{{ else }}
-								<div class="rating-score">
-									<span class="rating-avg-val">-</span> / 10
-								</div>
-								<div class="rating-count">0 votes</div>
-								{{ end }}
 							</div>
 						</div>
 					</div>
+					{{ end }}
 
 					<!-- Your Rating Column -->
 					<div class="rating-column">
@@ -169,10 +164,11 @@
 							<button data-auth type="button" class="btn-open-rate">
 								{{ end }}
 								{{ if and $actions $actions.Rating }}
-								<span class="rating-user-star ">★</span>
-								{{ $actions.Rating }}
+								<span class="rating-user-star">&#9733;</span>
+								<span>{{ $actions.Rating }}</span>
 								{{ else }}
-								<span class="rating-user-star ">☆</span> Rate
+								<span class="rating-user-star">&#9734;</span>
+								<span>Rate</span>
 								{{ end }}
 							</button>
 					</div>

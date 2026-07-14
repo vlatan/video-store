@@ -49,7 +49,7 @@ document.querySelectorAll('.rate-widget').forEach(widget => {
             }
 
             // Transition the User Rating trigger state to confirm submission visually
-            rateBtnOpen.innerHTML = `<span class="rating-user-star " style="color: #5799ef;">★</span> ${currentRating}`;
+            rateBtnOpen.innerHTML = `<span class="rating-user-star">&#9733;</span> ${currentRating}`;
         } catch (error) {
             console.error("Failed to fetch or parse JSON:", error);
             setAlert("Something went wrong!");
