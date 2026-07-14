@@ -51,12 +51,18 @@ document.querySelectorAll('.rate-widget').forEach(widget => {
                     <span class="rating-column-label">AVG RATING</span>
                     <div class="rating-display">
                         <span class="rating-global-star">&#9733;</span>
-                        <div class="rating-meta">
+                        <div class="rating-meta" itemprop="aggregateRating" itemscope
+							itemtype="https://schema.org/AggregateRating">
+                            <meta itemprop="worstRating" content="1">
                             <div class="rating-score">
-                                <span class="rating-avg-val">${data.avg_rating}</span> / 10
+                                <span class="rating-avg-val" itemprop="ratingValue">
+                                    ${data.avg_rating}
+                                </span> / <span itemprop="bestRating">10</span>
                             </div>
                             <div class="rating-count">
-                                ${data.rating_count} ${votesText}
+                                <span class="rating-count-val" itemprop="ratingCount">
+                                    ${data.rating_count}
+                                </span> ${votesText}
                             </div>
                         </div>
                     </div>

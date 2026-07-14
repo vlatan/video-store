@@ -1,4 +1,3 @@
-* Use schema on rating if any
 * Fly in the login modal instead of pointing to login button
 
 * Build the JS and backend review/rating system
