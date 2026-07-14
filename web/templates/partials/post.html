@@ -137,7 +137,7 @@
 
 					<!-- Avg Rating Column -->
 					{{ if .CurrentPost.Rating }}
-					<div class="rating-column">
+					<div class="rating-column" id="average-rating-column">
 						<span class="rating-column-label">AVG RATING</span>
 						<div class="rating-display">
 							<span class="rating-global-star">&#9733;</span>
@@ -149,14 +149,16 @@
 								{{ if eq .CurrentPost.Rating.Count 1 }}
 								{{ $votesText = "vote" }}
 								{{ end }}
-								<div class="rating-count">{{ .CurrentPost.Rating.Count }} {{ $votesText }}</div>
+								<div class="rating-count">
+									{{ .CurrentPost.Rating.Count }} {{ $votesText }}
+								</div>
 							</div>
 						</div>
 					</div>
 					{{ end }}
 
 					<!-- Your Rating Column -->
-					<div class="rating-column">
+					<div class="rating-column" id="user-rating-column">
 						<span class="rating-column-label">YOUR RATING</span>
 						{{ if .CurrentUser.IsAuthenticated }}
 						<button type="button" class="btn-open-rate" aria-haspopup="dialog">

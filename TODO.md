@@ -1,6 +1,3 @@
-* Show rating count, update when rated via JS
-  Maybe replace the entire column
-  
 * Use schema on rating if any
 * Fly in the login modal instead of pointing to login button
 

@@ -1,10 +1,11 @@
 document.querySelectorAll('.rate-widget').forEach(widget => {
+    const avgRatingColumn = widget.querySelector('#average-rating-column');
+    const userRatingColumn = widget.querySelector('#user-rating-column');
     const rateDialog = widget.querySelector('.rate-dialog');
     const rateBtnOpen = widget.querySelector('.btn-open-rate');
     const rateBtnClose = widget.querySelector('.btn-close-rate');
     const rateBtnSubmit = widget.querySelector('.btn-submit-rate');
     const bigStarValue = widget.querySelector('.rating-big-star-value');
-    const avgValDisplay = widget.querySelector('.rating-avg-val');
     const rateURL = widget.dataset.url || `/api${window.location.pathname}/rate`;
 
     let currentRating = null;
@@ -43,12 +44,35 @@ document.querySelectorAll('.rate-widget').forEach(widget => {
             if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
             const data = await res.json();
 
-            // Update the distinct Video Rating value panel dynamically
-            if (avgValDisplay && data.avg_rating) {
-                avgValDisplay.textContent = data.avg_rating;
+            // Replace or insert average rating
+
+            let votesText = "votes";
+            if (data.rating_count === 1) votesText = "vote";
+
+            const avgRatingHTML = `
+                <div class="rating-column" id="average-rating-column">
+                    <span class="rating-column-label">AVG RATING</span>
+                    <div class="rating-display">
+                        <span class="rating-global-star">&#9733;</span>
+                        <div class="rating-meta">
+                            <div class="rating-score">
+                                <span class="rating-avg-val">${data.avg_rating}</span> / 10
+                            </div>
+                            <div class="rating-count">
+                                ${data.rating_count} ${votesText}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            if (avgRatingColumn) {
+                avgRatingColumn.outerHTML = avgRatingHTML;
+            } else if (userRatingColumn) {
+                userRatingColumn.insertAdjacentHTML('beforebegin', avgRatingHTML);
             }
 
-            // Transition the User Rating trigger state to confirm submission visually
+            // Transform the user rating button visually
             rateBtnOpen.innerHTML = `<span class="rating-user-star">&#9733;</span> ${currentRating}`;
         } catch (error) {
             console.error("Failed to fetch or parse JSON:", error);
