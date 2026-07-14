@@ -11,7 +11,7 @@ document.querySelectorAll('.rate-widget').forEach(widget => {
     let selectedStar = null;
     const bigStarOriginalTextContent = bigStarValue.textContent;
 
-    rateBtnOpen.addEventListener('click', () => { rateDialog.showModal(); });
+    rateBtnOpen.addEventListener('click', () => rateDialog.showModal());
     rateBtnClose.addEventListener('click', () => {
         rateDialog.close()
         rateBtnSubmit.disabled = true;
