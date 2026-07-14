@@ -131,7 +131,7 @@
 					{{ end }}
 				</div>
 
-				{{ if .CurrentUser.IsAuthenticated }}
+				<!-- Rating Widget -->
 				<div class="rate-widget" data-url="/api/video/{{ .CurrentPost.VideoID }}/rate">
 					{{ .CSRFField }}
 
@@ -163,16 +163,21 @@
 					<!-- Your Rating Column -->
 					<div class="rating-column">
 						<span class="rating-column-label">YOUR RATING</span>
+						{{ if .CurrentUser.IsAuthenticated }}
 						<button type="button" class="btn-open-rate" aria-haspopup="dialog">
-							{{ if and $actions $actions.Rating }}
-							<span class="rating-user-star ">★</span>
-							{{ $actions.Rating }}
 							{{ else }}
-							<span class="rating-user-star ">☆</span> Rate
-							{{ end }}
-						</button>
+							<button data-auth type="button" class="btn-open-rate">
+								{{ end }}
+								{{ if and $actions $actions.Rating }}
+								<span class="rating-user-star ">★</span>
+								{{ $actions.Rating }}
+								{{ else }}
+								<span class="rating-user-star ">☆</span> Rate
+								{{ end }}
+							</button>
 					</div>
 
+					{{ if .CurrentUser.IsAuthenticated }}
 					<!-- Rating Dialog -->
 					<dialog class="rate-dialog" closedby="any">
 						<div class="rate-dialog-content">
@@ -206,46 +211,9 @@
 							<button type="button" class="btn-submit-rate" disabled>Rate</button>
 						</div>
 					</dialog>
+					{{ end }}
+
 				</div>
-
-				{{ else }}
-
-				<div class="rate-widget">
-					<!-- Avg Rating Column -->
-					<div class="rating-column">
-						<span class="rating-column-label">AVG RATING</span>
-						<div class="rating-display">
-							<span class="rating-global-star">★</span>
-							<div class="rating-meta">
-								{{ if .CurrentPost.Rating }}
-								<div class="rating-score">
-									<span class="rating-avg-val">{{ .CurrentPost.Rating.Avg }}</span> / 10
-								</div>
-								{{ $votesText := "votes" }}
-								{{ if eq .CurrentPost.Rating.Count 1 }}
-								{{ $votesText = "vote" }}
-								{{ end }}
-								<div class="rating-count">{{ .CurrentPost.Rating.Count }} {{ $votesText }}</div>
-								{{ else }}
-								<div class="rating-score">
-									<span class="rating-avg-val">0</span> / 10
-								</div>
-								<div class="rating-count">0 votes</div>
-								{{ end }}
-							</div>
-						</div>
-					</div>
-
-					<!-- Your Rating Column -->
-					<div class="rating-column">
-						<span class="rating-column-label">YOUR RATING</span>
-						<button data-auth type="button" class="btn-open-rate">
-							<span class="rating-user-star ">☆</span> Rate
-						</button>
-					</div>
-				</div>
-				{{ end }}
-
 			</div>
 		</header>
 
