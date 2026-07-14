@@ -134,7 +134,11 @@ document.addEventListener('click', event => {
     }
 });
 
+
+// ==========================================================================
 // Cookies disclaimer
+// ==========================================================================
+
 const acceptCookies = localStorage.getItem('acceptCookies');
 const privacyPath = "/page/privacy/";
 const currentPath = window.location.pathname;

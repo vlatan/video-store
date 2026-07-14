@@ -475,12 +475,6 @@ a.nav-item:hover::after {
 	border-radius: 50%;
 }
 
-.login-wrap {
-	display: flex;
-	position: relative;
-	align-items: center;
-}
-
 .nav-item.delete-account {
 	color: var(--orange);
 	font-weight: bold;
@@ -490,36 +484,6 @@ a.nav-item:hover::after {
 
 
 /* ############# Alert Messages ############# */
-
-.need-login {
-	display: none;
-	position: absolute;
-	z-index: 2;
-	font-weight: bold;
-	border-radius: 0.7rem;
-	padding: 0.7rem 1.4rem;
-	top: 2.2rem;
-	right: 0;
-	white-space: nowrap;
-	text-align: center;
-	color: black;
-	background: white;
-	border: 2px solid var(--secondary-background-color);
-}
-
-.need-login::after {
-	content: "";
-	position: absolute;
-	top: 0;
-	right: 10%;
-	width: 0;
-	height: 0;
-	border: 10px solid transparent;
-	border-bottom-color: white;
-	border-top: 0;
-	margin-left: -10px;
-	margin-top: -10px;
-}
 
 .alert {
 	align-self: flex-end;

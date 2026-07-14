@@ -1,5 +1,3 @@
-* Fly in the login modal instead of pointing to login button
-
 * Build the JS and backend review/rating system
 * Make search bar on small screens accross entire screen
 * Maybe use another gemini API call for the credits

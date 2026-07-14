@@ -82,7 +82,7 @@
 						</button>
 						{{ end }}
 						{{ else }}
-						<button data-auth class="like like-no">
+						<button data-modal="login" class="like like-no">
 							<span>{{ .CurrentPost.LikeButtonText }}</span>
 						</button>
 						{{ end }}
@@ -99,7 +99,7 @@
 						</button>
 						{{ end }}
 						{{ else }}
-						<button data-auth class="fave fave-no">
+						<button data-modal="login" class="fave fave-no">
 							<span data-saves>Save</span>
 						</button>
 						{{ end }}
@@ -169,7 +169,7 @@
 						{{ if .CurrentUser.IsAuthenticated }}
 						<button type="button" class="btn-open-rate" aria-haspopup="dialog">
 							{{ else }}
-							<button data-auth type="button" class="btn-open-rate">
+							<button data-modal="login" type="button" class="btn-open-rate">
 								{{ end }}
 								{{ if and $actions $actions.Rating }}
 								<span class="rating-user-star">&#9733;</span>
@@ -291,8 +291,6 @@
 {{ if .CurrentUser.IsAuthenticated }}
 <script defer src='{{ .AddVersion "/static/js/likes.js" }}'></script>
 <script defer src='{{ .AddVersion "/static/js/rating.js" }}'></script>
-{{ else }}
-<script defer src='{{ .AddVersion "/static/js/login.js" }}'></script>
 {{ end }}
 <script defer src='{{ .AddVersion "/static/js/play.js" }}'></script>
 {{ end }}
