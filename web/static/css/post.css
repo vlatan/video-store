@@ -338,10 +338,9 @@ h1.video-title {
 .rate-dialog {
   position: fixed;
   inset: 0;
-  display: flex;
+  margin: auto;
   align-items: center;
   justify-content: center;
-  margin: auto;
   background-color: var(--secondary-background-color);
   border: none;
   border-radius: 0.5rem;
@@ -364,6 +363,7 @@ h1.video-title {
 }
 
 .rate-dialog[open] {
+  display: flex;
   opacity: 1;
   transform: scale(1);
 }
