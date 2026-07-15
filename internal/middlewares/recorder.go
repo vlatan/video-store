@@ -64,13 +64,16 @@ func (r *responseRecorder) flush() {
 	// Successful requests were already streamed.
 	// Only write headers and body for errors.
 	r.ResponseWriter.WriteHeader(r.status)
-	if r.body.Len() > 0 {
-		if _, err := r.ResponseWriter.Write(r.body.Bytes()); err != nil {
-			// Too late for recovery here, just log the error
-			slog.Error(
-				"failed to write data to response",
-				"error", err,
-			)
-		}
+
+	if r.body.Len() == 0 {
+		return
+	}
+
+	if _, err := r.ResponseWriter.Write(r.body.Bytes()); err != nil {
+		// Too late for recovery here, just log the error
+		slog.Error(
+			"failed to write data to response",
+			"error", err,
+		)
 	}
 }
