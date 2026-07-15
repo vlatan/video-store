@@ -1,5 +1,8 @@
-* Build the JS and backend review/rating system
+* Build the JS and backend review system
+* Maybe add sorting option by likes and rating
+* Add close button to login menu
 * Make search bar on small screens accross entire screen
+
 * Maybe use another gemini API call for the credits
 * Group videos by entity, create taxonomies
 * Create "Best of" landing pages for these clusters
