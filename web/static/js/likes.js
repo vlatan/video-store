@@ -1,10 +1,18 @@
 const setFaveStatus = action => {
-    let text = 'Save';
+    let saves = document.querySelector('[data-saves]');
+    let text = saves.textContent.trim();
     if (action === 'fave') {
-        text = '&#10003; Saved';
+        text = 'Saved';
+        let saved = document.createElement('span');
+        saved.innerHTML = '&#10003;';
+        saved.setAttribute('data-saved', '');
+        saves.before(saved);
+    } else {
+        text = 'Save';
+        document.querySelector('[data-saved]').remove();
     }
-    document.querySelector('[data-status]').innerHTML = text;
-};
+    saves.textContent = text;
+}
 
 const setLikeCounter = action => {
     let likes = document.querySelector('[data-likes]');
@@ -33,27 +41,24 @@ const setLikeCounter = action => {
     document.querySelector('[data-likes]').textContent = text;
 };
 
-const listenForAction = (event, action) => {
+const listenForAction = async (event, action) => {
     const actionElement = event.target.closest(`.${action}`);
-    if (actionElement) {
+    if (!actionElement) return;
+    actionElement.classList.toggle(`${action}-no`);
+    actionElement.classList.toggle(`${action}-yes`);
+    let currentAction = action;
+    if (actionElement.classList.contains(`${action}-no`)) currentAction = `un${action}`;
+    const url = `/api${window.location.pathname}${currentAction}`;
+    try {
+        const res = await postData(url);
+        if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
+        if (currentAction.includes('like')) { setLikeCounter(currentAction); return; }
+        setFaveStatus(currentAction);
+    } catch (error) {
         actionElement.classList.toggle(`${action}-no`);
         actionElement.classList.toggle(`${action}-yes`);
-        let currentAction = action;
-        if (actionElement.classList.contains(`${action}-no`)) {
-            currentAction = `un${action}`;
-        }
-        postData(`${window.location.pathname}${currentAction}`)
-            .then(response => {
-                if (response.ok) {
-                    if (currentAction.includes('like')) {
-                        setLikeCounter(currentAction);
-                    } else {
-                        setFaveStatus(currentAction);
-                    }
-                } else {
-                    setAlert("Sorry, could not record that action!")
-                }
-            });
+        console.error("Failed to fetch response:", error);
+        setAlert("Sorry, could not record that action!")
     }
 };
 

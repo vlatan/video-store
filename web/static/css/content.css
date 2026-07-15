@@ -126,7 +126,6 @@ h2.video-title {
 .content-title-wrap {
   display: flex;
   align-items: center;
-  /* gap: 0.5rem; */
   margin-bottom: var(--content-padding);
 }
 

@@ -1,68 +1,5 @@
-// Sleep time expects milliseconds
-const sleep = time => {
-    return new Promise(resolve => setTimeout(resolve, time));
-};
-
-// Send POST request to backend
-const postData = async (url = '', data = {}) => {
-    // Create headers object
-    const headers = new Headers();
-    headers.append("Content-Type", "application/json");
-
-    // If CSRF Token send with the POST request
-    let csrfToken = document.getElementsByName("gorilla.csrf.Token");
-    if (csrfToken) {
-        headers.append("X-CSRF-Token", csrfToken[0].value);
-    }
-
-    const response = await fetch(url, {
-        method: 'POST',
-        headers: headers,
-        body: JSON.stringify(data)
-    });
-
-    return response;
-};
-
-// Send GET request to backend
-const getData = async (url, cursor = "") => {
-    if (!cursor) {
-        return await fetch(url);
-    }
-
-    // set cursor query param to url
-    // https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams/set
-    const currenURL = new URL(url);
-    const params = new URLSearchParams(currenURL.search);
-    params.set("cursor", cursor);
-    currenURL.search = params.toString();
-    return await fetch(currenURL.toString());
-};
-
-// Set alert message
-const setAlert = message => {
-    const alert = document.createElement('div');
-    alert.classList.add('alert');
-    alert.innerText = message;
-    document.getElementById('footer').prepend(alert);
-    sleep(2000).then(() => {
-        alert.remove();
-    });
-};
 
 document.addEventListener('click', event => {
-
-    // Modals
-    document.querySelectorAll('[data-modal]').forEach(element => {
-        const modalName = element.dataset.modal;
-        const modalBody = document.querySelector(`[data-body="${modalName}"]`);
-        const closeModal = event.target.closest(`[data-close="${modalName}"]`);
-        if (event.target.closest(`[data-modal="${modalName}"]`)) {
-            modalBody.style.display = 'flex';
-        } else if (event.target === modalBody || closeModal) {
-            modalBody.removeAttribute('style');
-        }
-    });
 
     // User Profile Dropdown menu
     const dropContent = document.querySelector('.dropdown-content');
@@ -122,7 +59,103 @@ document.addEventListener('click', event => {
     }
 });
 
+
+// ==========================================================================
+// API request helpers
+// ==========================================================================
+
+// Send POST request to backend
+const postData = async (url = '', data = {}) => {
+    // Create headers object
+    const headers = new Headers();
+    headers.append("Content-Type", "application/json");
+
+    // If CSRF Token send with the POST request
+    let csrfToken = document.getElementsByName("gorilla.csrf.Token");
+    if (csrfToken) { headers.append("X-CSRF-Token", csrfToken[0].value); }
+
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(data)
+    });
+
+    return response;
+};
+
+// Send GET request to backend
+const getData = async (url, cursor = "") => {
+    if (!cursor) return await fetch(url);
+    const currentURL = new URL(url, window.location.origin);
+    currentURL.searchParams.set("cursor", cursor);
+    return await fetch(currentURL.toString());
+};
+
+
+// ==========================================================================
+// Alerts - Flash Messages
+// ==========================================================================
+
+
+// Sleep time expects milliseconds
+const sleep = time => {
+    return new Promise(resolve => setTimeout(resolve, time));
+};
+
+// Alert helper
+const dismissAlert = (alertEl) => {
+    const closeBtn = alertEl.querySelector('.alert-close');
+    closeBtn.addEventListener('click', () => alertEl.remove());
+    sleep(6000).then(() => alertEl.remove());
+};
+
+// Set alert message
+const setAlert = message => {
+    const alert = document.createElement('div');
+    alert.className = 'alert';
+    document.getElementById('footer').prepend(alert);
+
+    const alertText = document.createElement('span')
+    alertText.className = 'alert-text';
+    alertText.innerText = message;
+    alert.appendChild(alertText);
+
+    const alertClose = document.createElement('span')
+    alertClose.className = 'alert-close';
+    alertClose.innerHTML = '&times;';
+    alert.appendChild(alertClose);
+
+    dismissAlert(alert)
+};
+
+
+// Event listener for static HTML alert messages
+document.querySelectorAll('.alert').forEach(a => dismissAlert(a));
+
+
+// ==========================================================================
+// Dialogs
+// ==========================================================================
+
+document.querySelectorAll('[data-modal]').forEach(openDialogBtn => {
+    const modalName = openDialogBtn.dataset.modal;
+    const modalDialog = document.querySelector(`[data-body="${modalName}"]`);
+    const closeDialogBtns = modalDialog.querySelectorAll(`[data-close="${modalName}"]`);
+
+    // Open dialog on open button click
+    openDialogBtn.addEventListener('click', () => modalDialog.showModal());
+
+    // Close dialog on any close buttons click
+    closeDialogBtns.forEach(btn => {
+        btn.addEventListener('click', () => modalDialog.close());
+    });
+});
+
+
+// ==========================================================================
 // Cookies disclaimer
+// ==========================================================================
+
 const acceptCookies = localStorage.getItem('acceptCookies');
 const privacyPath = "/page/privacy/";
 const currentPath = window.location.pathname;

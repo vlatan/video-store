@@ -115,11 +115,40 @@ func Capitalize(s string) string {
 	return strings.ToUpper(s[:1]) + s[1:]
 }
 
-func ToNullInt64(i int) sql.NullInt64 {
+// ToNullInt64 is a helper function to convert
+// an int64 to sql.NullInt64 on db UPDATE/INSERT
+func ToNullInt64(i int64) sql.NullInt64 {
 	if i == 0 {
 		return sql.NullInt64{Valid: false}
 	}
-	return sql.NullInt64{Int64: int64(i), Valid: true}
+	return sql.NullInt64{Int64: i, Valid: true}
+}
+
+// FromNullInt64 is a helper function to convert
+// an sql.NullInt64 to an int64 on db SELECT
+func FromNullInt64(ni sql.NullInt64) int64 {
+	if !ni.Valid {
+		return 0
+	}
+	return ni.Int64
+}
+
+// ToNullFloat64 is a helper function to convert
+// an intto sql.NullInt64 on db UPDATE/INSERT
+func ToNullFloat64(f float64) sql.NullFloat64 {
+	if f == 0 {
+		return sql.NullFloat64{Valid: false}
+	}
+	return sql.NullFloat64{Float64: f, Valid: true}
+}
+
+// FromNullFloat64 is a helper function to convert
+// an sql.NullFloat64 to a float64 on db SELECT
+func FromNullFloat64(ni sql.NullFloat64) float64 {
+	if !ni.Valid {
+		return 0
+	}
+	return ni.Float64
 }
 
 // ToNullString is a helper function to convert

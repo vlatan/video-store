@@ -68,9 +68,19 @@ func New(
 	store sessions.Store,
 	config *config.Config,
 ) (Service, error) {
+
 	m := minify.New()
+
+	// Create a custom minifier configuration
+	htmlMinifier := &html.Minifier{
+		KeepDocumentTags: true, // Prevent stripping <html>, <head>, and <body>
+		KeepEndTags:      true, // Keep valid HTML structure
+	}
+
+	// Use the custom configured minifier function
+	m.AddFunc("text/html", htmlMinifier.Minify)
+
 	m.AddFunc("text/css", css.Minify)
-	m.AddFunc("text/html", html.Minify)
 	m.AddFuncRegexp(validJS, js.Minify)
 	m.AddFuncRegexp(validXML, xml.Minify)
 	m.AddFunc("application/manifest+json", json.Minify)

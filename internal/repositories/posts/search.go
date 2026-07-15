@@ -86,7 +86,7 @@ func (r *Repository) SearchPosts(
 			&post.Likes,
 			&totalNum,
 			&post.UploadDate,
-			&post.Score,
+			&post.SearchScore,
 		); err != nil {
 			return zero, err
 		}
@@ -122,7 +122,7 @@ func (r *Repository) SearchPosts(
 	uploadDate := lastPost.UploadDate.Format(time.RFC3339Nano)
 
 	// Preserve the full precision of the score float, %.17g
-	cursorStr := fmt.Sprintf("%.17g,%d,%s,%d", lastPost.Score, lastPost.Likes, uploadDate, lastPost.ID)
+	cursorStr := fmt.Sprintf("%.17g,%d,%s,%d", lastPost.SearchScore, lastPost.Likes, uploadDate, lastPost.ID)
 	posts.NextCursor = base64.StdEncoding.EncodeToString([]byte(cursorStr))
 
 	return posts, nil

@@ -1,10 +1,11 @@
 package posts
 
 import (
+	"errors"
 	"log/slog"
 	"net/http"
 
-	"github.com/vlatan/video-store/internal/models"
+	"github.com/jackc/pgx/v5"
 	"github.com/vlatan/video-store/internal/utils"
 )
 
@@ -84,12 +85,19 @@ func (s *Service) handleUnfave(w http.ResponseWriter, r *http.Request, userID in
 	}
 }
 
-// Handle a post ban
-func (s *Service) handleBan(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
-	rowsAffected, err := s.postsRepo.BanPost(r.Context(), videoID)
+// Handle a post favorite from user
+func (s *Service) handleRate(w http.ResponseWriter, r *http.Request, rating, userID int, videoID string) {
+
+	ratingData, err := s.postsRepo.Rate(r.Context(), rating, userID, videoID)
+
+	if errors.Is(err, pgx.ErrNoRows) {
+		http.NotFound(w, r)
+		return
+	}
+
 	if err != nil {
 		slog.ErrorContext(
-			r.Context(), "user failed to ban/delete the video",
+			r.Context(), "user failed to rate the video",
 			"path", r.URL.Path,
 			"userId", userID,
 			"error", err,
@@ -98,16 +106,5 @@ func (s *Service) handleBan(w http.ResponseWriter, r *http.Request, userID int, 
 		return
 	}
 
-	if rowsAffected == 0 {
-		http.NotFound(w, r)
-		return
-	}
-
-	successDelete := models.FlashMessage{
-		Message:  "The video has been deleted!",
-		Category: "info",
-	}
-
-	s.ui.StoreFlashMessage(w, r, &successDelete)
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	s.ui.WriteJSON(w, r, ratingData)
 }

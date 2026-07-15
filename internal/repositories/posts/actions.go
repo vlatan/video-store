@@ -2,7 +2,10 @@ package posts
 
 import (
 	"context"
+	"errors"
+	"log/slog"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/utils"
 )
@@ -53,6 +56,59 @@ func (r *Repository) Unfave(ctx context.Context, userID int, videoID string) (in
 
 	result, err := r.db.Pool.Exec(ctx, query, userID, videoID)
 	return result.RowsAffected(), err
+}
+
+// Rate records user's post rating
+func (r *Repository) Rate(ctx context.Context, rating, userID int, videoID string) (models.Rating, error) {
+
+	var zero, rd models.Rating
+
+	// Start trannsaction
+	tx, err := r.db.Pool.Begin(ctx)
+	if err != nil {
+		return zero, err
+	}
+
+	// Rollback if something goes wrong.
+	// Release the connection in any case.
+	defer func() {
+		rbErr := tx.Rollback(ctx)
+		if rbErr != nil && !errors.Is(rbErr, pgx.ErrTxClosed) {
+			slog.ErrorContext(
+				ctx, "transaction rollback on post rating failed",
+				"userId", userID,
+				"postId", videoID,
+				"error", rbErr,
+			)
+		}
+	}()
+
+	query, err := r.GetQuery("rate_post.sql", nil)
+	if err != nil {
+		return zero, err
+	}
+
+	var postId int64
+	err = tx.QueryRow(ctx, query, rating, userID, videoID).Scan(&postId)
+	if err != nil {
+		return zero, err
+	}
+
+	query = `
+		SELECT ROUND(AVG(rating), 2)::float8, COUNT(*)
+		FROM post_rating WHERE post_id = $1
+	`
+	err = tx.QueryRow(ctx, query, postId).Scan(&rd.Avg, &rd.Count)
+	if err != nil {
+		return zero, err
+	}
+
+	// Commit the changes
+	if err := tx.Commit(ctx); err != nil {
+		return zero, err
+	}
+
+	return rd, nil
 }
 
 // Update a playlist

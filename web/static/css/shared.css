@@ -2,11 +2,11 @@
 :root {
 	--base-font-size: 1rem;
 	--primary-background-color: rgb(20, 20, 20);
-	--secondary-background-color: rgb(28, 28, 28);
+	--secondary-background-color: rgb(30, 30, 30);
 	--primary-font-color: rgb(230, 237, 243);
 	--secondary-font-color: rgb(213, 220, 227);
-	--primary-border-color: hsl(0, 0%, 18.82%);
-	--secondary-border-color: hsl(0, 0%, 21%);
+	--primary-border-color: rgb(48, 48, 48);
+	--secondary-border-color: rgb(54, 54, 54);
 	--content-width: min(90vw, 1600px);
 	--main-font-family: system-ui, sans-serif;
 	--content-padding: 1.5rem;
@@ -475,12 +475,6 @@ a.nav-item:hover::after {
 	border-radius: 50%;
 }
 
-.login-wrap {
-	display: flex;
-	position: relative;
-	align-items: center;
-}
-
 .nav-item.delete-account {
 	color: var(--orange);
 	font-weight: bold;
@@ -491,45 +485,39 @@ a.nav-item:hover::after {
 
 /* ############# Alert Messages ############# */
 
-.need-login {
-	display: none;
-	position: absolute;
-	z-index: 2;
-	font-weight: bold;
-	border-radius: 0.7rem;
-	padding: 0.7rem 1.4rem;
-	top: 2.2rem;
-	right: 0;
-	white-space: nowrap;
-	text-align: center;
-	color: black;
-	background: white;
-	border: 2px solid var(--secondary-background-color);
-}
-
-.need-login::after {
-	content: "";
-	position: absolute;
-	top: 0;
-	right: 10%;
-	width: 0;
-	height: 0;
-	border: 10px solid transparent;
-	border-bottom-color: white;
-	border-top: 0;
-	margin-left: -10px;
-	margin-top: -10px;
-}
-
 .alert {
+	align-self: flex-end;
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	font-size: 0.85rem;
 	visibility: visible;
-	animation: fadeOut 2s ease-in forwards;
-	animation-delay: 0.5s;
-	border-radius: 1rem;
-	padding: 0.75rem 2rem;
+	animation: fadeOut 1s ease-in forwards;
+	animation-delay: 5s;
+	border-radius: 0.5rem;
+	padding: 0.5rem 0.75rem;
 	color: black;
-	background: white;
+	background-color: white;
 	border: 2px solid var(--secondary-background-color);
+}
+
+.alert-close {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border: 1px solid var(--primary-border-color);
+	font-size: 1rem;
+	line-height: 1;
+	cursor: pointer;
+	width: 1rem;
+	height: 1rem;
+	border-radius: 50%;
+}
+
+.alert-close:hover,
+.alert-close:focus {
+	color: white;
+	background-color: var(--secondary-background-color);
 }
 
 @keyframes fadeOut {
@@ -544,52 +532,64 @@ a.nav-item:hover::after {
 
 /* The Modal (background) */
 .modal {
-	display: none;
 	position: fixed;
-	z-index: 102;
-	justify-content: center;
+	inset: 0;
+	margin: auto;
 	align-items: center;
-	left: 0;
-	top: 0;
-	width: 100%;
-	height: 100%;
-	overflow: auto;
-	background-color: rgb(0, 0, 0);
-	background-color: rgba(0, 0, 0, 0.8);
-	animation: fadeIn 300ms ease-in forwards;
+	justify-content: center;
+	background-color: #fefefe;
+	border-radius: 0.5rem;
+	border: 1px solid #888;
+	color: black;
+
+	opacity: 0;
+	transform: scale(0);
+	transition:
+		opacity 300ms ease,
+		transform 300ms ease,
+		overlay 300ms ease,
+		display 300ms ease;
+	transition-behavior: allow-discrete;
 }
 
-@keyframes fadeIn {
-	from {
+.modal[open] {
+	display: flex;
+	opacity: 1;
+	transform: scale(1);
+}
+
+@starting-style {
+	.modal[open] {
 		opacity: 0;
+		transform: scale(0);
+	}
+}
+
+.modal::backdrop {
+	background-color: rgba(0, 0, 0, 0);
+	transition: background-color 300ms ease;
+}
+
+.modal[open]::backdrop {
+	background-color: rgba(0, 0, 0, 0.75);
+}
+
+@starting-style {
+	.modal[open]::backdrop {
+		background-color: rgba(0, 0, 0, 0);
 	}
 }
 
 /* Modal Content/Box */
 .modal-content {
-	position: relative;
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
 	align-items: center;
 	text-align: center;
-	background-color: #fefefe;
-	border-radius: 5px;
 	margin: auto;
-	border: 1px solid #888;
-	color: black;
 	gap: var(--content-padding);
 	padding: var(--modal-padding);
-	transform: translateX(30%);
-	opacity: 0;
-	animation: flyInRight 100ms ease-in 200ms forwards;
-}
-
-@keyframes flyInRight {
-	to {
-		transform: translateX(0);
-		opacity: 1;
-	}
 }
 
 

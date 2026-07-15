@@ -12,13 +12,10 @@ import (
 // Handle the user favorites page
 func (s *Service) UserFavoritesHandler(w http.ResponseWriter, r *http.Request) {
 
-	// Get the cursor if any
-	cursor := r.URL.Query().Get("cursor")
-
 	// Generate template data
 	data := models.GetDataFromContext(r)
 
-	posts, err := s.postsRepo.GetUserFavedPosts(r.Context(), data.CurrentUser.ID, cursor)
+	posts, err := s.postsRepo.GetUserFavedPosts(r.Context(), data.CurrentUser.ID, "")
 
 	if err != nil {
 		slog.ErrorContext(
@@ -28,12 +25,6 @@ func (s *Service) UserFavoritesHandler(w http.ResponseWriter, r *http.Request) {
 			"error", err,
 		)
 		utils.HttpError(w, http.StatusInternalServerError)
-		return
-	}
-
-	// If there's a cursor this is not the first page, return JSON
-	if cursor != "" {
-		s.ui.WriteJSON(w, r, posts)
 		return
 	}
 

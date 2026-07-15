@@ -63,38 +63,53 @@
 		</div>
 
 		<header class="metadata">
+
+			{{ $actions := .CurrentPost.UserActions }}
+
 			<div class="metadata-block">
 				<h1 class="video-title" itemprop="name">{{ .CurrentPost.GetTitle }}</h1>
-				<div class="social">
-					{{ if .CurrentUser.IsAuthenticated }}
-					{{ if .CurrentPost.UserLiked }}
-					<button class="like like-yes">
-						<span data-liked>&#10003;</span>
-						<span data-likes>{{ .CurrentPost.LikeButtonText }}</span>
-					</button>
-					{{ else }}
-					<button class="like like-no">
-						<span data-likes>{{ .CurrentPost.LikeButtonText }}</span>
-					</button>
-					{{ end }}
-					{{ else }}
-					<button data-auth class="like like-no">
-						<span>{{ .CurrentPost.LikeButtonText }}</span>
-					</button>
-					{{ end }}
+				<div class="ui-inner-metadata-block">
+					<div class="social">
+						{{ if .CurrentUser.IsAuthenticated }}
+						{{ if and $actions $actions.Liked }}
+						<button class="like like-yes">
+							<span data-liked>&#10003;</span>
+							<span data-likes>{{ .CurrentPost.LikeButtonText }}</span>
+						</button>
+						{{ else }}
+						<button class="like like-no">
+							<span data-likes>{{ .CurrentPost.LikeButtonText }}</span>
+						</button>
+						{{ end }}
+						{{ else }}
+						<button data-modal="login" class="like like-no">
+							<span>{{ .CurrentPost.LikeButtonText }}</span>
+						</button>
+						{{ end }}
 
-					{{ if .CurrentUser.IsAuthenticated }}
-					{{ if .CurrentPost.UserFaved }}
-					<button data-status class="fave fave-yes">&#10003; Saved</button>
-					{{ else }}
-					<button data-status class="fave fave-no">Save</button>
-					{{ end }}
-					{{ else }}
-					<button data-auth class="fave fave-no">Save</button>
-					{{ end }}
+						{{ if .CurrentUser.IsAuthenticated }}
+						{{ if and $actions $actions.Faved }}
+						<button class="fave fave-yes">
+							<span data-saved>&#10003;</span>
+							<span data-saves>Saved</span>
+						</button>
+						{{ else }}
+						<button class="fave fave-no">
+							<span data-saves>Save</span>
+						</button>
+						{{ end }}
+						{{ else }}
+						<button data-modal="login" class="fave fave-no">
+							<span data-saves>Save</span>
+						</button>
+						{{ end }}
+
+					</div>
 				</div>
 			</div>
+
 			<div class="metadata-block">
+
 				<div class="inner-metadata-block">
 					<span>
 						<strong>Duration:</strong>
@@ -115,12 +130,94 @@
 					</span>
 					{{ end }}
 				</div>
-				{{ if .IsCurrentUserAdmin }}
-				<span class="admin-buttons">
-					<button data-modal="video" class="modal-button">Delete</button>
-					<a href="/video/{{ .CurrentPost.VideoID }}/edit" class="modal-button edit-content">Edit</a>
-				</span>
-				{{ end }}
+
+				<!-- Rating Widget -->
+				<div class="rate-widget" data-url="/api/video/{{ .CurrentPost.VideoID }}/rate">
+					{{ .CSRFField }}
+
+					<!-- Avg Rating Column -->
+					{{ if .CurrentPost.Rating }}
+					<div class="rating-column" id="average-rating-column">
+						<span class="rating-column-label">AVG RATING</span>
+						<div class="rating-display">
+							<span class="rating-global-star">&#9733;</span>
+							<div class="rating-meta" itemprop="aggregateRating" itemscope
+								itemtype="https://schema.org/AggregateRating">
+								<meta itemprop="worstRating" content="1">
+								<div class="rating-score">
+									<span class="rating-avg-val" itemprop="ratingValue">
+										{{ .CurrentPost.Rating.Avg }}
+									</span> / <span itemprop="bestRating">10</span>
+								</div>
+								{{ $votesText := "votes" }}
+								{{ if eq .CurrentPost.Rating.Count 1 }}
+								{{ $votesText = "vote" }}
+								{{ end }}
+								<div class="rating-count">
+									<span class="rating-count-val" itemprop="ratingCount">
+										{{ .CurrentPost.Rating.Count }}
+									</span> {{ $votesText }}
+								</div>
+							</div>
+						</div>
+					</div>
+					{{ end }}
+
+					<!-- Your Rating Column -->
+					<div class="rating-column" id="user-rating-column">
+						<span class="rating-column-label">YOUR RATING</span>
+						{{ if .CurrentUser.IsAuthenticated }}
+						<button type="button" class="btn-open-rate" aria-haspopup="dialog">
+							{{ else }}
+							<button data-modal="login" type="button" class="btn-open-rate">
+								{{ end }}
+								{{ if and $actions $actions.Rating }}
+								<span class="rating-user-star">&#9733;</span>
+								<span>{{ $actions.Rating }}</span>
+								{{ else }}
+								<span class="rating-user-star">&#9734;</span>
+								<span>Rate</span>
+								{{ end }}
+							</button>
+					</div>
+
+					{{ if .CurrentUser.IsAuthenticated }}
+					<!-- Rating Dialog -->
+					<dialog class="modal rate-dialog" closedby="any">
+						<div class="rate-dialog-content">
+							<div class="rating-big-star-wrapper">
+								<svg viewBox="0 0 24 24">
+									<path
+										d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+								</svg>
+								<span class="rating-big-star-value">?</span>
+							</div>
+
+							<button type="button" class="btn-close-rate">&times;</button>
+							<header class="rating-header">
+								<h3 class="rate-subtitle">RATE THIS</h3>
+								<h2 class="rate-title">{{ .CurrentPost.GetTitle }}</h2>
+							</header>
+
+							<div class="rate-stars">
+								<label><input type="radio" name="rating" value="10"><span>★</span></label>
+								<label><input type="radio" name="rating" value="9"><span>★</span></label>
+								<label><input type="radio" name="rating" value="8"><span>★</span></label>
+								<label><input type="radio" name="rating" value="7"><span>★</span></label>
+								<label><input type="radio" name="rating" value="6"><span>★</span></label>
+								<label><input type="radio" name="rating" value="5"><span>★</span></label>
+								<label><input type="radio" name="rating" value="4"><span>★</span></label>
+								<label><input type="radio" name="rating" value="3"><span>★</span></label>
+								<label><input type="radio" name="rating" value="2"><span>★</span></label>
+								<label><input type="radio" name="rating" value="1"><span>★</span></label>
+							</div>
+
+							<button type="button" class="btn-submit-rate" disabled>Rate</button>
+						</div>
+					</dialog>
+					{{ end }}
+
+				</div>
 			</div>
 		</header>
 
@@ -142,8 +239,13 @@
 				{{ .CurrentPost.Description }}
 			</div>
 		</div>
-		<button class="modal-button edit-description edit-content">Edit Desc</button>
+		{{ end }}
 
+		{{ if .IsCurrentUserAdmin }}
+		<span class="admin-buttons">
+			<button data-modal="video" class="modal-button">Delete</button>
+			<a href="/video/{{ .CurrentPost.VideoID }}/edit" class="modal-button edit-content">Edit</a>
+		</span>
 		{{ end }}
 
 	</div>
@@ -170,7 +272,7 @@
 </article>
 
 {{ if .IsCurrentUserAdmin }}
-<div data-body="video" class="modal">
+<dialog data-body="video" class="modal" closedby="any">
 	<form class="modal-content" action="/video/{{ .CurrentPost.VideoID }}/delete" method="POST">
 		{{ .CSRFField }}
 		<span data-close="video" class="close-modal" title="Close">&times;</span>
@@ -181,15 +283,14 @@
 			<button type="submit" class="modal-button delete-button">Delete</button>
 		</div>
 	</form>
-</div>
+</dialog>
 {{ end }}
 {{ end }}
 
 {{ define "extra_scripts" }}
 {{ if .CurrentUser.IsAuthenticated }}
 <script defer src='{{ .AddVersion "/static/js/likes.js" }}'></script>
-{{ else }}
-<script defer src='{{ .AddVersion "/static/js/login.js" }}'></script>
+<script defer src='{{ .AddVersion "/static/js/rating.js" }}'></script>
 {{ end }}
 <script defer src='{{ .AddVersion "/static/js/play.js" }}'></script>
 {{ end }}

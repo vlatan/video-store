@@ -2,7 +2,7 @@ package middlewares
 
 import (
 	"bytes"
-	"log"
+	"log/slog"
 	"net/http"
 )
 
@@ -11,8 +11,9 @@ import (
 // response from the next handler before writing it to the client.
 type responseRecorder struct {
 	http.ResponseWriter
-	body   *bytes.Buffer
-	status int
+	body        *bytes.Buffer
+	status      int
+	wroteHeader bool
 }
 
 // NewResponseRecorder creates a new responseRecorder.
@@ -24,25 +25,52 @@ func NewResponseRecorder(w http.ResponseWriter) *responseRecorder {
 	}
 }
 
-// WriteHeader captures the response status code.
+// WriteHeader captures the response status code if error
 func (r *responseRecorder) WriteHeader(statusCode int) {
+	if r.wroteHeader {
+		return
+	}
+
 	r.status = statusCode
+	r.wroteHeader = true
+
+	// Stream successful headers immediately
+	if r.status < http.StatusBadRequest {
+		r.ResponseWriter.WriteHeader(statusCode)
+	}
 }
 
 // Write captures the response body.
 func (r *responseRecorder) Write(b []byte) (int, error) {
-	return r.body.Write(b)
+	if !r.wroteHeader {
+		r.WriteHeader(http.StatusOK) // Implicit 200 OK
+	}
+
+	// Only buffer the body if it's an error
+	if r.status >= http.StatusBadRequest {
+		return r.body.Write(b)
+	}
+
+	// Stream successful bodies directly to the client
+	return r.ResponseWriter.Write(b)
 }
 
 // flush sends the captured response (or a modified one) to the client.
 func (r *responseRecorder) flush() {
-	r.ResponseWriter.WriteHeader(r.status)
-	if r.body.Len() == 0 {
+	if r.status < http.StatusBadRequest {
 		return
 	}
-	_, err := r.ResponseWriter.Write(r.body.Bytes())
-	if err != nil {
-		// Too late for recovery here, just log the error
-		log.Printf("Error writing response body: %v", err)
+
+	// Successful requests were already streamed.
+	// Only write headers and body for errors.
+	r.ResponseWriter.WriteHeader(r.status)
+	if r.body.Len() > 0 {
+		if _, err := r.ResponseWriter.Write(r.body.Bytes()); err != nil {
+			// Too late for recovery here, just log the error
+			slog.Error(
+				"failed to write data to response",
+				"error", err,
+			)
+		}
 	}
 }

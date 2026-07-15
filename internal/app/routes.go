@@ -16,16 +16,18 @@ func (a *App) RegisterRoutes() *App {
 
 	// Home
 	mux.HandleFunc("GET /{$}", a.posts.HomeHandler)
+	mux.HandleFunc("GET /api/{$}", a.posts.HomeAPI)
 
 	// Videos
 	mux.HandleFunc("/video/new", a.mw.IsAdmin(a.posts.NewPostHandler))
 	mux.HandleFunc("GET /video/{video}/{$}", a.posts.SinglePostHandler)
-	mux.HandleFunc("GET /video/{video}/edit", a.mw.IsAdmin(a.posts.UpdatePostHandler))
-	mux.HandleFunc("POST /video/{video}/edit", a.mw.IsAdmin(a.posts.UpdatePostHandler))
-	mux.HandleFunc("POST /video/{video}/{action}", a.mw.IsAuthenticated(a.posts.ActionPostHandler))
+	mux.HandleFunc("/video/{video}/edit", a.mw.IsAdmin(a.posts.UpdatePostHandler))
+	mux.HandleFunc("POST /video/{video}/delete", a.mw.IsAdmin(a.posts.BanPostHandler))
+	mux.HandleFunc("POST /api/video/{video}/{action}", a.mw.IsAuthenticated(a.posts.ActionPostAPI))
 
 	// Categories
 	mux.HandleFunc("GET /category/{category}/{$}", a.posts.CategoryPostsHandler)
+	mux.HandleFunc("GET /api/category/{category}/{$}", a.posts.CategoryPostsAPI)
 
 	// Pages
 	mux.HandleFunc("GET /page/{slug}/{$}", a.pages.SinglePageHandler)
@@ -36,6 +38,7 @@ func (a *App) RegisterRoutes() *App {
 	// Sources
 	mux.HandleFunc("/source/new", a.mw.IsAdmin(a.sources.NewSourceHandler))
 	mux.HandleFunc("GET /source/{source}/{$}", a.sources.SourcePostsHandler)
+	mux.HandleFunc("GET /api/source/{source}/{$}", a.sources.SourcePostsAPI)
 	mux.HandleFunc("GET /sources/{$}", a.sources.SourcesHandler)
 
 	// Authentication
@@ -51,11 +54,13 @@ func (a *App) RegisterRoutes() *App {
 	// Users
 	mux.HandleFunc("POST /account/delete", a.mw.IsAuthenticated(a.auth.DeleteAccountHandler))
 	mux.HandleFunc("GET /user/favorites/{$}", a.mw.IsAuthenticated(a.users.UserFavoritesHandler))
+	mux.HandleFunc("GET /api/user/favorites/{$}", a.mw.IsAuthenticated(a.users.UserFavoritesAPI))
 	mux.HandleFunc("GET /users/{$}", a.mw.IsAdmin(a.users.UsersHandler))
 
 	// The rest
 	mux.HandleFunc("GET /search/{$}", a.posts.SearchPostsHandler)
-	mux.HandleFunc("GET /health/{$}", a.mw.IsAdmin(a.misc.HealthHandler))
+	mux.HandleFunc("GET /api/search/{$}", a.posts.SearchPostsAPI)
+	mux.HandleFunc("GET /api/health/{$}", a.mw.IsAdmin(a.misc.HealthAPI))
 	mux.HandleFunc("GET /static/", a.misc.StaticHandler)
 	mux.HandleFunc("GET /ads.txt", a.mw.PublicCache(a.misc.TextHandler))
 	mux.HandleFunc("GET /robots.txt", a.mw.PublicCache(a.misc.TextHandler))
