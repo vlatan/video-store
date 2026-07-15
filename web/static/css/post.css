@@ -334,63 +334,20 @@ h1.video-title {
 	color: #5799ef;
 }
 
-/* Dialog Styles */
+/* Rating dialog Styles */
 .rate-dialog {
-	position: fixed;
-	inset: 0;
-	margin: auto;
-	align-items: center;
-	justify-content: center;
 	background-color: var(--secondary-background-color);
 	border: none;
-	border-radius: 0.5rem;
 	color: var(--primary-font-color);
 	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
 	width: 620px;
 	max-width: 100%;
 	overflow: visible;
-
-	opacity: 0;
-	transform: scale(0);
-	transition:
-		opacity 0.3s ease,
-		transform 0.3s ease,
-		overlay 0.3s ease,
-		display 0.3s ease;
-	transition-behavior: allow-discrete;
 }
 
 @media screen and (max-width: 630px) {
 	.rate-dialog {
 		border-radius: 0;
-	}
-}
-
-.rate-dialog[open] {
-	display: flex;
-	opacity: 1;
-	transform: scale(1);
-}
-
-@starting-style {
-	.rate-dialog[open] {
-		opacity: 0;
-		transform: scale(0);
-	}
-}
-
-.rate-dialog::backdrop {
-	background-color: rgba(0, 0, 0, 0);
-	transition: background-color 0.3s ease;
-}
-
-.rate-dialog[open]::backdrop {
-	background-color: rgba(0, 0, 0, 0.75);
-}
-
-@starting-style {
-	.rate-dialog[open]::backdrop {
-		background-color: rgba(0, 0, 0, 0);
 	}
 }
 

@@ -537,38 +537,37 @@ a.nav-item:hover::after {
 	margin: auto;
 	align-items: center;
 	justify-content: center;
-	overflow: auto;
 	background-color: #fefefe;
-	border-radius: 5px;
+	border-radius: 0.5rem;
 	border: 1px solid #888;
 	color: black;
 
 	opacity: 0;
-	transform: translateX(30%);
+	transform: scale(0);
 	transition:
-		opacity 200ms ease-in 100ms,
-		transform 200ms ease-in 100ms,
-		overlay 200ms ease-in 100ms,
-		display 200ms ease-in 100ms;
+		opacity 300ms ease,
+		transform 300ms ease,
+		overlay 300ms ease,
+		display 300ms ease;
 	transition-behavior: allow-discrete;
 }
 
 .modal[open] {
 	display: flex;
 	opacity: 1;
-	transform: translateX(0);
+	transform: scale(1);
 }
 
 @starting-style {
 	.modal[open] {
 		opacity: 0;
-		transform: translateX(30%);
+		transform: scale(0);
 	}
 }
 
 .modal::backdrop {
 	background-color: rgba(0, 0, 0, 0);
-	transition: background-color 200ms ease-in 100ms;
+	transition: background-color 300ms ease;
 }
 
 .modal[open]::backdrop {
