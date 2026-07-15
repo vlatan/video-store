@@ -28,8 +28,14 @@ func (s *Service) HomeHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Construct the redis key
 	redisKey := "home:posts"
-	if orderBy == "likes" {
+
+	switch orderBy {
+	case "likes":
 		redisKey += ":likes"
+	case "avg_rating":
+		redisKey += ":avg_rating"
+	case "rating_count":
+		redisKey += ":rating_count"
 	}
 
 	// Generate template data
