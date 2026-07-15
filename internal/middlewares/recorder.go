@@ -2,6 +2,7 @@ package middlewares
 
 import (
 	"bytes"
+	"log/slog"
 	"net/http"
 )
 
@@ -64,6 +65,12 @@ func (r *responseRecorder) flush() {
 	// Only write headers and body for errors.
 	r.ResponseWriter.WriteHeader(r.status)
 	if r.body.Len() > 0 {
-		r.ResponseWriter.Write(r.body.Bytes())
+		if _, err := r.ResponseWriter.Write(r.body.Bytes()); err != nil {
+			// Too late for recovery here, just log the error
+			slog.Error(
+				"failed to write data to response",
+				"error", err,
+			)
+		}
 	}
 }
