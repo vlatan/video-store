@@ -156,7 +156,7 @@
 					</div>
 				</div>
 
-				<div data-body="account" class="modal">
+				<dialog data-body="account" class="modal" closedby="any">
 					<form class="modal-content" action="/account/delete" method="POST">
 						{{ .CSRFField }}
 						<span data-close="account" class="close-modal" title="Close">&times;</span>
@@ -171,13 +171,13 @@
 								class="modal-button delete-button">Delete</button>
 						</div>
 					</form>
-				</div>
+				</dialog>
 
 				{{ else }}
 
 				<a class="nav-item" data-modal="login" href="javascript:void(0)">Login</a>
 
-				<div data-body="login" class="modal">
+				<dialog data-body="login" class="modal" closedby="any">
 					<div class="modal-content login-modal-content">
 						<h3 class="login-header">Sign in to</h3>
 						<div class="login-logo">{{ .Config.AppName }}</div>
@@ -234,7 +234,7 @@
 							</a>
 						</div>
 					</div>
-				</div>
+				</dialog>
 				{{ end }}
 			</nav>
 		</header>

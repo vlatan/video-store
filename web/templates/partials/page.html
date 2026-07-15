@@ -34,7 +34,7 @@
 {{ end }}
 
 {{ if .IsCurrentUserAdmin }}
-<div data-body="page" class="modal">
+<dialog data-body="page" class="modal" closedby="any">
     <form class="modal-content" action="/page/{{ .CurrentPage.Slug }}/delete" method="POST">
         {{ .CSRFField }}
         <span data-close="page" class="close-modal" title="Close">&times;</span>
@@ -45,5 +45,5 @@
             <button type="submit" class="modal-button delete-button">Delete</button>
         </div>
     </form>
-</div>
+</dialog>
 {{ end }}

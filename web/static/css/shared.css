@@ -532,52 +532,65 @@ a.nav-item:hover::after {
 
 /* The Modal (background) */
 .modal {
-	display: none;
 	position: fixed;
-	z-index: 102;
-	justify-content: center;
+	inset: 0;
+	margin: auto;
 	align-items: center;
-	left: 0;
-	top: 0;
-	width: 100%;
-	height: 100%;
+	justify-content: center;
 	overflow: auto;
-	background-color: rgb(0, 0, 0);
-	background-color: rgba(0, 0, 0, 0.8);
-	animation: fadeIn 300ms ease-in forwards;
+	background-color: #fefefe;
+	border-radius: 5px;
+	border: 1px solid #888;
+	color: black;
+
+	opacity: 0;
+	transform: translateX(30%);
+	transition:
+		opacity 200ms ease-in 100ms,
+		transform 200ms ease-in 100ms,
+		overlay 200ms ease-in 100ms,
+		display 200ms ease-in 100ms;
+	transition-behavior: allow-discrete;
 }
 
-@keyframes fadeIn {
-	from {
+.modal[open] {
+	display: flex;
+	opacity: 1;
+	transform: translateX(0);
+}
+
+@starting-style {
+	.modal[open] {
 		opacity: 0;
+		transform: translateX(30%);
+	}
+}
+
+.modal::backdrop {
+	background-color: rgba(0, 0, 0, 0);
+	transition: background-color 200ms ease-in 100ms;
+}
+
+.modal[open]::backdrop {
+	background-color: rgba(0, 0, 0, 0.80);
+}
+
+@starting-style {
+	.modal[open]::backdrop {
+		background-color: rgba(0, 0, 0, 0);
 	}
 }
 
 /* Modal Content/Box */
 .modal-content {
-	position: relative;
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
 	align-items: center;
 	text-align: center;
-	background-color: #fefefe;
-	border-radius: 5px;
 	margin: auto;
-	border: 1px solid #888;
-	color: black;
 	gap: var(--content-padding);
 	padding: var(--modal-padding);
-	transform: translateX(30%);
-	opacity: 0;
-	animation: flyInRight 100ms ease-in 200ms forwards;
-}
-
-@keyframes flyInRight {
-	to {
-		transform: translateX(0);
-		opacity: 1;
-	}
 }
 
 

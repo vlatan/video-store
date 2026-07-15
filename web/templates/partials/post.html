@@ -272,7 +272,7 @@
 </article>
 
 {{ if .IsCurrentUserAdmin }}
-<div data-body="video" class="modal">
+<dialog data-body="video" class="modal" closedby="any">
 	<form class="modal-content" action="/video/{{ .CurrentPost.VideoID }}/delete" method="POST">
 		{{ .CSRFField }}
 		<span data-close="video" class="close-modal" title="Close">&times;</span>
@@ -283,7 +283,7 @@
 			<button type="submit" class="modal-button delete-button">Delete</button>
 		</div>
 	</form>
-</div>
+</dialog>
 {{ end }}
 {{ end }}
 

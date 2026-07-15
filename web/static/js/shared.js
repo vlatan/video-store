@@ -142,23 +142,12 @@ document.querySelectorAll('[data-modal]').forEach(openDialogBtn => {
     const modalDialog = document.querySelector(`[data-body="${modalName}"]`);
     const closeDialogBtns = modalDialog.querySelectorAll(`[data-close="${modalName}"]`);
 
-    // Open dialog button click
-    openDialogBtn.addEventListener('click', () => {
-        modalDialog.style.display = 'flex';
-    });
+    // Open dialog on open button click
+    openDialogBtn.addEventListener('click', () => modalDialog.showModal());
 
-    // Any close dialog buttons click
+    // Close dialog on any close buttons click
     closeDialogBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            modalDialog.removeAttribute('style');
-        });
-    });
-
-    // Outside of dialog click
-    modalDialog.addEventListener('click', event => {
-        if (event.target === modalDialog) {
-            modalDialog.removeAttribute('style');
-        }
+        btn.addEventListener('click', () => modalDialog.close());
     });
 });
 
