@@ -17,10 +17,6 @@ func (s *Service) HomeAPI(w http.ResponseWriter, r *http.Request) {
 
 	// Get the cursor from a query param
 	cursor := r.URL.Query().Get("cursor")
-	if cursor == "" {
-		http.NotFound(w, r)
-		return
-	}
 
 	// Get the order_by query param if any
 	orderBy := r.URL.Query().Get("order_by")
@@ -29,15 +25,17 @@ func (s *Service) HomeAPI(w http.ResponseWriter, r *http.Request) {
 	redisKey := "home:posts"
 
 	switch orderBy {
-	case "likes":
-		redisKey += ":likes"
-	case "avg_rating":
-		redisKey += ":avg_rating"
-	case "rating_count":
-		redisKey += ":rating_count"
+	case models.Likes:
+		redisKey += fmt.Sprintf(":%s", models.Likes)
+	case models.AvgRating:
+		redisKey += fmt.Sprintf(":%s", models.AvgRating)
+	case models.RatingCount:
+		redisKey += fmt.Sprintf(":%s", models.RatingCount)
 	}
 
-	redisKey += fmt.Sprintf(":cursor:%s", cursor)
+	if cursor != "" {
+		redisKey += fmt.Sprintf(":cursor:%s", cursor)
+	}
 
 	// Get current user
 	currentUser := models.GetUserFromContext(r)

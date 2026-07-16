@@ -35,25 +35,20 @@ type Users struct {
 
 // User struct to store in the USER info in session
 type User struct {
-	ID             int        `json:"id,omitempty"`
-	ProviderUserId string     `json:"user_id,omitempty"`
-	Email          string     `json:"email,omitempty"`
-	Name           string     `json:"name,omitempty"`
-	Provider       string     `json:"provider"`
-	AvatarURL      string     `json:"avatar_url,omitempty"`
-	AnalyticsID    string     `json:"analytics_id,omitempty"`
-	LocalAvatarURL string     `json:"local_avatar_url,omitempty"`
-	AccessToken    string     `json:"access_token,omitempty"`
-	RefreshToken   string     `json:"refresh_token,omitempty"`
-	Expiry         time.Time  `json:"expiry"`
-	LastSeen       *time.Time `json:"last_seen,omitempty"`
-	CreatedAt      *time.Time `json:"created_at,omitempty"`
+	ID             int
+	ProviderUserId string
+	Email          string
+	Name           string
+	Provider       string
+	AvatarURL      string
+	AnalyticsID    string
+	LocalAvatarURL string
+	AccessToken    string
+	RefreshToken   string
+	Expiry         time.Time
+	LastSeen       *time.Time
+	CreatedAt      *time.Time
 }
-
-const AvatarAdminPrefix = "avatar:admin:"
-const AvatarUserPrefix = "avatar:user:"
-const avatarPath = "avatars/%s.jpg"
-const defaultAvatar = "/static/images/default-avatar.jpg"
 
 // Check if the user is authenticated
 func (u *User) IsAuthenticated() bool {

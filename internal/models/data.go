@@ -49,11 +49,6 @@ type JSONErrorData struct {
 
 type FieldType int
 
-const (
-	FieldTypeInput FieldType = iota
-	FieldTypeTextarea
-)
-
 type FormGroup struct {
 	Type        FieldType
 	Label       string

@@ -1,5 +1,7 @@
+* Add sorting option by likes and rating
+  Validate the cursor if any first thing in the handler
+
 * Build the JS and backend review system
-* Maybe add sorting option by likes and rating
 * Add close button to login menu
 * Make search bar on small screens accross entire screen
 

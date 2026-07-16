@@ -30,12 +30,12 @@ func (s *Service) HomeHandler(w http.ResponseWriter, r *http.Request) {
 	redisKey := "home:posts"
 
 	switch orderBy {
-	case "likes":
-		redisKey += ":likes"
-	case "avg_rating":
-		redisKey += ":avg_rating"
-	case "rating_count":
-		redisKey += ":rating_count"
+	case models.Likes:
+		redisKey += fmt.Sprintf(":%s", models.Likes)
+	case models.AvgRating:
+		redisKey += fmt.Sprintf(":%s", models.AvgRating)
+	case models.RatingCount:
+		redisKey += fmt.Sprintf(":%s", models.RatingCount)
 	}
 
 	// Generate template data

@@ -6,8 +6,8 @@ import (
 )
 
 type Actions struct {
-	UserID    int        `json:"user_id,omitempty"`
-	PostID    int        `json:"post_id,omitempty"`
+	UserID    int        `json:"-"`
+	PostID    int        `json:"-"`
 	Liked     bool       `json:"user_liked,omitempty"`
 	Faved     bool       `json:"user_faved,omitempty"`
 	WhenFaved *time.Time `json:"when_user_faved,omitempty"`
