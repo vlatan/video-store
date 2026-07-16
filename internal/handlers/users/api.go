@@ -13,10 +13,6 @@ func (s *Service) UserFavoritesAPI(w http.ResponseWriter, r *http.Request) {
 
 	// Get the cursor if any
 	cursor := r.URL.Query().Get("cursor")
-	if cursor == "" {
-		http.NotFound(w, r)
-		return
-	}
 
 	// Get current user
 	currentUser := models.GetUserFromContext(r)
