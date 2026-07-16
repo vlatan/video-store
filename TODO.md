@@ -1,5 +1,5 @@
-* Add sorting option by likes and rating
-  Validate the cursor if any first thing in the handler
+* Add sorting option by rating
+  Modify the multiple LEFT JOIN queries so they don't fan out
 
 * Build the JS and backend review system
 * Add close button to login menu
