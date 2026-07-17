@@ -1,6 +1,3 @@
-* Add rating data to listings
-  Modify the multiple LEFT JOIN queries so they don't fan out
-
 * Build the JS and backend review system
 * Add close button to login menu
 * Make search bar on small screens accross entire screen

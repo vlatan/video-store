@@ -162,10 +162,6 @@ func (s *Service) SearchPostsAPI(w http.ResponseWriter, r *http.Request) {
 
 	// Get the cursor if any
 	cursor := r.URL.Query().Get("cursor")
-	if cursor == "" {
-		http.NotFound(w, r)
-		return
-	}
 
 	encodedSearchQuery := utils.EscapeTrancateString(searchQuery, 100)
 
