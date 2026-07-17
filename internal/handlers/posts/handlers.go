@@ -87,8 +87,14 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Construct the Redis key
 	redisKey := fmt.Sprintf("category:%s:posts", slug)
-	if orderBy == "likes" {
-		redisKey += ":likes"
+
+	switch orderBy {
+	case models.Likes:
+		redisKey += fmt.Sprintf(":%s", models.Likes)
+	case models.AvgRating:
+		redisKey += fmt.Sprintf(":%s", models.AvgRating)
+	case models.RatingCount:
+		redisKey += fmt.Sprintf(":%s", models.RatingCount)
 	}
 
 	// Generate template data (it gets all the categories too)

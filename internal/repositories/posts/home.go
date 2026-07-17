@@ -44,7 +44,7 @@ func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (
 		order = val.order
 	}
 
-	// If cursor supplied construct the additional args and WHERE clause if necessary
+	// If cursor supplied construct the additional args and WHERE clause
 	var zero, posts models.Posts
 	if cursor != "" {
 
@@ -68,7 +68,7 @@ func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (
 		}
 	}
 
-	sqlParts := struct{ OrderByWhat, WhereCondition string }{order, where}
+	sqlParts := struct{ WhereCondition, OrderByWhat string }{where, order}
 	query, err := r.GetQuery("home_posts.sql", sqlParts)
 
 	if err != nil {
@@ -127,7 +127,7 @@ func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (
 		return zero, err
 	}
 
-	// Post-process the posts, prepare the thumbnail
+	// Post-process the posts, prepare the thumbnails
 	if err = postProcessPosts(ctx, posts); err != nil {
 		return zero, err
 	}

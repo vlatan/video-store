@@ -80,21 +80,30 @@ func (s *Service) HomeAPI(w http.ResponseWriter, r *http.Request) {
 // Handle posts in a certain category
 func (s *Service) CategoryPostsAPI(w http.ResponseWriter, r *http.Request) {
 
+	// Get the cursor from a query param
 	cursor := r.URL.Query().Get("cursor")
-	if cursor == "" {
-		http.NotFound(w, r)
-		return
-	}
 
-	slug := r.PathValue("category")
+	// Get the order_by query param if any
 	orderBy := r.URL.Query().Get("order_by")
+
+	// Get the category slug
+	slug := r.PathValue("category")
 
 	// Construct the Redis key
 	redisKey := fmt.Sprintf("category:%s:posts", slug)
-	if orderBy == "likes" {
-		redisKey += ":likes"
+
+	switch orderBy {
+	case models.Likes:
+		redisKey += fmt.Sprintf(":%s", models.Likes)
+	case models.AvgRating:
+		redisKey += fmt.Sprintf(":%s", models.AvgRating)
+	case models.RatingCount:
+		redisKey += fmt.Sprintf(":%s", models.RatingCount)
 	}
-	redisKey += fmt.Sprintf(":cursor:%s", cursor)
+
+	if cursor != "" {
+		redisKey += fmt.Sprintf(":cursor:%s", cursor)
+	}
 
 	// Get current user
 	currentUser := models.GetUserFromContext(r)

@@ -13,21 +13,30 @@ import (
 // Handle posts in a certain source
 func (s *Service) SourcePostsAPI(w http.ResponseWriter, r *http.Request) {
 
+	// Get the cursor from a query param
 	cursor := r.URL.Query().Get("cursor")
-	if cursor == "" {
-		http.NotFound(w, r)
-		return
-	}
 
-	sourceID := r.PathValue("source")
+	// Get the order_by query param if any
 	orderBy := r.URL.Query().Get("order_by")
+
+	// Get the playlist id
+	sourceID := r.PathValue("source")
 
 	// Construct the Redis key
 	redisKey := fmt.Sprintf("source:%s:posts", sourceID)
-	if orderBy == "likes" {
-		redisKey += ":likes"
+
+	switch orderBy {
+	case models.Likes:
+		redisKey += fmt.Sprintf(":%s", models.Likes)
+	case models.AvgRating:
+		redisKey += fmt.Sprintf(":%s", models.AvgRating)
+	case models.RatingCount:
+		redisKey += fmt.Sprintf(":%s", models.RatingCount)
 	}
-	redisKey += fmt.Sprintf(":cursor:%s", cursor)
+
+	if cursor != "" {
+		redisKey += fmt.Sprintf(":cursor:%s", cursor)
+	}
 
 	// Get current user
 	currentUser := models.GetUserFromContext(r)

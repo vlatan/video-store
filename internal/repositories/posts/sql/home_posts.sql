@@ -23,8 +23,8 @@ posts AS (
         COALESCE(r.rating_count, 0) AS rating_count,
         upload_date
     FROM post
-    LEFT JOIN likes l ON l.post_id = post.id
-    LEFT JOIN ratings r ON r.post_id = post.id
+    LEFT JOIN likes AS l ON l.post_id = post.id
+    LEFT JOIN ratings AS r ON r.post_id = post.id
 )
 SELECT * FROM posts
 {{ .WhereCondition }} -- the WHERE condition if any
