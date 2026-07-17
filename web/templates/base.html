@@ -141,7 +141,7 @@
 						<span class="username-text">{{ .CurrentUser.Name }}</span>
 					</button>
 					<div class="dropdown-content">
-						{{ if .IsCurrentUserAdmin }}
+						{{ if .CurrentUser.IsAdmin }}
 						<a class="nav-item" href="/users/">Users Dash</a>
 						<a class="nav-item" href="/video/new">New Video</a>
 						<a class="nav-item" href="/source/new">New Source</a>

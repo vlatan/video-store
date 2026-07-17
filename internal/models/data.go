@@ -49,11 +49,6 @@ type JSONErrorData struct {
 
 type FieldType int
 
-const (
-	FieldTypeInput FieldType = iota
-	FieldTypeTextarea
-)
-
 type FormGroup struct {
 	Type        FieldType
 	Label       string
@@ -101,14 +96,6 @@ type TemplateData struct {
 	*Posts
 	*Users
 	*Form
-}
-
-// Check if current user is admin
-func (td *TemplateData) IsCurrentUserAdmin() bool {
-	return td != nil && td.CurrentUser.IsAdmin(
-		td.Config.AdminProviderUserId,
-		td.Config.AdminProvider,
-	)
 }
 
 // Add version query string to file

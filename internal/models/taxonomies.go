@@ -27,7 +27,7 @@ func (cats *Categories) UnmarshalBinary(data []byte) error {
 type Source struct {
 	PlaylistID         string      `json:"playlist_id,omitempty"`
 	ChannelID          string      `json:"channel_id,omitempty"`
-	UserID             int         `json:"user_id,omitempty"`
+	UserID             int         `json:"-"`
 	Title              string      `json:"title,omitempty"`
 	ChannelTitle       string      `json:"channel_title,omitempty"`
 	Thumbnail          *Thumbnail  `json:"thumbnail,omitempty"`

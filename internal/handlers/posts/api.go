@@ -17,20 +17,25 @@ func (s *Service) HomeAPI(w http.ResponseWriter, r *http.Request) {
 
 	// Get the cursor from a query param
 	cursor := r.URL.Query().Get("cursor")
-	if cursor == "" {
-		http.NotFound(w, r)
-		return
-	}
 
 	// Get the order_by query param if any
 	orderBy := r.URL.Query().Get("order_by")
 
 	// Construct the redis key
 	redisKey := "home:posts"
-	if orderBy == "likes" {
-		redisKey += ":likes"
+
+	switch orderBy {
+	case models.Likes:
+		redisKey += fmt.Sprintf(":%s", models.Likes)
+	case models.AvgRating:
+		redisKey += fmt.Sprintf(":%s", models.AvgRating)
+	case models.RatingCount:
+		redisKey += fmt.Sprintf(":%s", models.RatingCount)
 	}
-	redisKey += fmt.Sprintf(":cursor:%s", cursor)
+
+	if cursor != "" {
+		redisKey += fmt.Sprintf(":cursor:%s", cursor)
+	}
 
 	// Get current user
 	currentUser := models.GetUserFromContext(r)
@@ -41,7 +46,7 @@ func (s *Service) HomeAPI(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// Don't cache the home results only for the admin
-	if currentUser.IsAdmin(s.config.AdminProviderUserId, s.config.AdminProvider) {
+	if currentUser.IsAdmin() {
 		posts, err = s.postsRepo.GetHomePosts(
 			r.Context(), cursor, orderBy,
 		)
@@ -75,21 +80,30 @@ func (s *Service) HomeAPI(w http.ResponseWriter, r *http.Request) {
 // Handle posts in a certain category
 func (s *Service) CategoryPostsAPI(w http.ResponseWriter, r *http.Request) {
 
+	// Get the cursor from a query param
 	cursor := r.URL.Query().Get("cursor")
-	if cursor == "" {
-		http.NotFound(w, r)
-		return
-	}
 
-	slug := r.PathValue("category")
+	// Get the order_by query param if any
 	orderBy := r.URL.Query().Get("order_by")
+
+	// Get the category slug
+	slug := r.PathValue("category")
 
 	// Construct the Redis key
 	redisKey := fmt.Sprintf("category:%s:posts", slug)
-	if orderBy == "likes" {
-		redisKey += ":likes"
+
+	switch orderBy {
+	case models.Likes:
+		redisKey += fmt.Sprintf(":%s", models.Likes)
+	case models.AvgRating:
+		redisKey += fmt.Sprintf(":%s", models.AvgRating)
+	case models.RatingCount:
+		redisKey += fmt.Sprintf(":%s", models.RatingCount)
 	}
-	redisKey += fmt.Sprintf(":cursor:%s", cursor)
+
+	if cursor != "" {
+		redisKey += fmt.Sprintf(":cursor:%s", cursor)
+	}
 
 	// Get current user
 	currentUser := models.GetUserFromContext(r)
@@ -100,7 +114,7 @@ func (s *Service) CategoryPostsAPI(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// Don't cache the category posts only for the admin
-	if currentUser.IsAdmin(s.config.AdminProviderUserId, s.config.AdminProvider) {
+	if currentUser.IsAdmin() {
 		posts, err = s.postsRepo.GetCategoryPosts(
 			r.Context(), slug, cursor, orderBy,
 		)
@@ -148,10 +162,6 @@ func (s *Service) SearchPostsAPI(w http.ResponseWriter, r *http.Request) {
 
 	// Get the cursor if any
 	cursor := r.URL.Query().Get("cursor")
-	if cursor == "" {
-		http.NotFound(w, r)
-		return
-	}
 
 	encodedSearchQuery := utils.EscapeTrancateString(searchQuery, 100)
 
@@ -168,7 +178,7 @@ func (s *Service) SearchPostsAPI(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// Don't cache the search results only for the admin
-	if currentUser.IsAdmin(s.config.AdminProviderUserId, s.config.AdminProvider) {
+	if currentUser.IsAdmin() {
 		posts, err = s.postsRepo.SearchPosts(
 			r.Context(), searchQuery, s.config.PostsPerPage, cursor,
 		)

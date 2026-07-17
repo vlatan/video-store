@@ -13,13 +13,13 @@ import (
 func (r *Repository) GetRandomPosts(ctx context.Context, title string, limit int) (models.Posts, error) {
 
 	var zero, posts models.Posts
+	if title == "" {
+		return zero, errors.New("title can't be empty string")
+	}
+
 	query, err := r.GetQuery("random_posts.sql", nil)
 	if err != nil {
 		return zero, err
-	}
-
-	if title == "" {
-		return zero, errors.New("title can't be empty string")
 	}
 
 	// Get rows from DB
@@ -33,8 +33,13 @@ func (r *Repository) GetRandomPosts(ctx context.Context, title string, limit int
 
 	// Iterate over the rows
 	for rows.Next() {
-		var post models.Post
-		var originalTitle sql.NullString
+
+		var (
+			post          models.Post
+			originalTitle sql.NullString
+			avgRating     sql.NullFloat64
+			ratingCount   sql.NullInt64
+		)
 
 		if err = rows.Scan(
 			&post.VideoID,
@@ -42,12 +47,23 @@ func (r *Repository) GetRandomPosts(ctx context.Context, title string, limit int
 			&originalTitle,
 			&post.RawThumbs,
 			&post.Likes,
+			&avgRating,
+			&ratingCount,
 		); err != nil {
 			return zero, err
 		}
 
 		// Include the processed post in the result
 		post.OriginalTitle = utils.FromNullString(originalTitle)
+
+		// Attach ratings if any
+		if avgRating.Valid && ratingCount.Valid {
+			post.Rating = &models.Rating{
+				Avg:   utils.FromNullFloat64(avgRating),
+				Count: utils.FromNullInt64(ratingCount),
+			}
+		}
+
 		posts.Items = append(posts.Items, post)
 	}
 

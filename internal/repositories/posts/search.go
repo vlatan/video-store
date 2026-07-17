@@ -34,16 +34,13 @@ func (r *Repository) SearchPosts(
 	// No cursor on the first page, no need for total and the WHERE clause
 	if cursor != "" {
 
-		// SQL parts
 		total = "0"
-		where = "WHERE (score, likes, upload_date, id) < ($3, $4, $5, $6)"
-
 		cursorParts, err := decodeCursor(cursor)
 		if err != nil {
 			return zero, err
 		}
 
-		if len(cursorParts) != 4 {
+		if len(cursorParts) != 3 {
 			return zero, errors.New("invalid cursor components")
 		}
 
@@ -52,7 +49,8 @@ func (r *Repository) SearchPosts(
 			return zero, err
 		}
 
-		args = append(args, score, cursorParts[1], cursorParts[2], cursorParts[3])
+		args = append(args, score, cursorParts[1], cursorParts[2])
+		where = "WHERE (score, upload_date, id) < ($3, $4, $5)"
 	}
 
 	sqlParts := struct{ TotalCount, WhereCondition string }{total, where}
@@ -72,9 +70,14 @@ func (r *Repository) SearchPosts(
 
 	// Iterate over the rows
 	for rows.Next() {
-		var post models.Post
-		var originalTitle sql.NullString
-		var totalNum int
+
+		var (
+			post          models.Post
+			originalTitle sql.NullString
+			totalNum      int
+			avgRating     sql.NullFloat64
+			ratingCount   sql.NullInt64
+		)
 
 		// Paste post from row to struct, thumbnails in a separate var
 		if err = rows.Scan(
@@ -84,6 +87,8 @@ func (r *Repository) SearchPosts(
 			&originalTitle,
 			&post.RawThumbs,
 			&post.Likes,
+			&avgRating,
+			&ratingCount,
 			&totalNum,
 			&post.UploadDate,
 			&post.SearchScore,
@@ -93,10 +98,19 @@ func (r *Repository) SearchPosts(
 
 		// Include the processed post in the result
 		post.OriginalTitle = utils.FromNullString(originalTitle)
-		posts.Items = append(posts.Items, post)
-		if totalNum != 0 {
-			posts.TotalNum = totalNum
+
+		// Attach ratings if any
+		if avgRating.Valid && ratingCount.Valid {
+			post.Rating = &models.Rating{
+				Avg:   utils.FromNullFloat64(avgRating),
+				Count: utils.FromNullInt64(ratingCount),
+			}
 		}
+
+		posts.Items = append(posts.Items, post)
+
+		// Assign the total num of posts
+		posts.TotalNum = max(posts.TotalNum, totalNum)
 	}
 
 	// If error during iteration
@@ -122,7 +136,7 @@ func (r *Repository) SearchPosts(
 	uploadDate := lastPost.UploadDate.Format(time.RFC3339Nano)
 
 	// Preserve the full precision of the score float, %.17g
-	cursorStr := fmt.Sprintf("%.17g,%d,%s,%d", lastPost.SearchScore, lastPost.Likes, uploadDate, lastPost.ID)
+	cursorStr := fmt.Sprintf("%.17g,%s,%d", lastPost.SearchScore, uploadDate, lastPost.ID)
 	posts.NextCursor = base64.StdEncoding.EncodeToString([]byte(cursorStr))
 
 	return posts, nil

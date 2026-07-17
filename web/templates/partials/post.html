@@ -232,7 +232,7 @@
 			</span> -->
 		</div>
 
-		{{ else if .IsCurrentUserAdmin }}
+		{{ else if .CurrentUser.IsAdmin }}
 		<div class="unpublished">
 			<p>UNPUBLISHED DESCRIPTION:</p>
 			<div class="video-description">
@@ -241,7 +241,7 @@
 		</div>
 		{{ end }}
 
-		{{ if .IsCurrentUserAdmin }}
+		{{ if .CurrentUser.IsAdmin }}
 		<span class="admin-buttons">
 			<button data-modal="video" class="modal-button">Delete</button>
 			<a href="/video/{{ .CurrentPost.VideoID }}/edit" class="modal-button edit-content">Edit</a>
@@ -271,7 +271,7 @@
 	</div>
 </article>
 
-{{ if .IsCurrentUserAdmin }}
+{{ if .CurrentUser.IsAdmin }}
 <dialog data-body="video" class="modal" closedby="any">
 	<form class="modal-content" action="/video/{{ .CurrentPost.VideoID }}/delete" method="POST">
 		{{ .CSRFField }}

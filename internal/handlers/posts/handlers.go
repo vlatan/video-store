@@ -28,8 +28,14 @@ func (s *Service) HomeHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Construct the redis key
 	redisKey := "home:posts"
-	if orderBy == "likes" {
-		redisKey += ":likes"
+
+	switch orderBy {
+	case models.Likes:
+		redisKey += fmt.Sprintf(":%s", models.Likes)
+	case models.AvgRating:
+		redisKey += fmt.Sprintf(":%s", models.AvgRating)
+	case models.RatingCount:
+		redisKey += fmt.Sprintf(":%s", models.RatingCount)
 	}
 
 	// Generate template data
@@ -41,7 +47,7 @@ func (s *Service) HomeHandler(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// Don't cache the home results only for the admin
-	if data.IsCurrentUserAdmin() {
+	if data.CurrentUser.IsAdmin() {
 		posts, err = s.postsRepo.GetHomePosts(
 			r.Context(), "", orderBy,
 		)
@@ -81,8 +87,14 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Construct the Redis key
 	redisKey := fmt.Sprintf("category:%s:posts", slug)
-	if orderBy == "likes" {
-		redisKey += ":likes"
+
+	switch orderBy {
+	case models.Likes:
+		redisKey += fmt.Sprintf(":%s", models.Likes)
+	case models.AvgRating:
+		redisKey += fmt.Sprintf(":%s", models.AvgRating)
+	case models.RatingCount:
+		redisKey += fmt.Sprintf(":%s", models.RatingCount)
 	}
 
 	// Generate template data (it gets all the categories too)
@@ -95,7 +107,7 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// Don't cache the category posts only for the admin
-	if data.IsCurrentUserAdmin() {
+	if data.CurrentUser.IsAdmin() {
 		posts, err = s.postsRepo.GetCategoryPosts(
 			r.Context(), slug, "", orderBy,
 		)
@@ -159,7 +171,7 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// Don't cache the search results only for the admin
-	if data.IsCurrentUserAdmin() {
+	if data.CurrentUser.IsAdmin() {
 		posts, err = s.postsRepo.SearchPosts(
 			r.Context(), searchQuery, s.config.PostsPerPage, "",
 		)
@@ -181,7 +193,7 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		slog.ErrorContext(
-			r.Context(), "failed get posts from DB",
+			r.Context(), "failed to get posts from DB",
 			"path", r.URL.Path,
 			"error", err,
 		)
@@ -397,7 +409,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 	// Don't cache the related posts only for the admin.
 	// Ignore the error on related posts, no posts will be shown.
 	var relatedPosts models.Posts
-	if data.IsCurrentUserAdmin() {
+	if data.CurrentUser.IsAdmin() {
 		relatedPosts, _ = s.postsRepo.GetRelatedPosts(r.Context(), post.GetTitle())
 	} else {
 		relatedPosts, _ = rdb.GetCachedData(

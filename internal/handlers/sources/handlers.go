@@ -24,7 +24,7 @@ func (s *Service) SourcesHandler(w http.ResponseWriter, r *http.Request) {
 		sources models.Sources
 	)
 
-	if data.IsCurrentUserAdmin() {
+	if data.CurrentUser.IsAdmin() {
 		sources, err = s.sourcesRepo.GetAllSources(r.Context())
 	} else {
 		sources, err = rdb.GetCachedData(
@@ -195,21 +195,27 @@ func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
 	sourceID := r.PathValue("source")
 	orderBy := r.URL.Query().Get("order_by")
 
-	// Generate template data
-	data := models.GetDataFromContext(r)
-
 	// Construct the Redis key
 	redisKey := fmt.Sprintf("source:%s:posts", sourceID)
-	if orderBy == "likes" {
-		redisKey += ":likes"
+
+	switch orderBy {
+	case models.Likes:
+		redisKey += fmt.Sprintf(":%s", models.Likes)
+	case models.AvgRating:
+		redisKey += fmt.Sprintf(":%s", models.AvgRating)
+	case models.RatingCount:
+		redisKey += fmt.Sprintf(":%s", models.RatingCount)
 	}
+
+	// Generate template data
+	data := models.GetDataFromContext(r)
 
 	var (
 		err   error
 		posts models.Posts
 	)
 
-	if data.IsCurrentUserAdmin() {
+	if data.CurrentUser.IsAdmin() {
 		posts, err = s.postsRepo.GetSourcePosts(
 			r.Context(), sourceID, "", orderBy,
 		)

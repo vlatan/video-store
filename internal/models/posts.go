@@ -7,7 +7,7 @@ import (
 )
 
 type Post struct {
-	ID              int             `json:"id,omitempty"`
+	ID              int             `json:"-"`
 	Provider        string          `json:"provider,omitempty"`
 	VideoID         string          `json:"video_id,omitempty"`
 	Title           string          `json:"title,omitempty"`

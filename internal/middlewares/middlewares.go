@@ -58,8 +58,7 @@ func (s *Service) IsAuthenticated(next http.HandlerFunc) http.HandlerFunc {
 func (s *Service) IsAdmin(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// If the user is admin move onto the next handler
-		if user := models.GetUserFromContext(r); user.IsAuthenticated() &&
-			user.IsAdmin(s.config.AdminProviderUserId, s.config.AdminProvider) {
+		if user := models.GetUserFromContext(r); user.IsAdmin() {
 			next(w, r)
 			return
 		}
@@ -151,7 +150,7 @@ func (s *Service) RecoverPanic(next http.Handler) http.Handler {
 func (s *Service) PublicCache(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		data := models.GetDataFromContext(r)
-		if !data.IsCurrentUserAdmin() {
+		if !data.CurrentUser.IsAdmin() {
 			w.Header().Set("Cache-Control", "public, max-age=3600")
 		}
 		next(w, r)

@@ -15,20 +15,37 @@ import (
 // Get a limited number of posts with cursor
 func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (models.Posts, error) {
 
-	// Construct the SQL parts as well as the arguments
-	// The limit is the first argument ($1)
-	// Peek for one post beoynd the limit
-	var where string
+	// The first argument is the limit ($1).
+	// Peek for one post beoynd the limit to see if there's next page,
+	// meaning whether to construct and send the next cursor at all.
 	args := []any{r.config.PostsPerPage + 1}
+
+	// The default template variables - SQL parts
+	var where string
 	order := "upload_date DESC, id DESC"
-	if orderBy == "likes" {
-		order = "likes DESC, " + order
+
+	orderingOptions := map[string]struct{ order, where string }{
+		models.Likes: {
+			fmt.Sprintf("%s DESC, %s", models.Likes, order),
+			fmt.Sprintf("WHERE (%s, upload_date, id) < ($2, $3, $4)", models.Likes),
+		},
+		models.AvgRating: {
+			fmt.Sprintf("%s DESC NULLS LAST, %s", models.AvgRating, order),
+			fmt.Sprintf("WHERE (%s, upload_date, id) < ($2, $3, $4)", models.AvgRating),
+		},
+		models.RatingCount: {
+			fmt.Sprintf("%s DESC, %s", models.RatingCount, order),
+			fmt.Sprintf("WHERE (%s, upload_date, id) < ($2, $3, $4)", models.RatingCount),
+		},
 	}
 
-	var zero, posts models.Posts
+	// Change the ordering if instructed by the orderBy
+	if val, ok := orderingOptions[orderBy]; ok {
+		order = val.order
+	}
 
-	// Build args and SQL parts
-	// No cursor on the first page, no need for total and the WHERE clause
+	// If cursor supplied construct the additional args and WHERE clause
+	var zero, posts models.Posts
 	if cursor != "" {
 
 		cursorParts, err := decodeCursor(cursor)
@@ -36,14 +53,13 @@ func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (
 			return zero, err
 		}
 
-		switch orderBy {
-		case "likes":
+		if val, ok := orderingOptions[orderBy]; ok {
 			if len(cursorParts) != 3 {
 				return zero, errors.New("invalid cursor components")
 			}
 			args = append(args, cursorParts[0], cursorParts[1], cursorParts[2])
-			where = "WHERE (likes, upload_date, id) < ($2, $3, $4)"
-		default:
+			where = val.where
+		} else {
 			if len(cursorParts) != 2 {
 				return zero, fmt.Errorf("invalid cursor components")
 			}
@@ -54,6 +70,7 @@ func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (
 
 	sqlParts := struct{ WhereCondition, OrderByWhat string }{where, order}
 	query, err := r.GetQuery("home_posts.sql", sqlParts)
+
 	if err != nil {
 		return zero, err
 	}
@@ -70,8 +87,12 @@ func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (
 	// Iterate over the rows
 	for rows.Next() {
 
-		var post models.Post
-		var originalTitle sql.NullString
+		var (
+			post          models.Post
+			originalTitle sql.NullString
+			avgRating     sql.NullFloat64
+			ratingCount   sql.NullInt64
+		)
 
 		err = rows.Scan(
 			&post.ID,
@@ -80,6 +101,8 @@ func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (
 			&originalTitle,
 			&post.RawThumbs,
 			&post.Likes,
+			&avgRating,
+			&ratingCount,
 			&post.UploadDate,
 		)
 
@@ -87,7 +110,17 @@ func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (
 			return zero, err
 		}
 
+		// Attach the title
 		post.OriginalTitle = utils.FromNullString(originalTitle)
+
+		// Attach ratings if any
+		if avgRating.Valid && ratingCount.Valid {
+			post.Rating = &models.Rating{
+				Avg:   utils.FromNullFloat64(avgRating),
+				Count: utils.FromNullInt64(ratingCount),
+			}
+		}
+
 		posts.Items = append(posts.Items, post)
 	}
 
@@ -96,7 +129,7 @@ func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (
 		return zero, err
 	}
 
-	// Post-process the posts, prepare the thumbnail
+	// Post-process the posts, prepare the thumbnails
 	if err = postProcessPosts(ctx, posts); err != nil {
 		return zero, err
 	}
@@ -114,9 +147,22 @@ func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (
 	uploadDate := lastPost.UploadDate.Format(time.RFC3339Nano)
 	cursorStr := fmt.Sprintf("%s,%d", uploadDate, lastPost.ID)
 
-	// If ordering is by likes
-	if orderBy == "likes" {
+	// Modify the cursor if there's ordering
+	switch orderBy {
+	case models.Likes:
 		cursorStr = fmt.Sprintf("%d,%s", lastPost.Likes, cursorStr)
+	case models.AvgRating:
+		var avgRating float64
+		if lastPost.Rating != nil {
+			avgRating = lastPost.Rating.Avg
+		}
+		cursorStr = fmt.Sprintf("%.2f,%s", avgRating, cursorStr)
+	case models.RatingCount:
+		var ratingCount int64
+		if lastPost.Rating != nil {
+			ratingCount = lastPost.Rating.Count
+		}
+		cursorStr = fmt.Sprintf("%d,%s", ratingCount, cursorStr)
 	}
 
 	posts.NextCursor = base64.StdEncoding.EncodeToString([]byte(cursorStr))

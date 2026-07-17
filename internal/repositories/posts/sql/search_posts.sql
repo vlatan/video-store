@@ -40,6 +40,19 @@ WITH
         FROM post_matches AS pm
         FULL OUTER JOIN review_matches AS rm ON pm.id = rm.post_id
     ),
+    likes AS (
+        SELECT post_id, COUNT(*) AS likes
+        FROM post_like
+        GROUP BY post_id
+    ),
+    ratings AS (
+        SELECT
+            post_id,
+            ROUND(AVG(rating), 2)::float8 AS avg_rating,
+            COUNT(rating) AS rating_count
+        FROM post_rating
+        GROUP BY post_id
+    ),
     -- Get the data we need
     scored_posts AS (
         SELECT
@@ -48,17 +61,19 @@ WITH
             p.title,
             p.original_title,
             p.thumbnails,
-            COUNT(pl.id) AS likes,
+            COALESCE(l.likes, 0) AS likes,
+            r.avg_rating,
+            COALESCE(r.rating_count, 0) AS rating_count,
             {{ .TotalCount }} AS total_results,
             p.upload_date,
             cm.total_score AS score
         FROM combined_matches AS cm
         JOIN post AS p ON p.id = cm.post_id 
-        LEFT JOIN post_like AS pl ON pl.post_id = p.id
-        GROUP BY p.id, cm.total_score
+        LEFT JOIN likes AS l ON l.post_id = p.id
+        LEFT JOIN ratings AS r ON r.post_id = p.id
     )
     --- Filter posts
 	SELECT * FROM scored_posts
     {{ .WhereCondition }} -- the WHERE condition if any
-    ORDER BY score DESC, likes DESC, upload_date DESC, id DESC
+    ORDER BY score DESC, upload_date DESC, id DESC
     LIMIT $2;
