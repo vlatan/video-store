@@ -94,9 +94,11 @@ func (r *Repository) GetUserFavedPosts(
 		post.OriginalTitle = utils.FromNullString(originalTitle)
 
 		// Attach ratings if any
-		post.Rating = &models.Rating{
-			Avg:   utils.FromNullFloat64(avgRating),
-			Count: utils.FromNullInt64(ratingCount),
+		if avgRating.Valid && ratingCount.Valid {
+			post.Rating = &models.Rating{
+				Avg:   utils.FromNullFloat64(avgRating),
+				Count: utils.FromNullInt64(ratingCount),
+			}
 		}
 
 		// Include the processed post in the result

@@ -156,9 +156,11 @@ func (r *Repository) queryTaxonomyPosts(
 		posts.Title = utils.FromNullString(playlistTitle)
 
 		// Attach ratings if any
-		post.Rating = &models.Rating{
-			Avg:   utils.FromNullFloat64(avgRating),
-			Count: utils.FromNullInt64(ratingCount),
+		if avgRating.Valid && ratingCount.Valid {
+			post.Rating = &models.Rating{
+				Avg:   utils.FromNullFloat64(avgRating),
+				Count: utils.FromNullInt64(ratingCount),
+			}
 		}
 
 		// Include the post in the result
@@ -196,9 +198,17 @@ func (r *Repository) queryTaxonomyPosts(
 	case models.Likes:
 		cursorStr = fmt.Sprintf("%d,%s", lastPost.Likes, cursorStr)
 	case models.AvgRating:
-		cursorStr = fmt.Sprintf("%.2f,%s", lastPost.Rating.Avg, cursorStr)
+		var avgRating float64
+		if lastPost.Rating != nil {
+			avgRating = lastPost.Rating.Avg
+		}
+		cursorStr = fmt.Sprintf("%.2f,%s", avgRating, cursorStr)
 	case models.RatingCount:
-		cursorStr = fmt.Sprintf("%d,%s", lastPost.Rating.Count, cursorStr)
+		var ratingCount int64
+		if lastPost.Rating != nil {
+			ratingCount = lastPost.Rating.Count
+		}
+		cursorStr = fmt.Sprintf("%d,%s", ratingCount, cursorStr)
 	}
 
 	posts.NextCursor = base64.StdEncoding.EncodeToString([]byte(cursorStr))

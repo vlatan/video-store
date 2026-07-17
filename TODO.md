@@ -1,8 +1,5 @@
-* Add sorting option by rating
+* Add rating data to listings
   Modify the multiple LEFT JOIN queries so they don't fan out
-
-* Validate category early on category posts handler
-* Don't include rating struct in post if no ratings. Keep in mind the cursor.
 
 * Build the JS and backend review system
 * Add close button to login menu

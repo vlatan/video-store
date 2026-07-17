@@ -114,9 +114,11 @@ func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (
 		post.OriginalTitle = utils.FromNullString(originalTitle)
 
 		// Attach ratings if any
-		post.Rating = &models.Rating{
-			Avg:   utils.FromNullFloat64(avgRating),
-			Count: utils.FromNullInt64(ratingCount),
+		if avgRating.Valid && ratingCount.Valid {
+			post.Rating = &models.Rating{
+				Avg:   utils.FromNullFloat64(avgRating),
+				Count: utils.FromNullInt64(ratingCount),
+			}
 		}
 
 		posts.Items = append(posts.Items, post)
@@ -150,9 +152,17 @@ func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (
 	case models.Likes:
 		cursorStr = fmt.Sprintf("%d,%s", lastPost.Likes, cursorStr)
 	case models.AvgRating:
-		cursorStr = fmt.Sprintf("%.2f,%s", lastPost.Rating.Avg, cursorStr)
+		var avgRating float64
+		if lastPost.Rating != nil {
+			avgRating = lastPost.Rating.Avg
+		}
+		cursorStr = fmt.Sprintf("%.2f,%s", avgRating, cursorStr)
 	case models.RatingCount:
-		cursorStr = fmt.Sprintf("%d,%s", lastPost.Rating.Count, cursorStr)
+		var ratingCount int64
+		if lastPost.Rating != nil {
+			ratingCount = lastPost.Rating.Count
+		}
+		cursorStr = fmt.Sprintf("%d,%s", ratingCount, cursorStr)
 	}
 
 	posts.NextCursor = base64.StdEncoding.EncodeToString([]byte(cursorStr))
