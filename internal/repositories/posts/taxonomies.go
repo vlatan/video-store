@@ -164,10 +164,8 @@ func (r *Repository) queryTaxonomyPosts(
 		// Include the post in the result
 		posts.Items = append(posts.Items, post)
 
-		// Include the total amount of posts fetched
-		if totalNum != 0 {
-			posts.TotalNum = totalNum
-		}
+		// Assign the total num of posts
+		posts.TotalNum = max(posts.TotalNum, totalNum)
 	}
 
 	// If error during iteration

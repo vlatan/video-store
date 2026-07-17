@@ -18,33 +18,31 @@ func (r *Repository) GetUserFavedPosts(
 	userID int,
 	cursor string) (models.Posts, error) {
 
-	// Construct the SQL parts as well as the arguments
 	// The user ID and the limit are the first two arguments ($1 and $2)
-	// Peek for one post beoynd the limit
-	var where string
-	total := "COUNT(*) OVER()"
+	// Peek for one post beoynd the limit to see if there's next page,
+	// meaning whether to construct and send the next cursor at all.
 	args := []any{userID, r.config.PostsPerPage + 1}
 
-	var zero, posts models.Posts
+	// The default template variables - SQL parts
+	var where string
+	total := "COUNT(*) OVER()"
 
-	// Build args and SQL parts
-	// No cursor on the first page, no need for total and the WHERE clause
+	// If cursor supplied construct the additional args and WHERE clause
+	var zero, posts models.Posts
 	if cursor != "" {
 
-		// SQL parts
 		total = "0"
-		where = "WHERE (when_faved, likes, upload_date, id) < ($3, $4, $5, $6)"
-
 		cursorParts, err := decodeCursor(cursor)
 		if err != nil {
 			return zero, err
 		}
 
-		if len(cursorParts) != 4 {
+		if len(cursorParts) != 3 {
 			return zero, errors.New("invalid cursor components")
 		}
 
-		args = append(args, cursorParts[0], cursorParts[1], cursorParts[2], cursorParts[3])
+		args = append(args, cursorParts[0], cursorParts[1], cursorParts[2])
+		where = "WHERE (when_faved, upload_date, id) < ($3, $4, $5)"
 	}
 
 	sqlParts := struct{ TotalCount, WhereCondition string }{total, where}
@@ -64,10 +62,16 @@ func (r *Repository) GetUserFavedPosts(
 
 	// Iterate over the rows
 	for rows.Next() {
-		var post models.Post
+
+		var (
+			post          models.Post
+			totalNum      int
+			originalTitle sql.NullString
+			avgRating     sql.NullFloat64
+			ratingCount   sql.NullInt64
+		)
+
 		post.UserActions = &models.Actions{}
-		var totalNum int
-		var originalTitle sql.NullString
 
 		// Paste post from row to struct, thumbnails in a separate var
 		if err = rows.Scan(
@@ -77,6 +81,8 @@ func (r *Repository) GetUserFavedPosts(
 			&originalTitle,
 			&post.RawThumbs,
 			&post.Likes,
+			&avgRating,
+			&ratingCount,
 			&totalNum,
 			&post.UploadDate,
 			&post.UserActions.WhenFaved,
@@ -86,8 +92,16 @@ func (r *Repository) GetUserFavedPosts(
 
 		// Assing the original title
 		post.OriginalTitle = utils.FromNullString(originalTitle)
+
+		// Attach ratings if any
+		post.Rating = &models.Rating{
+			Avg:   utils.FromNullFloat64(avgRating),
+			Count: utils.FromNullInt64(ratingCount),
+		}
+
 		// Include the processed post in the result
 		posts.Items = append(posts.Items, post)
+
 		// Assign the total num of posts
 		posts.TotalNum = max(posts.TotalNum, totalNum)
 	}
@@ -97,7 +111,7 @@ func (r *Repository) GetUserFavedPosts(
 		return zero, err
 	}
 
-	// Post-process the posts, prepare the thumbnail
+	// Post-process the posts, prepare the thumbnails
 	if err = postProcessPosts(ctx, posts); err != nil {
 		return zero, err
 	}
@@ -114,7 +128,7 @@ func (r *Repository) GetUserFavedPosts(
 	lastPost := posts.Items[len(posts.Items)-1]
 	uploadDate := lastPost.UploadDate.Format(time.RFC3339Nano)
 	whenFaved := lastPost.UserActions.WhenFaved.Format(time.RFC3339Nano)
-	cursorStr := fmt.Sprintf("%s,%d,%s,%d", whenFaved, lastPost.Likes, uploadDate, lastPost.ID)
+	cursorStr := fmt.Sprintf("%s,%s,%d", whenFaved, uploadDate, lastPost.ID)
 	posts.NextCursor = base64.StdEncoding.EncodeToString([]byte(cursorStr))
 
 	return posts, nil
