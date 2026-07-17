@@ -94,6 +94,7 @@ func (s *service) GetUserFromSession(w http.ResponseWriter, r *http.Request) *mo
 		AvatarURL:      avatarURL,
 		AnalyticsID:    analyticsID,
 		AccessToken:    accessToken,
+		Config:         s.config,
 	}
 
 	if err = user.SetAvatar(

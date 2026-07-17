@@ -48,6 +48,7 @@ type User struct {
 	Expiry         time.Time
 	LastSeen       *time.Time
 	CreatedAt      *time.Time
+	*config.Config
 }
 
 // Check if the user is authenticated
@@ -56,10 +57,10 @@ func (u *User) IsAuthenticated() bool {
 }
 
 // Check if the user is Admin
-func (u *User) IsAdmin(adminID, adminProvider string) bool {
+func (u *User) IsAdmin() bool {
 	return u.IsAuthenticated() &&
-		u.ProviderUserId == adminID &&
-		u.Provider == adminProvider
+		u.ProviderUserId == u.Config.AdminProviderUserId &&
+		u.Provider == u.Config.AdminProvider
 }
 
 // Set the user analytics ID

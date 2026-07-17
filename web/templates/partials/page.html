@@ -22,7 +22,7 @@
 <div class="page">
     <div class="page-title-wrap">
         <h1>{{ .Title }}</h1>
-        {{ if .IsCurrentUserAdmin }}
+        {{ if .CurrentUser.IsAdmin }}
         <div class="page-buttons">
             <a data-modal="page" class="modal-button" href="javascript:void(0)">Delete</a>
             <a href="/page/{{ .CurrentPage.Slug }}/edit" class="modal-button edit-content">Edit</a>
@@ -33,7 +33,7 @@
 </div>
 {{ end }}
 
-{{ if .IsCurrentUserAdmin }}
+{{ if .CurrentUser.IsAdmin }}
 <dialog data-body="page" class="modal" closedby="any">
     <form class="modal-content" action="/page/{{ .CurrentPage.Slug }}/delete" method="POST">
         {{ .CSRFField }}

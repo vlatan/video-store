@@ -24,7 +24,7 @@ func (s *Service) SourcesHandler(w http.ResponseWriter, r *http.Request) {
 		sources models.Sources
 	)
 
-	if data.IsCurrentUserAdmin() {
+	if data.CurrentUser.IsAdmin() {
 		sources, err = s.sourcesRepo.GetAllSources(r.Context())
 	} else {
 		sources, err = rdb.GetCachedData(
@@ -215,7 +215,7 @@ func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
 		posts models.Posts
 	)
 
-	if data.IsCurrentUserAdmin() {
+	if data.CurrentUser.IsAdmin() {
 		posts, err = s.postsRepo.GetSourcePosts(
 			r.Context(), sourceID, "", orderBy,
 		)
