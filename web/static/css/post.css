@@ -507,16 +507,24 @@ h1.video-title {
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
-	gap: 1rem;
+	gap: 1.5rem;
 	background: var(--card-bg);
-	padding: 1.25rem;
+	padding: 1.5rem;
 	width: 100%;
+	border-radius: 0.5rem;
 }
 
-.form-heading {
+.review-form-heading {
 	margin: 0;
 	font-size: 16px;
 	font-weight: 600;
+}
+
+.review-form-group {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	gap: 0.5rem;
 }
 
 textarea#review-text,
@@ -574,6 +582,7 @@ button.btn-primary:disabled {
 
 .reviews-header .btn-open-review {
 	font-size: 0.85rem;
+	min-width: 6rem;
 }
 
 .review-user-plus {
@@ -582,7 +591,6 @@ button.btn-primary:disabled {
 	font-weight: bold;
 }
 
-/* Static Review Cards */
 .review-card {
 	background: var(--card-bg);
 	border: 1px solid var(--border-color);
@@ -591,11 +599,7 @@ button.btn-primary:disabled {
 	margin-bottom: 15px;
 }
 
-.new-review {
-	animation: fadeIn 0.3s ease-in;
-}
-
-@keyframes fadeIn {
+@keyframes reviewFadeIn {
 	from {
 		opacity: 0;
 		transform: translateY(-10px);
@@ -605,6 +609,10 @@ button.btn-primary:disabled {
 		opacity: 1;
 		transform: translateY(0);
 	}
+}
+
+.new-review {
+	animation: reviewFadeIn 0.3s ease-in;
 }
 
 .review-header {
