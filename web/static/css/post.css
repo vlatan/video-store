@@ -238,7 +238,7 @@ h1.video-title {
 
 /* ############# Post Dialogs ############# */
 
-.post-meta-dialog {
+.post-dialog {
 	background-color: var(--secondary-background-color);
 	border: none;
 	color: var(--primary-font-color);
@@ -249,9 +249,55 @@ h1.video-title {
 }
 
 @media screen and (max-width: 630px) {
-	.post-meta-dialog {
+	.post-dialog {
 		border-radius: 0;
 	}
+}
+
+.btn-open-post-dialog {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.4rem;
+	line-height: 1;
+	background-color: var(--secondary-background-color);
+	border: 1px solid var(--primary-border-color);
+	border-radius: 1rem;
+	min-height: 2rem;
+	min-width: 5.5rem;
+
+	color: #5799ef;
+	font-size: 0.85rem;
+	font-weight: bold;
+	cursor: pointer;
+	transition: background 0.2s;
+}
+
+.btn-open-post-dialog:hover {
+	background: var(--primary-background-color);
+}
+
+.btn-close-post-dialog {
+	position: absolute;
+	top: 15px;
+	right: 15px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--primary-font-color);
+	background-color: var(--primary-background-color);
+	border: 1px solid var(--secondary-border-color);
+	line-height: 1;
+	font-size: 1.2rem;
+	z-index: 1;
+	cursor: pointer;
+	width: 35px;
+	height: 35px;
+	border-radius: 50%;
+}
+
+.btn-close-post-dialog:hover {
+	color: var(--secondary-font-color);
 }
 
 
@@ -263,11 +309,6 @@ h1.video-title {
 	gap: 1rem;
 	background: transparent;
 	font-family: sans-serif;
-}
-
-.rate-widget,
-.rate-widget .btn-open-rate {
-	font-size: 0.85rem;
 }
 
 .rating-column {
@@ -285,30 +326,16 @@ h1.video-title {
 	text-transform: uppercase;
 }
 
-.rating-display,
-.btn-open-rate {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	gap: 0.4rem;
-	line-height: 1;
-	background-color: var(--secondary-background-color);
-	border: 1px solid var(--primary-border-color);
-	border-radius: 1rem;
-	min-height: 2rem;
-	min-width: 5.5rem;
-}
-
 .rating-display {
 	background-color: transparent;
 	border: 1px solid transparent;
+	cursor: unset;
 }
 
 .rating-global-star,
 .rating-user-star {
 	line-height: 1;
-	font-size: 1.30rem;
-	font-weight: normal;
+	font-size: 1.15rem;
 }
 
 .rating-global-star {
@@ -335,22 +362,6 @@ h1.video-title {
 .rating-count {
 	color: #777;
 	font-size: 0.6rem;
-}
-
-/* User Interaction Button Trigger */
-.btn-open-rate {
-	color: #5799ef;
-	cursor: pointer;
-	font-weight: bold;
-	transition: background 0.2s;
-}
-
-.btn-open-rate:hover {
-	background: var(--primary-background-color);
-}
-
-.rating-user-star {
-	color: #5799ef;
 }
 
 .rate-dialog-content {
@@ -390,29 +401,6 @@ h1.video-title {
 	color: white;
 	z-index: 1;
 	margin-top: 4px;
-}
-
-.btn-close-rate {
-	position: absolute;
-	top: 15px;
-	right: 15px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	color: var(--primary-font-color);
-	background-color: var(--primary-background-color);
-	border: 1px solid var(--secondary-border-color);
-	line-height: 1;
-	font-size: 1.2rem;
-	z-index: 1;
-	cursor: pointer;
-	width: 35px;
-	height: 35px;
-	border-radius: 50%;
-}
-
-.btn-close-rate:hover {
-	color: var(--secondary-font-color);
 }
 
 .rating-header {

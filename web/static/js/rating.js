@@ -5,8 +5,8 @@
 document.querySelectorAll('.rate-widget').forEach(widget => {
     const userRatingColumn = widget.querySelector('#user-rating-column');
     const rateDialog = widget.querySelector('#rate-dialog');
-    const rateBtnOpen = widget.querySelector('.btn-open-rate');
-    const rateBtnClose = widget.querySelector('.btn-close-rate');
+    const rateBtnOpen = widget.querySelector('#btn-open-rate');
+    const rateBtnClose = widget.querySelector('#btn-close-rate');
     const rateBtnSubmit = widget.querySelector('.btn-submit-rate');
     const bigStarValue = widget.querySelector('.rating-big-star-value');
     const rateURL = widget.dataset.url || `/api${window.location.pathname}/rate`;

@@ -139,7 +139,7 @@
 					{{ if .CurrentPost.Rating }}
 					<div class="rating-column" id="average-rating-column">
 						<span class="rating-column-label">AVG RATING</span>
-						<div class="rating-display">
+						<div class="btn-open-post-dialog rating-display">
 							<span class="rating-global-star">&#9733;</span>
 							<div class="rating-meta" itemprop="aggregateRating" itemscope
 								itemtype="https://schema.org/AggregateRating">
@@ -167,9 +167,9 @@
 					<div class="rating-column" id="user-rating-column">
 						<span class="rating-column-label">YOUR RATING</span>
 						{{ if .CurrentUser.IsAuthenticated }}
-						<button type="button" class="btn-open-rate" aria-haspopup="dialog">
+						<button type="button" id="btn-open-rate" class="btn-open-post-dialog" aria-haspopup="dialog">
 							{{ else }}
-							<button data-modal="login" type="button" class="btn-open-rate">
+							<button data-modal="login" type="button" id="btn-open-rate" class="btn-open-post-dialog">
 								{{ end }}
 								{{ if and $actions $actions.Rating }}
 								<span class="rating-user-star">&#9733;</span>
@@ -183,7 +183,7 @@
 
 					{{ if .CurrentUser.IsAuthenticated }}
 					<!-- Rating Dialog -->
-					<dialog class="modal post-meta-dialog" id="rate-dialog" closedby="any">
+					<dialog class="modal post-dialog" id="rate-dialog" closedby="any">
 						<div class="rate-dialog-content">
 							<div class="rating-big-star-wrapper">
 								<svg viewBox="0 0 24 24">
@@ -193,7 +193,7 @@
 								<span class="rating-big-star-value">?</span>
 							</div>
 
-							<button type="button" class="btn-close-rate">&times;</button>
+							<button type="button" id="btn-close-rate" class="btn-close-post-dialog">&times;</button>
 							<header class="rating-header">
 								<h3 class="rate-subtitle">RATE THIS</h3>
 								<h2 class="rate-title">{{ .CurrentPost.GetTitle }}</h2>
@@ -251,11 +251,11 @@
 		<section id="review-section">
 
 			{{ if .CurrentUser.IsAuthenticated }}
-			<dialog data-body="review" class="modal post-meta-dialog review-dialog" closedby="any">
+			<dialog data-body="review" class="modal post-dialog review-dialog" closedby="any">
 				<form id="review-form" action="/api/reviews" method="POST">
 					{{ .CSRFField }}
 
-					<button type="button" class="btn-close-rate">&times;</button>
+					<button type="button" id="btn-close-review" class="btn-close-post-dialog">&times;</button>
 
 					<div class="review-form-group">
 						<label class="review-form-heading" for="review-title">Headline</label>
@@ -277,9 +277,10 @@
 			<header class="reviews-header">
 				<h3>User Reviews</h3>
 				{{ if .CurrentUser.IsAuthenticated }}
-				<button data-modal="review" type="button" class="btn-open-rate btn-open-review" aria-haspopup="dialog">
+				<button data-modal="review" type="button" id="btn-open-review" class="btn-open-post-dialog"
+					aria-haspopup="dialog">
 					{{ else }}
-					<button data-modal="login" type="button" class="btn-open-rate btn-open-review">
+					<button data-modal="login" type="button" id="btn-open-review" class="btn-open-post-dialog">
 						{{ end }}
 						<span class="open-review-symbol">+</span>
 						<span>Review</span>
