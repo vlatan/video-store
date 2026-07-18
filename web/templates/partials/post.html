@@ -132,7 +132,7 @@
 				</div>
 
 				<!-- Rating Widget -->
-				<div class="rate-widget" data-url="/api/video/{{ .CurrentPost.VideoID }}/rate">
+				<section class="rating-section" data-url="/api/video/{{ .CurrentPost.VideoID }}/rate">
 					{{ .CSRFField }}
 
 					<!-- Avg Rating Column -->
@@ -183,7 +183,7 @@
 
 					{{ if .CurrentUser.IsAuthenticated }}
 					<!-- Rating Dialog -->
-					<dialog class="modal post-dialog" id="rate-dialog" closedby="any">
+					<dialog id="rate-dialog" class="modal post-dialog" closedby="any">
 						<div class="rate-dialog-content">
 							<div class="rating-big-star-wrapper">
 								<svg viewBox="0 0 24 24">
@@ -217,7 +217,7 @@
 					</dialog>
 					{{ end }}
 
-				</div>
+				</section>
 			</div>
 		</header>
 
@@ -248,11 +248,11 @@
 		</span>
 		{{ end }}
 
-		<section id="review-section">
+		<section class="review-section">
 
 			{{ if .CurrentUser.IsAuthenticated }}
-			<dialog data-body="review" class="modal post-dialog review-dialog" closedby="any">
-				<form id="review-form" action="/api/reviews" method="POST">
+			<dialog id="review-dialog" class="modal post-dialog" closedby="any">
+				<form id="review-form" action="/api/video/{{ .CurrentPost.VideoID }}/review" method="POST">
 					{{ .CSRFField }}
 
 					<button type="button" id="btn-close-review" class="btn-close-post-dialog">&times;</button>
@@ -277,8 +277,7 @@
 			<header class="reviews-header">
 				<h3>User Reviews</h3>
 				{{ if .CurrentUser.IsAuthenticated }}
-				<button data-modal="review" type="button" id="btn-open-review" class="btn-open-post-dialog"
-					aria-haspopup="dialog">
+				<button type="button" id="btn-open-review" class="btn-open-post-dialog" aria-haspopup="dialog">
 					{{ else }}
 					<button data-modal="login" type="button" id="btn-open-review" class="btn-open-post-dialog">
 						{{ end }}

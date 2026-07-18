@@ -1,10 +1,13 @@
 * Build the frontend and backend review system.
+  Change ids to classes.
+  Make the submit button disabled until the headline and review text get populated.
+
   User should be able to post just one review per post.
   Schema reflects that, there's UNIQUE(user_id, post_id).
   Make the frontend enforce that too.
+
   Show the rating on the review if any or make the rating option available on the review.
   Decide whether to show more reviews with "load more", infinite scroll or with pagination.
-  Customize the review modal. Add close button.
 
 * Make the checkmarks on the like/save green or yellow
 * Add close button to login menu

@@ -303,7 +303,7 @@ h1.video-title {
 
 /* ############# Ratings ############# */
 
-.rate-widget {
+.rating-section {
 	display: flex;
 	align-items: center;
 	gap: 1rem;
@@ -485,7 +485,7 @@ h1.video-title {
 
 /* ############# Reviews ############# */
 
-#review-section {
+.review-section {
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
