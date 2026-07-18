@@ -1,4 +1,11 @@
-* Build the JS and backend review system
+* Build the frontend and backend review system.
+  User should be able to post just one review per post.
+  Schema reflects that, there's UNIQUE(user_id, post_id).
+  Make the frontend enforce that too.
+  Show the rating on the review if any or make the rating option available on the review.
+  Decide whether to show more reviews with "load more", infinite scroll or with pagination.
+
+* Make the checkmarks on the like/save green or yellow
 * Add close button to login menu
 * Make search bar on small screens accross entire screen
 
