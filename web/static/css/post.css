@@ -552,7 +552,7 @@ textarea#review-text:focus {
 	border-color: var(--accent);
 }
 
-button.btn-primary {
+button.btn-post-review {
 	align-self: flex-end;
 	padding: 12px;
 	background: var(--accent);
@@ -565,11 +565,11 @@ button.btn-primary {
 	transition: opacity 0.2s;
 }
 
-button.btn-primary:hover:not(:disabled) {
+button.btn-post-review:hover:not(:disabled) {
 	background: var(--accent-hover);
 }
 
-button.btn-primary:disabled {
+button.btn-post-review:disabled {
 	opacity: 0.5;
 	cursor: not-allowed;
 }
@@ -580,7 +580,7 @@ button.btn-primary:disabled {
 	justify-content: space-between;
 }
 
-.reviews-header .btn-open-review {
+.btn-open-review {
 	font-size: 0.85rem;
 	min-width: 6rem;
 }
