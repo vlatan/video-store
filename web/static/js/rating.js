@@ -1,3 +1,7 @@
+// ==========================================================================
+// Ratings
+// ==========================================================================
+
 document.querySelectorAll('.rate-widget').forEach(widget => {
     const userRatingColumn = widget.querySelector('#user-rating-column');
     const rateDialog = widget.querySelector('#rate-dialog');
@@ -84,4 +88,48 @@ document.querySelectorAll('.rate-widget').forEach(widget => {
             setAlert("Something went wrong!");
         }
     });
+});
+
+
+// ==========================================================================
+// Reviews
+// ==========================================================================
+
+const reviewForm = document.getElementById('review-form');
+const reviewsList = document.getElementById('reviews-list');
+const submitBtn = document.getElementById('submit-review');
+
+reviewForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Posting...';
+
+    const formData = new FormData(this);
+
+    try {
+        const response = await fetch(this.action, { method: 'POST', body: formData });
+        if (!response.ok) throw new Error();
+        const data = await response.json();
+
+        const card = document.createElement('div');
+        card.className = 'review-card new-review';
+        card.innerHTML = `
+          <div class="review-header">
+            <h4>${data.author || 'Anonymous'} <span class="date-meta">Just now</span></h4>
+            <span class="stars-display">${getStarsHTML(parseInt(data.rating || formData.get('rating')))}</span>
+          </div>
+          <p class="content"></p>
+        `;
+        card.querySelector('.content').textContent = data.text || formData.get('text');
+
+        reviewsList.prepend(card);
+        this.reset();
+    } catch (err) {
+        formError.style.display = 'block';
+        console.error("Failed to fetch or parse JSON:", error);
+        setAlert("Something went wrong!");
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Post Review';
+    }
 });

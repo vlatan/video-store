@@ -554,7 +554,7 @@ textarea#review-text:focus {
 	border-color: var(--accent);
 }
 
-button.btn-post-review {
+button.btn-submit-review {
 	align-self: flex-end;
 	padding: 12px;
 	background: var(--accent);
@@ -567,11 +567,11 @@ button.btn-post-review {
 	transition: opacity 0.2s;
 }
 
-button.btn-post-review:hover:not(:disabled) {
+button.btn-submit-review:hover:not(:disabled) {
 	background: var(--accent-hover);
 }
 
-button.btn-post-review:disabled {
+button.btn-submit-review:disabled {
 	opacity: 0.5;
 	cursor: not-allowed;
 }
