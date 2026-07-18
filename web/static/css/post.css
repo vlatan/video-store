@@ -493,6 +493,147 @@ h1.video-title {
 }
 
 
+/* ############# Reviews ############# */
+
+#review-section {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	gap: 1.5rem;
+	width: 100%;
+}
+
+#review-form {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	gap: 1rem;
+	background: var(--card-bg);
+	padding: 1.25rem;
+	width: 100%;
+}
+
+.form-heading {
+	margin: 0;
+	font-size: 16px;
+	font-weight: 600;
+}
+
+textarea#review-text,
+input#review-title {
+	background: var(--bg-color);
+	color: var(--text-main);
+	padding: 0.85rem;
+	border: 1px solid var(--border-color);
+	border-radius: 6px;
+	font-family: inherit;
+	font-size: 1rem;
+	width: 100%;
+	box-sizing: border-box;
+	resize: vertical;
+}
+
+textarea#review-text::placeholder,
+input#review-title::placeholder {
+	font-size: 0.85rem;
+}
+
+input#review-title:focus,
+textarea#review-text:focus {
+	outline: none;
+	border-color: var(--accent);
+}
+
+button.btn-primary {
+	align-self: flex-end;
+	padding: 12px;
+	background: var(--accent);
+	color: #000;
+	border: none;
+	border-radius: 6px;
+	cursor: pointer;
+	font-weight: bold;
+	font-size: 16px;
+	transition: opacity 0.2s;
+}
+
+button.btn-primary:hover:not(:disabled) {
+	background: var(--accent-hover);
+}
+
+button.btn-primary:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.reviews-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.reviews-header .btn-open-review {
+	font-size: 0.85rem;
+}
+
+.review-user-plus {
+	line-height: 1;
+	font-size: 1.30rem;
+	font-weight: bold;
+}
+
+/* Static Review Cards */
+.review-card {
+	background: var(--card-bg);
+	border: 1px solid var(--border-color);
+	padding: 1.25rem;
+	border-radius: 8px;
+	margin-bottom: 15px;
+}
+
+.new-review {
+	animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+		transform: translateY(-10px);
+	}
+
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.review-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 10px;
+}
+
+.review-header h4 {
+	margin: 0;
+	font-size: 16px;
+}
+
+.date-meta {
+	font-size: 12px;
+	color: var(--text-muted);
+	font-weight: normal;
+	margin-left: 10px;
+}
+
+
+.review-card p.content {
+	margin: 0;
+	color: var(--text-muted);
+	line-height: 1.5;
+}
+
+
 /* ############# Sidebar ############# */
 
 .sidebar_wrap {

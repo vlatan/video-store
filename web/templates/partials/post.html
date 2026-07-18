@@ -248,6 +248,56 @@
 		</span>
 		{{ end }}
 
+		<section id="review-section">
+
+			{{ if .CurrentUser.IsAuthenticated }}
+			<dialog data-body="review" class="modal rate-dialog" closedby="any">
+				<form id="review-form" action="/api/reviews" method="POST">
+					{{ .CSRFField }}
+
+					<h3 class="form-heading">Headline</h3>
+					<input id="review-title" name="title" placeholder="Write a catchy headline..." type="text" required>
+
+					<h3 class="form-heading">Review</h3>
+					<textarea id="review-text" name="text" placeholder="Write your review here..." rows="4" type="text"
+						required></textarea>
+
+					<button type="submit" class="btn-primary" id="submit-btn">Post Review</button>
+				</form>
+			</dialog>
+			{{ end }}
+
+			<header class="reviews-header">
+				<h3>User Reviews</h3>
+				{{ if .CurrentUser.IsAuthenticated }}
+				<button data-modal="review" type="button" class="btn-open-rate btn-open-review" aria-haspopup="dialog">
+					{{ else }}
+					<button data-modal="login" type="button" class="btn-open-rate btn-open-review">
+						{{ end }}
+						<span class="review-user-plus">+</span>
+						<span>Review</span>
+					</button>
+			</header>
+
+			<div id="reviews-list">
+				<div class="review-card">
+					<div class="review-header">
+						<h4>Sarah J. <span class="date-meta">Jun 1, 2026</span></h4>
+						<span class="stars-display">★★★★★</span>
+					</div>
+					<p class="content">Absolutely phenomenal update. Appears instantly on load.</p>
+				</div>
+
+				<div class="review-card">
+					<div class="review-header">
+						<h4>Marcus T. <span class="date-meta">May 20, 2026</span></h4>
+						<span class="stars-display">★★★★☆</span>
+					</div>
+					<p class="content">Solid implementation, taking off one star for missing color themes.</p>
+				</div>
+			</div>
+		</section>
+
 	</div>
 
 	<div class="sidebar_wrap">

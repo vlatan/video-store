@@ -4,6 +4,8 @@
   Make the frontend enforce that too.
   Show the rating on the review if any or make the rating option available on the review.
   Decide whether to show more reviews with "load more", infinite scroll or with pagination.
+  Make the headings label inside the review form.
+  Customize the review modal.
 
 * Make the checkmarks on the like/save green or yellow
 * Add close button to login menu
