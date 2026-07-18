@@ -236,6 +236,25 @@ h1.video-title {
 }
 
 
+/* ############# Post Dialogs ############# */
+
+.post-meta-dialog {
+	background-color: var(--secondary-background-color);
+	border: none;
+	color: var(--primary-font-color);
+	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+	width: 620px;
+	max-width: 100%;
+	overflow: visible;
+}
+
+@media screen and (max-width: 630px) {
+	.post-meta-dialog {
+		border-radius: 0;
+	}
+}
+
+
 /* ############# Ratings ############# */
 
 .rate-widget {
@@ -332,23 +351,6 @@ h1.video-title {
 
 .rating-user-star {
 	color: #5799ef;
-}
-
-/* Rating dialog Styles */
-.rate-dialog {
-	background-color: var(--secondary-background-color);
-	border: none;
-	color: var(--primary-font-color);
-	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
-	width: 620px;
-	max-width: 100%;
-	overflow: visible;
-}
-
-@media screen and (max-width: 630px) {
-	.rate-dialog {
-		border-radius: 0;
-	}
 }
 
 .rate-dialog-content {
@@ -509,7 +511,7 @@ h1.video-title {
 	justify-content: center;
 	gap: 1.5rem;
 	background: var(--card-bg);
-	padding: 1.5rem;
+	padding: 2rem;
 	width: 100%;
 	border-radius: 0.5rem;
 }
@@ -531,7 +533,7 @@ textarea#review-text,
 input#review-title {
 	background: var(--bg-color);
 	color: var(--text-main);
-	padding: 0.85rem;
+	padding: 0.75rem;
 	border: 1px solid var(--border-color);
 	border-radius: 6px;
 	font-family: inherit;
@@ -585,7 +587,7 @@ button.btn-post-review:disabled {
 	min-width: 6rem;
 }
 
-.review-user-plus {
+.open-review-symbol {
 	line-height: 1;
 	font-size: 1.30rem;
 	font-weight: bold;

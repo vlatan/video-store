@@ -183,7 +183,7 @@
 
 					{{ if .CurrentUser.IsAuthenticated }}
 					<!-- Rating Dialog -->
-					<dialog class="modal rate-dialog" closedby="any">
+					<dialog class="modal post-meta-dialog" id="rate-dialog" closedby="any">
 						<div class="rate-dialog-content">
 							<div class="rating-big-star-wrapper">
 								<svg viewBox="0 0 24 24">
@@ -251,9 +251,11 @@
 		<section id="review-section">
 
 			{{ if .CurrentUser.IsAuthenticated }}
-			<dialog data-body="review" class="modal rate-dialog" closedby="any">
+			<dialog data-body="review" class="modal post-meta-dialog review-dialog" closedby="any">
 				<form id="review-form" action="/api/reviews" method="POST">
 					{{ .CSRFField }}
+
+					<button type="button" class="btn-close-rate">&times;</button>
 
 					<div class="review-form-group">
 						<label class="review-form-heading" for="review-title">Headline</label>
@@ -279,7 +281,7 @@
 					{{ else }}
 					<button data-modal="login" type="button" class="btn-open-rate btn-open-review">
 						{{ end }}
-						<span class="review-user-plus">+</span>
+						<span class="open-review-symbol">+</span>
 						<span>Review</span>
 					</button>
 			</header>
