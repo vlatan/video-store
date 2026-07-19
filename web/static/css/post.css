@@ -534,8 +534,14 @@ textarea#review-text:focus {
 	border-color: var(--accent);
 }
 
+.review-form-footer {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 0.75rem;
+}
+
 button.btn-submit-review {
-	align-self: flex-end;
 	padding: 12px;
 	background: var(--accent);
 	color: #000;
@@ -555,6 +561,12 @@ button.btn-submit-review:disabled {
 	opacity: 0.5;
 	cursor: not-allowed;
 }
+
+.review-form-error {
+	color: #d92d20;
+	font-size: 0.75rem;
+}
+
 
 .reviews-header {
 	display: flex;

@@ -98,20 +98,44 @@ document.querySelectorAll('.review-section').forEach(s => {
     const reviewOpenBtn = s.querySelector('#btn-open-review');
     const reviewCloseBtn = s.querySelector('#btn-close-review');
     const reviewSubmitBtn = s.querySelector('#submit-review');
+    const reviewError = s.querySelector('#review-error');
+
+    const showError = (msg) => {
+        reviewError.textContent = msg;
+        reviewError.hidden = false;
+    };
+    const clearError = () => {
+        reviewError.textContent = '';
+        reviewError.hidden = true;
+    };
 
     reviewOpenBtn.addEventListener('click', () => reviewDialog.showModal());
     reviewCloseBtn.addEventListener('click', () => reviewDialog.close());
 
     reviewForm.addEventListener('submit', async (event) => {
         event.preventDefault();
+        clearError();
+
+        if (!reviewForm.checkValidity()) {
+            reviewForm.reportValidity(); // shows the native browser bubble
+            return;
+        }
+
+        const formData = new FormData(event.currentTarget);
+        const headline = (formData.get('headline') || '').trim();
+        const content = (formData.get('content') || '').trim();
+
+        if (!headline || !content) {
+            showError('Please fill in both the headline and the review');
+            return;
+        }
+
         reviewSubmitBtn.disabled = true;
         reviewSubmitBtn.textContent = 'Posting...';
         reviewDialog.close();
 
-        const formData = new FormData(event.currentTarget);
-
         try {
-            const response = await fetch(this.action, { method: 'POST', body: formData });
+            const response = await fetch(event.currentTarget.action, { method: 'POST', body: formData });
             if (!response.ok) throw new Error();
             const data = await response.json();
 

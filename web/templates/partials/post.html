@@ -257,17 +257,20 @@
 
 					<div class="review-form-group">
 						<label class="review-form-heading" for="review-title">Headline</label>
-						<input id="review-title" name="title" placeholder="Write a catchy headline..." type="text"
+						<input id="review-title" name="headline" placeholder="Write a catchy headline..." type="text"
 							required>
 					</div>
 
 					<div class="review-form-group">
 						<label class="review-form-heading" for="review-text">Review</label>
-						<textarea id="review-text" name="text" placeholder="Write your review..." rows="4" type="text"
-							required></textarea>
+						<textarea id="review-text" name="content" placeholder="Write your review..." rows="4"
+							type="text" required></textarea>
 					</div>
 
-					<button type="submit" id="submit-review" class="btn-submit-review">Post Review</button>
+					<div class="review-form-footer">
+						<span id="review-error" class="review-form-error" hidden></span>
+						<button type="submit" id="submit-review" class="btn-submit-review">Post Review</button>
+					</div>
 				</form>
 			</dialog>
 			{{ end }}
