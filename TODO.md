@@ -1,10 +1,12 @@
 * Build the frontend and backend review system.
   Change ids to classes.
-  Make the submit button disabled until the headline and review text get populated.
 
   User should be able to post just one review per post.
   Schema reflects that, there's UNIQUE(user_id, post_id).
-  Make the frontend enforce that too.
+  So maybe preserve/populate the user review in the dialog and if they want to edit, update in DB.
+  Consequently the user should be able to delete a review or a rating for that matter.
+  Maybe add delete button in the dialog next to the submit.
+  That is doable on the review dialog but not so much on the rating dialog.
 
   Show the rating on the review if any or make the rating option available on the review.
   Decide whether to show more reviews with "load more", infinite scroll or with pagination.
