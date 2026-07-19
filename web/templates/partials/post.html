@@ -135,7 +135,7 @@
 				<section class="rating-section" data-url="/api/video/{{ .CurrentPost.VideoID }}/rate">
 					{{ .CSRFField }}
 
-					<!-- Avg Rating Column -->
+					<!-- Avg Rating Box -->
 					{{ if .CurrentPost.Rating }}
 					<div class="btn-open-post-dialog avg-rating-display">
 						<span class="rating-global-star">&#9733;</span>
@@ -160,7 +160,7 @@
 					</div>
 					{{ end }}
 
-					<!-- Your Rating Column -->
+					<!-- User Rating Box -->
 					{{ if .CurrentUser.IsAuthenticated }}
 					<button type="button" id="btn-open-rate" class="btn-open-post-dialog" aria-haspopup="dialog">
 						{{ else }}
@@ -175,8 +175,8 @@
 							{{ end }}
 						</button>
 
-						{{ if .CurrentUser.IsAuthenticated }}
 						<!-- Rating Dialog -->
+						{{ if .CurrentUser.IsAuthenticated }}
 						<dialog id="rate-dialog" class="modal post-dialog" closedby="any">
 							<div class="rate-dialog-content">
 								<div class="rating-big-star-wrapper">
@@ -242,8 +242,10 @@
 		</span>
 		{{ end }}
 
+		<!-- Review Widget -->
 		<section class="review-section">
 
+			<!-- Review Dialog -->
 			{{ if .CurrentUser.IsAuthenticated }}
 			<dialog id="review-dialog" class="modal post-dialog" closedby="any">
 				<form id="review-form" action="/api/video/{{ .CurrentPost.VideoID }}/review" method="POST">
@@ -280,6 +282,7 @@
 					</button>
 			</header>
 
+			<!-- Reviews List -->
 			<div id="reviews-list">
 				<div class="review-card">
 					<div class="review-header">
