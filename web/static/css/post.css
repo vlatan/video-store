@@ -318,15 +318,7 @@ h1.video-title {
 	gap: 5px;
 }
 
-.rating-column-label {
-	font-size: 0.6rem;
-	color: #999;
-	letter-spacing: 0.5px;
-	font-weight: bold;
-	text-transform: uppercase;
-}
-
-.rating-display {
+.avg-rating-display {
 	background-color: transparent;
 	border: 1px solid transparent;
 	cursor: unset;

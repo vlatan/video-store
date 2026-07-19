@@ -3,7 +3,6 @@
 // ==========================================================================
 
 document.querySelectorAll('.rating-section').forEach(widget => {
-    const userRatingColumn = widget.querySelector('#user-rating-column');
     const rateDialog = widget.querySelector('#rate-dialog');
     const rateBtnOpen = widget.querySelector('#btn-open-rate');
     const rateBtnClose = widget.querySelector('#btn-close-rate');
@@ -51,34 +50,31 @@ document.querySelectorAll('.rating-section').forEach(widget => {
             if (data.rating_count === 1) votesText = "vote";
 
             const avgRatingHTML = `
-                <div class="rating-column" id="average-rating-column">
-                    <span class="rating-column-label">AVG RATING</span>
-                    <div class="rating-display">
-                        <span class="rating-global-star">&#9733;</span>
-                        <div class="rating-meta" itemprop="aggregateRating" itemscope
-							itemtype="https://schema.org/AggregateRating">
-                            <meta itemprop="worstRating" content="1">
-                            <div class="rating-score">
-                                <span class="rating-avg-val" itemprop="ratingValue">
-                                    ${data.avg_rating}
-                                </span> / <span itemprop="bestRating">10</span>
-                            </div>
-                            <div class="rating-count">
-                                <span class="rating-count-val" itemprop="ratingCount">
-                                    ${data.rating_count}
-                                </span> ${votesText}
-                            </div>
+                <div class="btn-open-post-dialog avg-rating-display">
+                    <span class="rating-global-star">&#9733;</span>
+                    <div class="rating-meta" itemprop="aggregateRating" itemscope
+                        itemtype="https://schema.org/AggregateRating">
+                        <meta itemprop="worstRating" content="1">
+                        <div class="rating-score">
+                            <span class="rating-avg-val" itemprop="ratingValue">
+                                ${data.avg_rating}
+                            </span> / <span itemprop="bestRating">10</span>
+                        </div>
+                        <div class="rating-count">
+                            <span class="rating-count-val" itemprop="ratingCount">
+                                ${data.rating_count}
+                            </span> ${votesText}
                         </div>
                     </div>
                 </div>
             `;
 
             // Replace or insert average rating
-            const avgRatingColumn = widget.querySelector('#average-rating-column');
-            if (avgRatingColumn) {
-                avgRatingColumn.outerHTML = avgRatingHTML;
-            } else if (userRatingColumn) {
-                userRatingColumn.insertAdjacentHTML('beforebegin', avgRatingHTML);
+            const avgRatingDisplay = widget.querySelector('.avg-rating-display');
+            if (avgRatingDisplay) {
+                avgRatingDisplay.outerHTML = avgRatingHTML;
+            } else if (rateBtnOpen) {
+                rateBtnOpen.insertAdjacentHTML('beforebegin', avgRatingHTML);
             }
 
             // Transform the user rating button

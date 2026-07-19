@@ -137,85 +137,79 @@
 
 					<!-- Avg Rating Column -->
 					{{ if .CurrentPost.Rating }}
-					<div class="rating-column" id="average-rating-column">
-						<span class="rating-column-label">AVG RATING</span>
-						<div class="btn-open-post-dialog rating-display">
-							<span class="rating-global-star">&#9733;</span>
-							<div class="rating-meta" itemprop="aggregateRating" itemscope
-								itemtype="https://schema.org/AggregateRating">
-								<meta itemprop="worstRating" content="1">
-								<div class="rating-score">
-									<span class="rating-avg-val" itemprop="ratingValue">
-										{{ .CurrentPost.Rating.Avg }}
-									</span> / <span itemprop="bestRating">10</span>
-								</div>
-								{{ $votesText := "votes" }}
-								{{ if eq .CurrentPost.Rating.Count 1 }}
-								{{ $votesText = "vote" }}
-								{{ end }}
-								<div class="rating-count">
-									<span class="rating-count-val" itemprop="ratingCount">
-										{{ .CurrentPost.Rating.Count }}
-									</span> {{ $votesText }}
-								</div>
+					<div class="btn-open-post-dialog avg-rating-display">
+						<span class="rating-global-star">&#9733;</span>
+						<div class="rating-meta" itemprop="aggregateRating" itemscope
+							itemtype="https://schema.org/AggregateRating">
+							<meta itemprop="worstRating" content="1">
+							<div class="rating-score">
+								<span class="rating-avg-val" itemprop="ratingValue">
+									{{ .CurrentPost.Rating.Avg }}
+								</span> / <span itemprop="bestRating">10</span>
+							</div>
+							{{ $votesText := "votes" }}
+							{{ if eq .CurrentPost.Rating.Count 1 }}
+							{{ $votesText = "vote" }}
+							{{ end }}
+							<div class="rating-count">
+								<span class="rating-count-val" itemprop="ratingCount">
+									{{ .CurrentPost.Rating.Count }}
+								</span> {{ $votesText }}
 							</div>
 						</div>
 					</div>
 					{{ end }}
 
 					<!-- Your Rating Column -->
-					<div class="rating-column" id="user-rating-column">
-						<span class="rating-column-label">YOUR RATING</span>
-						{{ if .CurrentUser.IsAuthenticated }}
-						<button type="button" id="btn-open-rate" class="btn-open-post-dialog" aria-haspopup="dialog">
-							{{ else }}
-							<button data-modal="login" type="button" id="btn-open-rate" class="btn-open-post-dialog">
-								{{ end }}
-								{{ if and $actions $actions.Rating }}
-								<span class="rating-user-star">&#9733;</span>
-								<span>{{ $actions.Rating }}</span>
-								{{ else }}
-								<span class="rating-user-star">&#9734;</span>
-								<span>Rate</span>
-								{{ end }}
-							</button>
-					</div>
-
 					{{ if .CurrentUser.IsAuthenticated }}
-					<!-- Rating Dialog -->
-					<dialog id="rate-dialog" class="modal post-dialog" closedby="any">
-						<div class="rate-dialog-content">
-							<div class="rating-big-star-wrapper">
-								<svg viewBox="0 0 24 24">
-									<path
-										d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-								</svg>
-								<span class="rating-big-star-value">?</span>
+					<button type="button" id="btn-open-rate" class="btn-open-post-dialog" aria-haspopup="dialog">
+						{{ else }}
+						<button data-modal="login" type="button" id="btn-open-rate" class="btn-open-post-dialog">
+							{{ end }}
+							{{ if and $actions $actions.Rating }}
+							<span class="rating-user-star">&#9733;</span>
+							<span>{{ $actions.Rating }}</span>
+							{{ else }}
+							<span class="rating-user-star">&#9734;</span>
+							<span>Rate</span>
+							{{ end }}
+						</button>
+
+						{{ if .CurrentUser.IsAuthenticated }}
+						<!-- Rating Dialog -->
+						<dialog id="rate-dialog" class="modal post-dialog" closedby="any">
+							<div class="rate-dialog-content">
+								<div class="rating-big-star-wrapper">
+									<svg viewBox="0 0 24 24">
+										<path
+											d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+									</svg>
+									<span class="rating-big-star-value">?</span>
+								</div>
+
+								<button type="button" id="btn-close-rate" class="btn-close-post-dialog">&times;</button>
+								<header class="rating-header">
+									<h3 class="rate-subtitle">RATE THIS</h3>
+									<h2 class="rate-title">{{ .CurrentPost.GetTitle }}</h2>
+								</header>
+
+								<div class="rate-stars">
+									<label><input type="radio" name="rating" value="10"><span>★</span></label>
+									<label><input type="radio" name="rating" value="9"><span>★</span></label>
+									<label><input type="radio" name="rating" value="8"><span>★</span></label>
+									<label><input type="radio" name="rating" value="7"><span>★</span></label>
+									<label><input type="radio" name="rating" value="6"><span>★</span></label>
+									<label><input type="radio" name="rating" value="5"><span>★</span></label>
+									<label><input type="radio" name="rating" value="4"><span>★</span></label>
+									<label><input type="radio" name="rating" value="3"><span>★</span></label>
+									<label><input type="radio" name="rating" value="2"><span>★</span></label>
+									<label><input type="radio" name="rating" value="1"><span>★</span></label>
+								</div>
+
+								<button type="button" class="btn-submit-rate" disabled>Rate</button>
 							</div>
-
-							<button type="button" id="btn-close-rate" class="btn-close-post-dialog">&times;</button>
-							<header class="rating-header">
-								<h3 class="rate-subtitle">RATE THIS</h3>
-								<h2 class="rate-title">{{ .CurrentPost.GetTitle }}</h2>
-							</header>
-
-							<div class="rate-stars">
-								<label><input type="radio" name="rating" value="10"><span>★</span></label>
-								<label><input type="radio" name="rating" value="9"><span>★</span></label>
-								<label><input type="radio" name="rating" value="8"><span>★</span></label>
-								<label><input type="radio" name="rating" value="7"><span>★</span></label>
-								<label><input type="radio" name="rating" value="6"><span>★</span></label>
-								<label><input type="radio" name="rating" value="5"><span>★</span></label>
-								<label><input type="radio" name="rating" value="4"><span>★</span></label>
-								<label><input type="radio" name="rating" value="3"><span>★</span></label>
-								<label><input type="radio" name="rating" value="2"><span>★</span></label>
-								<label><input type="radio" name="rating" value="1"><span>★</span></label>
-							</div>
-
-							<button type="button" class="btn-submit-rate" disabled>Rate</button>
-						</div>
-					</dialog>
-					{{ end }}
+						</dialog>
+						{{ end }}
 
 				</section>
 			</div>
