@@ -36,10 +36,10 @@ document.querySelectorAll('.rating-section').forEach(widget => {
     if (!rateBtnSubmit) return;
     rateBtnSubmit.addEventListener('click', async () => {
         if (!currentRating) return;
-        rateDialog.close();
         rateBtnSubmit.disabled = true;
         if (selectedStar) selectedStar.checked = false;
         bigStarValue.textContent = bigStarOriginalTextContent;
+        rateDialog.close();
 
         try {
             const res = await postData(rateURL, { 'rating': currentRating });
@@ -106,8 +106,9 @@ document.querySelectorAll('.review-section').forEach(s => {
         event.preventDefault();
         reviewSubmitBtn.disabled = true;
         reviewSubmitBtn.textContent = 'Posting...';
+        reviewDialog.close();
 
-        const formData = new FormData(this);
+        const formData = new FormData(event.currentTarget);
 
         try {
             const response = await fetch(this.action, { method: 'POST', body: formData });
@@ -126,9 +127,9 @@ document.querySelectorAll('.review-section').forEach(s => {
             card.querySelector('.content').textContent = data.text || formData.get('text');
 
             reviewsList.prepend(card);
-            this.reset();
+            event.currentTarget.reset()
         } catch (err) {
-            console.error("Failed to fetch or parse JSON:", error);
+            console.error("Failed to fetch or parse JSON:", err);
             setAlert("Something went wrong!");
         } finally {
             reviewSubmitBtn.disabled = false;
