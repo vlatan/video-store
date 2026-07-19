@@ -160,7 +160,7 @@
 					</div>
 					{{ end }}
 
-					<!-- User Rating Box -->
+					<!-- User Rating Button -->
 					{{ if .CurrentUser.IsAuthenticated }}
 					<button type="button" id="btn-open-rate" class="btn-open-post-dialog" aria-haspopup="dialog">
 						{{ else }}
@@ -270,8 +270,10 @@
 			</dialog>
 			{{ end }}
 
+			<!-- Reviews List Header -->
 			<header class="reviews-header">
 				<h3>User Reviews</h3>
+				<!-- User Review Button -->
 				{{ if .CurrentUser.IsAuthenticated }}
 				<button type="button" id="btn-open-review" class="btn-open-post-dialog" aria-haspopup="dialog">
 					{{ else }}
