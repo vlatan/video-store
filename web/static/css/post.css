@@ -306,7 +306,7 @@ h1.video-title {
 .rating-section {
 	display: flex;
 	align-items: center;
-	gap: 1rem;
+	gap: 0.5rem;
 	background: transparent;
 	font-family: sans-serif;
 }
