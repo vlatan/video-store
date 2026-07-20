@@ -91,6 +91,8 @@ document.querySelectorAll('.rating-section').forEach(widget => {
 // Reviews
 // ==========================================================================
 
+function getStarsHTML(rating) { return '★'.repeat(rating) + '☆'.repeat(10 - rating); }
+
 document.querySelectorAll('.review-section').forEach(s => {
     const reviewDialog = s.querySelector('#review-dialog');
     const reviewForm = s.querySelector('.review-form');
@@ -131,14 +133,14 @@ document.querySelectorAll('.review-section').forEach(s => {
             return;
         }
 
+        const data = Object.fromEntries(formData.entries());
+        if (data.rating) data.rating = Number(data.rating);
+
         reviewSubmitBtn.disabled = true;
         reviewSubmitBtn.textContent = 'Posting...';
         reviewDialog.close();
 
         try {
-
-            const data = Object.fromEntries(formData.entries());
-            if (data.rating) data.rating = Number(data.rating);
             const response = await postData(event.currentTarget.action, data);
             if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
             const result = await response.json();
@@ -147,12 +149,14 @@ document.querySelectorAll('.review-section').forEach(s => {
             card.className = 'review-card new-review';
             card.innerHTML = `
                 <div class="review-header">
-                    <h4>${data.author || 'Anonymous'} <span class="date-meta">Just now</span></h4>
-                    <span class="stars-display">${getStarsHTML(parseInt(data.rating || formData.get('rating')))}</span>
+                    <h4>${result.author || 'Anonymous'} <span class="date-meta">Just now</span></h4>
+                    <span class="stars-display">${getStarsHTML(parseInt(result.rating || formData.get('rating')))}</span>
                 </div>
-                <p class="content"></p>
+                <p class="review-headline"></p>
+                <p class="review-content"></p>
             `;
-            card.querySelector('.content').textContent = data.text || formData.get('text');
+            card.querySelector('.review-headline').textContent = result.headline || formData.get('headline');
+            card.querySelector('.review-content').textContent = result.content || formData.get('content');
             reviewsList.prepend(card);
             event.currentTarget.reset()
         } catch (err) {
@@ -164,3 +168,10 @@ document.querySelectorAll('.review-section').forEach(s => {
         }
     });
 });
+
+
+// ==========================================================================
+// Helpers
+// ==========================================================================
+
+function getStarsHTML(rating) { return '★'.repeat(rating) + '☆'.repeat(10 - rating); }
