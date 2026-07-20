@@ -136,9 +136,12 @@ document.querySelectorAll('.review-section').forEach(s => {
         reviewDialog.close();
 
         try {
-            const response = await fetch(event.currentTarget.action, { method: 'POST', body: formData });
-            if (!response.ok) throw new Error();
-            const data = await response.json();
+
+            const data = Object.fromEntries(formData.entries());
+            if (data.rating) data.rating = Number(data.rating);
+            const response = await postData(event.currentTarget.action, data);
+            if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+            const result = await response.json();
 
             const card = document.createElement('div');
             card.className = 'review-card new-review';
@@ -150,7 +153,6 @@ document.querySelectorAll('.review-section').forEach(s => {
                 <p class="content"></p>
             `;
             card.querySelector('.content').textContent = data.text || formData.get('text');
-
             reviewsList.prepend(card);
             event.currentTarget.reset()
         } catch (err) {
