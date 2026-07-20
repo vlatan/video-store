@@ -558,8 +558,10 @@ button.btn-submit-review:hover:not(:disabled) {
 	background: var(--accent-hover);
 }
 
-button.btn-submit-review:disabled {
+button.btn-submit-review:disabled,
+#review-form:invalid button.btn-submit-review {
 	opacity: 0.5;
+	pointer-events: none;
 	cursor: not-allowed;
 }
 
