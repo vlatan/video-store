@@ -260,7 +260,7 @@
 			<!-- Review Dialog -->
 			{{ if .CurrentUser.IsAuthenticated }}
 			<dialog id="review-dialog" class="modal post-dialog" closedby="any">
-				<form id="review-form" action="/api/video/{{ .CurrentPost.VideoID }}/review" method="POST">
+				<form class="review-form" action="/api/video/{{ .CurrentPost.VideoID }}/review" method="POST">
 					{{ .CSRFField }}
 
 					<button type="button" id="btn-close-review" class="btn-close-post-dialog">&times;</button>
@@ -278,7 +278,8 @@
 					</div>
 
 					<fieldset class="review-form-group">
-						<legend class="review-form-heading">Rating</legend>
+						<legend class="visually-hidden">Rating</legend>
+						<div class="review-form-heading">Rating</div>
 						<div class="rate-stars rate-stars-review">
 							<label><input type="radio" name="rating" value="10" required
 									aria-label="10 stars"><span>★</span></label>

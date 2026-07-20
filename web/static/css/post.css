@@ -481,7 +481,7 @@ h1.video-title {
 	width: 100%;
 }
 
-#review-form {
+.review-form {
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
@@ -559,7 +559,7 @@ button.btn-submit-review:hover:not(:disabled) {
 }
 
 button.btn-submit-review:disabled,
-#review-form:invalid button.btn-submit-review {
+.review-form:invalid button.btn-submit-review {
 	opacity: 0.5;
 	pointer-events: none;
 	cursor: not-allowed;

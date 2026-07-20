@@ -93,7 +93,7 @@ document.querySelectorAll('.rating-section').forEach(widget => {
 
 document.querySelectorAll('.review-section').forEach(s => {
     const reviewDialog = s.querySelector('#review-dialog');
-    const reviewForm = s.querySelector('#review-form');
+    const reviewForm = s.querySelector('.review-form');
     const reviewsList = s.querySelector('#reviews-list');
     const reviewOpenBtn = s.querySelector('#btn-open-review');
     const reviewCloseBtn = s.querySelector('#btn-close-review');
