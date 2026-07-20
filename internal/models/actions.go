@@ -12,6 +12,7 @@ type Actions struct {
 	Faved     bool       `json:"user_faved,omitempty"`
 	WhenFaved *time.Time `json:"when_user_faved,omitempty"`
 	Rating    uint8      `json:"user_rating,omitempty"`
+	Review    *Review    `json:"review,omitempty"`
 }
 
 // MarshalBinary implements the encoding.BinaryMarshaler interface
@@ -36,5 +37,20 @@ func (r Rating) MarshalBinary() (data []byte, err error) {
 
 // UnmarshalBinary implements the encoding.BinaryUnmarshaler interface
 func (r *Rating) UnmarshalBinary(data []byte) error {
+	return json.Unmarshal(data, r)
+}
+
+type Review struct {
+	Title   string `json:"title,omitempty"`
+	Content string `json:"content,omitempty"`
+}
+
+// MarshalBinary implements the encoding.BinaryMarshaler interface
+func (r Review) MarshalBinary() (data []byte, err error) {
+	return json.Marshal(r)
+}
+
+// UnmarshalBinary implements the encoding.BinaryUnmarshaler interface
+func (r *Review) UnmarshalBinary(data []byte) error {
 	return json.Unmarshal(data, r)
 }
