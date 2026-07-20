@@ -89,10 +89,27 @@ button {
 	background-color: transparent;
 }
 
+/* Reset fieldset to behave like a standard div */
+fieldset {
+	border: none;
+	padding: 0;
+	margin: 0;
+	min-width: 0;
+}
+
+/* Reset legend to behave like a standard block or heading text */
+legend {
+	padding: 0;
+	margin: 0;
+	font-weight: bold;
+	display: block;
+}
+
 
 /* ################# Utilities ################# */
 
-.visually-hidden {
+.visually-hidden,
+.rate-stars input {
 	position: absolute;
 	height: 1px;
 	width: 1px;

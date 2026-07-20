@@ -117,6 +117,7 @@ document.querySelectorAll('.review-section').forEach(s => {
         clearError();
 
         if (!reviewForm.checkValidity()) {
+            console.log("Form is invalid!");
             reviewForm.reportValidity(); // shows the native browser bubble
             return;
         }
@@ -124,9 +125,10 @@ document.querySelectorAll('.review-section').forEach(s => {
         const formData = new FormData(event.currentTarget);
         const headline = (formData.get('headline') || '').trim();
         const content = (formData.get('content') || '').trim();
+        const rating = (formData.get('rating') || '').trim();
 
-        if (!headline || !content) {
-            showError('Please fill in both the headline and the review');
+        if (!headline || !content || !rating) {
+            showError('Please fill in the required fields');
             return;
         }
 

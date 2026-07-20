@@ -196,16 +196,26 @@
 							</header>
 
 							<div class="rate-stars">
-								<label><input type="radio" name="rating" value="10"><span>★</span></label>
-								<label><input type="radio" name="rating" value="9"><span>★</span></label>
-								<label><input type="radio" name="rating" value="8"><span>★</span></label>
-								<label><input type="radio" name="rating" value="7"><span>★</span></label>
-								<label><input type="radio" name="rating" value="6"><span>★</span></label>
-								<label><input type="radio" name="rating" value="5"><span>★</span></label>
-								<label><input type="radio" name="rating" value="4"><span>★</span></label>
-								<label><input type="radio" name="rating" value="3"><span>★</span></label>
-								<label><input type="radio" name="rating" value="2"><span>★</span></label>
-								<label><input type="radio" name="rating" value="1"><span>★</span></label>
+								<label><input type="radio" name="rating" value="10" required
+										aria-label="10 stars"><span>★</span></label>
+								<label><input type="radio" name="rating" value="9" required
+										aria-label="9 stars"><span>★</span></label>
+								<label><input type="radio" name="rating" value="8" required
+										aria-label="8 stars"><span>★</span></label>
+								<label><input type="radio" name="rating" value="7" required
+										aria-label="7 stars"><span>★</span></label>
+								<label><input type="radio" name="rating" value="6" required
+										aria-label="6 stars"><span>★</span></label>
+								<label><input type="radio" name="rating" value="5" required
+										aria-label="5 stars"><span>★</span></label>
+								<label><input type="radio" name="rating" value="4" required
+										aria-label="4 stars"><span>★</span></label>
+								<label><input type="radio" name="rating" value="3" required
+										aria-label="3 stars"><span>★</span></label>
+								<label><input type="radio" name="rating" value="2" required
+										aria-label="2 stars"><span>★</span></label>
+								<label><input type="radio" name="rating" value="1" required
+										aria-label="1 star"><span>★</span></label>
 							</div>
 
 							<button type="button" class="btn-submit-rate" disabled>Rate</button>
@@ -266,6 +276,32 @@
 						<textarea id="review-text" name="content" placeholder="Write your review..." rows="4"
 							type="text" required></textarea>
 					</div>
+
+					<fieldset class="review-form-group">
+						<legend class="review-form-heading">Rating</legend>
+						<div class="rate-stars rate-stars-review">
+							<label><input type="radio" name="rating" value="10" required
+									aria-label="10 stars"><span>★</span></label>
+							<label><input type="radio" name="rating" value="9" required
+									aria-label="9 stars"><span>★</span></label>
+							<label><input type="radio" name="rating" value="8" required
+									aria-label="8 stars"><span>★</span></label>
+							<label><input type="radio" name="rating" value="7" required
+									aria-label="7 stars"><span>★</span></label>
+							<label><input type="radio" name="rating" value="6" required
+									aria-label="6 stars"><span>★</span></label>
+							<label><input type="radio" name="rating" value="5" required
+									aria-label="5 stars"><span>★</span></label>
+							<label><input type="radio" name="rating" value="4" required
+									aria-label="4 stars"><span>★</span></label>
+							<label><input type="radio" name="rating" value="3" required
+									aria-label="3 stars"><span>★</span></label>
+							<label><input type="radio" name="rating" value="2" required
+									aria-label="2 stars"><span>★</span></label>
+							<label><input type="radio" name="rating" value="1" required
+									aria-label="1 star"><span>★</span></label>
+						</div>
+					</fieldset>
 
 					<div class="review-form-footer">
 						<span id="review-error" class="review-form-error" hidden></span>

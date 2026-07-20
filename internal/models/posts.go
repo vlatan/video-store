@@ -19,6 +19,7 @@ type Post struct {
 	Category        *Category       `json:"category,omitempty"`
 	Source          *Source         `json:"source,omitempty"`
 	Likes           int             `json:"likes,omitempty"`
+	Reviews         []Review        `json:"reviews,omitempty"`
 	UserActions     *Actions        `json:"user_actions,omitempty"`
 	Rating          *Rating         `json:"rating,omitempty"`
 	SearchScore     float64         `json:"search_score,omitempty"`
