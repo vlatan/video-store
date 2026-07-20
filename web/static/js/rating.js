@@ -117,7 +117,6 @@ document.querySelectorAll('.review-section').forEach(s => {
         clearError();
 
         if (!reviewForm.checkValidity()) {
-            console.log("Form is invalid!");
             reviewForm.reportValidity(); // shows the native browser bubble
             return;
         }
