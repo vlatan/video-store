@@ -1,5 +1,6 @@
 * Build the frontend and backend review system.
-  Send and process form or JSON on the backend?
+  SMake quick rating feature a form.
+  Include big star in the review form.
   Change ids to classes.
 
   User should be able to post just one review per post.
