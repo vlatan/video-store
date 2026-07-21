@@ -1,5 +1,4 @@
 * Build the frontend and backend review system.
-  Make quick rating feature a form.
   Include big star in the review form.
   Change ids to classes.
 

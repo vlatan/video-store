@@ -4,50 +4,48 @@
 
 document.querySelectorAll('.rating-section').forEach(widget => {
     const rateDialog = widget.querySelector('#rate-dialog');
+    const rateForm = widget.querySelector('.rate-form');
     const rateBtnOpen = widget.querySelector('#btn-open-rate');
     const rateBtnClose = widget.querySelector('#btn-close-rate');
     const rateBtnSubmit = widget.querySelector('.btn-submit-rate');
     const bigStarValue = widget.querySelector('.rating-big-star-value');
-    const rateURL = widget.dataset.url || `/api${window.location.pathname}/rate`;
-
-    let currentRating = null;
-    let selectedStar = null;
     const bigStarOriginalTextContent = bigStarValue.textContent;
 
     rateBtnOpen.addEventListener('click', () => rateDialog.showModal());
-    rateBtnClose.addEventListener('click', () => {
-        rateDialog.close()
-        rateBtnSubmit.disabled = true;
-        if (selectedStar) selectedStar.checked = false;
-        bigStarValue.textContent = bigStarOriginalTextContent;
-    });
+    rateBtnClose.addEventListener('click', () => rateDialog.close());
 
-    // Handle interactive star adjustments inside the modal
+    // Handle interactive star value in the big star
     widget.querySelectorAll('input[type="radio"]').forEach(input => {
-        input.addEventListener('change', (e) => {
-            selectedStar = e.target;
-            currentRating = Number(selectedStar.value);
-            bigStarValue.textContent = currentRating;
-            rateBtnSubmit.disabled = false;
+        input.addEventListener('change', (event) => {
+            currentRating = Number(event.target.value);
+            bigStarValue.textContent = event.target.value;
         });
     });
 
-    // Handle submission workflow via the dedicated Rate CTA
-    if (!rateBtnSubmit) return;
-    rateBtnSubmit.addEventListener('click', async () => {
-        if (!currentRating) return;
+    // Handle form submission
+    rateForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        if (!rateForm.checkValidity()) {
+            rateForm.reportValidity(); // shows the native browser bubble
+            return;
+        }
+
+        const formData = new FormData(event.currentTarget);
+        const data = Object.fromEntries(formData.entries());
+        if (data.rating) data.rating = Number(data.rating);
+
         rateBtnSubmit.disabled = true;
-        if (selectedStar) selectedStar.checked = false;
-        bigStarValue.textContent = bigStarOriginalTextContent;
+        rateBtnSubmit.textContent = 'Posting...';
         rateDialog.close();
 
         try {
-            const res = await postData(rateURL, { 'rating': currentRating });
-            if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
-            const data = await res.json();
+            const response = await postData(event.currentTarget.action, data);
+            if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+            const result = await response.json();
 
             let votesText = "votes";
-            if (data.rating_count === 1) votesText = "vote";
+            if (result.rating_count === 1) votesText = "vote";
 
             const avgRatingHTML = `
                 <div class="btn-open-post-dialog avg-rating-display">
@@ -57,12 +55,12 @@ document.querySelectorAll('.rating-section').forEach(widget => {
                         <meta itemprop="worstRating" content="1">
                         <div class="rating-score">
                             <span class="rating-avg-val" itemprop="ratingValue">
-                                ${data.avg_rating}
+                                ${result.avg_rating}
                             </span> / <span itemprop="bestRating">10</span>
                         </div>
                         <div class="rating-count">
                             <span class="rating-count-val" itemprop="ratingCount">
-                                ${data.rating_count}
+                                ${result.rating_count}
                             </span> ${votesText}
                         </div>
                     </div>
@@ -78,10 +76,17 @@ document.querySelectorAll('.rating-section').forEach(widget => {
             }
 
             // Transform the user rating button
-            rateBtnOpen.innerHTML = `<span class="rating-user-star">&#9733;</span> ${currentRating}`;
+            rateBtnOpen.innerHTML = `<span class="rating-user-star">&#9733;</span> ${data.rating}`;
+
+            // Reset the form and the big star
+            bigStarValue.textContent = bigStarOriginalTextContent
+            rateForm.reset()
         } catch (error) {
             console.error("Failed to fetch or parse JSON:", error);
             setAlert("Something went wrong!");
+        } finally {
+            rateBtnSubmit.disabled = false;
+            rateBtnSubmit.textContent = 'Rate';
         }
     });
 });
@@ -158,7 +163,9 @@ document.querySelectorAll('.review-section').forEach(s => {
             card.querySelector('.review-headline').textContent = result.headline || formData.get('headline');
             card.querySelector('.review-content').textContent = result.content || formData.get('content');
             reviewsList.prepend(card);
-            event.currentTarget.reset()
+
+            // Reset the form
+            reviewForm.reset()
         } catch (err) {
             console.error("Failed to fetch or parse JSON:", err);
             setAlert("Something went wrong!");

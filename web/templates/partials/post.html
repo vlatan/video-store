@@ -132,8 +132,7 @@
 				</div>
 
 				<!-- Rating Widget -->
-				<section class="rating-section" data-url="/api/video/{{ .CurrentPost.VideoID }}/rate">
-					{{ .CSRFField }}
+				<section class="rating-section">
 
 					<!-- Avg Rating Box -->
 					{{ with .CurrentPost.Rating }}
@@ -180,7 +179,8 @@
 					<!-- Rating Dialog -->
 					{{ if .CurrentUser.IsAuthenticated }}
 					<dialog id="rate-dialog" class="modal post-dialog" closedby="any">
-						<div class="rate-dialog-content">
+						<form class="rate-form" action="/api/video/{{ .CurrentPost.VideoID }}/rate" method="POST">
+							{{ .CSRFField }}
 							<div class="rating-big-star-wrapper">
 								<svg viewBox="0 0 24 24">
 									<path
@@ -195,7 +195,8 @@
 								<h2 class="rate-title">{{ .CurrentPost.GetTitle }}</h2>
 							</header>
 
-							<div class="rate-stars">
+							<fieldset class="rate-stars">
+								<legend class="visually-hidden">Rating</legend>
 								<label><input type="radio" name="rating" value="10" required
 										aria-label="10 stars"><span>★</span></label>
 								<label><input type="radio" name="rating" value="9" required
@@ -216,10 +217,10 @@
 										aria-label="2 stars"><span>★</span></label>
 								<label><input type="radio" name="rating" value="1" required
 										aria-label="1 star"><span>★</span></label>
-							</div>
+							</fieldset>
 
-							<button type="button" class="btn-submit-rate" disabled>Rate</button>
-						</div>
+							<button type="submit" class="btn-submit-rate">Rate</button>
+						</form>
 					</dialog>
 					{{ end }}
 

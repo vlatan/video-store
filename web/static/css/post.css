@@ -356,7 +356,7 @@ h1.video-title {
 	font-size: 0.6rem;
 }
 
-.rate-dialog-content {
+.rate-form {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -452,7 +452,7 @@ h1.video-title {
 	-webkit-text-stroke: 0;
 }
 
-.btn-submit-rate {
+button.btn-submit-rate {
 	width: 100%;
 	padding: 12px;
 	border-radius: 25px;
@@ -460,14 +460,17 @@ h1.video-title {
 	font-size: 0.85rem;
 	font-weight: bold;
 	cursor: pointer;
-	background: #333;
-	color: #777;
+	background: #f5c518;
+	color: #000;
 	transition: background 0.2s, color 0.2s;
 }
 
-.btn-submit-rate:not(:disabled) {
-	background: #f5c518;
-	color: #000;
+button.btn-submit-rate:disabled,
+.rate-form:invalid button.btn-submit-rate {
+	background: #333;
+	color: #777;
+	pointer-events: none;
+	cursor: not-allowed;
 }
 
 
