@@ -462,7 +462,11 @@ button.btn-submit-rate {
 	cursor: pointer;
 	background: #f5c518;
 	color: #000;
-	transition: background 0.2s, color 0.2s;
+	transition: background 0.2s, color 0.2s, opacity 0.2s;
+}
+
+button.btn-submit-rate:hover:not(:disabled) {
+	background: #e0b415;
 }
 
 button.btn-submit-rate:disabled,
@@ -546,7 +550,7 @@ textarea#review-text:focus {
 }
 
 button.btn-submit-review {
-	padding: 12px;
+	padding: 12px 18px;
 	background: var(--accent);
 	color: #000;
 	border: none;
@@ -554,7 +558,7 @@ button.btn-submit-review {
 	cursor: pointer;
 	font-weight: bold;
 	font-size: 16px;
-	transition: opacity 0.2s;
+	transition: background 0.2s, color 0.2s, opacity 0.2s;
 }
 
 button.btn-submit-review:hover:not(:disabled) {
@@ -563,6 +567,8 @@ button.btn-submit-review:hover:not(:disabled) {
 
 button.btn-submit-review:disabled,
 .review-form:invalid button.btn-submit-review {
+	background: #333;
+	color: #777;
 	opacity: 0.5;
 	pointer-events: none;
 	cursor: not-allowed;
