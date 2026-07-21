@@ -62,9 +62,9 @@
 			</div>
 		</div>
 
-		<header class="metadata">
+		{{ $actions := .CurrentPost.UserActions }}
 
-			{{ $actions := .CurrentPost.UserActions }}
+		<header class="metadata">
 
 			<div class="metadata-block">
 				<h1 class="video-title" itemprop="name">{{ .CurrentPost.GetTitle }}</h1>
@@ -176,6 +176,11 @@
 					</button>
 					<!-- beautify ignore:end -->
 
+					{{ $rating := 0 }}
+					{{ if and $actions $actions.Rating }}
+					{{ $rating = $actions.Rating }}
+					{{ end }}
+
 					<!-- Rating Dialog -->
 					{{ if .CurrentUser.IsAuthenticated }}
 					<dialog id="rate-dialog" class="modal post-dialog" closedby="any">
@@ -186,7 +191,9 @@
 									<path
 										d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
 								</svg>
-								<span class="rating-big-star-value">?</span>
+								<span class="rating-big-star-value">
+									{{ if eq $rating 0 }}?{{ else }}{{ $rating }}{{ end }}
+								</span>
 							</div>
 
 							<button type="button" id="btn-close-rate" class="btn-close-post-dialog">&times;</button>
@@ -197,26 +204,56 @@
 
 							<fieldset class="rate-stars">
 								<legend class="visually-hidden">Rating</legend>
-								<label><input type="radio" name="rating" value="10" required
-										aria-label="10 stars"><span>★</span></label>
-								<label><input type="radio" name="rating" value="9" required
-										aria-label="9 stars"><span>★</span></label>
-								<label><input type="radio" name="rating" value="8" required
-										aria-label="8 stars"><span>★</span></label>
-								<label><input type="radio" name="rating" value="7" required
-										aria-label="7 stars"><span>★</span></label>
-								<label><input type="radio" name="rating" value="6" required
-										aria-label="6 stars"><span>★</span></label>
-								<label><input type="radio" name="rating" value="5" required
-										aria-label="5 stars"><span>★</span></label>
-								<label><input type="radio" name="rating" value="4" required
-										aria-label="4 stars"><span>★</span></label>
-								<label><input type="radio" name="rating" value="3" required
-										aria-label="3 stars"><span>★</span></label>
-								<label><input type="radio" name="rating" value="2" required
-										aria-label="2 stars"><span>★</span></label>
-								<label><input type="radio" name="rating" value="1" required
-										aria-label="1 star"><span>★</span></label>
+								<label>
+									<input {{if eq $rating 10}}checked{{end}} type="radio" name="rating" value="10"
+										aria-label="10 stars" required>
+									<span>★</span>
+								</label>
+								<label>
+									<input {{if eq $rating 9}}checked{{end}} type="radio" name="rating" value="9"
+										aria-label="9 stars" required>
+									<span>★</span>
+								</label>
+								<label>
+									<input {{if eq $rating 8}}checked{{end}} type="radio" name="rating" value="8"
+										aria-label="8 stars" required>
+									<span>★</span>
+								</label>
+								<label>
+									<input {{if eq $rating 7}}checked{{end}} type="radio" name="rating" value="7"
+										aria-label="7 stars" required>
+									<span>★</span>
+								</label>
+								<label>
+									<input {{if eq $rating 6}}checked{{end}} type="radio" name="rating" value="6"
+										aria-label="6 stars" required>
+									<span>★</span>
+								</label>
+								<label>
+									<input {{if eq $rating 5}}checked{{end}} type="radio" name="rating" value="5"
+										aria-label="5 stars" required>
+									<span>★</span>
+								</label>
+								<label>
+									<input {{if eq $rating 4}}checked{{end}} type="radio" name="rating" value="4"
+										aria-label="4 stars" required>
+									<span>★</span>
+								</label>
+								<label>
+									<input {{if eq $rating 3}}checked{{end}} type="radio" name="rating" value="3"
+										aria-label="3 stars" required>
+									<span>★</span>
+								</label>
+								<label>
+									<input {{if eq $rating 2}}checked{{end}} type="radio" name="rating" value="2"
+										aria-label="2 stars" required>
+									<span>★</span>
+								</label>
+								<label>
+									<input {{if eq $rating 1}}checked{{end}} type="radio" name="rating" value="1"
+										aria-label="1 star" required>
+									<span>★</span>
+								</label>
 							</fieldset>
 
 							<button type="submit" class="btn-submit-rate">Rate</button>

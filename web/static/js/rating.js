@@ -9,7 +9,6 @@ document.querySelectorAll('.rating-section').forEach(widget => {
     const rateBtnClose = widget.querySelector('#btn-close-rate');
     const rateBtnSubmit = widget.querySelector('.btn-submit-rate');
     const bigStarValue = widget.querySelector('.rating-big-star-value');
-    const bigStarOriginalTextContent = bigStarValue.textContent;
 
     rateBtnOpen.addEventListener('click', () => rateDialog.showModal());
     rateBtnClose.addEventListener('click', () => rateDialog.close());
@@ -78,10 +77,6 @@ document.querySelectorAll('.rating-section').forEach(widget => {
 
             // Transform the user rating button
             rateBtnOpen.innerHTML = `<span class="rating-user-star">&#9733;</span> ${data.rating}`;
-
-            // Reset the form and the big star
-            bigStarValue.textContent = bigStarOriginalTextContent
-            form.reset()
         } catch (error) {
             console.error("Failed to fetch or parse JSON:", error);
             setAlert("Something went wrong!");
