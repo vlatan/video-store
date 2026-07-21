@@ -1,17 +1,26 @@
 * Build the frontend and backend review system.
-  SMake quick rating feature a form.
+  Make quick rating feature a form.
   Include big star in the review form.
   Change ids to classes.
 
   User should be able to post just one review per post.
-  Schema reflects that, there's UNIQUE(user_id, post_id).
-  So maybe preserve/populate the user review in the dialog and if they want to edit, update in DB.
-  Consequently the user should be able to delete a review or a rating for that matter.
-  Maybe add delete button in the dialog next to the submit.
-  That is doable on the review dialog but not so much on the rating dialog.
+  Schema reflects that, there's UNIQUE(user_id, post_id) so upsert the review/rating.
+  Update the schema so the review can't exist without a rating.
+  Cascade delete review if the rating was deleted.
+  So when deleting we need to delete just the rating and if there's a review that will be deleted too.
 
-  Show the rating on the review if any or make the rating option available on the review.
-  Decide whether to show more reviews with "load more", infinite scroll or with pagination.
+  Preserve/populate the user review/rating in the dialog and if they want to edit, update in DB.
+  Consequently the user should be able to delete a review or a rating for that matter.
+  Include delete button on the modals and add edit button on the review card.
+  If the user has a review the "quick rate" button opens the review modal.
+  On deletion inline the deletion exalplanation and confirmation in the modals with swapping the modal footer.
+
+  Use "show more reviews" to uncover more reviews.
+  Probably use cursor.
+
+  If a review is added we just prepend the review in the review list.
+  If a review is updated scroll to the review and highlight it with fade out.
+  If a review is deleted we remove it from the list if it't on the first page.
 
 * Make the checkmarks on the like/save green or yellow
 * Add close button to login menu
