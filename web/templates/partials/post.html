@@ -176,6 +176,8 @@
 					</button>
 					<!-- beautify ignore:end -->
 
+					<!-- Needs to be lowercase var because the minifier will lower it 
+						 if placed in HTML tags susch as <input>. -->
 					{{ $rating := 0 }}
 					{{ if and $actions $actions.Rating }}
 					{{ $rating = $actions.Rating }}
