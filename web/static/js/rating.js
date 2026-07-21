@@ -25,13 +25,14 @@ document.querySelectorAll('.rating-section').forEach(widget => {
     // Handle form submission
     rateForm.addEventListener('submit', async (event) => {
         event.preventDefault();
+        const form = event.currentTarget;
 
-        if (!rateForm.checkValidity()) {
-            rateForm.reportValidity(); // shows the native browser bubble
+        if (!form.checkValidity()) {
+            form.reportValidity(); // shows the native browser bubble
             return;
         }
 
-        const formData = new FormData(event.currentTarget);
+        const formData = new FormData(form);
         const data = Object.fromEntries(formData.entries());
         if (data.rating) data.rating = Number(data.rating);
 
@@ -40,7 +41,7 @@ document.querySelectorAll('.rating-section').forEach(widget => {
         rateDialog.close();
 
         try {
-            const response = await postData(event.currentTarget.action, data);
+            const response = await postData(form.action, data);
             if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
             const result = await response.json();
 
@@ -80,7 +81,7 @@ document.querySelectorAll('.rating-section').forEach(widget => {
 
             // Reset the form and the big star
             bigStarValue.textContent = bigStarOriginalTextContent
-            rateForm.reset()
+            form.reset()
         } catch (error) {
             console.error("Failed to fetch or parse JSON:", error);
             setAlert("Something went wrong!");
@@ -121,14 +122,15 @@ document.querySelectorAll('.review-section').forEach(s => {
 
     reviewForm.addEventListener('submit', async (event) => {
         event.preventDefault();
+        const form = event.currentTarget;
         clearError();
 
-        if (!reviewForm.checkValidity()) {
-            reviewForm.reportValidity(); // shows the native browser bubble
+        if (!form.checkValidity()) {
+            form.reportValidity(); // shows the native browser bubble
             return;
         }
 
-        const formData = new FormData(event.currentTarget);
+        const formData = new FormData(form);
         const headline = (formData.get('headline') || '').trim();
         const content = (formData.get('content') || '').trim();
         const rating = (formData.get('rating') || '').trim();
@@ -146,7 +148,7 @@ document.querySelectorAll('.review-section').forEach(s => {
         reviewDialog.close();
 
         try {
-            const response = await postData(event.currentTarget.action, data);
+            const response = await postData(form.action, data);
             if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
             const result = await response.json();
 
@@ -165,7 +167,7 @@ document.querySelectorAll('.review-section').forEach(s => {
             reviewsList.prepend(card);
 
             // Reset the form
-            reviewForm.reset()
+            form.reset()
         } catch (err) {
             console.error("Failed to fetch or parse JSON:", err);
             setAlert("Something went wrong!");
