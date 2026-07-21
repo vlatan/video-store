@@ -454,7 +454,7 @@ h1.video-title {
 
 button.btn-submit-rate {
 	width: 100%;
-	padding: 12px;
+	padding: 12px 18px;
 	border-radius: 25px;
 	border: none;
 	font-size: 0.85rem;
@@ -551,25 +551,24 @@ textarea#review-text:focus {
 
 button.btn-submit-review {
 	padding: 12px 18px;
-	background: var(--accent);
+	background: #f5c518;
 	color: #000;
 	border: none;
 	border-radius: 6px;
 	cursor: pointer;
 	font-weight: bold;
-	font-size: 16px;
+	font-size: 0.85rem;
 	transition: background 0.2s, color 0.2s, opacity 0.2s;
 }
 
 button.btn-submit-review:hover:not(:disabled) {
-	background: var(--accent-hover);
+	background: #e0b415;
 }
 
 button.btn-submit-review:disabled,
 .review-form:invalid button.btn-submit-review {
 	background: #333;
 	color: #777;
-	opacity: 0.5;
 	pointer-events: none;
 	cursor: not-allowed;
 }
@@ -578,7 +577,6 @@ button.btn-submit-review:disabled,
 	color: #d92d20;
 	font-size: 0.75rem;
 }
-
 
 .reviews-header {
 	display: flex;
