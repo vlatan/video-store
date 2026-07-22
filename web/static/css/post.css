@@ -362,18 +362,19 @@ h1.video-title {
 	align-items: center;
 	justify-content: center;
 	gap: 2rem;
-	padding: 60px 2rem 2.5rem 2rem;
+	padding: 80px 2rem 2.5rem 2rem;
 	width: 420px;
 	max-width: 100%;
 }
 
 .rating-big-star-wrapper {
+	--big-star-size: 6.25rem;
 	position: absolute;
-	top: -60px;
+	top: calc(var(--big-star-size) / -2);
 	left: 50%;
 	transform: translateX(-50%);
-	width: 120px;
-	height: 120px;
+	width: var(--big-star-size);
+	height: var(--big-star-size);
 	display: flex;
 	justify-content: center;
 	align-items: center;
@@ -384,15 +385,16 @@ h1.video-title {
 	width: 100%;
 	height: 100%;
 	fill: #5799ef;
+	display: block;
 }
 
 .rating-big-star-value {
 	position: relative;
-	font-size: 1.25rem;
+	font-size: calc(var(--big-star-size) * 0.30);
 	font-weight: bold;
 	color: white;
 	z-index: 1;
-	margin-top: 4px;
+	pointer-events: none;
 }
 
 .rating-header {
@@ -537,9 +539,40 @@ textarea#review-text:focus {
 	border-color: var(--accent);
 }
 
+.review-stars-group {
+	display: flex;
+	align-items: center;
+	gap: 1.5rem;
+}
+
 .rate-stars-review {
 	/* This is flex-end because the stars flex direction is reversed */
 	justify-content: flex-end;
+}
+
+.review-big-star-wrapper {
+	--big-star-size: 2.5rem;
+	position: relative;
+	width: var(--big-star-size);
+	height: var(--big-star-size);
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.review-big-star-wrapper svg {
+	width: 100%;
+	height: 100%;
+	fill: #5799ef;
+	display: block;
+}
+
+.review-big-star-value {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	font-size: calc(var(--big-star-size) * 0.30);
 }
 
 .review-form-footer {

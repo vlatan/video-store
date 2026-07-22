@@ -1,9 +1,9 @@
 * Build the frontend and backend review system.
-  Include big star in the review form.
   Change ids to classes.
 
-  Preserve/populate the user review/rating in the dialog and if they want to edit, update in DB.
-  Consequently the user should be able to delete a review or a rating for that matter.
+  Persists the headline and content in the review dialog.
+  Update the average rating when a review is submitted.
+  The user should be able to delete a review or a rating.
   Include delete button on the modals and add edit button on the review card.
   If the user has a review the "quick rate" button opens the review modal.
   On deletion inline the deletion exalplanation and confirmation in the modals with swapping the modal footer.

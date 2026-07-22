@@ -1,3 +1,30 @@
+
+// ==========================================================================
+// Sync All Checked Stars and Big Star Values
+// ==========================================================================
+
+const starEadios = document.querySelectorAll('input[name="rating"]');
+const bigStarValues = document.querySelectorAll('.rating-big-star-value');
+
+starEadios.forEach(radio => {
+    radio.addEventListener('change', (event) => {
+        if (!event.target.checked) return;
+
+        const value = event.target.value;
+
+        // Sync across all star sets (needed if they're in separate forms)
+        starEadios.forEach(r => {
+            if (r.value === value) r.checked = true;
+        });
+
+        // Update the displayed rating value
+        bigStarValues.forEach(bsv => {
+            bsv.textContent = value;
+        });
+    });
+});
+
+
 // ==========================================================================
 // Ratings
 // ==========================================================================
@@ -8,18 +35,9 @@ document.querySelectorAll('.rating-section').forEach(widget => {
     const rateBtnOpen = widget.querySelector('#btn-open-rate');
     const rateBtnClose = widget.querySelector('#btn-close-rate');
     const rateBtnSubmit = widget.querySelector('.btn-submit-rate');
-    const bigStarValue = widget.querySelector('.rating-big-star-value');
 
     rateBtnOpen.addEventListener('click', () => rateDialog.showModal());
     rateBtnClose.addEventListener('click', () => rateDialog.close());
-
-    // Handle interactive star value in the big star
-    widget.querySelectorAll('input[type="radio"]').forEach(input => {
-        input.addEventListener('change', (event) => {
-            currentRating = Number(event.target.value);
-            bigStarValue.textContent = event.target.value;
-        });
-    });
 
     // Handle form submission
     rateForm.addEventListener('submit', async (event) => {
@@ -160,9 +178,6 @@ document.querySelectorAll('.review-section').forEach(s => {
             card.querySelector('.review-headline').textContent = result.headline || formData.get('headline');
             card.querySelector('.review-content').textContent = result.content || formData.get('content');
             reviewsList.prepend(card);
-
-            // Reset the form
-            form.reset()
         } catch (err) {
             console.error("Failed to fetch or parse JSON:", err);
             setAlert("Something went wrong!");
