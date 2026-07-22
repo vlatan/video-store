@@ -245,7 +245,7 @@ func (s *Service) ActionPostAPI(w http.ResponseWriter, r *http.Request) {
 		s.handleUnfave(w, r, user.ID, videoID)
 	case "rate":
 		var data struct {
-			Rating int `json:"rating"`
+			Rating uint8 `json:"rating"`
 		}
 		if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
 			slog.ErrorContext(

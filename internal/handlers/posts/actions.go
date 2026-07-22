@@ -86,7 +86,7 @@ func (s *Service) handleUnfave(w http.ResponseWriter, r *http.Request, userID in
 }
 
 // Handle a post favorite from user
-func (s *Service) handleRate(w http.ResponseWriter, r *http.Request, rating, userID int, videoID string) {
+func (s *Service) handleRate(w http.ResponseWriter, r *http.Request, rating uint8, userID int, videoID string) {
 
 	ratingData, err := s.postsRepo.Rate(r.Context(), rating, userID, videoID)
 

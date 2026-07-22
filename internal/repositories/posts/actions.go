@@ -59,7 +59,7 @@ func (r *Repository) Unfave(ctx context.Context, userID int, videoID string) (in
 }
 
 // Rate records user's post rating
-func (r *Repository) Rate(ctx context.Context, rating, userID int, videoID string) (models.Rating, error) {
+func (r *Repository) Rate(ctx context.Context, rating uint8, userID int, videoID string) (models.Rating, error) {
 
 	var zero, rd models.Rating
 

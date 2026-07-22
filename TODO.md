@@ -2,12 +2,6 @@
   Include big star in the review form.
   Change ids to classes.
 
-  User should be able to post just one review per post.
-  Schema reflects that, there's UNIQUE(user_id, post_id) so upsert the review/rating.
-  Update the schema so the review can't exist without a rating.
-  Cascade delete review if the rating was deleted.
-  So when deleting we need to delete just the rating and if there's a review that will be deleted too.
-
   Preserve/populate the user review/rating in the dialog and if they want to edit, update in DB.
   Consequently the user should be able to delete a review or a rating for that matter.
   Include delete button on the modals and add edit button on the review card.
