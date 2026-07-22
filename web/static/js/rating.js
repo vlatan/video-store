@@ -26,6 +26,49 @@ starEadios.forEach(radio => {
 
 
 // ==========================================================================
+// Update the Average Rating Display and the User Rating Button
+// ==========================================================================
+
+function updateRatingHTML(user_rating, avg_rating, rating_count) {
+
+    const votesText = rating_count === 1 ? "vote" : "votes";
+    const avgRatingHTML = `
+        <div class="btn-open-post-dialog avg-rating-display">
+            <span class="rating-global-star">&#9733;</span>
+            <div class="rating-meta" itemprop="aggregateRating" itemscope
+                itemtype="https://schema.org/AggregateRating">
+                <meta itemprop="worstRating" content="1">
+                <div class="rating-score">
+                    <span class="rating-avg-val" itemprop="ratingValue">
+                        ${avg_rating}
+                    </span> / <span itemprop="bestRating">10</span>
+                </div>
+                <div class="rating-count">
+                    <span class="rating-count-val" itemprop="ratingCount">
+                        ${rating_count}
+                    </span> ${votesText}
+                </div>
+            </div>
+        </div>
+    `;
+
+    const avgRatingDisplay = document.querySelector('.avg-rating-display');
+    const rateBtnOpen = document.querySelector('#btn-open-rate');
+
+    // Transform the average display
+    if (avgRatingDisplay) {
+        avgRatingDisplay.outerHTML = avgRatingHTML;
+    } else if (rateBtnOpen) {
+        rateBtnOpen.insertAdjacentHTML('beforebegin', avgRatingHTML);
+    }
+
+    // Transform the user rating button
+    rateBtnOpen.innerHTML = `<span class="rating-user-star">&#9733;</span> ${user_rating}`;
+}
+
+
+
+// ==========================================================================
 // Ratings
 // ==========================================================================
 
@@ -62,39 +105,8 @@ document.querySelectorAll('.rating-section').forEach(widget => {
             if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
             const result = await response.json();
 
-            let votesText = "votes";
-            if (result.rating_count === 1) votesText = "vote";
-
-            const avgRatingHTML = `
-                <div class="btn-open-post-dialog avg-rating-display">
-                    <span class="rating-global-star">&#9733;</span>
-                    <div class="rating-meta" itemprop="aggregateRating" itemscope
-                        itemtype="https://schema.org/AggregateRating">
-                        <meta itemprop="worstRating" content="1">
-                        <div class="rating-score">
-                            <span class="rating-avg-val" itemprop="ratingValue">
-                                ${result.avg_rating}
-                            </span> / <span itemprop="bestRating">10</span>
-                        </div>
-                        <div class="rating-count">
-                            <span class="rating-count-val" itemprop="ratingCount">
-                                ${result.rating_count}
-                            </span> ${votesText}
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            // Replace or insert average rating
-            const avgRatingDisplay = widget.querySelector('.avg-rating-display');
-            if (avgRatingDisplay) {
-                avgRatingDisplay.outerHTML = avgRatingHTML;
-            } else if (rateBtnOpen) {
-                rateBtnOpen.insertAdjacentHTML('beforebegin', avgRatingHTML);
-            }
-
-            // Transform the user rating button
-            rateBtnOpen.innerHTML = `<span class="rating-user-star">&#9733;</span> ${data.rating}`;
+            // Update the rating HTML
+            updateRatingHTML(data.rating, result.avg_rating, result.rating_count)
         } catch (error) {
             console.error("Failed to fetch or parse JSON:", error);
             setAlert("Something went wrong!");
@@ -170,14 +182,17 @@ document.querySelectorAll('.review-section').forEach(s => {
             card.innerHTML = `
                 <div class="review-header">
                     <h4>${result.author || 'Anonymous'} <span class="date-meta">Just now</span></h4>
-                    <span class="stars-display">${getStarsHTML(parseInt(result.rating || formData.get('rating')))}</span>
+                    <span class="stars-display">${getStarsHTML(data.rating)}</span>
                 </div>
                 <p class="review-headline"></p>
                 <p class="review-content"></p>
             `;
-            card.querySelector('.review-headline').textContent = result.headline || formData.get('headline');
-            card.querySelector('.review-content').textContent = result.content || formData.get('content');
+            card.querySelector('.review-headline').textContent = data.headline;
+            card.querySelector('.review-content').textContent = data.content;
             reviewsList.prepend(card);
+
+            // Update the rating HTML
+            updateRatingHTML(data.rating, result.avg_rating, result.rating_count)
         } catch (err) {
             console.error("Failed to fetch or parse JSON:", err);
             setAlert("Something went wrong!");

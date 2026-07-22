@@ -2,7 +2,6 @@
   Change ids to classes.
 
   Persists the headline and content in the review dialog.
-  Update the average rating when a review is submitted.
   The user should be able to delete a review or a rating.
   Include delete button on the modals and add edit button on the review card.
   If the user has a review the "quick rate" button opens the review modal.
