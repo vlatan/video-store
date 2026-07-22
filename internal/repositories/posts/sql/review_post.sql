@@ -9,14 +9,15 @@ rating_upsert AS (
     FROM target_post AS tp
     ON CONFLICT (user_id, post_id)
     DO UPDATE SET rating = EXCLUDED.rating
-    RETURNING id
+    RETURNING id, post_id
+),
+review_upsert AS (
+    INSERT INTO post_review (rating_id, title, review)
+    SELECT ru.id, $4, $5
+    FROM rating_upsert AS ru
+    ON CONFLICT (rating_id)
+    DO UPDATE SET
+        title = EXCLUDED.title, 
+        review = EXCLUDED.review
 )
-INSERT INTO post_review (rating_id, title, review)
-SELECT ru.id, $4, $5
-FROM rating_upsert AS ru
-ON CONFLICT (rating_id)
-DO UPDATE SET
-    title = EXCLUDED.title, 
-    review = EXCLUDED.review
-RETURNING rating_id;
-
+SELECT post_id FROM rating_upsert;

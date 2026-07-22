@@ -108,3 +108,32 @@ func (s *Service) handleRate(w http.ResponseWriter, r *http.Request, rating uint
 
 	s.ui.WriteJSON(w, r, ratingData)
 }
+
+// Handle a post favorite from user
+func (s *Service) handleReview(
+	w http.ResponseWriter,
+	r *http.Request,
+	rating uint8,
+	userID int,
+	videoID, title, review string) {
+
+	ratingData, err := s.postsRepo.Review(r.Context(), rating, userID, videoID, title, review)
+
+	if errors.Is(err, pgx.ErrNoRows) {
+		http.NotFound(w, r)
+		return
+	}
+
+	if err != nil {
+		slog.ErrorContext(
+			r.Context(), "user failed to review the video",
+			"path", r.URL.Path,
+			"userId", userID,
+			"error", err,
+		)
+		utils.HttpError(w, http.StatusInternalServerError)
+		return
+	}
+
+	s.ui.WriteJSON(w, r, ratingData)
+}

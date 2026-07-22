@@ -221,7 +221,7 @@ func (s *Service) ActionPostAPI(w http.ResponseWriter, r *http.Request) {
 
 	// Validate the action
 	action := r.PathValue("action")
-	allowedActions := []string{"like", "unlike", "fave", "unfave", "rate"}
+	allowedActions := []string{"like", "unlike", "fave", "unfave", "rate", "review"}
 	if !slices.Contains(allowedActions, action) {
 		slog.InfoContext(
 			r.Context(), "not a valid action on post",
@@ -258,6 +258,20 @@ func (s *Service) ActionPostAPI(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		s.handleRate(w, r, data.Rating, user.ID, videoID)
+	case "review":
+		var data models.Review
+		if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
+			slog.ErrorContext(
+				r.Context(), "failed to decode post rating",
+				"path", r.URL.Path,
+				"userId", user.ID,
+				"error", err,
+			)
+			utils.HttpError(w, http.StatusInternalServerError)
+			return
+		}
+		s.handleReview(w, r, data.Rating, user.ID, videoID, data.Headline, data.Content)
+
 	default:
 		utils.HttpError(w, http.StatusBadRequest)
 	}
