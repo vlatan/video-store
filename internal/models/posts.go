@@ -20,8 +20,9 @@ type Post struct {
 	Source          *Source         `json:"source,omitempty"`
 	Likes           int             `json:"likes,omitempty"`
 	Reviews         []Review        `json:"reviews,omitempty"`
-	UserActions     *Actions        `json:"user_actions,omitempty"`
 	Rating          *Rating         `json:"rating,omitempty"`
+	Stars           [10]uint8       `json:"-"`
+	UserActions     *Actions        `json:"user_actions,omitempty"`
 	SearchScore     float64         `json:"search_score,omitempty"`
 	LikeButtonText  string          `json:"like_button_text,omitempty"`
 	Description     string          `json:"description,omitempty"`

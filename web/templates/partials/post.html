@@ -206,56 +206,13 @@
 
 							<fieldset class="rate-stars">
 								<legend class="visually-hidden">Rating</legend>
+								{{ range .CurrentPost.Stars }}
 								<label>
-									<input {{if eq $rating 10}}checked{{end}} type="radio" name="rating" value="10"
-										aria-label="10 stars" required>
+									<input {{if eq $rating .}}checked{{end}} type="radio" name="rating" value="{{.}}"
+										aria-label="{{.}} stars" required>
 									<span>★</span>
 								</label>
-								<label>
-									<input {{if eq $rating 9}}checked{{end}} type="radio" name="rating" value="9"
-										aria-label="9 stars" required>
-									<span>★</span>
-								</label>
-								<label>
-									<input {{if eq $rating 8}}checked{{end}} type="radio" name="rating" value="8"
-										aria-label="8 stars" required>
-									<span>★</span>
-								</label>
-								<label>
-									<input {{if eq $rating 7}}checked{{end}} type="radio" name="rating" value="7"
-										aria-label="7 stars" required>
-									<span>★</span>
-								</label>
-								<label>
-									<input {{if eq $rating 6}}checked{{end}} type="radio" name="rating" value="6"
-										aria-label="6 stars" required>
-									<span>★</span>
-								</label>
-								<label>
-									<input {{if eq $rating 5}}checked{{end}} type="radio" name="rating" value="5"
-										aria-label="5 stars" required>
-									<span>★</span>
-								</label>
-								<label>
-									<input {{if eq $rating 4}}checked{{end}} type="radio" name="rating" value="4"
-										aria-label="4 stars" required>
-									<span>★</span>
-								</label>
-								<label>
-									<input {{if eq $rating 3}}checked{{end}} type="radio" name="rating" value="3"
-										aria-label="3 stars" required>
-									<span>★</span>
-								</label>
-								<label>
-									<input {{if eq $rating 2}}checked{{end}} type="radio" name="rating" value="2"
-										aria-label="2 stars" required>
-									<span>★</span>
-								</label>
-								<label>
-									<input {{if eq $rating 1}}checked{{end}} type="radio" name="rating" value="1"
-										aria-label="1 star" required>
-									<span>★</span>
-								</label>
+								{{ end }}
 							</fieldset>
 
 							<button type="submit" class="btn-submit-rate">Rate</button>
@@ -321,26 +278,13 @@
 						<legend class="visually-hidden">Rating</legend>
 						<div class="review-form-heading">Rating</div>
 						<div class="rate-stars rate-stars-review">
-							<label><input type="radio" name="rating" value="10" required
-									aria-label="10 stars"><span>★</span></label>
-							<label><input type="radio" name="rating" value="9" required
-									aria-label="9 stars"><span>★</span></label>
-							<label><input type="radio" name="rating" value="8" required
-									aria-label="8 stars"><span>★</span></label>
-							<label><input type="radio" name="rating" value="7" required
-									aria-label="7 stars"><span>★</span></label>
-							<label><input type="radio" name="rating" value="6" required
-									aria-label="6 stars"><span>★</span></label>
-							<label><input type="radio" name="rating" value="5" required
-									aria-label="5 stars"><span>★</span></label>
-							<label><input type="radio" name="rating" value="4" required
-									aria-label="4 stars"><span>★</span></label>
-							<label><input type="radio" name="rating" value="3" required
-									aria-label="3 stars"><span>★</span></label>
-							<label><input type="radio" name="rating" value="2" required
-									aria-label="2 stars"><span>★</span></label>
-							<label><input type="radio" name="rating" value="1" required
-									aria-label="1 star"><span>★</span></label>
+							{{ range .CurrentPost.Stars }}
+							<label>
+								<input {{if eq $rating .}}checked{{end}} type="radio" name="rating" value="{{.}}"
+									aria-label="{{.}} stars" required>
+								<span>★</span>
+							</label>
+							{{ end }}
 						</div>
 					</fieldset>
 

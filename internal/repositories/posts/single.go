@@ -186,6 +186,9 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.
 	// Make srcset string
 	post.Srcset = thumbs.Srcset(maxThumb.Width)
 
+	// Attach the stars slice for the rating stars html iteration
+	post.Stars = [10]uint8{10, 9, 8, 7, 6, 5, 4, 3, 2, 1}
+
 	return post, nil
 }
 
