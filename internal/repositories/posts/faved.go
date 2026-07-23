@@ -71,8 +71,6 @@ func (r *Repository) GetUserFavedPosts(
 			ratingCount   sql.NullInt64
 		)
 
-		post.UserActions = &models.Actions{}
-
 		// Paste post from row to struct, thumbnails in a separate var
 		if err = rows.Scan(
 			&post.ID,

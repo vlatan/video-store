@@ -22,7 +22,7 @@ type Post struct {
 	Reviews         []Review        `json:"reviews,omitempty"`
 	Rating          *Rating         `json:"rating,omitempty"`
 	Stars           [10]uint8       `json:"-"`
-	UserActions     *Actions        `json:"user_actions,omitempty"`
+	UserActions     Actions         `json:"user_actions,omitzero"`
 	SearchScore     float64         `json:"search_score,omitempty"`
 	LikeButtonText  string          `json:"like_button_text,omitempty"`
 	Description     string          `json:"description,omitempty"`

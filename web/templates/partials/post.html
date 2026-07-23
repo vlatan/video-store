@@ -62,8 +62,6 @@
 			</div>
 		</div>
 
-		{{ $actions := .CurrentPost.UserActions }}
-
 		<header class="metadata">
 
 			<div class="metadata-block">
@@ -71,7 +69,7 @@
 				<div class="ui-inner-metadata-block">
 					<div class="social">
 						{{ if .CurrentUser.IsAuthenticated }}
-						{{ if and $actions $actions.Liked }}
+						{{ if .CurrentPost.UserActions.Liked }}
 						<button class="like like-yes">
 							<span data-liked>&#10003;</span>
 							<span data-likes>{{ .CurrentPost.LikeButtonText }}</span>
@@ -88,7 +86,7 @@
 						{{ end }}
 
 						{{ if .CurrentUser.IsAuthenticated }}
-						{{ if and $actions $actions.Faved }}
+						{{ if .CurrentPost.UserActions.Faved }}
 						<button class="fave fave-yes">
 							<span data-saved>&#10003;</span>
 							<span data-saves>Saved</span>
@@ -159,10 +157,7 @@
 					</div>
 					{{ end }}
 
-					{{ $rating := 0 }}
-					{{ if $actions }}
-					{{ $rating = $actions.Review.Rating }}
-					{{ end }}
+					{{- $userRating := .CurrentPost.UserActions.Review.Rating -}}
 
 					<!-- User Rating Button -->
 					<!-- beautify ignore:start -->
@@ -171,9 +166,9 @@
 					{{ else }}
 					<button data-modal="login" type="button" id="btn-open-rate" class="btn-open-post-dialog">
 					{{ end }}
-						{{ if $rating }}
+						{{ if $userRating }}
 						<span class="rating-user-star">&#9733;</span>
-						<span>{{ $rating }}</span>
+						<span>{{ $userRating }}</span>
 						{{ else }}
 						<span class="rating-user-star">&#9734;</span>
 						<span>Rate</span>
@@ -191,7 +186,7 @@
 									<use href="#big-hearth" />
 								</svg>
 								<span class="big-star-value rating-big-star-value">
-									{{ if eq $rating 0 }}?{{ else }}{{ $rating }}{{ end }}
+									{{ if eq $userRating 0 }}?{{ else }}{{ $userRating }}{{ end }}
 								</span>
 							</div>
 
@@ -204,9 +199,13 @@
 							<fieldset class="rate-stars">
 								<legend class="visually-hidden">Rating</legend>
 								{{ range .CurrentPost.Stars }}
+								{{ $starsText := "stars" }}
+								{{ if eq . 1 }}
+								{{ $starsText = "star" }}
+								{{ end }}
 								<label>
-									<input {{if eq $rating .}}checked{{end}} type="radio" name="rating" value="{{.}}"
-										aria-label="{{.}} stars" required>
+									<input {{ if eq $userRating . }}checked{{ end }} type="radio" name="rating"
+										value="{{ . }}" aria-label="{{ . }} {{ $starsText }}" required>
 									<span>★</span>
 								</label>
 								{{ end }}
@@ -259,12 +258,8 @@
 
 					<button type="button" id="btn-close-review" class="btn-close-post-dialog">&times;</button>
 
-					{{ $headline := "" }}
-					{{ $body := "" }}
-					{{ if $actions }}
-					{{ $headline = $actions.Review.Headline }}
-					{{ $body = $actions.Review.Content }}
-					{{ end }}
+					{{- $headline := .CurrentPost.UserActions.Review.Headline -}}
+					{{- $body := .CurrentPost.UserActions.Review.Content -}}
 
 					<div class="review-form-group">
 						<label class="review-form-heading" for="review-title">Headline</label>
@@ -285,9 +280,13 @@
 						<div class="review-stars-group">
 							<div class="rate-stars rate-stars-review">
 								{{ range .CurrentPost.Stars }}
+								{{ $starsText := "stars" }}
+								{{ if eq . 1 }}
+								{{ $starsText = "star" }}
+								{{ end }}
 								<label>
-									<input {{if eq $rating .}}checked{{end}} type="radio" name="rating" value="{{.}}"
-										aria-label="{{.}} stars" required>
+									<input {{ if eq $userRating . }}checked{{ end }} type="radio" name="rating"
+										value="{{ . }}" aria-label="{{ . }} {{ $starsText }}" required>
 									<span>★</span>
 								</label>
 								{{ end }}
@@ -297,7 +296,7 @@
 									<use href="#big-hearth" />
 								</svg>
 								<span class="rating-big-star-value review-big-star-value">
-									{{ if eq $rating 0 }}?{{ else }}{{ $rating }}{{ end }}
+									{{ if eq $userRating 0 }}?{{ else }}{{ $userRating }}{{ end }}
 								</span>
 							</div>
 						</div>
