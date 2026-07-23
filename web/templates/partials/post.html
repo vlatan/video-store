@@ -329,21 +329,16 @@
 
 			<!-- Reviews List -->
 			<div id="reviews-list">
+				{{ range .CurrentPost.Reviews }}
 				<div class="review-card">
 					<div class="review-header">
-						<h4>Sarah J. <span class="date-meta">Jun 1, 2026</span></h4>
-						<span class="stars-display">★★★★★</span>
+						<h4>Name Placeholder <span class="date-meta">Date Placeholder</span></h4>
+						<span class="stars-display">{{ .Rating }}</span>
 					</div>
-					<p class="review-content">Absolutely phenomenal update. Appears instantly on load.</p>
+					<p class="review-headline">{{ .Headline }}</p>
+					<p class="review-content">{{ .Content }}</p>
 				</div>
-
-				<div class="review-card">
-					<div class="review-header">
-						<h4>Marcus T. <span class="date-meta">May 20, 2026</span></h4>
-						<span class="stars-display">★★★★☆</span>
-					</div>
-					<p class="review-content">Solid implementation, taking off one star for missing color themes.</p>
-				</div>
+				{{ end }}
 			</div>
 		</section>
 

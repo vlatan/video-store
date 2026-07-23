@@ -24,8 +24,8 @@ agg_reviews AS (
     SELECT 
         tp.post_id,
         JSON_AGG(JSON_BUILD_OBJECT(
-            'title', prev.title,
-            'review', prev.review,
+            'headline', prev.title,
+            'content', prev.review,
             'rating', prat.rating
         )) AS reviews_json
     FROM post_review AS prev

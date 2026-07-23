@@ -166,6 +166,12 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.
 		}
 	}
 
+	// Unmarshal the JSON array directly into the Reviews slice
+	err = json.Unmarshal(reviewsJSON, &post.Reviews)
+	if err != nil {
+		return zero, fmt.Errorf("failed to unmarshal post reviews: %w", err)
+	}
+
 	// Unserialize thumbnails
 	var thumbs models.Thumbnails
 	if err = json.Unmarshal(thumbnails, &thumbs); err != nil {
