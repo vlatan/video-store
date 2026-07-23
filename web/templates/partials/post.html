@@ -159,6 +159,15 @@
 					</div>
 					{{ end }}
 
+					<!-- $rating needs to be lowercase var 
+					 	 because the minifier will lower it 
+						 if placed in HTML tags susch as <input>. -->
+					{{ $rating := 0 }}
+					{{ if and $actions $actions.Rating }}
+					{{ $rating = $actions.Rating }}
+					{{ end }}
+
+
 					<!-- User Rating Button -->
 					<!-- beautify ignore:start -->
 					{{ if .CurrentUser.IsAuthenticated }}
@@ -166,22 +175,15 @@
 					{{ else }}
 					<button data-modal="login" type="button" id="btn-open-rate" class="btn-open-post-dialog">
 					{{ end }}
-						{{ if and $actions $actions.Rating }}
+						{{ if $rating }}
 						<span class="rating-user-star">&#9733;</span>
-						<span>{{ $actions.Rating }}</span>
+						<span>{{ $rating }}</span>
 						{{ else }}
 						<span class="rating-user-star">&#9734;</span>
 						<span>Rate</span>
 						{{ end }}
 					</button>
 					<!-- beautify ignore:end -->
-
-					<!-- Needs to be lowercase var because the minifier will lower it 
-						 if placed in HTML tags susch as <input>. -->
-					{{ $rating := 0 }}
-					{{ if and $actions $actions.Rating }}
-					{{ $rating = $actions.Rating }}
-					{{ end }}
 
 					<!-- Rating Dialog -->
 					{{ if .CurrentUser.IsAuthenticated }}

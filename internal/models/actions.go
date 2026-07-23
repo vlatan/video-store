@@ -12,7 +12,7 @@ type Actions struct {
 	Faved     bool       `json:"user_faved,omitempty"`
 	WhenFaved *time.Time `json:"when_user_faved,omitempty"`
 	Rating    uint8      `json:"user_rating,omitempty"`
-	Review    *Review    `json:"review,omitempty"`
+	Review    *Review    `json:"user_review,omitempty"`
 }
 
 // MarshalBinary implements the encoding.BinaryMarshaler interface
