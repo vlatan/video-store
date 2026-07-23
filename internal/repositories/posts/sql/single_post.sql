@@ -24,13 +24,17 @@ agg_reviews AS (
     SELECT 
         tp.post_id,
         JSON_AGG(JSON_BUILD_OBJECT(
+            'username', au.name,
             'headline', prev.title,
             'content', prev.review,
-            'rating', prat.rating
+            'rating', prat.rating,
+            -- Force PostgreSQL to append "Z" so Go's JSON parser recognizes it as UTC
+            'updated_at', to_char(GREATEST(prat.updated_at, prev.updated_at), 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
         )) AS reviews_json
     FROM post_review AS prev
     JOIN post_rating AS prat ON prat.id = prev.rating_id
     JOIN target_post AS tp ON prat.post_id = tp.post_id
+    JOIN app_user AS au ON au.id = prat.user_id
     GROUP BY tp.post_id
 )
 SELECT

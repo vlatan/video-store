@@ -332,8 +332,11 @@
 				{{ range .CurrentPost.Reviews }}
 				<div class="review-card">
 					<div class="review-header">
-						<h4>Name Placeholder <span class="date-meta">Date Placeholder</span></h4>
-						<span class="stars-display">{{ .Rating }}</span>
+						<h4>
+							{{ .Username }}
+							<span class="review-date" data-utc-time="{{ .UpdatedAt }}">Loading date...</span>
+						</h4>
+						<span class="review-user-rating">{{ .Rating }}</span>
 					</div>
 					<p class="review-headline">{{ .Headline }}</p>
 					<p class="review-content">{{ .Content }}</p>

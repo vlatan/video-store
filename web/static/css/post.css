@@ -664,7 +664,7 @@ button.btn-submit-review:disabled,
 	font-size: 16px;
 }
 
-.date-meta {
+.review-date {
 	font-size: 12px;
 	color: var(--text-muted);
 	font-weight: normal;

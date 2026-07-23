@@ -40,9 +40,11 @@ func (r *Rating) UnmarshalBinary(data []byte) error {
 }
 
 type Review struct {
-	Headline string `json:"headline,omitempty"`
-	Content  string `json:"content,omitempty"`
-	Rating   uint8  `json:"rating,omitempty"`
+	Username  string    `json:"username,omitempty"`
+	Headline  string    `json:"headline,omitempty"`
+	Content   string    `json:"content,omitempty"`
+	Rating    uint8     `json:"rating,omitempty"`
+	UpdatedAt time.Time `json:"updated_at,omitzero"`
 }
 
 // MarshalBinary implements the encoding.BinaryMarshaler interface

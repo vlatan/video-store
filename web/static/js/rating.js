@@ -1,4 +1,16 @@
 
+
+// ==========================================================================
+// Convert Review Dates into Local User Time
+// ==========================================================================
+
+document.querySelectorAll('.review-date').forEach(element => {
+    const rawUtcString = element.getAttribute('data-utc-time');
+    const dateObj = new Date(rawUtcString);
+    element.textContent = dateObj.toLocaleDateString();
+});
+
+
 // ==========================================================================
 // Sync All Checked Stars and Big Star Values
 // ==========================================================================
@@ -181,8 +193,8 @@ document.querySelectorAll('.review-section').forEach(s => {
             card.className = 'review-card new-review';
             card.innerHTML = `
                 <div class="review-header">
-                    <h4>${result.author || 'Anonymous'} <span class="date-meta">Just now</span></h4>
-                    <span class="stars-display">${getStarsHTML(data.rating)}</span>
+                    <h4>${result.author || 'Anonymous'} <span class="review-date">Just now</span></h4>
+                    <span class="review-user-rating">${getStarsHTML(data.rating)}</span>
                 </div>
                 <p class="review-headline"></p>
                 <p class="review-content"></p>
