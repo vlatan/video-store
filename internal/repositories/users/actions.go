@@ -22,7 +22,7 @@ func (r *Repository) GetUserActions(ctx context.Context, userID, postID int) (mo
 		&actions.Liked,
 		&actions.Faved,
 		&actions.WhenFaved,
-		&actions.Rating,
+		&actions.Review.Rating,
 		&actions.Review.Headline,
 		&actions.Review.Content,
 	)

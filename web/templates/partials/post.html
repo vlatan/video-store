@@ -159,14 +159,10 @@
 					</div>
 					{{ end }}
 
-					<!-- $rating needs to be lowercase var 
-					 	 because the minifier will lower it 
-						 if placed in HTML tags such as <input>. -->
 					{{ $rating := 0 }}
-					{{ if and $actions $actions.Rating }}
-					{{ $rating = $actions.Rating }}
+					{{ if $actions }}
+					{{ $rating = $actions.Review.Rating }}
 					{{ end }}
-
 
 					<!-- User Rating Button -->
 					<!-- beautify ignore:start -->
@@ -265,7 +261,7 @@
 
 					{{ $headline := "" }}
 					{{ $body := "" }}
-					{{ if and $actions $actions.Review }}
+					{{ if $actions }}
 					{{ $headline = $actions.Review.Headline }}
 					{{ $body = $actions.Review.Content }}
 					{{ end }}
