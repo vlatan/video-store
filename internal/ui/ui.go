@@ -71,14 +71,14 @@ func New(
 
 	m := minify.New()
 
-	// Create a custom minifier configuration
+	// Configure a custom HTML minifier
 	htmlMinifier := &html.Minifier{
 		KeepDocumentTags: true,                  // Prevent stripping <html>, <head>, and <body>
 		KeepEndTags:      true,                  // Keep valid HTML structure
 		TemplateDelims:   [2]string{"{{", "}}"}, // Ignore golang template logic delimiters
 	}
 
-	// Use the custom configured minifier function
+	// Use the custom HTML in a minifier function
 	m.AddFunc("text/html", htmlMinifier.Minify)
 
 	m.AddFunc("text/css", css.Minify)
