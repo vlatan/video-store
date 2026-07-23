@@ -3,6 +3,7 @@
 
   Change big star value on hover on the small stars.
   On posting the review get back the user name and update time.
+  Make scrollbar on review text area black.
 
   If a review is added we just prepend the review in the review list.
   If a review is updated scroll to the review and highlight it with fade out.
