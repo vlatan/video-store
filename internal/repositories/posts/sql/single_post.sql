@@ -1,34 +1,61 @@
+WITH target_post AS (
+    SELECT id AS post_id
+    FROM post
+    WHERE video_id = $1
+),
+agg_likes AS (
+    SELECT
+        tp.post_id,
+        COUNT(*) AS likes_count
+    FROM post_like AS pl
+    JOIN target_post AS tp ON pl.post_id = tp.post_id
+    GROUP BY tp.post_id
+),
+agg_rating AS (
+    SELECT
+        tp.post_id,
+        ROUND(AVG(prat.rating), 2)::float8 AS avg_rating,
+        COUNT(prat.rating) AS rating_count
+    FROM post_rating AS prat
+    JOIN target_post AS tp ON prat.post_id = tp.post_id
+    GROUP BY tp.post_id
+),
+agg_reviews AS (
+    SELECT 
+        tp.post_id,
+        JSON_AGG(JSON_BUILD_OBJECT(
+            'title', prev.title,
+            'review', prev.review,
+            'rating', prat.rating
+        )) AS reviews_json
+    FROM post_review AS prev
+    JOIN post_rating AS prat ON prat.id = prev.rating_id
+    JOIN target_post AS tp ON prat.post_id = tp.post_id
+    GROUP BY tp.post_id
+)
 SELECT
     post.id,
     post.video_id,
     post.title,
     post.original_title,
     post.thumbnails,
-    COALESCE(l.likes, 0) AS likes,
-    r.avg_rating,
-    COALESCE(r.rating_count, 0) AS rating_count,
+    COALESCE(al.likes_count, 0) AS likes,
+    arat.avg_rating,
+    COALESCE(arat.rating_count, 0) AS rating_count,
+    COALESCE(arev.reviews_json, '[]') AS reviews,
     post.description,
     post.summary,
-    playlist.playlist_id,
-    playlist.title,
-    playlist.channel_title,
-    category.slug,
-    category.name,
+    source.playlist_id,
+    source.title,
+    source.channel_title,
+    cat.slug,
+    cat.name,
     post.upload_date,
     post.duration
 FROM post
-LEFT JOIN LATERAL (
-    SELECT COUNT(*) AS likes
-    FROM post_like
-    WHERE post_like.post_id = post.id
-) AS l ON true
-LEFT JOIN LATERAL (
-    SELECT
-        ROUND(AVG(rating), 2)::float8 AS avg_rating,
-        COUNT(rating) AS rating_count
-    FROM post_rating
-    WHERE post_rating.post_id = post.id
-) AS r ON true
-LEFT JOIN category ON category.id = post.category_id
-LEFT JOIN playlist ON playlist.id = post.playlist_db_id
-WHERE post.video_id = $1;
+JOIN target_post AS tp ON tp.post_id = post.id
+LEFT JOIN agg_likes AS al ON al.post_id = post.id
+LEFT JOIN agg_rating AS arat ON arat.post_id = post.id
+LEFT JOIN agg_reviews AS arev ON arev.post_id = post.id
+LEFT JOIN category AS cat ON cat.id = post.category_id
+LEFT JOIN playlist AS source ON source.id = post.playlist_db_id;

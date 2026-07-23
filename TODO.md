@@ -1,6 +1,8 @@
 * Build the frontend and backend review system.
   Change ids to classes.
 
+  Change big star value on hover on the small stars
+
   If a review is added we just prepend the review in the review list.
   If a review is updated scroll to the review and highlight it with fade out.
   If a review is deleted we remove it from the list if it's on the first page.

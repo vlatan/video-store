@@ -86,6 +86,7 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.
 		channelTitle sql.NullString
 		avgRating   sql.NullFloat64
 		ratingCount sql.NullInt64
+		reviewsJSON []byte
 	)
 
 	// Get single row from DB
@@ -98,6 +99,7 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.
 		&post.Likes,
 		&avgRating,
 		&ratingCount,
+		&reviewsJSON,
 		&post.Description,
 		&summary,
 		&playlistID,
