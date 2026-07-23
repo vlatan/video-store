@@ -2,10 +2,8 @@ package users
 
 import (
 	"context"
-	"database/sql"
 
 	"github.com/vlatan/video-store/internal/models"
-	"github.com/vlatan/video-store/internal/utils"
 )
 
 // Check if the user liked and/or faved a post
@@ -17,7 +15,6 @@ func (r *Repository) GetUserActions(ctx context.Context, userID, postID int) (mo
 		return zero, err
 	}
 
-	var headline, content sql.NullString
 	row := r.db.Pool.QueryRow(ctx, query, userID, postID)
 	err = row.Scan(
 		&actions.UserID,
@@ -26,19 +23,12 @@ func (r *Repository) GetUserActions(ctx context.Context, userID, postID int) (mo
 		&actions.Faved,
 		&actions.WhenFaved,
 		&actions.Rating,
-		&headline,
-		&content,
+		&actions.Review.Headline,
+		&actions.Review.Content,
 	)
 
 	if err != nil {
 		return zero, err
-	}
-
-	if headline.Valid && content.Valid {
-		actions.Review = &models.Review{
-			Headline: utils.FromNullString(headline),
-			Content:  utils.FromNullString(content),
-		}
 	}
 
 	return actions, nil
