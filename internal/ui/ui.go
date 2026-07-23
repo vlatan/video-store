@@ -13,12 +13,12 @@ import (
 	"github.com/vlatan/video-store/internal/repositories/users"
 
 	"github.com/gorilla/sessions"
-	"github.com/tdewolff/minify"
-	"github.com/tdewolff/minify/css"
-	"github.com/tdewolff/minify/html"
-	"github.com/tdewolff/minify/js"
-	"github.com/tdewolff/minify/json"
-	"github.com/tdewolff/minify/xml"
+	"github.com/tdewolff/minify/v2"
+	"github.com/tdewolff/minify/v2/css"
+	"github.com/tdewolff/minify/v2/html"
+	"github.com/tdewolff/minify/v2/js"
+	"github.com/tdewolff/minify/v2/json"
+	"github.com/tdewolff/minify/v2/xml"
 )
 
 type Service interface {
@@ -73,8 +73,9 @@ func New(
 
 	// Create a custom minifier configuration
 	htmlMinifier := &html.Minifier{
-		KeepDocumentTags: true, // Prevent stripping <html>, <head>, and <body>
-		KeepEndTags:      true, // Keep valid HTML structure
+		KeepDocumentTags: true,                  // Prevent stripping <html>, <head>, and <body>
+		KeepEndTags:      true,                  // Keep valid HTML structure
+		TemplateDelims:   [2]string{"{{", "}}"}, // Ignore golang template logic delimiters
 	}
 
 	// Use the custom configured minifier function
