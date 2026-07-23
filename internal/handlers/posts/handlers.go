@@ -396,13 +396,25 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 	// Assign the post to data
 	data.CurrentPost = &post
 
-	// Check whether the current user liked and/or faved the post
+	// Check whether the current user liked, faved, rated, reviewed the post
 	if data.CurrentUser.IsAuthenticated() {
-		userActions, _ := s.usersRepo.GetUserActions(
+
+		userActions, err := s.usersRepo.GetUserActions(
 			r.Context(),
 			data.CurrentUser.ID,
 			data.CurrentPost.ID,
 		)
+
+		if err != nil {
+			slog.ErrorContext(
+				r.Context(), "failed to get the user actions on this post",
+				"path", r.URL.Path,
+				"error", err,
+			)
+			utils.HttpError(w, http.StatusInternalServerError)
+			return
+		}
+
 		data.CurrentPost.UserActions = &userActions
 	}
 

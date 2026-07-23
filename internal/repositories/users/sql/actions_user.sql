@@ -4,8 +4,11 @@ SELECT
     pl.user_id IS NOT NULL AS liked,
     pf.user_id IS NOT NULL AS faved,
     pf.created_at AS when_faved,
-    COALESCE(pr.rating, 0) AS rating
+    COALESCE(prat.rating, 0) AS rating,
+    prev.title,
+    prev.review
 FROM (SELECT $1::integer AS user_id, $2::integer AS post_id) AS p
 LEFT JOIN post_like AS pl ON pl.user_id = p.user_id AND pl.post_id = p.post_id
 LEFT JOIN post_fave AS pf ON pf.user_id = p.user_id AND pf.post_id = p.post_id
-LEFT JOIN post_rating AS pr ON pr.user_id = p.user_id AND pr.post_id = p.post_id;
+LEFT JOIN post_rating AS prat ON prat.user_id = p.user_id AND prat.post_id = p.post_id
+LEFT JOIN post_review AS prev ON prev.rating_id = prat.id;
