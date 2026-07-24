@@ -6,12 +6,12 @@ import (
 )
 
 type Actions struct {
-	UserID    int        `json:"-"`
-	PostID    int        `json:"-"`
-	Liked     bool       `json:"user_liked,omitempty"`
-	Faved     bool       `json:"user_faved,omitempty"`
-	WhenFaved *time.Time `json:"when_user_faved,omitempty"`
-	Review    Review     `json:"user_review,omitzero"`
+	UserID    int       `json:"-"`
+	PostID    int       `json:"-"`
+	Liked     bool      `json:"user_liked,omitempty"`
+	Faved     bool      `json:"user_faved,omitempty"`
+	WhenFaved time.Time `json:"when_user_faved,omitzero"`
+	Review    Review    `json:"user_review,omitzero"`
 }
 
 // MarshalBinary implements the encoding.BinaryMarshaler interface

@@ -64,11 +64,12 @@ func (r *Repository) GetUserFavedPosts(
 	for rows.Next() {
 
 		var (
-			post          models.Post
 			totalNum      int
+			post          models.Post
 			originalTitle sql.NullString
 			avgRating     sql.NullFloat64
 			ratingCount   sql.NullInt64
+			whenFaved     sql.NullTime
 		)
 
 		// Paste post from row to struct, thumbnails in a separate var
@@ -83,13 +84,14 @@ func (r *Repository) GetUserFavedPosts(
 			&ratingCount,
 			&totalNum,
 			&post.UploadDate,
-			&post.UserActions.WhenFaved,
+			&whenFaved,
 		); err != nil {
 			return zero, err
 		}
 
-		// Assing the original title
-		post.OriginalTitle = utils.FromNullString(originalTitle)
+		// Assign the values back to the fields
+		post.OriginalTitle = originalTitle.String
+		post.UserActions.WhenFaved = whenFaved.Time
 
 		// Attach ratings if any
 		if avgRating.Valid && ratingCount.Valid {

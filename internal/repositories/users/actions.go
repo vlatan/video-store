@@ -2,6 +2,7 @@ package users
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/vlatan/video-store/internal/models"
 )
@@ -15,13 +16,14 @@ func (r *Repository) GetUserActions(ctx context.Context, userID, postID int) (mo
 		return zero, err
 	}
 
+	var whenFaved sql.NullTime
 	row := r.db.Pool.QueryRow(ctx, query, userID, postID)
 	err = row.Scan(
 		&actions.UserID,
 		&actions.PostID,
 		&actions.Liked,
 		&actions.Faved,
-		&actions.WhenFaved,
+		&whenFaved,
 		&actions.Review.Rating,
 		&actions.Review.Headline,
 		&actions.Review.Content,
@@ -31,5 +33,6 @@ func (r *Repository) GetUserActions(ctx context.Context, userID, postID int) (mo
 		return zero, err
 	}
 
+	actions.WhenFaved = whenFaved.Time
 	return actions, nil
 }
