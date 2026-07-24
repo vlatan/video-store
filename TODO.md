@@ -17,6 +17,8 @@
   If the user has a review the "quick rate" button opens the review modal.
   On deletion inline the deletion exalplanation and confirmation in the modals with swapping the modal footer.
 
+* Remove the usage of FromNullString and other Froms
+
 * Make the checkmarks on the like/save green or yellow
 * Add close button to login menu
 * Make search bar on small screens accross entire screen
