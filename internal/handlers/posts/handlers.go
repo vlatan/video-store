@@ -396,6 +396,17 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 	// Assign the post to data
 	data.CurrentPost = &post
 
+	// Get post reviews
+	if data.CurrentPost.Reviews, err = s.postsRepo.GetPostReviews(r.Context(), videoID); err != nil {
+		slog.ErrorContext(
+			r.Context(), "failed to get the post reviews from DB",
+			"path", r.URL.Path,
+			"error", err,
+		)
+		utils.HttpError(w, http.StatusInternalServerError)
+		return
+	}
+
 	// Check whether the current user liked, faved, rated, reviewed the post
 	if data.CurrentUser.IsAuthenticated() {
 

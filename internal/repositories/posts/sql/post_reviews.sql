@@ -1,11 +1,10 @@
 SELECT 
-    p.id,
     au.provider_user_id,
     au.provider,
-    COALESCE(au.name, ''),
-    COALESCE(au.email, ''),
-    COALESCE(au.picture, ''),
-    COALESCE(au.analytics_id, '')
+    au.name,
+    au.email,
+    au.picture,
+    au.analytics_id,
     prev.title AS headline,
     prev.review AS content,
     prat.rating AS rating,

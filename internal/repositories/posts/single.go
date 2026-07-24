@@ -86,7 +86,6 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.
 		channelTitle sql.NullString
 		avgRating   sql.NullFloat64
 		ratingCount sql.NullInt64
-		reviewsJSON []byte
 	)
 
 	// Get single row from DB
@@ -99,7 +98,6 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.
 		&post.Likes,
 		&avgRating,
 		&ratingCount,
-		&reviewsJSON,
 		&post.Description,
 		&summary,
 		&playlistID,
@@ -162,12 +160,6 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.
 			Avg:   avgRating.Float64,
 			Count: ratingCount.Int64,
 		}
-	}
-
-	// Unmarshal the JSON array directly into the Reviews slice
-	err = json.Unmarshal(reviewsJSON, &post.Reviews)
-	if err != nil {
-		return zero, fmt.Errorf("failed to unmarshal post reviews: %w", err)
 	}
 
 	// Unserialize thumbnails

@@ -19,34 +19,6 @@ agg_rating AS (
     FROM post_rating AS prat
     JOIN target_post AS tp ON prat.post_id = tp.post_id
     GROUP BY tp.post_id
-),
-agg_reviews AS (
-    SELECT 
-        tp.post_id,
-        JSON_AGG(
-            JSON_BUILD_OBJECT(
-                -- We need the user data to construct the local avatar url
-                'user', JSON_BUILD_OBJECT(
-                    'provider_user_id', au.provider_user_id,
-                    'provider', au.provider,
-                    'name', COALESCE(au.name, ''),
-                    'email', COALESCE(au.email, ''),
-                    'picture',  COALESCE(au.picture, ''),
-                    'analytics_id', COALESCE(au.analytics_id, '')
-                ),
-                'headline', prev.title,
-                'content', prev.review,
-                'rating', prat.rating,
-                -- Append "Z" so Go's JSON parser recognizes it as UTC
-                'updated_at', to_char(GREATEST(prat.updated_at, prev.updated_at), 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
-            )
-        ORDER BY prev.created_at DESC
-        ) AS reviews_json
-    FROM post_review AS prev
-    JOIN post_rating AS prat ON prat.id = prev.rating_id
-    JOIN target_post AS tp ON prat.post_id = tp.post_id
-    JOIN app_user AS au ON au.id = prat.user_id
-    GROUP BY tp.post_id
 )
 SELECT
     post.id,
@@ -57,7 +29,6 @@ SELECT
     COALESCE(al.likes_count, 0) AS likes,
     arat.avg_rating,
     COALESCE(arat.rating_count, 0) AS rating_count,
-    COALESCE(arev.reviews_json, '[]') AS reviews,
     post.description,
     post.summary,
     source.playlist_id,
@@ -71,6 +42,5 @@ FROM post
 JOIN target_post AS tp ON tp.post_id = post.id
 LEFT JOIN agg_likes AS al ON al.post_id = post.id
 LEFT JOIN agg_rating AS arat ON arat.post_id = post.id
-LEFT JOIN agg_reviews AS arev ON arev.post_id = post.id
 LEFT JOIN category AS cat ON cat.id = post.category_id
 LEFT JOIN playlist AS source ON source.id = post.playlist_db_id;
