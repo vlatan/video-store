@@ -109,6 +109,10 @@ services:
     environment:
       # Use Go version specified in the go.mod, not the local one
       - GOTOOLCHAIN=auto
+
+      # Tell Go where to look for cached files inside the container
+      - GOCACHE=/root/.cache/go-build
+      - GOMODCACHE=/go/pkg/mod
       
     volumes:
       - /etc/timezone:/etc/timezone:ro
@@ -121,6 +125,13 @@ services:
       - ./go.sum:/src/go.sum:ro
       - ./Makefile:/src/Makefile:ro
       - ./.air.toml:/src/.air.toml:ro
+
+      # Store compiled binaries/objects natively on the Linux host
+      - go_build_cache:/root/.cache/go-build
+
+      # Store downloaded third-party libraries natively on your Linux host
+      - go_mod_cache:/go/pkg/mod
+
 
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:${PORT}/healthcheck" ]
@@ -189,3 +200,7 @@ services:
 volumes:
   redis_data:
   postgres_data:
+
+  # Local persistent cache for Go builds
+  go_build_cache:
+  go_mod_cache:
