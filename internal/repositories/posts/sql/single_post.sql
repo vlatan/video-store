@@ -25,11 +25,19 @@ agg_reviews AS (
         tp.post_id,
         JSON_AGG(
             JSON_BUILD_OBJECT(
-                'username', au.name,
+                -- We need the user data to construct the local avatar url
+                'user', JSON_BUILD_OBJECT(
+                    'provider_user_id', au.provider_user_id,
+                    'provider', au.provider,
+                    'name', COALESCE(au.name, ''),
+                    'email', COALESCE(au.email, ''),
+                    'picture',  COALESCE(au.picture, ''),
+                    'analytics_id', COALESCE(au.analytics_id, '')
+                ),
                 'headline', prev.title,
                 'content', prev.review,
                 'rating', prat.rating,
-                -- Force PostgreSQL to append "Z" so Go's JSON parser recognizes it as UTC
+                -- Append "Z" so Go's JSON parser recognizes it as UTC
                 'updated_at', to_char(GREATEST(prat.updated_at, prev.updated_at), 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
             )
         ORDER BY prev.created_at DESC

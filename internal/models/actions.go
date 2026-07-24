@@ -40,7 +40,7 @@ func (r *Rating) UnmarshalBinary(data []byte) error {
 }
 
 type Review struct {
-	Username  string    `json:"username,omitempty"`
+	User      User      `json:"user,omitzero"`
 	Headline  string    `json:"headline,omitempty"`
 	Content   string    `json:"content,omitempty"`
 	Rating    uint8     `json:"rating,omitempty"`
