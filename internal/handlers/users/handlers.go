@@ -3,7 +3,6 @@ package users
 import (
 	"log/slog"
 	"net/http"
-	"time"
 
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/utils"
@@ -61,7 +60,6 @@ func (s *Service) UsersHandler(w http.ResponseWriter, r *http.Request) {
 	if err = s.SetAvatars(
 		r, users.Items,
 		models.AvatarAdminPrefix,
-		30*24*time.Hour,
 	); err != nil {
 		slog.ErrorContext(
 			r.Context(), "failed to set users' avatars",

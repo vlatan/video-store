@@ -4,7 +4,6 @@ import (
 	"log/slog"
 	"net/http"
 	"runtime"
-	"time"
 
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/utils"
@@ -15,8 +14,7 @@ import (
 func (s *Service) SetAvatars(
 	r *http.Request,
 	users []models.User,
-	keyPrefix string,
-	ttl time.Duration) error {
+	keyPrefix string) error {
 
 	ctx := r.Context()
 	g := new(errgroup.Group)

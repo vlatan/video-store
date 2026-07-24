@@ -170,8 +170,6 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.
 		return zero, fmt.Errorf("failed to unmarshal post reviews: %w", err)
 	}
 
-	// TODO: Get users from the reviews and set local avatar paths to them
-
 	// Unserialize thumbnails
 	var thumbs models.Thumbnails
 	if err = json.Unmarshal(thumbnails, &thumbs); err != nil {

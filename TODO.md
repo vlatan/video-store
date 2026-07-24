@@ -1,6 +1,11 @@
 * Build the frontend and backend review system.
   Change ids to classes.
 
+  Get users from the reviews and set local avatar paths to them.
+	The current user avatar if any should be set with different redis key and stored for one hour.
+
+  Remove the usage of FromNullString and other Froms
+
   Change big star value on hover on the small stars.
   On posting the review get back the user name and update time.
   Make scrollbar on review text area black.
@@ -16,8 +21,6 @@
   Include delete button on the modals and add edit button on the review card.
   If the user has a review the "quick rate" button opens the review modal.
   On deletion inline the deletion exalplanation and confirmation in the modals with swapping the modal footer.
-
-* Remove the usage of FromNullString and other Froms
 
 * Make the checkmarks on the like/save green or yellow
 * Add close button to login menu
