@@ -210,7 +210,8 @@ func (u *User) refreshAvatar(
 		return "", fmt.Errorf("failed to download avatar; %w", err)
 	}
 
-	// Hash the source image
+	// Hash the source image.
+	// We are not doing anything important here, md5  is fine.
 	sourceHash := fmt.Sprintf("%x", md5.Sum(data)) // #nosec G401
 
 	// Get R2 object head
