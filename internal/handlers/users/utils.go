@@ -1,7 +1,6 @@
 package users
 
 import (
-	"fmt"
 	"log/slog"
 	"net/http"
 	"runtime"
@@ -12,12 +11,7 @@ import (
 )
 
 // SetAvatars sets users avatars in parallel
-func (s *Service) SetAvatars(
-	r *http.Request,
-	users []models.User,
-	keyPrefix string) error {
-
-	fmt.Println(runtime.GOMAXPROCS(0))
+func (s *Service) SetAvatars(r *http.Request, users []models.User) error {
 
 	ctx := r.Context()
 	g := new(errgroup.Group)
@@ -30,7 +24,8 @@ func (s *Service) SetAvatars(
 				return ctx.Err()
 			case semaphore <- struct{}{}: // Semaphore will block if full
 				defer func() { <-semaphore }()
-				err := user.SetAvatar(ctx, s.config, s.rdb, s.r2s, keyPrefix)
+				var err error
+				user.LocalAvatarURL, err = user.GetAvatar(ctx, s.config, s.rdb, s.r2s)
 
 				// Return the error if contex ended
 				if utils.IsContextErr(err) {
@@ -40,7 +35,7 @@ func (s *Service) SetAvatars(
 				// Just log a non-breaking error
 				if err != nil {
 					slog.ErrorContext(
-						ctx, "failed to set user's avatar",
+						ctx, "failed to get user's avatar",
 						"path", r.URL.Path,
 						"userId", user.ID,
 						"error", err,

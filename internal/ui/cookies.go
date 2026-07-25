@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/utils"
 )
 
 // Store flash message in a session
@@ -28,28 +29,35 @@ func (s *service) StoreFlashMessage(
 }
 
 // Get the user from session
-func (s *service) GetUserFromSession(w http.ResponseWriter, r *http.Request) *models.User {
+func (s *service) GetUserFromSession(w http.ResponseWriter, r *http.Request) (*models.User, error) {
 
-	// Check for a user cookie
+	// Check for a user cookie, if not this is anonymous user
 	if _, err := r.Cookie(s.config.UserSessionName); err != nil {
-		return nil
+		return nil, err
 	}
 
 	// Get session from store
 	session, err := s.store.Get(r, s.config.UserSessionName)
 	if session == nil || err != nil {
-		return nil
+		return nil, err
 	}
 
 	// Get user row ID from session
 	id, ok := session.Values["ID"].(int)
 	if !ok || id == 0 {
+
 		// Clear the session this is anonymous user
 		session.Options.MaxAge = -1
 		if err = session.Save(r, w); err != nil {
-			log.Printf("couldn't clear the session for anonymous user; %v", err)
+			slog.ErrorContext(
+				r.Context(), "failed to clear the session for anonymous user",
+				"path", r.URL.Path,
+				"userId", id,
+				"error", err,
+			)
 		}
-		return nil
+
+		return nil, nil
 	}
 
 	// Update last seen
@@ -61,7 +69,15 @@ func (s *service) GetUserFromSession(w http.ResponseWriter, r *http.Request) *mo
 
 	// Check if the last seen is out of sync for an entire day
 	if !sameDate(lastSeenDB, now) {
-		if _, err := s.usersRepo.UpdateLastUserSeen(r.Context(), id, now); err != nil {
+
+		_, err = s.usersRepo.UpdateLastUserSeen(r.Context(), id, now)
+
+		// Return early if context error
+		if utils.IsContextErr(err) {
+			return nil, err
+		}
+
+		if err != nil {
 			slog.ErrorContext(
 				r.Context(), "failed to update user's last seen in DB",
 				"path", r.URL.Path,
@@ -69,12 +85,18 @@ func (s *service) GetUserFromSession(w http.ResponseWriter, r *http.Request) *mo
 				"error", err,
 			)
 		}
+
 		session.Values["LastSeenDB"] = now
 	}
 
 	// Save the session
 	if err = session.Save(r, w); err != nil {
-		log.Printf("couldn't save session for updating user last seen; %v", err)
+		slog.ErrorContext(
+			r.Context(), "failed to save session after updating user's last seen",
+			"path", r.URL.Path,
+			"userId", id,
+			"error", err,
+		)
 	}
 
 	providerUserId, _ := session.Values["ProviderUserId"].(string)
@@ -97,22 +119,23 @@ func (s *service) GetUserFromSession(w http.ResponseWriter, r *http.Request) *mo
 		Config:         s.config,
 	}
 
-	if err = user.SetAvatar(
-		r.Context(),
-		s.config,
-		s.rdb,
-		s.r2s,
-		models.AvatarUserPrefix,
-	); err != nil {
+	user.LocalAvatarURL, err = user.GetAvatar(r.Context(), s.config, s.rdb, s.r2s)
+
+	// Return early if context error
+	if utils.IsContextErr(err) {
+		return nil, err
+	}
+
+	if err != nil {
 		slog.ErrorContext(
-			r.Context(), "failed to set user's avatar",
+			r.Context(), "failed to get user's avatar",
 			"path", r.URL.Path,
 			"userId", user.ID,
 			"error", err,
 		)
 	}
 
-	return &user
+	return &user, nil
 }
 
 // Check if same dates

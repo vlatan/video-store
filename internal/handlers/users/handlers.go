@@ -57,10 +57,7 @@ func (s *Service) UsersHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Assign avatars to users
-	if err = s.SetAvatars(
-		r, users.Items,
-		models.AvatarAdminPrefix,
-	); err != nil {
+	if err = s.SetAvatars(r, users.Items); err != nil {
 		slog.ErrorContext(
 			r.Context(), "failed to set users' avatars",
 			"path", r.URL.Path,

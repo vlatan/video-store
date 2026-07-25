@@ -23,7 +23,7 @@ import (
 
 type Service interface {
 	// Get the user from session
-	GetUserFromSession(w http.ResponseWriter, r *http.Request) *models.User
+	GetUserFromSession(w http.ResponseWriter, r *http.Request) (*models.User, error)
 	// Store flash message in a session
 	StoreFlashMessage(w http.ResponseWriter, r *http.Request, m *models.FlashMessage)
 	// Get the map containing the static files

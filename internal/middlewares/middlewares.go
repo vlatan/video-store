@@ -73,9 +73,15 @@ func (s *Service) LoadUser(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		// Get user from session and store in context
-		user := s.ui.GetUserFromSession(w, r) // Can be nil
-		ctx := context.WithValue(r.Context(), models.UserContextKey, user)
+		user, err := s.ui.GetUserFromSession(w, r) // Anonymous if nil
 
+		// Exit early if context ended
+		if utils.IsContextErr(err) {
+			utils.HttpError(w, http.StatusInternalServerError)
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), models.UserContextKey, user)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

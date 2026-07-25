@@ -2,8 +2,8 @@ package models
 
 // Avatars constants
 const (
-	AvatarAdminPrefix = "avatar:admin:"
-	AvatarUserPrefix  = "avatar:user:"
+	avatarCacheTTL    = "avatar:ttl:"
+	avatarCachePrefix = "avatar:"
 	avatarPath        = "avatars/%s.jpg"
 	defaultAvatar     = "/static/images/default-avatar.jpg"
 )

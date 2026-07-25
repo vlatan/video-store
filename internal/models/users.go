@@ -11,11 +11,11 @@ import (
 	"image"
 	"image/jpeg"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"time"
 
-	"github.com/redis/go-redis/v9"
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 
@@ -82,14 +82,16 @@ func (u *User) SetAnalyticsID() {
 }
 
 // SetAvatar sets user avatar path, either from Redis,
-// or downloads remote avatar, uploads it to R2 and caches the path to Redis.
-// If the function returns an error the default avatar might be set.
-func (u *User) SetAvatar(
+// or downloads remote avatar, converts it to JPEG,
+// uploads it to R2 and caches the path to Redis.
+// The function will return only breaking errors,
+// in this case only if the context expired.
+// Every other error will be logged.
+func (u *User) GetAvatar(
 	ctx context.Context,
 	config *config.Config,
 	rdb *rdb.Service,
-	r2s r2.Service,
-	keyPrefix string) error {
+	r2s r2.Service) (string, error) {
 
 	// Set the anaylytics ID in case it's missing
 	if u.AnalyticsID == "" {
@@ -97,52 +99,96 @@ func (u *User) SetAvatar(
 	}
 
 	// Get avatar URL from Redis
-	redisKey := keyPrefix + u.AnalyticsID
-	avatar, err := rdb.Client.Get(ctx, redisKey).Result()
-
-	if err == nil {
-		u.LocalAvatarURL = avatar
-		return nil
-	}
+	avatarKey := avatarCachePrefix + u.AnalyticsID
+	r2URL, err := rdb.Client.Get(ctx, avatarKey).Result()
 
 	// Return early if context error
 	if utils.IsContextErr(err) {
-		return err
+		return "", err
 	}
 
-	// Set a slice of errors to acumulate non-breaking errors
-	var errs []error
-
-	// Save the error if not Redis nil error
-	if !errors.Is(err, redis.Nil) {
-		errs = append(errs, err)
+	// Avatar not in cache at all
+	if err != nil || r2URL == "" {
+		slog.Error(
+			"failed to get avatar from Redis cache",
+			"avatar", r2URL,
+			"error", err,
+		)
+		r2URL = defaultAvatar
 	}
 
-	// Refresh the avatar - reupload if changed
-	avatar, err = u.refreshAvatar(ctx, config, r2s)
+	// Check if TTL for the avatar expired
+	ttlKey := avatarCacheTTL + u.AnalyticsID
+	ttl, err := rdb.Client.Exists(ctx, ttlKey).Result()
 
 	// Return early if context error
 	if utils.IsContextErr(err) {
-		return err
+		return "", err
 	}
 
-	// Set to default avatar if no remote avatar
 	if err != nil {
-		avatar = defaultAvatar
-		errs = append(errs, err)
+		slog.Error(
+			"failed to get avatar's TTL from Redis cache",
+			"avatar", r2URL,
+			"error", err,
+		)
 	}
 
-	// Set avatar
-	u.LocalAvatarURL = avatar
-	err = u.updateAvatarCache(ctx, rdb, avatar)
+	// Cache timer haven't expired, return r2URL
+	if ttl > 0 {
+		return r2URL, nil
+	}
+
+	// The timer has expired at this point.
+	// Refresh the avatar - reupload to R2 if changed.
+	r2URL, err = u.refreshAvatar(ctx, config, r2s)
 
 	// Return early if context error
 	if utils.IsContextErr(err) {
-		return err
+		return "", err
 	}
 
-	errs = append(errs, err)
-	return errors.Join(errs...)
+	if err != nil || r2URL == "" {
+		slog.Error(
+			"failed to refresh the avatar",
+			"avatar", r2URL,
+			"error", err,
+		)
+		r2URL = defaultAvatar
+	}
+
+	// Set the avatar URL in cache with long ttl only if not default avatar
+	if r2URL != defaultAvatar {
+		if err := rdb.Client.Set(ctx, avatarKey, r2URL, 30*24*time.Hour).Err(); err != nil {
+			slog.Error(
+				"failed to save the avatar in Redis",
+				"redisKey", avatarKey,
+				"avatarURL", r2URL,
+				"error", err,
+			)
+		}
+
+		// Return early if context error
+		if utils.IsContextErr(err) {
+			return "", err
+		}
+	}
+
+	// Reset the timer
+	if err := rdb.Client.Set(ctx, ttlKey, "true", 24*time.Hour).Err(); err != nil {
+		slog.Error(
+			"failed to reset the avatar TTL in Redis",
+			"redisKey", ttlKey,
+			"error", err,
+		)
+	}
+
+	// Return early if context error
+	if utils.IsContextErr(err) {
+		return "", err
+	}
+
+	return r2URL, nil
 }
 
 // downloadAvatar downloads avatar from a remote source
@@ -179,23 +225,6 @@ func (u *User) downloadAvatar(ctx context.Context) ([]byte, error) {
 	// Limit size to prevent abuse (5MB max)
 	limitedReader := io.LimitReader(resp.Body, 5*1024*1024)
 	return io.ReadAll(limitedReader)
-}
-
-// updateAvatarCache sets both user and admin avatar caches in Redis
-func (u *User) updateAvatarCache(ctx context.Context, rdb *rdb.Service, url string) error {
-
-	errs := make([]error, 0, 2)
-	data := map[string]time.Duration{
-		(AvatarUserPrefix + u.AnalyticsID):  24 * time.Hour,      // 1 day
-		(AvatarAdminPrefix + u.AnalyticsID): 30 * 24 * time.Hour, // 30 days
-	}
-
-	for key, ttl := range data {
-		err := rdb.Client.Set(ctx, key, url, ttl).Err()
-		errs = append(errs, err)
-	}
-
-	return errors.Join(errs...)
 }
 
 // refreshAvatar reuploads the user avatar at R2 if changed
@@ -296,8 +325,8 @@ func (u *User) DeleteAvatar(
 
 	// Delete user and admin avatar Redis cache values
 	for _, key := range []string{
-		AvatarAdminPrefix + u.AnalyticsID,
-		AvatarUserPrefix + u.AnalyticsID,
+		avatarCacheTTL + u.AnalyticsID,
+		avatarCachePrefix + u.AnalyticsID,
 	} {
 		err := rdb.Client.Del(ctx, key).Err()
 		err = fmt.Errorf("failed to remove avatar %q from Redis: %w", key, err)
