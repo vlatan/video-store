@@ -13,6 +13,7 @@ import (
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/redirect"
 	"github.com/vlatan/video-store/internal/utils"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/jackc/pgx/v5"
 )
@@ -360,24 +361,78 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 	data := models.GetDataFromContext(r)
 
 	var (
-		err  error
-		post models.Post
+		err          error
+		post         models.Post
+		postReviews  models.Reviews
+		userActions  models.Actions
+		relatedPosts []models.Post
 	)
 
-	// Don't cache single post for logged in users
-	if data.CurrentUser.IsAuthenticated() {
-		post, err = s.postsRepo.GetSinglePost(r.Context(), videoID)
-	} else {
-		post, err = rdb.GetCachedData(
-			r.Context(),
-			s.rdb,
-			fmt.Sprintf(postCacheKey, videoID),
-			s.config.CacheTimeout,
-			func() (models.Post, error) {
-				return s.postsRepo.GetSinglePost(r.Context(), videoID)
-			},
-		)
-	}
+	g := new(errgroup.Group)
+
+	// Send post fetch in a goroutine
+	g.Go(func() error {
+
+		// Don't cache single post for logged in users
+		if data.CurrentUser.IsAuthenticated() {
+			post, err = s.postsRepo.GetSinglePost(r.Context(), videoID)
+		} else {
+			post, err = rdb.GetCachedData(
+				r.Context(),
+				s.rdb,
+				fmt.Sprintf(postCacheKey, videoID),
+				s.config.CacheTimeout,
+				func() (models.Post, error) {
+					return s.postsRepo.GetSinglePost(r.Context(), videoID)
+				},
+			)
+		}
+
+		if err != nil {
+			slog.ErrorContext(
+				r.Context(), "failed to get the post from DB",
+				"path", r.URL.Path,
+				"error", err,
+			)
+			return err
+		}
+
+		return nil
+	})
+
+	// Send post reviews fetch in a goroutine
+	g.Go(func() error {
+
+		// Get post reviews
+		if data.CurrentUser.IsAuthenticated() {
+			postReviews, err = s.postsRepo.GetPostReviews(r.Context(), videoID)
+		} else {
+			postReviews, err = rdb.GetCachedData(
+				r.Context(),
+				s.rdb,
+				fmt.Sprintf(postRveiewsCacheKey, videoID),
+				s.config.CacheTimeout,
+				func() (models.Reviews, error) {
+					return s.postsRepo.GetPostReviews(r.Context(), videoID)
+				},
+			)
+		}
+
+		if err != nil {
+			slog.ErrorContext(
+				r.Context(), "failed to get the post reviews from DB",
+				"path", r.URL.Path,
+				"error", err,
+			)
+			return err
+
+		}
+
+		return nil
+	})
+
+	// Wait for the goroutines to finish
+	err = g.Wait()
 
 	if errors.Is(err, pgx.ErrNoRows) {
 		http.NotFound(w, r)
@@ -385,81 +440,72 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		slog.ErrorContext(
-			r.Context(), "failed to get the post from DB",
-			"path", r.URL.Path,
-			"error", err,
-		)
 		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}
+
+	// Send user actions fetch in a goroutine
+	g.Go(func() error {
+
+		// Check whether the current user liked, faved, rated and/or reviewed the post
+		if data.CurrentUser.IsAuthenticated() {
+
+			userActions, err = s.usersRepo.GetUserActions(
+				r.Context(),
+				data.CurrentUser.ID,
+				post.ID,
+			)
+
+			if err != nil {
+				slog.ErrorContext(
+					r.Context(), "failed to get the user actions on this post",
+					"path", r.URL.Path,
+					"error", err,
+				)
+				return err
+			}
+		}
+
+		return nil
+	})
+
+	// Send related posts fetch in a goroutine
+	g.Go(func() error {
+
+		// Don't cache the related posts only for the admin.
+		// Ignore the error on related posts, no posts will be shown.
+		var posts models.Posts
+		if data.CurrentUser.IsAdmin() {
+			posts, _ = s.postsRepo.GetRelatedPosts(r.Context(), post.GetTitle())
+		} else {
+			posts, _ = rdb.GetCachedData(
+				r.Context(),
+				s.rdb,
+				fmt.Sprintf(relatedPostsCacheKey, videoID),
+				s.config.CacheTimeout,
+				func() (models.Posts, error) {
+					return s.postsRepo.GetRelatedPosts(r.Context(), post.GetTitle())
+				},
+			)
+		}
+
+		relatedPosts = posts.Items
+		return nil
+	})
+
+	// Wait for the goroutines to finish
+	if err = g.Wait(); err != nil {
+		utils.HttpError(w, http.StatusInternalServerError)
+		return
+	}
+
+	// Attach the results to the post object
+	post.Reviews = postReviews
+	post.UserActions = userActions
+	post.RelatedPosts = relatedPosts
 
 	// Assign the post to data
 	data.CurrentPost = &post
-
-	// Get post reviews
-	if data.CurrentUser.IsAuthenticated() {
-		data.CurrentPost.Reviews, err = s.postsRepo.GetPostReviews(r.Context(), videoID)
-	} else {
-		data.CurrentPost.Reviews, err = rdb.GetCachedData(
-			r.Context(),
-			s.rdb,
-			fmt.Sprintf(postRveiewsCacheKey, videoID),
-			s.config.CacheTimeout,
-			func() (models.Reviews, error) {
-				return s.postsRepo.GetPostReviews(r.Context(), videoID)
-			},
-		)
-	}
-
-	if err != nil {
-		slog.ErrorContext(
-			r.Context(), "failed to get the post reviews from DB",
-			"path", r.URL.Path,
-			"error", err,
-		)
-		utils.HttpError(w, http.StatusInternalServerError)
-		return
-	}
-
-	// Check whether the current user liked, faved, rated, reviewed the post
-	if data.CurrentUser.IsAuthenticated() {
-
-		data.CurrentPost.UserActions, err = s.usersRepo.GetUserActions(
-			r.Context(),
-			data.CurrentUser.ID,
-			data.CurrentPost.ID,
-		)
-
-		if err != nil {
-			slog.ErrorContext(
-				r.Context(), "failed to get the user actions on this post",
-				"path", r.URL.Path,
-				"error", err,
-			)
-			utils.HttpError(w, http.StatusInternalServerError)
-			return
-		}
-	}
-
-	// Don't cache the related posts only for the admin.
-	// Ignore the error on related posts, no posts will be shown.
-	var relatedPosts models.Posts
-	if data.CurrentUser.IsAdmin() {
-		relatedPosts, _ = s.postsRepo.GetRelatedPosts(r.Context(), post.GetTitle())
-	} else {
-		relatedPosts, _ = rdb.GetCachedData(
-			r.Context(),
-			s.rdb,
-			fmt.Sprintf(relatedPostsCacheKey, videoID),
-			s.config.CacheTimeout,
-			func() (models.Posts, error) {
-				return s.postsRepo.GetRelatedPosts(r.Context(), post.GetTitle())
-			},
-		)
-	}
-
-	data.CurrentPost.RelatedPosts = relatedPosts.Items
 	s.ui.RenderHTML(w, r, "post.html", data)
 }
 
