@@ -19,6 +19,7 @@ import (
 
 const postCacheKey = "post:%s"
 const relatedPostsCacheKey = "post:%s:related_posts"
+const postRveiewsCacheKey = "post:%s:reviews"
 
 // Handle the Home page
 func (s *Service) HomeHandler(w http.ResponseWriter, r *http.Request) {
@@ -397,7 +398,21 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 	data.CurrentPost = &post
 
 	// Get post reviews
-	if data.CurrentPost.Reviews, err = s.postsRepo.GetPostReviews(r.Context(), videoID); err != nil {
+	if data.CurrentUser.IsAuthenticated() {
+		data.CurrentPost.Reviews, err = s.postsRepo.GetPostReviews(r.Context(), videoID)
+	} else {
+		data.CurrentPost.Reviews, err = rdb.GetCachedData(
+			r.Context(),
+			s.rdb,
+			fmt.Sprintf(postRveiewsCacheKey, videoID),
+			s.config.CacheTimeout,
+			func() (models.Reviews, error) {
+				return s.postsRepo.GetPostReviews(r.Context(), videoID)
+			},
+		)
+	}
+
+	if err != nil {
 		slog.ErrorContext(
 			r.Context(), "failed to get the post reviews from DB",
 			"path", r.URL.Path,

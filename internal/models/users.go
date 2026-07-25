@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/md5" // #nosec G501
 	"crypto/sha256"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"image"
@@ -49,6 +50,16 @@ type User struct {
 	LastSeen       *time.Time
 	CreatedAt      *time.Time
 	*config.Config
+}
+
+// MarshalBinary implements the encoding.BinaryMarshaler interface
+func (u User) MarshalBinary() (data []byte, err error) {
+	return json.Marshal(u)
+}
+
+// UnmarshalBinary implements the encoding.BinaryUnmarshaler interface
+func (u *User) UnmarshalBinary(data []byte) error {
+	return json.Unmarshal(data, u)
 }
 
 // Check if the user is authenticated

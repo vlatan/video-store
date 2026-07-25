@@ -3,6 +3,7 @@
 
   Get users from the reviews and set local avatar paths to them.
 	The current user avatar if any should be set with different redis key and stored for one hour.
+  Run multiple queries in post concurrently.
 
   Remove the usage of FromNullString and other Froms
 

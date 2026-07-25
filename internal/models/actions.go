@@ -56,3 +56,15 @@ func (r Review) MarshalBinary() (data []byte, err error) {
 func (r *Review) UnmarshalBinary(data []byte) error {
 	return json.Unmarshal(data, r)
 }
+
+type Reviews []Review
+
+// MarshalBinary implements the encoding.BinaryMarshaler interface
+func (r Reviews) MarshalBinary() (data []byte, err error) {
+	return json.Marshal(r)
+}
+
+// UnmarshalBinary implements the encoding.BinaryUnmarshaler interface
+func (r *Reviews) UnmarshalBinary(data []byte) error {
+	return json.Unmarshal(data, r)
+}
