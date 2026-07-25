@@ -1,6 +1,7 @@
 package users
 
 import (
+	"fmt"
 	"log/slog"
 	"net/http"
 	"runtime"
@@ -16,9 +17,12 @@ func (s *Service) SetAvatars(
 	users []models.User,
 	keyPrefix string) error {
 
+	fmt.Println(runtime.GOMAXPROCS(0))
+
 	ctx := r.Context()
 	g := new(errgroup.Group)
-	semaphore := make(chan struct{}, runtime.GOMAXPROCS(0))
+	maxConcurrency := runtime.GOMAXPROCS(0) * 8
+	semaphore := make(chan struct{}, maxConcurrency)
 	for i, user := range users {
 		g.Go(func() error {
 			select {
