@@ -1,9 +1,9 @@
 * Build the frontend and backend review system.
   Change ids to classes.
 
-  Get users from the reviews and set local avatar paths to them.
-	The current user avatar if any should be set with different redis key and stored for one hour.
-  Run multiple queries in post concurrently.
+  Don't process the avatars on call.
+  Push their processing to global queue.
+  Deduplicate jobs with redis lock.
 
   Remove the usage of FromNullString and other Froms
 
