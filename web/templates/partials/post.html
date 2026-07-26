@@ -336,6 +336,7 @@
 							{{ .User.Name }}
 							<span class="review-date" data-utc-time="{{ .UpdatedAt }}">Loading date...</span>
 						</h4>
+						<img src="{{ .User.LocalAvatarURL }}" class=" review-user-avatar" width="20" height="20" alt="">
 						<span class="review-user-rating">{{ .Rating }}</span>
 					</div>
 					<p class="review-headline">{{ .Headline }}</p>

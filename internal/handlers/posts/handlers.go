@@ -425,7 +425,21 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 				"error", err,
 			)
 			return err
+		}
 
+		// Get the user avatars
+		for i, review := range postReviews {
+			localAvatarURL, err := s.avatars.Get(r.Context(), &review.User)
+			if err != nil {
+				slog.ErrorContext(
+					r.Context(), "failed to get user's avatar",
+					"path", r.URL.Path,
+					"userId", review.User.ID,
+					"error", err,
+				)
+				return err
+			}
+			postReviews[i].User.LocalAvatarURL = localAvatarURL
 		}
 
 		return nil
