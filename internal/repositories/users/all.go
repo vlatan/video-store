@@ -5,7 +5,6 @@ import (
 	"database/sql"
 
 	"github.com/vlatan/video-store/internal/models"
-	"github.com/vlatan/video-store/internal/utils"
 )
 
 // Get users with limit and offset
@@ -40,6 +39,7 @@ func (r *Repository) GetUsers(ctx context.Context, page int) (models.Users, erro
 
 		// Get user row data to destination
 		if err = rows.Scan(
+			&user.ID,
 			&user.ProviderUserId,
 			&user.Provider,
 			&name,
@@ -54,10 +54,10 @@ func (r *Repository) GetUsers(ctx context.Context, page int) (models.Users, erro
 		}
 
 		// Convert the NullString back to string
-		user.Name = utils.FromNullString(name)
-		user.Email = utils.FromNullString(email)
-		user.AvatarURL = utils.FromNullString(avatarURL)
-		user.AnalyticsID = utils.FromNullString(analyticsID)
+		user.Name = name.String
+		user.Email = email.String
+		user.AvatarURL = avatarURL.String
+		user.AnalyticsID = analyticsID.String
 
 		// Include the user in the result
 		users.Items = append(users.Items, user)

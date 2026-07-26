@@ -1,4 +1,5 @@
 SELECT
+    id,
     provider_user_id,
     provider, 
     name,

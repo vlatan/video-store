@@ -1,4 +1,5 @@
 SELECT 
+    au.id,
     au.provider_user_id,
     au.provider,
     au.name,

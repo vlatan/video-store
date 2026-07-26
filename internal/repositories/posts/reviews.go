@@ -37,6 +37,7 @@ func (r *Repository) GetPostReviews(ctx context.Context, videoID string) (models
 		)
 
 		err = rows.Scan(
+			&review.User.ID,
 			&review.User.ProviderUserId,
 			&review.User.Provider,
 			&name,
