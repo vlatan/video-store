@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"log/slog"
 	"sync"
+	"time"
 
+	"github.com/redis/go-redis/v9"
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/integrations/r2"
@@ -71,14 +73,17 @@ func (s *Service) Get(ctx context.Context, user *models.User) (string, error) {
 		return "", err
 	}
 
-	// Avatar not in cache at all
-	if err != nil || r2URL == "" {
+	// Log redis non nil error
+	if err != nil && !errors.Is(err, redis.Nil) {
 		slog.Error(
 			"failed to get avatar from Redis cache",
 			"avatar", r2URL,
 			"error", err,
 		)
-		// Revert to default avatar
+	}
+
+	// Use default avatar. Avatar not in cache.
+	if err != nil || r2URL == "" {
 		r2URL = defaultAvatarPath
 	}
 
@@ -91,6 +96,7 @@ func (s *Service) Get(ctx context.Context, user *models.User) (string, error) {
 		return "", err
 	}
 
+	// Log redis error
 	if err != nil {
 		slog.Error(
 			"failed to get avatar's TTL from Redis cache",
@@ -105,6 +111,44 @@ func (s *Service) Get(ctx context.Context, user *models.User) (string, error) {
 	}
 
 	return r2URL, nil
+}
+
+// Save ensures the avatar is cached, downloading it synchronously if missing.
+func (s *Service) Save(ctx context.Context, user *models.User) error {
+
+	avatarKey := avatarCachePrefix + user.AnalyticsID
+	ttlKey := avatarCacheTTL + user.AnalyticsID
+
+	// Check if already in cache (if returning user)
+	if err := s.rdb.Client.Get(ctx, avatarKey).Err(); err == nil {
+		return nil // Already cached, good to go
+	}
+
+	// Cache miss (new user or expired/evicted cache): process synchronously
+	r2URL, err := s.refreshAvatar(ctx, user)
+	if err != nil || r2URL == "" {
+		return err
+	}
+
+	// Save to Redis
+	if err = s.rdb.Client.Set(ctx, avatarKey, r2URL, 30*24*time.Hour).Err(); err != nil {
+		slog.Error(
+			"failed to save the avatar in Redis",
+			"redisKey", avatarKey,
+			"avatarURL", r2URL,
+			"error", err,
+		)
+	}
+
+	if err = s.rdb.Client.Set(ctx, ttlKey, "true", 24*time.Hour).Err(); err != nil {
+		slog.Error(
+			"failed to reset the avatar TTL in Redis",
+			"redisKey", ttlKey,
+			"error", err,
+		)
+	}
+
+	return nil
 }
 
 // Delete avatar from object storage if exists
