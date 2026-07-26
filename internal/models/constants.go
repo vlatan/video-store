@@ -4,8 +4,8 @@ package models
 const (
 	avatarCacheTTL    = "avatar:ttl:"
 	avatarCachePrefix = "avatar:"
-	avatarPath        = "avatars/%s.jpg"
-	defaultAvatar     = "/static/images/default-avatar.jpg"
+	avatarR2Path      = "avatars/%s.jpg"
+	defaultAvatarPath = "/static/images/default-avatar.jpg"
 )
 
 // Whitelisted sorting options

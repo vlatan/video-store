@@ -124,7 +124,7 @@ func (u *User) GetAvatar(
 			"avatar", r2URL,
 			"error", err,
 		)
-		r2URL = defaultAvatar
+		r2URL = defaultAvatarPath
 	}
 
 	// Check if TTL for the avatar expired
@@ -164,11 +164,11 @@ func (u *User) GetAvatar(
 			"avatar", r2URL,
 			"error", err,
 		)
-		r2URL = defaultAvatar
+		r2URL = defaultAvatarPath
 	}
 
 	// Set the avatar URL in cache with long ttl only if not default avatar
-	if r2URL != defaultAvatar {
+	if r2URL != defaultAvatarPath {
 		if err := rdb.Client.Set(ctx, avatarKey, r2URL, 30*24*time.Hour).Err(); err != nil {
 			slog.Error(
 				"failed to save the avatar in Redis",
@@ -257,14 +257,14 @@ func (u *User) refreshAvatar(
 	head, err := r2s.HeadObject(
 		ctx,
 		config.R2CdnBucketName,
-		fmt.Sprintf(avatarPath, u.AnalyticsID),
+		fmt.Sprintf(avatarR2Path, u.AnalyticsID),
 	)
 
 	// Form the avatar URL
 	avatarURL := &url.URL{
 		Scheme:   "https",
 		Host:     config.R2CdnDomain,
-		Path:     fmt.Sprintf(avatarPath, u.AnalyticsID),
+		Path:     fmt.Sprintf(avatarR2Path, u.AnalyticsID),
 		RawQuery: "v=" + url.QueryEscape(sourceHash),
 	}
 
@@ -301,7 +301,7 @@ func (u *User) refreshAvatar(
 	err = r2s.PutObject(
 		ctx,
 		config.R2CdnBucketName,
-		fmt.Sprintf(avatarPath, u.AnalyticsID),
+		fmt.Sprintf(avatarR2Path, u.AnalyticsID),
 		bytes.NewReader(buf.Bytes()),
 		"image/jpeg",
 		map[string]string{"source-hash": sourceHash},
@@ -328,7 +328,7 @@ func (u *User) DeleteAvatar(
 	errs := make([]error, 0, 3)
 
 	// Attemp to delete the avatar image from R2
-	objectKey := fmt.Sprintf(avatarPath, u.AnalyticsID)
+	objectKey := fmt.Sprintf(avatarR2Path, u.AnalyticsID)
 	err := r2s.DeleteObject(ctx, config.R2CdnBucketName, objectKey)
 	err = fmt.Errorf("failed to remove avatar %q from R2: %w", objectKey, err)
 	errs = append(errs, err)
