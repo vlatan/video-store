@@ -32,7 +32,7 @@ func New(
 	rdb *rdb.Service,
 	r2s r2.Service) *Service {
 
-	q := &Service{
+	s := &Service{
 		active: make(map[int]struct{}),
 		Jobs:   make(chan *models.User, bufferSize),
 
@@ -43,10 +43,10 @@ func New(
 
 	// Spawn workerCount number of workers
 	for range workerCount {
-		go q.worker()
+		go s.worker()
 	}
 
-	return q
+	return s
 }
 
 // SetAvatar sets user avatar path, either from Redis,
