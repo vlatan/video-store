@@ -38,7 +38,7 @@ func (r *Repository) GetSinglePage(ctx context.Context, slug string) (models.Pag
 		return zero, err
 	}
 
-	page.Content = utils.FromNullString(content)
+	page.Content = content.String
 
 	// Parse markdown to HTML
 	if page.HTMLContent, err = utils.ParseMarkdown(page.Content); err != nil {

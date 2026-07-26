@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/vlatan/video-store/internal/models"
-	"github.com/vlatan/video-store/internal/utils"
 )
 
 // Get a limited number of posts from one category with cursor
@@ -152,14 +151,14 @@ func (r *Repository) queryTaxonomyPosts(
 			return zero, err
 		}
 
-		post.OriginalTitle = utils.FromNullString(originalTitle)
-		posts.Title = utils.FromNullString(playlistTitle)
+		post.OriginalTitle = originalTitle.String
+		posts.Title = playlistTitle.String
 
 		// Attach ratings if any
 		if avgRating.Valid && ratingCount.Valid {
 			post.Rating = &models.Rating{
-				Avg:   utils.FromNullFloat64(avgRating),
-				Count: utils.FromNullInt64(ratingCount),
+				Avg:   avgRating.Float64,
+				Count: ratingCount.Int64,
 			}
 		}
 

@@ -1,12 +1,7 @@
 * Build the frontend and backend review system.
   Change ids to classes.
 
-  No need to use SetAvatars now, we can just itterate and set avatars in a normal loop
-
-  Remove the usage of FromNullString and other Froms
-
   Change big star value on hover on the small stars.
-  On posting the review get back the user name and update time.
   Make scrollbar on review text area black.
 
   If a review is added we just prepend the review in the review list.

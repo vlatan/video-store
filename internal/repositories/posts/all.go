@@ -5,7 +5,6 @@ import (
 	"database/sql"
 
 	"github.com/vlatan/video-store/internal/models"
-	"github.com/vlatan/video-store/internal/utils"
 )
 
 // Get all the posts from DB
@@ -49,10 +48,10 @@ func (r *Repository) GetAllPosts(ctx context.Context) ([]*models.Post, error) {
 		}
 
 		// Asign values
-		post.PlaylistID = utils.FromNullString(playlistID)
-		post.OriginalTitle = utils.FromNullString(originalTitle)
-		post.Summary = utils.FromNullString(summary)
-		post.Category = &models.Category{Name: utils.FromNullString(categoryName)}
+		post.PlaylistID = playlistID.String
+		post.OriginalTitle = originalTitle.String
+		post.Summary = summary.String
+		post.Category = &models.Category{Name: categoryName.String}
 
 		// Include the processed post in the result
 		posts = append(posts, &post)
