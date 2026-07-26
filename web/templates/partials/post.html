@@ -331,14 +331,13 @@
 			<div id="reviews-list">
 				{{ range .CurrentPost.Reviews }}
 				<div class="review-card">
-					<div class="review-header">
-						<h4>
-							{{ .User.Name }}
-							<span class="review-date" data-utc-time="{{ .UpdatedAt }}">Loading date...</span>
-						</h4>
-						<img src="{{ .User.LocalAvatarURL }}" class=" review-user-avatar" width="20" height="20" alt="">
+					<header class="review-header">
+						<h4 class="review-user-name">{{ .User.Name }}</h4>
+						<span class="review-date" data-utc-time="{{ .UpdatedAt }}">Loading date...</span>
+						<img src="{{ .User.LocalAvatarURL }}" class=" review-user-avatar" width="20" height="20"
+							loading="lazy" alt="{{ .User.Name }}">
 						<span class="review-user-rating">{{ .Rating }}</span>
-					</div>
+					</header>
 					<p class="review-headline">{{ .Headline }}</p>
 					<p class="review-content">{{ .Content }}</p>
 				</div>
