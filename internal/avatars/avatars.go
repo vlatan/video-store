@@ -51,7 +51,7 @@ func New(
 	return s
 }
 
-// SetAvatar sets user avatar path, either from Redis,
+// SetAvatar gets user avatar path, either from Redis,
 // or enques the avatar for downloading, converting to JPEG,
 // uploading to R2 and caching the path to Redis.
 // The function will return only breaking errors,
@@ -114,24 +114,61 @@ func (s *Service) Get(ctx context.Context, user *models.User) (string, error) {
 }
 
 // Save ensures the avatar is cached, downloading it synchronously if missing.
+// Will return an error only if context ended.
 func (s *Service) Save(ctx context.Context, user *models.User) error {
 
 	avatarKey := avatarCachePrefix + user.AnalyticsID
 	ttlKey := avatarCacheTTL + user.AnalyticsID
 
 	// Check if already in cache (if returning user)
-	if err := s.rdb.Client.Get(ctx, avatarKey).Err(); err == nil {
+	err := s.rdb.Client.Get(ctx, avatarKey).Err()
+
+	if err == nil {
 		return nil // Already cached, good to go
+	}
+
+	// Return early if context error
+	if utils.IsContextErr(err) {
+		return err
+	}
+
+	// Log redis non nil error and abandon further progress.
+	if !errors.Is(err, redis.Nil) {
+		slog.Error(
+			"failed to get avatar from Redis cache",
+			"error", err,
+		)
+		return nil
 	}
 
 	// Cache miss (new user or expired/evicted cache): process synchronously
 	r2URL, err := s.refreshAvatar(ctx, user)
-	if err != nil || r2URL == "" {
+
+	// Return early if context error
+	if utils.IsContextErr(err) {
 		return err
 	}
 
+	// Swallow this error and abandon further progress
+	if err != nil || r2URL == "" {
+		slog.Error(
+			"failed to refresh the avatar",
+			"avatar", r2URL,
+			"error", err,
+		)
+		return nil
+	}
+
 	// Save to Redis
-	if err = s.rdb.Client.Set(ctx, avatarKey, r2URL, 30*24*time.Hour).Err(); err != nil {
+	err = s.rdb.Client.Set(ctx, avatarKey, r2URL, 30*24*time.Hour).Err()
+
+	// Return early if context error
+	if utils.IsContextErr(err) {
+		return err
+	}
+
+	// Swallow this error
+	if err != nil {
 		slog.Error(
 			"failed to save the avatar in Redis",
 			"redisKey", avatarKey,
@@ -140,7 +177,16 @@ func (s *Service) Save(ctx context.Context, user *models.User) error {
 		)
 	}
 
-	if err = s.rdb.Client.Set(ctx, ttlKey, "true", 24*time.Hour).Err(); err != nil {
+	// Set the timer
+	err = s.rdb.Client.Set(ctx, ttlKey, "true", 24*time.Hour).Err()
+
+	// Return early if context error
+	if utils.IsContextErr(err) {
+		return err
+	}
+
+	// Swallow this error
+	if err != nil {
 		slog.Error(
 			"failed to reset the avatar TTL in Redis",
 			"redisKey", ttlKey,

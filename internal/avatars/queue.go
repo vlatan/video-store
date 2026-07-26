@@ -39,25 +39,55 @@ func (s *Service) release(id int) {
 // worker refreshes the avatar and saves the url in Redis
 func (s *Service) worker() {
 
-	ctx := context.Background()
 	for user := range s.Jobs {
 
-		// Download and if avatar changed convert to JPEG and reupload to R2
-		r2URL, err := s.refreshAvatar(ctx, user)
+		// Wrap in function so the defer cancel can fire for each job,
+		// because we're in an infinite loop.
+		func() {
 
-		// Redis keys
-		ttlKey := avatarCacheTTL + user.AnalyticsID
-		avatarKey := avatarCachePrefix + user.AnalyticsID
+			// Give 30 seconds for the job to finish
+			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+			defer cancel()
 
-		// If no avatar url fetched
-		if err != nil || r2URL == "" {
-			slog.Error(
-				"failed to refresh the avatar",
-				"avatar", r2URL,
-				"error", err,
-			)
+			// Download and if avatar changed convert to JPEG and reupload to R2
+			r2URL, err := s.refreshAvatar(ctx, user)
 
-			// Reset the timer, we don't want this refreshed for another 24hrs
+			// Redis keys
+			ttlKey := avatarCacheTTL + user.AnalyticsID
+			avatarKey := avatarCachePrefix + user.AnalyticsID
+
+			// If no avatar url fetched
+			if err != nil || r2URL == "" {
+				slog.Error(
+					"failed to refresh the avatar",
+					"avatar", r2URL,
+					"error", err,
+				)
+
+				// Reset the timer, we don't want this refreshed for another 24hrs
+				if err := s.rdb.Client.Set(ctx, ttlKey, "true", 24*time.Hour).Err(); err != nil {
+					slog.Error(
+						"failed to reset the avatar TTL in Redis",
+						"redisKey", ttlKey,
+						"error", err,
+					)
+				}
+
+				s.release(user.ID)
+				return
+			}
+
+			// Set the avatar URL in cache
+			if err := s.rdb.Client.Set(ctx, avatarKey, r2URL, 30*24*time.Hour).Err(); err != nil {
+				slog.Error(
+					"failed to save the avatar in Redis",
+					"redisKey", avatarKey,
+					"avatarURL", r2URL,
+					"error", err,
+				)
+			}
+
+			// Reset the timer, we succesfully refreshed the avatar
 			if err := s.rdb.Client.Set(ctx, ttlKey, "true", 24*time.Hour).Err(); err != nil {
 				slog.Error(
 					"failed to reset the avatar TTL in Redis",
@@ -67,28 +97,6 @@ func (s *Service) worker() {
 			}
 
 			s.release(user.ID)
-			continue
-		}
-
-		// Set the avatar URL in cache
-		if err := s.rdb.Client.Set(ctx, avatarKey, r2URL, 30*24*time.Hour).Err(); err != nil {
-			slog.Error(
-				"failed to save the avatar in Redis",
-				"redisKey", avatarKey,
-				"avatarURL", r2URL,
-				"error", err,
-			)
-		}
-
-		// Reset the timer, we succesfully refreshed the avatar
-		if err := s.rdb.Client.Set(ctx, ttlKey, "true", 24*time.Hour).Err(); err != nil {
-			slog.Error(
-				"failed to reset the avatar TTL in Redis",
-				"redisKey", ttlKey,
-				"error", err,
-			)
-		}
-
-		s.release(user.ID)
+		}()
 	}
 }

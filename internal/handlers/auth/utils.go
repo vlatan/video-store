@@ -81,10 +81,7 @@ func (s *Service) loginUser(w http.ResponseWriter, r *http.Request, user *models
 
 	// Download and save the avatar if not in Redis cache
 	if err := s.avatars.Save(r.Context(), user); err != nil {
-		slog.Error(
-			"failed to download and save the avatar in Redis",
-			"error", err,
-		)
+		return err
 	}
 
 	return nil
