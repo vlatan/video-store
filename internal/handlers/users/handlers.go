@@ -72,16 +72,6 @@ func (s *Service) UsersHandler(w http.ResponseWriter, r *http.Request) {
 		users.Items[i].LocalAvatarURL = localAvatarURL
 	}
 
-	if err = s.SetAvatars(r, users.Items); err != nil {
-		slog.ErrorContext(
-			r.Context(), "failed to set users' avatars",
-			"path", r.URL.Path,
-			"error", err,
-		)
-		utils.HttpError(w, http.StatusInternalServerError)
-		return
-	}
-
 	data.PaginationInfo = s.ui.NewPagination(
 		page,
 		users.TotalNum,

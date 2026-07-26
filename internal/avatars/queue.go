@@ -49,6 +49,9 @@ func (s *Service) worker() {
 			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 			defer cancel()
 
+			// Release this job after the work is done
+			defer s.release(user.ID)
+
 			// Download and if avatar changed convert to JPEG and reupload to R2
 			r2URL, err := s.refreshAvatar(ctx, user)
 
@@ -56,8 +59,10 @@ func (s *Service) worker() {
 			ttlKey := avatarCacheTTL + user.AnalyticsID
 			avatarKey := avatarCachePrefix + user.AnalyticsID
 
-			// If no avatar url fetched
+			// If no avatar url refreshed
 			if err != nil || r2URL == "" {
+
+				// Log the error
 				slog.Error(
 					"failed to refresh the avatar",
 					"avatar", r2URL,
@@ -72,8 +77,6 @@ func (s *Service) worker() {
 						"error", err,
 					)
 				}
-
-				s.release(user.ID)
 				return
 			}
 
@@ -95,8 +98,6 @@ func (s *Service) worker() {
 					"error", err,
 				)
 			}
-
-			s.release(user.ID)
 		}()
 	}
 }
