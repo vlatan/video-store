@@ -25,7 +25,7 @@ func (s *Service) SetAvatars(r *http.Request, users []models.User) error {
 			case semaphore <- struct{}{}: // Semaphore will block if full
 				defer func() { <-semaphore }()
 				var err error
-				user.LocalAvatarURL, err = user.GetAvatar(ctx, s.config, s.rdb, s.r2s)
+				user.LocalAvatarURL, err = s.avatars.Get(ctx, &user)
 
 				// Return the error if contex ended
 				if utils.IsContextErr(err) {

@@ -1,6 +1,7 @@
 package users
 
 import (
+	"github.com/vlatan/video-store/internal/avatars"
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/integrations/r2"
@@ -12,6 +13,7 @@ import (
 type Service struct {
 	usersRepo *usersRepo.Repository
 	postsRepo *postsRepo.Repository
+	avatars   *avatars.Service
 	rdb       *rdb.Service
 	r2s       r2.Service
 	ui        ui.Service
@@ -21,6 +23,7 @@ type Service struct {
 func New(
 	usersRepo *usersRepo.Repository,
 	postsRepo *postsRepo.Repository,
+	avatars *avatars.Service,
 	rdb *rdb.Service,
 	r2s r2.Service,
 	ui ui.Service,
@@ -29,6 +32,7 @@ func New(
 	return &Service{
 		usersRepo: usersRepo,
 		postsRepo: postsRepo,
+		avatars:   avatars,
 		rdb:       rdb,
 		r2s:       r2s,
 		ui:        ui,

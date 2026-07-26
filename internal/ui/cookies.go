@@ -119,7 +119,7 @@ func (s *service) GetUserFromSession(w http.ResponseWriter, r *http.Request) (*m
 		Config:         s.config,
 	}
 
-	user.LocalAvatarURL, err = user.GetAvatar(r.Context(), s.config, s.rdb, s.r2s)
+	user.LocalAvatarURL, err = s.avatars.Get(r.Context(), &user)
 
 	// Return early if context error
 	if utils.IsContextErr(err) {
