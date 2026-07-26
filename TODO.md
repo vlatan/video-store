@@ -1,9 +1,8 @@
 * Build the frontend and backend review system.
   Change ids to classes.
 
-  Don't process the avatars on call.
-  Push their processing to global queue.
-  Deduplicate jobs with redis lock.
+  Don't log redis nil error on avatars
+  No need to use SetAvatars now, we can just itterate and set avatars in a normal loop
 
   Remove the usage of FromNullString and other Froms
 
