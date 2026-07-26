@@ -240,13 +240,6 @@
 		</div>
 		{{ end }}
 
-		{{ if .CurrentUser.IsAdmin }}
-		<span class="admin-buttons">
-			<button data-modal="video" class="modal-button">Delete</button>
-			<a href="/video/{{ .CurrentPost.VideoID }}/edit" class="modal-button edit-content">Edit</a>
-		</span>
-		{{ end }}
-
 		<!-- Review Widget -->
 		<section class="review-section">
 
@@ -332,14 +325,17 @@
 				{{ range .CurrentPost.Reviews }}
 				<div class="review-card">
 					<header class="review-header">
-						<h4 class="review-user-name">{{ .User.Name }}</h4>
-						<span class="review-date" data-utc-time="{{ .UpdatedAt }}">Loading date...</span>
 						<img src="{{ .User.LocalAvatarURL }}" class=" review-user-avatar" width="20" height="20"
 							loading="lazy" alt="{{ .User.Name }}">
-						<span class="review-user-rating">{{ .Rating }}</span>
+						<h4 class="review-user-name">{{ .User.Name }}</h4>
+						<span class="review-user-rating">
+							<span class="rating-global-star">&#9733;</span>
+							<span>{{ .Rating }}</span>
+						</span>
+						<span class="review-date" data-utc-time="{{ .UpdatedAt }}">Loading date...</span>
 					</header>
 					<p class="review-headline">{{ .Headline }}</p>
-					<p class="review-content">{{ .Content }}</p>
+					<div class="review-content">{{ .Content }}</div>
 				</div>
 				{{ end }}
 			</div>
@@ -348,6 +344,14 @@
 	</div>
 
 	<div class="sidebar_wrap">
+
+		{{ if .CurrentUser.IsAdmin }}
+		<span class="admin-buttons">
+			<button data-modal="video" class="modal-button">Delete</button>
+			<a href="/video/{{ .CurrentPost.VideoID }}/edit" class="modal-button edit-content">Edit</a>
+		</span>
+		{{ end }}
+
 		<div class="related_videos">
 			{{ range .CurrentPost.RelatedPosts }}
 			<a href="/video/{{ .VideoID }}/" class="related-video">

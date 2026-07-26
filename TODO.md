@@ -1,7 +1,7 @@
 * Build the frontend and backend review system.
   Change ids to classes.
 
-  Style review cards with avatars and everything.
+  When sending back review data to frontend attach user data as well
 
   Change big star value on hover on the small stars.
   Make scrollbar on review text area black.

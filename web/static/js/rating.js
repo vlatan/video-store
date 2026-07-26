@@ -134,8 +134,6 @@ document.querySelectorAll('.rating-section').forEach(widget => {
 // Reviews
 // ==========================================================================
 
-function getStarsHTML(rating) { return '★'.repeat(rating) + '☆'.repeat(10 - rating); }
-
 document.querySelectorAll('.review-section').forEach(s => {
     const reviewDialog = s.querySelector('#review-dialog');
     const reviewForm = s.querySelector('.review-form');
@@ -191,14 +189,22 @@ document.querySelectorAll('.review-section').forEach(s => {
 
             const card = document.createElement('div');
             card.className = 'review-card new-review';
+
             card.innerHTML = `
-                <div class="review-header">
-                    <h4>${result.author || 'Anonymous'} <span class="review-date">Just now</span></h4>
-                    <span class="review-user-rating">${getStarsHTML(data.rating)}</span>
-                </div>
+                <header class="review-header">
+                    <img src="" class=" review-user-avatar" width="20" height="20"
+                        loading="lazy" alt="">
+                    <h4 class="review-user-name">${result.author || 'Anonymous'}</h4>
+                    <span class="review-user-rating">
+                        <span class="rating-global-star">&#9733;</span>
+                        <span>${data.rating}</span>
+                    </span>
+                    <span class="review-date" data-utc-time="">Loading date...</span>
+                </header>
                 <p class="review-headline"></p>
-                <p class="review-content"></p>
+                <div class="review-content"></div>
             `;
+
             card.querySelector('.review-headline').textContent = data.headline;
             card.querySelector('.review-content').textContent = data.content;
             reviewsList.prepend(card);
@@ -214,10 +220,3 @@ document.querySelectorAll('.review-section').forEach(s => {
         }
     });
 });
-
-
-// ==========================================================================
-// Helpers
-// ==========================================================================
-
-function getStarsHTML(rating) { return '★'.repeat(rating) + '☆'.repeat(10 - rating); }

@@ -628,14 +628,6 @@ button.btn-submit-review:disabled,
 	font-weight: bold;
 }
 
-.review-card {
-	background: var(--card-bg);
-	border: 1px solid var(--border-color);
-	padding: 1.25rem;
-	border-radius: 8px;
-	margin-bottom: 15px;
-}
-
 @keyframes reviewFadeIn {
 	from {
 		opacity: 0;
@@ -648,31 +640,50 @@ button.btn-submit-review:disabled,
 	}
 }
 
+.review-card {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+	background: var(--card-bg);
+	border: 1px solid var(--border-color);
+	padding: 1.25rem;
+	border-radius: 8px;
+	margin-bottom: 15px;
+}
+
 .new-review {
 	animation: reviewFadeIn 0.3s ease-in;
 }
 
 .review-header {
 	display: flex;
-	justify-content: space-between;
 	align-items: center;
-	margin-bottom: 10px;
+	gap: 0.75rem;
 }
 
-.review-header h4 {
+.review-user-name {
 	margin: 0;
-	font-size: 16px;
+	font-size: 1rem;
+}
+
+.review-user-avatar {
+	display: block;
+	border-radius: 50%;
 }
 
 .review-date {
-	font-size: 12px;
+	font-size: 0.75rem;
 	color: var(--text-muted);
 	font-weight: normal;
 	margin-left: 10px;
 }
 
+.review-headline {
+	font-weight: bold;
+	color: var(--secondary-font-color);
+}
 
-.review-card p.content {
+.review-content {
 	margin: 0;
 	color: var(--text-muted);
 	line-height: 1.5;
