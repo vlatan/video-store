@@ -1,5 +1,6 @@
 * Build the frontend and backend review system.
   Change ids to classes.
+  Remove the css vars in rating css.
 
   When sending back review data to frontend attach user data as well
 
