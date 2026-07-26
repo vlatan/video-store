@@ -34,6 +34,16 @@ type Users struct {
 	Items    []User
 }
 
+// MarshalBinary implements the encoding.BinaryMarshaler interface
+func (u Users) MarshalBinary() (data []byte, err error) {
+	return json.Marshal(u)
+}
+
+// UnmarshalBinary implements the encoding.BinaryUnmarshaler interface
+func (u *Users) UnmarshalBinary(data []byte) error {
+	return json.Unmarshal(data, u)
+}
+
 // User struct to store in the USER info in session
 type User struct {
 	ID             int
