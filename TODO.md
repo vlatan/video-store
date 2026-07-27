@@ -2,17 +2,14 @@
   Change ids to classes.
   Remove the css vars in rating css.
 
-  When sending back review data to frontend attach user data as well
-
+  Use "show more reviews" to uncover more reviews.
+  Probably use cursor.
+  
   Change big star value on hover on the small stars.
-  Make scrollbar on review text area black.
 
   If a review is added we just prepend the review in the review list.
   If a review is updated scroll to the review and highlight it with fade out.
   If a review is deleted we remove it from the list if it's on the first page.
-
-  Use "show more reviews" to uncover more reviews.
-  Probably use cursor.
 
   The user should be able to delete a review or a rating.
   Include delete button on the modals and add edit button on the review card.

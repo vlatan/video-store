@@ -190,23 +190,27 @@ document.querySelectorAll('.review-section').forEach(s => {
             const card = document.createElement('div');
             card.className = 'review-card new-review';
 
+            const avatar = document.querySelector('.username-image')?.getAttribute('src') ?? "";
+            const username = document.querySelector('.username-text')?.textContent.trim() ?? "";
+
+            const now = new Date();
+            const localDate = now.toLocaleDateString();
+
             card.innerHTML = `
                 <header class="review-header">
-                    <img src="" class=" review-user-avatar" width="20" height="20"
+                    <img src="${avatar}" class=" review-user-avatar" width="20" height="20"
                         loading="lazy" alt="">
-                    <h4 class="review-user-name">${result.author || 'Anonymous'}</h4>
+                    <h4 class="review-user-name">${username}</h4>
                     <span class="review-user-rating">
                         <span class="rating-global-star">&#9733;</span>
                         <span>${data.rating}</span>
                     </span>
-                    <span class="review-date" data-utc-time="">Loading date...</span>
+                    <span class="review-date" data-utc-time="">${localDate}</span>
                 </header>
-                <p class="review-headline"></p>
-                <div class="review-content"></div>
+                <p class="review-headline">${data.headline}</p>
+                <div class="review-content">${data.content}</div>
             `;
 
-            card.querySelector('.review-headline').textContent = data.headline;
-            card.querySelector('.review-content').textContent = data.content;
             reviewsList.prepend(card);
 
             // Update the rating HTML
