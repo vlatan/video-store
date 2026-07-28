@@ -1,7 +1,6 @@
 package posts
 
 import (
-	"encoding/json"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -244,47 +243,9 @@ func (s *Service) ActionPostAPI(w http.ResponseWriter, r *http.Request) {
 	case "unfave":
 		s.handleUnfave(w, r, user.ID, videoID)
 	case "rate":
-		var data struct {
-			Rating uint8 `json:"rating"`
-		}
-		if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
-			slog.ErrorContext(
-				r.Context(), "failed to decode post rating",
-				"path", r.URL.Path,
-				"userId", user.ID,
-				"error", err,
-			)
-			utils.HttpError(w, http.StatusInternalServerError)
-			return
-		}
-		s.handleRate(w, r, data.Rating, user.ID, videoID)
+		s.handleRate(w, r, user.ID, videoID)
 	case "review":
-		var data models.Review
-
-		if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
-			slog.ErrorContext(
-				r.Context(), "failed to decode post review",
-				"path", r.URL.Path,
-				"userId", user.ID,
-				"error", err,
-			)
-			utils.HttpError(w, http.StatusInternalServerError)
-			return
-		}
-
-		if err := validateReview(data.Headline, data.Content); err != nil {
-			slog.ErrorContext(
-				r.Context(), "failed to validate the review",
-				"path", r.URL.Path,
-				"userId", user.ID,
-				"error", err,
-			)
-			utils.HttpError(w, http.StatusInternalServerError)
-			return
-		}
-
-		s.handleReview(w, r, user.ID, videoID, data.Rating, data.Headline, data.Content)
-
+		s.handleReview(w, r, user.ID, videoID)
 	default:
 		utils.HttpError(w, http.StatusBadRequest)
 	}

@@ -3,7 +3,6 @@
   Remove the css vars in rating css.
 
   Move h4 in the header of the review?
-  Move handle code in handle rate and review funcs.
   Use schema on the reviews.
 
   Use "show more reviews" to uncover more reviews.

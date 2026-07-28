@@ -1,11 +1,13 @@
 package posts
 
 import (
+	"encoding/json"
 	"errors"
 	"log/slog"
 	"net/http"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/utils"
 )
 
@@ -86,9 +88,24 @@ func (s *Service) handleUnfave(w http.ResponseWriter, r *http.Request, userID in
 }
 
 // Handle a post favorite from user
-func (s *Service) handleRate(w http.ResponseWriter, r *http.Request, rating uint8, userID int, videoID string) {
+func (s *Service) handleRate(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
 
-	ratingData, err := s.postsRepo.Rate(r.Context(), rating, userID, videoID)
+	var data struct {
+		Rating uint8 `json:"rating"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
+		slog.ErrorContext(
+			r.Context(), "failed to decode post rating",
+			"path", r.URL.Path,
+			"userId", userID,
+			"error", err,
+		)
+		utils.HttpError(w, http.StatusInternalServerError)
+		return
+	}
+
+	ratingData, err := s.postsRepo.Rate(r.Context(), data.Rating, userID, videoID)
 
 	if errors.Is(err, pgx.ErrNoRows) {
 		http.NotFound(w, r)
@@ -110,13 +127,39 @@ func (s *Service) handleRate(w http.ResponseWriter, r *http.Request, rating uint
 }
 
 // Handle a post favorite from user
-func (s *Service) handleReview(
-	w http.ResponseWriter,
-	r *http.Request,
-	userID int, videoID string,
-	rating uint8, headline, content string) {
+func (s *Service) handleReview(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
 
-	data, err := s.postsRepo.Review(r.Context(), userID, videoID, rating, headline, content)
+	var review models.Review
+	if err := json.NewDecoder(r.Body).Decode(&review); err != nil {
+		slog.ErrorContext(
+			r.Context(), "failed to decode post review",
+			"path", r.URL.Path,
+			"userId", userID,
+			"error", err,
+		)
+		utils.HttpError(w, http.StatusInternalServerError)
+		return
+	}
+
+	if err := validateReview(review.Headline, review.Content); err != nil {
+		slog.ErrorContext(
+			r.Context(), "failed to validate the review",
+			"path", r.URL.Path,
+			"userId", userID,
+			"error", err,
+		)
+		utils.HttpError(w, http.StatusInternalServerError)
+		return
+	}
+
+	data, err := s.postsRepo.Review(
+		r.Context(),
+		userID,
+		videoID,
+		review.Rating,
+		review.Headline,
+		review.Content,
+	)
 
 	if errors.Is(err, pgx.ErrNoRows) {
 		http.NotFound(w, r)
