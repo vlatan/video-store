@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"slices"
 
+	"github.com/microcosm-cc/bluemonday"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/utils"
@@ -270,7 +271,14 @@ func (s *Service) ActionPostAPI(w http.ResponseWriter, r *http.Request) {
 			utils.HttpError(w, http.StatusInternalServerError)
 			return
 		}
-		s.handleReview(w, r, data.Rating, user.ID, videoID, data.Headline, data.Content)
+
+		// Sanitize the client input
+		p := bluemonday.StrictPolicy()
+
+		s.handleReview(
+			w, r, data.Rating, user.ID, videoID,
+			p.Sanitize(data.Headline), p.Sanitize(data.Content),
+		)
 
 	default:
 		utils.HttpError(w, http.StatusBadRequest)
