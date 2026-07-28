@@ -257,13 +257,13 @@
 					<div class="review-form-group">
 						<label class="review-form-heading" for="review-title">Headline</label>
 						<input id="review-title" name="headline" value="{{ $headline }}"
-							placeholder="Write a catchy headline..." type="text" required>
+							placeholder="Write a catchy headline..." minlength="2" maxlength="100" type="text" required>
 					</div>
 
 					<div class="review-form-group">
 						<label class="review-form-heading" for="review-text">Review</label>
 						<textarea id="review-text" name="content" placeholder="Write your review..." rows="4"
-							type="text" required>{{ $body }}</textarea>
+							minlength="10" maxlength="3000" type="text" required>{{ $body }}</textarea>
 					</div>
 
 					<fieldset class="review-form-group">

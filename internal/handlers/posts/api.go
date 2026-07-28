@@ -260,9 +260,21 @@ func (s *Service) ActionPostAPI(w http.ResponseWriter, r *http.Request) {
 		s.handleRate(w, r, data.Rating, user.ID, videoID)
 	case "review":
 		var data models.Review
+
 		if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
 			slog.ErrorContext(
-				r.Context(), "failed to decode post rating",
+				r.Context(), "failed to decode post review",
+				"path", r.URL.Path,
+				"userId", user.ID,
+				"error", err,
+			)
+			utils.HttpError(w, http.StatusInternalServerError)
+			return
+		}
+
+		if err := validateReview(data.Headline, data.Content); err != nil {
+			slog.ErrorContext(
+				r.Context(), "failed to validate the review",
 				"path", r.URL.Path,
 				"userId", user.ID,
 				"error", err,
