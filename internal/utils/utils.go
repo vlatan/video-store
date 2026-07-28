@@ -6,7 +6,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"html/template"
 	"log"
 	"net/http"
 	"net/url"
@@ -202,13 +201,26 @@ func GetProjectRoot() (string, error) {
 	}
 }
 
-// ParseMarkdown converts markdown to HTML
-func ParseMarkdown(content string, policy *bluemonday.Policy) (template.HTML, error) {
+// simplePolicy creates simple blue monday policy the allows
+// only paragraph splitting, bold, italic and strike-through.
+func SimplePolicy() *bluemonday.Policy {
+	p := bluemonday.NewPolicy()
+
+	// Allow structural block elements for paragraph breaks
+	p.AllowElements("p", "br")
+
+	// Allow basic text formatting (both markdown and inline html variants)
+	p.AllowElements("b", "strong", "i", "em", "u", "s", "strike")
+
+	return p
+}
+
+// ParseMarkdown converts markdown to HTML string
+func ParseMarkdown(content string, policy *bluemonday.Policy) (string, error) {
 	var buf bytes.Buffer
 	if err := goldmark.Convert([]byte(content), &buf); err != nil {
 		return "", err
 	}
 
-	html := policy.SanitizeBytes(buf.Bytes())
-	return template.HTML(html), nil // #nosec G203
+	return policy.Sanitize(buf.String()), nil
 }

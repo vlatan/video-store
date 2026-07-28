@@ -5,9 +5,9 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"strings"
 
-	"github.com/microcosm-cc/bluemonday"
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/utils"
 )
@@ -139,13 +139,16 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.
 		}
 	}
 
-	// Parse markdown to HTML
-	if post.HTMLSummary, err = utils.ParseMarkdown(post.Summary, bluemonday.UGCPolicy()); err != nil {
+	// Convert to HTML and sanitize the post summary
+	safeHTMLSummary, err := utils.ParseMarkdown(post.Summary, utils.SimplePolicy())
+	if err != nil {
 		return zero, fmt.Errorf(
 			"could not convert markdown to html on %q: %v",
 			post.VideoID, err,
 		)
 	}
+
+	post.HTMLSummary = template.HTML(safeHTMLSummary) // #nosec G203
 
 	// Like button text
 	post.LikeButtonText = "Like"

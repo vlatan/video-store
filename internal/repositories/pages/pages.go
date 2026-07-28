@@ -42,8 +42,8 @@ func (r *Repository) GetSinglePage(ctx context.Context, slug string) (models.Pag
 
 	page.Content = content.String
 
-	// Parse markdown to HTML
-	html, err := utils.ParseMarkdown(page.Content, bluemonday.UGCPolicy())
+	// Convert to HTML and sanitize the page content
+	safeHTMLContent, err := utils.ParseMarkdown(page.Content, bluemonday.UGCPolicy())
 	if err != nil {
 		return zero, fmt.Errorf(
 			"could not convert markdown to html on %q: %w",
@@ -52,7 +52,7 @@ func (r *Repository) GetSinglePage(ctx context.Context, slug string) (models.Pag
 	}
 
 	// Encapsulate safe HTML
-	page.HTMLContent = template.HTML(html)
+	page.HTMLContent = template.HTML(safeHTMLContent) // #nosec G203
 
 	return page, nil
 }

@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/microcosm-cc/bluemonday"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/handlers/auth"
 	"github.com/vlatan/video-store/internal/models"
@@ -427,8 +428,29 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 			return err
 		}
 
-		// Get the user avatars
+		// Define policies for review headline and content sanitization
+		strictPolicy := bluemonday.StrictPolicy()
+		simplePolicy := utils.SimplePolicy()
+
 		for i, review := range postReviews {
+
+			// Sanitize headline and content
+			safeHeadline := strictPolicy.Sanitize(review.Headline)
+			safeHTMLcontent, err := utils.ParseMarkdown(review.Content, simplePolicy)
+			if err != nil {
+				slog.ErrorContext(
+					r.Context(), "failed to parse review content",
+					"path", r.URL.Path,
+					"userId", data.CurrentUser.ID,
+					"error", err,
+				)
+				return err
+			}
+
+			postReviews[i].Headline = safeHeadline
+			postReviews[i].Content = safeHTMLcontent
+
+			// Get user avatar
 			localAvatarURL, err := s.avatars.Get(r.Context(), &review.User)
 			if err != nil {
 				slog.ErrorContext(
@@ -439,6 +461,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 				)
 				return err
 			}
+
 			postReviews[i].User.LocalAvatarURL = localAvatarURL
 		}
 
