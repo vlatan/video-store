@@ -203,12 +203,12 @@ func GetProjectRoot() (string, error) {
 }
 
 // ParseMarkdown converts markdown to HTML
-func ParseMarkdown(content string) (template.HTML, error) {
+func ParseMarkdown(content string, policy *bluemonday.Policy) (template.HTML, error) {
 	var buf bytes.Buffer
 	if err := goldmark.Convert([]byte(content), &buf); err != nil {
 		return "", err
 	}
 
-	html := bluemonday.UGCPolicy().SanitizeBytes(buf.Bytes())
+	html := policy.SanitizeBytes(buf.Bytes())
 	return template.HTML(html), nil // #nosec G203
 }

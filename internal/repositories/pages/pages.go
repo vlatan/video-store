@@ -4,7 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"html/template"
 
+	"github.com/microcosm-cc/bluemonday"
 	"github.com/vlatan/video-store/internal/drivers/database"
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/utils"
@@ -41,12 +43,16 @@ func (r *Repository) GetSinglePage(ctx context.Context, slug string) (models.Pag
 	page.Content = content.String
 
 	// Parse markdown to HTML
-	if page.HTMLContent, err = utils.ParseMarkdown(page.Content); err != nil {
+	html, err := utils.ParseMarkdown(page.Content, bluemonday.UGCPolicy())
+	if err != nil {
 		return zero, fmt.Errorf(
 			"could not convert markdown to html on %q: %w",
 			page.Slug, err,
 		)
 	}
+
+	// Encapsulate safe HTML
+	page.HTMLContent = template.HTML(html)
 
 	return page, nil
 }

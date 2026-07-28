@@ -3,7 +3,7 @@ package avatars
 import (
 	"bytes"
 	"context"
-	"crypto/md5"
+	"crypto/md5" // #nosec G501
 	"fmt"
 	"image"
 	"image/jpeg"

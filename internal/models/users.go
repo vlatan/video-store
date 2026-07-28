@@ -39,20 +39,20 @@ func (u *Users) UnmarshalBinary(data []byte) error {
 
 // User struct to store in the USER info in session
 type User struct {
-	ID             int
-	ProviderUserId string
-	Email          string
-	Name           string
-	Provider       string
-	AvatarURL      string
-	AnalyticsID    string
-	LocalAvatarURL string
-	AccessToken    string
-	RefreshToken   string
-	Expiry         time.Time
-	LastSeen       *time.Time
-	CreatedAt      *time.Time
-	*config.Config
+	ID             int            `json:"-"`
+	ProviderUserId string         `json:"-"`
+	Email          string         `json:"-"`
+	Name           string         `json:"name,omitempty"`
+	Provider       string         `json:"-"`
+	AvatarURL      string         `json:"avatar_url,omitempty"`
+	AnalyticsID    string         `json:"-"`
+	LocalAvatarURL string         `json:"local_avatar_url,omitempty"`
+	AccessToken    string         `json:"-"`
+	RefreshToken   string         `json:"-"`
+	Expiry         time.Time      `json:"-"`
+	LastSeen       *time.Time     `json:"last_seen,omitempty"`
+	CreatedAt      *time.Time     `json:"created_at,omitempty"`
+	Config         *config.Config `json:"-"`
 }
 
 // MarshalBinary implements the encoding.BinaryMarshaler interface

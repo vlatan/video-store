@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/microcosm-cc/bluemonday"
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/utils"
 )
@@ -139,7 +140,7 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.
 	}
 
 	// Parse markdown to HTML
-	if post.HTMLSummary, err = utils.ParseMarkdown(post.Summary); err != nil {
+	if post.HTMLSummary, err = utils.ParseMarkdown(post.Summary, bluemonday.UGCPolicy()); err != nil {
 		return zero, fmt.Errorf(
 			"could not convert markdown to html on %q: %v",
 			post.VideoID, err,

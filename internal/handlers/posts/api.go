@@ -272,12 +272,33 @@ func (s *Service) ActionPostAPI(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// Sanitize the client input
+		// Sanitize the review headline with strict policy.
+		// Do not convert to HTML
 		p := bluemonday.StrictPolicy()
+		headline := p.Sanitize(data.Headline)
+
+		// Allow structural block elements for paragraph breaks
+		p.AllowElements("p", "br")
+
+		// Allow basic text formatting (both markdown and inline html variants)
+		p.AllowElements("b", "strong", "i", "em", "u", "s", "strike")
+
+		// Sanitize the review content
+		content, err := utils.ParseMarkdown(data.Content, p)
+		if err != nil {
+			slog.ErrorContext(
+				r.Context(), "failed to parse review content",
+				"path", r.URL.Path,
+				"userId", user.ID,
+				"error", err,
+			)
+			utils.HttpError(w, http.StatusInternalServerError)
+			return
+		}
 
 		s.handleReview(
 			w, r, data.Rating, user.ID, videoID,
-			p.Sanitize(data.Headline), p.Sanitize(data.Content),
+			headline, string(content),
 		)
 
 	default:
