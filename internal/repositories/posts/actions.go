@@ -60,9 +60,9 @@ func (r *Repository) Unfave(ctx context.Context, userID int, videoID string) (in
 
 // Rate records user's post rating,
 // Returns a struct with rating count and average rating for the video.
-func (r *Repository) Rate(ctx context.Context, rating uint8, userID int, videoID string) (models.Rating, error) {
+func (r *Repository) Rate(ctx context.Context, rating uint8, userID int, videoID string) (models.RatingStats, error) {
 
-	var zero, rd models.Rating
+	var zero, rs models.RatingStats
 
 	// Start trannsaction
 	tx, err := r.db.Pool.Begin(ctx)
@@ -99,7 +99,7 @@ func (r *Repository) Rate(ctx context.Context, rating uint8, userID int, videoID
 		SELECT ROUND(AVG(rating), 2)::float8, COUNT(*)
 		FROM post_rating WHERE post_id = $1
 	`
-	err = tx.QueryRow(ctx, query, postId).Scan(&rd.Avg, &rd.Count)
+	err = tx.QueryRow(ctx, query, postId).Scan(&rs.Avg, &rs.Count)
 	if err != nil {
 		return zero, err
 	}
@@ -109,7 +109,7 @@ func (r *Repository) Rate(ctx context.Context, rating uint8, userID int, videoID
 		return zero, err
 	}
 
-	return rd, nil
+	return rs, nil
 }
 
 // Review records user's post rating and review.
@@ -118,9 +118,9 @@ func (r *Repository) Review(
 	ctx context.Context,
 	rating uint8,
 	userID int,
-	videoID, title, review string) (models.Rating, error) {
+	videoID, title, review string) (models.RatingStats, error) {
 
-	var zero, rd models.Rating
+	var zero, rs models.RatingStats
 
 	// Start trannsaction
 	tx, err := r.db.Pool.Begin(ctx)
@@ -157,7 +157,7 @@ func (r *Repository) Review(
 		SELECT ROUND(AVG(rating), 2)::float8, COUNT(*)
 		FROM post_rating WHERE post_id = $1
 	`
-	err = tx.QueryRow(ctx, query, postId).Scan(&rd.Avg, &rd.Count)
+	err = tx.QueryRow(ctx, query, postId).Scan(&rs.Avg, &rs.Count)
 	if err != nil {
 		return zero, err
 	}
@@ -167,7 +167,7 @@ func (r *Repository) Review(
 		return zero, err
 	}
 
-	return rd, nil
+	return rs, nil
 }
 
 // Update a playlist

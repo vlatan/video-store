@@ -100,7 +100,7 @@ func (r *Repository) SearchPosts(
 
 		// Attach ratings if any
 		if avgRating.Valid && ratingCount.Valid {
-			post.Rating = &models.Rating{
+			post.RatingStats = &models.RatingStats{
 				Avg:   avgRating.Float64,
 				Count: ratingCount.Int64,
 			}

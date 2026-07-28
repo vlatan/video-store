@@ -2,6 +2,8 @@
   Change ids to classes.
   Remove the css vars in rating css.
 
+  Get back sanitized review after user posts it.
+
   Use "show more reviews" to uncover more reviews.
   Probably use cursor.
   
