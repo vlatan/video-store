@@ -113,11 +113,10 @@ func (s *Service) handleRate(w http.ResponseWriter, r *http.Request, rating uint
 func (s *Service) handleReview(
 	w http.ResponseWriter,
 	r *http.Request,
-	rating uint8,
-	userID int,
-	videoID, title, review string) {
+	userID int, videoID string,
+	rating uint8, headline, content string) {
 
-	ratingData, err := s.postsRepo.Review(r.Context(), rating, userID, videoID, title, review)
+	data, err := s.postsRepo.Review(r.Context(), userID, videoID, rating, headline, content)
 
 	if errors.Is(err, pgx.ErrNoRows) {
 		http.NotFound(w, r)
@@ -135,5 +134,5 @@ func (s *Service) handleReview(
 		return
 	}
 
-	s.ui.WriteJSON(w, r, ratingData)
+	s.ui.WriteJSON(w, r, data)
 }

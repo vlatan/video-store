@@ -661,8 +661,8 @@ button.btn-submit-review:disabled,
 }
 
 .review-user-name {
-	margin: 0;
 	font-size: 1rem;
+	font-weight: bold;
 }
 
 .review-user-avatar {
@@ -679,6 +679,7 @@ button.btn-submit-review:disabled,
 .review-headline {
 	font-weight: bold;
 	color: var(--secondary-font-color);
+	margin: 0;
 }
 
 .review-content {

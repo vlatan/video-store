@@ -3,6 +3,7 @@
   Remove the css vars in rating css.
 
   Get back sanitized review after user posts it.
+  Use schema on the reviews.
 
   Use "show more reviews" to uncover more reviews.
   Probably use cursor.

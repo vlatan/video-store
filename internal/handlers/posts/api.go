@@ -271,7 +271,7 @@ func (s *Service) ActionPostAPI(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		s.handleReview(w, r, data.Rating, user.ID, videoID, data.Headline, data.Content)
+		s.handleReview(w, r, user.ID, videoID, data.Rating, data.Headline, data.Content)
 
 	default:
 		utils.HttpError(w, http.StatusBadRequest)

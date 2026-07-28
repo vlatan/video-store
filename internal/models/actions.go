@@ -48,6 +48,7 @@ type Review struct {
 	HTMLContent  template.HTML `json:"html_content,omitempty"`
 	Rating       uint8         `json:"rating,omitempty"`
 	UpdatedAt    time.Time     `json:"updated_at,omitzero"`
+	CreatedAt    time.Time     `json:"created_at,omitzero"`
 }
 
 // MarshalBinary implements the encoding.BinaryMarshaler interface

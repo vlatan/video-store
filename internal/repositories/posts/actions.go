@@ -116,16 +116,16 @@ func (r *Repository) Rate(ctx context.Context, rating uint8, userID int, videoID
 // Returns a struct with rating count and average rating for the video.
 func (r *Repository) Review(
 	ctx context.Context,
-	rating uint8,
-	userID int,
-	videoID, title, review string) (models.RatingStats, error) {
+	userID int, videoID string,
+	rating uint8, headline, content string) (map[string]any, error) {
 
-	var zero, rs models.RatingStats
+	var rs models.RatingStats
+	var re models.Review
 
 	// Start trannsaction
 	tx, err := r.db.Pool.Begin(ctx)
 	if err != nil {
-		return zero, err
+		return nil, err
 	}
 
 	// Rollback if something goes wrong.
@@ -144,30 +144,42 @@ func (r *Repository) Review(
 
 	query, err := r.GetQuery("review_post.sql", nil)
 	if err != nil {
-		return zero, err
+		return nil, err
 	}
 
 	var postId int64
-	err = tx.QueryRow(ctx, query, rating, userID, videoID, title, review).Scan(&postId)
+	err = tx.QueryRow(ctx, query, rating, userID, videoID, headline, content).Scan(&postId)
 	if err != nil {
-		return zero, err
+		return nil, err
 	}
 
-	query = `
-		SELECT ROUND(AVG(rating), 2)::float8, COUNT(*)
-		FROM post_rating WHERE post_id = $1
-	`
-	err = tx.QueryRow(ctx, query, postId).Scan(&rs.Avg, &rs.Count)
+	query, err = r.GetQuery("review_data.sql", nil)
 	if err != nil {
-		return zero, err
+		return nil, err
+	}
+
+	row := tx.QueryRow(ctx, query, postId)
+	err = row.Scan(
+		&rs.Avg,
+		&rs.Count,
+		&re.Headline,
+		&re.Content,
+	)
+	if err != nil {
+		return nil, err
 	}
 
 	// Commit the changes
 	if err := tx.Commit(ctx); err != nil {
-		return zero, err
+		return nil, err
 	}
 
-	return rs, nil
+	result := map[string]any{
+		"review": re,
+		"stats":  rs,
+	}
+
+	return result, nil
 }
 
 // Update a playlist

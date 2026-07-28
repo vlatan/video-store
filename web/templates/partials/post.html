@@ -327,14 +327,14 @@
 					<header class="review-header">
 						<img src="{{ .User.LocalAvatarURL }}" class=" review-user-avatar" width="20" height="20"
 							loading="lazy" alt="{{ .User.Name }}">
-						<h4 class="review-user-name">{{ .User.Name }}</h4>
+						<span class="review-user-name">{{ .User.Name }}</span>
 						<span class="review-user-rating">
 							<span class="rating-global-star">&#9733;</span>
 							<span>{{ .Rating }}</span>
 						</span>
 						<span class="review-date" data-utc-time="{{ .UpdatedAt }}">Loading date...</span>
 					</header>
-					<p class="review-headline">{{ .HTMLHeadline }}</p>
+					<h4 class="review-headline">{{ .HTMLHeadline }}</h4>
 					<div class="review-content">{{ .HTMLContent }}</div>
 				</div>
 				{{ end }}

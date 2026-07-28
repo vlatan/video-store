@@ -207,14 +207,14 @@ document.querySelectorAll('.review-section').forEach(s => {
                     </span>
                     <span class="review-date" data-utc-time="">${localDate}</span>
                 </header>
-                <p class="review-headline">${data.headline}</p>
-                <div class="review-content">${data.content}</div>
+                <p class="review-headline">${result.review.headline}</p>
+                <div class="review-content">${result.review.content}</div>
             `;
 
             reviewsList.prepend(card);
 
             // Update the rating HTML
-            updateRatingHTML(data.rating, result.avg_rating, result.rating_count)
+            updateRatingHTML(data.rating, result.stats.avg_rating, result.stats.rating_count)
         } catch (err) {
             console.error("Failed to fetch or parse JSON:", err);
             setAlert("Something went wrong!");
