@@ -3,9 +3,12 @@ package posts
 import (
 	"context"
 	"errors"
+	"fmt"
+	"html/template"
 	"log/slog"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/microcosm-cc/bluemonday"
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/utils"
 )
@@ -113,7 +116,7 @@ func (r *Repository) Rate(ctx context.Context, rating uint8, userID int, videoID
 }
 
 // Review records user's post rating and review.
-// Returns a struct with rating count and average rating for the video.
+// Returns a map with review data and ratings stats for the post.
 func (r *Repository) Review(
 	ctx context.Context,
 	userID int, videoID string,
@@ -147,24 +150,18 @@ func (r *Repository) Review(
 		return nil, err
 	}
 
+	// Insert review
 	var postId int64
 	err = tx.QueryRow(ctx, query, rating, userID, videoID, headline, content).Scan(&postId)
 	if err != nil {
 		return nil, err
 	}
 
-	query, err = r.GetQuery("review_data.sql", nil)
-	if err != nil {
-		return nil, err
-	}
-
-	row := tx.QueryRow(ctx, query, postId)
-	err = row.Scan(
-		&rs.Avg,
-		&rs.Count,
-		&re.Headline,
-		&re.Content,
-	)
+	query = `
+		SELECT ROUND(AVG(rating), 2)::float8, COUNT(*)
+		FROM post_rating WHERE post_id = $1
+	`
+	err = tx.QueryRow(ctx, query, postId).Scan(&rs.Avg, &rs.Count)
 	if err != nil {
 		return nil, err
 	}
@@ -173,6 +170,25 @@ func (r *Repository) Review(
 	if err := tx.Commit(ctx); err != nil {
 		return nil, err
 	}
+
+	// Define policies for review headline and content sanitization
+	strictPolicy := bluemonday.StrictPolicy()
+	simplePolicy := utils.SimplePolicy()
+
+	// Sanitize headline
+	safeHeadline := strictPolicy.Sanitize(headline)
+	re.HTMLHeadline = template.HTML(safeHeadline) // #nosec G203
+
+	// Convert to HTML and sanitize content
+	safeHTMLcontent, err := utils.ParseMarkdown(content, simplePolicy)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"could not parse/sanitize markdown on video %q review: %v",
+			videoID, err,
+		)
+	}
+
+	re.HTMLContent = template.HTML(safeHTMLcontent) // #nosec G203
 
 	result := map[string]any{
 		"review": re,
