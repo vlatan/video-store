@@ -3,8 +3,12 @@ package posts
 import (
 	"context"
 	"database/sql"
+	"fmt"
+	"html/template"
 
+	"github.com/microcosm-cc/bluemonday"
 	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/utils"
 )
 
 // GetPostReviews gets posts reviews
@@ -24,6 +28,10 @@ func (r *Repository) GetPostReviews(ctx context.Context, videoID string) (models
 
 	// Close rows on exit
 	defer rows.Close()
+
+	// Define policies for review headline and content sanitization
+	strictPolicy := bluemonday.StrictPolicy()
+	simplePolicy := utils.SimplePolicy()
 
 	// Iterate over the rows
 	for rows.Next() {
@@ -58,6 +66,22 @@ func (r *Repository) GetPostReviews(ctx context.Context, videoID string) (models
 		review.User.Email = email.String
 		review.User.AvatarURL = avatarURL.String
 		review.User.AnalyticsID = analyticsID.String
+
+		// Sanitize headline
+		safeHeadline := strictPolicy.Sanitize(review.Headline)
+		review.HTMLHeadline = template.HTML(safeHeadline) // #nosec G203
+
+		// Convert to HTML and sanitize content
+		safeHTMLcontent, err := utils.ParseMarkdown(review.Content, simplePolicy)
+		if err != nil {
+			return nil, fmt.Errorf(
+				"could not parse/sanitize markdown on video %q review: %v",
+				videoID, err,
+			)
+		}
+		review.HTMLContent = template.HTML(safeHTMLcontent) // #nosec G203
+
+		// This review is done, append it
 		reviews = append(reviews, review)
 	}
 

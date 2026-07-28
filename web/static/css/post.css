@@ -674,7 +674,6 @@ button.btn-submit-review:disabled,
 	font-size: 0.75rem;
 	color: var(--text-muted);
 	font-weight: normal;
-	margin-left: 10px;
 }
 
 .review-headline {
@@ -686,6 +685,10 @@ button.btn-submit-review:disabled,
 	margin: 0;
 	color: var(--text-muted);
 	line-height: 1.5;
+}
+
+.review-content p:not(:last-child) {
+	margin-bottom: 1rem;
 }
 
 

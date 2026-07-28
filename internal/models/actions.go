@@ -2,6 +2,7 @@ package models
 
 import (
 	"encoding/json"
+	"html/template"
 	"time"
 )
 
@@ -40,11 +41,13 @@ func (r *Rating) UnmarshalBinary(data []byte) error {
 }
 
 type Review struct {
-	User      User      `json:"user,omitzero"`
-	Headline  string    `json:"headline,omitempty"`
-	Content   string    `json:"content,omitempty"`
-	Rating    uint8     `json:"rating,omitempty"`
-	UpdatedAt time.Time `json:"updated_at,omitzero"`
+	User         User          `json:"user,omitzero"`
+	Headline     string        `json:"headline,omitempty"`
+	HTMLHeadline template.HTML `json:"html_headline,omitempty"`
+	Content      string        `json:"content,omitempty"`
+	HTMLContent  template.HTML `json:"html_content,omitempty"`
+	Rating       uint8         `json:"rating,omitempty"`
+	UpdatedAt    time.Time     `json:"updated_at,omitzero"`
 }
 
 // MarshalBinary implements the encoding.BinaryMarshaler interface
