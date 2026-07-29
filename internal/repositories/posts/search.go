@@ -20,17 +20,18 @@ func (r *Repository) SearchPosts(
 	limit int,
 	cursor string) (models.Posts, error) {
 
-	// Construct the SQL parts as well as the arguments
-	// The search term and limit are the first two arguments ($1 and $2)
-	// Peek for one post beoynd the limit
+	// Construct the SQL parts as well as the arguments.
+	// The search term and limit are the first two arguments ($1 and $2).
+	// Peek for one post beoynd the limit.
 	var where string
 	total := "COUNT(*) OVER()"
 	args := []any{searchTerm, limit + 1}
 
 	var zero, posts models.Posts
 
-	// Build args and SQL parts
-	// No cursor on the first page, no need for total and the WHERE clause
+	// Build args and SQL parts.
+	// If cursor (meanining this is not the first page),
+	// do not count total and supply WHERE clause
 	if cursor != "" {
 
 		total = "0"

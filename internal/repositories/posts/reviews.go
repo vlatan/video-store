@@ -3,6 +3,7 @@ package posts
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"html/template"
 
@@ -14,15 +15,44 @@ import (
 // GetPostReviews gets posts reviews
 func (r *Repository) GetPostReviews(ctx context.Context, videoID, cursor string) (models.Reviews, error) {
 
+	// The video ID and the limit are the first two arguments ($1 and $2)
+	// Peek for one review beoynd the limit to see if there are more reviews,
+	// meaning whether to construct and send the next cursor at all.
+	args := []any{videoID, r.config.ReviewsPerPost + 1}
+
+	// The default template variables - SQL parts
+	var andCondition string
+	total := "COUNT(*) OVER()"
+
 	var zero, reviews models.Reviews
 
-	query, err := r.GetQuery("post_reviews.sql", nil)
+	// Build args and SQL parts.
+	// If cursor (meanining this is not the first page),
+	// do not count total and supply AND clause
+	if cursor != "" {
+
+		total = "0"
+		cursorParts, err := decodeCursor(cursor)
+		if err != nil {
+			return zero, err
+		}
+
+		if len(cursorParts) != 2 {
+			return zero, errors.New("invalid cursor components")
+		}
+
+		args = append(args, cursorParts[1], cursorParts[2])
+		andCondition = "AND (prev.created_at, prev.rating_id) < ($3, $4)"
+	}
+
+	sqlParts := struct{ TotalCount, AndCondition string }{total, andCondition}
+	query, err := r.GetQuery("post_reviews.sql", sqlParts)
 	if err != nil {
 		return zero, err
 	}
 
 	// Get rows from DB
-	rows, err := r.db.Pool.Query(ctx, query, videoID)
+	rows, err := r.db.Pool.Query(ctx, query, args...)
 	if err != nil {
 		return zero, err
 	}
@@ -38,7 +68,8 @@ func (r *Repository) GetPostReviews(ctx context.Context, videoID, cursor string)
 	for rows.Next() {
 
 		var (
-			review models.Review
+			review   models.Review
+			totalNum int
 			name,
 			email,
 			avatarURL,
@@ -57,6 +88,7 @@ func (r *Repository) GetPostReviews(ctx context.Context, videoID, cursor string)
 			&review.Content,
 			&review.Rating,
 			&review.UpdatedAt,
+			&totalNum,
 		)
 
 		if err != nil {
@@ -81,6 +113,9 @@ func (r *Repository) GetPostReviews(ctx context.Context, videoID, cursor string)
 			)
 		}
 		review.HTMLContent = template.HTML(safeHTMLcontent) // #nosec G203
+
+		// Assign the total num of reviews
+		reviews.TotalNum = max(reviews.TotalNum, totalNum)
 
 		// This review is done, append it
 		reviews.Items = append(reviews.Items, review)
