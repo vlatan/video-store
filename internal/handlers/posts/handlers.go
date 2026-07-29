@@ -405,7 +405,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Get post reviews, don't cache sthe reviews for logged in users
 		if data.CurrentUser.IsAuthenticated() {
-			postReviews, err = s.postsRepo.GetPostReviews(r.Context(), videoID)
+			postReviews, err = s.postsRepo.GetPostReviews(r.Context(), videoID, "")
 		} else {
 			postReviews, err = rdb.GetCachedData(
 				r.Context(),
@@ -413,7 +413,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 				fmt.Sprintf(postRveiewsCacheKey, videoID),
 				s.config.CacheTimeout,
 				func() (models.Reviews, error) {
-					return s.postsRepo.GetPostReviews(r.Context(), videoID)
+					return s.postsRepo.GetPostReviews(r.Context(), videoID, "")
 				},
 			)
 		}

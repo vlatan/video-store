@@ -12,7 +12,7 @@ import (
 )
 
 // GetPostReviews gets posts reviews
-func (r *Repository) GetPostReviews(ctx context.Context, videoID string) (models.Reviews, error) {
+func (r *Repository) GetPostReviews(ctx context.Context, videoID, cursor string) (models.Reviews, error) {
 
 	var zero, reviews models.Reviews
 

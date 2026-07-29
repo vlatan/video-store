@@ -47,6 +47,7 @@ type Config struct {
 	GtagID          string `env:"GTAG_ID"`
 	PostsPerPage    int    `env:"POSTS_PER_PAGE" envDefault:"24"`
 	NumRelatedPosts int    `env:"NUM_RELATED_POSTS" envDefault:"5"`
+	ReviewsPerPost  int    `env:"REVIEWS_PER_POST" envDefault:"10"`
 
 	// Google APIs settings
 	YouTubeAPIKey  string `env:"YOUTUBE_API_KEY"`
