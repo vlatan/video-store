@@ -7,7 +7,6 @@ import (
 	"net/http"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/utils"
 )
 
@@ -129,8 +128,13 @@ func (s *Service) handleRate(w http.ResponseWriter, r *http.Request, userID int,
 // Handle a post favorite from user
 func (s *Service) handleReview(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
 
-	var review models.Review
-	if err := json.NewDecoder(r.Body).Decode(&review); err != nil {
+	var data struct {
+		Headline string `json:"headline"`
+		Content  string `json:"content"`
+		Rating   uint8  `json:"rating"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
 		slog.ErrorContext(
 			r.Context(), "failed to decode post review",
 			"path", r.URL.Path,
@@ -141,7 +145,7 @@ func (s *Service) handleReview(w http.ResponseWriter, r *http.Request, userID in
 		return
 	}
 
-	if err := validateReview(review.Headline, review.Content); err != nil {
+	if err := validateReview(data.Headline, data.Content); err != nil {
 		slog.ErrorContext(
 			r.Context(), "failed to validate the review",
 			"path", r.URL.Path,
@@ -152,13 +156,13 @@ func (s *Service) handleReview(w http.ResponseWriter, r *http.Request, userID in
 		return
 	}
 
-	data, err := s.postsRepo.Review(
+	reviewData, err := s.postsRepo.Review(
 		r.Context(),
 		userID,
 		videoID,
-		review.Rating,
-		review.Headline,
-		review.Content,
+		data.Rating,
+		data.Headline,
+		data.Content,
 	)
 
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -177,5 +181,5 @@ func (s *Service) handleReview(w http.ResponseWriter, r *http.Request, userID in
 		return
 	}
 
-	s.ui.WriteJSON(w, r, data)
+	s.ui.WriteJSON(w, r, reviewData)
 }

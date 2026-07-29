@@ -42,9 +42,9 @@ func (r *RatingStats) UnmarshalBinary(data []byte) error {
 
 type Review struct {
 	Id           int           `json:"-"`
-	Headline     string        `json:"headline,omitempty"`
+	Headline     string        `json:"-"`
 	HTMLHeadline template.HTML `json:"html_headline,omitempty"`
-	Content      string        `json:"content,omitempty"`
+	Content      string        `json:"-"`
 	HTMLContent  template.HTML `json:"html_content,omitempty"`
 	Rating       uint8         `json:"rating,omitempty"`
 	UpdatedAt    time.Time     `json:"updated_at,omitzero"`
