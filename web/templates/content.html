@@ -1,4 +1,4 @@
-<div id="scroller" class="scroll-content">
+<div id="scroller" class="scroll-content" {{ with .Posts -}} data-cursor="{{ .NextCursor }}" {{- end }}>
 
     {{ range $index, $item := .Posts.Items }}
     <a class="video-link" href="/video/{{ $item.VideoID }}/">

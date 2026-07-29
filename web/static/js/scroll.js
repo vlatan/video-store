@@ -5,9 +5,9 @@ const sentinel = document.getElementById("sentinel");
 const spinner = sentinel.querySelector('div');
 
 let state = {
-    nextCursor: initialCursor,
+    nextCursor: scroller.dataset.cursor,
     isLoading: false,
-    hasMore: !!initialCursor,
+    hasMore: !!scroller.dataset.cursor,
 };
 
 // Function to request new items and render to the dom
