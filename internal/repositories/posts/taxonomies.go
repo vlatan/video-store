@@ -49,7 +49,7 @@ func (r *Repository) GetSourcePosts(
 // Query the DB for posts based on variadic arguments
 func (r *Repository) queryTaxonomyPosts(
 	ctx context.Context,
-	queryFilename,
+	sqlFilename,
 	taxonomyID,
 	cursor,
 	orderBy string,
@@ -111,7 +111,7 @@ func (r *Repository) queryTaxonomyPosts(
 	}
 
 	sqlParts := struct{ TotalCount, WhereCondition, OrderByWhat string }{total, where, order}
-	query, err := r.GetQuery(queryFilename, sqlParts)
+	query, err := r.GetQuery(sqlFilename, sqlParts)
 	if err != nil {
 		return zero, err
 	}
