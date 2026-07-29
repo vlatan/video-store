@@ -403,7 +403,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 	// Send post reviews fetch in a goroutine
 	g.Go(func() error {
 
-		// Get post reviews
+		// Get post reviews, don't cache sthe reviews for logged in users
 		if data.CurrentUser.IsAuthenticated() {
 			postReviews, err = s.postsRepo.GetPostReviews(r.Context(), videoID)
 		} else {
@@ -428,7 +428,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Get the user avatars
-		for i, review := range postReviews {
+		for i, review := range postReviews.Items {
 			localAvatarURL, err := s.avatars.Get(r.Context(), &review.User)
 			if err != nil {
 				slog.ErrorContext(
@@ -439,7 +439,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 				)
 				return err
 			}
-			postReviews[i].User.LocalAvatarURL = localAvatarURL
+			postReviews.Items[i].User.LocalAvatarURL = localAvatarURL
 		}
 
 		return nil
@@ -514,7 +514,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Attach the results to the post object
-	post.Reviews = postReviews
+	post.Reviews = &postReviews
 	post.UserActions = userActions
 	post.RelatedPosts = relatedPosts
 

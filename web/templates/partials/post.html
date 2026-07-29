@@ -321,8 +321,9 @@
 			</header>
 
 			<!-- Reviews List -->
+			{{ with .CurrentPost.Reviews }}
 			<div id="reviews-list">
-				{{ range .CurrentPost.Reviews }}
+				{{ range .Items }}
 				<div class="review-card">
 					<header class="review-header">
 						<img src="{{ .User.LocalAvatarURL }}" class=" review-user-avatar" width="20" height="20"
@@ -339,6 +340,12 @@
 				</div>
 				{{ end }}
 			</div>
+			{{ end }}
+
+			<button id="load-more-reviews-btn" data-post-id="{{ .CurrentPost.VideoID }}" {{ with .CurrentPost.Reviews
+				-}} data-cursor="{{ .NextCursor }}" {{- end }}>
+				Load More
+			</button>
 		</section>
 
 	</div>

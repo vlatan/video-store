@@ -14,16 +14,17 @@ import (
 // GetPostReviews gets posts reviews
 func (r *Repository) GetPostReviews(ctx context.Context, videoID string) (models.Reviews, error) {
 
+	var zero, reviews models.Reviews
+
 	query, err := r.GetQuery("post_reviews.sql", nil)
 	if err != nil {
-		return nil, err
+		return zero, err
 	}
 
 	// Get rows from DB
-	var reviews models.Reviews
 	rows, err := r.db.Pool.Query(ctx, query, videoID)
 	if err != nil {
-		return nil, err
+		return zero, err
 	}
 
 	// Close rows on exit
@@ -59,7 +60,7 @@ func (r *Repository) GetPostReviews(ctx context.Context, videoID string) (models
 		)
 
 		if err != nil {
-			return nil, err
+			return zero, err
 		}
 
 		review.User.Name = name.String
@@ -74,7 +75,7 @@ func (r *Repository) GetPostReviews(ctx context.Context, videoID string) (models
 		// Convert to HTML and sanitize content
 		safeHTMLcontent, err := utils.ParseMarkdown(review.Content, simplePolicy)
 		if err != nil {
-			return nil, fmt.Errorf(
+			return zero, fmt.Errorf(
 				"could not parse/sanitize markdown on video %q review: %v",
 				videoID, err,
 			)
@@ -82,12 +83,12 @@ func (r *Repository) GetPostReviews(ctx context.Context, videoID string) (models
 		review.HTMLContent = template.HTML(safeHTMLcontent) // #nosec G203
 
 		// This review is done, append it
-		reviews = append(reviews, review)
+		reviews.Items = append(reviews.Items, review)
 	}
 
 	// If error during iteration
 	if err = rows.Err(); err != nil {
-		return nil, err
+		return zero, err
 	}
 
 	return reviews, nil

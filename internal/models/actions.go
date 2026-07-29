@@ -61,7 +61,11 @@ func (r *Review) UnmarshalBinary(data []byte) error {
 	return json.Unmarshal(data, r)
 }
 
-type Reviews []Review
+type Reviews struct {
+	Items      []Review `json:"items"`
+	NextCursor string   `json:"next_cursor"`
+	TotalNum   int      `json:"total_num,omitempty"`
+}
 
 // MarshalBinary implements the encoding.BinaryMarshaler interface
 func (r Reviews) MarshalBinary() (data []byte, err error) {

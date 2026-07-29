@@ -224,3 +224,52 @@ document.querySelectorAll('.review-section').forEach(s => {
         }
     });
 });
+
+
+// ==========================================================================
+// Load More Reviews
+// ==========================================================================
+document.getElementById('load-more-reviews-btn')?.addEventListener('click', async (event) => {
+    const btn = event.currentTarget;
+    const postId = btn.dataset.postId;
+    const cursor = btn.dataset.cursor;
+
+    try {
+        btn.disabled = true;
+
+        const response = await fetch(`/api/reviews?postId=${postId}&cursor=${cursor}`);
+        if (!response.ok) throw new Error('Failed to fetch reviews');
+
+        const data = await response.json();
+
+        if (data.reviews?.length) {
+            const html = data.reviews.map(r => `
+                <div class="review-card">
+                    <header class="review-header">
+                        <img src="${r.User.LocalAvatarURL}" class="review-user-avatar" width="20" height="20" loading="lazy" alt="${r.User.Name}">
+                        <h4 class="review-user-name">${r.User.Name}</h4>
+                        <span class="review-user-rating">
+                            <span class="rating-global-star">&#9733;</span>
+                            <span>${r.Rating}</span>
+                        </span>
+                        <span class="review-date" data-utc-time="${r.UpdatedAt}">Loading date...</span>
+                    </header>
+                    <p class="review-headline">${r.Headline}</p>
+                    <div class="review-content">${r.Content}</div>
+                </div>
+            `).join('');
+
+            document.getElementById('reviews-list').insertAdjacentHTML('beforeend', html);
+        }
+
+        if (data.nextCursor) {
+            btn.dataset.cursor = data.nextCursor;
+        } else {
+            btn.style.display = 'none'; // Hide if no more cursor
+        }
+    } catch (error) {
+        console.error('Error loading more reviews:', error);
+    } finally {
+        btn.disabled = false;
+    }
+});
