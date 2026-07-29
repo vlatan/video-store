@@ -1,14 +1,17 @@
 * Build the frontend and backend review system.
+
+  In prod DO **NOT FORGET** first torun the migration, include env var and rebuild the setup/
+
   Change ids to classes.
   Remove the css vars in rating css.
 
   Move h4 in the header of the review?
   Use schema on the reviews.
+  Change big star value on hover on the small stars.
 
   Use "show more reviews" to uncover more reviews.
   Probably use cursor.
-  
-  Change big star value on hover on the small stars.
+  Add many reviews to post and test.
 
   If a review is added we just prepend the review in the review list.
   If a review is updated scroll to the review and highlight it with fade out.
@@ -16,7 +19,6 @@
 
   The user should be able to delete a review or a rating.
   Include delete button on the modals and add edit button on the review card.
-  If the user has a review the "quick rate" button opens the review modal.
   On deletion inline the deletion exalplanation and confirmation in the modals with swapping the modal footer.
 
 * Make the checkmarks on the like/save green or yellow
