@@ -3,9 +3,11 @@ package posts
 import (
 	"context"
 	"database/sql"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"html/template"
+	"time"
 
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/vlatan/video-store/internal/models"
@@ -77,6 +79,13 @@ func (r *Repository) GetPostReviews(ctx context.Context, videoID, cursor string)
 		)
 
 		err = rows.Scan(
+			&review.Id,
+			&review.Headline,
+			&review.Content,
+			&review.Rating,
+			&review.UpdatedAt,
+			&review.CreatedAt,
+			&totalNum,
 			&review.User.ID,
 			&review.User.ProviderUserId,
 			&review.User.Provider,
@@ -84,11 +93,6 @@ func (r *Repository) GetPostReviews(ctx context.Context, videoID, cursor string)
 			&email,
 			&avatarURL,
 			&analyticsID,
-			&review.Headline,
-			&review.Content,
-			&review.Rating,
-			&review.UpdatedAt,
-			&totalNum,
 		)
 
 		if err != nil {
@@ -125,6 +129,22 @@ func (r *Repository) GetPostReviews(ctx context.Context, videoID, cursor string)
 	if err = rows.Err(); err != nil {
 		return zero, err
 	}
+
+	// This is the last page
+	if len(reviews.Items) <= r.config.ReviewsPerPost {
+		return reviews, nil
+	}
+
+	// Exclude the last review
+	reviews.Items = reviews.Items[:len(reviews.Items)-1]
+
+	// Determine the next cursor
+	lastReview := reviews.Items[len(reviews.Items)-1]
+	createdDate := lastReview.CreatedAt.Format(time.RFC3339Nano)
+	cursorStr := fmt.Sprintf("%s,%d", createdDate, lastReview.Id)
+
+	// Encode and assign the next cursor
+	reviews.NextCursor = base64.StdEncoding.EncodeToString([]byte(cursorStr))
 
 	return reviews, nil
 }

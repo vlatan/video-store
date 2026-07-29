@@ -1,16 +1,18 @@
 SELECT 
-    au.id,
+    prev.rating_id,
+    prev.title AS headline,
+    prev.review AS content,
+    prat.rating AS rating,
+    GREATEST(prat.updated_at, prev.updated_at) AS updated_at,
+    prev.created_at,
+    {{ .TotalCount }} AS total_results,
+    au.id as user_id,
     au.provider_user_id,
     au.provider,
     au.name,
     au.email,
     au.picture,
-    au.analytics_id,
-    prev.title AS headline,
-    prev.review AS content,
-    prat.rating AS rating,
-    GREATEST(prat.updated_at, prev.updated_at) AS updated_at,
-    {{ .TotalCount }} AS total_results
+    au.analytics_id
 FROM post AS p
 JOIN post_rating AS prat ON prat.post_id = p.id
 JOIN post_review AS prev ON prev.rating_id = prat.id

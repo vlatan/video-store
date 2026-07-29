@@ -20,7 +20,7 @@ import (
 
 const postCacheKey = "post:%s"
 const relatedPostsCacheKey = "post:%s:related_posts"
-const postRveiewsCacheKey = "post:%s:reviews"
+const postReviewsCacheKey = "post:%s:reviews"
 
 // Handle the Home page
 func (s *Service) HomeHandler(w http.ResponseWriter, r *http.Request) {
@@ -410,7 +410,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 			postReviews, err = rdb.GetCachedData(
 				r.Context(),
 				s.rdb,
-				fmt.Sprintf(postRveiewsCacheKey, videoID),
+				fmt.Sprintf(postReviewsCacheKey, videoID),
 				s.config.CacheTimeout,
 				func() (models.Reviews, error) {
 					return s.postsRepo.GetPostReviews(r.Context(), videoID, "")

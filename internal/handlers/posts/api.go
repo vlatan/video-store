@@ -209,7 +209,84 @@ func (s *Service) SearchPostsAPI(w http.ResponseWriter, r *http.Request) {
 }
 
 // Perform an action on a video
-func (s *Service) ActionPostAPI(w http.ResponseWriter, r *http.Request) {
+func (s *Service) PostReviewsAPI(w http.ResponseWriter, r *http.Request) {
+
+	// Validate the YT ID
+	videoID := r.PathValue("video")
+	if validVideoID.FindStringSubmatch(videoID) == nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	// Get the cursor from a query param
+	cursor := r.URL.Query().Get("cursor")
+
+	// Construct the Redis key
+	redisKey := fmt.Sprintf(postReviewsCacheKey, videoID)
+	if cursor != "" {
+		redisKey += fmt.Sprintf(":cursor:%s", cursor)
+	}
+
+	// Get current user
+	currentUser := models.GetUserFromContext(r)
+
+	var (
+		err     error
+		reviews models.Reviews
+	)
+
+	// Get post reviews, don't cache sthe reviews for logged in users
+	if currentUser.IsAuthenticated() {
+		reviews, err = s.postsRepo.GetPostReviews(r.Context(), videoID, cursor)
+	} else {
+		reviews, err = rdb.GetCachedData(
+			r.Context(),
+			s.rdb,
+			redisKey,
+			s.config.CacheTimeout,
+			func() (models.Reviews, error) {
+				return s.postsRepo.GetPostReviews(r.Context(), videoID, cursor)
+			},
+		)
+	}
+
+	if err != nil {
+		slog.ErrorContext(
+			r.Context(), "failed get reviews from DB",
+			"path", r.URL.Path,
+			"error", err,
+		)
+		utils.HttpError(w, http.StatusInternalServerError)
+		return
+	}
+
+	if len(reviews.Items) == 0 {
+		http.NotFound(w, r)
+		return
+	}
+
+	// Get the user avatars
+	for i, review := range reviews.Items {
+		localAvatarURL, err := s.avatars.Get(r.Context(), &review.User)
+		if err != nil {
+			slog.ErrorContext(
+				r.Context(), "failed to get user's avatar",
+				"path", r.URL.Path,
+				"userId", review.User.ID,
+				"error", err,
+			)
+
+			utils.HttpError(w, http.StatusInternalServerError)
+			return
+		}
+		reviews.Items[i].User.LocalAvatarURL = localAvatarURL
+	}
+
+	s.ui.WriteJSON(w, r, reviews)
+}
+
+// Perform an action on a video
+func (s *Service) PostActionAPI(w http.ResponseWriter, r *http.Request) {
 
 	// Validate the YT ID
 	videoID := r.PathValue("video")

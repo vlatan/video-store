@@ -41,7 +41,7 @@ func (r *RatingStats) UnmarshalBinary(data []byte) error {
 }
 
 type Review struct {
-	User         User          `json:"user,omitzero"`
+	Id           int           `json:"-"`
 	Headline     string        `json:"headline,omitempty"`
 	HTMLHeadline template.HTML `json:"html_headline,omitempty"`
 	Content      string        `json:"content,omitempty"`
@@ -49,6 +49,7 @@ type Review struct {
 	Rating       uint8         `json:"rating,omitempty"`
 	UpdatedAt    time.Time     `json:"updated_at,omitzero"`
 	CreatedAt    time.Time     `json:"created_at,omitzero"`
+	User         User          `json:"user,omitzero"`
 }
 
 // MarshalBinary implements the encoding.BinaryMarshaler interface
