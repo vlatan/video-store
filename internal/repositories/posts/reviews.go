@@ -43,7 +43,7 @@ func (r *Repository) GetPostReviews(ctx context.Context, videoID, cursor string)
 			return zero, errors.New("invalid cursor components")
 		}
 
-		args = append(args, cursorParts[1], cursorParts[2])
+		args = append(args, cursorParts[0], cursorParts[1])
 		andCondition = "AND (prev.created_at, prev.rating_id) < ($3, $4)"
 	}
 

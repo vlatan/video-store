@@ -1,6 +1,13 @@
 * Build the frontend and backend review system.
 
-  In prod DO **NOT FORGET** first torun the migration, include env var and rebuild the setup/
+  In prod DO **NOT FORGET** first to:
+   - Run the DB migration
+   - Iinclude new env var and 
+   - Rebuild the setup
+
+  Use "Load More" to uncover more reviews.
+  Do not fetch on empty cursor.
+  Add many reviews to post and test.
 
   Change ids to classes.
   Remove the css vars in rating css.
@@ -8,10 +15,6 @@
   Move h4 in the header of the review?
   Use schema on the reviews.
   Change big star value on hover on the small stars.
-
-  Use "show more reviews" to uncover more reviews.
-  Probably use cursor.
-  Add many reviews to post and test.
 
   If a review is added we just prepend the review in the review list.
   If a review is updated scroll to the review and highlight it with fade out.

@@ -322,6 +322,7 @@
 
 			<!-- Reviews List -->
 			{{ with .CurrentPost.Reviews }}
+
 			<div id="reviews-list">
 				{{ range .Items }}
 				<div class="review-card">
@@ -340,12 +341,15 @@
 				</div>
 				{{ end }}
 			</div>
-			{{ end }}
 
-			<button id="load-more-reviews-btn" data-post-id="{{ .CurrentPost.VideoID }}" {{ with .CurrentPost.Reviews
-				-}} data-cursor="{{ .NextCursor }}" {{- end }}>
+			<!-- {{ if gt .TotalNum $.Config.ReviewsPerPost }} -->
+			<button id="load-more-reviews-btn" data-video-id="{{ $.CurrentPost.VideoID }}"
+				data-cursor="{{ .NextCursor }}">
 				Load More
 			</button>
+			<!-- {{ end }} -->
+
+			{{ end }}
 		</section>
 
 	</div>
