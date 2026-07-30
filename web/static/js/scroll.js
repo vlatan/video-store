@@ -2,16 +2,19 @@
 const scroller = document.getElementById("scroller");
 const template = document.getElementById("post_template");
 const sentinel = document.getElementById("sentinel");
-const spinner = sentinel.querySelector('div');
+const spinner = sentinel?.querySelector('div');
 
 let state = {
-    nextCursor: scroller.dataset.cursor,
+    nextCursor: scroller?.dataset.cursor,
     isLoading: false,
-    hasMore: !!scroller.dataset.cursor,
+    hasMore: !!scroller?.dataset.cursor,
 };
 
 // Function to request new items and render to the dom
-const loadItems = async (url, cursor) => {
+const loadItems = async (url = "", cursor = "") => {
+
+    if (!(template instanceof HTMLTemplateElement)) return;
+    if (!(sentinel instanceof HTMLElement)) return;
 
     // Prevent multiple simultaneous fetches
     if (state.isLoading || !state.hasMore) {
@@ -19,7 +22,7 @@ const loadItems = async (url, cursor) => {
     }
 
     state.isLoading = true;
-    spinner.setAttribute("id", "spinner");
+    spinner?.setAttribute("id", "spinner");
 
     try {
 
@@ -53,7 +56,7 @@ const loadItems = async (url, cursor) => {
             }
 
             // Append template to dom
-            scroller.appendChild(template_clone);
+            scroller?.appendChild(template_clone);
         }
 
         if (!state.hasMore) {
@@ -85,5 +88,5 @@ if ('IntersectionObserver' in window) {
     }, { rootMargin: "200px 0px" });
 
     // Instruct the IntersectionObserver to watch the sentinel
-    intersectionObserver.observe(sentinel);
+    if (sentinel) intersectionObserver.observe(sentinel);
 }

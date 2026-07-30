@@ -5,10 +5,6 @@
    - Iinclude new env var and 
    - Rebuild the setup
 
-  Use "Load More" to uncover more reviews.
-  Do not fetch on empty cursor.
-  Add many reviews to post and test.
-
   Change ids to classes.
   Remove the css vars in rating css.
 
