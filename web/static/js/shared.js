@@ -75,8 +75,12 @@ document.addEventListener('click', event => {
 // ==========================================================================
 
 // Send POST request to backend
-const postData = async (url = '', data = {}) => {
-    // Create headers object
+const postData = (url = "", data = {}) => {
+    if (!url) throw new Error("URL parameter is required");
+    if (!data || (typeof data === 'object' && Object.keys(data).length === 0)) {
+        throw new Error("Data payload is required");
+    }
+
     const headers = new Headers();
     headers.append("Content-Type", "application/json");
 
@@ -86,22 +90,19 @@ const postData = async (url = '', data = {}) => {
         headers.append("X-CSRF-Token", csrfTokens[0].value);
     }
 
-    const response = await fetch(url, {
+    return fetch(url, {
         method: 'POST',
         headers: headers,
         body: JSON.stringify(data)
     });
-
-    return response;
 };
 
 // Send GET request to backend
-const getData = async (url = "", cursor = "") => {
-    if (!url) return;
-    if (!cursor) return await fetch(url);
-    const currentURL = new URL(url, window.location.origin);
-    currentURL.searchParams.set("cursor", cursor);
-    return await fetch(currentURL.toString());
+const getData = (url = "", cursor = "") => {
+    if (!url) throw new Error("URL parameter is required");
+    const reqUrl = new URL(url, window.location.origin);
+    if (cursor) reqUrl.searchParams.set("cursor", cursor);
+    return fetch(reqUrl);
 };
 
 

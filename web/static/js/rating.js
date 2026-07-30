@@ -266,9 +266,8 @@ document.getElementById('load-more-reviews-btn')?.addEventListener('click', asyn
         btn.disabled = true;
         btn.innerHTML = '<span class="review-spinner"></span> Loading...';
 
-        const response = await fetch(`/api/video/${videoId}/reviews?cursor=${cursor}`);
+        const response = await getData(`/api/video/${videoId}/reviews`, cursor);
         if (!response.ok) throw new Error('Failed to fetch reviews');
-
         const data = await response.json();
 
         /** @type {Record<string, any>[]} */
