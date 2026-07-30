@@ -1,5 +1,4 @@
 
-
 // ==========================================================================
 // Convert Review Dates into Local User Time
 // ==========================================================================
@@ -158,17 +157,23 @@ document.querySelectorAll('.review-section').forEach(s => {
     const reviewSubmitBtn = s.querySelector('#submit-review');
     const reviewError = s.querySelector('#review-error');
 
-    const showError = (msg) => {
+    if (!(reviewDialog instanceof HTMLDialogElement)) return;
+    if (!(reviewForm instanceof HTMLFormElement)) return;
+    if (!(reviewSubmitBtn instanceof HTMLButtonElement && reviewSubmitBtn.type === 'submit')) return;
+
+    const showError = (msg = '') => {
+        if (!(reviewError instanceof HTMLElement)) return;
         reviewError.textContent = msg;
         reviewError.hidden = false;
     };
     const clearError = () => {
+        if (!(reviewError instanceof HTMLElement)) return;
         reviewError.textContent = '';
         reviewError.hidden = true;
     };
 
-    reviewOpenBtn.addEventListener('click', () => reviewDialog.showModal());
-    reviewCloseBtn.addEventListener('click', () => reviewDialog.close());
+    reviewOpenBtn?.addEventListener('click', () => reviewDialog.showModal());
+    reviewCloseBtn?.addEventListener('click', () => reviewDialog.close());
 
     reviewForm.addEventListener('submit', async (event) => {
         event.preventDefault();
@@ -182,24 +187,26 @@ document.querySelectorAll('.review-section').forEach(s => {
         }
 
         const formData = new FormData(form);
-        const headline = (formData.get('headline') || '').trim();
-        const content = (formData.get('content') || '').trim();
-        const rating = (formData.get('rating') || '').trim();
+        const headline = String(formData.get('headline') || '').trim();
+        const content = String(formData.get('content') || '').trim();
+        const rating = String(formData.get('rating') || '').trim();
 
         if (!headline || !content || !rating) {
             showError('Please fill in the required fields');
             return;
         }
 
-        const data = Object.fromEntries(formData.entries());
-        if (data.rating) data.rating = Number(data.rating);
+        const payload = {
+            ...Object.fromEntries(formData.entries()),
+            rating: Number(formData.get('rating') || 0)
+        };
 
         reviewSubmitBtn.disabled = true;
         reviewSubmitBtn.textContent = 'Posting...';
         reviewDialog.close();
 
         try {
-            const response = await postData(form.action, data);
+            const response = await postData(form.action, payload);
             if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
             const result = await response.json();
 
@@ -219,7 +226,7 @@ document.querySelectorAll('.review-section').forEach(s => {
                     <span class="review-user-name">${username}</span>
                     <span class="review-user-rating">
                         <span class="rating-global-star">&#9733;</span>
-                        <span>${data.rating}</span>
+                        <span>${payload.rating}</span>
                     </span>
                     <span class="review-date" data-utc-time="">${localDate}</span>
                 </header>
@@ -227,10 +234,10 @@ document.querySelectorAll('.review-section').forEach(s => {
                 <div class="review-content">${result.review.html_content}</div>
             `;
 
-            reviewsList.prepend(card);
+            reviewsList?.prepend(card);
 
             // Update the rating HTML
-            updateRatingHTML(data.rating, result.stats.avg_rating, result.stats.rating_count)
+            updateRatingHTML(payload.rating, result.stats.avg_rating, result.stats.rating_count)
         } catch (err) {
             console.error("Failed to fetch or parse JSON:", err);
             setAlert("Something went wrong!");
@@ -264,8 +271,11 @@ document.getElementById('load-more-reviews-btn')?.addEventListener('click', asyn
 
         const data = await response.json();
 
-        // Map the html to the array of reviews and join the items in a string
-        const reviews = (data.items || []).map(review => {
+        /** @type {Record<string, any>[]} */
+        const items = data.items || [];
+
+        // Map the corresponding html to each review in the array
+        const reviews = items.map(review => {
 
             const dateObj = new Date(review.updated_at);
             const localDate = dateObj.toLocaleDateString();
@@ -287,7 +297,8 @@ document.getElementById('load-more-reviews-btn')?.addEventListener('click', asyn
                 </div>`;
         });
 
-        document.getElementById('reviews-list').insertAdjacentHTML('beforeend', reviews.join(''));
+        // Append the reviews joined as string
+        document.getElementById('reviews-list')?.insertAdjacentHTML('beforeend', reviews.join(''));
 
         if (data.next_cursor) {
             btn.dataset.cursor = data.next_cursor;
