@@ -241,26 +241,32 @@ document.getElementById('load-more-reviews-btn')?.addEventListener('click', asyn
         if (!response.ok) throw new Error('Failed to fetch reviews');
 
         const data = await response.json();
+        if (!data.items?.length) return;
 
-        if (data.items?.length) {
-            const reviews = data.items.map(review => `
-                <header class="review-header">
-                    <img src="${review.user.local_avatar_url}" class=" review-user-avatar" width="20" height="20"
-                        loading="lazy" alt="">
-                    <span class="review-user-name">${review.user.name}</span>
-                    <span class="review-user-rating">
-                        <span class="rating-global-star">&#9733;</span>
-                        <span>${review.rating}</span>
-                    </span>
-                    <span class="review-date" data-utc-time="${review.updated_at}">Loading date...</span>
-                </header>
-                <h4 class="review-headline">${review.html_headline}</h4>
-                <div class="review-content">${review.html_content}</div>
-                </div>
-            `).join('');
+        // Map the html to the array of reviews and join the items in a string
+        const reviews = data.items.map(review => {
 
-            document.getElementById('reviews-list').insertAdjacentHTML('beforeend', reviews);
-        }
+            const dateObj = new Date(review.updated_at);
+            const localDate = dateObj.toLocaleDateString();
+
+            return `
+                <div class="review-card">
+                    <header class="review-header">
+                        <img src="${review.user.local_avatar_url}" class=" review-user-avatar" width="20" height="20"
+                            loading="lazy" alt="">
+                        <span class="review-user-name">${review.user.name}</span>
+                        <span class="review-user-rating">
+                            <span class="rating-global-star">&#9733;</span>
+                            <span>${review.rating}</span>
+                        </span>
+                        <span class="review-date" data-utc-time="${review.updated_at}">${localDate}</span>
+                    </header>
+                    <h4 class="review-headline">${review.html_headline}</h4>
+                    <div class="review-content">${review.html_content}</div>
+                </div>`;
+        });
+
+        document.getElementById('reviews-list').insertAdjacentHTML('beforeend', reviews.join(''));
 
         if (data.next_cursor) {
             btn.dataset.cursor = data.next_cursor;
