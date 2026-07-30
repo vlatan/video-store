@@ -1,6 +1,8 @@
 
 document.addEventListener('click', event => {
 
+    if (!(event.target instanceof Element)) return;
+
     // User Profile Dropdown menu
     const dropContent = document.querySelector('.dropdown-content');
     if (dropContent) {
@@ -113,7 +115,7 @@ const dismissAlert = (alertEl) => {
 const setAlert = message => {
     const alert = document.createElement('div');
     alert.className = 'alert';
-    document.getElementById('footer').prepend(alert);
+    document.getElementById('footer')?.prepend(alert);
 
     const alertText = document.createElement('span')
     alertText.className = 'alert-text';
@@ -192,7 +194,7 @@ if (currentPath !== privacyPath && acceptCookies !== 'true') {
     snackbarActions.appendChild(buttonOK);
 
     buttonOK.addEventListener('click', () => {
-        localStorage.setItem('acceptCookies', true);
+        localStorage.setItem('acceptCookies', 'true');
         snackbar.remove();
     });
 }
@@ -212,6 +214,7 @@ if (formSubmit) {
         // Check if all required inputs have values
         let ok = true
         for (const inputElement of formInputs) {
+            if (!(inputElement instanceof HTMLInputElement)) continue;
             if (inputElement.required && inputElement.value.trim() === '') {
                 ok = false
             }
