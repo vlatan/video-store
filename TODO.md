@@ -4,14 +4,15 @@
    - Run the DB migration
    - Iinclude new env var and 
    - Rebuild the setup
+
+
+  If a review is added we just prepend the review in the review list.
+  If a review is updated scroll to the review and highlight it with fade out.
+  If a review is deleted we remove it from the list if it's on the first page.
   
   Style the Load more button.
   Add number of reviews to html.
   
-  If a review is added we just prepend the review in the review list.
-  If a review is updated scroll to the review and highlight it with fade out.
-  If a review is deleted we remove it from the list if it's on the first page.
-
   Change ids to classes.
   Remove the css vars in rating css.
 

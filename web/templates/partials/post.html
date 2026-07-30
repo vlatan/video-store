@@ -319,7 +319,7 @@
 
 			<div id="reviews-list">
 				{{ range .Items }}
-				<div class="review-card">
+				<div {{ if eq $.CurrentUser.ID .User.ID }} id="current-user-review" {{ end }} class="review-card">
 					<header class="review-header">
 						<img src="{{ .User.LocalAvatarURL }}" class=" review-user-avatar" width="20" height="20"
 							loading="lazy" alt="{{ .User.Name }}">

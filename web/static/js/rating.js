@@ -216,15 +216,16 @@ document.querySelectorAll('.review-section').forEach(s => {
             const result = await response.json();
 
             const card = document.createElement('div');
-            card.className = 'review-card new-review';
+            card.className = 'review-card';
 
+            // Get these from the header of the page
             const avatar = document.querySelector('.username-image')?.getAttribute('src') ?? "";
             const username = document.querySelector('.username-text')?.textContent.trim() ?? "";
 
             const now = new Date();
             const localDate = now.toLocaleDateString();
 
-            card.innerHTML = `
+            const innerHTML = `
                 <header class="review-header">
                     <img src="${avatar}" class=" review-user-avatar" width="20" height="20"
                         loading="lazy" alt="">
@@ -239,9 +240,26 @@ document.querySelectorAll('.review-section').forEach(s => {
                 <div class="review-content">${result.review.html_content}</div>
             `;
 
-            reviewsList?.prepend(card);
+            // Look for this review in the DOM
+            const review = document.getElementById("current-user-review");
+            if (review) { // Review is in the DOM
+                review.innerHTML = innerHTML;
+                review.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                review.classList.add('updated-review');
+                setTimeout(() => review.classList.remove('updated-review'), 2000);
+                setAlert("Review updated!");
+                // TODO: Change this check, not reliable
+            } else if (originalreviewBtnSubmitText.trim() === "Update Review") {
+                // Review isn't loaded in the DOM yet.
+                setAlert("Review updated!");
+            } else { // New review, prepend to the list
+                card.innerHTML = innerHTML;
+                card.classList.add('new-review');
+                reviewsList?.prepend(card);
+                setAlert("Review posted!");
+            }
 
-            // Update the rating HTML
+            // Update the user rating and average rating HTML
             updateRatingHTML(payload.rating, result.stats.avg_rating, result.stats.rating_count)
 
             // The request went through, change the button text
