@@ -6,6 +6,7 @@
 
 document.querySelectorAll('.review-date').forEach(element => {
     const rawUtcString = element.getAttribute('data-utc-time');
+    if (!rawUtcString) return;
     const dateObj = new Date(rawUtcString);
     element.textContent = dateObj.toLocaleDateString();
 });
@@ -20,12 +21,14 @@ const bigStarValues = document.querySelectorAll('.rating-big-star-value');
 
 starRadios.forEach(radio => {
     radio.addEventListener('change', (event) => {
-        if (!event.target.checked) return;
-
-        const value = event.target.value;
+        const currentRadio = event.currentTarget;
+        if (!(currentRadio instanceof HTMLInputElement && currentRadio.type === 'radio')) return;
+        if (!currentRadio.checked) return;
+        const value = currentRadio.value;
 
         // Sync across all star sets (needed if they're in separate forms)
         starRadios.forEach(r => {
+            if (!(r instanceof HTMLInputElement && r.type === 'radio')) return;
             if (r.value === value) r.checked = true;
         });
 
@@ -41,7 +44,10 @@ starRadios.forEach(radio => {
 // Update the Average Rating Display and the User Rating Button
 // ==========================================================================
 
-function updateRatingHTML(user_rating, avg_rating, rating_count) {
+function updateRatingHTML(user_rating = 0, avg_rating = 0, rating_count = 0) {
+
+    // Illegal values
+    if (user_rating <= 0 || user_rating > 10) return;
 
     const votesText = rating_count === 1 ? "vote" : "votes";
     const avgRatingHTML = `
@@ -75,7 +81,9 @@ function updateRatingHTML(user_rating, avg_rating, rating_count) {
     }
 
     // Transform the user rating button
-    rateBtnOpen.innerHTML = `<span class="rating-user-star">&#9733;</span> ${user_rating}`;
+    if (rateBtnOpen) {
+        rateBtnOpen.innerHTML = `<span class="rating-user-star">&#9733;</span> ${user_rating}`;
+    }
 }
 
 
@@ -91,11 +99,15 @@ document.querySelectorAll('.rating-section').forEach(widget => {
     const rateBtnClose = widget.querySelector('#btn-close-rate');
     const rateBtnSubmit = widget.querySelector('.btn-submit-rate');
 
-    rateBtnOpen.addEventListener('click', () => rateDialog.showModal());
-    rateBtnClose.addEventListener('click', () => rateDialog.close());
+    if (!(rateDialog instanceof HTMLDialogElement)) return;
+    if (!(rateForm instanceof HTMLFormElement)) return;
+    if (!(rateBtnSubmit instanceof HTMLButtonElement && rateBtnSubmit.type === 'submit')) return;
+
+    rateBtnOpen?.addEventListener('click', () => rateDialog.showModal());
+    rateBtnClose?.addEventListener('click', () => rateDialog.close());
 
     // Handle form submission
-    rateForm.addEventListener('submit', async (event) => {
+    rateForm?.addEventListener('submit', async (event) => {
         event.preventDefault();
         const form = event.currentTarget;
         if (!(form instanceof HTMLFormElement)) return;
@@ -106,20 +118,22 @@ document.querySelectorAll('.rating-section').forEach(widget => {
         }
 
         const formData = new FormData(form);
-        const data = Object.fromEntries(formData.entries());
-        if (data.rating) data.rating = Number(data.rating);
+        const payload = {
+            ...Object.fromEntries(formData.entries()),
+            rating: Number(formData.get('rating') || 0)
+        };
 
         rateBtnSubmit.disabled = true;
         rateBtnSubmit.textContent = 'Posting...';
         rateDialog.close();
 
         try {
-            const response = await postData(form.action, data);
+            const response = await postData(form.action, payload);
             if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
             const result = await response.json();
 
             // Update the rating HTML
-            updateRatingHTML(data.rating, result.avg_rating, result.rating_count)
+            updateRatingHTML(payload.rating, result.avg_rating, result.rating_count)
         } catch (error) {
             console.error("Failed to fetch or parse JSON:", error);
             setAlert("Something went wrong!");
