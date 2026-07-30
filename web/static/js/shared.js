@@ -138,8 +138,13 @@ document.querySelectorAll('.alert').forEach(a => dismissAlert(a));
 // ==========================================================================
 
 document.querySelectorAll('[data-modal]').forEach(openDialogBtn => {
+
+    if (!(openDialogBtn instanceof HTMLElement)) return;
     const modalName = openDialogBtn.dataset.modal;
+
     const modalDialog = document.querySelector(`[data-body="${modalName}"]`);
+    if (!(modalDialog instanceof HTMLDialogElement)) return;
+
     const closeDialogBtns = modalDialog.querySelectorAll(`[data-close="${modalName}"]`);
 
     // Open dialog on open button click
@@ -162,7 +167,7 @@ const currentPath = window.location.pathname;
 if (currentPath !== privacyPath && acceptCookies !== 'true') {
     const snackbar = document.createElement('div');
     snackbar.classList.add('snackbar');
-    document.getElementById('footer').after(snackbar);
+    document.getElementById('footer')?.after(snackbar);
 
     const snackbarLabel = document.createElement('div');
     snackbarLabel.classList.add('snackbar-label');
