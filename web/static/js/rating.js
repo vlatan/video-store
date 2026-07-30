@@ -97,6 +97,7 @@ document.querySelectorAll('.rating-section').forEach(widget => {
     const rateBtnOpen = widget.querySelector('#btn-open-rate');
     const rateBtnClose = widget.querySelector('#btn-close-rate');
     const rateBtnSubmit = widget.querySelector('.btn-submit-rate');
+    let originalrateBtnSubmitText = rateBtnSubmit?.textContent || 'Rate';
 
     if (!(rateDialog instanceof HTMLDialogElement)) return;
     if (!(rateForm instanceof HTMLFormElement)) return;
@@ -133,12 +134,15 @@ document.querySelectorAll('.rating-section').forEach(widget => {
 
             // Update the rating HTML
             updateRatingHTML(payload.rating, result.avg_rating, result.rating_count)
+
+            // The request went through, change the button text
+            originalrateBtnSubmitText = "Update";
         } catch (error) {
             console.error("Failed to fetch or parse JSON:", error);
             setAlert("Something went wrong!");
         } finally {
             rateBtnSubmit.disabled = false;
-            rateBtnSubmit.textContent = 'Rate';
+            rateBtnSubmit.textContent = originalrateBtnSubmitText;
         }
     });
 });
@@ -155,13 +159,14 @@ document.querySelectorAll('.review-section').forEach(s => {
     const reviewOpenBtn = s.querySelector('#btn-open-review');
     const reviewCloseBtn = s.querySelector('#btn-close-review');
     const reviewSubmitBtn = s.querySelector('#submit-review');
+    let originalreviewBtnSubmitText = reviewSubmitBtn?.textContent || 'Post Review';
     const reviewError = s.querySelector('#review-error');
 
     if (!(reviewDialog instanceof HTMLDialogElement)) return;
     if (!(reviewForm instanceof HTMLFormElement)) return;
     if (!(reviewSubmitBtn instanceof HTMLButtonElement && reviewSubmitBtn.type === 'submit')) return;
 
-    const showError = (msg = '') => {
+    const showError = (msg = "") => {
         if (!(reviewError instanceof HTMLElement)) return;
         reviewError.textContent = msg;
         reviewError.hidden = false;
@@ -238,12 +243,15 @@ document.querySelectorAll('.review-section').forEach(s => {
 
             // Update the rating HTML
             updateRatingHTML(payload.rating, result.stats.avg_rating, result.stats.rating_count)
+
+            // The request went through, change the button text
+            originalreviewBtnSubmitText = "Update Review"
         } catch (err) {
             console.error("Failed to fetch or parse JSON:", err);
             setAlert("Something went wrong!");
         } finally {
             reviewSubmitBtn.disabled = false;
-            reviewSubmitBtn.textContent = 'Post Review';
+            reviewSubmitBtn.textContent = originalreviewBtnSubmitText;
         }
     });
 });

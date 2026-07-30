@@ -206,7 +206,9 @@
 								{{ end }}
 							</fieldset>
 
-							<button type="submit" class="btn-submit-rate">Rate</button>
+							<button type="submit" class="btn-submit-rate">
+								{{ if $userRating }}Update{{ else }}Rate{{ end }}
+							</button>
 						</form>
 					</dialog>
 					{{ end }}
@@ -292,7 +294,9 @@
 
 					<div class="review-form-footer">
 						<span id="review-error" class="review-form-error" hidden></span>
-						<button type="submit" id="submit-review" class="btn-submit-review">Post Review</button>
+						<button type="submit" id="submit-review" class="btn-submit-review">
+							{{ if and $headline $body}}Update Review{{ else }}Post Review{{ end }}
+						</button>
 					</div>
 				</form>
 			</dialog>
