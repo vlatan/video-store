@@ -342,12 +342,11 @@
 				{{ end }}
 			</div>
 
-			<!-- {{ if gt .TotalNum $.Config.ReviewsPerPost }} -->
-			<button id="load-more-reviews-btn" data-video-id="{{ $.CurrentPost.VideoID }}"
-				data-cursor="{{ .NextCursor }}">
+			{{ with .NextCursor }}
+			<button id="load-more-reviews-btn" data-video-id="{{ $.CurrentPost.VideoID }}" data-cursor="{{ . }}">
 				Load More
 			</button>
-			<!-- {{ end }} -->
+			{{ end }}
 
 			{{ end }}
 		</section>

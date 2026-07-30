@@ -639,6 +639,24 @@ button.btn-submit-review:disabled,
 	}
 }
 
+.review-spinner {
+	display: inline-block;
+	width: 14px;
+	height: 14px;
+	border: 2px solid currentColor;
+	border-right-color: transparent;
+	border-radius: 50%;
+	animation: spin 0.75s linear infinite;
+	vertical-align: middle;
+	margin-right: 6px;
+}
+
+@keyframes spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
 .review-card {
 	display: flex;
 	flex-direction: column;

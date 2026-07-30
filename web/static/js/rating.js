@@ -98,6 +98,7 @@ document.querySelectorAll('.rating-section').forEach(widget => {
     rateForm.addEventListener('submit', async (event) => {
         event.preventDefault();
         const form = event.currentTarget;
+        if (!(form instanceof HTMLFormElement)) return;
 
         if (!form.checkValidity()) {
             form.reportValidity(); // shows the native browser bubble
@@ -158,6 +159,7 @@ document.querySelectorAll('.review-section').forEach(s => {
     reviewForm.addEventListener('submit', async (event) => {
         event.preventDefault();
         const form = event.currentTarget;
+        if (!(form instanceof HTMLFormElement)) return;
         clearError();
 
         if (!form.checkValidity()) {
@@ -231,20 +233,25 @@ document.querySelectorAll('.review-section').forEach(s => {
 // ==========================================================================
 document.getElementById('load-more-reviews-btn')?.addEventListener('click', async (event) => {
     const btn = event.currentTarget;
+    if (!(btn instanceof HTMLButtonElement)) return;
     const videoId = btn.dataset.videoId;
     const cursor = btn.dataset.cursor;
 
+    // Prevent fetch if no cursor
+    if (!cursor) return;
+    const originalBtnText = btn.innerHTML;
+
     try {
         btn.disabled = true;
+        btn.innerHTML = '<span class="review-spinner"></span> Loading...';
 
         const response = await fetch(`/api/video/${videoId}/reviews?cursor=${cursor}`);
         if (!response.ok) throw new Error('Failed to fetch reviews');
 
         const data = await response.json();
-        if (!data.items?.length) return;
 
         // Map the html to the array of reviews and join the items in a string
-        const reviews = data.items.map(review => {
+        const reviews = (data.items || []).map(review => {
 
             const dateObj = new Date(review.updated_at);
             const localDate = dateObj.toLocaleDateString();
@@ -271,11 +278,19 @@ document.getElementById('load-more-reviews-btn')?.addEventListener('click', asyn
         if (data.next_cursor) {
             btn.dataset.cursor = data.next_cursor;
         } else {
-            btn.style.display = 'none'; // Hide if no more cursor
+            btn.dataset.cursor = "";
+            btn.outerHTML = '<p class="no-more-reviews">No more reviews</p>';
+            return; // Exit so finally block doesn't try to restore outerHTML button
         }
     } catch (error) {
-        console.error('Error loading more reviews:', error);
+        console.error("Failed to fetch or parse JSON:", error);
+        setAlert("Something went wrong!");
     } finally {
-        btn.disabled = false;
+        // If the button is in the DOM (not replaced with "no more reviews" message),
+        // enable it and restore the original text.
+        if (btn.isConnected) {
+            btn.disabled = false;
+            btn.innerHTML = originalBtnText;
+        }
     }
 });
