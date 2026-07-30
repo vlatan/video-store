@@ -15,17 +15,17 @@ document.querySelectorAll('.review-date').forEach(element => {
 // Sync All Checked Stars and Big Star Values
 // ==========================================================================
 
-const starEadios = document.querySelectorAll('input[name="rating"]');
+const starRadios = document.querySelectorAll('input[name="rating"]');
 const bigStarValues = document.querySelectorAll('.rating-big-star-value');
 
-starEadios.forEach(radio => {
+starRadios.forEach(radio => {
     radio.addEventListener('change', (event) => {
         if (!event.target.checked) return;
 
         const value = event.target.value;
 
         // Sync across all star sets (needed if they're in separate forms)
-        starEadios.forEach(r => {
+        starRadios.forEach(r => {
             if (r.value === value) r.checked = true;
         });
 
