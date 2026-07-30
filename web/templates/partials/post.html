@@ -160,12 +160,8 @@
 					{{- $userRating := .CurrentPost.UserActions.Review.Rating -}}
 
 					<!-- User Rating Button -->
-					<!-- beautify ignore:start -->
-					{{ if .CurrentUser.IsAuthenticated }}
-					<button type="button" id="btn-open-rate" class="btn-open-post-dialog" aria-haspopup="dialog">
-					{{ else }}
-					<button data-modal="login" type="button" id="btn-open-rate" class="btn-open-post-dialog">
-					{{ end }}
+					<button {{ if not .CurrentUser.IsAuthenticated }} data-modal="login" {{ end }} type="button"
+						id="btn-open-rate" class="btn-open-post-dialog" aria-haspopup="dialog">
 						{{ if $userRating }}
 						<span class="rating-user-star">&#9733;</span>
 						<span>{{ $userRating }}</span>
@@ -174,7 +170,6 @@
 						<span>Rate</span>
 						{{ end }}
 					</button>
-					<!-- beautify ignore:end -->
 
 					<!-- Rating Dialog -->
 					{{ if .CurrentUser.IsAuthenticated }}
@@ -308,16 +303,11 @@
 				<h3>User Reviews</h3>
 
 				<!-- User Review Button -->
-				<!-- beautify ignore:start -->
-				{{ if .CurrentUser.IsAuthenticated }}
-				<button type="button" id="btn-open-review" class="btn-open-post-dialog" aria-haspopup="dialog">
-				{{ else }}
-				<button data-modal="login" type="button" id="btn-open-review" class="btn-open-post-dialog">
-				{{ end }}
+				<button {{ if not .CurrentUser.IsAuthenticated }} data-modal="login" {{ end }} type="button"
+					id="btn-open-review" class="btn-open-post-dialog" aria-haspopup="dialog">
 					<span class="open-review-symbol">+</span>
 					<span>Review</span>
 				</button>
-				<!-- beautify ignore:end -->
 			</header>
 
 			<!-- Reviews List -->

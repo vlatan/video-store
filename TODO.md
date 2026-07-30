@@ -4,6 +4,13 @@
    - Run the DB migration
    - Iinclude new env var and 
    - Rebuild the setup
+  
+  Style the Load more button.
+  Add number of reviews to html.
+  
+  If a review is added we just prepend the review in the review list.
+  If a review is updated scroll to the review and highlight it with fade out.
+  If a review is deleted we remove it from the list if it's on the first page.
 
   Change ids to classes.
   Remove the css vars in rating css.
@@ -11,10 +18,6 @@
   Move h4 in the header of the review?
   Use schema on the reviews.
   Change big star value on hover on the small stars.
-
-  If a review is added we just prepend the review in the review list.
-  If a review is updated scroll to the review and highlight it with fade out.
-  If a review is deleted we remove it from the list if it's on the first page.
 
   The user should be able to delete a review or a rating.
   Include delete button on the modals and add edit button on the review card.
