@@ -5,8 +5,9 @@
    - Iinclude new env var and 
    - Rebuild the setup
 
-  For non-auth user the reviews have default avatars but then the first avatar is populated
-  and the first review has no date.
+  Rename the `analytics_id` to `public_id` and make non null constraint.
+  There's no row without that column.
+  Remove non-stop producing this id throughout the code and make it only on user upsert.
 
   The user should be able to delete a review or a rating.
   Include delete button on the modals and add edit button on the review card.
