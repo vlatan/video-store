@@ -31,14 +31,14 @@ func (s *Service) refreshAvatar(ctx context.Context, user *models.User) (string,
 	head, err := s.r2s.HeadObject(
 		ctx,
 		s.config.R2CdnBucketName,
-		fmt.Sprintf(avatarR2Path, user.AnalyticsID),
+		fmt.Sprintf(avatarR2Path, user.PublicID),
 	)
 
 	// Form the avatar URL
 	avatarURL := &url.URL{
 		Scheme:   "https",
 		Host:     s.config.R2CdnDomain,
-		Path:     fmt.Sprintf(avatarR2Path, user.AnalyticsID),
+		Path:     fmt.Sprintf(avatarR2Path, user.PublicID),
 		RawQuery: "v=" + url.QueryEscape(sourceHash),
 	}
 
@@ -75,7 +75,7 @@ func (s *Service) refreshAvatar(ctx context.Context, user *models.User) (string,
 	err = s.r2s.PutObject(
 		ctx,
 		s.config.R2CdnBucketName,
-		fmt.Sprintf(avatarR2Path, user.AnalyticsID),
+		fmt.Sprintf(avatarR2Path, user.PublicID),
 		bytes.NewReader(buf.Bytes()),
 		"image/jpeg",
 		map[string]string{"source-hash": sourceHash},
@@ -84,7 +84,7 @@ func (s *Service) refreshAvatar(ctx context.Context, user *models.User) (string,
 	if err != nil {
 		return "", fmt.Errorf(
 			"failed to upload the avatar %s to bucket: %w",
-			user.AnalyticsID, err,
+			user.PublicID, err,
 		)
 	}
 

@@ -42,12 +42,12 @@
 
 	{{ if not .Config.Debug }}
 	<script async src="https://www.googletagmanager.com/gtag/js?id={{ .Config.GtagID }}"></script>
-	{{ if and .CurrentUser .CurrentUser.AnalyticsID }}
+	{{ if and .CurrentUser .CurrentUser.PublicID }}
 	<script>
 		window.dataLayer = window.dataLayer || [];
 		function gtag() { dataLayer.push(arguments); }
 		gtag('js', new Date());
-		gtag('config', '{{ .Config.GtagID }}', { 'user_id': '{{ .CurrentUser.AnalyticsID }}' });
+		gtag('config', '{{ .Config.GtagID }}', { 'user_id': '{{ .CurrentUser.PublicID }}' });
 	</script>
 	{{ else }}
 	<script>

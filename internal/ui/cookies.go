@@ -103,7 +103,7 @@ func (s *service) GetUserFromSession(w http.ResponseWriter, r *http.Request) (*m
 	email, _ := session.Values["Email"].(string)
 	name, _ := session.Values["Name"].(string)
 	provider, _ := session.Values["Provider"].(string)
-	analyticsID, _ := session.Values["AnalyticsID"].(string)
+	publicID, _ := session.Values["PublicID"].(string)
 	avatarURL, _ := session.Values["AvatarURL"].(string)
 	accessToken, _ := session.Values["AccessToken"].(string)
 
@@ -114,7 +114,7 @@ func (s *service) GetUserFromSession(w http.ResponseWriter, r *http.Request) (*m
 		Name:           name,
 		Provider:       provider,
 		AvatarURL:      avatarURL,
-		AnalyticsID:    analyticsID,
+		PublicID:       publicID,
 		AccessToken:    accessToken,
 		Config:         s.config,
 	}

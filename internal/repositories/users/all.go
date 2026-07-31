@@ -35,7 +35,7 @@ func (r *Repository) GetUsers(ctx context.Context, page int) (models.Users, erro
 
 		var totalNum int
 		var user models.User
-		var name, email, avatarURL, analyticsID sql.NullString
+		var name, email, avatarURL, publicID sql.NullString
 
 		// Get user row data to destination
 		if err = rows.Scan(
@@ -45,7 +45,7 @@ func (r *Repository) GetUsers(ctx context.Context, page int) (models.Users, erro
 			&name,
 			&email,
 			&avatarURL,
-			&analyticsID,
+			&publicID,
 			&user.LastSeen,
 			&user.CreatedAt,
 			&totalNum,
@@ -57,7 +57,7 @@ func (r *Repository) GetUsers(ctx context.Context, page int) (models.Users, erro
 		user.Name = name.String
 		user.Email = email.String
 		user.AvatarURL = avatarURL.String
-		user.AnalyticsID = analyticsID.String
+		user.PublicID = publicID.String
 
 		// Include the user in the result
 		users.Items = append(users.Items, user)

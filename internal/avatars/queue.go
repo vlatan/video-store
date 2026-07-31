@@ -56,8 +56,8 @@ func (s *Service) worker() {
 			r2URL, err := s.refreshAvatar(ctx, user)
 
 			// Redis keys
-			ttlKey := avatarCacheTTL + user.AnalyticsID
-			avatarKey := avatarCachePrefix + user.AnalyticsID
+			ttlKey := avatarCacheTTL + user.PublicID
+			avatarKey := avatarCachePrefix + user.PublicID
 
 			// If no avatar url refreshed
 			if err != nil || r2URL == "" {

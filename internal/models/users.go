@@ -45,7 +45,7 @@ type User struct {
 	Name           string         `json:"name,omitempty"`
 	Provider       string         `json:"-"`
 	AvatarURL      string         `json:"avatar_url,omitempty"`
-	AnalyticsID    string         `json:"-"`
+	PublicID       string         `json:"public_id,omitempty"`
 	LocalAvatarURL string         `json:"local_avatar_url,omitempty"`
 	AccessToken    string         `json:"-"`
 	RefreshToken   string         `json:"-"`
@@ -78,8 +78,8 @@ func (u *User) IsAdmin() bool {
 }
 
 // Set the user analytics ID
-func (u *User) SetAnalyticsID() {
-	analyticsID := u.ProviderUserId + u.Provider + u.Email
-	hashBytes := sha256.Sum256([]byte(analyticsID))
-	u.AnalyticsID = fmt.Sprintf("%x", hashBytes)[:32]
+func (u *User) SetPublicID() {
+	publicID := u.ProviderUserId + u.Provider + u.Email
+	hashBytes := sha256.Sum256([]byte(publicID))
+	u.PublicID = fmt.Sprintf("%x", hashBytes)[:32]
 }

@@ -75,7 +75,7 @@ func (r *Repository) GetPostReviews(ctx context.Context, videoID, cursor string)
 			name,
 			email,
 			avatarURL,
-			analyticsID sql.NullString
+			publicID sql.NullString
 		)
 
 		err = rows.Scan(
@@ -92,7 +92,7 @@ func (r *Repository) GetPostReviews(ctx context.Context, videoID, cursor string)
 			&name,
 			&email,
 			&avatarURL,
-			&analyticsID,
+			&publicID,
 		)
 
 		if err != nil {
@@ -102,7 +102,7 @@ func (r *Repository) GetPostReviews(ctx context.Context, videoID, cursor string)
 		review.User.Name = name.String
 		review.User.Email = email.String
 		review.User.AvatarURL = avatarURL.String
-		review.User.AnalyticsID = analyticsID.String
+		review.User.PublicID = publicID.String
 
 		// Sanitize headline
 		safeHeadline := strictPolicy.Sanitize(review.Headline)

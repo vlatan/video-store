@@ -48,7 +48,7 @@ func IsProtectedRoute(path string) bool {
 func (s *Service) loginUser(w http.ResponseWriter, r *http.Request, user *models.User) error {
 
 	// Set user analytics ID
-	user.SetAnalyticsID()
+	user.SetPublicID()
 
 	// Update or insert user
 	id, err := s.usersRepo.UpsertUser(r.Context(), user)
@@ -68,7 +68,7 @@ func (s *Service) loginUser(w http.ResponseWriter, r *http.Request, user *models
 	session.Values["Name"] = user.Name
 	session.Values["Provider"] = user.Provider
 	session.Values["AvatarURL"] = user.AvatarURL
-	session.Values["AnalyticsID"] = user.AnalyticsID
+	session.Values["PublicID"] = user.PublicID
 	session.Values["AccessToken"] = user.AccessToken
 	session.Values["RefreshToken"] = user.RefreshToken
 	session.Values["LastSeen"] = now
