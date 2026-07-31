@@ -140,18 +140,13 @@
 							itemtype="https://schema.org/AggregateRating">
 							<meta itemprop="worstRating" content="1">
 							<div class="rating-score">
-								<span class="rating-avg-val" itemprop="ratingValue">
-									{{ .Avg }}
-								</span> / <span itemprop="bestRating">10</span>
+								<span class="rating-avg-val" itemprop="ratingValue">{{ .Avg }}</span>
+								<span>/</span>
+								<span itemprop="bestRating">10</span>
 							</div>
-							{{ $votesText := "votes" }}
-							{{ if eq .Count 1 }}
-							{{ $votesText = "vote" }}
-							{{ end }}
 							<div class="rating-count">
-								<span class="rating-count-val" itemprop="ratingCount">
-									{{ .Count }}
-								</span> {{ $votesText }}
+								<span class="rating-count-val" itemprop="ratingCount">{{ .Count }}</span>
+								<span>{{ if eq .Count 1 }}vote{{ else }}votes{{ end }}</span>
 							</div>
 						</div>
 					</div>
@@ -240,6 +235,10 @@
 		<!-- Review Widget -->
 		<section class="review-section">
 
+			{{- $headline := .CurrentPost.UserActions.Review.Headline -}}
+			{{- $body := .CurrentPost.UserActions.Review.Content -}}
+			{{- $userHasReview := .CurrentPost.UserActions.Review.IsCurrentUser -}}
+
 			<!-- Review Dialog -->
 			{{ if .CurrentUser.IsAuthenticated }}
 			<dialog id="review-dialog" class="modal post-dialog" closedby="any">
@@ -248,9 +247,7 @@
 
 					<button type="button" id="btn-close-review" class="btn-close-post-dialog">&times;</button>
 
-					{{- $headline := .CurrentPost.UserActions.Review.Headline -}}
-					{{- $body := .CurrentPost.UserActions.Review.Content -}}
-					{{- $userHasReview := .CurrentPost.UserActions.Review.IsCurrentUser -}}
+
 
 					<div class="review-form-group">
 						<label class="review-form-heading" for="review-title">Headline</label>
@@ -323,14 +320,14 @@
 				<button {{ if not .CurrentUser.IsAuthenticated }} data-modal="login" {{ end }} type="button"
 					id="btn-open-review" class="btn-open-post-dialog" aria-haspopup="dialog">
 					<span class="open-review-symbol">+</span>
-					<span>Review</span>
+					<span>{{ if $userHasReview }}Update Review{{ else }}Post Review{{ end }}</span>
 				</button>
 			</header>
 
 			<!-- Reviews List -->
 			{{ with .CurrentPost.Reviews }}
 
-			<div id="reviews-list">
+			<div id="reviews-list" class="reviews-list">
 				{{ range .Items }}
 				<div {{ if .IsCurrentUser }} id="current-user-review" {{ end }} class="review-card">
 					<header class="review-header">

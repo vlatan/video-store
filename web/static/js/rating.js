@@ -68,14 +68,13 @@ function updateRatingHTML(user_rating = 0, avg_rating = 0, rating_count = 0) {
                 itemtype="https://schema.org/AggregateRating">
                 <meta itemprop="worstRating" content="1">
                 <div class="rating-score">
-                    <span class="rating-avg-val" itemprop="ratingValue">
-                        ${avg_rating}
-                    </span> / <span itemprop="bestRating">10</span>
+                    <span class="rating-avg-val" itemprop="ratingValue">${avg_rating}</span>
+                    <span>/</span>
+                    <span itemprop="bestRating">10</span>
                 </div>
                 <div class="rating-count">
-                    <span class="rating-count-val" itemprop="ratingCount">
-                        ${rating_count}
-                    </span> ${votesText}
+                    <span class="rating-count-val" itemprop="ratingCount">${rating_count}</span>
+                    <span>${votesText}</span>
                 </div>
             </div>
         </div>
