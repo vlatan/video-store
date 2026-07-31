@@ -19,7 +19,6 @@
 
   Move h4 in the header of the review?
   Use schema on the reviews.
-  Change big star value on hover on the small stars.
 
   The user should be able to delete a review or a rating.
   Include delete button on the modals and add edit button on the review card.

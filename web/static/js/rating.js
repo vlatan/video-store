@@ -18,23 +18,47 @@ document.querySelectorAll('.review-date').forEach(element => {
 const starRadios = document.querySelectorAll('input[name="rating"]');
 const bigStarValues = document.querySelectorAll('.rating-big-star-value');
 
+// Track currently checked value
+let selectedValue = "?";
+const checked = document.querySelector('input[name="rating"]:checked');
+if (checked instanceof HTMLInputElement) {
+    selectedValue = checked.value;
+}
+
+// Update the displayed rating value
+const updateBigStar = (val = "?") => {
+    bigStarValues.forEach(bsv => {
+        bsv.textContent = val;
+    });
+};
+
 starRadios.forEach(radio => {
-    radio.addEventListener('change', (event) => {
-        const currentRadio = event.currentTarget;
-        if (!(currentRadio instanceof HTMLInputElement && currentRadio.type === 'radio')) return;
-        if (!currentRadio.checked) return;
-        const value = currentRadio.value;
+    if (!(radio instanceof HTMLInputElement)) return;
+
+    radio.addEventListener('change', () => {
+        if (!radio.checked) return;
+        selectedValue = radio.value;
 
         // Sync across all star sets (needed if they're in separate forms)
         starRadios.forEach(r => {
-            if (!(r instanceof HTMLInputElement && r.type === 'radio')) return;
-            if (r.value === value) r.checked = true;
+            if (r instanceof HTMLInputElement && r.value === selectedValue) {
+                r.checked = true;
+            }
+            updateBigStar(selectedValue);
         });
+    });
 
-        // Update the displayed rating value
-        bigStarValues.forEach(bsv => {
-            bsv.textContent = value;
-        });
+    // Target the visible label (or fall back to input)
+    const hoverTarget = radio.closest('label') || radio;
+
+    // Hover preview
+    hoverTarget.addEventListener('mouseenter', () => {
+        updateBigStar(radio.value);
+    });
+
+    // Reset to checked value on mouse leave
+    hoverTarget.addEventListener('mouseleave', () => {
+        updateBigStar(selectedValue);
     });
 });
 
