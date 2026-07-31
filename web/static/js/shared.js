@@ -131,7 +131,7 @@ const setAlert = (message = '') => {
 
     const alert = document.createElement('div');
     alert.className = 'alert';
-    document.getElementById('footer')?.prepend(alert);
+    document.getElementById('footer')?.append(alert);
 
     const alertText = document.createElement('span')
     alertText.className = 'alert-text';
