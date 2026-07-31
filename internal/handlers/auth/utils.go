@@ -47,7 +47,7 @@ func IsProtectedRoute(path string) bool {
 // Store user info in our own session
 func (s *Service) loginUser(w http.ResponseWriter, r *http.Request, user *models.User) error {
 
-	// Set user analytics ID
+	// Set user public ID
 	user.SetPublicID()
 
 	// Update or insert user

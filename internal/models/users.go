@@ -77,7 +77,7 @@ func (u *User) IsAdmin() bool {
 		u.Provider == u.Config.AdminProvider
 }
 
-// Set the user analytics ID
+// Set the user public ID
 func (u *User) SetPublicID() {
 	publicID := u.ProviderUserId + u.Provider + u.Email
 	hashBytes := sha256.Sum256([]byte(publicID))
