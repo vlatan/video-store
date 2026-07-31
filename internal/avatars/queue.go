@@ -11,11 +11,11 @@ import (
 // Enqueue returns true if queued, false if duplicate or queue is full
 func (s *Service) enqueue(user *models.User) bool {
 	s.mu.Lock()
-	if _, exists := s.active[user.ID]; exists {
+	if _, exists := s.active[user.PublicID]; exists {
 		s.mu.Unlock()
 		return false // Duplicate, silently drop
 	}
-	s.active[user.ID] = struct{}{}
+	s.active[user.PublicID] = struct{}{}
 	s.mu.Unlock()
 
 	// Non-blocking send
@@ -24,13 +24,13 @@ func (s *Service) enqueue(user *models.User) bool {
 		return true // Successfully queued
 	default:
 		// Queue is full. Must release the lock status so it can be tried later.
-		s.release(user.ID)
+		s.release(user.PublicID)
 		return false
 	}
 }
 
 // Release deletes a job from the mutex map
-func (s *Service) release(id int) {
+func (s *Service) release(id string) {
 	s.mu.Lock()
 	delete(s.active, id)
 	s.mu.Unlock()
@@ -50,7 +50,7 @@ func (s *Service) worker() {
 			defer cancel()
 
 			// Release this job after the work is done
-			defer s.release(user.ID)
+			defer s.release(user.PublicID)
 
 			// Download and if avatar changed convert to JPEG and reupload to R2
 			r2URL, err := s.refreshAvatar(ctx, user)

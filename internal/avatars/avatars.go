@@ -17,7 +17,7 @@ import (
 )
 
 type Service struct {
-	active map[int]struct{}
+	active map[string]struct{}
 	mu     sync.Mutex
 	Jobs   chan *models.User
 
@@ -35,7 +35,7 @@ func New(
 	r2s r2.Service) *Service {
 
 	s := &Service{
-		active: make(map[int]struct{}),
+		active: make(map[string]struct{}),
 		Jobs:   make(chan *models.User, bufferSize),
 
 		config: cfg,
