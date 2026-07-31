@@ -116,7 +116,7 @@ const sleep = (time = 0) => {
     return new Promise(resolve => setTimeout(resolve, time));
 };
 
-// Alert helper
+// Remove alert message
 /** @param {Element} alertEl */
 const dismissAlert = (alertEl) => {
     const closeBtn = alertEl.querySelector('.alert-close');
