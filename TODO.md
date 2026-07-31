@@ -5,11 +5,7 @@
    - Iinclude new env var and 
    - Rebuild the setup
 
-  Rename the `analytics_id` to `public_id` and make non null constraint.
-  There's no row without that column.
-  Remove non-stop producing this id throughout the code and make it only on user upsert.
-
-  The user should be able to delete a review or a rating.
+   The user should be able to delete a review or a rating.
   Include delete button on the modals and add edit button on the review card.
   On deletion inline the deletion exalplanation and confirmation in the modals with swapping the modal footer.
   If a review is deleted we remove it from the list if it's on the first page.

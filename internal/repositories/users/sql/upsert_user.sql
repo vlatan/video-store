@@ -1,7 +1,7 @@
 INSERT INTO app_user (
     provider_user_id, 
     provider, 
-    analytics_id, 
+    public_id, 
     name, 
     email, 
     picture, 
@@ -10,7 +10,7 @@ INSERT INTO app_user (
 VALUES ( $1, $2, $3, $4, $5, $6, NOW() ) 
 ON CONFLICT (provider, provider_user_id) 
 DO UPDATE SET
-    analytics_id = EXCLUDED.analytics_id,
+    public_id = EXCLUDED.public_id,
     name = EXCLUDED.name,
     email = EXCLUDED.email,
     picture = EXCLUDED.picture,

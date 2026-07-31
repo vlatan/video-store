@@ -78,8 +78,8 @@ func (u *User) IsAdmin() bool {
 }
 
 // Set the user public ID
-func (u *User) SetPublicID() {
+func (u *User) MakePublicID() string {
 	publicID := u.ProviderUserId + u.Provider + u.Email
 	hashBytes := sha256.Sum256([]byte(publicID))
-	u.PublicID = fmt.Sprintf("%x", hashBytes)[:32]
+	return fmt.Sprintf("%x", hashBytes)[:32]
 }

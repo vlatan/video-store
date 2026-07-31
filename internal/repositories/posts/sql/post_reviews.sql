@@ -12,7 +12,7 @@ SELECT
     au.name,
     au.email,
     au.picture,
-    au.analytics_id
+    au.public_id
 FROM post AS p
 JOIN post_rating AS prat ON prat.post_id = p.id
 JOIN post_review AS prev ON prev.rating_id = prat.id
