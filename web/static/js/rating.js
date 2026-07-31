@@ -1,17 +1,5 @@
 
 // ==========================================================================
-// Convert Review Dates into Local User Time
-// ==========================================================================
-
-document.querySelectorAll('.review-date').forEach(element => {
-    const rawUtcString = element.getAttribute('data-utc-time');
-    if (!rawUtcString) return;
-    const dateObj = new Date(rawUtcString);
-    element.textContent = dateObj.toLocaleDateString();
-});
-
-
-// ==========================================================================
 // Sync All Checked Stars and Big Star Values
 // ==========================================================================
 

@@ -5,6 +5,9 @@
    - Iinclude new env var and 
    - Rebuild the setup
 
+  For non-auth user the reviews have default avatars but then the first avatar is populated
+  and the first review has no date.
+
   The user should be able to delete a review or a rating.
   Include delete button on the modals and add edit button on the review card.
   On deletion inline the deletion exalplanation and confirmation in the modals with swapping the modal footer.

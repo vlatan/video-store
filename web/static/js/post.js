@@ -15,6 +15,18 @@ playerContent?.addEventListener('click', () => {
 
 
 // ==========================================================================
+// Convert Review Dates into Local User Time
+// ==========================================================================
+
+document.querySelectorAll('.review-date').forEach(element => {
+    const rawUtcString = element.getAttribute('data-utc-time');
+    if (!rawUtcString) return;
+    const dateObj = new Date(rawUtcString);
+    element.textContent = dateObj.toLocaleDateString();
+});
+
+
+// ==========================================================================
 // Load More Reviews
 // ==========================================================================
 document.getElementById('load-more-reviews-btn')?.addEventListener('click', async (event) => {
@@ -46,7 +58,7 @@ document.getElementById('load-more-reviews-btn')?.addEventListener('click', asyn
             const localDate = dateObj.toLocaleDateString();
 
             // Check if this is a current user review
-            const reviewdId = review.is_current_user ? "id='current-user-review'" : ""
+            const reviewdId = review.is_current_user ? "id='current-user-review'" : "";
 
             return `
                 <div class="review-card" ${reviewdId}>
