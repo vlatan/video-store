@@ -306,7 +306,18 @@
 
 			<!-- Reviews List Header -->
 			<header class="reviews-header">
-				<h3>User Reviews</h3>
+				<div class="reviews-title-wrapper">
+					<h3>User Reviews</h3>
+					<!-- beautify ignore:start -->
+					{{- if .CurrentPost.Reviews.TotalNum -}}
+					<span id="review-count-wrapper">
+					{{- else -}}
+					<span id="review-count-wrapper" style="display:none;">
+					{{- end -}}
+						- <span id="review-count">{{ .CurrentPost.Reviews.TotalNum }}</span>
+					</span>
+					<!-- beautify ignore:end -->
+				</div>
 
 				<!-- User Review Button -->
 				<button {{ if not .CurrentUser.IsAuthenticated }} data-modal="login" {{ end }} type="button"
