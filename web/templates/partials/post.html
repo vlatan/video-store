@@ -181,7 +181,7 @@
 									<use href="#big-hearth" />
 								</svg>
 								<span class="big-star-value rating-big-star-value">
-									{{ if eq $userRating 0 }}?{{ else }}{{ $userRating }}{{ end }}
+									{{ if $userRating }}{{ $userRating }}{{ else }}?{{ end }}
 								</span>
 							</div>
 
@@ -287,7 +287,7 @@
 									<use href="#big-hearth" />
 								</svg>
 								<span class="rating-big-star-value review-big-star-value">
-									{{ if eq $userRating 0 }}?{{ else }}{{ $userRating }}{{ end }}
+									{{ if $userRating }}{{ $userRating }}{{ else }}?{{ end }}
 								</span>
 							</div>
 						</div>
@@ -296,7 +296,7 @@
 					<div class="review-form-footer">
 						<span id="review-error" class="review-form-error" hidden></span>
 						<button type="submit" id="submit-review" class="btn-submit-review"
-							data-has-review="{{ if $userHasReview }}true{{ else }}false{{ end }}">
+							data-has-review="{{ $userHasReview }}">
 							{{ if $userHasReview }}Update Review{{ else }}Post Review{{ end }}
 						</button>
 					</div>
