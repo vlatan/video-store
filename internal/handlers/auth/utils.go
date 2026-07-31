@@ -107,6 +107,7 @@ func (s *Service) getRedirectFromSession(w http.ResponseWriter, r *http.Request)
 	if err := session.Save(r, w); err != nil {
 		log.Printf("failed to delete the redirect session; %v", err)
 	}
+
 	return redirectTo
 }
 
