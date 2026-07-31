@@ -59,7 +59,7 @@ func New(
 // Every other error will be logged.
 func (s *Service) Get(ctx context.Context, user *models.User) (string, error) {
 
-	// Set the anaylytics ID in case it's missing
+	// Set the public ID in case it's missing
 	if user.PublicID == "" {
 		user.SetPublicID()
 	}
@@ -116,6 +116,11 @@ func (s *Service) Get(ctx context.Context, user *models.User) (string, error) {
 // Save ensures the avatar is cached, downloading it synchronously if missing.
 // Will return an error only if context ended.
 func (s *Service) Save(ctx context.Context, user *models.User) error {
+
+	// Set the public ID in case it's missing
+	if user.PublicID == "" {
+		user.SetPublicID()
+	}
 
 	avatarKey := avatarCachePrefix + user.PublicID
 	ttlKey := avatarCacheTTL + user.PublicID
@@ -199,6 +204,11 @@ func (s *Service) Save(ctx context.Context, user *models.User) error {
 
 // Delete avatar from object storage if exists
 func (s *Service) Delete(ctx context.Context, user *models.User) error {
+
+	// Set the public ID in case it's missing
+	if user.PublicID == "" {
+		user.SetPublicID()
+	}
 
 	errs := make([]error, 0, 3)
 
