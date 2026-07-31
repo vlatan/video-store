@@ -337,11 +337,15 @@ document.getElementById('load-more-reviews-btn')?.addEventListener('click', asyn
         // Map the corresponding html to each review in the array
         const reviews = items.map(review => {
 
+            // Convert review date to user's local date
             const dateObj = new Date(review.updated_at);
             const localDate = dateObj.toLocaleDateString();
 
+            // Check if this is a current user review
+            const reviewdId = review.is_current_user ? "id='current-user-review'" : ""
+
             return `
-                <div class="review-card">
+                <div class="review-card" ${reviewdId}>
                     <header class="review-header">
                         <img src="${review.user.local_avatar_url}" class=" review-user-avatar" width="20" height="20"
                             loading="lazy" alt="">

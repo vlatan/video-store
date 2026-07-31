@@ -5,21 +5,19 @@
    - Iinclude new env var and 
    - Rebuild the setup
 
-  If a review is added we just prepend the review in the review list.
-  If a review is updated scroll to the review and highlight it with fade out.
-  If a review is deleted we remove it from the list if it's on the first page.
-  
   Add number of reviews to html.
   
+  The user should be able to delete a review or a rating.
+  Include delete button on the modals and add edit button on the review card.
+  On deletion inline the deletion exalplanation and confirmation in the modals with swapping the modal footer.
+  If a review is deleted we remove it from the list if it's on the first page.
+  Don't forget to change the state of the ids and datasets in JS.
+   
   Change ids to classes.
   Remove the css vars in rating css.
 
   Move h4 in the header of the review?
   Use schema on the reviews.
-
-  The user should be able to delete a review or a rating.
-  Include delete button on the modals and add edit button on the review card.
-  On deletion inline the deletion exalplanation and confirmation in the modals with swapping the modal footer.
 
 * Make the checkmarks on the like/save green or yellow
 * Add close button to login menu

@@ -282,6 +282,13 @@ func (s *Service) PostReviewsAPI(w http.ResponseWriter, r *http.Request) {
 		reviews.Items[i].User.LocalAvatarURL = localAvatarURL
 	}
 
+	// Check if the current user owns a review
+	for i, review := range reviews.Items {
+		if currentUser.ID == review.User.ID {
+			reviews.Items[i].IsCurrentUser = true
+		}
+	}
+
 	s.ui.WriteJSON(w, r, reviews)
 }
 

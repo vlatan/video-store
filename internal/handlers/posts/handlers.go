@@ -400,10 +400,10 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 		return nil
 	})
 
-	// Send post reviews fetch in a goroutine
+	// Get reviews from DB in a goroutine
 	g.Go(func() error {
 
-		// Get post reviews, don't cache sthe reviews for logged in users
+		// Get post reviews, don't cache the reviews for logged in users
 		if data.CurrentUser.IsAuthenticated() {
 			postReviews, err = s.postsRepo.GetPostReviews(r.Context(), videoID, "")
 		} else {
@@ -442,6 +442,13 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 			postReviews.Items[i].User.LocalAvatarURL = localAvatarURL
 		}
 
+		// Check if the current user owns a review
+		for i, review := range postReviews.Items {
+			if data.CurrentUser.ID == review.User.ID {
+				postReviews.Items[i].IsCurrentUser = true
+			}
+		}
+
 		return nil
 	})
 
@@ -458,7 +465,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Send user actions fetch in a goroutine
+	// Get current user actions in a goroutine
 	g.Go(func() error {
 
 		// Check whether the current user liked, faved, rated and/or reviewed the post
@@ -478,6 +485,10 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 				)
 				return err
 			}
+		}
+
+		if userActions.Review.Headline != "" && userActions.Review.Content != "" {
+			userActions.Review.IsCurrentUser = true
 		}
 
 		return nil
