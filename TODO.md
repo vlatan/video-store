@@ -1,9 +1,10 @@
 * Build the frontend and backend review system.
 
   In prod DO **NOT FORGET** first to:
-   - Run the DB migration
-   - Iinclude new env var and 
+   - Run the DB migrations
+   - Include new env var
    - Rebuild the setup
+   - Push code
 
   The user should be able to delete a review or a rating.
   Include delete button on the modals and add edit button on the review card.
