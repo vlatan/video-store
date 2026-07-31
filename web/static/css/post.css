@@ -187,7 +187,6 @@ h1.video-title {
 
 @media screen and (max-width: 900px) {
 	.summary_wrap {
-		border-bottom: 1px solid var(--primary-border-color);
 		padding-bottom: calc(var(--content-padding) / 2);
 	}
 }
@@ -503,14 +502,8 @@ button.btn-submit-rate:disabled,
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
-	gap: var(--content-padding);
+	gap: 1rem;
 	width: 100%;
-}
-
-@media screen and (max-width: 900px) {
-	.review-section {
-		gap: calc(var(--content-padding) * 2);
-	}
 }
 
 .review-form {
