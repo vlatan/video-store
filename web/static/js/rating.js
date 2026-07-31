@@ -363,15 +363,16 @@ document.getElementById('load-more-reviews-btn')?.addEventListener('click', asyn
         if (data.next_cursor) {
             btn.dataset.cursor = data.next_cursor;
         } else {
+            // The last page, reset the cursor, remove the load more button
             btn.dataset.cursor = "";
-            btn.outerHTML = '<p class="no-more-reviews">No more reviews</p>';
-            return; // Exit so finally block doesn't try to restore outerHTML button
+            btn.remove();
+            return;
         }
     } catch (error) {
         console.error("Failed to fetch or parse JSON:", error);
         setAlert("Something went wrong!");
     } finally {
-        // If the button is in the DOM (not replaced with "no more reviews" message),
+        // If the button is in the DOM (not removed),
         // enable it and restore the original text.
         if (btn.isConnected) {
             btn.disabled = false;

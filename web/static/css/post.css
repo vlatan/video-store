@@ -627,6 +627,19 @@ button.btn-submit-review:disabled,
 	font-weight: bold;
 }
 
+.load-more-reviews-btn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin: auto;
+	cursor: pointer;
+	border: 1px solid var(--primary-border-color);
+	border-radius: 1rem;
+	background: var(--secondary-background-color);
+	min-height: 2rem;
+	min-width: 5.5rem;
+}
+
 .review-spinner {
 	display: inline-block;
 	width: 14px;

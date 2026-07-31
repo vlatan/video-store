@@ -339,7 +339,8 @@
 			</div>
 
 			{{ with .NextCursor }}
-			<button id="load-more-reviews-btn" data-video-id="{{ $.CurrentPost.VideoID }}" data-cursor="{{ . }}">
+			<button id="load-more-reviews-btn" class="load-more-reviews-btn" data-video-id="{{ $.CurrentPost.VideoID }}"
+				data-cursor="{{ . }}">
 				Load More
 			</button>
 			{{ end }}
