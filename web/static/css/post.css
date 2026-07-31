@@ -657,10 +657,10 @@ button.btn-submit-review:disabled,
 }
 
 .new-review {
-	animation: reviewFadeIn 0.3s ease-in;
+	animation: fadeIn 0.3s ease-in;
 }
 
-@keyframes reviewFadeIn {
+@keyframes fadeIn {
 	from {
 		opacity: 0;
 		transform: translateY(-10px);
@@ -684,7 +684,7 @@ button.btn-submit-review:disabled,
 	}
 
 	50% {
-		background-color: #fef08a;
+		background-color: #2a2a2a;
 	}
 }
 

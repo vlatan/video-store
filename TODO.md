@@ -5,6 +5,8 @@
    - Iinclude new env var and 
    - Rebuild the setup
 
+  When flash message dissapears there's jerky motion on the page.
+  Style and center the no more reviews.
 
   If a review is added we just prepend the review in the review list.
   If a review is updated scroll to the review and highlight it with fade out.

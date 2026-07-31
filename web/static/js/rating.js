@@ -97,7 +97,7 @@ document.querySelectorAll('.rating-section').forEach(widget => {
     const rateBtnOpen = widget.querySelector('#btn-open-rate');
     const rateBtnClose = widget.querySelector('#btn-close-rate');
     const rateBtnSubmit = widget.querySelector('.btn-submit-rate');
-    let originalrateBtnSubmitText = rateBtnSubmit?.textContent || 'Rate';
+    let originalrateBtnSubmitText = rateBtnSubmit?.textContent.trim() || 'Rate';
 
     if (!(rateDialog instanceof HTMLDialogElement)) return;
     if (!(rateForm instanceof HTMLFormElement)) return;
@@ -159,7 +159,7 @@ document.querySelectorAll('.review-section').forEach(s => {
     const reviewOpenBtn = s.querySelector('#btn-open-review');
     const reviewCloseBtn = s.querySelector('#btn-close-review');
     const reviewSubmitBtn = s.querySelector('#submit-review');
-    let originalreviewBtnSubmitText = reviewSubmitBtn?.textContent || 'Post Review';
+    let originalreviewBtnSubmitText = reviewSubmitBtn?.textContent.trim() || 'Post Review';
     const reviewError = s.querySelector('#review-error');
 
     if (!(reviewDialog instanceof HTMLDialogElement)) return;
@@ -215,9 +215,6 @@ document.querySelectorAll('.review-section').forEach(s => {
             if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
             const result = await response.json();
 
-            const card = document.createElement('div');
-            card.className = 'review-card';
-
             // Get these from the header of the page
             const avatar = document.querySelector('.username-image')?.getAttribute('src') ?? "";
             const username = document.querySelector('.username-text')?.textContent.trim() ?? "";
@@ -241,20 +238,28 @@ document.querySelectorAll('.review-section').forEach(s => {
             `;
 
             // Look for this review in the DOM
-            const review = document.getElementById("current-user-review");
-            if (review) { // Review is in the DOM
-                review.innerHTML = innerHTML;
-                review.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                review.classList.add('updated-review');
-                setTimeout(() => review.classList.remove('updated-review'), 2000);
+            const reviewInDom = document.getElementById("current-user-review");
+
+            // Look if the user has a review here at all
+            const userHasReview = reviewSubmitBtn.dataset.hasReview === 'true';
+
+            // Create review holder in case it is new review
+            const card = document.createElement('div');
+
+            if (reviewInDom) { // Review is in the DOM
+                reviewInDom.innerHTML = innerHTML;
+                reviewInDom.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                reviewInDom.classList.add('updated-review');
+                setTimeout(() => reviewInDom.classList.remove('updated-review'), 2000);
                 setAlert("Review updated!");
                 // TODO: Change this check, not reliable
-            } else if (originalreviewBtnSubmitText.trim() === "Update Review") {
+            } else if (userHasReview) {
                 // Review isn't loaded in the DOM yet.
                 setAlert("Review updated!");
             } else { // New review, prepend to the list
+                card.className = 'review-card new-review';
+                card.id = "current-user-review";
                 card.innerHTML = innerHTML;
-                card.classList.add('new-review');
                 reviewsList?.prepend(card);
                 setAlert("Review posted!");
             }
@@ -262,8 +267,14 @@ document.querySelectorAll('.review-section').forEach(s => {
             // Update the user rating and average rating HTML
             updateRatingHTML(payload.rating, result.stats.avg_rating, result.stats.rating_count)
 
-            // The request went through, change the button text
+            // The request went through, change the submit button text,
+            // the data state and remove the new-review class.
             originalreviewBtnSubmitText = "Update Review"
+            reviewSubmitBtn.dataset.hasReview = 'true';
+            card.addEventListener('animationend', () => {
+                card.classList.remove('new-review');
+            }, { once: true }); // 'once: true' auto-removes the listener after it fires
+
         } catch (err) {
             console.error("Failed to fetch or parse JSON:", err);
             setAlert("Something went wrong!");
