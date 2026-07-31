@@ -444,7 +444,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Check if the current user owns a review
 		for i, review := range postReviews.Items {
-			if data.CurrentUser.ID == review.User.ID {
+			if data.CurrentUser.IsAuthenticated() && data.CurrentUser.ID == review.User.ID {
 				postReviews.Items[i].IsCurrentUser = true
 			}
 		}

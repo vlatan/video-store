@@ -284,7 +284,7 @@ func (s *Service) PostReviewsAPI(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the current user owns a review
 	for i, review := range reviews.Items {
-		if currentUser.ID == review.User.ID {
+		if currentUser.IsAuthenticated() && currentUser.ID == review.User.ID {
 			reviews.Items[i].IsCurrentUser = true
 		}
 	}
