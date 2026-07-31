@@ -168,6 +168,8 @@ document.querySelectorAll('.review-section').forEach(s => {
     const reviewForm = s.querySelector('.review-form');
     const reviewsList = s.querySelector('#reviews-list');
     const reviewOpenBtn = s.querySelector('#btn-open-review');
+    const reviewOpenBtnText = s.querySelector('#btn-open-review-text');
+    let originalreviewOpenBtnText = reviewOpenBtnText?.textContent.trim() || 'Post Review';
     const reviewCloseBtn = s.querySelector('#btn-close-review');
     const reviewSubmitBtn = s.querySelector('#submit-review');
     let originalreviewBtnSubmitText = reviewSubmitBtn?.textContent.trim() || 'Post Review';
@@ -175,6 +177,7 @@ document.querySelectorAll('.review-section').forEach(s => {
 
     if (!(reviewDialog instanceof HTMLDialogElement)) return;
     if (!(reviewForm instanceof HTMLFormElement)) return;
+    if (!(reviewOpenBtnText instanceof HTMLElement)) return;
     if (!(reviewSubmitBtn instanceof HTMLButtonElement && reviewSubmitBtn.type === 'submit')) return;
 
     const showError = (msg = "") => {
@@ -293,9 +296,10 @@ document.querySelectorAll('.review-section').forEach(s => {
             // Update the user rating and average rating HTML
             updateRatingHTML(payload.rating, result.stats.avg_rating, result.stats.rating_count)
 
-            // The request went through, change the submit button text,
+            // The request went through, change the open and submit button text,
             // the data state and remove the new-review class.
-            originalreviewBtnSubmitText = "Update Review"
+            originalreviewBtnSubmitText = "Update Review";
+            originalreviewOpenBtnText = "Update Review";
             reviewSubmitBtn.dataset.hasReview = 'true';
         } catch (err) {
             console.error("Failed to fetch or parse JSON:", err);
@@ -303,6 +307,7 @@ document.querySelectorAll('.review-section').forEach(s => {
         } finally {
             reviewSubmitBtn.disabled = false;
             reviewSubmitBtn.textContent = originalreviewBtnSubmitText;
+            reviewOpenBtnText.textContent = originalreviewOpenBtnText;
         }
     });
 });

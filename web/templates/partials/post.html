@@ -320,7 +320,9 @@
 				<button {{ if not .CurrentUser.IsAuthenticated }} data-modal="login" {{ end }} type="button"
 					id="btn-open-review" class="btn-open-post-dialog" aria-haspopup="dialog">
 					<span class="open-review-symbol">+</span>
-					<span>{{ if $userHasReview }}Update Review{{ else }}Post Review{{ end }}</span>
+					<span id="btn-open-review-text">
+						{{ if $userHasReview }}Update Review{{ else }}Post Review{{ end}}
+					</span>
 				</button>
 			</header>
 

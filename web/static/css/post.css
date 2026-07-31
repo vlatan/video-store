@@ -669,10 +669,8 @@ button.btn-submit-review:disabled,
 	display: flex;
 	flex-direction: column;
 	gap: 1rem;
-	background: var(--card-bg);
-	border: 1px solid var(--border-color);
-	padding: 1.25rem;
-	border-radius: 8px;
+	border-top: 1px solid var(--primary-border-color);
+	padding-top: 1rem;
 }
 
 .new-review {
