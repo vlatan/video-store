@@ -1,22 +1,23 @@
-const setFaveStatus = action => {
+const setFaveStatus = (action = "") => {
     let saves = document.querySelector('[data-saves]');
-    let text = saves.textContent.trim();
+    let text = saves?.textContent.trim();
     if (action === 'fave') {
         text = 'Saved';
         let saved = document.createElement('span');
         saved.innerHTML = '&#10003;';
         saved.setAttribute('data-saved', '');
-        saves.before(saved);
+        saves?.before(saved);
     } else {
         text = 'Save';
-        document.querySelector('[data-saved]').remove();
+        saves = document.querySelector('[data-saved]');
+        saves?.remove();
     }
-    saves.textContent = text;
+    if (saves) saves.textContent = text;
 }
 
-const setLikeCounter = action => {
+const setLikeCounter = (action = "") => {
     let likes = document.querySelector('[data-likes]');
-    let text = likes.textContent.trim();
+    let text = String(likes?.textContent.trim());
     let counter = parseInt(text.charAt(0));
     if (isNaN(counter)) {
         counter = 0;
@@ -25,11 +26,11 @@ const setLikeCounter = action => {
         let liked = document.createElement('span');
         liked.innerHTML = '&#10003;';
         liked.setAttribute('data-liked', '');
-        likes.before(liked);
+        likes?.before(liked);
         counter += 1;
     } else {
         counter -= 1;
-        document.querySelector('[data-liked]').remove();
+        document.querySelector('[data-liked]')?.remove();
     }
     if (counter === 0) {
         text = 'Like';
@@ -38,10 +39,14 @@ const setLikeCounter = action => {
     } else {
         text = `${counter} Likes`;
     }
-    document.querySelector('[data-likes]').textContent = text;
+
+    likes = document.querySelector('[data-likes]')
+    if (likes) likes.textContent = text;
 };
 
-const listenForAction = async (event, action) => {
+/** @param {PointerEvent} event */
+const listenForAction = async (event, action = "") => {
+    if (!(event.target instanceof HTMLElement)) return;
     const actionElement = event.target.closest(`.${action}`);
     if (!actionElement) return;
     actionElement.classList.toggle(`${action}-no`);

@@ -5,17 +5,16 @@
    - Include new env var
    - Rebuild the setup
    - Push code
+  
+  Use schema on the reviews.
+  Change ids to classes.
+  Remove the css vars in rating css.
 
   The user should be able to delete a review or a rating.
   Include delete button on the modals and add edit button on the review card.
   On deletion inline the deletion exalplanation and confirmation in the modals with swapping the modal footer.
   If a review is deleted we remove it from the list if it's on the first page.
   Don't forget to change the state of the current-user-id and datasets in JS.
-   
-  Change ids to classes.
-  Remove the css vars in rating css.
-
-  Use schema on the reviews.
 
 * Make the checkmarks on the like/save green or yellow
 * Add close button to login menu
