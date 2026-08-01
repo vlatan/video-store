@@ -1,85 +1,85 @@
 .dashboard-wrap {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
+	display: flex;
+	flex-direction: column;
+	gap: 2rem;
 }
 
 .dashboard-title-wrap {
-  align-self: flex-start;
-  display: flex;
-  gap: 0.75rem;
-  padding-bottom: calc(var(--content-padding) / 3);
-  border-bottom: 1px solid #696969;
+	align-self: flex-start;
+	display: flex;
+	gap: 0.75rem;
+	padding-bottom: calc(var(--content-padding) / 3);
+	border-bottom: 1px solid #696969;
 }
 
 .dashboard-title {
-  font-size: 1.2rem;
-  line-height: normal;
+	font-size: 1.2rem;
+	line-height: normal;
 }
 
 .dashboard {
-  border: 1px solid #696969;
-  display: grid;
-  grid-template-columns: repeat(7, auto);
+	border: 1px solid #696969;
+	display: grid;
+	grid-template-columns: repeat(7, auto);
 }
 
 .dashboard-header-item {
-  color: #E95420;
+	color: #E95420;
 }
 
 /* Add padding, bottom and right border to all dashboard items */
 .dashboard-item {
-  padding: 15px 20px;
-  border-bottom: 1px solid #696969;
-  border-right: 1px solid #696969;
+	padding: 15px 20px;
+	border-bottom: 1px solid #696969;
+	border-right: 1px solid #696969;
 }
 
 /* Remove bottom border from the last grid row */
 .dashboard-item:nth-last-child(-n+7) {
-  border-bottom: none;
+	border-bottom: none;
 }
 
 /* Remove right border from the last grid column */
 .dashboard-item:nth-child(7n) {
-  border-right: none;
+	border-right: none;
 }
 
 .dashboard-item-img,
 .dashboard-item-number {
-  display: flex;
-  justify-content: center;
-  align-items: center;
+	display: flex;
+	justify-content: center;
+	align-items: center;
 }
 
 .dashboard-user-img {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
+	width: 30px;
+	height: 30px;
+	border-radius: 50%;
 }
 
 /* Pagination */
 .pagination {
-  display: flex;
-  margin: 0 auto;
-  gap: 0.75rem;
-  font-size: 0.85rem;
+	display: flex;
+	margin: 0 auto;
+	gap: 0.75rem;
+	font-size: 0.85rem;
 }
 
 .pagination-item {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 0.20rem 0.75rem;
-  border: 1px solid var(--primary-border-color);
-  background-color: var(--primary-border-color);
-  border-radius: 0.5rem;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	padding: 0.20rem 0.75rem;
+	border: 1px solid var(--primary-border-color);
+	background-color: var(--primary-border-color);
+	border-radius: 0.5rem;
 }
 
 .pagination-item-current {
-  background-color: unset;
+	background-color: unset;
 }
 
 a.pagination-item:hover {
-  border: 1px solid #353535;
-  background-color: #353535;
+	border: 1px solid #353535;
+	background-color: #353535;
 }
