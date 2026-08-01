@@ -55,10 +55,29 @@ starRadios.forEach(radio => {
 // Update the Average Rating Display and the User Rating Button
 // ==========================================================================
 
-function updateRatingHTML(user_rating = 0, avg_rating = 0, rating_count = 0) {
 
-    // Illegal values
-    if (user_rating <= 0 || user_rating > 10) return;
+/**
+ * Applies average rating and user rating HTML.
+ *
+ * @param {number} user_rating
+ * @param {number} avg_rating
+ * @param {number} rating_count
+ */
+function updateRatingHTML(user_rating, avg_rating, rating_count) {
+
+    user_rating = Number(user_rating);
+    avg_rating = Number(avg_rating);
+    rating_count = Number(rating_count);
+
+    if (!Number.isFinite(user_rating) || user_rating <= 0 || user_rating > 10) {
+        throw new Error("user rating can't be <= 0 or > 10");
+    }
+    if (!Number.isFinite(avg_rating) || avg_rating < 0 || avg_rating > 10) {
+        throw new Error("avg rating must be a number between 0 and 10");
+    }
+    if (!Number.isInteger(rating_count) || rating_count < 0) {
+        throw new Error("rating count must be a non-negative integer");
+    }
 
     const votesText = rating_count === 1 ? "vote" : "votes";
     const avgRatingHTML = `
@@ -95,7 +114,6 @@ function updateRatingHTML(user_rating = 0, avg_rating = 0, rating_count = 0) {
         rateBtnOpen.innerHTML = `<span class="rating-user-star">&#9733;</span> ${user_rating}`;
     }
 }
-
 
 
 // ==========================================================================
