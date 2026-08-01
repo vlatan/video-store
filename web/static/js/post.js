@@ -29,6 +29,7 @@ document.querySelectorAll('.review-date').forEach(element => {
 // ==========================================================================
 // Load More Reviews
 // ==========================================================================
+
 document.getElementById('load-more-reviews-btn')?.addEventListener('click', async (event) => {
     const btn = event.currentTarget;
     if (!(btn instanceof HTMLButtonElement)) return;
@@ -102,3 +103,81 @@ document.getElementById('load-more-reviews-btn')?.addEventListener('click', asyn
         }
     }
 });
+
+
+// ==========================================================================
+// Review Helpers
+// ==========================================================================
+
+/**
+ * @param {string} str
+ * @returns {string}
+ */
+function escapeHtml(str) {
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+/**
+ * Only allow http/https URLs through — rejects javascript:, data:,
+ * and malformed strings that could break out of the src attribute.
+ * @param {string} url
+ * @returns {string}
+ */
+function sanitizeImageUrl(url) {
+    try {
+        const parsed = new URL(url, window.location.href);
+        if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+            return escapeHtml(parsed.href);
+        }
+    } catch {
+        // invalid URL — fall through
+    }
+    return '';
+}
+
+/**
+ * Builds the inner HTML markup for a single review card.
+ *
+ * @param {string} reviewId - Complete review id string i.e. "id='example'""
+ * @param {string} avatar - URL of the reviewer's avatar image
+ * @param {string} username - Display name of the reviewer
+ * @param {number} rating - The user rating
+ * @param {string} date - Pre-formatted, human-readable date string
+ * @param {string} html_headline - Assumes escaped html headline
+ * @param {string} html_content - Assumes escaped html content
+ * @returns {string} Sanitized HTML markup for the review card's contents
+ */
+function buildReviewHTML(reviewId, avatar, username, rating, date, html_content, html_headline) {
+
+    const safeReviewId = escapeHtml(reviewId)
+    const safeAvatar = sanitizeImageUrl(avatar);
+    const safeUsername = escapeHtml(username);
+    const safeDate = escapeHtml(date);
+
+    const safeRating = Number(rating);
+    if (!Number.isFinite(rating) || rating < 0 || rating > 10) {
+        throw new Error('rating must be a number between 0 and 10');
+    }
+
+    return `
+        <header class="review-header" ${safeReviewId}>
+            <div class="review-meta">
+                <img src="${safeAvatar}" class=" review-user-avatar" width="20" height="20"
+                    loading="lazy" alt="${safeUsername}">
+                <span class="review-user-name">${safeUsername}</span>
+                <span class="review-user-rating">
+                    <span class="rating-global-star">&#9733;</span>
+                    <span>${safeRating}</span>
+                </span>
+                <span class="review-date" data-utc-time="">${safeDate}</span>
+            </div>
+            <h4 class="review-headline">${html_headline}</h4>
+        </header>
+        <div class="review-content">${html_content}</div>
+    `;
+}
