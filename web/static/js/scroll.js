@@ -1,6 +1,5 @@
 // Get references to the dom elements
 const scroller = document.getElementById("scroller");
-const htmlTemplate = document.getElementById("post_template");
 const sentinel = document.getElementById("sentinel");
 const spinner = sentinel?.querySelector('div');
 
@@ -13,7 +12,6 @@ let state = {
 // Function to request new items and render to the dom
 const loadItems = async (url = "", cursor = "") => {
 
-    if (!(htmlTemplate instanceof HTMLTemplateElement)) return;
     if (!(sentinel instanceof HTMLElement)) return;
 
     // Prevent multiple simultaneous fetches
@@ -39,7 +37,7 @@ const loadItems = async (url = "", cursor = "") => {
         // and append them as children to the scroller.
         for (const item of data.items) {
             const card = createVideoCard(item);
-            if (card) scroller?.appendChild(card);
+            scroller?.appendChild(card);
         }
 
         if (!state.hasMore) {
@@ -76,46 +74,54 @@ if ('IntersectionObserver' in window) {
 
 
 /**
- * Builds a populated video card from the template for a single item.
- * Returns null if the template markup is missing required elements.
+ * Builds a populated video card.
  *
  * @param {{video_id: string, thumbnail: {url: string}, title: string, srcset: string, id: string|number}} item
- * @returns {DocumentFragment | null}
+ * @returns {HTMLElement}
  */
 function createVideoCard(item) {
 
-    if (!(htmlTemplate instanceof HTMLTemplateElement)) {
-        throw new Error('Expected #post_template to be a <template> element');
+    // Create the anchor element
+    const a = document.createElement('a');
+    a.className = 'video-link';
+    a.href = `/video/${item.video_id}/`;
+
+    // Create image wrapper
+    const span = document.createElement('span');
+    span.className = 'video-img-wrap';
+    a.appendChild(span);
+
+    // Create the image
+    const img = document.createElement('img');
+    img.className = 'video-img';
+    img.src = item.thumbnail.url;
+    img.alt = item.title;
+    img.srcset = item.srcset;
+    span.appendChild(img);
+
+    // Create the title
+    const title = document.createElement('h2');
+    title.className = 'video-title';
+    title.textContent = item.title;
+    a.appendChild(title);
+
+    // Needs slight modification if this is user favorites scroll.
+    // Wrap the anchor in another block and offer remove button.
+    if (window.location.pathname === '/user/favorites/') {
+
+        const block = document.createElement('div');
+        block.className = 'video-block';
+
+        const remove = document.createElement('span');
+        remove.className = 'remove-option';
+        remove.setAttribute('data-id', `${item.video_id}`);
+        remove.setAttribute('aria-label', 'Close');
+        remove.textContent = '\u00D7';
+        block.appendChild(remove);
+
+        block.appendChild(a);
+        return block;
     }
 
-    // Clone the HTML template
-    const templateClone = /** @type {DocumentFragment} */ (htmlTemplate.content.cloneNode(true));
-
-    // Set the link source
-    const videoLink = templateClone.querySelector('.video-link');
-    if (!(videoLink instanceof HTMLAnchorElement)) {
-        console.warn('Skipping item, .video-link missing or malformed:', item);
-        return null;
-    }
-    videoLink.href = `/video/${item.video_id}/`;
-
-    // Update the image
-    const thumb = templateClone.querySelector('.video-img');
-    if (!(thumb instanceof HTMLImageElement)) {
-        console.warn('Skipping item, .video-img missing or malformed:', item);
-        return null;
-    }
-    thumb.src = item.thumbnail.url;
-    thumb.alt = item.title;
-    thumb.srcset = item.srcset;
-
-    // Set the title of the video
-    const videoTitle = templateClone.querySelector('.video-title');
-    if (videoTitle) videoTitle.textContent = item.title;
-
-    // Set the data-id on the remove buttton if any
-    const remove = templateClone.querySelector('.remove-option');
-    remove?.setAttribute('data-id', `${item.id}`);
-
-    return templateClone;
+    return a;
 }
