@@ -5,8 +5,6 @@
    - Rebuild the setup
    - Push code
   
-  Add "Be the first to review this".
-
   The user should be able to delete a review or a rating.
   Include delete button on the modals and add edit/delete buttons on the review card.
   On deletion inline the deletion exalplanation and confirmation in the modals with swapping the modal footer.
