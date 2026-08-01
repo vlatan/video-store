@@ -30,7 +30,7 @@
 <div id="scroller" class="scroll-content" {{ with .Posts -}} data-cursor="{{ .NextCursor }}" {{- end }}>
     {{ range $index, $item := .Posts.Items }}
     <div class="video-block">
-        <span data-id="{{ $item.VideoID }}" class="remove-option" aria-label="Close">&times;</span>
+        <button type="button" data-id="{{ $item.VideoID }}" class="remove-option" aria-label="Close">&times;</button>
         <a class="video-link" href="/video/{{ $item.VideoID }}/">
             <span class="video-img-wrap">
                 <img {{ if gt $index 7 }} loading="lazy" {{ end }} class="video-img" alt="{{ $item.GetTitle }}"
