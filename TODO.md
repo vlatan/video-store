@@ -1,6 +1,6 @@
 * Build the frontend and backend review system.
 
-  Give to the public_id unique constraint.
+  Give to the public_id unique constraint in the DB.
 
   The user should be able to delete a review or a rating.
   Include delete button on the modals and add edit/delete buttons on the review card.
