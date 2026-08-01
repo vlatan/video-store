@@ -418,9 +418,9 @@
 {{ end }} <!-- content end -->
 
 {{ define "extra_scripts" }}
+<script defer src='{{ .AddVersion "/static/js/post.js" }}'></script>
 {{ if .CurrentUser.IsAuthenticated }}
 <script defer src='{{ .AddVersion "/static/js/likes.js" }}'></script>
 <script defer src='{{ .AddVersion "/static/js/rating.js" }}'></script>
 {{ end }}
-<script defer src='{{ .AddVersion "/static/js/post.js" }}'></script>
 {{ end }}

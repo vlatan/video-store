@@ -1,6 +1,6 @@
 // Get references to the dom elements
 const scroller = document.getElementById("scroller");
-const template = document.getElementById("post_template");
+const htmlTemplate = document.getElementById("post_template");
 const sentinel = document.getElementById("sentinel");
 const spinner = sentinel?.querySelector('div');
 
@@ -13,7 +13,7 @@ let state = {
 // Function to request new items and render to the dom
 const loadItems = async (url = "", cursor = "") => {
 
-    if (!(template instanceof HTMLTemplateElement)) return;
+    if (!(htmlTemplate instanceof HTMLTemplateElement)) return;
     if (!(sentinel instanceof HTMLElement)) return;
 
     // Prevent multiple simultaneous fetches
@@ -41,22 +41,22 @@ const loadItems = async (url = "", cursor = "") => {
         for (const item of data.items) {
 
             // Clone the HTML template
-            const template_clone = template.content.cloneNode(true);
+            const templateClone = htmlTemplate.content.cloneNode(true);
 
             // Query & update the template content
-            template_clone.querySelector('.video-link').href = `/video/${item.video_id}/`;
-            const thumb = template_clone.querySelector('.video-img');
+            templateClone.querySelector('.video-link').href = `/video/${item.video_id}/`;
+            const thumb = templateClone.querySelector('.video-img');
             thumb.src = item.thumbnail.url;
             thumb.alt = item.title;
             thumb.srcset = item.srcset;
-            template_clone.querySelector('.video-title').innerHTML = item.title;
-            const remove = template_clone.querySelector('.remove-option');
+            templateClone.querySelector('.video-title').innerHTML = item.title;
+            const remove = templateClone.querySelector('.remove-option');
             if (remove) {
                 remove.setAttribute('data-id', `${item.id}`)
             }
 
             // Append template to dom
-            scroller?.appendChild(template_clone);
+            scroller?.appendChild(templateClone);
         }
 
         if (!state.hasMore) {

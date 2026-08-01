@@ -77,9 +77,6 @@ document.addEventListener('click', event => {
 // Send POST request to backend
 const postData = (url = "", data = {}) => {
     if (!url) throw new Error("URL parameter is required");
-    if (!data || (typeof data === 'object' && Object.keys(data).length === 0)) {
-        throw new Error("Data payload is required");
-    }
 
     const headers = new Headers();
     headers.append("Content-Type", "application/json");
