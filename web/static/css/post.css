@@ -662,8 +662,8 @@ button.btn-submit-review:disabled,
     display: flex;
     flex-direction: column;
     gap: 1rem;
-    border-top: 1px solid var(--primary-border-color);
-    padding-top: 1rem;
+    border: 1px solid var(--primary-border-color);
+    padding: 1rem;
 }
 
 .load-review {
