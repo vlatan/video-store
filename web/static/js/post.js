@@ -74,6 +74,7 @@ document.getElementById('load-more-reviews-btn')?.addEventListener('click', asyn
             reviewsList?.append(card);
         }
 
+        // Attach the next cursor
         if (data.next_cursor) {
             btn.dataset.cursor = data.next_cursor;
         } else {
