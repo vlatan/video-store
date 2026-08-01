@@ -666,7 +666,7 @@ button.btn-submit-review:disabled,
     padding-top: 1rem;
 }
 
-.new-review {
+.load-review {
     animation: fadeIn 0.3s ease-in;
 }
 
