@@ -1,16 +1,3 @@
-:root {
-    --bg-color: #121212;
-    --card-bg: #1e1e1e;
-    --border-color: #333;
-    --text-main: #e0e0e0;
-    --text-muted: #a0a0a0;
-    --accent: #bb86fc;
-    --accent-hover: #9965f4;
-    --star-active: #ffc107;
-    --star-inactive: #444;
-    --success-text: #81c784;
-}
-
 .media-content {
     display: grid;
     grid-template-columns: auto 32%;
@@ -274,7 +261,7 @@ h1.video-title {
     min-width: 5.5rem;
     padding: 0 1rem;
 
-    color: #5799ef;
+    color: var(--blue-link-color);
     font-size: 0.8rem;
     font-weight: bold;
     cursor: pointer;
@@ -339,7 +326,7 @@ h1.video-title {
 }
 
 .rating-global-star {
-    color: #f5c518;
+    color: var(--yellow-star-color);
 }
 
 .rating-meta {
@@ -400,7 +387,7 @@ h1.video-title {
     position: absolute;
     width: 100%;
     height: 100%;
-    fill: #5799ef;
+    fill: var(--blue-link-color);
     display: block;
 }
 
@@ -425,7 +412,7 @@ h1.video-title {
     text-transform: uppercase;
     font-size: 0.7rem;
     letter-spacing: 1px;
-    color: #f5c518;
+    color: var(--yellow-star-color);
 }
 
 .rate-title {
@@ -466,7 +453,7 @@ h1.video-title {
 .rate-stars label:hover~label span,
 .rate-stars:not(:hover) label:has(input:checked) span,
 .rate-stars:not(:hover) label:has(input:checked)~label span {
-    color: #5799ef;
+    color: var(--blue-link-color);
     -webkit-text-stroke: 0;
 }
 
@@ -478,7 +465,7 @@ button.btn-submit-rate {
     font-size: 0.85rem;
     font-weight: bold;
     cursor: pointer;
-    background: #f5c518;
+    background: var(--yellow-star-color);
     color: #000;
     transition: background 0.2s, color 0.2s, opacity 0.2s;
 }
@@ -511,7 +498,7 @@ button.btn-submit-rate:disabled,
     flex-direction: column;
     justify-content: center;
     gap: 1.5rem;
-    background: var(--card-bg);
+    background: var(--secondary-background-color);
     padding: 2rem;
     width: 100%;
     border-radius: 0.5rem;
@@ -532,10 +519,10 @@ button.btn-submit-rate:disabled,
 
 textarea#review-text,
 input#review-title {
-    background: var(--bg-color);
-    color: var(--text-main);
+    background: var(--primary-background-color);
+    color: var(--primary-font-color);
     padding: 0.75rem;
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--primary-border-color);
     border-radius: 6px;
     font-family: inherit;
     font-size: 1rem;
@@ -551,7 +538,7 @@ input#review-title::placeholder {
 input#review-title:focus,
 textarea#review-text:focus {
     outline: none;
-    border-color: var(--accent);
+    border-color: var(--outline-color);
 }
 
 .review-stars-group {
@@ -578,7 +565,7 @@ textarea#review-text:focus {
 .review-big-star-wrapper svg {
     width: 100%;
     height: 100%;
-    fill: #5799ef;
+    fill: var(--blue-link-color);
     display: block;
 }
 
@@ -599,7 +586,7 @@ textarea#review-text:focus {
 
 button.btn-submit-review {
     padding: 12px 18px;
-    background: #f5c518;
+    background: var(--yellow-star-color);
     color: #000;
     border: none;
     border-radius: 6px;
@@ -723,7 +710,7 @@ button.btn-submit-review:disabled,
 
 .review-date {
     font-size: 0.75rem;
-    color: var(--text-muted);
+    color: var(--muted-font-color);
     font-weight: normal;
 }
 
@@ -734,7 +721,7 @@ button.btn-submit-review:disabled,
 }
 
 .review-content {
-    color: var(--text-muted);
+    color: var(--muted-font-color);
 }
 
 .review-content p:not(:last-child) {

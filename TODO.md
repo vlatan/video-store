@@ -8,7 +8,6 @@
   
   Use schema on the reviews.
   Change ids to classes.
-  Remove the css vars in rating css.
 
   The user should be able to delete a review or a rating.
   Include delete button on the modals and add edit button on the review card.
