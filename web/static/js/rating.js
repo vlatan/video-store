@@ -178,7 +178,7 @@ document.querySelectorAll('.rating-section').forEach(widget => {
 
 
 // ==========================================================================
-// Reviews
+// Add Review
 // ==========================================================================
 
 document.querySelectorAll('.review-section').forEach(s => {
@@ -254,22 +254,14 @@ document.querySelectorAll('.review-section').forEach(s => {
             const now = new Date();
             const localDate = now.toLocaleDateString();
 
-            const innerHTML = `
-                <header class="review-header">
-                    <div class="review-meta">
-                        <img src="${avatar}" class=" review-user-avatar" width="20" height="20"
-                            loading="lazy" alt="">
-                        <span class="review-user-name">${username}</span>
-                        <span class="review-user-rating">
-                            <span class="rating-global-star">&#9733;</span>
-                            <span>${payload.rating}</span>
-                        </span>
-                        <span class="review-date" data-utc-time="">${localDate}</span>
-                    </div>
-                    <h4 class="review-headline">${result.review.html_headline}</h4>
-                </header>
-                <div class="review-content">${result.review.html_content}</div>
-            `;
+            const innerHTML = buildReviewHTML(
+                avatar,
+                username,
+                payload.rating,
+                localDate,
+                result.review.html_headline,
+                result.review.html_content,
+            );
 
             // Look for this review in the DOM
             const reviewInDom = document.getElementById("current-user-review");
@@ -289,7 +281,7 @@ document.querySelectorAll('.review-section').forEach(s => {
                 setAlert("Review updated!");
             } else { // New review, prepend to the list
                 const card = document.createElement('div');
-                card.className = 'review-card new-review';
+                card.className = 'review-card load-review';
                 card.id = "current-user-review";
                 card.innerHTML = innerHTML;
                 reviewsList?.prepend(card);
@@ -306,10 +298,10 @@ document.querySelectorAll('.review-section').forEach(s => {
                     reviewCountWrapper.style.display = 'inline';
                 }
 
-                // Remove the class new-review after the animation.
+                // Remove the class load-review after the animation.
                 // 'once: true' auto-removes the listener after it fires.
                 card.addEventListener('animationend', () => {
-                    card.classList.remove('new-review');
+                    card.classList.remove('load-review');
                 }, { once: true });
             }
 
@@ -317,7 +309,7 @@ document.querySelectorAll('.review-section').forEach(s => {
             updateRatingHTML(payload.rating, result.stats.avg_rating, result.stats.rating_count)
 
             // The request went through, change the open and submit button text,
-            // the data state and remove the new-review class.
+            // the data state and remove the load-review class.
             originalreviewBtnSubmitText = "Update Review";
             originalreviewOpenBtnText = "Update Review";
             reviewSubmitBtn.dataset.hasReview = 'true';

@@ -51,37 +51,28 @@ document.getElementById('load-more-reviews-btn')?.addEventListener('click', asyn
         /** @type {Record<string, any>[]} */
         const items = data.items || [];
 
-        // Map the corresponding html to each review in the array
-        const reviews = items.map(review => {
+        const reviewsList = document.getElementById('reviews-list');
+        for (const review of data.items) {
 
             // Convert review date to user's local date
             const dateObj = new Date(review.updated_at);
             const localDate = dateObj.toLocaleDateString();
 
-            // Check if this is a current user review
-            const reviewdId = review.is_current_user ? "id='current-user-review'" : "";
+            // Build review card
+            const card = document.createElement('div');
+            card.className = 'review-card load-review';
+            if (review.is_current_user) card.id = "current-user-review";
+            card.innerHTML = buildReviewHTML(
+                review.user.local_avatar_url,
+                review.user.name,
+                review.rating,
+                localDate,
+                review.html_headline,
+                review.html_content,
+            );
 
-            return `
-                <div class="review-card" ${reviewdId}>
-                    <header class="review-header">
-                        <div class="review-meta">
-                            <img src="${review.user.local_avatar_url}" class=" review-user-avatar" width="20" height="20"
-                                loading="lazy" alt="">
-                            <span class="review-user-name">${review.user.name}</span>
-                            <span class="review-user-rating">
-                                <span class="rating-global-star">&#9733;</span>
-                                <span>${review.rating}</span>
-                            </span>
-                            <span class="review-date" data-utc-time="${review.updated_at}">${localDate}</span>
-                        </div>
-                        <h4 class="review-headline">${review.html_headline}</h4>
-                    </header>
-                    <div class="review-content">${review.html_content}</div>
-                </div>`;
-        });
-
-        // Append the reviews joined as string
-        document.getElementById('reviews-list')?.insertAdjacentHTML('beforeend', reviews.join(''));
+            reviewsList?.append(card);
+        }
 
         if (data.next_cursor) {
             btn.dataset.cursor = data.next_cursor;
@@ -141,9 +132,8 @@ function sanitizeImageUrl(url) {
 }
 
 /**
- * Builds the inner HTML markup for a single review card.
+ * Builds the HTML markup for a single review card.
  *
- * @param {string} reviewId - Complete review id string i.e. "id='example'""
  * @param {string} avatar - URL of the reviewer's avatar image
  * @param {string} username - Display name of the reviewer
  * @param {number} rating - The user rating
@@ -152,9 +142,8 @@ function sanitizeImageUrl(url) {
  * @param {string} html_content - Assumes escaped html content
  * @returns {string} Sanitized HTML markup for the review card's contents
  */
-function buildReviewHTML(reviewId, avatar, username, rating, date, html_content, html_headline) {
+function buildReviewHTML(avatar, username, rating, date, html_headline, html_content) {
 
-    const safeReviewId = escapeHtml(reviewId)
     const safeAvatar = sanitizeImageUrl(avatar);
     const safeUsername = escapeHtml(username);
     const safeDate = escapeHtml(date);
@@ -165,7 +154,7 @@ function buildReviewHTML(reviewId, avatar, username, rating, date, html_content,
     }
 
     return `
-        <header class="review-header" ${safeReviewId}>
+        <header class="review-header">
             <div class="review-meta">
                 <img src="${safeAvatar}" class=" review-user-avatar" width="20" height="20"
                     loading="lazy" alt="${safeUsername}">
