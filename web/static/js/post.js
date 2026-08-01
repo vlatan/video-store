@@ -62,6 +62,9 @@ document.getElementById('load-more-reviews-btn')?.addEventListener('click', asyn
             const card = document.createElement('div');
             card.className = 'review-card load-review';
             if (review.is_current_user) card.id = "current-user-review";
+            card.setAttribute("itemprop", "review");
+            card.setAttribute("itemscope", "");
+            card.setAttribute("itemtype", "https://schema.org/Review");
             card.innerHTML = buildReviewHTML(
                 review.user.local_avatar_url,
                 review.user.name,
@@ -159,15 +162,21 @@ function buildReviewHTML(avatar, username, rating, date, html_headline, html_con
             <div class="review-meta">
                 <img src="${safeAvatar}" class=" review-user-avatar" width="20" height="20"
                     loading="lazy" alt="${safeUsername}">
-                <span class="review-user-name">${safeUsername}</span>
-                <span class="review-user-rating">
+                <span itemprop="author" itemscope itemtype="https://schema.org/Person">
+                    <span itemprop="name" class="review-user-name">${safeUsername}</span>
+                </span
+                <span itemprop="reviewRating" itemscope itemtype="https://schema.org/Rating"
+                    class="review-user-rating">
+                    <meta itemprop="worstRating" content="1">
                     <span class="rating-global-star">&#9733;</span>
-                    <span>${safeRating}</span>
+                    <span itemprop="ratingValue">${safeRating}</span>
+                    <meta itemprop="bestRating" content="10">
                 </span>
+                <meta itemprop="datePublished" content="${safeDate}">
                 <span class="review-date" data-utc-time="">${safeDate}</span>
             </div>
-            <h4 class="review-headline">${html_headline}</h4>
+            <h4 itemprop="name" class="review-headline">${html_headline}</h4>
         </header>
-        <div class="review-content">${html_content}</div>
+        <div itemprop="reviewBody" class="review-content">${html_content}</div>
     `;
 }

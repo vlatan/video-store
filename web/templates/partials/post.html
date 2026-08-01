@@ -331,21 +331,28 @@
 
 			<div id="reviews-list" class="reviews-list">
 				{{ range .Items }}
-				<div {{ if .IsCurrentUser }} id="current-user-review" {{ end }} class="review-card">
+				<div itemprop="review" itemscope itemtype="https://schema.org/Review" {{ if .IsCurrentUser }}
+					id="current-user-review" {{ end }} class="review-card">
 					<header class="review-header">
 						<div class="review-meta">
 							<img src="{{ .User.LocalAvatarURL }}" class=" review-user-avatar" width="20" height="20"
 								loading="lazy" alt="{{ .User.Name }}">
-							<span class="review-user-name">{{ .User.Name }}</span>
-							<span class="review-user-rating">
-								<span class="rating-global-star">&#9733;</span>
-								<span>{{ .Rating }}</span>
+							<span itemprop="author" itemscope itemtype="https://schema.org/Person">
+								<span itemprop="name" class="review-user-name">{{ .User.Name }}</span>
 							</span>
+							<span itemprop="reviewRating" itemscope itemtype="https://schema.org/Rating"
+								class="review-user-rating">
+								<meta itemprop="worstRating" content="1">
+								<span class="rating-global-star">&#9733;</span>
+								<span itemprop="ratingValue">{{ .Rating }}</span>
+								<meta itemprop="bestRating" content="10">
+							</span>
+							<meta itemprop="datePublished" content="{{ .UpdatedAt }}">
 							<span class="review-date" data-utc-time="{{ .UpdatedAt }}">Loading date...</span>
 						</div>
-						<h4 class="review-headline">{{ .HTMLHeadline }}</h4>
+						<h4 itemprop="name" class="review-headline">{{ .HTMLHeadline }}</h4>
 					</header>
-					<div class="review-content">{{ .HTMLContent }}</div>
+					<div itemprop="reviewBody" class="review-content">{{ .HTMLContent }}</div>
 				</div>
 				{{ end }}
 			</div>

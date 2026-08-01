@@ -283,6 +283,9 @@ document.querySelectorAll('.review-section').forEach(s => {
                 const card = document.createElement('div');
                 card.className = 'review-card load-review';
                 card.id = "current-user-review";
+                card.setAttribute("itemprop", "review");
+                card.setAttribute("itemscope", "");
+                card.setAttribute("itemtype", "https://schema.org/Review");
                 card.innerHTML = innerHTML;
                 reviewsList?.prepend(card);
                 setAlert("Review posted!");

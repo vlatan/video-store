@@ -6,7 +6,6 @@
    - Rebuild the setup
    - Push code
   
-  Use schema on the reviews.
   Change ids to classes.
 
   The user should be able to delete a review or a rating.
