@@ -298,7 +298,7 @@ document.querySelectorAll('.review-section').forEach(s => {
                 if (reviewsHeaderTitle) {
                     if (numReviews === 1) {
                         reviewsHeaderTitle.textContent = "User Review";
-                    } else {
+                    } else if (numReviews > 1) {
                         reviewsHeaderTitle.textContent = "User Reviews";
                     }
                 }
