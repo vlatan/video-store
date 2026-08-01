@@ -41,19 +41,33 @@ const loadItems = async (url = "", cursor = "") => {
         for (const item of data.items) {
 
             // Clone the HTML template
-            const templateClone = htmlTemplate.content.cloneNode(true);
+            const templateClone = /** @type {DocumentFragment} */ (htmlTemplate.content.cloneNode(true));
 
-            // Query & update the template content
-            templateClone.querySelector('.video-link').href = `/video/${item.video_id}/`;
+            // Set the link source
+            const videoLink = templateClone.querySelector('.video-link');
+            if (!(videoLink instanceof HTMLAnchorElement)) {
+                console.warn('Skipping item, .video-link missing or malformed:', item);
+                continue;
+            }
+            videoLink.href = `/video/${item.video_id}/`;
+
+            // Update the image
             const thumb = templateClone.querySelector('.video-img');
+            if (!(thumb instanceof HTMLImageElement)) {
+                console.warn('Skipping item, .video-img missing or malformed:', item);
+                continue;
+            }
             thumb.src = item.thumbnail.url;
             thumb.alt = item.title;
             thumb.srcset = item.srcset;
-            templateClone.querySelector('.video-title').innerHTML = item.title;
+
+            // Set the title of the video
+            const videoTitle = templateClone.querySelector('.video-title');
+            if (videoTitle) videoTitle.textContent = item.title;
+
+            // Set the data-id on the remove buttton if any
             const remove = templateClone.querySelector('.remove-option');
-            if (remove) {
-                remove.setAttribute('data-id', `${item.id}`)
-            }
+            remove?.setAttribute('data-id', `${item.id}`);
 
             // Append template to dom
             scroller?.appendChild(templateClone);
