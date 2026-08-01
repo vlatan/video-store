@@ -109,9 +109,9 @@ func setupDatabase(ctx context.Context, cfg *config.Config) error {
 func seedTestData(ctx context.Context, pool *pgxpool.Pool) error {
 	// Example seed data - customize as needed
 	queries := []string{
-		`INSERT INTO app_user (id, provider, provider_user_id, name, email, created_at) VALUES 
-			(1, 'google', 'test1', 'Test User 1', 'test1@example.com', NOW()),
-			(2, 'google', 'test2', 'Test User 2', 'test2@example.com', NOW())`,
+		`INSERT INTO app_user (id, public_id, provider, provider_user_id, name, email, created_at) VALUES 
+			(1, 'foobar', 'google', 'test1', 'Test User 1', 'test1@example.com', NOW()),
+			(2, 'barfoo', 'google', 'test2', 'Test User 2', 'test2@example.com', NOW())`,
 
 		`INSERT INTO category (id, name, slug, created_at) VALUES 
 			(1, 'Technology', 'technology', NOW()),
