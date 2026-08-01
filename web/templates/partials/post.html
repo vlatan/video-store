@@ -308,7 +308,7 @@
 						id="review-count-wrapper">
 						<span id="review-count">{{ .CurrentPost.Reviews.TotalNum }}</span>
 					</span>
-					<h3>User Reviews</h3>
+					<h3>{{ if eq .CurrentPost.Reviews.TotalNum 1 }}User Review{{ else }}User Reviews{{ end }}</h3>
 				</div>
 
 				<!-- User Review Button -->

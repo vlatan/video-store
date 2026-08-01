@@ -292,8 +292,19 @@ document.querySelectorAll('.review-section').forEach(s => {
 
                 // Update the user reviews counter
                 const countSpan = document.getElementById('review-count');
+                const numReviews = parseInt(countSpan?.textContent || "0", 10) + 1
+
+                const reviewsHeaderTitle = document.querySelector('.reviews-title-wrapper h3');
+                if (reviewsHeaderTitle) {
+                    if (numReviews === 1) {
+                        reviewsHeaderTitle.textContent = "User Review";
+                    } else {
+                        reviewsHeaderTitle.textContent = "User Reviews";
+                    }
+                }
+
                 if (countSpan) {
-                    countSpan.textContent = String(parseInt(countSpan.textContent || "0", 10) + 1);
+                    countSpan.textContent = String(numReviews);
                 }
 
                 const reviewCountWrapper = document.getElementById('review-count-wrapper')

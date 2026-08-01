@@ -623,7 +623,7 @@ button.btn-submit-review:disabled,
 .reviews-title-wrapper {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.30rem;
     font-weight: bold;
 }
 
