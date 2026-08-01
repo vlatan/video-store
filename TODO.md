@@ -15,7 +15,6 @@
   Change ids to classes.
   Remove the css vars in rating css.
 
-  Move h4 in the header of the review?
   Use schema on the reviews.
 
 * Make the checkmarks on the like/save green or yellow

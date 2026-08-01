@@ -238,16 +238,18 @@ document.querySelectorAll('.review-section').forEach(s => {
 
             const innerHTML = `
                 <header class="review-header">
-                    <img src="${avatar}" class=" review-user-avatar" width="20" height="20"
-                        loading="lazy" alt="">
-                    <span class="review-user-name">${username}</span>
-                    <span class="review-user-rating">
-                        <span class="rating-global-star">&#9733;</span>
-                        <span>${payload.rating}</span>
-                    </span>
-                    <span class="review-date" data-utc-time="">${localDate}</span>
+                    <div class="review-meta">
+                        <img src="${avatar}" class=" review-user-avatar" width="20" height="20"
+                            loading="lazy" alt="">
+                        <span class="review-user-name">${username}</span>
+                        <span class="review-user-rating">
+                            <span class="rating-global-star">&#9733;</span>
+                            <span>${payload.rating}</span>
+                        </span>
+                        <span class="review-date" data-utc-time="">${localDate}</span>
+                    </div>
+                    <h4 class="review-headline">${result.review.html_headline}</h4>
                 </header>
-                <h4 class="review-headline">${result.review.html_headline}</h4>
                 <div class="review-content">${result.review.html_content}</div>
             `;
 

@@ -63,16 +63,18 @@ document.getElementById('load-more-reviews-btn')?.addEventListener('click', asyn
             return `
                 <div class="review-card" ${reviewdId}>
                     <header class="review-header">
-                        <img src="${review.user.local_avatar_url}" class=" review-user-avatar" width="20" height="20"
-                            loading="lazy" alt="">
-                        <span class="review-user-name">${review.user.name}</span>
-                        <span class="review-user-rating">
-                            <span class="rating-global-star">&#9733;</span>
-                            <span>${review.rating}</span>
-                        </span>
-                        <span class="review-date" data-utc-time="${review.updated_at}">${localDate}</span>
+                        <div class="review-meta">
+                            <img src="${review.user.local_avatar_url}" class=" review-user-avatar" width="20" height="20"
+                                loading="lazy" alt="">
+                            <span class="review-user-name">${review.user.name}</span>
+                            <span class="review-user-rating">
+                                <span class="rating-global-star">&#9733;</span>
+                                <span>${review.rating}</span>
+                            </span>
+                            <span class="review-date" data-utc-time="${review.updated_at}">${localDate}</span>
+                        </div>
+                        <h4 class="review-headline">${review.html_headline}</h4>
                     </header>
-                    <h4 class="review-headline">${review.html_headline}</h4>
                     <div class="review-content">${review.html_content}</div>
                 </div>`;
         });
