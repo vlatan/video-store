@@ -304,16 +304,11 @@
 			<!-- Reviews List Header -->
 			<header class="reviews-header">
 				<div class="reviews-title-wrapper">
-					<h3>User Reviews</h3>
-					<!-- beautify ignore:start -->
-					{{- if .CurrentPost.Reviews.TotalNum -}}
-					<span id="review-count-wrapper">
-					{{- else -}}
-					<span id="review-count-wrapper" style="display:none;">
-					{{- end -}}
-						- <span id="review-count">{{ .CurrentPost.Reviews.TotalNum }}</span>
+					<span {{ if not .CurrentPost.Reviews.TotalNum }} style="display:none;" {{ end }}
+						id="review-count-wrapper">
+						<span id="review-count">{{ .CurrentPost.Reviews.TotalNum }}</span>
 					</span>
-					<!-- beautify ignore:end -->
+					<h3>User Reviews</h3>
 				</div>
 
 				<!-- User Review Button -->

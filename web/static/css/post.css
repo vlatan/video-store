@@ -627,6 +627,10 @@ button.btn-submit-review:disabled,
     font-weight: bold;
 }
 
+.reviews-title-wrapper * {
+    font-size: 1.10rem;
+}
+
 .btn-open-review {
     font-size: 0.85rem;
     min-width: 6rem;
