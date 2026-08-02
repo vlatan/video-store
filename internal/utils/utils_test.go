@@ -172,25 +172,6 @@ func TestToNullString(t *testing.T) {
 	}
 }
 
-func TestFromNullString(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    sql.NullString
-		expected string
-	}{
-		{"invalid NullString", sql.NullString{Valid: false}, ""},
-		{"valid NullString", sql.NullString{String: "foo", Valid: true}, "foo"},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := FromNullString(tt.input); got != tt.expected {
-				t.Errorf("got %+v, want %+v", got, tt.expected)
-			}
-		})
-	}
-}
-
 func TestIsStatic(t *testing.T) {
 
 	type test struct {

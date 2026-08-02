@@ -22,7 +22,7 @@ func (r *Repository) UpsertUser(ctx context.Context, u *models.User) (int, error
 		query,
 		u.ProviderUserId,
 		u.Provider,
-		utils.ToNullString(u.AnalyticsID),
+		u.PublicID,
 		utils.ToNullString(u.Name),
 		utils.ToNullString(u.Email),
 		utils.ToNullString(u.AvatarURL),

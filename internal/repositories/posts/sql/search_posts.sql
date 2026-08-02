@@ -23,14 +23,15 @@ WITH
     -- Isolated GIN scan #2 - match reviews and calculate scores
     review_matches AS (
         SELECT
-            pr.post_id,
+            prat.post_id,
             (MAX(ts_rank(pr.search_vector, st.and_query, 32)) * 1.5) +
             (MAX(ts_rank(pr.search_vector, st.or_query, 32)) * 0.75) +
             (MAX(COALESCE(similarity(pr.title, st.raw_query), 0) * 0.25)) AS review_score
         FROM post_review AS pr
+        JOIN post_rating AS prat ON prat.id = pr.rating_id
         CROSS JOIN search_terms AS st
         WHERE pr.search_vector @@ st.or_query
-        GROUP BY pr.post_id
+        GROUP BY prat.post_id
     ),
     -- Merge the IDs and save the total score
     combined_matches AS (

@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"regexp"
 
+	"github.com/vlatan/video-store/internal/avatars"
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/integrations/r2"
@@ -13,17 +14,17 @@ import (
 	"github.com/vlatan/video-store/internal/repositories/users"
 
 	"github.com/gorilla/sessions"
-	"github.com/tdewolff/minify"
-	"github.com/tdewolff/minify/css"
-	"github.com/tdewolff/minify/html"
-	"github.com/tdewolff/minify/js"
-	"github.com/tdewolff/minify/json"
-	"github.com/tdewolff/minify/xml"
+	"github.com/tdewolff/minify/v2"
+	"github.com/tdewolff/minify/v2/css"
+	"github.com/tdewolff/minify/v2/html"
+	"github.com/tdewolff/minify/v2/js"
+	"github.com/tdewolff/minify/v2/json"
+	"github.com/tdewolff/minify/v2/xml"
 )
 
 type Service interface {
 	// Get the user from session
-	GetUserFromSession(w http.ResponseWriter, r *http.Request) *models.User
+	GetUserFromSession(w http.ResponseWriter, r *http.Request) (*models.User, error)
 	// Store flash message in a session
 	StoreFlashMessage(w http.ResponseWriter, r *http.Request, m *models.FlashMessage)
 	// Get the map containing the static files
@@ -54,6 +55,7 @@ type service struct {
 	store       sessions.Store
 	catsRepo    *categories.Repository
 	usersRepo   *users.Repository
+	avatars     *avatars.Service
 }
 
 var validJS = regexp.MustCompile("^(application|text)/(x-)?(java|ecma)script$")
@@ -63,6 +65,7 @@ var validXML = regexp.MustCompile("[/+]xml$")
 func New(
 	usersRepo *users.Repository,
 	catsRepo *categories.Repository,
+	avatars *avatars.Service,
 	rdb *rdb.Service,
 	r2s r2.Service,
 	store sessions.Store,
@@ -71,13 +74,14 @@ func New(
 
 	m := minify.New()
 
-	// Create a custom minifier configuration
+	// Configure a custom HTML minifier
 	htmlMinifier := &html.Minifier{
-		KeepDocumentTags: true, // Prevent stripping <html>, <head>, and <body>
-		KeepEndTags:      true, // Keep valid HTML structure
+		KeepDocumentTags: true,                  // Prevent stripping <html>, <head>, and <body>
+		KeepEndTags:      true,                  // Keep valid HTML structure
+		TemplateDelims:   [2]string{"{{", "}}"}, // Preserve context within and surrounding golang template delimiters
 	}
 
-	// Use the custom configured minifier function
+	// Use the custom HTML in a minifier function
 	m.AddFunc("text/html", htmlMinifier.Minify)
 
 	m.AddFunc("text/css", css.Minify)
@@ -105,5 +109,6 @@ func New(
 		store:       store,
 		catsRepo:    catsRepo,
 		usersRepo:   usersRepo,
+		avatars:     avatars,
 	}, nil
 }

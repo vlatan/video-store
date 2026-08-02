@@ -1,87 +1,339 @@
-document.querySelectorAll('.rate-widget').forEach(widget => {
-    const userRatingColumn = widget.querySelector('#user-rating-column');
-    const rateDialog = widget.querySelector('.rate-dialog');
-    const rateBtnOpen = widget.querySelector('.btn-open-rate');
-    const rateBtnClose = widget.querySelector('.btn-close-rate');
-    const rateBtnSubmit = widget.querySelector('.btn-submit-rate');
-    const bigStarValue = widget.querySelector('.rating-big-star-value');
-    const rateURL = widget.dataset.url || `/api${window.location.pathname}/rate`;
 
-    let currentRating = null;
-    let selectedStar = null;
-    const bigStarOriginalTextContent = bigStarValue.textContent;
+// ==========================================================================
+// Sync All Checked Stars and Big Star Values
+// ==========================================================================
 
-    rateBtnOpen.addEventListener('click', () => rateDialog.showModal());
-    rateBtnClose.addEventListener('click', () => {
-        rateDialog.close()
-        rateBtnSubmit.disabled = true;
-        if (selectedStar) selectedStar.checked = false;
-        bigStarValue.textContent = bigStarOriginalTextContent;
+const starRadios = document.querySelectorAll('input[name="rating"]');
+const bigStarValues = document.querySelectorAll('.rating-big-star-value');
+
+// Track currently checked value
+let selectedValue = "?";
+const checked = document.querySelector('input[name="rating"]:checked');
+if (checked instanceof HTMLInputElement) {
+    selectedValue = checked.value;
+}
+
+// Update the displayed rating value
+const updateBigStar = (val = "?") => {
+    bigStarValues.forEach(bsv => {
+        bsv.textContent = val;
     });
+};
 
-    // Handle interactive star adjustments inside the modal
-    widget.querySelectorAll('input[type="radio"]').forEach(input => {
-        input.addEventListener('change', (e) => {
-            selectedStar = e.target;
-            currentRating = Number(selectedStar.value);
-            bigStarValue.textContent = currentRating;
-            rateBtnSubmit.disabled = false;
+starRadios.forEach(radio => {
+    if (!(radio instanceof HTMLInputElement)) return;
+
+    radio.addEventListener('change', () => {
+        if (!radio.checked) return;
+        selectedValue = radio.value;
+
+        // Sync across all star sets (needed if they're in separate forms)
+        starRadios.forEach(r => {
+            if (r instanceof HTMLInputElement && r.value === selectedValue) {
+                r.checked = true;
+            }
+            updateBigStar(selectedValue);
         });
     });
 
-    // Handle submission workflow via the dedicated Rate CTA
-    if (!rateBtnSubmit) return;
-    rateBtnSubmit.addEventListener('click', async () => {
-        if (!currentRating) return;
-        rateDialog.close();
+    // Target the visible label (or fall back to input)
+    const hoverTarget = radio.closest('label') || radio;
+
+    // Hover preview
+    hoverTarget.addEventListener('mouseenter', () => {
+        updateBigStar(radio.value);
+    });
+
+    // Reset to checked value on mouse leave
+    hoverTarget.addEventListener('mouseleave', () => {
+        updateBigStar(selectedValue);
+    });
+});
+
+
+// ==========================================================================
+// Update the Average Rating Display and the User Rating Button
+// ==========================================================================
+
+
+/**
+ * Applies average rating and user rating HTML.
+ *
+ * @param {number} user_rating
+ * @param {number} avg_rating
+ * @param {number} rating_count
+ */
+function updateRatingHTML(user_rating, avg_rating, rating_count) {
+
+    user_rating = Number(user_rating);
+    avg_rating = Number(avg_rating);
+    rating_count = Number(rating_count);
+
+    if (!Number.isFinite(user_rating) || user_rating <= 0 || user_rating > 10) {
+        throw new Error("user rating can't be <= 0 or > 10");
+    }
+    if (!Number.isFinite(avg_rating) || avg_rating < 0 || avg_rating > 10) {
+        throw new Error("avg rating must be a number between 0 and 10");
+    }
+    if (!Number.isInteger(rating_count) || rating_count < 0) {
+        throw new Error("rating count must be a non-negative integer");
+    }
+
+    const votesText = rating_count === 1 ? "vote" : "votes";
+    const avgRatingHTML = `
+        <div class="btn-open-post-dialog avg-rating-display">
+            <span class="rating-global-star">&#9733;</span>
+            <div class="rating-meta" itemprop="aggregateRating" itemscope
+                itemtype="https://schema.org/AggregateRating">
+                <meta itemprop="worstRating" content="1">
+                <div class="rating-score">
+                    <span class="rating-avg-val" itemprop="ratingValue">${avg_rating}</span>
+                    <span>/</span>
+                    <span itemprop="bestRating">10</span>
+                </div>
+                <div class="rating-count">
+                    <span class="rating-count-val" itemprop="ratingCount">${rating_count}</span>
+                    <span>${votesText}</span>
+                </div>
+            </div>
+        </div>
+    `;
+
+    const avgRatingDisplay = document.querySelector('.avg-rating-display');
+    const rateBtnOpen = document.querySelector('#btn-open-rate');
+
+    // Transform the average display
+    if (avgRatingDisplay) {
+        avgRatingDisplay.outerHTML = avgRatingHTML;
+    } else if (rateBtnOpen) {
+        rateBtnOpen.insertAdjacentHTML('beforebegin', avgRatingHTML);
+    }
+
+    // Transform the user rating button
+    if (rateBtnOpen) {
+        rateBtnOpen.innerHTML = `<span class="rating-user-star">&#9733;</span> ${user_rating}`;
+    }
+}
+
+
+// ==========================================================================
+// Ratings
+// ==========================================================================
+
+document.querySelectorAll('.rating-section').forEach(widget => {
+    const rateDialog = widget.querySelector('#rate-dialog');
+    const rateForm = widget.querySelector('.rate-form');
+    const rateBtnOpen = widget.querySelector('#btn-open-rate');
+    const rateBtnClose = widget.querySelector('#btn-close-rate');
+    const rateBtnSubmit = widget.querySelector('.btn-submit-rate');
+    let originalrateBtnSubmitText = rateBtnSubmit?.textContent.trim() || 'Rate';
+
+    if (!(rateDialog instanceof HTMLDialogElement)) return;
+    if (!(rateForm instanceof HTMLFormElement)) return;
+    if (!(rateBtnSubmit instanceof HTMLButtonElement && rateBtnSubmit.type === 'submit')) return;
+
+    rateBtnOpen?.addEventListener('click', () => rateDialog.showModal());
+    rateBtnClose?.addEventListener('click', () => rateDialog.close());
+
+    // Handle form submission
+    rateForm?.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const form = event.currentTarget;
+        if (!(form instanceof HTMLFormElement)) return;
+
+        if (!form.checkValidity()) {
+            form.reportValidity(); // shows the native browser bubble
+            return;
+        }
+
+        const formData = new FormData(form);
+        const payload = {
+            ...Object.fromEntries(formData.entries()),
+            rating: Number(formData.get('rating') || 0)
+        };
+
         rateBtnSubmit.disabled = true;
-        if (selectedStar) selectedStar.checked = false;
-        bigStarValue.textContent = bigStarOriginalTextContent;
+        rateBtnSubmit.textContent = 'Posting...';
+        rateDialog.close();
 
         try {
-            const res = await postData(rateURL, { 'rating': currentRating });
-            if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
-            const data = await res.json();
+            const response = await postData(form.action, payload);
+            if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+            const result = await response.json();
 
-            let votesText = "votes";
-            if (data.rating_count === 1) votesText = "vote";
+            // Update the rating HTML
+            updateRatingHTML(payload.rating, result.avg_rating, result.rating_count)
 
-            const avgRatingHTML = `
-                <div class="rating-column" id="average-rating-column">
-                    <span class="rating-column-label">AVG RATING</span>
-                    <div class="rating-display">
-                        <span class="rating-global-star">&#9733;</span>
-                        <div class="rating-meta" itemprop="aggregateRating" itemscope
-							itemtype="https://schema.org/AggregateRating">
-                            <meta itemprop="worstRating" content="1">
-                            <div class="rating-score">
-                                <span class="rating-avg-val" itemprop="ratingValue">
-                                    ${data.avg_rating}
-                                </span> / <span itemprop="bestRating">10</span>
-                            </div>
-                            <div class="rating-count">
-                                <span class="rating-count-val" itemprop="ratingCount">
-                                    ${data.rating_count}
-                                </span> ${votesText}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            // Replace or insert average rating
-            const avgRatingColumn = widget.querySelector('#average-rating-column');
-            if (avgRatingColumn) {
-                avgRatingColumn.outerHTML = avgRatingHTML;
-            } else if (userRatingColumn) {
-                userRatingColumn.insertAdjacentHTML('beforebegin', avgRatingHTML);
-            }
-
-            // Transform the user rating button
-            rateBtnOpen.innerHTML = `<span class="rating-user-star">&#9733;</span> ${currentRating}`;
+            // The request went through, change the button text
+            originalrateBtnSubmitText = "Update";
         } catch (error) {
             console.error("Failed to fetch or parse JSON:", error);
             setAlert("Something went wrong!");
+        } finally {
+            rateBtnSubmit.disabled = false;
+            rateBtnSubmit.textContent = originalrateBtnSubmitText;
+        }
+    });
+});
+
+
+// ==========================================================================
+// Add Review
+// ==========================================================================
+
+document.querySelectorAll('.review-section').forEach(s => {
+    const reviewDialog = s.querySelector('#review-dialog');
+    const reviewForm = s.querySelector('.review-form');
+    const reviewsList = s.querySelector('#reviews-list');
+    const reviewOpenBtn = s.querySelector('#btn-open-review');
+    const reviewOpenBtnText = s.querySelector('#btn-open-review-text');
+    let originalreviewOpenBtnText = reviewOpenBtnText?.textContent.trim() || 'Post Review';
+    const reviewCloseBtn = s.querySelector('#btn-close-review');
+    const reviewSubmitBtn = s.querySelector('#submit-review');
+    let originalreviewBtnSubmitText = reviewSubmitBtn?.textContent.trim() || 'Post Review';
+    const reviewError = s.querySelector('#review-error');
+
+    if (!(reviewDialog instanceof HTMLDialogElement)) return;
+    if (!(reviewForm instanceof HTMLFormElement)) return;
+    if (!(reviewOpenBtnText instanceof HTMLElement)) return;
+    if (!(reviewSubmitBtn instanceof HTMLButtonElement && reviewSubmitBtn.type === 'submit')) return;
+
+    const showError = (msg = "") => {
+        if (!(reviewError instanceof HTMLElement)) return;
+        reviewError.textContent = msg;
+        reviewError.hidden = false;
+    };
+    const clearError = () => {
+        if (!(reviewError instanceof HTMLElement)) return;
+        reviewError.textContent = '';
+        reviewError.hidden = true;
+    };
+
+    reviewOpenBtn?.addEventListener('click', () => reviewDialog.showModal());
+    reviewCloseBtn?.addEventListener('click', () => reviewDialog.close());
+
+    reviewForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const form = event.currentTarget;
+        if (!(form instanceof HTMLFormElement)) return;
+        clearError();
+
+        if (!form.checkValidity()) {
+            form.reportValidity(); // shows the native browser bubble
+            return;
+        }
+
+        const formData = new FormData(form);
+        const headline = String(formData.get('headline') || '').trim();
+        const content = String(formData.get('content') || '').trim();
+        const rating = String(formData.get('rating') || '').trim();
+
+        if (!headline || !content || !rating) {
+            showError('Please fill in the required fields');
+            return;
+        }
+
+        const payload = {
+            ...Object.fromEntries(formData.entries()),
+            rating: Number(formData.get('rating') || 0)
+        };
+
+        reviewSubmitBtn.disabled = true;
+        reviewSubmitBtn.textContent = 'Posting...';
+        reviewDialog.close();
+
+        try {
+            const response = await postData(form.action, payload);
+            if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+            const result = await response.json();
+
+            // Get these from the header of the page
+            const avatar = document.querySelector('.username-image')?.getAttribute('src') ?? "";
+            const username = document.querySelector('.username-text')?.textContent.trim() ?? "";
+
+            const now = new Date();
+            const localDate = now.toLocaleDateString();
+
+            const innerHTML = buildReviewHTML(
+                avatar,
+                username,
+                payload.rating,
+                localDate,
+                result.review.html_headline,
+                result.review.html_content,
+            );
+
+            // Look for this review in the DOM
+            const reviewInDom = document.getElementById("current-user-review");
+
+            // Look if the user has a review here at all
+            const userHasReview = reviewSubmitBtn.dataset.hasReview === 'true';
+
+            if (reviewInDom) { // Review is in the DOM
+                reviewInDom.innerHTML = innerHTML;
+                reviewInDom.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                reviewInDom.classList.add('updated-review');
+                setTimeout(() => reviewInDom.classList.remove('updated-review'), 2000);
+                setAlert("Review updated!");
+                // TODO: Change this check, not reliable
+            } else if (userHasReview) {
+                // Review isn't loaded in the DOM yet.
+                setAlert("Review updated!");
+            } else { // New review, prepend to the list
+                const card = document.createElement('div');
+                card.className = 'review-card load-review';
+                card.id = "current-user-review";
+                card.setAttribute("itemprop", "review");
+                card.setAttribute("itemscope", "");
+                card.setAttribute("itemtype", "https://schema.org/Review");
+                card.innerHTML = innerHTML;
+                reviewsList?.prepend(card);
+                setAlert("Review posted!");
+
+                // Update the user reviews counter
+                const countSpan = document.getElementById('review-count');
+                const numReviews = parseInt(countSpan?.textContent || "0", 10) + 1
+
+                const reviewsHeaderTitle = document.querySelector('.reviews-title-wrapper h3');
+                if (reviewsHeaderTitle) {
+                    if (numReviews === 1) {
+                        reviewsHeaderTitle.textContent = "User Review";
+                    } else if (numReviews > 1) {
+                        reviewsHeaderTitle.textContent = "User Reviews";
+                    }
+                }
+
+                if (countSpan) {
+                    countSpan.textContent = String(numReviews);
+                }
+
+                const reviewCountWrapper = document.getElementById('review-count-wrapper')
+                if (reviewCountWrapper) {
+                    reviewCountWrapper.style.display = 'inline';
+                }
+
+                // Remove the class load-review after the animation.
+                // 'once: true' auto-removes the listener after it fires.
+                card.addEventListener('animationend', () => {
+                    card.classList.remove('load-review');
+                }, { once: true });
+            }
+
+            // Update the user rating and average rating HTML
+            updateRatingHTML(payload.rating, result.stats.avg_rating, result.stats.rating_count)
+
+            // The request went through, change the open and submit button text,
+            // the data state and remove the load-review class.
+            originalreviewBtnSubmitText = "Update Review";
+            originalreviewOpenBtnText = "Update Review";
+            reviewSubmitBtn.dataset.hasReview = 'true';
+        } catch (err) {
+            console.error("Failed to fetch or parse JSON:", err);
+            setAlert("Something went wrong!");
+        } finally {
+            reviewSubmitBtn.disabled = false;
+            reviewSubmitBtn.textContent = originalreviewBtnSubmitText;
+            reviewOpenBtnText.textContent = originalreviewOpenBtnText;
         }
     });
 });

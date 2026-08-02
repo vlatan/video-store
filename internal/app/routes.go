@@ -23,7 +23,8 @@ func (a *App) RegisterRoutes() *App {
 	mux.HandleFunc("GET /video/{video}/{$}", a.posts.SinglePostHandler)
 	mux.HandleFunc("/video/{video}/edit", a.mw.IsAdmin(a.posts.UpdatePostHandler))
 	mux.HandleFunc("POST /video/{video}/delete", a.mw.IsAdmin(a.posts.BanPostHandler))
-	mux.HandleFunc("POST /api/video/{video}/{action}", a.mw.IsAuthenticated(a.posts.ActionPostAPI))
+	mux.HandleFunc("GET /api/video/{video}/reviews", a.posts.PostReviewsAPI)
+	mux.HandleFunc("POST /api/video/{video}/{action}", a.mw.IsAuthenticated(a.posts.PostActionAPI))
 
 	// Categories
 	mux.HandleFunc("GET /category/{category}/{$}", a.posts.CategoryPostsHandler)

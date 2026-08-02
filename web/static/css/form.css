@@ -1,177 +1,178 @@
 .form-content {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 500px;
-  max-width: 700px;
-  margin: 0 auto;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	min-height: 500px;
+	max-width: 700px;
+	margin: 0 auto;
 }
 
 .form-content form {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: var(--content-padding);
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	gap: var(--content-padding);
 }
 
 .form-content fieldset {
-  display: flex;
-  flex-direction: column;
-  gap: var(--content-padding);
-  border: 1px solid var(--primary-border-color);
-  border-radius: 5px;
-  padding: var(--content-padding);
-  background-color: var(--secondary-background-color);
+	display: flex;
+	flex-direction: column;
+	gap: var(--content-padding);
+	border: 1px solid var(--primary-border-color);
+	border-radius: 5px;
+	padding: var(--content-padding);
+	background-color: var(--secondary-background-color);
 }
 
 /* Opt-in to the modern customizable select rendering */
 .form-select,
 .form-select::picker(select) {
-  appearance: base-select;
+	appearance: base-select;
 }
 
 
 /* Remove the picker's default black border and animate on open */
 .form-select::picker(select) {
-  border: none;
-  opacity: 0;
-  transition: all 0.4s allow-discrete;
+	border: none;
+	opacity: 0;
+	transition: all 0.4s allow-discrete;
 }
 
 .form-select:open::picker(select) {
-  opacity: 1;
+	opacity: 1;
 }
 
 @starting-style {
-  .form-select:open::picker(select) {
-    opacity: 0;
-  }
+	.form-select:open::picker(select) {
+		opacity: 0;
+	}
 }
 
 /* Style the main button box */
 .form-select {
-  color-scheme: dark;
-  background-color: var(--primary-background-color);
-  color: var(--primary-font-color);
-  padding: 0.35rem 0.75rem;
-  font-size: 1rem;
-  border: 1px solid var(--primary-border-color);
-  border-radius: 0.25rem;
-  width: 250px;
-  cursor: pointer;
-  transition: 0.4s;
+	color-scheme: dark;
+	background-color: var(--primary-background-color);
+	color: var(--primary-font-color);
+	padding: 0.35rem 0.75rem;
+	font-size: 1rem;
+	border: 1px solid var(--primary-border-color);
+	border-radius: 0.25rem;
+	width: 250px;
+	cursor: pointer;
+	transition: 0.4s;
 }
 
 .form-select::picker-icon {
-  transition: 0.4s rotate;
+	transition: 0.4s rotate;
 }
 
 .form-select:open::picker-icon {
-  rotate: 180deg;
+	rotate: 180deg;
 }
 
 /* Style individual option items */
 .form-select option {
-  display: flex;
-  justify-content: flex-start;
-  gap: 1rem;
-  border: 1px solid var(--primary-border-color);
-  background-color: var(--primary-background-color);
-  color: var(--primary-font-color);
-  padding: 0.35rem 0.75rem;
-  transition: 0.4s;
+	display: flex;
+	justify-content: flex-start;
+	gap: 1rem;
+	border: 1px solid var(--primary-border-color);
+	background-color: var(--primary-background-color);
+	color: var(--primary-font-color);
+	padding: 0.35rem 0.75rem;
+	transition: 0.4s;
 }
 
 /* Style options when hovered, focused or checked */
 .form-select option:hover,
 .form-select option:focus,
 .form-select option:checked {
-  background-color: var(--secondary-background-color);
-  font-weight: bold;
-  color: var(--secondary-font-color);
+	background-color: var(--secondary-background-color);
+	font-weight: bold;
+	color: var(--secondary-font-color);
 }
 
 .form-select option::checkmark {
-  order: 1;
-  margin-left: auto;
-  color: yellow;
+	order: 1;
+	margin-left: auto;
+	color: yellow;
 }
 
 .form-legend {
-  font-weight: bold;
-  padding: 0.3rem 1rem;
-  border: 1px solid var(--primary-border-color);
-  border-radius: 5px;
-  background-color: var(--secondary-background-color);
+	font-weight: bold;
+	padding: 0.3rem 1rem;
+	border: 1px solid var(--primary-border-color);
+	border-radius: 5px;
+	background-color: var(--secondary-background-color);
 }
 
 .form-label {
-  display: block;
-  margin-bottom: 0.5rem;
+	display: block;
+	margin-bottom: 0.5rem;
 }
 
 .form-input {
-  padding: 0.5rem;
-  font-size: 0.9rem;
-  width: 100%;
-  background-color: var(--primary-background-color);
-  border: 1px solid var(--primary-border-color);
+	padding: 0.5rem;
+	font-size: 0.9rem;
+	width: 100%;
+	background-color: var(--primary-background-color);
+	border: 1px solid var(--primary-border-color);
+	resize: vertical;
 }
 
 .form-input:focus {
-  outline: none;
-  border-color: rgb(88, 88, 150);
+	outline: none;
+	border-color: rgb(88, 88, 150);
 }
 
 .button-group {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
+	display: flex;
+	align-items: center;
+	gap: 1rem;
 }
 
 .form-button {
-  padding: 0.5rem 1rem;
-  font-size: 1rem;
-  border: 1px solid var(--primary-border-color);
-  border-radius: 5px;
-  background-color: var(--secondary-background-color);
-  cursor: pointer;
-  line-height: normal;
+	padding: 0.5rem 1rem;
+	font-size: 1rem;
+	border: 1px solid var(--primary-border-color);
+	border-radius: 5px;
+	background-color: var(--secondary-background-color);
+	cursor: pointer;
+	line-height: normal;
 }
 
 .form-button:hover {
-  background-color: var(--primary-background-color);
+	background-color: var(--primary-background-color);
 }
 
 .form-invalid-feedback {
-  display: flex;
-  align-items: center;
-  color: white;
-  padding-left: 8px;
-  font-size: 0.9rem;
-  border-left: 4px solid #F4511E;
+	display: flex;
+	align-items: center;
+	color: white;
+	padding-left: 8px;
+	font-size: 0.9rem;
+	border-left: 4px solid #F4511E;
 }
 
 .submit-spinner {
-  display: none;
-  width: 20px;
-  height: 20px;
-  border: 2px solid #f3f3f3;
-  border-top: 2px solid #007bff;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
+	display: none;
+	width: 20px;
+	height: 20px;
+	border: 2px solid #f3f3f3;
+	border-top: 2px solid #007bff;
+	border-radius: 50%;
+	animation: spin 1s linear infinite;
 }
 
 .submit-spinner.show {
-  display: inline-block;
+	display: inline-block;
 }
 
 @keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
+	0% {
+		transform: rotate(0deg);
+	}
 
-  100% {
-    transform: rotate(360deg);
-  }
+	100% {
+		transform: rotate(360deg);
+	}
 }

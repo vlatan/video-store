@@ -1,10 +1,11 @@
 SELECT
+    id,
     provider_user_id,
     provider, 
     name,
     email,
     picture,
-    analytics_id,
+    public_id,
     last_seen,
     created_at,
     COUNT(*) OVER() as total_results

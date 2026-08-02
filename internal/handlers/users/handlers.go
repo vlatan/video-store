@@ -3,7 +3,6 @@ package users
 import (
 	"log/slog"
 	"net/http"
-	"time"
 
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/utils"
@@ -57,19 +56,20 @@ func (s *Service) UsersHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Assign avatars to users
-	if err = s.SetAvatars(
-		r, users.Items,
-		models.AvatarAdminPrefix,
-		30*24*time.Hour,
-	); err != nil {
-		slog.ErrorContext(
-			r.Context(), "failed to set users' avatars",
-			"path", r.URL.Path,
-			"error", err,
-		)
-		utils.HttpError(w, http.StatusInternalServerError)
-		return
+	// Assign R2 avatars to users
+	for i, user := range users.Items {
+		localAvatarURL, err := s.avatars.Get(r.Context(), &user)
+		if err != nil {
+			slog.ErrorContext(
+				r.Context(), "failed to get user's avatar",
+				"path", r.URL.Path,
+				"userId", user.ID,
+				"error", err,
+			)
+			utils.HttpError(w, http.StatusInternalServerError)
+			return
+		}
+		users.Items[i].LocalAvatarURL = localAvatarURL
 	}
 
 	data.PaginationInfo = s.ui.NewPagination(

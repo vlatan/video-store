@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/vlatan/video-store/internal/models"
-	"github.com/vlatan/video-store/internal/utils"
 )
 
 // Get a limited number of posts with cursor
@@ -111,13 +110,13 @@ func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (
 		}
 
 		// Attach the title
-		post.OriginalTitle = utils.FromNullString(originalTitle)
+		post.OriginalTitle = originalTitle.String
 
 		// Attach ratings if any
 		if avgRating.Valid && ratingCount.Valid {
-			post.Rating = &models.Rating{
-				Avg:   utils.FromNullFloat64(avgRating),
-				Count: utils.FromNullInt64(ratingCount),
+			post.RatingStats = &models.RatingStats{
+				Avg:   avgRating.Float64,
+				Count: ratingCount.Int64,
 			}
 		}
 
@@ -153,14 +152,14 @@ func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (
 		cursorStr = fmt.Sprintf("%d,%s", lastPost.Likes, cursorStr)
 	case models.AvgRating:
 		var avgRating float64
-		if lastPost.Rating != nil {
-			avgRating = lastPost.Rating.Avg
+		if lastPost.RatingStats != nil {
+			avgRating = lastPost.RatingStats.Avg
 		}
 		cursorStr = fmt.Sprintf("%.2f,%s", avgRating, cursorStr)
 	case models.RatingCount:
 		var ratingCount int64
-		if lastPost.Rating != nil {
-			ratingCount = lastPost.Rating.Count
+		if lastPost.RatingStats != nil {
+			ratingCount = lastPost.RatingStats.Count
 		}
 		cursorStr = fmt.Sprintf("%d,%s", ratingCount, cursorStr)
 	}

@@ -5,8 +5,10 @@ import (
 	"encoding/gob"
 	"fmt"
 	"net/http"
+	"runtime"
 	"time"
 
+	"github.com/vlatan/video-store/internal/avatars"
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/drivers/database"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
@@ -49,6 +51,8 @@ type App struct {
 // Holds handler services and a HTTP server.
 func New() (*App, error) {
 
+	ctx := context.Background()
+
 	// Register types with gob to be able to use them in sessions
 	gob.Register(&models.FlashMessage{})
 	gob.Register(time.Time{})
@@ -74,6 +78,16 @@ func New() (*App, error) {
 	// Create session store
 	store := redisStore.New(cfg, rdb, "session", 86400*30)
 
+	// Create Cloudflare R2 service
+	r2s, err := r2.New(ctx, cfg)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't create R2 service: %w", err)
+	}
+
+	// Create avatars service
+	maxConcurrency := runtime.GOMAXPROCS(0) * 8
+	as := avatars.New(maxConcurrency, 500, cfg, rdb, r2s)
+
 	// Create DB repositories
 	catsRepo, err := catsRepo.New(db, nil)
 	if err != nil {
@@ -98,7 +112,6 @@ func New() (*App, error) {
 	}
 
 	// Create YouTube service
-	ctx := context.Background()
 	yt, err := yt.New(ctx, cfg)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create YouTube service: %w", err)
@@ -110,33 +123,37 @@ func New() (*App, error) {
 		return nil, fmt.Errorf("couldn't create Gemini service: %w", err)
 	}
 
-	// Create Cloudflare R2 service
-	r2s, err := r2.New(ctx, cfg)
-	if err != nil {
-		return nil, fmt.Errorf("couldn't create R2 service: %w", err)
-	}
-
 	// Create user interface service
-	ui, err := ui.New(usersRepo, catsRepo, rdb, r2s, store, cfg)
+	ui, err := ui.New(usersRepo, catsRepo, as, rdb, r2s, store, cfg)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create UI service: %w", err)
 	}
 
 	// Create new app service
 	a := &App{
-		auth:     auth.New(usersRepo, store, rdb, r2s, ui, cfg),
-		users:    users.New(usersRepo, postsRepo, rdb, r2s, ui, cfg),
-		posts:    posts.New(postsRepo, usersRepo, rdb, ui, cfg, yt, gemini),
+
+		// Handlers services
+		auth:     auth.New(usersRepo, as, store, rdb, r2s, ui, cfg),
+		users:    users.New(usersRepo, postsRepo, as, rdb, r2s, ui, cfg),
+		posts:    posts.New(postsRepo, usersRepo, as, rdb, ui, cfg, yt, gemini),
 		pages:    pages.New(pagesRepo, rdb, ui, cfg),
 		sources:  sources.New(postsRepo, sourcesRepo, rdb, ui, cfg, yt),
 		sitemaps: sitemaps.New(postsRepo, rdb, ui, cfg),
 		misc:     misc.New(cfg, db, rdb, ui),
-		mw:       middlewares.New(ui, cfg),
-		domain:   cfg.Domain,
+
+		// Middleware service
+		mw: middlewares.New(ui, cfg),
+
+		// The domain we're serving this app on
+		domain: cfg.Domain,
+
+		// Register cleanup function
 		cleanup: func() error {
 			db.Pool.Close()
 			return rdb.Client.Close()
 		},
+
+		// The HTTP server
 		server: &http.Server{
 			Addr:         fmt.Sprintf(":%d", cfg.Port),
 			IdleTimeout:  time.Minute,

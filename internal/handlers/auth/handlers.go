@@ -281,9 +281,7 @@ func (s *Service) DeleteAccountHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Attempt to remove the avatar from R2 and redis
-	if err = currentUser.DeleteAvatar(
-		r.Context(), s.config, s.rdb, s.r2s,
-	); err != nil {
+	if err = s.avatars.Delete(r.Context(), currentUser); err != nil {
 		log.Printf("Failed to delete user avatar: %v", err)
 	}
 

@@ -64,14 +64,12 @@
 
 		<header class="metadata">
 
-			{{ $actions := .CurrentPost.UserActions }}
-
 			<div class="metadata-block">
 				<h1 class="video-title" itemprop="name">{{ .CurrentPost.GetTitle }}</h1>
 				<div class="ui-inner-metadata-block">
 					<div class="social">
 						{{ if .CurrentUser.IsAuthenticated }}
-						{{ if and $actions $actions.Liked }}
+						{{ if .CurrentPost.UserActions.Liked }}
 						<button class="like like-yes">
 							<span data-liked>&#10003;</span>
 							<span data-likes>{{ .CurrentPost.LikeButtonText }}</span>
@@ -88,7 +86,7 @@
 						{{ end }}
 
 						{{ if .CurrentUser.IsAuthenticated }}
-						{{ if and $actions $actions.Faved }}
+						{{ if .CurrentPost.UserActions.Faved }}
 						<button class="fave fave-yes">
 							<span data-saved>&#10003;</span>
 							<span data-saves>Saved</span>
@@ -132,92 +130,85 @@
 				</div>
 
 				<!-- Rating Widget -->
-				<div class="rate-widget" data-url="/api/video/{{ .CurrentPost.VideoID }}/rate">
-					{{ .CSRFField }}
+				<section class="rating-section">
 
-					<!-- Avg Rating Column -->
-					{{ if .CurrentPost.Rating }}
-					<div class="rating-column" id="average-rating-column">
-						<span class="rating-column-label">AVG RATING</span>
-						<div class="rating-display">
-							<span class="rating-global-star">&#9733;</span>
-							<div class="rating-meta" itemprop="aggregateRating" itemscope
-								itemtype="https://schema.org/AggregateRating">
-								<meta itemprop="worstRating" content="1">
-								<div class="rating-score">
-									<span class="rating-avg-val" itemprop="ratingValue">
-										{{ .CurrentPost.Rating.Avg }}
-									</span> / <span itemprop="bestRating">10</span>
-								</div>
-								{{ $votesText := "votes" }}
-								{{ if eq .CurrentPost.Rating.Count 1 }}
-								{{ $votesText = "vote" }}
-								{{ end }}
-								<div class="rating-count">
-									<span class="rating-count-val" itemprop="ratingCount">
-										{{ .CurrentPost.Rating.Count }}
-									</span> {{ $votesText }}
-								</div>
+					<!-- Avg Rating Box -->
+					{{ with .CurrentPost.RatingStats }}
+					<div class="btn-open-post-dialog avg-rating-display">
+						<span class="rating-global-star">&#9733;</span>
+						<div class="rating-meta" itemprop="aggregateRating" itemscope
+							itemtype="https://schema.org/AggregateRating">
+							<meta itemprop="worstRating" content="1">
+							<div class="rating-score">
+								<span class="rating-avg-val" itemprop="ratingValue">{{ .Avg }}</span>
+								<span>/</span>
+								<span itemprop="bestRating">10</span>
+							</div>
+							<div class="rating-count">
+								<span class="rating-count-val" itemprop="ratingCount">{{ .Count }}</span>
+								<span>{{ if eq .Count 1 }}vote{{ else }}votes{{ end }}</span>
 							</div>
 						</div>
 					</div>
 					{{ end }}
 
-					<!-- Your Rating Column -->
-					<div class="rating-column" id="user-rating-column">
-						<span class="rating-column-label">YOUR RATING</span>
-						{{ if .CurrentUser.IsAuthenticated }}
-						<button type="button" class="btn-open-rate" aria-haspopup="dialog">
-							{{ else }}
-							<button data-modal="login" type="button" class="btn-open-rate">
-								{{ end }}
-								{{ if and $actions $actions.Rating }}
-								<span class="rating-user-star">&#9733;</span>
-								<span>{{ $actions.Rating }}</span>
-								{{ else }}
-								<span class="rating-user-star">&#9734;</span>
-								<span>Rate</span>
-								{{ end }}
-							</button>
-					</div>
+					{{- $userRating := .CurrentPost.UserActions.Review.Rating -}}
 
-					{{ if .CurrentUser.IsAuthenticated }}
+					<!-- User Rating Button -->
+					<button {{ if not .CurrentUser.IsAuthenticated }} data-modal="login" {{ end }} type="button"
+						id="btn-open-rate" class="btn-open-post-dialog" aria-haspopup="dialog">
+						{{ if $userRating }}
+						<span class="rating-user-star">&#9733;</span>
+						<span>{{ $userRating }}</span>
+						{{ else }}
+						<span class="rating-user-star">&#9734;</span>
+						<span>Rate</span>
+						{{ end }}
+					</button>
+
 					<!-- Rating Dialog -->
-					<dialog class="modal rate-dialog" closedby="any">
-						<div class="rate-dialog-content">
+					{{ if .CurrentUser.IsAuthenticated }}
+					<dialog id="rate-dialog" class="modal post-dialog" closedby="any">
+						<form class="rate-form" action="/api/video/{{ .CurrentPost.VideoID }}/rate" method="POST">
+							{{ .CSRFField }}
 							<div class="rating-big-star-wrapper">
-								<svg viewBox="0 0 24 24">
-									<path
-										d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+								<svg>
+									<use href="#big-hearth" />
 								</svg>
-								<span class="rating-big-star-value">?</span>
+								<span class="big-star-value rating-big-star-value">
+									{{ if $userRating }}{{ $userRating }}{{ else }}?{{ end }}
+								</span>
 							</div>
 
-							<button type="button" class="btn-close-rate">&times;</button>
+							<button type="button" id="btn-close-rate" class="btn-close-post-dialog">&times;</button>
 							<header class="rating-header">
 								<h3 class="rate-subtitle">RATE THIS</h3>
 								<h2 class="rate-title">{{ .CurrentPost.GetTitle }}</h2>
 							</header>
 
-							<div class="rate-stars">
-								<label><input type="radio" name="rating" value="10"><span>★</span></label>
-								<label><input type="radio" name="rating" value="9"><span>★</span></label>
-								<label><input type="radio" name="rating" value="8"><span>★</span></label>
-								<label><input type="radio" name="rating" value="7"><span>★</span></label>
-								<label><input type="radio" name="rating" value="6"><span>★</span></label>
-								<label><input type="radio" name="rating" value="5"><span>★</span></label>
-								<label><input type="radio" name="rating" value="4"><span>★</span></label>
-								<label><input type="radio" name="rating" value="3"><span>★</span></label>
-								<label><input type="radio" name="rating" value="2"><span>★</span></label>
-								<label><input type="radio" name="rating" value="1"><span>★</span></label>
-							</div>
+							<fieldset class="rate-stars">
+								<legend class="visually-hidden">Rating</legend>
+								{{ range .CurrentPost.Stars }}
+								{{ $starsText := "stars" }}
+								{{ if eq . 1 }}
+								{{ $starsText = "star" }}
+								{{ end }}
+								<label>
+									<input {{ if eq $userRating . }}checked{{ end }} type="radio" name="rating"
+										value="{{ . }}" aria-label="{{ . }} {{ $starsText }}" required>
+									<span>★</span>
+								</label>
+								{{ end }}
+							</fieldset>
 
-							<button type="button" class="btn-submit-rate" disabled>Rate</button>
-						</div>
+							<button type="submit" class="btn-submit-rate">
+								{{ if $userRating }}Update{{ else }}Rate{{ end }}
+							</button>
+						</form>
 					</dialog>
 					{{ end }}
 
-				</div>
+				</section>
 			</div>
 		</header>
 
@@ -241,6 +232,148 @@
 		</div>
 		{{ end }}
 
+		<!-- Review Widget -->
+		<section class="review-section">
+
+			{{- $headline := .CurrentPost.UserActions.Review.Headline -}}
+			{{- $body := .CurrentPost.UserActions.Review.Content -}}
+			{{- $userHasReview := .CurrentPost.UserActions.Review.IsCurrentUser -}}
+
+			<!-- Review Dialog -->
+			{{ if .CurrentUser.IsAuthenticated }}
+			<dialog id="review-dialog" class="modal post-dialog" closedby="any">
+				<form class="review-form" action="/api/video/{{ .CurrentPost.VideoID }}/review" method="POST">
+					{{ .CSRFField }}
+
+					<button type="button" id="btn-close-review" class="btn-close-post-dialog">&times;</button>
+
+
+
+					<div class="review-form-group">
+						<label class="review-form-heading" for="review-title">Headline</label>
+						<input id="review-title" name="headline" value="{{ $headline }}"
+							placeholder="Write a catchy headline..." minlength="2" maxlength="100" type="text" required>
+					</div>
+
+					<div class="review-form-group">
+						<label class="review-form-heading" for="review-text">Review</label>
+						<textarea id="review-text" name="content" placeholder="Write your review..." rows="8"
+							minlength="10" maxlength="3000" type="text" required>{{ $body }}</textarea>
+					</div>
+
+					<fieldset class="review-form-group">
+						<legend class="visually-hidden">Rating</legend>
+						<div class="review-form-heading">Rating</div>
+
+						<div class="review-stars-group">
+							<div class="rate-stars rate-stars-review">
+								{{ range .CurrentPost.Stars }}
+								{{ $starsText := "stars" }}
+								{{ if eq . 1 }}
+								{{ $starsText = "star" }}
+								{{ end }}
+								<label>
+									<input {{ if eq $userRating . }}checked{{ end }} type="radio" name="rating"
+										value="{{ . }}" aria-label="{{ . }} {{ $starsText }}" required>
+									<span>★</span>
+								</label>
+								{{ end }}
+							</div>
+							<div class="review-big-star-wrapper">
+								<svg>
+									<use href="#big-hearth" />
+								</svg>
+								<span class="rating-big-star-value review-big-star-value">
+									{{ if $userRating }}{{ $userRating }}{{ else }}?{{ end }}
+								</span>
+							</div>
+						</div>
+					</fieldset>
+
+					<div class="review-form-footer">
+						<span id="review-error" class="review-form-error" hidden></span>
+						<button type="submit" id="submit-review" class="btn-submit-review"
+							data-has-review="{{ $userHasReview }}">
+							{{ if $userHasReview }}Update Review{{ else }}Post Review{{ end }}
+						</button>
+					</div>
+				</form>
+			</dialog>
+			{{ end }}
+
+			<!-- Reviews List Header -->
+			<header class="reviews-header">
+				<div class="reviews-title-wrapper">
+					<span {{ if not .CurrentPost.Reviews.TotalNum }} style="display:none;" {{ end }}
+						id="review-count-wrapper">
+						<span id="review-count">{{ .CurrentPost.Reviews.TotalNum }}</span>
+					</span>
+					<h3>
+						{{ if eq .CurrentPost.Reviews.TotalNum 0 }}
+						Write a Review
+						{{ else if eq .CurrentPost.Reviews.TotalNum 1 }}
+						User Review
+						{{ else }}
+						User Reviews
+						{{ end }}
+					</h3>
+				</div>
+
+				<!-- User Review Button -->
+				<button {{ if not .CurrentUser.IsAuthenticated }} data-modal="login" {{ end }} type="button"
+					id="btn-open-review" class="btn-open-post-dialog" aria-haspopup="dialog">
+					<span class="open-review-symbol">+</span>
+					<span id="btn-open-review-text">
+						{{ if $userHasReview }}Update Review{{ else }}Post Review{{ end}}
+					</span>
+				</button>
+			</header>
+
+			<!-- Reviews List -->
+			{{ with .CurrentPost.Reviews }}
+
+			<div id="reviews-list" class="reviews-list">
+				{{ range .Items }}
+				<div itemprop="review" itemscope itemtype="https://schema.org/Review" {{ if .IsCurrentUser }}
+					id="current-user-review" {{ end }} class="review-card">
+					<header class="review-header">
+						<div class="review-meta">
+							<img src="{{ .User.LocalAvatarURL }}" class=" review-user-avatar" width="20" height="20"
+								loading="lazy" alt="{{ .User.Name }}">
+							<span itemprop="author" itemscope itemtype="https://schema.org/Person">
+								<span itemprop="name" class="review-user-name">{{ .User.Name }}</span>
+							</span>
+							<span itemprop="reviewRating" itemscope itemtype="https://schema.org/Rating"
+								class="review-user-rating">
+								<meta itemprop="worstRating" content="1">
+								<span class="rating-global-star">&#9733;</span>
+								<span itemprop="ratingValue">{{ .Rating }}</span>
+								<meta itemprop="bestRating" content="10">
+							</span>
+							<meta itemprop="datePublished" content="{{ .UpdatedAt }}">
+							<span class="review-date" data-utc-time="{{ .UpdatedAt }}">Loading date...</span>
+						</div>
+						<h4 itemprop="name" class="review-headline">{{ .HTMLHeadline }}</h4>
+					</header>
+					<div itemprop="reviewBody" class="review-content">{{ .HTMLContent }}</div>
+				</div>
+				{{ end }}
+			</div>
+
+			{{ with .NextCursor }}
+			<button id="load-more-reviews-btn" class="load-more-reviews-btn" data-video-id="{{ $.CurrentPost.VideoID }}"
+				data-cursor="{{ . }}">
+				Load More
+			</button>
+			{{ end }}
+
+			{{ end }}
+		</section>
+
+	</div>
+
+	<div class="sidebar_wrap">
+
 		{{ if .CurrentUser.IsAdmin }}
 		<span class="admin-buttons">
 			<button data-modal="video" class="modal-button">Delete</button>
@@ -248,9 +381,6 @@
 		</span>
 		{{ end }}
 
-	</div>
-
-	<div class="sidebar_wrap">
 		<div class="related_videos">
 			{{ range .CurrentPost.RelatedPosts }}
 			<a href="/video/{{ .VideoID }}/" class="related-video">
@@ -285,12 +415,22 @@
 	</form>
 </dialog>
 {{ end }}
-{{ end }}
+
+
+<!-- Define the big star svg -->
+<svg style="display: none;">
+	<symbol id="big-hearth" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512">
+		<path
+			d="M309.5-18.9c-4.1-8-12.4-13.1-21.4-13.1s-17.3 5.1-21.4 13.1L193.1 125.3 33.2 150.7c-8.9 1.4-16.3 7.7-19.1 16.3s-.5 18 5.8 24.4l114.4 114.5-25.2 159.9c-1.4 8.9 2.3 17.9 9.6 23.2s16.9 6.1 25 2L288.1 417.6 432.4 491c8 4.1 17.7 3.3 25-2s11-14.2 9.6-23.2L441.7 305.9 556.1 191.4c6.4-6.4 8.6-15.8 5.8-24.4s-10.1-14.9-19.1-16.3L383 125.3 309.5-18.9z" />
+	</symbol>
+</svg>
+
+{{ end }} <!-- content end -->
 
 {{ define "extra_scripts" }}
+<script defer src='{{ .AddVersion "/static/js/post.js" }}'></script>
 {{ if .CurrentUser.IsAuthenticated }}
 <script defer src='{{ .AddVersion "/static/js/likes.js" }}'></script>
 <script defer src='{{ .AddVersion "/static/js/rating.js" }}'></script>
 {{ end }}
-<script defer src='{{ .AddVersion "/static/js/play.js" }}'></script>
 {{ end }}

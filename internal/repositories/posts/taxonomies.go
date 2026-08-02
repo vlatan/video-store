@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/vlatan/video-store/internal/models"
-	"github.com/vlatan/video-store/internal/utils"
 )
 
 // Get a limited number of posts from one category with cursor
@@ -50,7 +49,7 @@ func (r *Repository) GetSourcePosts(
 // Query the DB for posts based on variadic arguments
 func (r *Repository) queryTaxonomyPosts(
 	ctx context.Context,
-	queryFilename,
+	sqlFilename,
 	taxonomyID,
 	cursor,
 	orderBy string,
@@ -112,7 +111,7 @@ func (r *Repository) queryTaxonomyPosts(
 	}
 
 	sqlParts := struct{ TotalCount, WhereCondition, OrderByWhat string }{total, where, order}
-	query, err := r.GetQuery(queryFilename, sqlParts)
+	query, err := r.GetQuery(sqlFilename, sqlParts)
 	if err != nil {
 		return zero, err
 	}
@@ -152,14 +151,14 @@ func (r *Repository) queryTaxonomyPosts(
 			return zero, err
 		}
 
-		post.OriginalTitle = utils.FromNullString(originalTitle)
-		posts.Title = utils.FromNullString(playlistTitle)
+		post.OriginalTitle = originalTitle.String
+		posts.Title = playlistTitle.String
 
 		// Attach ratings if any
 		if avgRating.Valid && ratingCount.Valid {
-			post.Rating = &models.Rating{
-				Avg:   utils.FromNullFloat64(avgRating),
-				Count: utils.FromNullInt64(ratingCount),
+			post.RatingStats = &models.RatingStats{
+				Avg:   avgRating.Float64,
+				Count: ratingCount.Int64,
 			}
 		}
 
@@ -199,14 +198,14 @@ func (r *Repository) queryTaxonomyPosts(
 		cursorStr = fmt.Sprintf("%d,%s", lastPost.Likes, cursorStr)
 	case models.AvgRating:
 		var avgRating float64
-		if lastPost.Rating != nil {
-			avgRating = lastPost.Rating.Avg
+		if lastPost.RatingStats != nil {
+			avgRating = lastPost.RatingStats.Avg
 		}
 		cursorStr = fmt.Sprintf("%.2f,%s", avgRating, cursorStr)
 	case models.RatingCount:
 		var ratingCount int64
-		if lastPost.Rating != nil {
-			ratingCount = lastPost.Rating.Count
+		if lastPost.RatingStats != nil {
+			ratingCount = lastPost.RatingStats.Count
 		}
 		cursorStr = fmt.Sprintf("%d,%s", ratingCount, cursorStr)
 	}

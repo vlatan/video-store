@@ -42,12 +42,12 @@
 
 	{{ if not .Config.Debug }}
 	<script async src="https://www.googletagmanager.com/gtag/js?id={{ .Config.GtagID }}"></script>
-	{{ if and .CurrentUser .CurrentUser.AnalyticsID }}
+	{{ if and .CurrentUser .CurrentUser.PublicID }}
 	<script>
 		window.dataLayer = window.dataLayer || [];
 		function gtag() { dataLayer.push(arguments); }
 		gtag('js', new Date());
-		gtag('config', '{{ .Config.GtagID }}', { 'user_id': '{{ .CurrentUser.AnalyticsID }}' });
+		gtag('config', '{{ .Config.GtagID }}', { 'user_id': '{{ .CurrentUser.PublicID }}' });
 	</script>
 	{{ else }}
 	<script>
@@ -157,7 +157,7 @@
 				</div>
 
 				<dialog data-body="account" class="modal" closedby="any">
-					<form class="modal-content" action="/account/delete" method="POST">
+					<form class="modal-content" action="/account/delete?redirect={{ .CurrentURI }}" method="POST">
 						{{ .CSRFField }}
 						<span data-close="account" class="close-modal" title="Close">&times;</span>
 						<h2 class="modal-title">Delete Account</h2>
@@ -265,15 +265,7 @@
 		aria-hidden="true">Ad</a>
 
 	{{ block "scripts" . }}
-
-	{{ with .Posts }}
-	<script>
-		let initialCursor = "{{ .NextCursor }}";
-	</script>
-	{{ end }}
-
 	<script defer src='{{ .AddVersion "/static/js/shared.js" }}'></script>
-
 	{{ end }}
 
 	{{ block "extra_scripts" . }}{{ end }}

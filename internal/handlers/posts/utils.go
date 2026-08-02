@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/vlatan/video-store/internal/integrations/gemini"
 	"github.com/vlatan/video-store/internal/models"
@@ -100,6 +101,21 @@ func (s *Service) generatePostContent(
 		return fmt.Errorf(
 			"failed to update the LLM data in DB on video %q: %w",
 			post.VideoID, err)
+	}
+
+	return nil
+}
+
+// validateReview checks the length of the review's headline and content
+func validateReview(headline, content string) error {
+	hLen := utf8.RuneCountInString(headline)
+	if hLen < 2 || hLen > 100 {
+		return errors.New("headline must be between 2 and 100 characters")
+	}
+
+	cLen := utf8.RuneCountInString(content)
+	if cLen < 10 || cLen > 3000 {
+		return errors.New("review content must be between 10 and 3000 characters")
 	}
 
 	return nil

@@ -1,17 +1,18 @@
 // Get references to the dom elements
 const scroller = document.getElementById("scroller");
-const template = document.getElementById("post_template");
 const sentinel = document.getElementById("sentinel");
-const spinner = sentinel.querySelector('div');
+const spinner = sentinel?.querySelector('div');
 
 let state = {
-    nextCursor: initialCursor,
+    nextCursor: scroller?.dataset.cursor,
     isLoading: false,
-    hasMore: !!initialCursor,
+    hasMore: !!scroller?.dataset.cursor,
 };
 
 // Function to request new items and render to the dom
-const loadItems = async (url, cursor) => {
+const loadItems = async (url = "", cursor = "") => {
+
+    if (!(sentinel instanceof HTMLElement)) return;
 
     // Prevent multiple simultaneous fetches
     if (state.isLoading || !state.hasMore) {
@@ -19,7 +20,7 @@ const loadItems = async (url, cursor) => {
     }
 
     state.isLoading = true;
-    spinner.setAttribute("id", "spinner");
+    spinner?.setAttribute("id", "spinner");
 
     try {
 
@@ -29,31 +30,14 @@ const loadItems = async (url, cursor) => {
         }
 
         const data = await response.json();
-
         state.nextCursor = data.next_cursor || null;
         state.hasMore = !!data.next_cursor;
 
-
-        // Iterate over the items in the response
+        // Iterate over the items in the response, create video cards
+        // and append them as children to the scroller.
         for (const item of data.items) {
-
-            // Clone the HTML template
-            const template_clone = template.content.cloneNode(true);
-
-            // Query & update the template content
-            template_clone.querySelector('.video-link').href = `/video/${item.video_id}/`;
-            const thumb = template_clone.querySelector('.video-img');
-            thumb.src = item.thumbnail.url;
-            thumb.alt = item.title;
-            thumb.srcset = item.srcset;
-            template_clone.querySelector('.video-title').innerHTML = item.title;
-            const remove = template_clone.querySelector('.remove-option');
-            if (remove) {
-                remove.setAttribute('data-id', `${item.id}`)
-            }
-
-            // Append template to dom
-            scroller.appendChild(template_clone);
+            const card = createVideoCard(item);
+            scroller?.appendChild(card);
         }
 
         if (!state.hasMore) {
@@ -85,5 +69,60 @@ if ('IntersectionObserver' in window) {
     }, { rootMargin: "200px 0px" });
 
     // Instruct the IntersectionObserver to watch the sentinel
-    intersectionObserver.observe(sentinel);
+    if (sentinel) intersectionObserver.observe(sentinel);
+}
+
+
+/**
+ * Builds a populated video card.
+ *
+ * @param {{video_id: string, thumbnail: {url: string}, title: string, srcset: string, id: string|number}} item
+ * @returns {HTMLElement}
+ */
+function createVideoCard(item) {
+
+    // Create the anchor element
+    const a = document.createElement('a');
+    a.className = 'video-link';
+    a.href = `/video/${item.video_id}/`;
+
+    // Create image wrapper
+    const span = document.createElement('span');
+    span.className = 'video-img-wrap';
+    a.appendChild(span);
+
+    // Create the image
+    const img = document.createElement('img');
+    img.className = 'video-img';
+    img.src = item.thumbnail.url;
+    img.alt = item.title;
+    img.srcset = item.srcset;
+    span.appendChild(img);
+
+    // Create the title
+    const title = document.createElement('h2');
+    title.className = 'video-title';
+    title.textContent = item.title;
+    a.appendChild(title);
+
+    // Needs slight modification if this is user favorites scroll.
+    // Wrap the anchor in another block and offer remove button.
+    if (window.location.pathname === '/user/favorites/') {
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'video-block';
+
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'remove-option';
+        removeBtn.setAttribute('data-id', `${item.video_id}`);
+        removeBtn.setAttribute('aria-label', 'Close');
+        removeBtn.textContent = '\u00D7';
+        wrapper.appendChild(removeBtn);
+
+        wrapper.appendChild(a);
+        return wrapper;
+    }
+
+    return a;
 }

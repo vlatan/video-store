@@ -1,6 +1,8 @@
 document.addEventListener('click', async (event) => {
+    if (!(event.target instanceof HTMLElement)) return;
     const remove = event.target.closest('.remove-option');
-    if (!remove) return;
+    if (!(remove instanceof HTMLElement)) return;
+
     let action = 'unlike';
     let messageText = "Succesfully unliked.";
     if (window.location.pathname.includes('favorites')) {
@@ -11,7 +13,7 @@ document.addEventListener('click', async (event) => {
     try {
         const res = await postData(url);
         if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
-        remove.parentElement.remove();
+        remove.parentElement?.remove();
         setAlert(messageText);
     } catch (error) {
         console.error("Failed to fetch response:", error);

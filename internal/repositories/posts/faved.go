@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/vlatan/video-store/internal/models"
-	"github.com/vlatan/video-store/internal/utils"
 )
 
 // Get user's favorited posts
@@ -64,14 +63,13 @@ func (r *Repository) GetUserFavedPosts(
 	for rows.Next() {
 
 		var (
-			post          models.Post
 			totalNum      int
+			post          models.Post
 			originalTitle sql.NullString
 			avgRating     sql.NullFloat64
 			ratingCount   sql.NullInt64
+			whenFaved     sql.NullTime
 		)
-
-		post.UserActions = &models.Actions{}
 
 		// Paste post from row to struct, thumbnails in a separate var
 		if err = rows.Scan(
@@ -85,19 +83,20 @@ func (r *Repository) GetUserFavedPosts(
 			&ratingCount,
 			&totalNum,
 			&post.UploadDate,
-			&post.UserActions.WhenFaved,
+			&whenFaved,
 		); err != nil {
 			return zero, err
 		}
 
-		// Assing the original title
-		post.OriginalTitle = utils.FromNullString(originalTitle)
+		// Assign the values back to the fields
+		post.OriginalTitle = originalTitle.String
+		post.UserActions.WhenFaved = whenFaved.Time
 
 		// Attach ratings if any
 		if avgRating.Valid && ratingCount.Valid {
-			post.Rating = &models.Rating{
-				Avg:   utils.FromNullFloat64(avgRating),
-				Count: utils.FromNullInt64(ratingCount),
+			post.RatingStats = &models.RatingStats{
+				Avg:   avgRating.Float64,
+				Count: ratingCount.Int64,
 			}
 		}
 

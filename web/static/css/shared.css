@@ -2,11 +2,15 @@
 :root {
 	--base-font-size: 1rem;
 	--primary-background-color: rgb(20, 20, 20);
-	--secondary-background-color: rgb(30, 30, 30);
+	--secondary-background-color: rgb(32, 32, 32);
 	--primary-font-color: rgb(230, 237, 243);
 	--secondary-font-color: rgb(213, 220, 227);
+	--muted-font-color: rgb(173, 173, 173);
 	--primary-border-color: rgb(48, 48, 48);
 	--secondary-border-color: rgb(54, 54, 54);
+	--outline-color: rgb(88, 88, 150);
+	--blue-link-color: rgb(87, 153, 239);
+	--yellow-star-color: rgb(245, 197, 24);
 	--content-width: min(90vw, 1600px);
 	--main-font-family: system-ui, sans-serif;
 	--content-padding: 1.5rem;
@@ -18,6 +22,8 @@
 	--img-hover-transition-duration: 0.3s;
 	--img-border-radius: 10px;
 	--orange: #f26123;
+
+	color-scheme: dark;
 }
 
 
@@ -89,10 +95,27 @@ button {
 	background-color: transparent;
 }
 
+/* Reset fieldset to behave like a standard div */
+fieldset {
+	border: none;
+	padding: 0;
+	margin: 0;
+	min-width: 0;
+}
+
+/* Reset legend to behave like a standard block or heading text */
+legend {
+	padding: 0;
+	margin: 0;
+	font-weight: bold;
+	display: block;
+}
+
 
 /* ################# Utilities ################# */
 
-.visually-hidden {
+.visually-hidden,
+.rate-stars input {
 	position: absolute;
 	height: 1px;
 	width: 1px;
@@ -232,7 +255,7 @@ input.search-form-input {
 
 input.search-form-input:focus {
 	outline: none;
-	border-color: rgb(88, 88, 150);
+	border-color: var(--outline-color);
 }
 
 button.search-button {
@@ -486,7 +509,8 @@ a.nav-item:hover::after {
 /* ############# Alert Messages ############# */
 
 .alert {
-	align-self: flex-end;
+	position: absolute;
+	bottom: 120%;
 	display: flex;
 	align-items: center;
 	gap: 0.5rem;
@@ -799,7 +823,6 @@ button.cancel-button {
 
 .site-footer>* {
 	display: block;
-	line-height: 1;
 }
 
 .site-copy {

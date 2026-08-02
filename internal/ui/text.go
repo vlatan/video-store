@@ -15,9 +15,9 @@ var weirdBots = []string{
 	"PetalBot",
 	"Zoominfobot",
 	"Go-http-client",
-	"Node/simplecrawler",
+	"simplecrawler",
 	"CazoodleBot",
-	"dotbot/1.0",
+	"dotbot",
 	"Gigabot",
 	"Barkrowler",
 	"BLEXBot",
@@ -64,23 +64,21 @@ func buildRobotsTxt(cfg *config.Config) []byte {
 	var builder strings.Builder
 
 	// Use canonical domain from config
-	sitemapURL := fmt.Sprintf("%s://%s/sitemap.xml",
-		cfg.Protocol,
-		cfg.Domain,
-	)
+	sitemapURL := fmt.Sprintf("%s://%s/sitemap.xml", cfg.Protocol, cfg.Domain)
 
 	builder.WriteString("# Sitemap\n")
 	fmt.Fprintf(&builder, "Sitemap: %s\n\n", sitemapURL)
 
-	builder.WriteString("# Ban weird bots\n")
+	builder.WriteString("# Disallow weird bots\n")
 	for _, bot := range weirdBots {
 		fmt.Fprintf(&builder, "User-agent: %s\n", bot)
 	}
 	builder.WriteString("Disallow: /\n\n")
 
-	builder.WriteString("# Disallow all bots on /auth\n")
+	builder.WriteString("# Disallow paths\n")
 	builder.WriteString("User-agent: *\n")
-	builder.WriteString("Disallow: /auth/")
+	builder.WriteString("Disallow: /auth/\n")
+	builder.WriteString("Disallow: /api/")
 
 	return []byte(builder.String())
 }

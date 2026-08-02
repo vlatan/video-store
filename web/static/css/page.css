@@ -1,36 +1,36 @@
 .page {
-  padding: var(--modal-padding);
-  background: var(--secondary-background-color);
-  border-radius: 1rem;
-  margin: 0 auto;
-  max-width: 800px;
+	padding: var(--modal-padding);
+	background: var(--secondary-background-color);
+	border-radius: 1rem;
+	margin: 0 auto;
+	max-width: 800px;
 }
 
 .page a {
-  text-decoration: underline;
-  font-weight: bold;
+	text-decoration: underline;
+	font-weight: bold;
 }
 
 .page p {
-  margin: 1rem 0;
-  color: var(--secondary-font-color);
+	margin: 1rem 0;
+	color: var(--secondary-font-color);
 }
 
 .page-title-wrap {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 2rem;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 2rem;
 }
 
 .page-buttons {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
+	display: flex;
+	align-items: center;
+	gap: 1rem;
 }
 
 .page-buttons a {
-  line-height: 1;
-  text-decoration: none;
-  font-weight: unset;
+	line-height: 1;
+	text-decoration: none;
+	font-weight: unset;
 }

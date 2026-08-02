@@ -1,6 +1,8 @@
 
 document.addEventListener('click', event => {
 
+    if (!(event.target instanceof Element)) return;
+
     // User Profile Dropdown menu
     const dropContent = document.querySelector('.dropdown-content');
     if (dropContent) {
@@ -38,6 +40,13 @@ document.addEventListener('click', event => {
     const arrow = document.querySelector('.search-arrow-icon')
     const arrowClicked = event.target.closest('.search-arrow-icon');
     const searchFormClicked = event.target.closest('#searchForm');
+
+    if (!(arrow instanceof SVGElement)) return;
+    if (!(searchForm instanceof HTMLFormElement)) return;
+    if (!(logo instanceof HTMLElement)) return;
+    if (!(searchIcon instanceof SVGElement)) return;
+    if (!(hamburgerIcon instanceof SVGElement)) return;
+
     if (event.target.closest('.mobile-search-icon')) {
         arrow.style.display = "flex";
         searchForm.style.display = 'flex'
@@ -45,6 +54,7 @@ document.addEventListener('click', event => {
         searchIcon.style.display = "none";
         hamburgerIcon.style.display = "none";
         for (const dropdown of dropdowns) {
+            if (!(dropdown instanceof HTMLElement)) continue;
             dropdown.style.display = "none";
         }
     } else if (arrowClicked || !searchFormClicked) {
@@ -65,30 +75,31 @@ document.addEventListener('click', event => {
 // ==========================================================================
 
 // Send POST request to backend
-const postData = async (url = '', data = {}) => {
-    // Create headers object
+const postData = (url = "", data = {}) => {
+    if (!url) throw new Error("URL parameter is required");
+
     const headers = new Headers();
     headers.append("Content-Type", "application/json");
 
     // If CSRF Token send with the POST request
-    let csrfToken = document.getElementsByName("gorilla.csrf.Token");
-    if (csrfToken) { headers.append("X-CSRF-Token", csrfToken[0].value); }
+    const csrfTokens = document.getElementsByName("gorilla.csrf.Token");
+    if (csrfTokens.length > 0 && csrfTokens[0] instanceof HTMLInputElement) {
+        headers.append("X-CSRF-Token", csrfTokens[0].value);
+    }
 
-    const response = await fetch(url, {
+    return fetch(url, {
         method: 'POST',
         headers: headers,
         body: JSON.stringify(data)
     });
-
-    return response;
 };
 
 // Send GET request to backend
-const getData = async (url, cursor = "") => {
-    if (!cursor) return await fetch(url);
-    const currentURL = new URL(url, window.location.origin);
-    currentURL.searchParams.set("cursor", cursor);
-    return await fetch(currentURL.toString());
+const getData = (url = "", cursor = "") => {
+    if (!url) throw new Error("URL parameter is required");
+    const reqUrl = new URL(url, window.location.origin);
+    if (cursor) reqUrl.searchParams.set("cursor", cursor);
+    return fetch(reqUrl);
 };
 
 
@@ -98,22 +109,26 @@ const getData = async (url, cursor = "") => {
 
 
 // Sleep time expects milliseconds
-const sleep = time => {
+const sleep = (time = 0) => {
     return new Promise(resolve => setTimeout(resolve, time));
 };
 
-// Alert helper
+// Remove alert message
+/** @param {Element} alertEl */
 const dismissAlert = (alertEl) => {
     const closeBtn = alertEl.querySelector('.alert-close');
-    closeBtn.addEventListener('click', () => alertEl.remove());
+    closeBtn?.addEventListener('click', () => alertEl.remove());
     sleep(6000).then(() => alertEl.remove());
 };
 
 // Set alert message
-const setAlert = message => {
+const setAlert = (message = '') => {
+
+    if (!message) return;
+
     const alert = document.createElement('div');
     alert.className = 'alert';
-    document.getElementById('footer').prepend(alert);
+    document.getElementById('footer')?.append(alert);
 
     const alertText = document.createElement('span')
     alertText.className = 'alert-text';
@@ -138,8 +153,13 @@ document.querySelectorAll('.alert').forEach(a => dismissAlert(a));
 // ==========================================================================
 
 document.querySelectorAll('[data-modal]').forEach(openDialogBtn => {
+
+    if (!(openDialogBtn instanceof HTMLElement)) return;
     const modalName = openDialogBtn.dataset.modal;
+
     const modalDialog = document.querySelector(`[data-body="${modalName}"]`);
+    if (!(modalDialog instanceof HTMLDialogElement)) return;
+
     const closeDialogBtns = modalDialog.querySelectorAll(`[data-close="${modalName}"]`);
 
     // Open dialog on open button click
@@ -162,7 +182,7 @@ const currentPath = window.location.pathname;
 if (currentPath !== privacyPath && acceptCookies !== 'true') {
     const snackbar = document.createElement('div');
     snackbar.classList.add('snackbar');
-    document.getElementById('footer').after(snackbar);
+    document.getElementById('footer')?.after(snackbar);
 
     const snackbarLabel = document.createElement('div');
     snackbarLabel.classList.add('snackbar-label');
@@ -187,7 +207,7 @@ if (currentPath !== privacyPath && acceptCookies !== 'true') {
     snackbarActions.appendChild(buttonOK);
 
     buttonOK.addEventListener('click', () => {
-        localStorage.setItem('acceptCookies', true);
+        localStorage.setItem('acceptCookies', 'true');
         snackbar.remove();
     });
 }
@@ -197,25 +217,28 @@ if (currentPath !== privacyPath && acceptCookies !== 'true') {
 // Form
 // ==========================================================================
 
-const formInputs = document.querySelectorAll('.form-input');
-const formSubmit = document.querySelector('.form-button');
-const formSpinner = document.querySelector('.submit-spinner');
+const mainForm = document.getElementById('main-form');
+const formInputs = mainForm?.querySelectorAll('.form-input');
+const formSubmit = mainForm?.querySelector('.form-button');
+const formSpinner = mainForm?.querySelector('.submit-spinner');
 
-if (formSubmit) {
-    formSubmit.addEventListener('click', () => {
+formSubmit?.addEventListener('click', () => {
 
-        // Check if all required inputs have values
-        let ok = true
-        for (const inputElement of formInputs) {
-            if (inputElement.required && inputElement.value.trim() === '') {
-                ok = false
-            }
+    if (!formInputs) return;
+
+    // Check if all required inputs have values
+    let ok = true
+    for (const inputElement of formInputs) {
+        console.log(inputElement);
+        if (!(inputElement instanceof HTMLInputElement)) continue;
+        if (inputElement.required && inputElement.value.trim() === '') {
+            ok = false
         }
+    }
 
-        if (ok) {
-            if (formSpinner) {
-                formSpinner.classList.add('show')
-            }
+    if (ok) {
+        if (formSpinner) {
+            formSpinner.classList.add('show')
         }
-    });
-}
+    }
+});

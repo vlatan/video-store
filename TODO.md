@@ -1,4 +1,11 @@
-* Build the JS and backend review system
+* Build the frontend and backend review system.
+  The user should be able to delete a review or a rating.
+  Include delete button on the modals and add edit/delete buttons on the review card.
+  On deletion inline the deletion exalplanation and confirmation in the modals with swapping the modal footer.
+  If a review is deleted we remove it from the list if it's on the first page.
+  Don't forget to change the state of the current-user-id and datasets in JS.
+
+* Make the checkmarks on the like/save green or yellow
 * Add close button to login menu
 * Make search bar on small screens accross entire screen
 

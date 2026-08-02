@@ -25,14 +25,12 @@ jobs:
     - name: Checkout source code
       uses: actions/checkout@v7
     
-    - name: Set up Go
-      uses: actions/setup-go@v6
+    - name: Set up Go and Cache Modules
+      uses: actions/setup-go@v7
       with:
-        go-version: '1.26'
-    
-    - name: Clean test cache
-      run: go clean -testcache
-   
+        go-version-file: 'go.mod'
+        cache: true
+      
     - name: Run tests
       run: go test -race -coverprofile=coverage.out ./...
     
@@ -54,6 +52,12 @@ jobs:
     steps:
       - name: Checkout source code
         uses: actions/checkout@v7
+      
+      - name: Set up Go and Cache Modules
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: 'go.mod'
+          cache: true
 
       - name: Run gosec security scanner
         env:

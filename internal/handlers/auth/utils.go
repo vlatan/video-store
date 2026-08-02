@@ -47,8 +47,12 @@ func IsProtectedRoute(path string) bool {
 // Store user info in our own session
 func (s *Service) loginUser(w http.ResponseWriter, r *http.Request, user *models.User) error {
 
-	// Set user analytics ID
-	user.SetAnalyticsID()
+	// Make user public ID
+	var err error
+	user.PublicID, err = user.MakePublicID()
+	if err != nil {
+		return err
+	}
 
 	// Update or insert user
 	id, err := s.usersRepo.UpsertUser(r.Context(), user)
@@ -68,7 +72,7 @@ func (s *Service) loginUser(w http.ResponseWriter, r *http.Request, user *models
 	session.Values["Name"] = user.Name
 	session.Values["Provider"] = user.Provider
 	session.Values["AvatarURL"] = user.AvatarURL
-	session.Values["AnalyticsID"] = user.AnalyticsID
+	session.Values["PublicID"] = user.PublicID
 	session.Values["AccessToken"] = user.AccessToken
 	session.Values["RefreshToken"] = user.RefreshToken
 	session.Values["LastSeen"] = now
@@ -76,6 +80,11 @@ func (s *Service) loginUser(w http.ResponseWriter, r *http.Request, user *models
 
 	// Save the session
 	if err := session.Save(r, w); err != nil {
+		return err
+	}
+
+	// Download and save the avatar if not in Redis cache
+	if err := s.avatars.Save(r.Context(), user); err != nil {
 		return err
 	}
 
@@ -102,6 +111,7 @@ func (s *Service) getRedirectFromSession(w http.ResponseWriter, r *http.Request)
 	if err := session.Save(r, w); err != nil {
 		log.Printf("failed to delete the redirect session; %v", err)
 	}
+
 	return redirectTo
 }
 

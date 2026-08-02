@@ -6,7 +6,6 @@ import (
 	"errors"
 
 	"github.com/vlatan/video-store/internal/models"
-	"github.com/vlatan/video-store/internal/utils"
 )
 
 // Get random posts, but exclude posts with the exact title match
@@ -54,13 +53,13 @@ func (r *Repository) GetRandomPosts(ctx context.Context, title string, limit int
 		}
 
 		// Include the processed post in the result
-		post.OriginalTitle = utils.FromNullString(originalTitle)
+		post.OriginalTitle = originalTitle.String
 
 		// Attach ratings if any
 		if avgRating.Valid && ratingCount.Valid {
-			post.Rating = &models.Rating{
-				Avg:   utils.FromNullFloat64(avgRating),
-				Count: utils.FromNullInt64(ratingCount),
+			post.RatingStats = &models.RatingStats{
+				Avg:   avgRating.Float64,
+				Count: ratingCount.Int64,
 			}
 		}
 

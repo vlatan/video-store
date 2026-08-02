@@ -6,7 +6,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"html/template"
 	"log"
 	"net/http"
 	"net/url"
@@ -124,33 +123,6 @@ func ToNullInt64(i int64) sql.NullInt64 {
 	return sql.NullInt64{Int64: i, Valid: true}
 }
 
-// FromNullInt64 is a helper function to convert
-// an sql.NullInt64 to an int64 on db SELECT
-func FromNullInt64(ni sql.NullInt64) int64 {
-	if !ni.Valid {
-		return 0
-	}
-	return ni.Int64
-}
-
-// ToNullFloat64 is a helper function to convert
-// an intto sql.NullInt64 on db UPDATE/INSERT
-func ToNullFloat64(f float64) sql.NullFloat64 {
-	if f == 0 {
-		return sql.NullFloat64{Valid: false}
-	}
-	return sql.NullFloat64{Float64: f, Valid: true}
-}
-
-// FromNullFloat64 is a helper function to convert
-// an sql.NullFloat64 to a float64 on db SELECT
-func FromNullFloat64(ni sql.NullFloat64) float64 {
-	if !ni.Valid {
-		return 0
-	}
-	return ni.Float64
-}
-
 // ToNullString is a helper function to convert
 // a string to sql.NullString on db UPDATE/INSERT
 func ToNullString(s string) sql.NullString {
@@ -158,15 +130,6 @@ func ToNullString(s string) sql.NullString {
 		return sql.NullString{Valid: false}
 	}
 	return sql.NullString{String: s, Valid: true}
-}
-
-// FromNullString is a helper function to convert
-// an sql.NullString to a string on db SELECT
-func FromNullString(ns sql.NullString) string {
-	if !ns.Valid {
-		return ""
-	}
-	return ns.String
 }
 
 // Check if this is a static file
@@ -238,13 +201,26 @@ func GetProjectRoot() (string, error) {
 	}
 }
 
-// ParseMarkdown converts markdown to HTML
-func ParseMarkdown(content string) (template.HTML, error) {
+// simplePolicy creates simple blue monday policy the allows
+// only paragraph splitting, bold, italic and strike-through.
+func SimplePolicy() *bluemonday.Policy {
+	p := bluemonday.NewPolicy()
+
+	// Allow structural block elements for paragraph breaks
+	p.AllowElements("p", "br")
+
+	// Allow basic text formatting (both markdown and inline html variants)
+	p.AllowElements("b", "strong", "i", "em", "u", "s", "strike")
+
+	return p
+}
+
+// ParseMarkdown converts markdown to HTML string
+func ParseMarkdown(content string, policy *bluemonday.Policy) (string, error) {
 	var buf bytes.Buffer
 	if err := goldmark.Convert([]byte(content), &buf); err != nil {
 		return "", err
 	}
 
-	html := bluemonday.UGCPolicy().SanitizeBytes(buf.Bytes())
-	return template.HTML(html), nil // #nosec G203
+	return policy.Sanitize(buf.String()), nil
 }

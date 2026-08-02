@@ -8,7 +8,7 @@ import (
 	"io/fs"
 	"strings"
 
-	"github.com/tdewolff/minify"
+	"github.com/tdewolff/minify/v2"
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/web"
 )

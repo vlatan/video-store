@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"strings"
 
 	"github.com/vlatan/video-store/internal/models"
@@ -36,10 +37,6 @@ func (r *Repository) InsertPost(ctx context.Context, post *models.Post) (int64, 
 
 	if post.Category == nil {
 		post.Category = &models.Category{}
-	}
-
-	if post.UserActions == nil {
-		post.UserActions = &models.Actions{}
 	}
 
 	query, err := r.GetQuery("insert_post.sql", nil)
@@ -117,14 +114,15 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.
 		return zero, err
 	}
 
-	// Assign the original title if any
-	post.OriginalTitle = utils.FromNullString(originalTitle)
+	// Assign the original title/summary if any
+	post.OriginalTitle = originalTitle.String
+	post.Summary = summary.String
 
-	// Gather playlist/channel info
+	// Gather playlist/channel info if any
 	post.Source = &models.Source{
-		PlaylistID:   utils.FromNullString(playlistID),
-		Title:        utils.FromNullString(playlistTitle),
-		ChannelTitle: utils.FromNullString(channelTitle),
+		PlaylistID:   playlistID.String,
+		Title:        playlistTitle.String,
+		ChannelTitle: channelTitle.String,
 	}
 
 	// Check if the video does not belong to source
@@ -136,21 +134,21 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.
 	// Define category if valid
 	if categorySlug.Valid && categoryName.Valid {
 		post.Category = &models.Category{
-			Slug: utils.FromNullString(categorySlug),
-			Name: utils.FromNullString(categoryName),
+			Slug: categorySlug.String,
+			Name: categoryName.String,
 		}
 	}
 
-	// Define summary
-	post.Summary = utils.FromNullString(summary)
-
-	// Parse markdown to HTML
-	if post.HTMLSummary, err = utils.ParseMarkdown(post.Summary); err != nil {
+	// Convert to HTML and sanitize the post summary
+	safeHTMLSummary, err := utils.ParseMarkdown(post.Summary, utils.SimplePolicy())
+	if err != nil {
 		return zero, fmt.Errorf(
 			"could not convert markdown to html on %q: %v",
 			post.VideoID, err,
 		)
 	}
+
+	post.HTMLSummary = template.HTML(safeHTMLSummary) // #nosec G203
 
 	// Like button text
 	post.LikeButtonText = "Like"
@@ -162,9 +160,9 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.
 
 	// Attach ratings if any
 	if avgRating.Valid && ratingCount.Valid {
-		post.Rating = &models.Rating{
-			Avg:   utils.FromNullFloat64(avgRating),
-			Count: utils.FromNullInt64(ratingCount),
+		post.RatingStats = &models.RatingStats{
+			Avg:   avgRating.Float64,
+			Count: ratingCount.Int64,
 		}
 	}
 
@@ -185,6 +183,9 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.
 
 	// Make srcset string
 	post.Srcset = thumbs.Srcset(maxThumb.Width)
+
+	// Attach the stars slice for the rating stars html iteration
+	post.Stars = [10]uint8{10, 9, 8, 7, 6, 5, 4, 3, 2, 1}
 
 	return post, nil
 }
