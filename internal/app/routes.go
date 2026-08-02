@@ -22,7 +22,7 @@ func (a *App) RegisterRoutes() *App {
 	mux.HandleFunc("/video/new", a.mw.IsAdmin(a.posts.NewPostHandler))
 	mux.HandleFunc("GET /video/{video}/{$}", a.posts.SinglePostHandler)
 	mux.HandleFunc("/video/{video}/edit", a.mw.IsAdmin(a.posts.UpdatePostHandler))
-	mux.HandleFunc("POST /video/{video}/delete", a.mw.IsAdmin(a.posts.BanPostHandler))
+	mux.HandleFunc("DELETE /video/{video}/delete", a.mw.IsAdmin(a.posts.BanPostHandler))
 	mux.HandleFunc("GET /api/video/{video}/reviews", a.posts.PostReviewsAPI)
 	mux.HandleFunc("POST /api/video/{video}/{action}", a.mw.IsAuthenticated(a.posts.PostActionAPI))
 
@@ -53,7 +53,7 @@ func (a *App) RegisterRoutes() *App {
 	mux.HandleFunc("GET /sitemap.xml", a.mw.PublicCache(a.sitemaps.SitemapIndexHandler))
 
 	// Users
-	mux.HandleFunc("POST /account/delete", a.mw.IsAuthenticated(a.auth.DeleteAccountHandler))
+	mux.HandleFunc("DELETE /account/delete", a.mw.IsAuthenticated(a.auth.DeleteAccountHandler))
 	mux.HandleFunc("GET /user/favorites/{$}", a.mw.IsAuthenticated(a.users.UserFavoritesHandler))
 	mux.HandleFunc("GET /api/user/favorites/{$}", a.mw.IsAuthenticated(a.users.UserFavoritesAPI))
 	mux.HandleFunc("GET /users/{$}", a.mw.IsAdmin(a.users.UsersHandler))
