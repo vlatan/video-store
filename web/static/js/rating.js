@@ -190,7 +190,7 @@ document.querySelectorAll('.review-section').forEach(s => {
     let originalreviewOpenBtnText = reviewOpenBtnText?.textContent.trim() || 'Post Review';
     const reviewCloseBtn = s.querySelector('#btn-close-review');
     const reviewSubmitBtn = s.querySelector('#submit-review');
-    let originalreviewBtnSubmitText = reviewSubmitBtn?.textContent.trim() || 'Post Review';
+    let originalreviewBtnSubmitText = reviewSubmitBtn?.textContent.trim() || 'Submit';
     const reviewError = s.querySelector('#review-error');
 
     if (!(reviewDialog instanceof HTMLDialogElement)) return;
@@ -324,8 +324,8 @@ document.querySelectorAll('.review-section').forEach(s => {
 
             // The request went through, change the open and submit button text,
             // the data state and remove the load-review class.
-            originalreviewBtnSubmitText = "Update Review";
             originalreviewOpenBtnText = "Update Review";
+            originalreviewBtnSubmitText = "Update";
             reviewSubmitBtn.dataset.hasReview = 'true';
         } catch (err) {
             console.error("Failed to fetch or parse JSON:", err);

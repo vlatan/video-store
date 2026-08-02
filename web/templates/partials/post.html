@@ -290,11 +290,12 @@
 						</div>
 					</fieldset>
 
+					<!-- User Review Submit Button -->
 					<div class="review-form-footer">
 						<span id="review-error" class="review-form-error" hidden></span>
 						<button type="submit" id="submit-review" class="btn-submit-review"
 							data-has-review="{{ $userHasReview }}">
-							{{ if $userHasReview }}Update Review{{ else }}Post Review{{ end }}
+							{{ if $userHasReview }}Update{{ else }}Submit{{ end }}
 						</button>
 					</div>
 				</form>
@@ -319,7 +320,7 @@
 					</h3>
 				</div>
 
-				<!-- User Review Button -->
+				<!-- User Review Open Button -->
 				<button {{ if not .CurrentUser.IsAuthenticated }} data-modal="login" {{ end }} type="button"
 					id="btn-open-review" class="btn-open-post-dialog" aria-haspopup="dialog">
 					<span class="open-review-symbol">+</span>
