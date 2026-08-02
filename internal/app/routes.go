@@ -34,7 +34,7 @@ func (a *App) RegisterRoutes() *App {
 	mux.HandleFunc("GET /page/{slug}/{$}", a.pages.SinglePageHandler)
 	mux.HandleFunc("/page/{slug}/edit", a.mw.IsAdmin(a.pages.UpdatePageHandler))
 	mux.HandleFunc("/page/new", a.mw.IsAdmin(a.pages.NewPageHandler))
-	mux.HandleFunc("POST /page/{slug}/delete", a.mw.IsAdmin(a.pages.DeletePageHandler))
+	mux.HandleFunc("DELETE /page/{slug}/delete", a.mw.IsAdmin(a.pages.DeletePageHandler))
 
 	// Sources
 	mux.HandleFunc("/source/new", a.mw.IsAdmin(a.sources.NewSourceHandler))
@@ -99,11 +99,12 @@ func (a *App) RegisterRoutes() *App {
 
 	// Chain middlewares that apply to all requests.
 	// The order is important.
-	// Use this custom handler as HTTP server handler
+	// Use this custom handler as HTTP server handler.
 	a.server.Handler = a.mw.ApplyToAll(
 		a.mw.CloseBody,         // Absolute safety net for body memory leaks
 		a.mw.Compress,          // Compress the response no matter what is it
-		a.mw.CanonicalRedirect, // Redirect www to non-www, nothing to do
+		a.mw.CanonicalRedirect, // Redirect www to non-www
+		a.mw.MethodOverride,    // Override a POST method if needed
 		a.mw.Logging,           // Log the request, unless healthcheck
 		a.mw.LoadUser,          // Load user data from seesion into context
 		a.mw.CsrfProtection,    // Provide CSRF protection (needs user data)
