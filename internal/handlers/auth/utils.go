@@ -47,8 +47,12 @@ func IsProtectedRoute(path string) bool {
 // Store user info in our own session
 func (s *Service) loginUser(w http.ResponseWriter, r *http.Request, user *models.User) error {
 
-	// Set user public ID
-	user.PublicID = user.MakePublicID()
+	// Make user public ID
+	var err error
+	user.PublicID, err = user.MakePublicID()
+	if err != nil {
+		return err
+	}
 
 	// Update or insert user
 	id, err := s.usersRepo.UpsertUser(r.Context(), user)

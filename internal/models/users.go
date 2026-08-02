@@ -5,6 +5,7 @@ import (
 	// #nosec G501
 	"crypto/sha256"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -77,9 +78,15 @@ func (u *User) IsAdmin() bool {
 		u.Provider == u.Config.AdminProvider
 }
 
-// Set the user public ID
-func (u *User) MakePublicID() string {
+// Make a user public ID
+func (u *User) MakePublicID() (string, error) {
+	if u.Provider == "" || u.ProviderUserId == "" {
+		return "", errors.New(
+			"cannot generate public ID: provider and provider user id are required",
+		)
+	}
+
 	publicID := fmt.Sprintf("%s:%s:%s", u.Provider, u.ProviderUserId, u.Email)
 	hashBytes := sha256.Sum256([]byte(publicID))
-	return fmt.Sprintf("%x", hashBytes) // 64 hex chars (256 bits)
+	return fmt.Sprintf("%x", hashBytes), nil
 }
