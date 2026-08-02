@@ -55,7 +55,6 @@ starRadios.forEach(radio => {
 // Update the Average Rating Display and the User Rating Button
 // ==========================================================================
 
-
 /**
  * Applies average rating and user rating HTML.
  *
