@@ -1,9 +1,4 @@
 * Build the frontend and backend review system.
-
-  In prod DO **NOT FORGET** first to:
-  - Run the DB migrations and Push code at the same time
-  - Rebuild the setup
-
   The user should be able to delete a review or a rating.
   Include delete button on the modals and add edit/delete buttons on the review card.
   On deletion inline the deletion exalplanation and confirmation in the modals with swapping the modal footer.
