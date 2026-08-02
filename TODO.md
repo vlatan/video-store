@@ -1,7 +1,5 @@
 * Build the frontend and backend review system.
 
-  Give to the public_id unique constraint in the DB.
-
   In prod DO **NOT FORGET** first to:
   - Run the DB migrations and Push code at the same time
   - Rebuild the setup
