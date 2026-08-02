@@ -5,6 +5,8 @@
   If a review is deleted we remove it from the list if it's on the first page.
   Don't forget to change the state of the current-user-id and datasets in JS.
 
+* Change delete handlers to DELETE requests.
+
 * Make the checkmarks on the like/save green or yellow
 * Add close button to login menu
 * Make search bar on small screens accross entire screen

@@ -278,7 +278,7 @@ func (s *Service) DeletePageHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	successDelete := models.FlashMessage{
-		Message:  "The page has been deleted!",
+		Message:  "The page has been deleted",
 		Category: "info",
 	}
 
