@@ -522,7 +522,8 @@ a.nav-item:hover::after {
 	animation-delay: 5s;
 	border-radius: 0.5rem;
 	padding: 0.40rem 0.80rem;
-	background-color: var(--secondary-background-color);
+	color: var(--primary-background-color);
+	background-color: var(--primary-font-color);
 	border: 1px solid var(--primary-border-color);
 }
 
@@ -530,20 +531,20 @@ a.nav-item:hover::after {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	color: var(--primary-font-color);
-	background-color: var(--primary-background-color);
-	border: 1px solid var(--secondary-border-color);
-	font-size: 0.85rem;
+	color: var(--primary-background-color);
+	background-color: var(--muted-font-color);
+	/* border: 1px solid var(--secondary-border-color); */
 	line-height: 1;
 	cursor: pointer;
-	width: 1.35rem;
-	height: 1.35rem;
+	width: 1.10rem;
+	height: 1.10rem;
 	border-radius: 50%;
 }
 
 .alert-close:hover,
 .alert-close:focus {
-	background-color: var(--secondary-background-color);
+	color: var(--primary-font-color);
+	background-color: var(--primary-background-color);
 }
 
 @keyframes fadeOut {
