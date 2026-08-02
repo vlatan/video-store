@@ -383,13 +383,13 @@ func (s *Service) Logging(next http.Handler) http.Handler {
 func (s *Service) MethodOverride(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		// Is this a post request
+		// Check the request method
 		if r.Method != http.MethodPost {
 			next.ServeHTTP(w, r)
 			return
 		}
 
-		// Is this a standard HTML form submit (not multipart)
+		// Check for a standard HTML form submit
 		contentType := r.Header.Get("Content-Type")
 		if !strings.HasPrefix(contentType, "application/x-www-form-urlencoded") {
 			next.ServeHTTP(w, r)
