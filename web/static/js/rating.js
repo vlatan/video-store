@@ -165,6 +165,7 @@ document.querySelectorAll('.rating-section').forEach(widget => {
 
             // The request went through, change the button text
             originalrateBtnSubmitText = "Update";
+            setAlert("Post rated");
         } catch (error) {
             console.error("Failed to fetch or parse JSON:", error);
             setAlert("Something went wrong!");
@@ -273,11 +274,11 @@ document.querySelectorAll('.review-section').forEach(s => {
                 reviewInDom.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 reviewInDom.classList.add('updated-review');
                 setTimeout(() => reviewInDom.classList.remove('updated-review'), 2000);
-                setAlert("Review updated!");
+                setAlert("Review updated");
                 // TODO: Change this check, not reliable
             } else if (userHasReview) {
                 // Review isn't loaded in the DOM yet.
-                setAlert("Review updated!");
+                setAlert("Review updated");
             } else { // New review, prepend to the list
                 const card = document.createElement('div');
                 card.className = 'review-card load-review';
@@ -287,7 +288,7 @@ document.querySelectorAll('.review-section').forEach(s => {
                 card.setAttribute("itemtype", "https://schema.org/Review");
                 card.innerHTML = innerHTML;
                 reviewsList?.prepend(card);
-                setAlert("Review posted!");
+                setAlert("Review posted");
 
                 // Update the user reviews counter
                 const countSpan = document.getElementById('review-count');
