@@ -190,6 +190,7 @@ document.querySelectorAll('.review-section').forEach(s => {
     let originalreviewOpenBtnText = reviewOpenBtnText?.textContent.trim() || 'Post Review';
     const reviewCloseBtn = s.querySelector('#btn-close-review');
     const reviewSubmitBtn = s.querySelector('#btn-submit-review');
+    const btnDeleteInit = s.querySelector('#btn-review-delete-init');
     let originalreviewBtnSubmitText = reviewSubmitBtn?.textContent.trim() || 'Submit';
     const reviewError = s.querySelector('#review-error');
 
@@ -197,6 +198,7 @@ document.querySelectorAll('.review-section').forEach(s => {
     if (!(reviewForm instanceof HTMLFormElement)) return;
     if (!(reviewOpenBtnText instanceof HTMLElement)) return;
     if (!(reviewSubmitBtn instanceof HTMLButtonElement && reviewSubmitBtn.type === 'submit')) return;
+    if (!(btnDeleteInit instanceof HTMLButtonElement && btnDeleteInit.type === 'button')) return;
 
     const showError = (msg = "") => {
         if (!(reviewError instanceof HTMLElement)) return;
@@ -324,21 +326,11 @@ document.querySelectorAll('.review-section').forEach(s => {
             updateRatingHTML(payload.rating, result.stats.avg_rating, result.stats.rating_count)
 
             // The request went through, change the open and submit button text,
-            // the data state and remove the load-review class.
+            // the data state and reveal the delete button.
             originalreviewOpenBtnText = "Update Review";
             originalreviewBtnSubmitText = "Update";
             reviewSubmitBtn.dataset.hasReview = 'true';
-
-            // Add delete button if not there
-            const btnDeleteInit = s.querySelector('#btn-review-delete-init');
-            if (!btnDeleteInit) {
-                const btn = document.createElement('button');
-                btn.type = 'button';
-                btn.id = 'btn-review-delete-init';
-                btn.className = 'btn-review btn-review-danger';
-                btn.textContent = 'Delete';
-                reviewSubmitBtn.before(btn);
-            }
+            btnDeleteInit.hidden = false;
 
         } catch (err) {
             console.error("Failed to fetch or parse JSON:", err);

@@ -294,10 +294,8 @@
 						<div class="review-form-footer">
 							<span id="review-error" class="review-form-error" hidden></span>
 							<div class="review-btn-group">
-								{{ if $userHasReview }}
-								<button type="button" id="btn-review-delete-init"
-									class="btn-review btn-review-danger">Delete</button>
-								{{ end }}
+								<button type="button" id="btn-review-delete-init" class="btn-review btn-review-danger"
+									{{ if not $userHasReview }}hidden{{ end }}>Delete</button>
 								<button type="submit" id="btn-submit-review" class="btn-review btn-submit-review"
 									data-has-review="{{ $userHasReview }}">
 									{{ if $userHasReview }}Update{{ else }}Submit{{ end }}
