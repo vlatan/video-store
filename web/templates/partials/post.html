@@ -288,14 +288,40 @@
 						</div>
 					</fieldset>
 
-					<!-- User Review Submit Button -->
-					<div class="review-form-footer">
-						<span id="review-error" class="review-form-error" hidden></span>
-						<button type="submit" id="submit-review" class="btn-submit-review"
-							data-has-review="{{ $userHasReview }}">
-							{{ if $userHasReview }}Update{{ else }}Submit{{ end }}
-						</button>
+
+					<!-- Default Review Buttons State -->
+					<div id="review-actions-default">
+						<div class="review-form-footer">
+							<span id="review-error" class="review-form-error" hidden></span>
+							<div class="review-btn-group">
+								{{ if $userHasReview }}
+								<button type="button" id="btn-review-delete-init"
+									class="btn-review btn-review-danger">Delete</button>
+								{{ end }}
+								<button type="submit" id="btn-submit-review" class="btn-review btn-submit-review"
+									data-has-review="{{ $userHasReview }}">
+									{{ if $userHasReview }}Update{{ else }}Submit{{ end }}
+								</button>
+							</div>
+						</div>
 					</div>
+
+					<!-- Confirmation Review Buttons State -->
+					<div id="review-actions-confirm" hidden>
+						<div class="review-form-footer">
+							<span id="review-error-confirm" class="review-form-error" hidden></span>
+							<span class="review-warning-text">
+								Are you sure? This will delete your review.
+							</span>
+							<div class="review-btn-group">
+								<button type="button" id="btn-review-delete-cancel"
+									class="btn-review btn-review-secondary">Cancel</button>
+								<button type="button" id="btn-review-delete-confirm"
+									class="btn-review btn-review-danger">Confirm</button>
+							</div>
+						</div>
+					</div>
+
 				</form>
 			</dialog>
 			{{ end }}

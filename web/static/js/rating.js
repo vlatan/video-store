@@ -189,7 +189,7 @@ document.querySelectorAll('.review-section').forEach(s => {
     const reviewOpenBtnText = s.querySelector('#btn-open-review-text');
     let originalreviewOpenBtnText = reviewOpenBtnText?.textContent.trim() || 'Post Review';
     const reviewCloseBtn = s.querySelector('#btn-close-review');
-    const reviewSubmitBtn = s.querySelector('#submit-review');
+    const reviewSubmitBtn = s.querySelector('#btn-submit-review');
     let originalreviewBtnSubmitText = reviewSubmitBtn?.textContent.trim() || 'Submit';
     const reviewError = s.querySelector('#review-error');
 
@@ -294,6 +294,7 @@ document.querySelectorAll('.review-section').forEach(s => {
                 const countSpan = document.getElementById('review-count');
                 const numReviews = parseInt(countSpan?.textContent || "0", 10) + 1
 
+                // Adjust the reviews list header
                 const reviewsHeaderTitle = document.querySelector('.reviews-title-wrapper h3');
                 if (reviewsHeaderTitle) {
                     if (numReviews === 1) {
@@ -327,6 +328,18 @@ document.querySelectorAll('.review-section').forEach(s => {
             originalreviewOpenBtnText = "Update Review";
             originalreviewBtnSubmitText = "Update";
             reviewSubmitBtn.dataset.hasReview = 'true';
+
+            // Add delete button if not there
+            const btnDeleteInit = s.querySelector('#btn-review-delete-init');
+            if (!btnDeleteInit) {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.id = 'btn-review-delete-init';
+                btn.className = 'btn-review btn-review-danger';
+                btn.textContent = 'Delete';
+                reviewSubmitBtn.before(btn);
+            }
+
         } catch (err) {
             console.error("Failed to fetch or parse JSON:", err);
             setAlert("Something went wrong!");
@@ -334,6 +347,48 @@ document.querySelectorAll('.review-section').forEach(s => {
             reviewSubmitBtn.disabled = false;
             reviewSubmitBtn.textContent = originalreviewBtnSubmitText;
             reviewOpenBtnText.textContent = originalreviewOpenBtnText;
+        }
+    });
+});
+
+
+// ==========================================================================
+// Delete Review
+// ==========================================================================
+
+document.querySelectorAll('.review-section').forEach(s => {
+
+    const reviewDialog = s.querySelector('#review-dialog');
+    const defaultState = s.querySelector('#review-actions-default');
+    const confirmState = s.querySelector('#review-actions-confirm');
+    const btnDeleteInit = s.querySelector('#btn-review-delete-init');
+    const btnDeleteCancel = s.querySelector('#btn-review-delete-cancel');
+    const btnDeleteConfirm = s.querySelector('#btn-review-delete-confirm');
+
+    if (!(reviewDialog instanceof HTMLDialogElement)) return;
+    if (!(defaultState instanceof HTMLElement)) return;
+    if (!(confirmState instanceof HTMLElement)) return;
+
+    btnDeleteInit?.addEventListener('click', () => {
+        defaultState.hidden = true;
+        confirmState.hidden = false;
+    });
+
+    btnDeleteCancel?.addEventListener('click', () => {
+        confirmState.hidden = true;
+        defaultState.hidden = false;
+    });
+
+    btnDeleteConfirm?.addEventListener('click', async () => {
+
+        try {
+            // await fetch('/api/reviews/1', { method: 'DELETE' });
+            reviewDialog.close();
+
+            confirmState.hidden = true;
+            defaultState.hidden = false;
+        } catch (error) {
+            console.error('Deletion failed', error);
         }
     });
 });
