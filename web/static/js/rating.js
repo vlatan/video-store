@@ -190,8 +190,8 @@ document.querySelectorAll('.review-section').forEach(s => {
     let originalreviewOpenBtnText = reviewOpenBtnText?.textContent.trim() || 'Post Review';
     const reviewCloseBtn = s.querySelector('#btn-close-review');
     const reviewSubmitBtn = s.querySelector('#btn-submit-review');
-    const btnDeleteInit = s.querySelector('#btn-review-delete-init');
     let originalreviewBtnSubmitText = reviewSubmitBtn?.textContent.trim() || 'Submit';
+    const btnDeleteInit = s.querySelector('#btn-review-delete-init');
     const reviewError = s.querySelector('#review-error');
 
     if (!(reviewDialog instanceof HTMLDialogElement)) return;
@@ -230,6 +230,7 @@ document.querySelectorAll('.review-section').forEach(s => {
         const content = String(formData.get('content') || '').trim();
         const rating = String(formData.get('rating') || '').trim();
 
+        // Check for input errors
         if (!headline || !content || !rating) {
             showError('Please fill in the required fields');
             return;
@@ -277,7 +278,6 @@ document.querySelectorAll('.review-section').forEach(s => {
                 reviewInDom.classList.add('updated-review');
                 setTimeout(() => reviewInDom.classList.remove('updated-review'), 2000);
                 setAlert("Review updated");
-                // TODO: Change this check, not reliable
             } else if (userHasReview) {
                 // Review isn't loaded in the DOM yet.
                 setAlert("Review updated");
@@ -331,7 +331,6 @@ document.querySelectorAll('.review-section').forEach(s => {
             originalreviewBtnSubmitText = "Update";
             reviewSubmitBtn.dataset.hasReview = 'true';
             btnDeleteInit.hidden = false;
-
         } catch (err) {
             console.error("Failed to fetch or parse JSON:", err);
             setAlert("Something went wrong!");
@@ -351,6 +350,7 @@ document.querySelectorAll('.review-section').forEach(s => {
 document.querySelectorAll('.review-section').forEach(s => {
 
     const reviewDialog = s.querySelector('#review-dialog');
+    const reviewForm = s.querySelector('.review-form');
     const defaultState = s.querySelector('#review-actions-default');
     const confirmState = s.querySelector('#review-actions-confirm');
     const btnDeleteInit = s.querySelector('#btn-review-delete-init');
@@ -358,8 +358,19 @@ document.querySelectorAll('.review-section').forEach(s => {
     const btnDeleteConfirm = s.querySelector('#btn-review-delete-confirm');
 
     if (!(reviewDialog instanceof HTMLDialogElement)) return;
+    if (!(reviewForm instanceof HTMLFormElement)) return;
     if (!(defaultState instanceof HTMLElement)) return;
     if (!(confirmState instanceof HTMLElement)) return;
+    if (!(btnDeleteInit instanceof HTMLButtonElement && btnDeleteInit.type === 'button')) return;
+    if (!(btnDeleteConfirm instanceof HTMLButtonElement && btnDeleteInit.type === 'button')) return;
+
+    const reviewOpenBtnText = s.querySelector('#btn-open-review-text');
+    if (!(reviewOpenBtnText instanceof HTMLElement)) return;
+    let originalreviewOpenBtnText = reviewOpenBtnText.textContent.trim() || 'Post Review';
+
+    const reviewSubmitBtn = s.querySelector('#btn-submit-review');
+    if (!(reviewSubmitBtn instanceof HTMLButtonElement && reviewSubmitBtn.type === 'submit')) return;
+    let originalreviewBtnSubmitText = reviewSubmitBtn.textContent.trim() || 'Submit';
 
     btnDeleteInit?.addEventListener('click', () => {
         defaultState.hidden = true;
@@ -373,14 +384,42 @@ document.querySelectorAll('.review-section').forEach(s => {
 
     btnDeleteConfirm?.addEventListener('click', async () => {
 
-        try {
-            // await fetch('/api/reviews/1', { method: 'DELETE' });
-            reviewDialog.close();
+        // Disable the delete and submit buttons and close the review dialog
+        btnDeleteConfirm.disabled = true;
+        btnDeleteConfirm.textContent = 'Deleting...';
+        reviewSubmitBtn.disabled = true;
+        reviewDialog.close();
 
+        try {
+            // Send the request to the backend
+            const response = await postData(reviewForm.action);
+            if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+
+            // Look for this review in the DOM and remove it if there
+            const reviewInDom = document.getElementById("current-user-review");
+            reviewInDom?.remove();
+
+            // TODO: Update the average rating with updateRatingHTML()
+            // TODO: Update the review count in the reviews list header, decrease by one
+            // TODO: Clear the form, empty the inputs and rating check
+
+            // The request went through, change the open and submit button text,
+            // the data state and hide the delete button.
+            originalreviewOpenBtnText = "Post Review";
+            originalreviewBtnSubmitText = "Post";
+            reviewSubmitBtn.dataset.hasReview = 'false';
+            btnDeleteInit.hidden = true;
+        } catch (error) {
+            console.error('Review deletion failed', error);
+            setAlert("Something went wrong!");
+        } finally {
+            // Reset the state of the buttons and texts
             confirmState.hidden = true;
             defaultState.hidden = false;
-        } catch (error) {
-            console.error('Deletion failed', error);
+            reviewSubmitBtn.disabled = false;
+            btnDeleteConfirm.disabled = false;
+            reviewSubmitBtn.textContent = originalreviewBtnSubmitText;
+            reviewOpenBtnText.textContent = originalreviewOpenBtnText;
         }
     });
 });

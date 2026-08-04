@@ -94,6 +94,25 @@ const postData = (url = "", data = {}) => {
     });
 };
 
+// Send DELETE request to backend
+const deleteData = (url = "") => {
+    if (!url) throw new Error("URL parameter is required");
+
+    const headers = new Headers();
+    headers.append("Content-Type", "application/json");
+
+    // If CSRF Token send with the POST request
+    const csrfTokens = document.getElementsByName("gorilla.csrf.Token");
+    if (csrfTokens.length > 0 && csrfTokens[0] instanceof HTMLInputElement) {
+        headers.append("X-CSRF-Token", csrfTokens[0].value);
+    }
+
+    return fetch(url, {
+        method: 'DELETE',
+        headers: headers
+    });
+}
+
 // Send GET request to backend
 const getData = (url = "", cursor = "") => {
     if (!url) throw new Error("URL parameter is required");
