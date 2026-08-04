@@ -416,8 +416,8 @@ document.querySelectorAll('.review-section').forEach(s => {
                 }
             });
 
-            // The request went through, change the open and submit button text,
-            // the data state and hide the delete button.
+            // Change the open/submit buttons text, 
+            // the current user review state and hide the delete button.
             originalreviewOpenBtnText = "Post Review";
             originalreviewBtnSubmitText = "Post";
             reviewSubmitBtn.dataset.hasReview = 'false';
