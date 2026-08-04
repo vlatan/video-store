@@ -392,16 +392,29 @@ document.querySelectorAll('.review-section').forEach(s => {
 
         try {
             // Send the request to the backend
-            const response = await postData(reviewForm.action);
-            if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+            // const response = await postData(reviewForm.action);
+            // if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
 
             // Look for this review in the DOM and remove it if there
             const reviewInDom = document.getElementById("current-user-review");
             reviewInDom?.remove();
 
-            // TODO: Update the average rating with updateRatingHTML()
+            // TODO: Update the average rating with updateRatingHTML(), 
+            // meaning the request neeeds to return the average and count here too.
             // TODO: Update the review count in the reviews list header, decrease by one
-            // TODO: Clear the form, empty the inputs and rating check
+            // TODO: Reset the big star value in the review form.
+
+            // Clear the form inputs
+            const inputs = reviewForm.querySelectorAll("input, select, textarea");
+            inputs.forEach(field => {
+                if (field instanceof HTMLInputElement || field instanceof HTMLTextAreaElement) {
+                    field.value = "";
+                }
+
+                if (field instanceof HTMLInputElement && field.type === 'radio') {
+                    field.checked = false;
+                }
+            });
 
             // The request went through, change the open and submit button text,
             // the data state and hide the delete button.
