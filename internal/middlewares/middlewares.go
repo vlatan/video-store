@@ -207,7 +207,8 @@ func (s *Service) CanonicalRedirect(next http.Handler) http.Handler {
 			return
 		}
 
-		canonical := utils.CanonicalURL(r, s.config.Protocol)
+		// Get the full canonical URL including queries and fragments
+		canonical, _ := utils.CanonicalURLs(r, s.config.Protocol)
 
 		// Reconstruct the actual incoming absolute URL
 		scheme := "http"

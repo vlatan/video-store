@@ -11,12 +11,12 @@
 {{ define "extra_meta" }}
 <meta property='og:title' content='{{ .CurrentPost.GetTitle }}'>
 <meta property='og:type' content='video.movie'>
-<meta property='og:url' content='{{ .CanonicalURL }}'>
+<meta property='og:url' content='{{ .BaseCanonicalURL }}'>
 <meta property='og:image' content='{{ .CurrentPost.Thumbnail.Url  }}'>
 <meta name='thumbnail' content='{{ .CurrentPost.Thumbnail.Url  }}'>
 
 <meta name="twitter:title" content="{{ .CurrentPost.GetTitle }}">
-<meta property="twitter:url" content="{{ .CanonicalURL }}">
+<meta property="twitter:url" content="{{ .BaseCanonicalURL }}">
 <meta name="twitter:image" content="{{ .CurrentPost.Thumbnail.Url  }}">
 
 {{ with .CurrentPost.MetaDescription }}

@@ -33,29 +33,31 @@ var RootFavicons = []string{
 	"/site.webmanifest",
 }
 
-// CanonicalURL creates canonical URI string
-func CanonicalURL(r *http.Request, protocol string) string {
+// CanonicalURLs returns both the full canonical URL (with queries/fragments)
+// and the base canonical URL (without queries/fragments).
+func CanonicalURLs(r *http.Request, protocol string) (full, base string) {
 
-	// Clone the URL
-	u := *r.URL
-	u.Scheme = protocol // Always force absolute scheme
-
-	// Remove www prefix
-	u.Host = r.Host
-	if host, ok := strings.CutPrefix(r.Host, "www."); ok {
-		u.Host = host
-	}
+	u := *r.URL                                 // Clone the URL
+	u.Scheme = protocol                         // Always force absolute scheme
+	u.Host = strings.TrimPrefix(r.Host, "www.") // Remove www prefix
 
 	// Clean the path
 	cleanedPath := path.Clean(r.URL.Path)
-	if strings.HasSuffix(r.URL.Path, "/") &&
-		!strings.HasSuffix(cleanedPath, "/") &&
-		cleanedPath != "/" {
+
+	// Restore trailing slash if any and if not root
+	if strings.HasSuffix(r.URL.Path, "/") && cleanedPath != "/" {
 		cleanedPath += "/"
 	}
 	u.Path = cleanedPath
 
-	return u.String()
+	// Full URL with queries and fragments
+	full = u.String()
+
+	// Clear the queries and fragments
+	u.RawQuery, u.Fragment = "", ""
+	base = u.String()
+
+	return full, base
 }
 
 // Validates a path

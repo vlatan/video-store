@@ -76,19 +76,19 @@ type Form struct {
 
 // Data struct to pass to templates
 type TemplateData struct {
-	Title           string
-	CurrentPost     *Post
-	CurrentPage     *Page
-	CurrentUser     *User
-	CurrentURI      string
-	CanonicalURL    string
-	Sources         []Source
-	Categories      []Category
-	FlashMessages   []*FlashMessage
-	SearchQuery     string
-	CSRFField       template.HTML
-	XMLDeclarations []template.HTML
-	SitemapItems    []*SitemapItem
+	Title            string
+	CurrentPost      *Post
+	CurrentPage      *Page
+	CurrentUser      *User
+	CurrentURI       string
+	BaseCanonicalURL string
+	Sources          []Source
+	Categories       []Category
+	FlashMessages    []*FlashMessage
+	SearchQuery      string
+	CSRFField        template.HTML
+	XMLDeclarations  []template.HTML
+	SitemapItems     []*SitemapItem
 	StaticFiles
 	*config.Config
 	*HTMLErrorData
