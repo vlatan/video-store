@@ -48,9 +48,6 @@ document.getElementById('load-more-reviews-btn')?.addEventListener('click', asyn
         if (!response.ok) throw new Error('Failed to fetch reviews');
         const data = await response.json();
 
-        /** @type {Record<string, any>[]} */
-        const items = data.items || [];
-
         const reviewsList = document.getElementById('reviews-list');
         for (const review of data.items) {
 
