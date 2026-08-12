@@ -23,7 +23,7 @@ function getInitialState() {
 const ratingState = getInitialState();
 
 /**
- *  Helper to mutate state and immediately trigger UI updates
+ *  Mutate state and immediately trigger UI updates
  * @param {Partial<typeof ratingState>} updates
  */
 function setState(updates) {
@@ -41,8 +41,10 @@ function renderState() {
     const buttonsToToggle = [
         document.getElementById('btn-open-rate'),
         document.querySelector('.btn-submit-rate'),
-        document.getElementById('btn-open-review-text'),
+        document.getElementById('btn-open-review'),
         document.getElementById('btn-submit-review'),
+        document.getElementById('btn-review-delete-init'),
+        document.getElementById('btn-review-delete-cancel'),
         document.getElementById('btn-review-delete-confirm')
     ];
 
@@ -77,7 +79,7 @@ function renderState() {
     if (reviewOpenBtnText && !ratingState.isSubmitting) {
         let text = "Post Review"
         if (ratingState.userHasReview) text = "Update Review";
-        reviewOpenBtnText.innerText = text;
+        reviewOpenBtnText.textContent = text;
     }
 
     // Dynamic Submit Review Button Inner Text
