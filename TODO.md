@@ -1,3 +1,5 @@
+* Examine Cloudflare to see if legit traffic is not blocked
+
 * Build the frontend and backend review system.
   The user should be able to delete a review or a rating.
   Include delete button on the modals and add edit/delete buttons on the review card.
