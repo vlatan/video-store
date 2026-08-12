@@ -3,7 +3,7 @@
  * Expects "?" or an integer between 1 and 10.
  * @param {string|number} [val="?"]
  */
-const updateBigStar = (val = "?") => {
+const updateBigStars = (val = "?") => {
     if (val !== "?") {
         const num = Number(val);
         if (!Number.isInteger(num) || num < 1 || num > 10) {
@@ -20,49 +20,42 @@ const updateBigStar = (val = "?") => {
 };
 
 
-// ==========================================================================
-// Sync All Checked Stars and Big Star Values on hover or checked
-// ==========================================================================
+/**
+ * Listen rating stars radios change on hover and syncs rating state.
+ */
+(() => {
 
-const starRadios = document.querySelectorAll('input[name="rating"]');
+    const starRadios = document.querySelectorAll('input[name="rating"]');
+    starRadios.forEach(radio => {
+        if (!(radio instanceof HTMLInputElement)) return;
 
-// Track currently checked value
-let selectedValue = "?";
-const checked = document.querySelector('input[name="rating"]:checked');
-if (checked instanceof HTMLInputElement) {
-    selectedValue = checked.value;
-}
+        radio.addEventListener('change', () => {
+            if (!radio.checked) return;
 
-starRadios.forEach(radio => {
-    if (!(radio instanceof HTMLInputElement)) return;
+            // Sync identical radios across multiple forms
+            starRadios.forEach(r => {
+                if (r instanceof HTMLInputElement && r.value === radio.value) {
+                    r.checked = true;
+                }
+            });
 
-    radio.addEventListener('change', () => {
-        if (!radio.checked) return;
-        selectedValue = radio.value;
-
-        // Sync across all star sets (needed if they're in separate forms)
-        starRadios.forEach(r => {
-            if (r instanceof HTMLInputElement && r.value === selectedValue) {
-                r.checked = true;
-            }
+            updateBigStars(radio.value);
         });
 
-        updateBigStar(selectedValue);
+        const hoverTarget = radio.closest('label') || radio;
+
+        hoverTarget.addEventListener('mouseenter', () => {
+            updateBigStars(radio.value);
+        });
+
+        // Revert to currently checked radio or "?"
+        hoverTarget.addEventListener('mouseleave', () => {
+            const currentChecked = document.querySelector('input[name="rating"]:checked');
+            updateBigStars(currentChecked instanceof HTMLInputElement ? currentChecked.value : "?");
+        });
     });
 
-    // Target the visible label (or fall back to input)
-    const hoverTarget = radio.closest('label') || radio;
-
-    // Hover preview
-    hoverTarget.addEventListener('mouseenter', () => {
-        updateBigStar(radio.value);
-    });
-
-    // Reset to checked value on mouse leave
-    hoverTarget.addEventListener('mouseleave', () => {
-        updateBigStar(selectedValue);
-    });
-});
+})();
 
 
 /**
@@ -71,17 +64,19 @@ starRadios.forEach(radio => {
  */
 function clearForm(inputs) {
     inputs.forEach(field => {
-        if (field instanceof HTMLInputElement || field instanceof HTMLTextAreaElement) {
+        if (field instanceof HTMLTextAreaElement) {
             field.value = "";
-        }
-
-        if (field instanceof HTMLInputElement && field.type === 'radio') {
-            field.checked = false;
+        } else if (field instanceof HTMLInputElement) {
+            if (field.type === 'radio' || field.type === 'checkbox') {
+                field.checked = false;
+            } else {
+                field.value = "";
+            }
         }
     });
 
-    // Reset the big star as well
-    updateBigStar();
+    // Clear the big stars values
+    updateBigStars();
 }
 
 
