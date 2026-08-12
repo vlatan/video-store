@@ -104,6 +104,16 @@ func (s *Service) handleRate(w http.ResponseWriter, r *http.Request, userID int,
 		return
 	}
 
+	if data.Rating < 1 || data.Rating > 10 {
+		slog.ErrorContext(
+			r.Context(), "rating out of bounds",
+			"path", r.URL.Path,
+			"userId", userID,
+		)
+		utils.HttpError(w, http.StatusBadRequest)
+		return
+	}
+
 	ratingData, err := s.postsRepo.Rate(r.Context(), data.Rating, userID, videoID)
 
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -145,6 +155,16 @@ func (s *Service) handleReview(w http.ResponseWriter, r *http.Request, userID in
 		return
 	}
 
+	if data.Rating < 1 || data.Rating > 10 {
+		slog.ErrorContext(
+			r.Context(), "rating out of bounds",
+			"path", r.URL.Path,
+			"userId", userID,
+		)
+		utils.HttpError(w, http.StatusBadRequest)
+		return
+	}
+
 	if err := validateReview(data.Headline, data.Content); err != nil {
 		slog.ErrorContext(
 			r.Context(), "failed to validate the review",
@@ -152,7 +172,7 @@ func (s *Service) handleReview(w http.ResponseWriter, r *http.Request, userID in
 			"userId", userID,
 			"error", err,
 		)
-		utils.HttpError(w, http.StatusInternalServerError)
+		utils.HttpError(w, http.StatusBadRequest)
 		return
 	}
 

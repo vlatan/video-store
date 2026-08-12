@@ -191,7 +191,7 @@ function clearForm(inputs) {
  * @param {number} avg_rating
  * @param {number} rating_count
  */
-function updateRatingHTML(user_rating, avg_rating, rating_count) {
+function updateAvgRatingHTML(user_rating, avg_rating, rating_count) {
 
     user_rating = Number(user_rating);
     avg_rating = Number(avg_rating);
@@ -228,18 +228,13 @@ function updateRatingHTML(user_rating, avg_rating, rating_count) {
     `;
 
     const avgRatingDisplay = document.querySelector('.avg-rating-display');
-    const rateBtnOpen = document.querySelector('#btn-open-rate');
+    const rateBtnOpen = document.getElementById('btn-open-rate');
 
     // Transform the average display
     if (avgRatingDisplay) {
         avgRatingDisplay.outerHTML = avgRatingHTML;
     } else if (rateBtnOpen) {
         rateBtnOpen.insertAdjacentHTML('beforebegin', avgRatingHTML);
-    }
-
-    // Transform the user rating button
-    if (rateBtnOpen) {
-        rateBtnOpen.innerHTML = `<span class="rating-user-star">&#9733;</span><span>${user_rating}</span>`;
     }
 }
 
@@ -290,7 +285,7 @@ document.querySelectorAll('.rating-section').forEach(widget => {
             const result = await response.json();
 
             // Update the rating HTML
-            updateRatingHTML(payload.rating, result.avg_rating, result.rating_count)
+            updateAvgRatingHTML(payload.rating, result.avg_rating, result.rating_count)
 
             // The request went through, change the button text
             originalrateBtnSubmitText = "Update";
@@ -464,7 +459,7 @@ document.querySelectorAll('.review-section').forEach(s => {
             }
 
             // Update the user rating and average rating HTML
-            updateRatingHTML(payload.rating, result.stats.avg_rating, result.stats.rating_count)
+            updateAvgRatingHTML(payload.rating, result.stats.avg_rating, result.stats.rating_count)
 
             // The request went through, change buttons
             originalrateBtnSubmitText = "Update";
