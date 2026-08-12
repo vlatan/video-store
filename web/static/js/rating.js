@@ -1,6 +1,21 @@
+/**
+ * Clear the rating or review form
+ * @param {NodeListOf<Element>} inputs
+ */
+function clearForm(inputs) {
+    inputs.forEach(field => {
+        if (field instanceof HTMLInputElement || field instanceof HTMLTextAreaElement) {
+            field.value = "";
+        }
+
+        if (field instanceof HTMLInputElement && field.type === 'radio') {
+            field.checked = false;
+        }
+    });
+}
 
 // ==========================================================================
-// Sync All Checked Stars and Big Star Values
+// Sync All Checked Stars and Big Star Values on hover or checked
 // ==========================================================================
 
 const starRadios = document.querySelectorAll('input[name="rating"]');
@@ -400,21 +415,20 @@ document.querySelectorAll('.review-section').forEach(s => {
             reviewInDom?.remove();
 
             // TODO: Update the average rating with updateRatingHTML(), 
-            // meaning the request neeeds to return the average and count here too.
+            // meaning the request neeeds to return the new average and count here too.
+
             // TODO: Update the review count in the reviews list header, decrease by one
             // TODO: Reset the big star value in the review form.
+            // TODO: Reset the rating button in the dialog too.
 
-            // Clear the form inputs
-            const inputs = reviewForm.querySelectorAll("input, select, textarea");
-            inputs.forEach(field => {
-                if (field instanceof HTMLInputElement || field instanceof HTMLTextAreaElement) {
-                    field.value = "";
-                }
+            // Clear the rating form
+            const rateForm = document.querySelector('.rate-form');
+            const rateFormInputs = rateForm?.querySelectorAll("input, select, textarea");
+            if (rateFormInputs) clearForm(rateFormInputs);
 
-                if (field instanceof HTMLInputElement && field.type === 'radio') {
-                    field.checked = false;
-                }
-            });
+            // Clear the review form
+            const reviewFormImputs = reviewForm.querySelectorAll("input, select, textarea");
+            clearForm(reviewFormImputs);
 
             // Change the open/submit buttons text, 
             // the current user review state and hide the delete button.
