@@ -15,6 +15,67 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
+func TestCanonicalURLs(t *testing.T) {
+	tests := []struct {
+		name            string
+		incomingTarget  string // Path + Query
+		incomingHost    string
+		protocol        string
+		expectedFullURL string
+		expectedBaseURL string
+	}{
+		{
+			name:            "Enforces absolute protocol and strips www",
+			incomingTarget:  "/video/test/",
+			incomingHost:    "www.example.com",
+			protocol:        "https",
+			expectedFullURL: "https://example.com/video/test/",
+			expectedBaseURL: "https://example.com/video/test/",
+		},
+		{
+			name:            "Cleans double slashes while preserving single trailing slash",
+			incomingTarget:  "/video//test//",
+			incomingHost:    "example.com",
+			protocol:        "https",
+			expectedFullURL: "https://example.com/video/test/",
+			expectedBaseURL: "https://example.com/video/test/",
+		},
+		{
+			name:            "Preserves query parameters",
+			incomingTarget:  "/video/test/?autoplay=1&t=30",
+			incomingHost:    "www.example.com",
+			protocol:        "https",
+			expectedFullURL: "https://example.com/video/test/?autoplay=1&t=30",
+			expectedBaseURL: "https://example.com/video/test/",
+		},
+		{
+			name:            "Handles root path without appending extra slashes",
+			incomingTarget:  "/",
+			incomingHost:    "example.com",
+			protocol:        "http",
+			expectedFullURL: "http://example.com/",
+			expectedBaseURL: "http://example.com/",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// NewRequest safely separates Path and RawQuery automatically
+			req := httptest.NewRequest("GET", tt.incomingTarget, nil)
+			req.Host = tt.incomingHost
+
+			fullURL, baseURL := CanonicalURLs(req, tt.protocol)
+
+			if fullURL != tt.expectedFullURL {
+				t.Errorf("\nExpected: %s\nGot:      %s", tt.expectedFullURL, fullURL)
+			}
+			if baseURL != tt.expectedBaseURL {
+				t.Errorf("\nExpected: %s\nGot:      %s", tt.expectedBaseURL, baseURL)
+			}
+		})
+	}
+}
+
 func TestValidateFilePath(t *testing.T) {
 
 	tests := []struct {
