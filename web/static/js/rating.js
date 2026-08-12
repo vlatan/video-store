@@ -483,19 +483,6 @@ document.querySelectorAll('.review-section').forEach(s => {
     if (!(btnDeleteInit instanceof HTMLButtonElement && btnDeleteInit.type === 'button')) return;
     if (!(btnDeleteConfirm instanceof HTMLButtonElement && btnDeleteInit.type === 'button')) return;
 
-    const reviewOpenBtnText = s.querySelector('#btn-open-review-text');
-    if (!(reviewOpenBtnText instanceof HTMLElement)) return;
-    let originalreviewOpenBtnText = reviewOpenBtnText.textContent.trim() || 'Post Review';
-
-    const reviewSubmitBtn = s.querySelector('#btn-submit-review');
-    if (!(reviewSubmitBtn instanceof HTMLButtonElement && reviewSubmitBtn.type === 'submit')) return;
-    let originalreviewBtnSubmitText = reviewSubmitBtn.textContent.trim() || 'Submit';
-
-    // We'll need the rate button submit value too
-    const rateBtnSubmit = document.querySelector('.btn-submit-rate');
-    if (!(rateBtnSubmit instanceof HTMLButtonElement && rateBtnSubmit.type === 'submit')) return;
-    let originalrateBtnSubmitText = rateBtnSubmit?.textContent.trim() || 'Rate';
-
     btnDeleteInit?.addEventListener('click', () => {
         defaultState.hidden = true;
         confirmState.hidden = false;
