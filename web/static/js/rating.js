@@ -1,25 +1,30 @@
 /**
- * Clear the rating or review form
- * @param {NodeListOf<Element>} inputs
+ * Updates big star elements.
+ * Expects "?" or an integer between 1 and 10.
+ * @param {string|number} [val="?"]
  */
-function clearForm(inputs) {
-    inputs.forEach(field => {
-        if (field instanceof HTMLInputElement || field instanceof HTMLTextAreaElement) {
-            field.value = "";
+const updateBigStar = (val = "?") => {
+    if (val !== "?") {
+        const num = Number(val);
+        if (!Number.isInteger(num) || num < 1 || num > 10) {
+            throw new Error(
+                `Invalid rating value "${val}". Expected "?" or an integer from 1 to 10.`
+            );
         }
+        val = String(num);
+    }
 
-        if (field instanceof HTMLInputElement && field.type === 'radio') {
-            field.checked = false;
-        }
+    document.querySelectorAll('.rating-big-star-value').forEach(bsv => {
+        bsv.textContent = val;
     });
-}
+};
+
 
 // ==========================================================================
 // Sync All Checked Stars and Big Star Values on hover or checked
 // ==========================================================================
 
 const starRadios = document.querySelectorAll('input[name="rating"]');
-const bigStarValues = document.querySelectorAll('.rating-big-star-value');
 
 // Track currently checked value
 let selectedValue = "?";
@@ -27,13 +32,6 @@ const checked = document.querySelector('input[name="rating"]:checked');
 if (checked instanceof HTMLInputElement) {
     selectedValue = checked.value;
 }
-
-// Update the displayed rating value
-const updateBigStar = (val = "?") => {
-    bigStarValues.forEach(bsv => {
-        bsv.textContent = val;
-    });
-};
 
 starRadios.forEach(radio => {
     if (!(radio instanceof HTMLInputElement)) return;
@@ -47,8 +45,9 @@ starRadios.forEach(radio => {
             if (r instanceof HTMLInputElement && r.value === selectedValue) {
                 r.checked = true;
             }
-            updateBigStar(selectedValue);
         });
+
+        updateBigStar(selectedValue);
     });
 
     // Target the visible label (or fall back to input)
@@ -66,12 +65,28 @@ starRadios.forEach(radio => {
 });
 
 
-// ==========================================================================
-// Update the Average Rating Display and the User Rating Button
-// ==========================================================================
+/**
+ * Clear the rating or review form as well as clear the big stars values
+ * @param {NodeListOf<Element>} inputs
+ */
+function clearForm(inputs) {
+    inputs.forEach(field => {
+        if (field instanceof HTMLInputElement || field instanceof HTMLTextAreaElement) {
+            field.value = "";
+        }
+
+        if (field instanceof HTMLInputElement && field.type === 'radio') {
+            field.checked = false;
+        }
+    });
+
+    // Reset the big star as well
+    updateBigStar();
+}
+
 
 /**
- * Applies average rating and user rating HTML.
+ * Update the Average Rating Display and the User Rating Button
  *
  * @param {number} user_rating
  * @param {number} avg_rating
