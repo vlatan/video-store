@@ -154,7 +154,7 @@
 
 					{{- $userRating := .CurrentPost.UserActions.Review.Rating -}}
 
-					<!-- User Rating Button -->
+					<!-- Open user rating dialog button -->
 					<button {{ if not .CurrentUser.IsAuthenticated }} data-modal="login" {{ end }} type="button"
 						id="btn-open-rate" class="btn-open-post-dialog" aria-haspopup="dialog">
 						{{ if $userRating }}

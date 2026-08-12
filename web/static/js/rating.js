@@ -1,4 +1,108 @@
 /**
+ *  Get initial state from HTML accross all the rating/review dialogs, forms and buttons
+ */
+function getInitialState() {
+    const checked = document.querySelector('input[name="rating"]:checked');
+    const avgRatingDisplay = document.querySelector('.avg-rating-display');
+    const btnSubmitReview = document.getElementById('btn-submit-review');
+
+    return {
+        // Data State
+        userRating: checked instanceof HTMLInputElement ? checked.value : "?",
+        avgRating: avgRatingDisplay?.querySelector('.rating-avg-val')?.textContent.trim() || "0.0",
+        ratingCount: avgRatingDisplay?.querySelector('.rating-count-val')?.textContent.trim() || "0",
+        userHasReview: btnSubmitReview?.dataset.hasReview === 'true',
+
+        // Async Status Flags (Interim State)
+        isSubmitting: false,
+        isDeleting: false
+    };
+}
+
+// Single rate/review source of truth
+const ratingState = getInitialState();
+
+/**
+ *  Helper to mutate state and immediately trigger UI updates
+ * @param {Partial<typeof ratingState>} updates
+ */
+function setState(updates) {
+    Object.assign(ratingState, updates);
+    renderState();
+}
+
+/**
+ *  Helper to actually render the HTML values of the rating/review UI state
+ */
+function renderState() {
+    const isBusy = ratingState.isSubmitting || ratingState.isDeleting;
+
+    // Disable/Enable all action buttons during async operations
+    const buttonsToToggle = [
+        document.getElementById('btn-open-rate'),
+        document.querySelector('.btn-submit-rate'),
+        document.getElementById('btn-open-review-text'),
+        document.getElementById('btn-submit-review'),
+        document.getElementById('btn-review-delete-confirm')
+    ];
+
+    buttonsToToggle.forEach(btn => {
+        if (btn instanceof HTMLButtonElement) {
+            btn.disabled = isBusy;
+        }
+    });
+
+    // Dynamic Open Rate Button Inner HTML
+    const rateBtnOpen = document.getElementById('btn-open-rate');
+    if (rateBtnOpen) {
+        let html = `<span class="rating-user-star">&#9734;</span><span>Rate</span>`;
+        if (ratingState.userRating !== "?") {
+            html = `<span class="rating-user-star">&#9733;</span><span>${ratingState.userRating}</span>`;
+        }
+        rateBtnOpen.innerHTML = html;
+    }
+
+    // Dynamic Submit Rating Button Text
+    const rateBtnSubmit = document.querySelector('.btn-submit-rate');
+    if (rateBtnSubmit) {
+        if (ratingState.isSubmitting) {
+            rateBtnSubmit.textContent = 'Posting...';
+        } else {
+            rateBtnSubmit.textContent = ratingState.userRating !== "?" ? 'Update' : 'Rate';
+        }
+    }
+
+    // Dynamic Open Review Button Inner Text
+    const reviewOpenBtnText = document.getElementById('btn-open-review-text');
+    if (reviewOpenBtnText) {
+        let text = "Post Review"
+        if (ratingState.userHasReview) text = "Update Review";
+        reviewOpenBtnText.innerText = text;
+    }
+
+    // Dynamic Submit Review Button Inner Text
+    const btnSubmitReview = document.getElementById('btn-submit-review');
+    if (btnSubmitReview) {
+        if (ratingState.isSubmitting) {
+            btnSubmitReview.textContent = 'Posting...';
+        } else {
+            btnSubmitReview.textContent = ratingState.userHasReview ? 'Update' : 'Submit';
+            btnSubmitReview.dataset.hasReview = String(ratingState.userHasReview);
+        }
+    }
+
+    // Dynamic Init Delete Review Button
+    const btnDeleteInit = document.getElementById('btn-review-delete-init');
+    if (btnDeleteInit) btnDeleteInit.hidden = !ratingState.userHasReview;
+
+    // Dynamic Delete Review Button Text
+    const btnDeleteConfirm = document.getElementById('btn-review-delete-confirm');
+    if (btnDeleteConfirm) {
+        btnDeleteConfirm.textContent = ratingState.isDeleting ? 'Deleting...' : 'Delete';
+    }
+}
+
+/**
  * Updates big star elements.
  * Expects "?" or an integer between 1 and 10.
  * @param {string|number} [val="?"]
@@ -93,7 +197,7 @@ function updateRatingHTML(user_rating, avg_rating, rating_count) {
     avg_rating = Number(avg_rating);
     rating_count = Number(rating_count);
 
-    if (!Number.isFinite(user_rating) || user_rating <= 0 || user_rating > 10) {
+    if (!Number.isInteger(user_rating) || user_rating <= 0 || user_rating > 10) {
         throw new Error("user rating can't be <= 0 or > 10");
     }
     if (!Number.isFinite(avg_rating) || avg_rating < 0 || avg_rating > 10) {
@@ -135,7 +239,7 @@ function updateRatingHTML(user_rating, avg_rating, rating_count) {
 
     // Transform the user rating button
     if (rateBtnOpen) {
-        rateBtnOpen.innerHTML = `<span class="rating-user-star">&#9733;</span> ${user_rating}`;
+        rateBtnOpen.innerHTML = `<span class="rating-user-star">&#9733;</span><span>${user_rating}</span>`;
     }
 }
 
@@ -443,11 +547,9 @@ document.querySelectorAll('.review-section').forEach(s => {
             const reviewInDom = document.getElementById("current-user-review");
             reviewInDom?.remove();
 
-            // TODO: Update the average rating with updateRatingHTML(), 
+            // TODO: Update the average rating. Call updateRatingHTML() with new values, 
             // meaning the request neeeds to return the new average and count here too.
-
             // TODO: Update the review count in the reviews list header, decrease by one
-            // TODO: Reset the big star value in the review form as well as in the rating form.
 
             // Clear the rating form
             const rateForm = document.querySelector('.rate-form');
