@@ -54,7 +54,7 @@ function renderState() {
 
     // Dynamic Open Rate Button Inner HTML
     const rateBtnOpen = document.getElementById('btn-open-rate');
-    if (rateBtnOpen) {
+    if (rateBtnOpen && !ratingState.isSubmitting) {
         let html = `<span class="rating-user-star">&#9734;</span><span>Rate</span>`;
         if (ratingState.userRating !== "?") {
             html = `<span class="rating-user-star">&#9733;</span><span>${ratingState.userRating}</span>`;
@@ -74,7 +74,7 @@ function renderState() {
 
     // Dynamic Open Review Button Inner Text
     const reviewOpenBtnText = document.getElementById('btn-open-review-text');
-    if (reviewOpenBtnText) {
+    if (reviewOpenBtnText && !ratingState.isSubmitting) {
         let text = "Post Review"
         if (ratingState.userHasReview) text = "Update Review";
         reviewOpenBtnText.innerText = text;
@@ -93,7 +93,7 @@ function renderState() {
 
     // Dynamic Init Delete Review Button
     const btnDeleteInit = document.getElementById('btn-review-delete-init');
-    if (btnDeleteInit) btnDeleteInit.hidden = !ratingState.userHasReview;
+    if (btnDeleteInit && !ratingState.isDeleting) btnDeleteInit.hidden = !ratingState.userHasReview;
 
     // Dynamic Delete Review Button Text
     const btnDeleteConfirm = document.getElementById('btn-review-delete-confirm');
@@ -248,12 +248,9 @@ document.querySelectorAll('.rating-section').forEach(widget => {
     const rateForm = widget.querySelector('.rate-form');
     const rateBtnOpen = widget.querySelector('#btn-open-rate');
     const rateBtnClose = widget.querySelector('#btn-close-rate');
-    const rateBtnSubmit = widget.querySelector('.btn-submit-rate');
-    let originalrateBtnSubmitText = rateBtnSubmit?.textContent.trim() || 'Rate';
 
     if (!(rateDialog instanceof HTMLDialogElement)) return;
     if (!(rateForm instanceof HTMLFormElement)) return;
-    if (!(rateBtnSubmit instanceof HTMLButtonElement && rateBtnSubmit.type === 'submit')) return;
 
     rateBtnOpen?.addEventListener('click', () => rateDialog.showModal());
     rateBtnClose?.addEventListener('click', () => rateDialog.close());
@@ -275,8 +272,7 @@ document.querySelectorAll('.rating-section').forEach(widget => {
             rating: Number(formData.get('rating') || 0)
         };
 
-        rateBtnSubmit.disabled = true;
-        rateBtnSubmit.textContent = 'Posting...';
+        setState({ isSubmitting: true });
         rateDialog.close();
 
         try {
@@ -287,15 +283,20 @@ document.querySelectorAll('.rating-section').forEach(widget => {
             // Update the rating HTML
             updateAvgRatingHTML(payload.rating, result.avg_rating, result.rating_count)
 
-            // The request went through, change the button text
-            originalrateBtnSubmitText = "Update";
+            // Set new state
+            setState({
+                userRating: String(payload.rating),
+                avgRating: result.avg_rating,
+                ratingCount: result.rating_count
+            });
+
+            // Show toast message
             setAlert("Post rated");
         } catch (error) {
             console.error("Failed to fetch or parse JSON:", error);
             setAlert("Something went wrong!");
         } finally {
-            rateBtnSubmit.disabled = false;
-            rateBtnSubmit.textContent = originalrateBtnSubmitText;
+            setState({ isSubmitting: false });
         }
     });
 });
@@ -310,24 +311,13 @@ document.querySelectorAll('.review-section').forEach(s => {
     const reviewForm = s.querySelector('.review-form');
     const reviewsList = s.querySelector('#reviews-list');
     const reviewOpenBtn = s.querySelector('#btn-open-review');
-    const reviewOpenBtnText = s.querySelector('#btn-open-review-text');
-    let originalreviewOpenBtnText = reviewOpenBtnText?.textContent.trim() || 'Post Review';
     const reviewCloseBtn = s.querySelector('#btn-close-review');
     const reviewSubmitBtn = s.querySelector('#btn-submit-review');
-    let originalreviewBtnSubmitText = reviewSubmitBtn?.textContent.trim() || 'Submit';
-    const btnDeleteInit = s.querySelector('#btn-review-delete-init');
     const reviewError = s.querySelector('#review-error');
 
     if (!(reviewDialog instanceof HTMLDialogElement)) return;
     if (!(reviewForm instanceof HTMLFormElement)) return;
-    if (!(reviewOpenBtnText instanceof HTMLElement)) return;
     if (!(reviewSubmitBtn instanceof HTMLButtonElement && reviewSubmitBtn.type === 'submit')) return;
-    if (!(btnDeleteInit instanceof HTMLButtonElement && btnDeleteInit.type === 'button')) return;
-
-    // We'll need the rate button submit value too
-    const rateBtnSubmit = document.querySelector('.btn-submit-rate');
-    if (!(rateBtnSubmit instanceof HTMLButtonElement && rateBtnSubmit.type === 'submit')) return;
-    let originalrateBtnSubmitText = rateBtnSubmit?.textContent.trim() || 'Rate';
 
     const showError = (msg = "") => {
         if (!(reviewError instanceof HTMLElement)) return;
@@ -370,15 +360,7 @@ document.querySelectorAll('.review-section').forEach(s => {
             rating: Number(formData.get('rating') || 0)
         };
 
-        // Disable the rate button
-        rateBtnSubmit.disabled = true;
-        rateBtnSubmit.textContent = 'Posting...';
-
-        // Disable the review button
-        reviewSubmitBtn.disabled = true;
-        reviewSubmitBtn.textContent = 'Posting...';
-
-        // Close the dialog
+        setState({ isSubmitting: true });
         reviewDialog.close();
 
         try {
@@ -461,21 +443,18 @@ document.querySelectorAll('.review-section').forEach(s => {
             // Update the user rating and average rating HTML
             updateAvgRatingHTML(payload.rating, result.stats.avg_rating, result.stats.rating_count)
 
-            // The request went through, change buttons
-            originalrateBtnSubmitText = "Update";
-            originalreviewOpenBtnText = "Update Review";
-            originalreviewBtnSubmitText = "Update";
-            reviewSubmitBtn.dataset.hasReview = 'true';
-            btnDeleteInit.hidden = false;
+            // Set new state
+            setState({
+                userRating: String(payload.rating),
+                avgRating: result.avg_rating,
+                ratingCount: result.rating_count,
+                userHasReview: true
+            });
         } catch (err) {
             console.error("Failed to fetch or parse JSON:", err);
             setAlert("Something went wrong!");
         } finally {
-            rateBtnSubmit.disabled = false;
-            rateBtnSubmit.textContent = originalrateBtnSubmitText;
-            reviewSubmitBtn.disabled = false;
-            reviewSubmitBtn.textContent = originalreviewBtnSubmitText;
-            reviewOpenBtnText.textContent = originalreviewOpenBtnText;
+            setState({ isSubmitting: false });
         }
     });
 });
@@ -527,10 +506,7 @@ document.querySelectorAll('.review-section').forEach(s => {
 
     btnDeleteConfirm?.addEventListener('click', async () => {
 
-        // Disable the delete and submit buttons and close the review dialog
-        btnDeleteConfirm.disabled = true;
-        btnDeleteConfirm.textContent = 'Deleting...';
-        reviewSubmitBtn.disabled = true;
+        setState({ isDeleting: true });
         reviewDialog.close();
 
         try {
@@ -544,6 +520,8 @@ document.querySelectorAll('.review-section').forEach(s => {
 
             // TODO: Update the average rating. Call updateRatingHTML() with new values, 
             // meaning the request neeeds to return the new average and count here too.
+            // If those values are zeros than the element needs to be removed.
+
             // TODO: Update the review count in the reviews list header, decrease by one
 
             // Clear the rating form
@@ -555,28 +533,18 @@ document.querySelectorAll('.review-section').forEach(s => {
             const reviewFormImputs = reviewForm.querySelectorAll("input, select, textarea");
             clearForm(reviewFormImputs);
 
-            // The request went through, change buttons
-            originalrateBtnSubmitText = "Rate";
-            originalreviewOpenBtnText = "Post Review";
-            originalreviewBtnSubmitText = "Post";
-            reviewSubmitBtn.dataset.hasReview = 'false';
-            btnDeleteInit.hidden = true;
+            // Set new state
+            setState({
+                userRating: "?",
+                userHasReview: false
+            });
         } catch (error) {
             console.error('Review deletion failed', error);
             setAlert("Something went wrong!");
         } finally {
-            // Reset the state of the buttons and texts
             confirmState.hidden = true;
             defaultState.hidden = false;
-
-            rateBtnSubmit.disabled = false;
-            rateBtnSubmit.textContent = originalrateBtnSubmitText;
-
-            reviewSubmitBtn.disabled = false;
-            reviewSubmitBtn.textContent = originalreviewBtnSubmitText;
-
-            btnDeleteConfirm.disabled = false;
-            reviewOpenBtnText.textContent = originalreviewOpenBtnText;
+            setState({ isDeleting: false });
         }
     });
 });
