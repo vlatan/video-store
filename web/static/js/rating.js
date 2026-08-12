@@ -437,8 +437,7 @@ document.querySelectorAll('.review-section').forEach(s => {
             // meaning the request neeeds to return the new average and count here too.
 
             // TODO: Update the review count in the reviews list header, decrease by one
-            // TODO: Reset the big star value in the review form.
-            // TODO: Reset the rating button in the dialog too.
+            // TODO: Reset the big star value in the review form as well as in the rating form.
 
             // Clear the rating form
             const rateForm = document.querySelector('.rate-form');
