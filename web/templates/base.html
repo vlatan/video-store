@@ -26,7 +26,7 @@
 	<link rel="manifest" href='{{ .AddVersion "/static/favicons/site.webmanifest" }}'>
 
 	{{ block "meta" . }}
-	<link rel="canonical" href="{{ .CanonicalURL }}" />
+	<link rel="canonical" href="{{ .BaseCanonicalURL }}" />
 	<meta property='og:site_name' content='{{ .Config.AppName }}'>
 	<meta name='twitter:card' content='summary_large_image'>
 	<meta property="twitter:domain" content="{{ .Config.Domain }}">
@@ -261,9 +261,6 @@
 			<a class="nav-item privacy" href="{{ .Config.Protocol }}://{{ .Config.Domain }}/page/privacy/">Privacy</a>
 		</footer>
 	</div>
-
-	<a href="?v=ymarncqvsthoprvenygihg" rel="nofollow" style="display:none" class="visually-hidden"
-		aria-hidden="true">Ad</a>
 
 	{{ block "scripts" . }}
 	<script defer src='{{ .AddVersion "/static/js/shared.js" }}'></script>
