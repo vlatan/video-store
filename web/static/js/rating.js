@@ -518,12 +518,6 @@ document.querySelectorAll('.review-section').forEach(s => {
             const reviewInDom = document.getElementById("current-user-review");
             reviewInDom?.remove();
 
-            // TODO: Update the average rating. Call updateRatingHTML() with new values, 
-            // meaning the request neeeds to return the new average and count here too.
-            // If those values are zeros than the element needs to be removed.
-
-            // TODO: Update the review count in the reviews list header, decrease by one
-
             // Clear the rating form
             const rateForm = document.querySelector('.rate-form');
             const rateFormInputs = rateForm?.querySelectorAll("input, select, textarea");

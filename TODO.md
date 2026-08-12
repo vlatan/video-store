@@ -1,11 +1,16 @@
 * Examine Cloudflare to see if legit traffic is not blocked
 
 * Build the frontend and backend review system.
-  The user should be able to delete a review or a rating.
-  Include delete button on the modals and add edit/delete buttons on the review card.
-  On deletion inline the deletion exalplanation and confirmation in the modals with swapping the modal footer.
-  If a review is deleted we remove it from the list if it's on the first page.
-  Don't forget to change the state of the current-user-id and datasets in JS.
+
+  Incorporate updating or removing avg HTML in the render state.
+  Incorporate updating or removing the review list header in the render state.
+  Incorporate the clearing of the forms in the render state.
+  Implement the backend to delete a review, return the newly calculated avg rating and count.
+  Decide whether to pass rating values in the state as numbers or strings.
+
+  Add delete button on the rating modal with the same logic as the review modal.
+  Implement the backend to delete a rating, return the newly calculated avg rating and count.
+  Decide whether to show the rewiew modal on rating click if the user has review.
 
 * Make the checkmarks on the like/save green or yellow
 * Add close button to login menu
