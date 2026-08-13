@@ -5,12 +5,14 @@ function getInitialState() {
     const checked = document.querySelector('input[name="rating"]:checked');
     const avgRatingDisplay = document.querySelector('.avg-rating-display');
     const btnSubmitReview = document.getElementById('btn-submit-review');
+    const reviewCount = document.getElementById('review-count');
 
     return {
         // Data State
         userRating: checked instanceof HTMLInputElement ? checked.value : "?",
         avgRating: avgRatingDisplay?.querySelector('.rating-avg-val')?.textContent.trim() || "0.0",
         ratingCount: avgRatingDisplay?.querySelector('.rating-count-val')?.textContent.trim() || "0",
+        numReviews: reviewCount?.textContent.trim() || "0",
         userHasReview: btnSubmitReview?.dataset.hasReview === 'true',
 
         // Async Status Flags (Interim State)
