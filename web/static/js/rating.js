@@ -12,7 +12,7 @@ function getInitialState() {
         userRating: checked instanceof HTMLInputElement ? checked.value : "?",
         avgRating: avgRatingDisplay?.querySelector('.rating-avg-val')?.textContent.trim() || "0.0",
         ratingCount: avgRatingDisplay?.querySelector('.rating-count-val')?.textContent.trim() || "0",
-        reviewCount: parseInt(reviewCount?.textContent.trim() || "0", 10),
+        reviewCount: parseInt(reviewCount?.textContent || "0", 10),
         userHasReview: btnSubmitReview?.dataset.hasReview === 'true',
 
         // Async Status Flags (Interim State)
@@ -220,7 +220,6 @@ function upsertAvgRatingHTML(avg_rating, rating_count) {
         return;
     }
 
-
     const votesText = rating_count === 1 ? "vote" : "votes";
     const avgRatingHTML = `
         <div class="btn-open-post-dialog avg-rating-display">
@@ -241,7 +240,6 @@ function upsertAvgRatingHTML(avg_rating, rating_count) {
         </div>
     `;
 
-
     // Upsert the average rating display
     const rateBtnOpen = document.getElementById('btn-open-rate');
     if (avgRatingDisplay) {
@@ -254,11 +252,10 @@ function upsertAvgRatingHTML(avg_rating, rating_count) {
 /**
  * Update the reviews header
  *
- * @param {number|string} review_count
+ * @param {number} review_count
  */
 function updatetReviewsHeader(review_count) {
 
-    review_count = Number(review_count);
     if (!Number.isInteger(review_count) || review_count < 0) {
         throw new Error("review count must be a non-negative integer");
     }
