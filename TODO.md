@@ -1,6 +1,9 @@
 * Examine Cloudflare to see if legit traffic is not blocked
 
 * Build the frontend and backend review system.
+  Fix confirmation warning text on rating delete.
+  Add clear forms to the render state.
+  Maybe avoid repetetion in deleting rating/review in JS.
   Add delete button on the rating modal with the same logic as the review modal.
   Decide whether to show the rewiew modal on rating click if the user has review.
 

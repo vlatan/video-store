@@ -457,29 +457,82 @@ h1.video-title {
     -webkit-text-stroke: 0;
 }
 
-button.btn-submit-rate {
+
+/* ############# Rate Form Buttons ############# */
+
+#rate-actions-default {
     width: 100%;
-    padding: 12px 18px;
-    border-radius: 25px;
-    border: none;
-    font-size: 0.85rem;
-    font-weight: bold;
-    cursor: pointer;
-    background: var(--yellow-star-color);
-    color: #000;
-    transition: background 0.2s, color 0.2s, opacity 0.2s;
 }
 
-button.btn-submit-rate:hover:not(:disabled) {
+.rate-form-footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-top: 1px solid var(--secondary-border-color);
+    padding-top: 2rem;
+    width: 100%;
+}
+
+.rate-form-error,
+.rate-warning-text {
+    color: var(--orange);
+    font-size: 0.875rem;
+}
+
+.rate-btn-group {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.btn-rate {
+    width: 100%;
+    padding: 0.6rem 1.2rem;
+    border-radius: 1rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: background-color 0.2s, color 0.2s, opacity 0.2s;
+}
+
+.btn-submit-rate {
+    background: var(--yellow-star-color);
+    color: #000;
+}
+
+.btn-submit-rate:hover:not(:disabled) {
     background: #e0b415;
 }
 
-button.btn-submit-rate:disabled,
-.rate-form:invalid button.btn-submit-rate {
+.btn-submit-rate:disabled,
+.rate-form:invalid .btn-submit-rate {
     background: #333;
     color: #777;
     pointer-events: none;
     cursor: not-allowed;
+}
+
+.btn-rate-danger {
+    background-color: #dc2626;
+    color: white;
+}
+
+.btn-rate-danger:hover {
+    background-color: #b91c1c;
+}
+
+.btn-rate-secondary {
+    background-color: #ffffff;
+    color: #374151;
+    border-color: #d1d5db;
+}
+
+.btn-rate-secondary:hover {
+    background-color: #f9fafb;
 }
 
 
@@ -509,10 +562,10 @@ button.btn-submit-rate:disabled,
 }
 
 .btn-review {
-    padding: 0.5rem 0.875rem;
-    border-radius: 6px;
-    font-size: 0.8rem;
-    font-weight: 500;
+    padding: 0.6rem 1.2rem;
+    border-radius: 1rem;
+    font-size: 0.85rem;
+    font-weight: 700;
     cursor: pointer;
     border: 1px solid transparent;
     transition: background-color 0.2s, color 0.2s, opacity 0.2s;
@@ -521,7 +574,6 @@ button.btn-submit-rate:disabled,
 .btn-submit-review {
     background: var(--yellow-star-color);
     color: #000;
-    font-weight: bold;
 }
 
 .btn-submit-review:hover:not(:disabled) {

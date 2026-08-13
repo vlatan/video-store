@@ -200,9 +200,37 @@
 								{{ end }}
 							</fieldset>
 
-							<button type="submit" class="btn-submit-rate">
-								{{ if $userRating }}Update{{ else }}Rate{{ end }}
-							</button>
+							<!-- Default Rate Buttons State -->
+							<div id="rate-actions-default">
+								<div class="rate-form-footer">
+									<span id="rate-error" class="rate-form-error" hidden></span>
+									<div class="rate-btn-group">
+										<button type="button" id="btn-rate-delete-init" class="btn-rate btn-rate-danger"
+											{{ if not $userRating }}hidden{{ end }}>Delete</button>
+										<button type="submit" id="btn-submit-rate" class="btn-rate btn-submit-rate">
+											{{ if $userRating }}Update{{ else }}Rate{{ end }}
+										</button>
+									</div>
+								</div>
+							</div>
+
+							<!-- Confirmation Rate Buttons State -->
+							<div id="rate-actions-confirm" hidden>
+								<div class="rate-form-footer">
+									<span id="rate-error-confirm" class="rate-form-error" hidden></span>
+									<span class="rate-warning-text">
+										Are you sure? This will delete your rating and review.
+									</span>
+									<div class="rate-btn-group">
+										<button type="button" id="btn-rate-delete-cancel"
+											class="btn-rate btn-rate-secondary">Cancel</button>
+										<button type="button" id="btn-rate-delete-confirm"
+											class="btn-rate btn-rate-danger"
+											data-video-id="{{ .CurrentPost.VideoID }}">Confirm</button>
+									</div>
+								</div>
+							</div>
+
 						</form>
 					</dialog>
 					{{ end }}
