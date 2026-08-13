@@ -59,9 +59,9 @@ function renderState() {
         upsertAvgRatingHTML(ratingState.avgRating, ratingState.ratingCount);
     }
 
-    // Dynamic Open Rate Button Inner HTML
+    // Dynamic Open Rating Dialog Button
     const rateBtnOpen = document.getElementById('btn-open-rate');
-    if (rateBtnOpen && !ratingState.isSubmitting) {
+    if (rateBtnOpen && !isBusy) {
         let html = `<span class="rating-user-star">&#9734;</span><span>Rate</span>`;
         if (ratingState.userRating !== "?") {
             html = `<span class="rating-user-star">&#9733;</span><span>${ratingState.userRating}</span>`;
@@ -69,7 +69,7 @@ function renderState() {
         rateBtnOpen.innerHTML = html;
     }
 
-    // Dynamic Submit Rating Button Text
+    // Dynamic Submit Rating Button
     const rateBtnSubmit = document.querySelector('.btn-submit-rate');
     if (rateBtnSubmit) {
         if (ratingState.isSubmitting) {
@@ -79,15 +79,15 @@ function renderState() {
         }
     }
 
-    // Dynamic Open Review Button Inner Text
+    // Dynamic Open Review Dialog Button
     const reviewOpenBtnText = document.getElementById('btn-open-review-text');
-    if (reviewOpenBtnText && !ratingState.isSubmitting) {
+    if (reviewOpenBtnText && !isBusy) {
         let text = "Post Review"
         if (ratingState.userHasReview) text = "Update Review";
         reviewOpenBtnText.textContent = text;
     }
 
-    // Dynamic Submit Review Button Inner Text
+    // Dynamic Submit Review Button
     const btnSubmitReview = document.getElementById('btn-submit-review');
     if (btnSubmitReview) {
         if (ratingState.isSubmitting) {
@@ -100,9 +100,9 @@ function renderState() {
 
     // Dynamic Init Delete Review Button
     const btnDeleteInit = document.getElementById('btn-review-delete-init');
-    if (btnDeleteInit && !ratingState.isDeleting) btnDeleteInit.hidden = !ratingState.userHasReview;
+    if (btnDeleteInit && !isBusy) btnDeleteInit.hidden = !ratingState.userHasReview;
 
-    // Dynamic Delete Review Button Text
+    // Dynamic Delete Review Button
     const btnDeleteConfirm = document.getElementById('btn-review-delete-confirm');
     if (btnDeleteConfirm) {
         btnDeleteConfirm.textContent = ratingState.isDeleting ? 'Deleting...' : 'Delete';
