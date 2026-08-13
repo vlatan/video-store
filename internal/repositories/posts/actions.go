@@ -115,6 +115,63 @@ func (r *Repository) Rate(ctx context.Context, rating uint8, userID int, videoID
 	return rs, nil
 }
 
+// DeleteRating deletes user rating and by cascade deletes their review too.
+// Returns updated rating stats.
+func (r *Repository) DeleteRating(
+	ctx context.Context,
+	userID int,
+	videoID string) (models.RatingStats, error) {
+
+	var zero, rs models.RatingStats
+
+	// Start trannsaction
+	tx, err := r.db.Pool.Begin(ctx)
+	if err != nil {
+		return zero, err
+	}
+
+	// Rollback if something goes wrong.
+	// Release the connection in any case.
+	defer func() {
+		rbErr := tx.Rollback(ctx)
+		if rbErr != nil && !errors.Is(rbErr, pgx.ErrTxClosed) {
+			slog.ErrorContext(
+				ctx, "transaction rollback on delete user rating failed",
+				"userId", userID,
+				"postId", videoID,
+				"error", rbErr,
+			)
+		}
+	}()
+
+	query, err := r.GetQuery("delete_rating.sql", nil)
+	if err != nil {
+		return zero, err
+	}
+
+	var postId int64
+	err = tx.QueryRow(ctx, query, userID, videoID).Scan(&postId)
+	if err != nil {
+		return zero, err
+	}
+
+	query = `
+		SELECT ROUND(AVG(rating), 2)::float8, COUNT(*)
+		FROM post_rating WHERE post_id = $1
+	`
+	err = tx.QueryRow(ctx, query, postId).Scan(&rs.Avg, &rs.Count)
+	if err != nil {
+		return zero, err
+	}
+
+	// Commit the changes
+	if err := tx.Commit(ctx); err != nil {
+		return zero, err
+	}
+
+	return rs, nil
+}
+
 // Review records user's post rating and review.
 // Returns a map with review data and ratings stats for the post.
 func (r *Repository) Review(
