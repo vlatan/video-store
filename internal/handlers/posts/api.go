@@ -1,13 +1,11 @@
 package posts
 
 import (
-	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
 	"slices"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/utils"
@@ -294,7 +292,7 @@ func (s *Service) PostReviewsAPI(w http.ResponseWriter, r *http.Request) {
 	s.ui.WriteJSON(w, r, reviews)
 }
 
-// Perform an action on a video
+// PostActionAPI performs POST action on a video
 func (s *Service) PostActionAPI(w http.ResponseWriter, r *http.Request) {
 
 	// Validate the YT ID
@@ -306,7 +304,7 @@ func (s *Service) PostActionAPI(w http.ResponseWriter, r *http.Request) {
 
 	// Validate the action
 	action := r.PathValue("action")
-	allowedActions := []string{"like", "unlike", "fave", "unfave", "rate", "review"}
+	allowedActions := []string{"like", "fave", "rate", "review"}
 	if !slices.Contains(allowedActions, action) {
 		slog.InfoContext(
 			r.Context(), "not a valid action on post",
@@ -322,12 +320,8 @@ func (s *Service) PostActionAPI(w http.ResponseWriter, r *http.Request) {
 	switch action {
 	case "like":
 		s.handleLike(w, r, user.ID, videoID)
-	case "unlike":
-		s.handleUnlike(w, r, user.ID, videoID)
 	case "fave":
 		s.handleFave(w, r, user.ID, videoID)
-	case "unfave":
-		s.handleUnfave(w, r, user.ID, videoID)
 	case "rate":
 		s.handleRate(w, r, user.ID, videoID)
 	case "review":
@@ -337,8 +331,8 @@ func (s *Service) PostActionAPI(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// UnrateAPI handles a deletion of a user rating/review
-func (s *Service) UnrateAPI(w http.ResponseWriter, r *http.Request) {
+// DeleteActionAPI performs DELETE action on a video
+func (s *Service) DeleteActionAPI(w http.ResponseWriter, r *http.Request) {
 
 	// Validate the YT ID
 	videoID := r.PathValue("video")
@@ -347,26 +341,29 @@ func (s *Service) UnrateAPI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get the current user
-	user := models.GetUserFromContext(r)
-
-	ratingStats, err := s.postsRepo.Unrate(r.Context(), user.ID, videoID)
-
-	if errors.Is(err, pgx.ErrNoRows) {
+	// Validate the action
+	action := r.PathValue("action")
+	allowedActions := []string{"unlike", "unfave", "unrate"}
+	if !slices.Contains(allowedActions, action) {
+		slog.InfoContext(
+			r.Context(), "not a valid action on post",
+			"path", r.URL.Path,
+		)
 		http.NotFound(w, r)
 		return
 	}
 
-	if err != nil {
-		slog.ErrorContext(
-			r.Context(), "user failed to delete their video rating/review",
-			"path", r.URL.Path,
-			"userId", user.ID,
-			"error", err,
-		)
-		utils.HttpError(w, http.StatusInternalServerError)
-		return
-	}
+	// Get the current user
+	user := models.GetUserFromContext(r)
 
-	s.ui.WriteJSON(w, r, ratingStats)
+	switch action {
+	case "unlike":
+		s.handleUnlike(w, r, user.ID, videoID)
+	case "unfave":
+		s.handleUnfave(w, r, user.ID, videoID)
+	case "unrate":
+		s.handleUnrate(w, r, user.ID, videoID)
+	default:
+		utils.HttpError(w, http.StatusBadRequest)
+	}
 }

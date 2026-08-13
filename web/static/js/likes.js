@@ -51,11 +51,11 @@ const listenForAction = async (action = "", videoId = "") => {
         if (!actionElement) return;
         actionElement.classList.toggle(`${action}-no`);
         actionElement.classList.toggle(`${action}-yes`);
-        let currentAction = action;
-        if (actionElement.classList.contains(`${action}-no`)) currentAction = `un${action}`;
+        const unAction = actionElement.classList.contains(`${action}-no`);
+        const currentAction = unAction ? `un${action}` : action;
         const url = `/api/video/${videoId}/${currentAction}`;
         try {
-            const res = await postData(url);
+            const res = unAction ? await deleteData(url) : await postData(url);
             if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
             if (currentAction.includes('like')) { setLikeCounter(currentAction); return; }
             setFaveStatus(currentAction);

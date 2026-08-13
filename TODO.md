@@ -1,5 +1,4 @@
 * Examine Cloudflare to see if legit traffic is not blocked
-* Divide POST and DELETE post actions in handlers
 
 * Build the frontend and backend review system.
   Add delete button on the rating modal with the same logic as the review modal.
