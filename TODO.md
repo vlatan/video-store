@@ -2,7 +2,6 @@
 
 * Build the frontend and backend review system.
   Add delete button on the rating modal with the same logic as the review modal.
-  Implement the backend to delete a rating, return the newly calculated avg rating and count.
   Decide whether to show the rewiew modal on rating click if the user has review.
 
 * Make the checkmarks on the like/save green or yellow
