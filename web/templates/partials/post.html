@@ -67,7 +67,7 @@
 			<div class="metadata-block">
 				<h1 class="video-title" itemprop="name">{{ .CurrentPost.GetTitle }}</h1>
 				<div class="ui-inner-metadata-block">
-					<div class="social">
+					<div id="social-buttons" class="social" data-video-id="{{ .CurrentPost.VideoID }}">
 						{{ if .CurrentUser.IsAuthenticated }}
 						{{ if .CurrentPost.UserActions.Liked }}
 						<button class="like like-yes">
@@ -101,7 +101,6 @@
 							<span data-saves>Save</span>
 						</button>
 						{{ end }}
-
 					</div>
 				</div>
 			</div>
