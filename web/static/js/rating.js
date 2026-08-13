@@ -301,15 +301,13 @@ document.querySelectorAll('.rating-section').forEach(widget => {
     // Handle form submission
     rateForm?.addEventListener('submit', async (event) => {
         event.preventDefault();
-        const form = event.currentTarget;
-        if (!(form instanceof HTMLFormElement)) return;
 
-        if (!form.checkValidity()) {
-            form.reportValidity(); // shows the native browser bubble
+        if (!rateForm.checkValidity()) {
+            rateForm.reportValidity(); // shows the native browser bubble
             return;
         }
 
-        const formData = new FormData(form);
+        const formData = new FormData(rateForm);
         const payload = {
             ...Object.fromEntries(formData.entries()),
             rating: Number(formData.get('rating') || 0)
@@ -319,7 +317,7 @@ document.querySelectorAll('.rating-section').forEach(widget => {
         rateDialog.close();
 
         try {
-            const response = await postData(form.action, payload);
+            const response = await postData(rateForm.action, payload);
             if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
             const result = await response.json();
 
@@ -375,16 +373,14 @@ document.querySelectorAll('.review-section').forEach(s => {
 
     reviewForm.addEventListener('submit', async (event) => {
         event.preventDefault();
-        const form = event.currentTarget;
-        if (!(form instanceof HTMLFormElement)) return;
         clearError();
 
-        if (!form.checkValidity()) {
-            form.reportValidity(); // shows the native browser bubble
+        if (!reviewForm.checkValidity()) {
+            reviewForm.reportValidity(); // shows the native browser bubble
             return;
         }
 
-        const formData = new FormData(form);
+        const formData = new FormData(reviewForm);
         const headline = String(formData.get('headline') || '').trim();
         const content = String(formData.get('content') || '').trim();
         const rating = String(formData.get('rating') || '').trim();
@@ -404,7 +400,7 @@ document.querySelectorAll('.review-section').forEach(s => {
         reviewDialog.close();
 
         try {
-            const response = await postData(form.action, payload);
+            const response = await postData(reviewForm.action, payload);
             if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
             const result = await response.json();
 
@@ -512,13 +508,14 @@ document.querySelectorAll('.review-section').forEach(s => {
 
     btnDeleteConfirm?.addEventListener('click', async () => {
 
+        const videoId = btnDeleteConfirm.dataset.videoId;
         setState({ isDeleting: true });
         reviewDialog.close();
 
         try {
             // Send the request to the backend
-            // const response = await postData(reviewForm.action);
-            // if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+            const response = await deleteData(`/api/video/${videoId}/unrate`);
+            if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
 
             // Look for this review in the DOM and remove it if there
             const reviewInDom = document.getElementById("current-user-review");

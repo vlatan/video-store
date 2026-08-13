@@ -315,7 +315,8 @@
 								<button type="button" id="btn-review-delete-cancel"
 									class="btn-review btn-review-secondary">Cancel</button>
 								<button type="button" id="btn-review-delete-confirm"
-									class="btn-review btn-review-danger">Confirm</button>
+									class="btn-review btn-review-danger"
+									data-video-id="{{ .CurrentPost.VideoID }}">Confirm</button>
 							</div>
 						</div>
 					</div>
@@ -325,7 +326,7 @@
 			{{ end }}
 
 			<!-- Reviews List Header -->
-			<header class="reviews-header">
+			<header class=" reviews-header">
 				<div class="reviews-title-wrapper">
 					<span {{ if not .CurrentPost.Reviews.TotalNum }} style="display:none;" {{ end }}
 						id="review-count-wrapper">
@@ -364,7 +365,8 @@
 							<img src="{{ .User.LocalAvatarURL }}" class=" review-user-avatar" width="20" height="20"
 								loading="lazy" alt="{{ .User.Name }}">
 							<span itemprop="author" itemscope itemtype="https://schema.org/Person">
-								<span itemprop="name" class="review-user-name">{{ .User.Name }}</span>
+								<span itemprop="name" class="review-user-name">{{ .User.Name
+									}}</span>
 							</span>
 							<span itemprop="reviewRating" itemscope itemtype="https://schema.org/Rating"
 								class="review-user-rating">
@@ -374,7 +376,8 @@
 								<meta itemprop="bestRating" content="10">
 							</span>
 							<meta itemprop="datePublished" content="{{ .UpdatedAt }}">
-							<span class="review-date" data-utc-time="{{ .UpdatedAt }}">Loading date...</span>
+							<span class="review-date" data-utc-time="{{ .UpdatedAt }}">Loading
+								date...</span>
 						</div>
 						<h4 itemprop="name" class="review-headline">{{ .HTMLHeadline }}</h4>
 					</header>
