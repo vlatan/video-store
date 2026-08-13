@@ -350,7 +350,7 @@ func (s *Service) UnrateAPI(w http.ResponseWriter, r *http.Request) {
 	// Get the current user
 	user := models.GetUserFromContext(r)
 
-	ratingData, err := s.postsRepo.Unrate(r.Context(), user.ID, videoID)
+	ratingStats, err := s.postsRepo.Unrate(r.Context(), user.ID, videoID)
 
 	if errors.Is(err, pgx.ErrNoRows) {
 		http.NotFound(w, r)
@@ -368,5 +368,5 @@ func (s *Service) UnrateAPI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.ui.WriteJSON(w, r, ratingData)
+	s.ui.WriteJSON(w, r, ratingStats)
 }

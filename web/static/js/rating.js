@@ -4,14 +4,16 @@
 function getInitialState() {
     const checked = document.querySelector('input[name="rating"]:checked');
     const avgRatingDisplay = document.querySelector('.avg-rating-display');
+    const avgRating = avgRatingDisplay?.querySelector('.rating-avg-val');
+    const ratingCount = avgRatingDisplay?.querySelector('.rating-count-val');
     const btnSubmitReview = document.getElementById('btn-submit-review');
     const reviewCount = document.getElementById('review-count');
 
     return {
         // Data State
         userRating: checked instanceof HTMLInputElement ? checked.value : "?",
-        avgRating: avgRatingDisplay?.querySelector('.rating-avg-val')?.textContent.trim() || "0.0",
-        ratingCount: avgRatingDisplay?.querySelector('.rating-count-val')?.textContent.trim() || "0",
+        avgRating: parseFloat(avgRating?.textContent || "0.0"),
+        ratingCount: parseInt(ratingCount?.textContent || "0", 10),
         reviewCount: parseInt(reviewCount?.textContent || "0", 10),
         userHasReview: btnSubmitReview?.dataset.hasReview === 'true',
 
@@ -56,13 +58,11 @@ function renderState() {
         }
     });
 
-    // Update the average rating display
-    if (!isBusy && ratingState.avgRating && ratingState.ratingCount) {
+    // Update the average rating display and reviews header
+    if (!isBusy) {
         upsertAvgRatingHTML(ratingState.avgRating, ratingState.ratingCount);
+        updatetReviewsHeader(ratingState.reviewCount);
     }
-
-    // Update the reviews header
-    if (!isBusy) updatetReviewsHeader(ratingState.reviewCount);
 
     // Dynamic Open Rating Dialog Button
     const rateBtnOpen = document.getElementById('btn-open-rate');
@@ -108,7 +108,7 @@ function renderState() {
     // Dynamic Delete Review Button
     const btnDeleteConfirm = document.getElementById('btn-review-delete-confirm');
     if (btnDeleteConfirm) {
-        btnDeleteConfirm.textContent = ratingState.isDeleting ? 'Deleting...' : 'Delete';
+        btnDeleteConfirm.textContent = ratingState.isDeleting ? 'Deleting...' : 'Confirm';
     }
 }
 
@@ -135,7 +135,7 @@ const updateBigStars = (val = "?") => {
 
 
 /**
- * Listen rating stars radios change on check or hover and syncs rating state.
+ * Listen rating stars radios change on checked/hover and syncs rating state.
  */
 (() => {
 
@@ -197,8 +197,8 @@ function clearForm(inputs) {
 /**
  * Update or insert the average rating display
  *
- * @param {number|string} avg_rating
- * @param {number|string} rating_count
+ * @param {number} avg_rating
+ * @param {number} rating_count
  */
 function upsertAvgRatingHTML(avg_rating, rating_count) {
 
@@ -256,6 +256,7 @@ function upsertAvgRatingHTML(avg_rating, rating_count) {
  */
 function updatetReviewsHeader(review_count) {
 
+    review_count = Number(review_count);
     if (!Number.isInteger(review_count) || review_count < 0) {
         throw new Error("review count must be a non-negative integer");
     }
@@ -516,6 +517,7 @@ document.querySelectorAll('.review-section').forEach(s => {
             // Send the request to the backend
             const response = await deleteData(`/api/video/${videoId}/unrate`);
             if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+            const result = await response.json();
 
             // Look for this review in the DOM and remove it if there
             const reviewInDom = document.getElementById("current-user-review");
@@ -534,10 +536,15 @@ document.querySelectorAll('.review-section').forEach(s => {
             setState({
                 userRating: "?",
                 userHasReview: false,
+                avgRating: result.avg_rating,
+                ratingCount: result.rating_count,
                 reviewCount: ratingState.reviewCount - 1
             });
-        } catch (error) {
-            console.error('Review deletion failed', error);
+
+            // Show toast message
+            setAlert("Review deleted");
+        } catch (err) {
+            console.error("Failed to fetch or parse JSON:", err);
             setAlert("Something went wrong!");
         } finally {
             confirmState.hidden = true;

@@ -2,9 +2,6 @@
 * Divide POST and DELETE post actions in handlers
 
 * Build the frontend and backend review system.
-
-  Decide whether to pass rating values in the state as numbers or strings.
-
   Add delete button on the rating modal with the same logic as the review modal.
   Implement the backend to delete a rating, return the newly calculated avg rating and count.
   Decide whether to show the rewiew modal on rating click if the user has review.

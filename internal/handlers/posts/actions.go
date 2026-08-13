@@ -114,7 +114,7 @@ func (s *Service) handleRate(w http.ResponseWriter, r *http.Request, userID int,
 		return
 	}
 
-	ratingData, err := s.postsRepo.Rate(r.Context(), data.Rating, userID, videoID)
+	ratingStats, err := s.postsRepo.Rate(r.Context(), data.Rating, userID, videoID)
 
 	if errors.Is(err, pgx.ErrNoRows) {
 		http.NotFound(w, r)
@@ -132,7 +132,7 @@ func (s *Service) handleRate(w http.ResponseWriter, r *http.Request, userID int,
 		return
 	}
 
-	s.ui.WriteJSON(w, r, ratingData)
+	s.ui.WriteJSON(w, r, ratingStats)
 }
 
 // Handle a post favorite from user
