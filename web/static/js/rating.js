@@ -12,7 +12,7 @@ function getInitialState() {
         userRating: checked instanceof HTMLInputElement ? checked.value : "?",
         avgRating: avgRatingDisplay?.querySelector('.rating-avg-val')?.textContent.trim() || "0.0",
         ratingCount: avgRatingDisplay?.querySelector('.rating-count-val')?.textContent.trim() || "0",
-        numReviews: reviewCount?.textContent.trim() || "0",
+        reviewCount: parseInt(reviewCount?.textContent.trim() || "0", 10),
         userHasReview: btnSubmitReview?.dataset.hasReview === 'true',
 
         // Async Status Flags (Interim State)
@@ -61,6 +61,9 @@ function renderState() {
         upsertAvgRatingHTML(ratingState.avgRating, ratingState.ratingCount);
     }
 
+    // Update the reviews header
+    if (!isBusy) updatetReviewsHeader(ratingState.reviewCount);
+
     // Dynamic Open Rating Dialog Button
     const rateBtnOpen = document.getElementById('btn-open-rate');
     if (rateBtnOpen && !isBusy) {
@@ -84,9 +87,7 @@ function renderState() {
     // Dynamic Open Review Dialog Button
     const reviewOpenBtnText = document.getElementById('btn-open-review-text');
     if (reviewOpenBtnText && !isBusy) {
-        let text = "Post Review"
-        if (ratingState.userHasReview) text = "Update Review";
-        reviewOpenBtnText.textContent = text;
+        reviewOpenBtnText.textContent = ratingState.userHasReview ? "Update Review" : "Post Review";
     }
 
     // Dynamic Submit Review Button
@@ -194,7 +195,7 @@ function clearForm(inputs) {
 
 
 /**
- * Update the Average Rating Display and the User Rating Button
+ * Update or insert the average rating display
  *
  * @param {number|string} avg_rating
  * @param {number|string} rating_count
@@ -214,7 +215,10 @@ function upsertAvgRatingHTML(avg_rating, rating_count) {
 
     // Remove the average rating display altogether if no rating at all
     const avgRatingDisplay = document.querySelector('.avg-rating-display');
-    if (avg_rating === 0 && rating_count === 0) avgRatingDisplay?.remove();
+    if (avg_rating === 0 && rating_count === 0) {
+        avgRatingDisplay?.remove();
+        return;
+    }
 
 
     const votesText = rating_count === 1 ? "vote" : "votes";
@@ -244,6 +248,39 @@ function upsertAvgRatingHTML(avg_rating, rating_count) {
         avgRatingDisplay.outerHTML = avgRatingHTML;
     } else if (rateBtnOpen) {
         rateBtnOpen.insertAdjacentHTML('beforebegin', avgRatingHTML);
+    }
+}
+
+/**
+ * Update the reviews header
+ *
+ * @param {number|string} review_count
+ */
+function updatetReviewsHeader(review_count) {
+
+    review_count = Number(review_count);
+    if (!Number.isInteger(review_count) || review_count < 0) {
+        throw new Error("review count must be a non-negative integer");
+    }
+
+    const reviewCountWrapper = document.getElementById('review-count-wrapper')
+    const reviewsHeaderTitle = document.querySelector('.reviews-title-wrapper h3');
+
+    // Hide the review count and adjust the reviews list title
+    if (review_count === 0) {
+        if (reviewCountWrapper) reviewCountWrapper.style.display = 'none';
+        if (reviewsHeaderTitle) reviewsHeaderTitle.textContent = "No Reviews Yet";
+        return;
+    }
+
+    // Update the user reviews count and show it
+    const countSpan = document.getElementById('review-count');
+    if (countSpan) countSpan.textContent = String(review_count);
+    if (reviewCountWrapper) reviewCountWrapper.style.display = 'inline';
+
+    // Adjust the reviews list title
+    if (reviewsHeaderTitle) {
+        reviewsHeaderTitle.textContent = review_count > 1 ? "User Reviews" : "User Review";
     }
 }
 
@@ -396,16 +433,18 @@ document.querySelectorAll('.review-section').forEach(s => {
             // Look if the user has a review here at all
             const userHasReview = reviewSubmitBtn.dataset.hasReview === 'true';
 
-            if (reviewInDom) { // Review is in the DOM
+            if (reviewInDom) {
+                // Review is in the DOM, update it
                 reviewInDom.innerHTML = innerHTML;
                 reviewInDom.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 reviewInDom.classList.add('updated-review');
                 setTimeout(() => reviewInDom.classList.remove('updated-review'), 2000);
                 setAlert("Review updated");
             } else if (userHasReview) {
-                // Review isn't loaded in the DOM yet.
+                // Review isn't in the DOM, just inform the user it was updated
                 setAlert("Review updated");
-            } else { // New review, prepend to the list
+            } else {
+                // New review, prepend it to the list
                 const card = document.createElement('div');
                 card.className = 'review-card load-review';
                 card.id = "current-user-review";
@@ -416,28 +455,8 @@ document.querySelectorAll('.review-section').forEach(s => {
                 reviewsList?.prepend(card);
                 setAlert("Review posted");
 
-                // Update the user reviews counter
-                const countSpan = document.getElementById('review-count');
-                const numReviews = parseInt(countSpan?.textContent || "0", 10) + 1
-
-                // Adjust the reviews list header
-                const reviewsHeaderTitle = document.querySelector('.reviews-title-wrapper h3');
-                if (reviewsHeaderTitle) {
-                    if (numReviews === 1) {
-                        reviewsHeaderTitle.textContent = "User Review";
-                    } else if (numReviews > 1) {
-                        reviewsHeaderTitle.textContent = "User Reviews";
-                    }
-                }
-
-                if (countSpan) {
-                    countSpan.textContent = String(numReviews);
-                }
-
-                const reviewCountWrapper = document.getElementById('review-count-wrapper')
-                if (reviewCountWrapper) {
-                    reviewCountWrapper.style.display = 'inline';
-                }
+                // Increase the review counter
+                setState({ reviewCount: ratingState.reviewCount + 1 });
 
                 // Remove the class load-review after the animation.
                 // 'once: true' auto-removes the listener after it fires.
@@ -518,7 +537,11 @@ document.querySelectorAll('.review-section').forEach(s => {
             clearForm(reviewFormImputs);
 
             // Set new state
-            setState({ userRating: "?", userHasReview: false });
+            setState({
+                userRating: "?",
+                userHasReview: false,
+                reviewCount: ratingState.reviewCount - 1
+            });
         } catch (error) {
             console.error('Review deletion failed', error);
             setAlert("Something went wrong!");

@@ -2,7 +2,6 @@
 
 * Build the frontend and backend review system.
 
-  Incorporate updating or removing the review list header in the render state.
   Implement the backend to delete a review, return the newly calculated avg rating and count.
   Decide whether to pass rating values in the state as numbers or strings.
 
