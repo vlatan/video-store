@@ -32,7 +32,7 @@ function setState(updates) {
 }
 
 /**
- *  Helper to actually render the HTML values of the rating/review UI state
+ *  Renders the HTML values of the rating/review UI state
  */
 function renderState() {
     const isBusy = ratingState.isSubmitting || ratingState.isDeleting;
@@ -53,6 +53,11 @@ function renderState() {
             btn.disabled = isBusy;
         }
     });
+
+    // Update the average rating display
+    if (!isBusy && ratingState.avgRating && ratingState.ratingCount) {
+        upsertAvgRatingHTML(ratingState.avgRating, ratingState.ratingCount);
+    }
 
     // Dynamic Open Rate Button Inner HTML
     const rateBtnOpen = document.getElementById('btn-open-rate');
@@ -127,7 +132,7 @@ const updateBigStars = (val = "?") => {
 
 
 /**
- * Listen rating stars radios change on hover and syncs rating state.
+ * Listen rating stars radios change on check or hover and syncs rating state.
  */
 (() => {
 
@@ -189,25 +194,26 @@ function clearForm(inputs) {
 /**
  * Update the Average Rating Display and the User Rating Button
  *
- * @param {number} user_rating
- * @param {number} avg_rating
- * @param {number} rating_count
+ * @param {number|string} avg_rating
+ * @param {number|string} rating_count
  */
-function updateAvgRatingHTML(user_rating, avg_rating, rating_count) {
+function upsertAvgRatingHTML(avg_rating, rating_count) {
 
-    user_rating = Number(user_rating);
     avg_rating = Number(avg_rating);
     rating_count = Number(rating_count);
 
-    if (!Number.isInteger(user_rating) || user_rating <= 0 || user_rating > 10) {
-        throw new Error("user rating can't be <= 0 or > 10");
-    }
     if (!Number.isFinite(avg_rating) || avg_rating < 0 || avg_rating > 10) {
         throw new Error("avg rating must be a number between 0 and 10");
     }
+
     if (!Number.isInteger(rating_count) || rating_count < 0) {
         throw new Error("rating count must be a non-negative integer");
     }
+
+    // Remove the average rating display altogether if no rating at all
+    const avgRatingDisplay = document.querySelector('.avg-rating-display');
+    if (avg_rating === 0 && rating_count === 0) avgRatingDisplay?.remove();
+
 
     const votesText = rating_count === 1 ? "vote" : "votes";
     const avgRatingHTML = `
@@ -229,10 +235,9 @@ function updateAvgRatingHTML(user_rating, avg_rating, rating_count) {
         </div>
     `;
 
-    const avgRatingDisplay = document.querySelector('.avg-rating-display');
-    const rateBtnOpen = document.getElementById('btn-open-rate');
 
-    // Transform the average display
+    // Upsert the average rating display
+    const rateBtnOpen = document.getElementById('btn-open-rate');
     if (avgRatingDisplay) {
         avgRatingDisplay.outerHTML = avgRatingHTML;
     } else if (rateBtnOpen) {
@@ -281,9 +286,6 @@ document.querySelectorAll('.rating-section').forEach(widget => {
             const response = await postData(form.action, payload);
             if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
             const result = await response.json();
-
-            // Update the rating HTML
-            updateAvgRatingHTML(payload.rating, result.avg_rating, result.rating_count)
 
             // Set new state
             setState({
@@ -442,14 +444,11 @@ document.querySelectorAll('.review-section').forEach(s => {
                 }, { once: true });
             }
 
-            // Update the user rating and average rating HTML
-            updateAvgRatingHTML(payload.rating, result.stats.avg_rating, result.stats.rating_count)
-
             // Set new state
             setState({
                 userRating: String(payload.rating),
-                avgRating: result.avg_rating,
-                ratingCount: result.rating_count,
+                avgRating: result.stats.avg_rating,
+                ratingCount: result.stats.rating_count,
                 userHasReview: true
             });
         } catch (err) {
@@ -517,10 +516,7 @@ document.querySelectorAll('.review-section').forEach(s => {
             clearForm(reviewFormImputs);
 
             // Set new state
-            setState({
-                userRating: "?",
-                userHasReview: false
-            });
+            setState({ userRating: "?", userHasReview: false });
         } catch (error) {
             console.error('Review deletion failed', error);
             setAlert("Something went wrong!");
