@@ -25,6 +25,7 @@ func (a *App) RegisterRoutes() *App {
 	mux.HandleFunc("DELETE /video/{video}/delete", a.mw.IsAdmin(a.posts.BanPostHandler))
 	mux.HandleFunc("GET /api/video/{video}/reviews", a.posts.PostReviewsAPI)
 	mux.HandleFunc("POST /api/video/{video}/{action}", a.mw.IsAuthenticated(a.posts.PostActionAPI))
+	mux.HandleFunc("DELETE /api/video/{video}/unrate", a.mw.IsAuthenticated(a.posts.UnrateAPI))
 
 	// Categories
 	mux.HandleFunc("GET /category/{category}/{$}", a.posts.CategoryPostsHandler)

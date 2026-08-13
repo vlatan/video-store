@@ -1,11 +1,13 @@
 package posts
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
 	"slices"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/utils"
@@ -333,4 +335,38 @@ func (s *Service) PostActionAPI(w http.ResponseWriter, r *http.Request) {
 	default:
 		utils.HttpError(w, http.StatusBadRequest)
 	}
+}
+
+// UnrateAPI handles a deletion of a user rating/review
+func (s *Service) UnrateAPI(w http.ResponseWriter, r *http.Request) {
+
+	// Validate the YT ID
+	videoID := r.PathValue("video")
+	if validVideoID.FindStringSubmatch(videoID) == nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	// Get the current user
+	user := models.GetUserFromContext(r)
+
+	ratingData, err := s.postsRepo.DeleteRating(r.Context(), user.ID, videoID)
+
+	if errors.Is(err, pgx.ErrNoRows) {
+		http.NotFound(w, r)
+		return
+	}
+
+	if err != nil {
+		slog.ErrorContext(
+			r.Context(), "user failed to delete their video rating/review",
+			"path", r.URL.Path,
+			"userId", user.ID,
+			"error", err,
+		)
+		utils.HttpError(w, http.StatusInternalServerError)
+		return
+	}
+
+	s.ui.WriteJSON(w, r, ratingData)
 }
