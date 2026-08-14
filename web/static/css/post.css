@@ -132,7 +132,7 @@ h1.video-title {
 }
 
 .inner-metadata-block .nav-item {
-    color: var(--orange);
+    color: var(--blue-link-color);
 }
 
 .admin-buttons {
@@ -473,7 +473,7 @@ h1.video-title {
     justify-content: center;
     gap: 0.5rem;
     border-top: 1px solid var(--secondary-border-color);
-    padding-top: 2.25rem;
+    padding-top: 2.30rem;
     width: 100%;
 }
 
@@ -486,7 +486,7 @@ h1.video-title {
     background-color: var(--secondary-background-color);
     pointer-events: none;
     text-align: center;
-    color: var(--orange);
+    color: var(--orange-warning);
     font-size: 0.8rem;
 }
 
@@ -529,7 +529,6 @@ h1.video-title {
 .btn-rate-danger {
     background-color: #dc2626;
     color: white;
-    width: 100%;
 }
 
 .btn-rate-danger:hover {
@@ -540,7 +539,6 @@ h1.video-title {
     background-color: #ffffff;
     color: #374151;
     border-color: #d1d5db;
-    width: 100%;
 }
 
 .btn-rate-secondary:hover {
@@ -562,7 +560,7 @@ h1.video-title {
 .review-form-error,
 .review-warning-text {
     pointer-events: none;
-    color: var(--orange);
+    color: var(--orange-warning);
     font-size: 0.8rem;
 }
 
@@ -575,6 +573,7 @@ h1.video-title {
 }
 
 .btn-review {
+    min-width: 6rem;
     padding: 0.6rem 1.2rem;
     border-radius: 1rem;
     font-size: 0.85rem;

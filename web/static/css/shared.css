@@ -21,7 +21,7 @@
 	--img-hover-transition-duration: 0.3s;
 	--img-border-radius: 10px;
 	--yellow: rgb(245, 197, 24);
-	--orange: #f26123;
+	--orange-warning: #FB923C;
 
 	color-scheme: dark;
 }
@@ -499,7 +499,7 @@ a.nav-item:hover::after {
 }
 
 .nav-item.delete-account {
-	color: var(--orange);
+	color: var(--orange-warning);
 	font-weight: bold;
 	padding-top: 0.5rem;
 	border-top: 1px solid var(--primary-background-color);
@@ -832,7 +832,7 @@ button.cancel-button {
 }
 
 .privacy {
-	color: var(--orange);
+	color: var(--yellow);
 }
 
 
