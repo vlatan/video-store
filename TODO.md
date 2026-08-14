@@ -1,9 +1,7 @@
 * Examine Cloudflare to see if legit traffic is not blocked
 
 * Build the frontend and backend review system.
-  Fix confirmation warning text on rating delete.
   Maybe avoid repetetion in deleting rating/review in JS.
-  Decide whether to show the rewiew modal on rating click if the user has review.
 
 * Make the checkmarks on the like/save green or yellow
 * Add close button to login menu

@@ -364,7 +364,7 @@ h1.video-title {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 2rem;
+    gap: 2.25rem;
     padding: 80px 2rem 2.5rem 2rem;
     width: 420px;
     max-width: 100%;
@@ -460,24 +460,34 @@ h1.video-title {
 
 /* ############# Rate Form Buttons ############# */
 
-#rate-actions-default {
+#rate-actions-default,
+#rate-actions-confirm {
     width: 100%;
 }
 
 .rate-form-footer {
+    position: relative;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
     border-top: 1px solid var(--secondary-border-color);
-    padding-top: 2rem;
+    padding-top: 2.25rem;
     width: 100%;
 }
 
 .rate-form-error,
 .rate-warning-text {
+    position: absolute;
+    top: 0;
+    transform: translateY(-60%);
+    width: 100%;
+    background-color: var(--secondary-background-color);
+    pointer-events: none;
+    text-align: center;
     color: var(--orange);
-    font-size: 0.875rem;
+    font-size: 0.8rem;
 }
 
 .rate-btn-group {
@@ -519,6 +529,7 @@ h1.video-title {
 .btn-rate-danger {
     background-color: #dc2626;
     color: white;
+    width: 100%;
 }
 
 .btn-rate-danger:hover {
@@ -529,6 +540,7 @@ h1.video-title {
     background-color: #ffffff;
     color: #374151;
     border-color: #d1d5db;
+    width: 100%;
 }
 
 .btn-rate-secondary:hover {
@@ -544,13 +556,14 @@ h1.video-title {
     justify-content: space-between;
     gap: 0.5rem;
     border-top: 1px solid var(--secondary-border-color);
-    padding-top: 1.5rem;
+    padding-top: 2rem;
 }
 
 .review-form-error,
 .review-warning-text {
+    pointer-events: none;
     color: var(--orange);
-    font-size: 0.875rem;
+    font-size: 0.8rem;
 }
 
 .review-btn-group {
