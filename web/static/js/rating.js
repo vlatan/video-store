@@ -120,6 +120,17 @@ function renderState() {
     if (btnReviewDeleteConfirm) {
         btnReviewDeleteConfirm.textContent = ratingState.isDeleting ? 'Deleting...' : 'Confirm';
     }
+
+    // Clear the ratings - in all forms
+    const ratingRadios = document.querySelectorAll('input[name="rating"]');
+    if (!isBusy && ratingState.userRating === "?") {
+        clearInputs(ratingRadios);
+        updateBigStars();
+    }
+
+    // Clear the review headline and content - in all forms
+    const reviewInputs = document.querySelectorAll('input[name="headline"], textarea[name="content"]');
+    if (!isBusy && !ratingState.userHasReview) clearInputs(reviewInputs);
 }
 
 /**
@@ -186,7 +197,7 @@ const updateBigStars = (val = "?") => {
  * Clear the rating or review form as well as clear the big stars values
  * @param {NodeListOf<Element>} inputs
  */
-function clearForm(inputs) {
+function clearInputs(inputs) {
     inputs.forEach(field => {
         if (field instanceof HTMLTextAreaElement) {
             field.value = "";
@@ -198,9 +209,6 @@ function clearForm(inputs) {
             }
         }
     });
-
-    // Clear the big stars values
-    updateBigStars();
 }
 
 
@@ -358,7 +366,6 @@ document.querySelectorAll('.rating-section').forEach(widget => {
 document.querySelectorAll('.rating-section').forEach(s => {
 
     const rateDialog = s.querySelector('#rate-dialog');
-    const rateForm = s.querySelector('.rate-form');
     const defaultState = s.querySelector('#rate-actions-default');
     const confirmState = s.querySelector('#rate-actions-confirm');
     const btnDeleteInit = s.querySelector('#btn-rate-delete-init');
@@ -366,7 +373,6 @@ document.querySelectorAll('.rating-section').forEach(s => {
     const btnDeleteConfirm = s.querySelector('#btn-rate-delete-confirm');
 
     if (!(rateDialog instanceof HTMLDialogElement)) return;
-    if (!(rateForm instanceof HTMLFormElement)) return;
     if (!(defaultState instanceof HTMLElement)) return;
     if (!(confirmState instanceof HTMLElement)) return;
     if (!(btnDeleteInit instanceof HTMLButtonElement && btnDeleteInit.type === 'button')) return;
@@ -397,15 +403,6 @@ document.querySelectorAll('.rating-section').forEach(s => {
             // Look for this review in the DOM and remove it if there
             const reviewInDom = document.getElementById("current-user-review");
             reviewInDom?.remove();
-
-            // Clear the review form
-            const reviewForm = document.querySelector('.review-form');
-            const reviewFormInputs = reviewForm?.querySelectorAll("input, select, textarea");
-            if (reviewFormInputs) clearForm(reviewFormInputs);
-
-            // Clear the rating form
-            const rateFormImputs = rateForm.querySelectorAll("input, select, textarea");
-            clearForm(rateFormImputs);
 
             // Substract review count if user has review at all
             let reviewCount = ratingState.reviewCount;
@@ -615,15 +612,6 @@ document.querySelectorAll('.review-section').forEach(s => {
             // Look for this review in the DOM and remove it if there
             const reviewInDom = document.getElementById("current-user-review");
             reviewInDom?.remove();
-
-            // Clear the rating form
-            const rateForm = document.querySelector('.rate-form');
-            const rateFormInputs = rateForm?.querySelectorAll("input, select, textarea");
-            if (rateFormInputs) clearForm(rateFormInputs);
-
-            // Clear the review form
-            const reviewFormImputs = reviewForm.querySelectorAll("input, select, textarea");
-            clearForm(reviewFormImputs);
 
             // Set new state
             setState({

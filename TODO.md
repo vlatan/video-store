@@ -4,7 +4,6 @@
   Fix confirmation warning text on rating delete.
   Add clear forms to the render state.
   Maybe avoid repetetion in deleting rating/review in JS.
-  Add delete button on the rating modal with the same logic as the review modal.
   Decide whether to show the rewiew modal on rating click if the user has review.
 
 * Make the checkmarks on the like/save green or yellow
