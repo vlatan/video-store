@@ -2,7 +2,6 @@
 
 * Build the frontend and backend review system.
   Fix confirmation warning text on rating delete.
-  Add clear forms to the render state.
   Maybe avoid repetetion in deleting rating/review in JS.
   Decide whether to show the rewiew modal on rating click if the user has review.
 
