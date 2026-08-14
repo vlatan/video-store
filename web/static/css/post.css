@@ -460,8 +460,8 @@ h1.video-title {
 
 /* ############# Rate Form Buttons ############# */
 
-#rate-actions-default,
-#rate-actions-confirm {
+.opinion-actions-default,
+.opinion-actions-confirm {
     width: 100%;
 }
 

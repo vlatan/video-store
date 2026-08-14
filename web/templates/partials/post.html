@@ -129,7 +129,7 @@
 				</div>
 
 				<!-- Rating Widget -->
-				<section class="rating-section">
+				<section class="rating-section opinion-section">
 
 					<!-- Avg Rating Box -->
 					{{ with .CurrentPost.RatingStats }}
@@ -167,7 +167,7 @@
 
 					<!-- Rating Dialog -->
 					{{ if .CurrentUser.IsAuthenticated }}
-					<dialog id="rate-dialog" class="modal post-dialog" closedby="any">
+					<dialog id="rate-dialog" class="modal post-dialog opinion-dialog" closedby="any">
 						<form class="rate-form" action="/api/video/{{ .CurrentPost.VideoID }}/rate" method="POST">
 							{{ .CSRFField }}
 							<div class="rating-big-star-wrapper">
@@ -201,12 +201,13 @@
 							</fieldset>
 
 							<!-- Default Rate Buttons State -->
-							<div id="rate-actions-default">
+							<div id="rate-actions-default" class="opinion-actions-default">
 								<div class="rate-form-footer">
 									<span id="rate-error" class="rate-form-error" hidden></span>
 									<div class="rate-btn-group">
-										<button type="button" id="btn-rate-delete-init" class="btn-rate btn-rate-danger"
-											{{ if not $userRating }}hidden{{ end }}>Delete</button>
+										<button type="button" id="btn-rate-delete-init"
+											class="btn-rate btn-rate-danger btn-opinion-delete-init" {{ if not
+											$userRating }}hidden{{ end }}>Delete</button>
 										<button type="submit" id="btn-submit-rate" class="btn-rate btn-submit-rate">
 											{{ if $userRating }}Update{{ else }}Rate{{ end }}
 										</button>
@@ -215,7 +216,7 @@
 							</div>
 
 							<!-- Confirmation Rate Buttons State -->
-							<div id="rate-actions-confirm" hidden>
+							<div id="rate-actions-confirm" class="opinion-actions-confirm" hidden>
 								<div class="rate-form-footer">
 									<span id="rate-error-confirm" class="rate-form-error" hidden></span>
 									<span class="rate-warning-text">
@@ -224,9 +225,9 @@
 									</span>
 									<div class="rate-btn-group">
 										<button type="button" id="btn-rate-delete-cancel"
-											class="btn-rate btn-rate-secondary">Cancel</button>
+											class="btn-rate btn-rate-secondary btn-opinion-delete-cancel">Cancel</button>
 										<button type="button" id="btn-rate-delete-confirm"
-											class="btn-rate btn-rate-danger"
+											class="btn-rate btn-rate-danger btn-opinion-delete-confirm"
 											data-video-id="{{ .CurrentPost.VideoID }}">Confirm</button>
 									</div>
 								</div>
@@ -261,7 +262,7 @@
 		{{ end }}
 
 		<!-- Review Widget -->
-		<section class="review-section">
+		<section class="review-section opinion-section">
 
 			{{- $headline := .CurrentPost.UserActions.Review.Headline -}}
 			{{- $body := .CurrentPost.UserActions.Review.Content -}}
@@ -269,7 +270,7 @@
 
 			<!-- Review Dialog -->
 			{{ if .CurrentUser.IsAuthenticated }}
-			<dialog id="review-dialog" class="modal post-dialog" closedby="any">
+			<dialog id="review-dialog" class="modal post-dialog opinion-dialog" closedby="any">
 				<form class="review-form" action="/api/video/{{ .CurrentPost.VideoID }}/review" method="POST">
 					{{ .CSRFField }}
 
@@ -318,12 +319,13 @@
 
 
 					<!-- Default Review Buttons State -->
-					<div id="review-actions-default">
+					<div id="review-actions-default" class="opinion-actions-default">
 						<div class="review-form-footer">
 							<span id="review-error" class="review-form-error" hidden></span>
 							<div class="review-btn-group">
-								<button type="button" id="btn-review-delete-init" class="btn-review btn-review-danger"
-									{{ if not $userHasReview }}hidden{{ end }}>Delete</button>
+								<button type="button" id="btn-review-delete-init"
+									class="btn-review btn-review-danger btn-opinion-delete-init" {{ if not
+									$userHasReview }}hidden{{ end }}>Delete</button>
 								<button type="submit" id="btn-submit-review" class="btn-review btn-submit-review"
 									data-has-review="{{ $userHasReview }}">
 									{{ if $userHasReview }}Update{{ else }}Submit{{ end }}
@@ -333,7 +335,7 @@
 					</div>
 
 					<!-- Confirmation Review Buttons State -->
-					<div id="review-actions-confirm" hidden>
+					<div id="review-actions-confirm" class="opinion-actions-confirm" hidden>
 						<div class="review-form-footer">
 							<span id="review-error-confirm" class="review-form-error" hidden></span>
 							<span class="review-warning-text">
@@ -341,9 +343,9 @@
 							</span>
 							<div class="review-btn-group">
 								<button type="button" id="btn-review-delete-cancel"
-									class="btn-review btn-review-secondary">Cancel</button>
+									class="btn-review btn-review-secondary btn-opinion-delete-cancel">Cancel</button>
 								<button type="button" id="btn-review-delete-confirm"
-									class="btn-review btn-review-danger"
+									class="btn-review btn-review-danger btn-opinion-delete-confirm"
 									data-video-id="{{ .CurrentPost.VideoID }}">Confirm</button>
 							</div>
 						</div>

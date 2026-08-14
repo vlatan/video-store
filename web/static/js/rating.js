@@ -24,14 +24,14 @@ function getInitialState() {
 }
 
 // Single rate/review source of truth
-const ratingState = getInitialState();
+const opinionState = getInitialState();
 
 /**
  *  Mutate state and immediately trigger UI updates
- * @param {Partial<typeof ratingState>} updates
+ * @param {Partial<typeof opinionState>} updates
  */
 function setState(updates) {
-    Object.assign(ratingState, updates);
+    Object.assign(opinionState, updates);
     renderState();
 }
 
@@ -39,7 +39,7 @@ function setState(updates) {
  *  Renders the HTML values of the rating/review UI state
  */
 function renderState() {
-    const isBusy = ratingState.isSubmitting || ratingState.isDeleting;
+    const isBusy = opinionState.isSubmitting || opinionState.isDeleting;
 
     // Disable/Enable all action buttons during async operations
     const buttonsToToggle = [
@@ -60,16 +60,16 @@ function renderState() {
 
     // Update the average rating display and reviews header
     if (!isBusy) {
-        upsertAvgRatingHTML(ratingState.avgRating, ratingState.ratingCount);
-        updatetReviewsHeader(ratingState.reviewCount);
+        upsertAvgRatingHTML(opinionState.avgRating, opinionState.ratingCount);
+        updatetReviewsHeader(opinionState.reviewCount);
     }
 
     // Dynamic Open Rating Dialog Button
     const rateBtnOpen = document.getElementById('btn-open-rate');
     if (rateBtnOpen && !isBusy) {
         let html = `<span class="rating-user-star">&#9734;</span><span>Rate</span>`;
-        if (ratingState.userRating !== "?") {
-            html = `<span class="rating-user-star">&#9733;</span><span>${ratingState.userRating}</span>`;
+        if (opinionState.userRating !== "?") {
+            html = `<span class="rating-user-star">&#9733;</span><span>${opinionState.userRating}</span>`;
         }
         rateBtnOpen.innerHTML = html;
     }
@@ -77,64 +77,64 @@ function renderState() {
     // Dynamic Submit Rating Button
     const rateBtnSubmit = document.querySelector('.btn-submit-rate');
     if (rateBtnSubmit) {
-        if (ratingState.isSubmitting) {
+        if (opinionState.isSubmitting) {
             rateBtnSubmit.textContent = 'Posting...';
         } else {
-            rateBtnSubmit.textContent = ratingState.userRating !== "?" ? 'Update' : 'Rate';
+            rateBtnSubmit.textContent = opinionState.userRating !== "?" ? 'Update' : 'Rate';
         }
     }
 
     // Dynamic Open Review Dialog Button
     const reviewOpenBtnText = document.getElementById('btn-open-review-text');
     if (reviewOpenBtnText && !isBusy) {
-        reviewOpenBtnText.textContent = ratingState.userHasReview ? "Update Review" : "Post Review";
+        reviewOpenBtnText.textContent = opinionState.userHasReview ? "Update Review" : "Post Review";
     }
 
     // Dynamic Submit Review Button
     const btnSubmitReview = document.getElementById('btn-submit-review');
     if (btnSubmitReview) {
-        if (ratingState.isSubmitting) {
+        if (opinionState.isSubmitting) {
             btnSubmitReview.textContent = 'Posting...';
         } else {
-            btnSubmitReview.textContent = ratingState.userHasReview ? 'Update' : 'Submit';
-            btnSubmitReview.dataset.hasReview = String(ratingState.userHasReview);
+            btnSubmitReview.textContent = opinionState.userHasReview ? 'Update' : 'Submit';
+            btnSubmitReview.dataset.hasReview = String(opinionState.userHasReview);
         }
     }
 
     // Dynamic Init Delete Rate Button
     const btnRateDeleteInit = document.getElementById('btn-rate-delete-init');
-    if (btnRateDeleteInit && !isBusy) btnRateDeleteInit.hidden = ratingState.userRating === "?";
+    if (btnRateDeleteInit && !isBusy) btnRateDeleteInit.hidden = opinionState.userRating === "?";
 
     // Dynamic Delete Rate Button
     const btnRateDeleteConfirm = document.getElementById('btn-rate-delete-confirm');
     if (btnRateDeleteConfirm) {
-        btnRateDeleteConfirm.textContent = ratingState.isDeleting ? 'Deleting...' : 'Confirm';
+        btnRateDeleteConfirm.textContent = opinionState.isDeleting ? 'Deleting...' : 'Confirm';
     }
 
     // Dynamic Init Delete Review Button
     const btnReviewDeleteInit = document.getElementById('btn-review-delete-init');
-    if (btnReviewDeleteInit && !isBusy) btnReviewDeleteInit.hidden = !ratingState.userHasReview;
+    if (btnReviewDeleteInit && !isBusy) btnReviewDeleteInit.hidden = !opinionState.userHasReview;
 
     // Dynamic Delete Review Button
     const btnReviewDeleteConfirm = document.getElementById('btn-review-delete-confirm');
     if (btnReviewDeleteConfirm) {
-        btnReviewDeleteConfirm.textContent = ratingState.isDeleting ? 'Deleting...' : 'Confirm';
+        btnReviewDeleteConfirm.textContent = opinionState.isDeleting ? 'Deleting...' : 'Confirm';
     }
 
     // Clear the ratings - in all forms
     const ratingRadios = document.querySelectorAll('input[name="rating"]');
-    if (!isBusy && ratingState.userRating === "?") {
+    if (!isBusy && opinionState.userRating === "?") {
         clearInputs(ratingRadios);
         updateBigStars();
     }
 
     // Clear the review headline and content - in all forms
     const reviewInputs = document.querySelectorAll('input[name="headline"], textarea[name="content"]');
-    if (!isBusy && !ratingState.userHasReview) clearInputs(reviewInputs);
+    if (!isBusy && !opinionState.userHasReview) clearInputs(reviewInputs);
 
     // Look for current user review in the DOM and remove it if there
     const reviewInDom = document.getElementById("current-user-review");
-    if (!isBusy && !ratingState.userHasReview) reviewInDom?.remove();
+    if (!isBusy && !opinionState.userHasReview) reviewInDom?.remove();
 }
 
 /**
@@ -364,74 +364,6 @@ document.querySelectorAll('.rating-section').forEach(widget => {
 
 
 // ==========================================================================
-// Delete Rating
-// ==========================================================================
-
-document.querySelectorAll('.rating-section').forEach(s => {
-
-    const rateDialog = s.querySelector('#rate-dialog');
-    const defaultState = s.querySelector('#rate-actions-default');
-    const confirmState = s.querySelector('#rate-actions-confirm');
-    const btnDeleteInit = s.querySelector('#btn-rate-delete-init');
-    const btnDeleteCancel = s.querySelector('#btn-rate-delete-cancel');
-    const btnDeleteConfirm = s.querySelector('#btn-rate-delete-confirm');
-
-    if (!(rateDialog instanceof HTMLDialogElement)) return;
-    if (!(defaultState instanceof HTMLElement)) return;
-    if (!(confirmState instanceof HTMLElement)) return;
-    if (!(btnDeleteInit instanceof HTMLButtonElement && btnDeleteInit.type === 'button')) return;
-    if (!(btnDeleteConfirm instanceof HTMLButtonElement && btnDeleteInit.type === 'button')) return;
-
-    btnDeleteInit?.addEventListener('click', () => {
-        defaultState.hidden = true;
-        confirmState.hidden = false;
-    });
-
-    btnDeleteCancel?.addEventListener('click', () => {
-        confirmState.hidden = true;
-        defaultState.hidden = false;
-    });
-
-    btnDeleteConfirm?.addEventListener('click', async () => {
-
-        const videoId = btnDeleteConfirm.dataset.videoId;
-        setState({ isDeleting: true });
-        rateDialog.close();
-
-        try {
-            // Send the request to the backend
-            const response = await deleteData(`/api/video/${videoId}/unrate`);
-            if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-            const result = await response.json();
-
-            // Substract review count if user has review at all
-            let reviewCount = ratingState.reviewCount;
-            reviewCount = ratingState.userHasReview ? reviewCount - 1 : reviewCount;
-
-            // Set new state
-            setState({
-                userRating: "?",
-                userHasReview: false,
-                avgRating: result.avg_rating,
-                ratingCount: result.rating_count,
-                reviewCount: reviewCount
-            });
-
-            // Show toast message
-            setAlert("Rating deleted");
-        } catch (err) {
-            console.error("Failed to fetch or parse JSON:", err);
-            setAlert("Something went wrong!");
-        } finally {
-            confirmState.hidden = true;
-            defaultState.hidden = false;
-            setState({ isDeleting: false });
-        }
-    });
-});
-
-
-// ==========================================================================
 // Add Review
 // ==========================================================================
 
@@ -540,7 +472,7 @@ document.querySelectorAll('.review-section').forEach(s => {
                 setAlert("Review posted");
 
                 // Increase the review counter
-                setState({ reviewCount: ratingState.reviewCount + 1 });
+                setState({ reviewCount: opinionState.reviewCount + 1 });
 
                 // Remove the class load-review after the animation.
                 // 'once: true' auto-removes the listener after it fires.
@@ -566,22 +498,21 @@ document.querySelectorAll('.review-section').forEach(s => {
 });
 
 
+
 // ==========================================================================
-// Delete Review
+// Delete Rating/Review
 // ==========================================================================
 
-document.querySelectorAll('.review-section').forEach(s => {
+document.querySelectorAll('.opinion-section').forEach(s => {
 
-    const reviewDialog = s.querySelector('#review-dialog');
-    const reviewForm = s.querySelector('.review-form');
-    const defaultState = s.querySelector('#review-actions-default');
-    const confirmState = s.querySelector('#review-actions-confirm');
-    const btnDeleteInit = s.querySelector('#btn-review-delete-init');
-    const btnDeleteCancel = s.querySelector('#btn-review-delete-cancel');
-    const btnDeleteConfirm = s.querySelector('#btn-review-delete-confirm');
+    const opinionDialog = s.querySelector('.opinion-dialog');
+    const defaultState = s.querySelector('.opinion-actions-default');
+    const confirmState = s.querySelector('.opinion-actions-confirm');
+    const btnDeleteInit = s.querySelector('.btn-opinion-delete-init');
+    const btnDeleteCancel = s.querySelector('.btn-opinion-delete-cancel');
+    const btnDeleteConfirm = s.querySelector('.btn-opinion-delete-confirm');
 
-    if (!(reviewDialog instanceof HTMLDialogElement)) return;
-    if (!(reviewForm instanceof HTMLFormElement)) return;
+    if (!(opinionDialog instanceof HTMLDialogElement)) return;
     if (!(defaultState instanceof HTMLElement)) return;
     if (!(confirmState instanceof HTMLElement)) return;
     if (!(btnDeleteInit instanceof HTMLButtonElement && btnDeleteInit.type === 'button')) return;
@@ -601,7 +532,7 @@ document.querySelectorAll('.review-section').forEach(s => {
 
         const videoId = btnDeleteConfirm.dataset.videoId;
         setState({ isDeleting: true });
-        reviewDialog.close();
+        opinionDialog.close();
 
         try {
             // Send the request to the backend
@@ -609,17 +540,21 @@ document.querySelectorAll('.review-section').forEach(s => {
             if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
             const result = await response.json();
 
+            // Substract review count if user has review at all
+            let reviewCount = opinionState.reviewCount;
+            reviewCount = opinionState.userHasReview ? reviewCount - 1 : reviewCount;
+
             // Set new state
             setState({
                 userRating: "?",
                 userHasReview: false,
                 avgRating: result.avg_rating,
                 ratingCount: result.rating_count,
-                reviewCount: ratingState.reviewCount - 1
+                reviewCount: reviewCount
             });
 
             // Show toast message
-            setAlert("Review deleted");
+            setAlert("Rating/Review deleted");
         } catch (err) {
             console.error("Failed to fetch or parse JSON:", err);
             setAlert("Something went wrong!");
