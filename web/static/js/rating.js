@@ -131,6 +131,10 @@ function renderState() {
     // Clear the review headline and content - in all forms
     const reviewInputs = document.querySelectorAll('input[name="headline"], textarea[name="content"]');
     if (!isBusy && !ratingState.userHasReview) clearInputs(reviewInputs);
+
+    // Look for current user review in the DOM and remove it if there
+    const reviewInDom = document.getElementById("current-user-review");
+    if (!isBusy && !ratingState.userHasReview) reviewInDom?.remove();
 }
 
 /**
@@ -400,10 +404,6 @@ document.querySelectorAll('.rating-section').forEach(s => {
             if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
             const result = await response.json();
 
-            // Look for this review in the DOM and remove it if there
-            const reviewInDom = document.getElementById("current-user-review");
-            reviewInDom?.remove();
-
             // Substract review count if user has review at all
             let reviewCount = ratingState.reviewCount;
             reviewCount = ratingState.userHasReview ? reviewCount - 1 : reviewCount;
@@ -608,10 +608,6 @@ document.querySelectorAll('.review-section').forEach(s => {
             const response = await deleteData(`/api/video/${videoId}/unrate`);
             if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
             const result = await response.json();
-
-            // Look for this review in the DOM and remove it if there
-            const reviewInDom = document.getElementById("current-user-review");
-            reviewInDom?.remove();
 
             // Set new state
             setState({
