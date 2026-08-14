@@ -549,6 +549,7 @@ h1.video-title {
 /* ############# Review Form Buttons ############# */
 
 .review-form-footer {
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -562,6 +563,14 @@ h1.video-title {
     pointer-events: none;
     color: var(--orange-warning);
     font-size: 0.8rem;
+
+    padding-left: 1rem;
+    position: absolute;
+    top: 0;
+    right: 0;
+    transform: translateY(-50%);
+    text-align: right;
+    background-color: var(--secondary-background-color);
 }
 
 .review-btn-group {
