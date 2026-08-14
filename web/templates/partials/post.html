@@ -67,7 +67,7 @@
 			<div class="metadata-block">
 				<h1 class="video-title" itemprop="name">{{ .CurrentPost.GetTitle }}</h1>
 				<div class="ui-inner-metadata-block">
-					<div class="social">
+					<div id="social-buttons" class="social" data-video-id="{{ .CurrentPost.VideoID }}">
 						{{ if .CurrentUser.IsAuthenticated }}
 						{{ if .CurrentPost.UserActions.Liked }}
 						<button class="like like-yes">
@@ -101,7 +101,6 @@
 							<span data-saves>Save</span>
 						</button>
 						{{ end }}
-
 					</div>
 				</div>
 			</div>
@@ -130,7 +129,7 @@
 				</div>
 
 				<!-- Rating Widget -->
-				<section class="rating-section">
+				<section class="rating-section opinion-section">
 
 					<!-- Avg Rating Box -->
 					{{ with .CurrentPost.RatingStats }}
@@ -154,7 +153,7 @@
 
 					{{- $userRating := .CurrentPost.UserActions.Review.Rating -}}
 
-					<!-- User Rating Button -->
+					<!-- Open user rating dialog button -->
 					<button {{ if not .CurrentUser.IsAuthenticated }} data-modal="login" {{ end }} type="button"
 						id="btn-open-rate" class="btn-open-post-dialog" aria-haspopup="dialog">
 						{{ if $userRating }}
@@ -168,7 +167,7 @@
 
 					<!-- Rating Dialog -->
 					{{ if .CurrentUser.IsAuthenticated }}
-					<dialog id="rate-dialog" class="modal post-dialog" closedby="any">
+					<dialog id="rate-dialog" class="modal post-dialog opinion-dialog" closedby="any">
 						<form class="rate-form" action="/api/video/{{ .CurrentPost.VideoID }}/rate" method="POST">
 							{{ .CSRFField }}
 							<div class="rating-big-star-wrapper">
@@ -201,9 +200,39 @@
 								{{ end }}
 							</fieldset>
 
-							<button type="submit" class="btn-submit-rate">
-								{{ if $userRating }}Update{{ else }}Rate{{ end }}
-							</button>
+							<!-- Default Rate Buttons State -->
+							<div id="rate-actions-default" class="opinion-actions-default">
+								<div class="rate-form-footer">
+									<span id="rate-error" class="rate-form-error" hidden></span>
+									<div class="rate-btn-group">
+										<button type="button" id="btn-rate-delete-init"
+											class="btn-rate btn-rate-danger btn-opinion-delete-init" {{ if not
+											$userRating }}hidden{{ end }}>Delete</button>
+										<button type="submit" id="btn-submit-rate" class="btn-rate btn-submit-rate">
+											{{ if $userRating }}Update{{ else }}Rate{{ end }}
+										</button>
+									</div>
+								</div>
+							</div>
+
+							<!-- Confirmation Rate Buttons State -->
+							<div id="rate-actions-confirm" class="opinion-actions-confirm" hidden>
+								<div class="rate-form-footer">
+									<span id="rate-error-confirm" class="rate-form-error" hidden></span>
+									<span class="rate-warning-text">
+										<p>Are you sure?</p>
+										<p>This will delete your rating and review if any.</p>
+									</span>
+									<div class="rate-btn-group">
+										<button type="button" id="btn-rate-delete-cancel"
+											class="btn-rate btn-rate-secondary btn-opinion-delete-cancel">Cancel</button>
+										<button type="button" id="btn-rate-delete-confirm"
+											class="btn-rate btn-rate-danger btn-opinion-delete-confirm"
+											data-video-id="{{ .CurrentPost.VideoID }}">Confirm</button>
+									</div>
+								</div>
+							</div>
+
 						</form>
 					</dialog>
 					{{ end }}
@@ -233,7 +262,7 @@
 		{{ end }}
 
 		<!-- Review Widget -->
-		<section class="review-section">
+		<section class="review-section opinion-section">
 
 			{{- $headline := .CurrentPost.UserActions.Review.Headline -}}
 			{{- $body := .CurrentPost.UserActions.Review.Content -}}
@@ -241,13 +270,11 @@
 
 			<!-- Review Dialog -->
 			{{ if .CurrentUser.IsAuthenticated }}
-			<dialog id="review-dialog" class="modal post-dialog" closedby="any">
+			<dialog id="review-dialog" class="modal post-dialog opinion-dialog" closedby="any">
 				<form class="review-form" action="/api/video/{{ .CurrentPost.VideoID }}/review" method="POST">
 					{{ .CSRFField }}
 
 					<button type="button" id="btn-close-review" class="btn-close-post-dialog">&times;</button>
-
-
 
 					<div class="review-form-group">
 						<label class="review-form-heading" for="review-title">Headline</label>
@@ -290,19 +317,46 @@
 						</div>
 					</fieldset>
 
-					<div class="review-form-footer">
-						<span id="review-error" class="review-form-error" hidden></span>
-						<button type="submit" id="submit-review" class="btn-submit-review"
-							data-has-review="{{ $userHasReview }}">
-							{{ if $userHasReview }}Update Review{{ else }}Post Review{{ end }}
-						</button>
+
+					<!-- Default Review Buttons State -->
+					<div id="review-actions-default" class="opinion-actions-default">
+						<div class="review-form-footer">
+							<span id="review-error" class="review-form-error" hidden></span>
+							<div class="review-btn-group">
+								<button type="button" id="btn-review-delete-init"
+									class="btn-review btn-review-danger btn-opinion-delete-init" {{ if not
+									$userHasReview }}hidden{{ end }}>Delete</button>
+								<button type="submit" id="btn-submit-review" class="btn-review btn-submit-review"
+									data-has-review="{{ $userHasReview }}">
+									{{ if $userHasReview }}Update{{ else }}Submit{{ end }}
+								</button>
+							</div>
+						</div>
 					</div>
+
+					<!-- Confirmation Review Buttons State -->
+					<div id="review-actions-confirm" class="opinion-actions-confirm" hidden>
+						<div class="review-form-footer">
+							<span id="review-error-confirm" class="review-form-error" hidden></span>
+							<span class="review-warning-text">
+								Are you sure? This will delete your review.
+							</span>
+							<div class="review-btn-group">
+								<button type="button" id="btn-review-delete-cancel"
+									class="btn-review btn-review-secondary btn-opinion-delete-cancel">Cancel</button>
+								<button type="button" id="btn-review-delete-confirm"
+									class="btn-review btn-review-danger btn-opinion-delete-confirm"
+									data-video-id="{{ .CurrentPost.VideoID }}">Confirm</button>
+							</div>
+						</div>
+					</div>
+
 				</form>
 			</dialog>
 			{{ end }}
 
 			<!-- Reviews List Header -->
-			<header class="reviews-header">
+			<header class=" reviews-header">
 				<div class="reviews-title-wrapper">
 					<span {{ if not .CurrentPost.Reviews.TotalNum }} style="display:none;" {{ end }}
 						id="review-count-wrapper">
@@ -310,7 +364,7 @@
 					</span>
 					<h3>
 						{{ if eq .CurrentPost.Reviews.TotalNum 0 }}
-						Write a Review
+						No Reviews Yet
 						{{ else if eq .CurrentPost.Reviews.TotalNum 1 }}
 						User Review
 						{{ else }}
@@ -319,7 +373,7 @@
 					</h3>
 				</div>
 
-				<!-- User Review Button -->
+				<!-- User Review Open Button -->
 				<button {{ if not .CurrentUser.IsAuthenticated }} data-modal="login" {{ end }} type="button"
 					id="btn-open-review" class="btn-open-post-dialog" aria-haspopup="dialog">
 					<span class="open-review-symbol">+</span>
@@ -341,7 +395,8 @@
 							<img src="{{ .User.LocalAvatarURL }}" class=" review-user-avatar" width="20" height="20"
 								loading="lazy" alt="{{ .User.Name }}">
 							<span itemprop="author" itemscope itemtype="https://schema.org/Person">
-								<span itemprop="name" class="review-user-name">{{ .User.Name }}</span>
+								<span itemprop="name" class="review-user-name">{{ .User.Name
+									}}</span>
 							</span>
 							<span itemprop="reviewRating" itemscope itemtype="https://schema.org/Rating"
 								class="review-user-rating">
@@ -351,7 +406,8 @@
 								<meta itemprop="bestRating" content="10">
 							</span>
 							<meta itemprop="datePublished" content="{{ .UpdatedAt }}">
-							<span class="review-date" data-utc-time="{{ .UpdatedAt }}">Loading date...</span>
+							<span class="review-date" data-utc-time="{{ .UpdatedAt }}">Loading
+								date...</span>
 						</div>
 						<h4 itemprop="name" class="review-headline">{{ .HTMLHeadline }}</h4>
 					</header>
@@ -405,11 +461,13 @@
 <dialog data-body="video" class="modal" closedby="any">
 	<form class="modal-content" action="/video/{{ .CurrentPost.VideoID }}/delete" method="POST">
 		{{ .CSRFField }}
+		<input type="hidden" name="_method" value="DELETE">
 		<span data-close="video" class="close-modal" title="Close">&times;</span>
 		<h2>Delete Video</h2>
 		<p>Are you sure you want to delete this video?</p>
 		<div class="modal-buttons-wrap">
-			<button data-close="video" type="button" class="modal-button cancel-button">Cancel</button>
+			<button type="button" data-close="video" formmethod="dialog"
+				class="modal-button cancel-button">Cancel</button>
 			<button type="submit" class="modal-button delete-button">Delete</button>
 		</div>
 	</form>

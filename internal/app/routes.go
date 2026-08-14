@@ -22,9 +22,10 @@ func (a *App) RegisterRoutes() *App {
 	mux.HandleFunc("/video/new", a.mw.IsAdmin(a.posts.NewPostHandler))
 	mux.HandleFunc("GET /video/{video}/{$}", a.posts.SinglePostHandler)
 	mux.HandleFunc("/video/{video}/edit", a.mw.IsAdmin(a.posts.UpdatePostHandler))
-	mux.HandleFunc("POST /video/{video}/delete", a.mw.IsAdmin(a.posts.BanPostHandler))
+	mux.HandleFunc("DELETE /video/{video}/delete", a.mw.IsAdmin(a.posts.BanPostHandler))
 	mux.HandleFunc("GET /api/video/{video}/reviews", a.posts.PostReviewsAPI)
 	mux.HandleFunc("POST /api/video/{video}/{action}", a.mw.IsAuthenticated(a.posts.PostActionAPI))
+	mux.HandleFunc("DELETE /api/video/{video}/{action}", a.mw.IsAuthenticated(a.posts.DeleteActionAPI))
 
 	// Categories
 	mux.HandleFunc("GET /category/{category}/{$}", a.posts.CategoryPostsHandler)
@@ -34,7 +35,7 @@ func (a *App) RegisterRoutes() *App {
 	mux.HandleFunc("GET /page/{slug}/{$}", a.pages.SinglePageHandler)
 	mux.HandleFunc("/page/{slug}/edit", a.mw.IsAdmin(a.pages.UpdatePageHandler))
 	mux.HandleFunc("/page/new", a.mw.IsAdmin(a.pages.NewPageHandler))
-	mux.HandleFunc("POST /page/{slug}/delete", a.mw.IsAdmin(a.pages.DeletePageHandler))
+	mux.HandleFunc("DELETE /page/{slug}/delete", a.mw.IsAdmin(a.pages.DeletePageHandler))
 
 	// Sources
 	mux.HandleFunc("/source/new", a.mw.IsAdmin(a.sources.NewSourceHandler))
@@ -53,7 +54,7 @@ func (a *App) RegisterRoutes() *App {
 	mux.HandleFunc("GET /sitemap.xml", a.mw.PublicCache(a.sitemaps.SitemapIndexHandler))
 
 	// Users
-	mux.HandleFunc("POST /account/delete", a.mw.IsAuthenticated(a.auth.DeleteAccountHandler))
+	mux.HandleFunc("DELETE /account/delete", a.mw.IsAuthenticated(a.auth.DeleteAccountHandler))
 	mux.HandleFunc("GET /user/favorites/{$}", a.mw.IsAuthenticated(a.users.UserFavoritesHandler))
 	mux.HandleFunc("GET /api/user/favorites/{$}", a.mw.IsAuthenticated(a.users.UserFavoritesAPI))
 	mux.HandleFunc("GET /users/{$}", a.mw.IsAdmin(a.users.UsersHandler))
@@ -99,11 +100,12 @@ func (a *App) RegisterRoutes() *App {
 
 	// Chain middlewares that apply to all requests.
 	// The order is important.
-	// Use this custom handler as HTTP server handler
+	// Use this custom handler as HTTP server handler.
 	a.server.Handler = a.mw.ApplyToAll(
 		a.mw.CloseBody,         // Absolute safety net for body memory leaks
 		a.mw.Compress,          // Compress the response no matter what is it
-		a.mw.CanonicalRedirect, // Redirect www to non-www, nothing to do
+		a.mw.CanonicalRedirect, // Redirect www to non-www
+		a.mw.MethodOverride,    // Override a POST method if needed
 		a.mw.Logging,           // Log the request, unless healthcheck
 		a.mw.LoadUser,          // Load user data from seesion into context
 		a.mw.CsrfProtection,    // Provide CSRF protection (needs user data)

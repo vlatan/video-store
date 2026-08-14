@@ -24,8 +24,8 @@
         <h1>{{ .Title }}</h1>
         {{ if .CurrentUser.IsAdmin }}
         <div class="page-buttons">
-            <a data-modal="page" class="modal-button" href="javascript:void(0)">Delete</a>
-            <a href="/page/{{ .CurrentPage.Slug }}/edit" class="modal-button edit-content">Edit</a>
+            <button type="button" data-modal="page" class="modal-button">Delete</button>
+            <a role="button" href="/page/{{ .CurrentPage.Slug }}/edit" class="modal-button edit-content">Edit</a>
         </div>
         {{ end }}
     </div>
@@ -37,11 +37,13 @@
 <dialog data-body="page" class="modal" closedby="any">
     <form class="modal-content" action="/page/{{ .CurrentPage.Slug }}/delete" method="POST">
         {{ .CSRFField }}
+        <input type="hidden" name="_method" value="DELETE">
         <span data-close="page" class="close-modal" title="Close">&times;</span>
         <h2>Delete Page</h2>
         <p>Are you sure you want to delete this page?</p>
         <div class="modal-buttons-wrap">
-            <button data-close="page" type="button" class="modal-button cancel-button">Cancel</button>
+            <button type="button" data-close="page" formmethod="dialog"
+                class="modal-button cancel-button">Cancel</button>
             <button type="submit" class="modal-button delete-button">Delete</button>
         </div>
     </form>

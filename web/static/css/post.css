@@ -132,7 +132,7 @@ h1.video-title {
 }
 
 .inner-metadata-block .nav-item {
-    color: var(--orange);
+    color: var(--blue-link-color);
 }
 
 .admin-buttons {
@@ -326,7 +326,7 @@ h1.video-title {
 }
 
 .rating-global-star {
-    color: var(--yellow-star-color);
+    color: var(--yellow);
 }
 
 .rating-meta {
@@ -364,7 +364,7 @@ h1.video-title {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 2rem;
+    gap: 2.25rem;
     padding: 80px 2rem 2.5rem 2rem;
     width: 420px;
     max-width: 100%;
@@ -412,7 +412,7 @@ h1.video-title {
     text-transform: uppercase;
     font-size: 0.7rem;
     letter-spacing: 1px;
-    color: var(--yellow-star-color);
+    color: var(--yellow);
 }
 
 .rate-title {
@@ -457,29 +457,175 @@ h1.video-title {
     -webkit-text-stroke: 0;
 }
 
-button.btn-submit-rate {
+
+/* ############# Rate Form Buttons ############# */
+
+.opinion-actions-default,
+.opinion-actions-confirm {
     width: 100%;
-    padding: 12px 18px;
-    border-radius: 25px;
-    border: none;
-    font-size: 0.85rem;
-    font-weight: bold;
-    cursor: pointer;
-    background: var(--yellow-star-color);
-    color: #000;
-    transition: background 0.2s, color 0.2s, opacity 0.2s;
 }
 
-button.btn-submit-rate:hover:not(:disabled) {
+.rate-form-footer {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-top: 1px solid var(--secondary-border-color);
+    padding-top: 2.30rem;
+    width: 100%;
+}
+
+.rate-form-error,
+.rate-warning-text {
+    position: absolute;
+    top: 0;
+    transform: translateY(-60%);
+    width: 100%;
+    background-color: var(--secondary-background-color);
+    pointer-events: none;
+    text-align: center;
+    color: var(--orange-warning);
+    font-size: 0.8rem;
+}
+
+.rate-btn-group {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.btn-rate {
+    width: 100%;
+    padding: 0.6rem 1.2rem;
+    border-radius: 1rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: background-color 0.2s, color 0.2s, opacity 0.2s;
+}
+
+.btn-submit-rate {
+    background: var(--yellow);
+    color: #000;
+}
+
+.btn-submit-rate:hover:not(:disabled) {
     background: #e0b415;
 }
 
-button.btn-submit-rate:disabled,
-.rate-form:invalid button.btn-submit-rate {
+.btn-submit-rate:disabled,
+.rate-form:invalid .btn-submit-rate {
     background: #333;
     color: #777;
     pointer-events: none;
     cursor: not-allowed;
+}
+
+.btn-rate-danger {
+    background-color: #dc2626;
+    color: white;
+}
+
+.btn-rate-danger:hover {
+    background-color: #b91c1c;
+}
+
+.btn-rate-secondary {
+    background-color: #ffffff;
+    color: #374151;
+    border-color: #d1d5db;
+}
+
+.btn-rate-secondary:hover {
+    background-color: #f9fafb;
+}
+
+
+/* ############# Review Form Buttons ############# */
+
+.review-form-footer {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    border-top: 1px solid var(--secondary-border-color);
+    padding-top: 2rem;
+}
+
+.review-form-error,
+.review-warning-text {
+    pointer-events: none;
+    color: var(--orange-warning);
+    font-size: 0.8rem;
+
+    padding-left: 1rem;
+    position: absolute;
+    top: 0;
+    right: 0;
+    transform: translateY(-50%);
+    text-align: right;
+    background-color: var(--secondary-background-color);
+}
+
+.review-btn-group {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
+    gap: 0.5rem;
+}
+
+.btn-review {
+    min-width: 6rem;
+    padding: 0.6rem 1.2rem;
+    border-radius: 1rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: background-color 0.2s, color 0.2s, opacity 0.2s;
+}
+
+.btn-submit-review {
+    background: var(--yellow);
+    color: #000;
+}
+
+.btn-submit-review:hover:not(:disabled) {
+    background: #e0b415;
+}
+
+.btn-submit-review:disabled,
+.review-form:invalid .btn-submit-review {
+    background: #333;
+    color: #777;
+    pointer-events: none;
+    cursor: not-allowed;
+}
+
+.btn-review-danger {
+    background-color: #dc2626;
+    color: white;
+}
+
+.btn-review-danger:hover {
+    background-color: #b91c1c;
+}
+
+.btn-review-secondary {
+    background-color: #ffffff;
+    color: #374151;
+    border-color: #d1d5db;
+}
+
+.btn-review-secondary:hover {
+    background-color: #f9fafb;
 }
 
 
@@ -575,42 +721,6 @@ textarea#review-text:focus {
     left: 50%;
     transform: translate(-50%, -50%);
     font-size: calc(var(--big-star-size) * 0.30);
-}
-
-.review-form-footer {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 0.75rem;
-}
-
-button.btn-submit-review {
-    padding: 12px 18px;
-    background: var(--yellow-star-color);
-    color: #000;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 0.85rem;
-    transition: background 0.2s, color 0.2s, opacity 0.2s;
-}
-
-button.btn-submit-review:hover:not(:disabled) {
-    background: #e0b415;
-}
-
-button.btn-submit-review:disabled,
-.review-form:invalid button.btn-submit-review {
-    background: #333;
-    color: #777;
-    pointer-events: none;
-    cursor: not-allowed;
-}
-
-.review-form-error {
-    color: #d92d20;
-    font-size: 0.75rem;
 }
 
 .reviews-header {

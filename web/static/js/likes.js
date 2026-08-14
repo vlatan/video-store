@@ -44,30 +44,33 @@ const setLikeCounter = (action = "") => {
     if (likes) likes.textContent = text;
 };
 
-/** @param {PointerEvent} event */
-const listenForAction = async (event, action = "") => {
-    if (!(event.target instanceof HTMLElement)) return;
-    const actionElement = event.target.closest(`.${action}`);
-    if (!actionElement) return;
-    actionElement.classList.toggle(`${action}-no`);
-    actionElement.classList.toggle(`${action}-yes`);
-    let currentAction = action;
-    if (actionElement.classList.contains(`${action}-no`)) currentAction = `un${action}`;
-    const url = `/api${window.location.pathname}${currentAction}`;
-    try {
-        const res = await postData(url);
-        if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
-        if (currentAction.includes('like')) { setLikeCounter(currentAction); return; }
-        setFaveStatus(currentAction);
-    } catch (error) {
+const listenForAction = async (action = "", videoId = "") => {
+    document.addEventListener('click', async event => {
+        if (!(event.target instanceof HTMLElement)) return;
+        const actionElement = event.target.closest(`.${action}`);
+        if (!actionElement) return;
         actionElement.classList.toggle(`${action}-no`);
         actionElement.classList.toggle(`${action}-yes`);
-        console.error("Failed to fetch response:", error);
-        setAlert("Sorry, could not record that action!")
-    }
+        const unAction = actionElement.classList.contains(`${action}-no`);
+        const currentAction = unAction ? `un${action}` : action;
+        const url = `/api/video/${videoId}/${currentAction}`;
+        try {
+            const res = unAction ? await deleteData(url) : await postData(url);
+            if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
+            if (currentAction.includes('like')) { setLikeCounter(currentAction); return; }
+            setFaveStatus(currentAction);
+        } catch (error) {
+            actionElement.classList.toggle(`${action}-no`);
+            actionElement.classList.toggle(`${action}-yes`);
+            console.error("Failed to fetch response:", error);
+            setAlert("Sorry, could not record that action!")
+        }
+    });
 };
 
-document.addEventListener('click', event => {
-    listenForAction(event, 'like');
-    listenForAction(event, 'fave');
-});
+(() => {
+    const socialButtons = document.getElementById('social-buttons');
+    const videoId = socialButtons?.dataset.videoId;
+    listenForAction('like', videoId);
+    listenForAction('fave', videoId);
+})();

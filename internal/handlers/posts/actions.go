@@ -12,7 +12,9 @@ import (
 
 // Handle a post like from user
 func (s *Service) handleLike(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
+
 	rowsAffected, err := s.postsRepo.Like(r.Context(), userID, videoID)
+
 	if err != nil {
 		slog.ErrorContext(
 			r.Context(), "user failed to like the video",
@@ -31,7 +33,9 @@ func (s *Service) handleLike(w http.ResponseWriter, r *http.Request, userID int,
 
 // Handle a post unlike from user
 func (s *Service) handleUnlike(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
+
 	rowsAffected, err := s.postsRepo.Unlike(r.Context(), userID, videoID)
+
 	if err != nil {
 		slog.ErrorContext(
 			r.Context(), "user failed to unlike the video",
@@ -50,7 +54,9 @@ func (s *Service) handleUnlike(w http.ResponseWriter, r *http.Request, userID in
 
 // Handle a post favorite from user
 func (s *Service) handleFave(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
+
 	rowsAffected, err := s.postsRepo.Fave(r.Context(), userID, videoID)
+
 	if err != nil {
 		slog.ErrorContext(
 			r.Context(), "user failed to favorite the video",
@@ -69,7 +75,9 @@ func (s *Service) handleFave(w http.ResponseWriter, r *http.Request, userID int,
 
 // Handle a post unfavorite from user
 func (s *Service) handleUnfave(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
+
 	rowsAffected, err := s.postsRepo.Unfave(r.Context(), userID, videoID)
+
 	if err != nil {
 		slog.ErrorContext(
 			r.Context(), "user failed to unfavorite the video",
@@ -104,7 +112,17 @@ func (s *Service) handleRate(w http.ResponseWriter, r *http.Request, userID int,
 		return
 	}
 
-	ratingData, err := s.postsRepo.Rate(r.Context(), data.Rating, userID, videoID)
+	if data.Rating < 1 || data.Rating > 10 {
+		slog.ErrorContext(
+			r.Context(), "rating out of bounds",
+			"path", r.URL.Path,
+			"userId", userID,
+		)
+		utils.HttpError(w, http.StatusBadRequest)
+		return
+	}
+
+	ratingStats, err := s.postsRepo.Rate(r.Context(), data.Rating, userID, videoID)
 
 	if errors.Is(err, pgx.ErrNoRows) {
 		http.NotFound(w, r)
@@ -122,7 +140,31 @@ func (s *Service) handleRate(w http.ResponseWriter, r *http.Request, userID int,
 		return
 	}
 
-	s.ui.WriteJSON(w, r, ratingData)
+	s.ui.WriteJSON(w, r, ratingStats)
+}
+
+// handleUnrate handles a deletion of a user rating/review
+func (s *Service) handleUnrate(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
+
+	ratingStats, err := s.postsRepo.Unrate(r.Context(), userID, videoID)
+
+	if errors.Is(err, pgx.ErrNoRows) {
+		http.NotFound(w, r)
+		return
+	}
+
+	if err != nil {
+		slog.ErrorContext(
+			r.Context(), "user failed to delete their video rating/review",
+			"path", r.URL.Path,
+			"userId", userID,
+			"error", err,
+		)
+		utils.HttpError(w, http.StatusInternalServerError)
+		return
+	}
+
+	s.ui.WriteJSON(w, r, ratingStats)
 }
 
 // Handle a post favorite from user
@@ -145,6 +187,16 @@ func (s *Service) handleReview(w http.ResponseWriter, r *http.Request, userID in
 		return
 	}
 
+	if data.Rating < 1 || data.Rating > 10 {
+		slog.ErrorContext(
+			r.Context(), "rating out of bounds",
+			"path", r.URL.Path,
+			"userId", userID,
+		)
+		utils.HttpError(w, http.StatusBadRequest)
+		return
+	}
+
 	if err := validateReview(data.Headline, data.Content); err != nil {
 		slog.ErrorContext(
 			r.Context(), "failed to validate the review",
@@ -152,7 +204,7 @@ func (s *Service) handleReview(w http.ResponseWriter, r *http.Request, userID in
 			"userId", userID,
 			"error", err,
 		)
-		utils.HttpError(w, http.StatusInternalServerError)
+		utils.HttpError(w, http.StatusBadRequest)
 		return
 	}
 

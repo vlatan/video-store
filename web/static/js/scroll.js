@@ -3,7 +3,7 @@ const scroller = document.getElementById("scroller");
 const sentinel = document.getElementById("sentinel");
 const spinner = sentinel?.querySelector('div');
 
-let state = {
+const scrollState = {
     nextCursor: scroller?.dataset.cursor,
     isLoading: false,
     hasMore: !!scroller?.dataset.cursor,
@@ -15,11 +15,11 @@ const loadItems = async (url = "", cursor = "") => {
     if (!(sentinel instanceof HTMLElement)) return;
 
     // Prevent multiple simultaneous fetches
-    if (state.isLoading || !state.hasMore) {
+    if (scrollState.isLoading || !scrollState.hasMore) {
         return;
     }
 
-    state.isLoading = true;
+    scrollState.isLoading = true;
     spinner?.setAttribute("id", "spinner");
 
     try {
@@ -30,8 +30,8 @@ const loadItems = async (url = "", cursor = "") => {
         }
 
         const data = await response.json();
-        state.nextCursor = data.next_cursor || null;
-        state.hasMore = !!data.next_cursor;
+        scrollState.nextCursor = data.next_cursor || null;
+        scrollState.hasMore = !!data.next_cursor;
 
         // Iterate over the items in the response, create video cards
         // and append them as children to the scroller.
@@ -40,17 +40,17 @@ const loadItems = async (url = "", cursor = "") => {
             scroller?.appendChild(card);
         }
 
-        if (!state.hasMore) {
+        if (!scrollState.hasMore) {
             sentinel.innerHTML = "No more videos";
         }
 
     } catch (error) {
-        state.hasMore = false;
+        scrollState.hasMore = false;
         sentinel.innerHTML = "Something went wrong";
         console.error("Failed to fetch items:", error);
 
     } finally {
-        state.isLoading = false;
+        scrollState.isLoading = false;
     }
 };
 
@@ -58,12 +58,12 @@ if ('IntersectionObserver' in window) {
     // Create a new IntersectionObserver instance
     let intersectionObserver = new IntersectionObserver(([entry]) => {
         // If there is next page and the entry is intersecting
-        if (state.hasMore && entry.isIntersecting) {
+        if (scrollState.hasMore && entry.isIntersecting) {
 
             const pathWithQueries = window.location.pathname + window.location.search + window.location.hash;
 
             // Call the loadItems function
-            loadItems(`/api${pathWithQueries}`, state.nextCursor);
+            loadItems(`/api${pathWithQueries}`, scrollState.nextCursor);
         }
         // add root margin for earlier intersection detecetion
     }, { rootMargin: "200px 0px" });

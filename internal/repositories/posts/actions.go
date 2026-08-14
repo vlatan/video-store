@@ -2,6 +2,7 @@ package posts
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"html/template"
@@ -102,7 +103,12 @@ func (r *Repository) Rate(ctx context.Context, rating uint8, userID int, videoID
 		SELECT ROUND(AVG(rating), 2)::float8, COUNT(*)
 		FROM post_rating WHERE post_id = $1
 	`
-	err = tx.QueryRow(ctx, query, postId).Scan(&rs.Avg, &rs.Count)
+	var (
+		avg   sql.NullFloat64
+		count sql.NullInt64
+	)
+
+	err = tx.QueryRow(ctx, query, postId).Scan(&avg, &count)
 	if err != nil {
 		return zero, err
 	}
@@ -111,6 +117,74 @@ func (r *Repository) Rate(ctx context.Context, rating uint8, userID int, videoID
 	if err := tx.Commit(ctx); err != nil {
 		return zero, err
 	}
+
+	// Assign the rating stats
+	rs.Avg, rs.Count = avg.Float64, count.Int64
+
+	return rs, nil
+}
+
+// DeleteRating deletes user rating and by cascade deletes their review too.
+// Returns updated rating stats.
+func (r *Repository) Unrate(
+	ctx context.Context,
+	userID int,
+	videoID string) (models.RatingStats, error) {
+
+	var zero, rs models.RatingStats
+
+	// Start trannsaction
+	tx, err := r.db.Pool.Begin(ctx)
+	if err != nil {
+		return zero, err
+	}
+
+	// Rollback if something goes wrong.
+	// Release the connection in any case.
+	defer func() {
+		rbErr := tx.Rollback(ctx)
+		if rbErr != nil && !errors.Is(rbErr, pgx.ErrTxClosed) {
+			slog.ErrorContext(
+				ctx, "transaction rollback on delete user rating failed",
+				"userId", userID,
+				"postId", videoID,
+				"error", rbErr,
+			)
+		}
+	}()
+
+	query, err := r.GetQuery("unrate_post.sql", nil)
+	if err != nil {
+		return zero, err
+	}
+
+	var postId int64
+	err = tx.QueryRow(ctx, query, userID, videoID).Scan(&postId)
+	if err != nil {
+		return zero, err
+	}
+
+	query = `
+		SELECT ROUND(AVG(rating), 2)::float8, COUNT(*)
+		FROM post_rating WHERE post_id = $1
+	`
+	var (
+		avg   sql.NullFloat64
+		count sql.NullInt64
+	)
+
+	err = tx.QueryRow(ctx, query, postId).Scan(&avg, &count)
+	if err != nil {
+		return zero, err
+	}
+
+	// Commit the changes
+	if err := tx.Commit(ctx); err != nil {
+		return zero, err
+	}
+
+	// Assign the rating stats
+	rs.Avg, rs.Count = avg.Float64, count.Int64
 
 	return rs, nil
 }
@@ -161,7 +235,12 @@ func (r *Repository) Review(
 		SELECT ROUND(AVG(rating), 2)::float8, COUNT(*)
 		FROM post_rating WHERE post_id = $1
 	`
-	err = tx.QueryRow(ctx, query, postId).Scan(&rs.Avg, &rs.Count)
+	var (
+		avg   sql.NullFloat64
+		count sql.NullInt64
+	)
+
+	err = tx.QueryRow(ctx, query, postId).Scan(&avg, &count)
 	if err != nil {
 		return nil, err
 	}
@@ -170,6 +249,9 @@ func (r *Repository) Review(
 	if err := tx.Commit(ctx); err != nil {
 		return nil, err
 	}
+
+	// Assign the rating stats
+	rs.Avg, rs.Count = avg.Float64, count.Int64
 
 	// Define policies for review headline and content sanitization
 	strictPolicy := bluemonday.StrictPolicy()

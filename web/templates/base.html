@@ -121,7 +121,7 @@
 					</svg>
 					<input id="q" name="q" size="20" value="{{ .SearchQuery }}" class="search-form-input"
 						placeholder="Search" required type="search">
-					<button aria-label="Search" class="search-button">
+					<button type="submit" aria-label="Search" class="search-button">
 						<svg role="img" class="search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
 							<circle cx="11" cy="11" r="8"></circle>
 							<line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -159,16 +159,17 @@
 				<dialog data-body="account" class="modal" closedby="any">
 					<form class="modal-content" action="/account/delete?redirect={{ .CurrentURI }}" method="POST">
 						{{ .CSRFField }}
+						<input type="hidden" name="_method" value="DELETE">
 						<span data-close="account" class="close-modal" title="Close">&times;</span>
 						<h2 class="modal-title">Delete Account</h2>
 						<p>Are you sure you want to delete your account?<br>
-							This will delete your data including your likes and favorites.
+							This will delete your data including all of your likes, favorites, ratings and reviews.
 						</p>
 						<div class="modal-buttons-wrap">
-							<button aria-label="Cancel Delete Account" data-close="account" type="button"
-								class="modal-button cancel-button">Cancel</button>
-							<button aria-label="Delete Account" type="submit"
-								class="modal-button delete-button">Delete</button>
+							<button type="button" data-close="account" formmethod="dialog"
+								aria-label="Cancel Delete Account" class="modal-button cancel-button">Cancel</button>
+							<button type="submit" class="modal-button delete-button"
+								aria-label="Delete Account">Delete</button>
 						</div>
 					</form>
 				</dialog>
@@ -182,8 +183,8 @@
 						<h3 class="login-header">Sign in to</h3>
 						<div class="login-logo">{{ .Config.AppName }}</div>
 						<div class="login-tagline">
-							Log in to be able to <strong>like</strong>, <strong>save</strong> and <strong>rate</strong>
-							your favorite documentaries.
+							Log in to be able to <strong>like</strong>, <strong>save</strong>, <strong>rate</strong> and
+							<strong>review</strong> your favorite documentaries.
 						</div>
 						<div class="login-buttons">
 							<a aria-label="Login via Google" data-close="login" class="brand-login-button google-login"
