@@ -326,7 +326,7 @@ h1.video-title {
 }
 
 .rating-global-star {
-    color: var(--yellow-star-color);
+    color: var(--yellow);
 }
 
 .rating-meta {
@@ -412,7 +412,7 @@ h1.video-title {
     text-transform: uppercase;
     font-size: 0.7rem;
     letter-spacing: 1px;
-    color: var(--yellow-star-color);
+    color: var(--yellow);
 }
 
 .rate-title {
@@ -510,7 +510,7 @@ h1.video-title {
 }
 
 .btn-submit-rate {
-    background: var(--yellow-star-color);
+    background: var(--yellow);
     color: #000;
 }
 
@@ -585,7 +585,7 @@ h1.video-title {
 }
 
 .btn-submit-review {
-    background: var(--yellow-star-color);
+    background: var(--yellow);
     color: #000;
 }
 

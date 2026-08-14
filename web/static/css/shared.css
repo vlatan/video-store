@@ -10,7 +10,6 @@
 	--secondary-border-color: rgb(54, 54, 54);
 	--outline-color: rgb(88, 88, 150);
 	--blue-link-color: rgb(87, 153, 239);
-	--yellow-star-color: rgb(245, 197, 24);
 	--content-width: min(90vw, 1600px);
 	--main-font-family: system-ui, sans-serif;
 	--content-padding: 1.5rem;
@@ -21,6 +20,7 @@
 	--img-hover-filter: brightness(85%);
 	--img-hover-transition-duration: 0.3s;
 	--img-border-radius: 10px;
+	--yellow: rgb(245, 197, 24);
 	--orange: #f26123;
 
 	color-scheme: dark;
