@@ -10,26 +10,27 @@ import (
 
 // MakeVideoContents creates Genai contents containing video file/URL
 // https://ai.google.dev/gemini-api/docs/video-understanding#clipping-intervals
-func (s *Service) MakeVideoContents(video *models.Post) ([]*genai.Content, error) {
+func (s *Service) MakeVideoContents(
+	videoId string,
+	startOffset, endOffset time.Duration) ([]*genai.Content, error) {
 
-	videoDuration, err := video.Duration.Seconds()
-	if err != nil || videoDuration == 0 {
+	if startOffset >= endOffset {
 		return nil, fmt.Errorf(
-			"couldn't convert video's %q duration %q to seconds; %w",
-			video.VideoID, video.Duration, err,
+			"start offset %q >= end offset %q for the video %q",
+			startOffset, endOffset, videoId,
 		)
 	}
 
-	// Ready the video INTRO part
+	// Ready the video part
 	videoFps := 1.0
-	youtubeURL := "https://www.youtube.com/watch?v=" + video.VideoID
+	youtubeURL := "https://www.youtube.com/watch?v=" + videoId
 	parts := []*genai.Part{
 		{
 			FileData: &genai.FileData{FileURI: youtubeURL, MIMEType: "video/*"},
 			VideoMetadata: &genai.VideoMetadata{
-				// <= 40 minutes to keep within the 250k TPM quota
-				EndOffset: min(videoDuration, 40*60) * time.Second,
-				FPS:       &videoFps,
+				StartOffset: startOffset,
+				EndOffset:   endOffset,
+				FPS:         &videoFps,
 			},
 		},
 	}

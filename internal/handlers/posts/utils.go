@@ -60,7 +60,8 @@ func (s *Service) generatePostContent(
 	}
 
 	// Create video contents
-	contents, err := s.gemini.MakeVideoContents(post)
+	// The first 40 minutes to keep within the 250k TPM quota
+	contents, err := s.gemini.MakeVideoContents(post.VideoID, 0, 40*60)
 	if err != nil {
 		return fmt.Errorf(
 			"failed to create gemini contents on video %q; %w",
@@ -91,6 +92,8 @@ func (s *Service) generatePostContent(
 			r.URL.Path, err,
 		)
 	}
+
+	// TODO: If it was not blocked proceed to make additional call with the end of the video
 
 	post.OriginalTitle = genaiResponse.OriginalTitle
 	post.Summary = genaiResponse.Summary

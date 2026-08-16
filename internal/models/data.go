@@ -20,12 +20,20 @@ type FileInfo struct {
 	Etag       string
 }
 
+type Credits struct {
+	Directors []string
+	Producers []string
+	Editors   []string
+}
+
 // The response from the Genai API
 type GenaiResponse struct {
 	Title         string `json:"video_title"`
-	OriginalTitle string `json:"original_title"`
-	Summary       string `json:"summary"`
-	Category      string `json:"category"`
+	OriginalTitle string
+	Summary       string
+	Category      string
+	ReleaseYear   int16
+	Credits       *Credits
 }
 
 // Flash message object to store to session for the next page
