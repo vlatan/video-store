@@ -61,8 +61,8 @@ func (s *Service) GenerateContent(
 		},
 		// Exit immediately if no candidates returned or RPD limit reached
 		func(err error) bool {
-			var target *BlockedError
-			return errors.As(err, &target) || errors.Is(err, ErrDailyLimitReached)
+			_, isBlockedError := errors.AsType[*BlockedError](err)
+			return isBlockedError || errors.Is(err, ErrDailyLimitReached)
 		},
 	)
 

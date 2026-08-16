@@ -41,8 +41,7 @@ func (w *Worker) getValidVideos(
 		}
 
 		// If this is NOT a validation error, stop the process
-		var valErr *yt.ValidationError
-		if !errors.As(err, &valErr) {
+		if _, ok := errors.AsType[*yt.ValidationError](err); !ok {
 			return fmt.Errorf(
 				"unexpected error during video %q validation; %w",
 				video.Id, err,
@@ -104,8 +103,7 @@ func (w *Worker) getValidSourcesVideos(
 			err = w.youtube.ValidateYouTubeVideo(video)
 
 			// If this is validation error, skip the video
-			var valErr *yt.ValidationError
-			if errors.As(err, &valErr) {
+			if _, ok := errors.AsType[*yt.ValidationError](err); ok {
 				continue
 			}
 
@@ -250,8 +248,6 @@ func (w *Worker) deleteVideos(
 // insertVideos summarizes videos and inserts them in database
 func (w *Worker) insertVideos(ctx context.Context, videos []*models.Post) error {
 
-	var lockError *rdb.LockError
-
 	// Insert new videos in DB
 	for _, video := range videos {
 
@@ -260,7 +256,7 @@ func (w *Worker) insertVideos(ctx context.Context, videos []*models.Post) error 
 
 		// Exit early if context ended or lock not owned anymore.
 		// Ignore any other error including RPD limit, we'll insert the video in DB regardless.
-		if utils.IsContextErr(err) || errors.As(err, &lockError) {
+		if _, ok := errors.AsType[*rdb.LockError](err); ok || utils.IsContextErr(err) {
 			return err
 		}
 

@@ -119,14 +119,13 @@ func (s *service) PutObject(
 		Metadata:    metadata,
 	})
 
+	// Check if the object was uploaded
 	if err != nil {
-		var apiErr smithy.APIError
-		if errors.As(err, &apiErr) && apiErr.ErrorCode() == "EntityTooLarge" {
+		if apiErr, ok := errors.AsType[smithy.APIError](err); ok && apiErr.ErrorCode() == "EntityTooLarge" {
 			return fmt.Errorf(
 				"error while uploading object to %s; The object is too large: %w",
-				bucket, err,
+				bucket, apiErr,
 			)
-
 		}
 
 		return fmt.Errorf(
@@ -135,6 +134,7 @@ func (s *service) PutObject(
 		)
 	}
 
+	// Quick check if the object exists
 	if err = s.ObjectExists(ctx, time.Minute, bucket, key); err != nil {
 		return fmt.Errorf(
 			"failed attempt to wait for object %s:%s to exist: %w",
