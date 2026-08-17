@@ -1,3 +1,5 @@
+* Make `:= range` more performant by using index
+
 * Make the checkmarks on the like/save green or yellow
 * Add close button to login menu
 * Make search bar on small screens accross entire screen
