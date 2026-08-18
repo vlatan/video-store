@@ -99,8 +99,8 @@ func Retry[T any](
 		}
 
 		// Wait for either the sleep time or context to end
-		if err := SleepContext(ctx, sleepTime); err != nil {
-			return zero, errors.Join(ctx.Err(), lastError)
+		if err := Sleep(ctx, sleepTime); err != nil {
+			return zero, errors.Join(err, lastError)
 		}
 	}
 

@@ -3,7 +3,6 @@ package posts
 import (
 	"errors"
 	"fmt"
-	"log"
 	"log/slog"
 	"net/http"
 	"time"
@@ -331,7 +330,13 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 		// generate the post content overnight.
 		go func() {
 			if err := s.generatePostContent(r, post, 30*time.Minute); err != nil {
-				log.Println(err)
+				slog.ErrorContext(
+					r.Context(),
+					"failed to generate/update LLM content",
+					"path", r.URL.Path,
+					"videoId", post.VideoID,
+					"error", err,
+				)
 			}
 		}()
 

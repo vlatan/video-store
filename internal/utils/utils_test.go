@@ -295,7 +295,7 @@ func TestIsContextErr(t *testing.T) {
 	}
 }
 
-func TestSleepContext(t *testing.T) {
+func TestSleep(t *testing.T) {
 
 	ctx := context.Background()
 	noCtx, cancel := context.WithCancel(ctx)
@@ -313,7 +313,7 @@ func TestSleepContext(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := SleepContext(tt.ctx, tt.delay)
+			err := Sleep(tt.ctx, tt.delay)
 			if gotErr := err != nil; gotErr != tt.weantErr {
 				t.Errorf("got error = %v, want error = %t", err, tt.weantErr)
 			}

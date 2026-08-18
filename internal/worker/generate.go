@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"math/rand/v2"
+	"log/slog"
 	"time"
 
 	"github.com/vlatan/video-store/internal/integrations/gemini"
@@ -22,11 +22,11 @@ func (w *Worker) generateContent(
 	video *models.Post) (bool, error) {
 
 	// Nothing to update, summary and category are populated
-	// if video.Summary != "" &&
-	// 	video.Category != nil &&
-	// 	video.Category.Name != "" {
-	// 	return false, nil
-	// }
+	if video.Summary != "" &&
+		video.Category != nil &&
+		video.Category.Name != "" {
+		return false, nil
+	}
 
 	// Get video duration
 	videoDuration, err := video.Duration.Seconds()
@@ -66,7 +66,7 @@ func (w *Worker) generateContent(
 
 	// Sleep with context in mind for 60-90 seconds.
 	// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
-	if err := sleep(ctx, 60*time.Second, 90*time.Second); err != nil {
+	if err := utils.SleepJitter(ctx, 60*time.Second, 90*time.Second); err != nil {
 		return false, err
 	}
 
@@ -103,7 +103,7 @@ func (w *Worker) generateContent(
 
 		// Sleep with context in mind for 60-90 seconds.
 		// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
-		if err := sleep(ctx, 60*time.Second, 90*time.Second); err != nil {
+		if err := utils.SleepJitter(ctx, 60*time.Second, 90*time.Second); err != nil {
 			return false, err
 		}
 	}
@@ -121,20 +121,24 @@ func (w *Worker) generateContent(
 	video.OriginalTitle = genaiResponse.OriginalTitle
 	video.Summary = genaiResponse.Summary
 	video.Category = &models.Category{Name: genaiResponse.Category}
+	video.Credits = genaiResponse.Credits
+	video.ReleaseYear = genaiResponse.ReleaseYear
 
 	// If not blocked and the video is more than 40 minutes long,
-	// make another call with the ending of the video to extract the credits
+	// make another call with the ending of the video to extract the credits.
 	if !blocked && videoDuration > 40*time.Minute {
 
-		// TODO: Maybe exit cleanly with hat we have if the second call fails
-		// Just log the error and dexit with true, nil
-
-		// Create video contents but now with an end offset - the last 10 minutes
+		// Create video contents but now with an end offset - the last 10 minutes.
+		// Just log error and exit cleanly with true, nil.
 		contents, err = w.gemini.MakeVideoContents(video.VideoID, videoDuration-10*time.Minute, videoDuration)
 		if err != nil {
-			return false, fmt.Errorf(
-				"failed to create gemini contents on video %q; %v",
-				video.VideoID, err)
+			slog.ErrorContext(
+				ctx,
+				"failed to make video contents",
+				"videoId", video.VideoID,
+				"error", err,
+			)
+			return true, nil
 		}
 
 		// Check if the worker still owns the lock before an expensive API call
@@ -157,7 +161,7 @@ func (w *Worker) generateContent(
 
 		// Sleep with context in mind for 60-90 seconds.
 		// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
-		if err := sleep(ctx, 60*time.Second, 90*time.Second); err != nil {
+		if err := utils.SleepJitter(ctx, 60*time.Second, 90*time.Second); err != nil {
 			return false, err
 		}
 
@@ -166,19 +170,4 @@ func (w *Worker) generateContent(
 	}
 
 	return true, nil
-}
-
-// sleep sleeps with context in mind
-// for a random duration between min and max sleep time
-func sleep(ctx context.Context, minSleep, maxSleep time.Duration) error {
-	if maxSleep < minSleep {
-		return errors.New("max sleep time < min sleep time")
-	}
-
-	if maxSleep == minSleep {
-		return utils.SleepContext(ctx, minSleep)
-	}
-
-	sleepTime := minSleep + rand.N(maxSleep-minSleep) // #nosec G404
-	return utils.SleepContext(ctx, sleepTime)
 }

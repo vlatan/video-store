@@ -59,51 +59,100 @@ func (s *Service) generatePostContent(
 		Delay:      65 * time.Second,
 	}
 
+	videoDuration, err := post.Duration.Seconds()
+	if err != nil || videoDuration == 0 {
+		return fmt.Errorf("couldn't convert video's duration to seconds: %w", err)
+	}
+
 	// Create video contents
 	// The first 40 minutes to keep within the 250k TPM quota
-	contents, err := s.gemini.MakeVideoContents(post.VideoID, 0, 40*60)
+	contents, err := s.gemini.MakeVideoContents(post.VideoID, 0, min(videoDuration, 40*time.Minute))
 	if err != nil {
-		return fmt.Errorf(
-			"failed to create gemini contents on video %q; %w",
-			post.VideoID, err)
+		return fmt.Errorf("failed to create gemini contents: %w", err)
 	}
 
 	genaiResponse, err := s.gemini.GenerateContent(ctx, post, contents, retryConfig)
 
 	// Check if this is a hard block error by the model.
 	// If so make another gemini API call just with a text contents.
-	if _, ok := errors.AsType[*gemini.BlockedError](err); ok {
+	_, blocked := errors.AsType[*gemini.BlockedError](err)
+	if blocked {
 		slog.ErrorContext(
 			ctx, "failed to generate LLM content, trying again with text input",
 			"path", r.URL.Path,
+			"videoId", post.VideoID,
 			"error", err,
 		)
 
 		// Create text contents
 		contents = s.gemini.MakeTextContents(post)
 
+		// Sleep with context in mind for 60-90 seconds.
+		// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
+		if err := utils.SleepJitter(ctx, 60*time.Second, 90*time.Second); err != nil {
+			return err
+		}
+
 		// Generate content using Gemini, but now with text contents
 		genaiResponse, err = s.gemini.GenerateContent(ctx, post, contents, retryConfig)
 	}
 
 	if err != nil {
-		return fmt.Errorf(
-			"failed to generate LLM content on path %q: %w",
-			r.URL.Path, err,
-		)
+		return fmt.Errorf("failed to generate LLM content: %w", err)
 	}
-
-	// TODO: If it was not blocked proceed to make additional call with the end of the video
 
 	post.OriginalTitle = genaiResponse.OriginalTitle
 	post.Summary = genaiResponse.Summary
 	post.Category = &models.Category{Name: genaiResponse.Category}
+	post.Credits = genaiResponse.Credits
+	post.ReleaseYear = genaiResponse.ReleaseYear
+
+	slog.InfoContext(
+		ctx,
+		"video results - first pass",
+		"videoId", post.VideoID,
+		"releaseYear", post.ReleaseYear,
+		"credits", post.Credits,
+	)
+
+	// If not blocked and the video is more than 40 minutes long,
+	// make another call with the ending of the video to extract the credits.
+	if !blocked && videoDuration > 40*time.Minute {
+
+		// Create video contents but now with an end offset - the last 10 minutes.
+		// Just log error and exit cleanly with true, nil.
+		contents, err = s.gemini.MakeVideoContents(post.VideoID, videoDuration-10*time.Minute, videoDuration)
+		if err != nil {
+			return fmt.Errorf("failed to create gemini contents: %w", err)
+		}
+
+		// Sleep with context in mind for 60-90 seconds.
+		// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
+		if err := utils.SleepJitter(ctx, 60*time.Second, 90*time.Second); err != nil {
+			return err
+		}
+
+		// Generate content using Gemini
+		genaiSecondResponse, err := s.gemini.GenerateContent(ctx, post, contents, retryConfig)
+		if err != nil {
+			return fmt.Errorf("failed to generate LLM content: %w", err)
+		}
+
+		post.Credits = genaiSecondResponse.Credits
+		post.ReleaseYear = genaiSecondResponse.ReleaseYear
+	}
+
+	slog.InfoContext(
+		ctx,
+		"video results - second pass",
+		"videoId", post.VideoID,
+		"releaseYear", post.ReleaseYear,
+		"credits", post.Credits,
+	)
 
 	_, err = s.postsRepo.UpdateGeneratedData(ctx, post)
 	if err != nil {
-		return fmt.Errorf(
-			"failed to update the LLM data in DB on video %q: %w",
-			post.VideoID, err)
+		return fmt.Errorf("failed to update LLM content in DB: %w", err)
 	}
 
 	return nil
