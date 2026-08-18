@@ -1,8 +1,8 @@
 * Combine/consolidate the credits results between the two passes
+* The release year is not being extracted well
 * Create a flag so the posts don't get reprocessed
 * Create migration files and run the DB migration
 * Modify the upsert and get post queries
-* The release year is not being extracted well
 
 * Make `:= range` more performant by using index
 
