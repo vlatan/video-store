@@ -46,6 +46,12 @@ func (w *Worker) generateContent(
 			video.VideoID, err)
 	}
 
+	// Sleep with context in mind for 60-90 seconds.
+	// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
+	if err := utils.SleepJitter(ctx, 60*time.Second, 90*time.Second); err != nil {
+		return false, err
+	}
+
 	// Check if the worker still owns the lock before an expensive API call
 	if err = w.lock.CheckLock(ctx); err != nil {
 		return false, fmt.Errorf(
@@ -64,12 +70,6 @@ func (w *Worker) generateContent(
 			video.VideoID, err)
 	}
 
-	// Sleep with context in mind for 60-90 seconds.
-	// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
-	if err := utils.SleepJitter(ctx, 60*time.Second, 90*time.Second); err != nil {
-		return false, err
-	}
-
 	// Check if this is a hard block error by the model.
 	// If so make another gemini API call just with a text contents.
 	_, blocked := errors.AsType[*gemini.BlockedError](err)
@@ -82,6 +82,12 @@ func (w *Worker) generateContent(
 
 		// Create text contents
 		contents = w.gemini.MakeTextContents(video)
+
+		// Sleep with context in mind for 60-90 seconds.
+		// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
+		if err := utils.SleepJitter(ctx, 60*time.Second, 90*time.Second); err != nil {
+			return false, err
+		}
 
 		// Check if the worker still owns the lock before an expensive API call
 		if err = w.lock.CheckLock(ctx); err != nil {
@@ -99,12 +105,6 @@ func (w *Worker) generateContent(
 			return false, fmt.Errorf(
 				"failed to generate content on video %q; %w",
 				video.VideoID, err)
-		}
-
-		// Sleep with context in mind for 60-90 seconds.
-		// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
-		if err := utils.SleepJitter(ctx, 60*time.Second, 90*time.Second); err != nil {
-			return false, err
 		}
 	}
 
@@ -141,6 +141,12 @@ func (w *Worker) generateContent(
 			return true, nil
 		}
 
+		// Sleep with context in mind for 60-90 seconds.
+		// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
+		if err := utils.SleepJitter(ctx, 60*time.Second, 90*time.Second); err != nil {
+			return false, err
+		}
+
 		// Check if the worker still owns the lock before an expensive API call
 		if err = w.lock.CheckLock(ctx); err != nil {
 			return false, fmt.Errorf(
@@ -159,14 +165,20 @@ func (w *Worker) generateContent(
 				video.VideoID, err)
 		}
 
-		// Sleep with context in mind for 60-90 seconds.
-		// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
-		if err := utils.SleepJitter(ctx, 60*time.Second, 90*time.Second); err != nil {
-			return false, err
+		// For every other error just log it
+		if err != nil {
+			slog.ErrorContext(
+				ctx,
+				"failed to generate LLM content on the second pass",
+				"videoId", video.VideoID,
+				"error", err,
+			)
 		}
 
-		video.Credits = genaiSecondResponse.Credits
-		video.ReleaseYear = genaiSecondResponse.ReleaseYear
+		if genaiSecondResponse != nil {
+			video.Credits = genaiSecondResponse.Credits
+			video.ReleaseYear = genaiSecondResponse.ReleaseYear
+		}
 	}
 
 	return true, nil

@@ -134,12 +134,26 @@ func (s *Service) generatePostContent(
 
 		// Generate content using Gemini
 		genaiSecondResponse, err := s.gemini.GenerateContent(ctx, post, contents, retryConfig)
-		if err != nil {
-			return fmt.Errorf("failed to generate LLM content: %w", err)
+
+		// Exit if context ended
+		if utils.IsContextErr(err) {
+			return fmt.Errorf("failed to generate LLM content on the second pass: %w", err)
 		}
 
-		post.Credits = genaiSecondResponse.Credits
-		post.ReleaseYear = genaiSecondResponse.ReleaseYear
+		// For every other error just log it for the second pass
+		if err != nil {
+			slog.ErrorContext(
+				ctx,
+				"failed to generate LLM content on the second pass",
+				"videoId", post.VideoID,
+				"error", err,
+			)
+		}
+
+		if genaiSecondResponse != nil {
+			post.Credits = genaiSecondResponse.Credits
+			post.ReleaseYear = genaiSecondResponse.ReleaseYear
+		}
 	}
 
 	slog.InfoContext(
