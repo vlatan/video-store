@@ -15,7 +15,7 @@ func (s *Service) responseSchema() *genai.Schema {
 			},
 			"original_title": {
 				Type: genai.TypeString,
-				Description: "Extract the complete original title visually displayed on the video frames. " +
+				Description: "Extract the complete original title visually displayed on the screen. " +
 					"If the title is split into a main title and a subtitle across different frames, " +
 					"combine them into a single string (e.g. 'Main Title: Subtitle'). " +
 					"You must read the pixels. Strictly ignore the audio track, transcript, and metadata. " +
@@ -35,8 +35,8 @@ func (s *Service) responseSchema() *genai.Schema {
 			},
 			"release_year": {
 				Type: genai.TypeInteger,
-				Description: "Extract the production, copyright or release year visually displayed on the video frames. " +
-					"This year usualy appears among the very last frames near the @ symbol. " +
+				Description: "Extract the 4-digit production, copyright, or release year visually displayed on the screen. " +
+					"This year usualy appears among the very last frames near the copyright symbol. " +
 					"If the year is rendered in Roman numerals convert it to a standard Arabic-numeral year. " +
 					"You must read the pixels. Strictly ignore the audio track, transcript, and metadata. " +
 					"Omit this field if no year is legible on screen. Do not infer a specific month or day.",
@@ -47,19 +47,19 @@ func (s *Service) responseSchema() *genai.Schema {
 					"directors": {
 						Type:  genai.TypeArray,
 						Items: &genai.Schema{Type: genai.TypeString},
-						Description: "Extract the Directors' full name(s) visually displayed on the video frames. " +
+						Description: "Extract the Directors' full name(s) visually displayed on the screen. " +
 							"You must read the pixels. Strictly ignore the audio track, transcript, and metadata. ",
 					},
 					"producers": {
 						Type:  genai.TypeArray,
 						Items: &genai.Schema{Type: genai.TypeString},
-						Description: "Extract the Producers' full name(s) visually displayed on the video frames. " +
+						Description: "Extract the Producers' full name(s) visually displayed on the screen. " +
 							"You must read the pixels. Strictly ignore the audio track, transcript, and metadata. ",
 					},
 					"editors": {
 						Type:  genai.TypeArray,
 						Items: &genai.Schema{Type: genai.TypeString},
-						Description: "Extract the Editors' full name(s) visually displayed on the video frames. " +
+						Description: "Extract the Editors' full name(s) visually displayed on the screen. " +
 							"You must read the pixels. Strictly ignore the audio track, transcript, and metadata. ",
 					},
 				},

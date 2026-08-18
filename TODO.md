@@ -1,3 +1,4 @@
+* The original title is not extracted
 * Combine/consolidate the credits results between the two passes
 * The release year is not being extracted well
 * Create a flag so the posts don't get reprocessed

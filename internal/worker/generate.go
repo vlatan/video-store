@@ -61,7 +61,7 @@ func (w *Worker) generateContent(
 	}
 
 	// Generate content using Gemini
-	genaiResponse, err := w.gemini.GenerateContent(ctx, video, contents, w.geminiRetryConfig)
+	genaiResponse, err := w.gemini.GenerateContent(ctx, contents, w.geminiRetryConfig)
 
 	// Exit with error if RPD reached or context ended
 	if errors.Is(err, gemini.ErrDailyLimitReached) || utils.IsContextErr(err) {
@@ -98,7 +98,7 @@ func (w *Worker) generateContent(
 		}
 
 		// Generate content using Gemini, but now with text contents
-		genaiResponse, err = w.gemini.GenerateContent(ctx, video, contents, w.geminiRetryConfig)
+		genaiResponse, err = w.gemini.GenerateContent(ctx, contents, w.geminiRetryConfig)
 
 		// Exit with error if RPD reached or context ended
 		if errors.Is(err, gemini.ErrDailyLimitReached) || utils.IsContextErr(err) {
@@ -156,7 +156,7 @@ func (w *Worker) generateContent(
 		}
 
 		// Generate content using Gemini
-		genaiSecondResponse, err := w.gemini.GenerateContent(ctx, video, contents, w.geminiRetryConfig)
+		genaiSecondResponse, err := w.gemini.GenerateContent(ctx, contents, w.geminiRetryConfig)
 
 		// Exit with error if RPD reached or context ended
 		if errors.Is(err, gemini.ErrDailyLimitReached) || utils.IsContextErr(err) {

@@ -49,7 +49,6 @@ func (s *Service) generateContent(
 // Unmarshals the result if any and returns a genai response object.
 func (s *Service) GenerateContent(
 	ctx context.Context,
-	video *models.Post,
 	contents []*genai.Content,
 	rc *utils.RetryConfig,
 ) (*models.GenaiResponse, error) {

@@ -61,7 +61,7 @@ func (s *Service) generatePostContent(ctx context.Context, post *models.Post) er
 		return fmt.Errorf("failed to create gemini contents: %w", err)
 	}
 
-	genaiResponse, err := s.gemini.GenerateContent(ctx, post, contents, retryConfig)
+	genaiResponse, err := s.gemini.GenerateContent(ctx, contents, retryConfig)
 
 	// Check if this is a hard block error by the model.
 	// If so make another gemini API call just with a text contents.
@@ -83,7 +83,7 @@ func (s *Service) generatePostContent(ctx context.Context, post *models.Post) er
 		}
 
 		// Generate content using Gemini, but now with text contents
-		genaiResponse, err = s.gemini.GenerateContent(ctx, post, contents, retryConfig)
+		genaiResponse, err = s.gemini.GenerateContent(ctx, contents, retryConfig)
 	}
 
 	if err != nil {
@@ -128,7 +128,7 @@ func (s *Service) generatePostContent(ctx context.Context, post *models.Post) er
 		}
 
 		// Generate content using Gemini
-		genaiSecondResponse, err := s.gemini.GenerateContent(ctx, post, contents, retryConfig)
+		genaiSecondResponse, err := s.gemini.GenerateContent(ctx, contents, retryConfig)
 
 		// Exit if context ended
 		if utils.IsContextErr(err) {
