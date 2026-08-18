@@ -304,7 +304,7 @@ func (w *Worker) updateVideos(ctx context.Context, videos []*models.Post) error 
 			continue
 		}
 
-		rowsAffected, err := w.postsRepo.UpdateGeneratedData(ctx, video)
+		rowsAffected, err := w.postsRepo.UpdateGeneratedContent(ctx, video)
 		w.stats.UpdatedDbVideos += rowsAffected
 
 		if err == nil {

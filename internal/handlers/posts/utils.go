@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"net/http"
 	"net/url"
 	"regexp"
 	"strings"
@@ -42,16 +41,7 @@ func extractYouTubeID(rawURL string) (string, error) {
 	return "", errors.New("could not extract the video ID")
 }
 
-func (s *Service) generatePostContent(
-	r *http.Request,
-	post *models.Post,
-	ttl time.Duration) error {
-
-	// Detach the request context and
-	// give this goroutine reasonable time to finish
-	detachedCtx := context.WithoutCancel(r.Context())
-	ctx, cancel := context.WithTimeout(detachedCtx, ttl)
-	defer cancel()
+func (s *Service) generatePostContent(ctx context.Context, post *models.Post) error {
 
 	retryConfig := &utils.RetryConfig{
 		MaxRetries: 1,
@@ -79,7 +69,6 @@ func (s *Service) generatePostContent(
 	if blocked {
 		slog.ErrorContext(
 			ctx, "failed to generate LLM content, trying again with text input",
-			"path", r.URL.Path,
 			"videoId", post.VideoID,
 			"error", err,
 		)
@@ -120,7 +109,6 @@ func (s *Service) generatePostContent(
 	if !blocked && videoDuration > 40*time.Minute {
 
 		// Create video contents but now with an end offset - the last 10 minutes.
-		// Just log error and exit cleanly with true, nil.
 		contents, err = s.gemini.MakeVideoContents(post.VideoID, videoDuration-10*time.Minute, videoDuration)
 		if err != nil {
 			return fmt.Errorf("failed to create gemini contents: %w", err)
@@ -140,7 +128,7 @@ func (s *Service) generatePostContent(
 			return fmt.Errorf("failed to generate LLM content on the second pass: %w", err)
 		}
 
-		// For every other error just log it for the second pass
+		// For every other error just log it
 		if err != nil {
 			slog.ErrorContext(
 				ctx,
@@ -163,11 +151,6 @@ func (s *Service) generatePostContent(
 		"releaseYear", post.ReleaseYear,
 		"credits", post.Credits,
 	)
-
-	_, err = s.postsRepo.UpdateGeneratedData(ctx, post)
-	if err != nil {
-		return fmt.Errorf("failed to update LLM content in DB: %w", err)
-	}
 
 	return nil
 }

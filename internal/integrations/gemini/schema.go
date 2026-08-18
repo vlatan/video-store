@@ -36,6 +36,7 @@ func (s *Service) responseSchema() *genai.Schema {
 			"release_year": {
 				Type: genai.TypeInteger,
 				Description: "Extract the copyright or release year visually displayed on the video frames. " +
+					"The release year usualy appears among the very last frames near the @ symbol. " +
 					"If the year is rendered in Roman numerals convert it to a standard Arabic-numeral year. " +
 					"You must read the pixels. Strictly ignore the audio track, transcript, and metadata. " +
 					"Omit this field if no year is legible on screen. Do not infer a specific month or day.",

@@ -1,6 +1,7 @@
 package posts
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -325,11 +326,17 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Generate content in the background using Gemini.
-		// Give reasonable TTL for this to finish.
 		// In production no need to use it, the worker will
 		// generate the post content overnight.
 		go func() {
-			if err := s.generatePostContent(r, post, 30*time.Minute); err != nil {
+
+			// Detach the request context and
+			// give this goroutine reasonable time to finish
+			detachedCtx := context.WithoutCancel(r.Context())
+			ctx, cancel := context.WithTimeout(detachedCtx, 30*time.Minute)
+			defer cancel()
+
+			if err := s.generatePostContent(ctx, post); err != nil {
 				slog.ErrorContext(
 					r.Context(),
 					"failed to generate/update LLM content",
@@ -337,7 +344,20 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 					"videoId", post.VideoID,
 					"error", err,
 				)
+				return
 			}
+
+			_, err = s.postsRepo.UpdateGeneratedContent(ctx, post)
+			if err != nil {
+				slog.ErrorContext(
+					r.Context(),
+					"failed to update LLM content in DB",
+					"path", r.URL.Path,
+					"videoId", post.VideoID,
+					"error", err,
+				)
+			}
+
 		}()
 
 		// Check out the video
