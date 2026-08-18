@@ -111,7 +111,14 @@ func (s *Service) generatePostContent(ctx context.Context, post *models.Post) er
 		// Create video contents but now with an end offset - the last 10 minutes.
 		contents, err = s.gemini.MakeVideoContents(post.VideoID, videoDuration-10*time.Minute, videoDuration)
 		if err != nil {
-			return fmt.Errorf("failed to create gemini contents: %w", err)
+			slog.ErrorContext(
+				ctx, "failed to create gemini contents on the second pass",
+				"videoId", post.VideoID,
+				"error", err,
+			)
+			// Abort with nil error, no need to continue.
+			// Salvage the generated content we already have.
+			return nil
 		}
 
 		// Sleep with context in mind for 60-90 seconds.
@@ -136,6 +143,9 @@ func (s *Service) generatePostContent(ctx context.Context, post *models.Post) er
 				"videoId", post.VideoID,
 				"error", err,
 			)
+			// Abort with nil error, no need to continue.
+			// Salvage the generated content we already have.
+			return nil
 		}
 
 		if genaiSecondResponse != nil {

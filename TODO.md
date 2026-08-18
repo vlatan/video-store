@@ -1,7 +1,7 @@
+* Combine/consolidate the results between the two passes
 * Create a flag so the posts don't get reprocessed
 * Create migration files and run the DB migration
 * Modify the upsert and get post queries
-* Check if the credits have been genreated in the first pass
 * The release year is not being extracted well
 
 * Make `:= range` more performant by using index
