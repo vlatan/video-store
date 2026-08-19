@@ -63,7 +63,6 @@ func (s *Service) responseSchema() *genai.Schema {
 							"You must read the pixels. Strictly ignore the audio track, transcript, and metadata. ",
 					},
 				},
-				Required: []string{"directors", "producers", "editors"},
 				Description: "Extract full name(s) only - no titles, role labels, or surrounding text. " +
 					"Each field is an empty array if that credit type does not appear on screen.",
 			},

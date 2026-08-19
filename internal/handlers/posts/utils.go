@@ -100,6 +100,7 @@ func (s *Service) generatePostContent(ctx context.Context, post *models.Post) er
 		ctx,
 		"video results - first pass",
 		"videoId", post.VideoID,
+		"original title", post.OriginalTitle,
 		"releaseYear", post.ReleaseYear,
 		"credits", post.Credits,
 	)
@@ -158,6 +159,7 @@ func (s *Service) generatePostContent(ctx context.Context, post *models.Post) er
 		ctx,
 		"video results - second pass",
 		"videoId", post.VideoID,
+		"original title", post.OriginalTitle,
 		"releaseYear", post.ReleaseYear,
 		"credits", post.Credits,
 	)
