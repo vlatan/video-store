@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"runtime/debug"
+	"slices"
 	"strings"
 
 	"github.com/vlatan/video-store/internal/config"
@@ -155,8 +156,7 @@ func (s *Service) RecoverPanic(next http.Handler) http.Handler {
 // PublicCache adds cache control header for non-admin users
 func (s *Service) PublicCache(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		data := models.GetDataFromContext(r)
-		if !data.CurrentUser.IsAdmin() {
+		if user := models.GetUserFromContext(r); !user.IsAdmin() {
 			w.Header().Set("Cache-Control", "public, max-age=3600")
 		}
 		next(w, r)
@@ -410,7 +410,7 @@ func (s *Service) MethodOverride(next http.Handler) http.Handler {
 func (s *Service) ApplyToAll(middlewares ...func(http.Handler) http.Handler) func(http.Handler) http.Handler {
 	return func(final http.Handler) http.Handler {
 		// Apply middlewares in reverse order
-		for i := len(middlewares) - 1; i >= 0; i-- {
+		for i := range slices.Backward(middlewares) {
 			final = middlewares[i](final)
 		}
 		return final
