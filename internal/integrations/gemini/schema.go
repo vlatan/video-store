@@ -39,7 +39,8 @@ func (s *Service) responseSchema() *genai.Schema {
 					"This year usualy appears among the very last frames near the copyright symbol. " +
 					"If the year is rendered in Roman numerals convert it to a standard Arabic-numeral year. " +
 					"You must read the pixels. Strictly ignore the audio track, transcript, and metadata. " +
-					"Omit this field if no year is legible on screen. Do not infer a specific month or day.",
+					"Do not guess the year, nor infer a specific month or day." +
+					"Omit this field if no year is legible on screen. ",
 			},
 			"credits": {
 				Type: genai.TypeObject,
@@ -48,21 +49,25 @@ func (s *Service) responseSchema() *genai.Schema {
 						Type:  genai.TypeArray,
 						Items: &genai.Schema{Type: genai.TypeString},
 						Description: "Extract the Directors' full name(s) visually displayed on the screen. " +
+							"Examples: 'Report by', 'Film by', 'Made by', 'Directed by', 'Director', 'Filmmaker', 'Reporter', 'Author'. " +
 							"You must read the pixels. Strictly ignore the audio track, transcript, and metadata. ",
 					},
 					"producers": {
 						Type:  genai.TypeArray,
 						Items: &genai.Schema{Type: genai.TypeString},
 						Description: "Extract the Producers' full name(s) visually displayed on the screen. " +
+							"Examples: 'Producer', 'Executive Producer'. " +
 							"You must read the pixels. Strictly ignore the audio track, transcript, and metadata. ",
 					},
 					"editors": {
 						Type:  genai.TypeArray,
 						Items: &genai.Schema{Type: genai.TypeString},
 						Description: "Extract the Editors' full name(s) visually displayed on the screen. " +
+							"Examples: 'Edited by', 'Editor'. " +
 							"You must read the pixels. Strictly ignore the audio track, transcript, and metadata. ",
 					},
 				},
+				Required: []string{"directors", "producers", "editors"},
 				Description: "Extract full name(s) only - no titles, role labels, or surrounding text. " +
 					"Each field is an empty array if that credit type does not appear on screen.",
 			},
