@@ -22,7 +22,6 @@ func (s *Service) MakeVideoContents(
 	}
 
 	// Ready the video part
-	videoFps := 1.0
 	youtubeURL := "https://www.youtube.com/watch?v=" + videoId
 	parts := []*genai.Part{
 		{
@@ -30,7 +29,7 @@ func (s *Service) MakeVideoContents(
 			VideoMetadata: &genai.VideoMetadata{
 				StartOffset: startOffset,
 				EndOffset:   endOffset,
-				FPS:         &videoFps,
+				FPS:         new(1.0),
 			},
 		},
 	}
