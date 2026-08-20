@@ -18,15 +18,17 @@ func (s *Service) responseSchema() *genai.Schema {
 				Description: "Extract the complete original title visually displayed on the screen. " +
 					"If the title is split into a main title and a subtitle across different frames, " +
 					"combine them into a single string (e.g. 'Main Title: Subtitle'). " +
-					"You must read the pixels. Strictly ignore the audio track, transcript, and metadata. " +
+					"You must read the video frames' pixels. " +
+					"Strictly ignore the audio track, transcript, and metadata. " +
 					"Use title case.",
 			},
 			"summary": {
 				Type: genai.TypeString,
 				Description: "Write an engaging one-paragraph blurb in the style of an IMDB film description. " +
-					"Focus entirely on the subject matter itself - the people, events, or forces at the heart of the story. " +
-					"Do NOT summarize or reference the video. Do NOT write a definition or encyclopedia entry. " +
-					"Make it feel compelling and human, not academic.",
+					"Focus entirely on the subject matter itself - people's names, events, and forces at the heart of the story. " +
+					"Do NOT summarize or reference the video. " +
+					"Do NOT make it extremely short. " +
+					"Make it feel compelling, informative, and human, not academic.",
 			},
 			"category": {
 				Type:        genai.TypeString,
@@ -36,11 +38,12 @@ func (s *Service) responseSchema() *genai.Schema {
 			"release_year": {
 				Type: genai.TypeInteger,
 				Description: "Extract the 4-digit production, copyright, or release year visually displayed on the screen. " +
-					"This year usualy appears among the very last frames near the copyright symbol. " +
+					"This year usualy appears among the very last frames. " +
 					"If the year is rendered in Roman numerals convert it to a standard Arabic-numeral year. " +
-					"You must read the pixels. Strictly ignore the audio track, transcript, and metadata. " +
-					"Do not guess the year, nor infer a specific month or day." +
-					"Omit this field if no year is legible on screen. ",
+					"You MUST read the video frames' pixels. " +
+					"Strictly ignore the audio track, transcript, and metadata. " +
+					"Do NOT under any circumstances guess or infer the year." +
+					"Leave this field empty if no year is legible on the screen. ",
 			},
 			"credits": {
 				Type: genai.TypeObject,
@@ -50,28 +53,15 @@ func (s *Service) responseSchema() *genai.Schema {
 						Items: &genai.Schema{Type: genai.TypeString},
 						Description: "Extract the Directors' full name(s) visually displayed on the screen. " +
 							"Examples: 'Report by', 'Film by', 'Made by', 'Directed by', 'Director', 'Filmmaker', 'Reporter', 'Author'. " +
-							"You must read the pixels. Strictly ignore the audio track, transcript, and metadata. ",
-					},
-					"producers": {
-						Type:  genai.TypeArray,
-						Items: &genai.Schema{Type: genai.TypeString},
-						Description: "Extract the Producers' full name(s) visually displayed on the screen. " +
-							"Examples: 'Producer', 'Executive Producer'. " +
-							"You must read the pixels. Strictly ignore the audio track, transcript, and metadata. ",
-					},
-					"editors": {
-						Type:  genai.TypeArray,
-						Items: &genai.Schema{Type: genai.TypeString},
-						Description: "Extract the Editors' full name(s) visually displayed on the screen. " +
-							"Examples: 'Edited by', 'Editor'. " +
-							"You must read the pixels. Strictly ignore the audio track, transcript, and metadata. ",
+							"Extract full name(s) only - no titles, role labels, or surrounding text. " +
+							"You MUST read the video frames' pixels. " +
+							"Strictly ignore the audio track, transcript, and metadata. " +
+							"Leave this field empty if this credit type does not appear on the screen.",
 					},
 				},
-				Required: []string{"directors", "producers", "editors"},
-				Description: "Extract full name(s) only - no titles, role labels, or surrounding text. " +
-					"Each field is an empty array if that credit type does not appear on screen.",
+				Required: []string{"directors"},
 			},
 		},
-		Required: []string{"summary", "category"},
+		Required: []string{"original_title", "summary", "category", "release_year", "credits"},
 	}
 }

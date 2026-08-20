@@ -58,10 +58,17 @@ func New(
 	}
 
 	// Configure genai
-	temp, topP := float32(0.0), float32(0.1)
 	s.genaiConfig = &genai.GenerateContentConfig{
-		Temperature: &temp,
-		TopP:        &topP,
+
+		// Set values for less randomness
+		Temperature: new(float32),
+		TopP:        new(float32),
+		TopK:        new(float32(1.0)),
+
+		// Forces minimal chain-of-thought
+		ThinkingConfig: &genai.ThinkingConfig{
+			ThinkingLevel: genai.ThinkingLevelMinimal,
+		},
 
 		// Can't return JSON if using web search
 		ResponseMIMEType: "application/json",
