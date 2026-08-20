@@ -121,7 +121,7 @@ func (w *Worker) generateContent(
 	video.OriginalTitle = genaiResponse.OriginalTitle
 	video.Summary = genaiResponse.Summary
 	video.Category = &models.Category{Name: genaiResponse.Category}
-	video.Credits = genaiResponse.Credits
+	video.Directors = genaiResponse.Directors
 	video.ReleaseYear = genaiResponse.ReleaseYear
 
 	// If not blocked and the video is more than 40 minutes long,
@@ -175,10 +175,8 @@ func (w *Worker) generateContent(
 			)
 		}
 
-		if genaiSecondResponse != nil {
-			video.Credits = genaiSecondResponse.Credits
-			video.ReleaseYear = genaiSecondResponse.ReleaseYear
-		}
+		video.Directors = genaiSecondResponse.Directors
+		video.ReleaseYear = genaiSecondResponse.ReleaseYear
 	}
 
 	return true, nil

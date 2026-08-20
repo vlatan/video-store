@@ -93,7 +93,7 @@ func (s *Service) generatePostContent(ctx context.Context, post *models.Post) er
 	post.OriginalTitle = genaiResponse.OriginalTitle
 	post.Summary = genaiResponse.Summary
 	post.Category = &models.Category{Name: genaiResponse.Category}
-	post.Credits = genaiResponse.Credits
+	post.Directors = genaiResponse.Directors
 	post.ReleaseYear = genaiResponse.ReleaseYear
 
 	slog.InfoContext(
@@ -101,8 +101,8 @@ func (s *Service) generatePostContent(ctx context.Context, post *models.Post) er
 		"video results - first pass",
 		"videoId", post.VideoID,
 		"original title", post.OriginalTitle,
+		"directors", post.Directors,
 		"releaseYear", post.ReleaseYear,
-		"credits", post.Credits,
 	)
 
 	// If not blocked and the video is more than 40 minutes long,
@@ -149,10 +149,8 @@ func (s *Service) generatePostContent(ctx context.Context, post *models.Post) er
 			return nil
 		}
 
-		if genaiSecondResponse != nil {
-			post.Credits = genaiSecondResponse.Credits
-			post.ReleaseYear = genaiSecondResponse.ReleaseYear
-		}
+		post.Directors = genaiSecondResponse.Directors
+		post.ReleaseYear = genaiSecondResponse.ReleaseYear
 	}
 
 	slog.InfoContext(
@@ -160,8 +158,8 @@ func (s *Service) generatePostContent(ctx context.Context, post *models.Post) er
 		"video results - second pass",
 		"videoId", post.VideoID,
 		"original title", post.OriginalTitle,
+		"directors", post.Directors,
 		"releaseYear", post.ReleaseYear,
-		"credits", post.Credits,
 	)
 
 	return nil

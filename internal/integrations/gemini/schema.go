@@ -35,33 +35,26 @@ func (s *Service) responseSchema() *genai.Schema {
 				Enum:        s.catNames,
 				Description: "Select only ONE category.",
 			},
+			"directors": {
+				Type:  genai.TypeArray,
+				Items: &genai.Schema{Type: genai.TypeString},
+				Description: "Extract the directors' full name(s) visually displayed on the screen. " +
+					"Examples: 'Report by', 'Film by', 'Made by', 'Directed by', 'Director', 'Filmmaker', 'Reporter', 'Author'. " +
+					"Extract full name(s) only - no titles, role labels, or surrounding text. " +
+					"You MUST read the video frames' pixels. " +
+					"Strictly ignore the audio track, transcript, and metadata. " +
+					"Do NOT under any circumstances guess or infer the director(s).",
+			},
 			"release_year": {
 				Type: genai.TypeInteger,
 				Description: "Extract the 4-digit production, copyright, or release year visually displayed on the screen. " +
-					"This year usualy appears among the very last frames. " +
+					"This year usualy appears among the very last frames of the closing credits. " +
 					"If the year is rendered in Roman numerals convert it to a standard Arabic-numeral year. " +
 					"You MUST read the video frames' pixels. " +
 					"Strictly ignore the audio track, transcript, and metadata. " +
-					"Do NOT under any circumstances guess or infer the year." +
-					"Leave this field empty if no year is legible on the screen. ",
-			},
-			"credits": {
-				Type: genai.TypeObject,
-				Properties: map[string]*genai.Schema{
-					"directors": {
-						Type:  genai.TypeArray,
-						Items: &genai.Schema{Type: genai.TypeString},
-						Description: "Extract the Directors' full name(s) visually displayed on the screen. " +
-							"Examples: 'Report by', 'Film by', 'Made by', 'Directed by', 'Director', 'Filmmaker', 'Reporter', 'Author'. " +
-							"Extract full name(s) only - no titles, role labels, or surrounding text. " +
-							"You MUST read the video frames' pixels. " +
-							"Strictly ignore the audio track, transcript, and metadata. " +
-							"Leave this field empty if this credit type does not appear on the screen.",
-					},
-				},
-				Required: []string{"directors"},
+					"Do NOT under any circumstances guess or infer the release year.",
 			},
 		},
-		Required: []string{"original_title", "summary", "category", "release_year", "credits"},
+		Required: []string{"summary", "category"},
 	}
 }

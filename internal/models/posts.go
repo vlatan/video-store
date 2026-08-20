@@ -12,8 +12,8 @@ type Post struct {
 	VideoID         string          `json:"video_id,omitempty"`
 	Title           string          `json:"title,omitempty"`
 	OriginalTitle   string          `json:"original_title,omitempty"`
+	Directors       []string        `json:"directors,omitempty"`
 	ReleaseYear     int16           `json:"release_year,omitempty"`
-	Credits         *Credits        `json:"credits,omitempty"`
 	Srcset          string          `json:"srcset,omitempty"`
 	RawThumbs       []byte          `json:"-"`
 	Thumbnails      *Thumbnails     `json:"thumbnails,omitempty"`
