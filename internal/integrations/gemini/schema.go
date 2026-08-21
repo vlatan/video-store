@@ -27,7 +27,7 @@ func (s *Service) responseSchema() *genai.Schema {
 				Description: "Write an engaging one-paragraph blurb in the style of an IMDB film description. " +
 					"Focus entirely on the subject matter itself - people's names, events, and forces at the heart of the story. " +
 					"Do NOT summarize or reference the video. " +
-					"Do NOT make it extremely short. " +
+					"Do NOT make the paragraph extremely short. " +
 					"Make it feel compelling, informative, and human, not academic.",
 			},
 			"category": {
@@ -38,7 +38,7 @@ func (s *Service) responseSchema() *genai.Schema {
 			"directors": {
 				Type:  genai.TypeArray,
 				Items: &genai.Schema{Type: genai.TypeString},
-				Description: "Extract the directors' full name(s) visually displayed on the screen. " +
+				Description: "Extract the director(s) full name(s) visually displayed on the screen. " +
 					"Examples: 'Report by', 'Film by', 'Made by', 'Directed by', 'Director', 'Filmmaker', 'Reporter', 'Author'. " +
 					"Extract full name(s) only - no titles, role labels, or surrounding text. " +
 					"You MUST read the video frames' pixels. " +
