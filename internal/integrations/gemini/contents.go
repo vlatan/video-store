@@ -2,7 +2,6 @@ package gemini
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/vlatan/video-store/internal/models"
 	"google.golang.org/genai"
@@ -12,35 +11,38 @@ import (
 // https://ai.google.dev/gemini-api/docs/video-understanding#clipping-intervals
 func (s *Service) MakeVideoContents(
 	videoId string,
-	startOffset, endOffset time.Duration,
-	fps *float64,
-	resolution genai.PartMediaResolutionLevel) ([]*genai.Content, error) {
+	config models.VideoPartConfig) ([]*genai.Content, error) {
 
-	if startOffset >= endOffset {
+	if config.StartOffset < 0 || config.EndOffset < 0 {
 		return nil, fmt.Errorf(
-			"start offset %q >= end offset %q for the video %q",
-			startOffset, endOffset, videoId,
+			"StartOffset %q and/or EndOffset %q < 0 for video %q",
+			config.StartOffset, config.EndOffset, videoId,
+		)
+	}
+
+	if config.EndOffset != 0 && config.StartOffset >= config.EndOffset {
+		return nil, fmt.Errorf(
+			"StartOffset %q >= EndOffset %q for video %q",
+			config.StartOffset, config.EndOffset, videoId,
 		)
 	}
 
 	// Ready the video part
 	youtubeURL := "https://www.youtube.com/watch?v=" + videoId
-	parts := []*genai.Part{
-		{
-			FileData: &genai.FileData{FileURI: youtubeURL, MIMEType: "video/*"},
-			VideoMetadata: &genai.VideoMetadata{
-				StartOffset: startOffset,
-				EndOffset:   endOffset,
-				FPS:         fps,
-			},
-			MediaResolution: &genai.PartMediaResolution{
-				Level: resolution,
-			},
+	part := &genai.Part{
+		FileData: &genai.FileData{FileURI: youtubeURL, MIMEType: "video/*"},
+		VideoMetadata: &genai.VideoMetadata{
+			StartOffset: config.StartOffset,
+			EndOffset:   config.EndOffset,
+			FPS:         config.FPS,
+		},
+		MediaResolution: &genai.PartMediaResolution{
+			Level: config.Resolutuon,
 		},
 	}
 
 	genaiContent := []*genai.Content{
-		genai.NewContentFromParts(parts, genai.RoleUser),
+		{Parts: []*genai.Part{part}},
 	}
 
 	return genaiContent, nil

@@ -20,16 +20,6 @@ type FileInfo struct {
 	Etag       string
 }
 
-// The response from the Genai API
-type GenaiResponse struct {
-	Title         string   `json:"video_title"`
-	OriginalTitle string   `json:"original_title"`
-	Summary       string   `json:"summary"`
-	Category      string   `json:"category"`
-	Directors     []string `json:"directors"`
-	ReleaseYear   int16    `json:"release_year"`
-}
-
 // Flash message object to store to session for the next page
 type FlashMessage struct {
 	Message  string

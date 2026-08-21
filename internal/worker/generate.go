@@ -42,10 +42,10 @@ func (w *Worker) generateContent(
 	// The first 40 minutes to keep within the 250k TPM quota.
 	// 40x60x1x70 = 168k tokens
 	contents, err := w.gemini.MakeVideoContents(
-		video.VideoID, 0,
-		min(videoDuration, 40*time.Minute),
-		new(1.0),
-		genai.PartMediaResolutionLevelMediaResolutionLow,
+		video.VideoID, models.VideoPartConfig{
+			EndOffset: min(videoDuration, 40*time.Minute),
+			FPS:       new(1.0),
+		},
 	)
 
 	if err != nil {
@@ -136,15 +136,15 @@ func (w *Worker) generateContent(
 	// make another call with the ending of the video to extract the credits.
 	if !blocked && videoDuration > 40*time.Minute {
 
-		// Create video contents but now with a start offset - the last 5 minutes.
-		// Increase the FPS to 2.0.
+		// Create video contents but now with just the last 5 minutes.
+		// Increase the FPS to 2.0 and media resolution level to high.
 		// 5x60x2x280 = 168k tokens
 		contents, err = w.gemini.MakeVideoContents(
-			video.VideoID,
-			videoDuration-5*time.Minute,
-			videoDuration,
-			new(2.0),
-			genai.PartMediaResolutionLevelMediaResolutionHigh,
+			video.VideoID, models.VideoPartConfig{
+				StartOffset: videoDuration - 5*time.Minute,
+				FPS:         new(2.0),
+				Resolutuon:  genai.PartMediaResolutionLevelMediaResolutionHigh,
+			},
 		)
 
 		// Just log the error and exit cleanly with true, nil.

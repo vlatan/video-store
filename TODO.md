@@ -1,7 +1,5 @@
-* Summary generation had detirioated
-* Credits extraction is subpar
-* The relase year is also subpar
-* Combine/consolidate the credits results between the two passes
+* Use three passes
+* Combine/consolidate the credits results between the passes
 * Create a flag so the posts don't get reprocessed
 * Create migration files and run the DB migration
 * Modify the upsert and get post queries
