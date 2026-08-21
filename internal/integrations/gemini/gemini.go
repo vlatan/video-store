@@ -77,7 +77,9 @@ func New(
 		SafetySettings:    safetySettings,
 		ResponseSchema:    s.responseSchema(),
 		SystemInstruction: s.systemInstruction(),
-		MediaResolution:   genai.MediaResolutionLow,
+
+		// https://ai.google.dev/gemini-api/docs/media-resolution#global-media-resolution
+		MediaResolution: genai.MediaResolutionLow,
 	}
 
 	return s, nil
