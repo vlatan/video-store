@@ -12,7 +12,7 @@ import (
 // https://ai.google.dev/gemini-api/docs/video-understanding#clipping-intervals
 func (s *Service) MakeVideoContents(
 	videoId string,
-	startOffset, endOffset time.Duration) ([]*genai.Content, error) {
+	startOffset, endOffset time.Duration, fps *float64) ([]*genai.Content, error) {
 
 	if startOffset >= endOffset {
 		return nil, fmt.Errorf(
@@ -29,7 +29,7 @@ func (s *Service) MakeVideoContents(
 			VideoMetadata: &genai.VideoMetadata{
 				StartOffset: startOffset,
 				EndOffset:   endOffset,
-				FPS:         new(1.0),
+				FPS:         fps,
 			},
 		},
 	}

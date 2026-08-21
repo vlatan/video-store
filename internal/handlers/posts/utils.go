@@ -54,9 +54,15 @@ func (s *Service) generatePostContent(ctx context.Context, post *models.Post) er
 		return fmt.Errorf("couldn't convert video's duration to seconds: %w", err)
 	}
 
-	// Create video contents
-	// The first 40 minutes to keep within the 250k TPM quota
-	contents, err := s.gemini.MakeVideoContents(post.VideoID, 0, min(videoDuration, 40*time.Minute))
+	// Create video contents.
+	// The first 40 minutes to keep within the 250k TPM quota.
+	// 40x60x1 = 2400 frames
+	contents, err := s.gemini.MakeVideoContents(
+		post.VideoID, 0,
+		min(videoDuration, 40*time.Minute),
+		new(1.0),
+	)
+
 	if err != nil {
 		return fmt.Errorf("failed to create gemini contents: %w", err)
 	}
@@ -109,8 +115,16 @@ func (s *Service) generatePostContent(ctx context.Context, post *models.Post) er
 	// make another call with the ending of the video to extract the credits.
 	if !blocked && videoDuration > 40*time.Minute {
 
-		// Create video contents but now with an end offset - the last 10 minutes.
-		contents, err = s.gemini.MakeVideoContents(post.VideoID, videoDuration-10*time.Minute, videoDuration)
+		// Create video contents but now with an end offset - the last 8 minutes.
+		// Increase the framerate to 5 FPS.
+		// 8x60x5 = 2400 frames
+		contents, err = s.gemini.MakeVideoContents(
+			post.VideoID,
+			videoDuration-8*time.Minute,
+			videoDuration,
+			new(5.0),
+		)
+
 		if err != nil {
 			slog.ErrorContext(
 				ctx, "failed to create gemini contents on the second pass",

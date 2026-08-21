@@ -60,7 +60,7 @@ func New(
 	// Configure genai
 	s.genaiConfig = &genai.GenerateContentConfig{
 
-		// Set values for less randomness
+		// Set low values for less randomness
 		Temperature: new(float32),
 		TopP:        new(float32),
 		TopK:        new(float32(1.0)),

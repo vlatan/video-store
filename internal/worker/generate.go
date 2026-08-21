@@ -37,9 +37,15 @@ func (w *Worker) generateContent(
 		)
 	}
 
-	// Create video contents
-	// The first 40 minutes to keep within the 250k TPM quota
-	contents, err := w.gemini.MakeVideoContents(video.VideoID, 0, min(videoDuration, 40*time.Minute))
+	// Create video contents.
+	// The first 40 minutes to keep within the 250k TPM quota.
+	// 40x60x1 = 2400 frames
+	contents, err := w.gemini.MakeVideoContents(
+		video.VideoID, 0,
+		min(videoDuration, 40*time.Minute),
+		new(1.0),
+	)
+
 	if err != nil {
 		return false, fmt.Errorf(
 			"failed to create gemini contents on video %q; %v",
@@ -128,9 +134,18 @@ func (w *Worker) generateContent(
 	// make another call with the ending of the video to extract the credits.
 	if !blocked && videoDuration > 40*time.Minute {
 
-		// Create video contents but now with an end offset - the last 10 minutes.
-		// Just log error and exit cleanly with true, nil.
-		contents, err = w.gemini.MakeVideoContents(video.VideoID, videoDuration-10*time.Minute, videoDuration)
+		// Create video contents but now with an end offset - the last 8 minutes.
+		// Increase the framerate to 5 FPS.
+		// 8x60x5 = 2400 frames
+		contents, err = w.gemini.MakeVideoContents(
+			video.VideoID,
+			videoDuration-8*time.Minute,
+			videoDuration,
+			new(5.0),
+		)
+
+		// Just log the error and exit cleanly with true, nil.
+		// Also increase the framerate to 5 FPS.
 		if err != nil {
 			slog.ErrorContext(
 				ctx,
