@@ -44,7 +44,6 @@ func (w *Worker) generateContent(
 	contents, err := w.gemini.MakeVideoContents(
 		video.VideoID, models.VideoPartConfig{
 			EndOffset: min(videoDuration, 40*time.Minute),
-			FPS:       new(1.0),
 		},
 	)
 

@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net/url"
 	"regexp"
+	"slices"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -55,13 +56,13 @@ func (s *Service) generatePostContent(ctx context.Context, post *models.Post) er
 		return fmt.Errorf("couldn't convert video's duration to seconds: %w", err)
 	}
 
-	// Create video contents.
+	// Create the main video contents.
 	// The first 40 minutes to keep within the 250k TPM quota.
+	// With low resolution and FPS of 1.0.
 	// 40x60x1x70 = 168k tokens
-	contents, err := s.gemini.MakeVideoContents(
+	mainContents, err := s.gemini.MakeVideoContents(
 		post.VideoID, models.VideoPartConfig{
 			EndOffset: min(videoDuration, 40*time.Minute),
-			FPS:       new(1.0),
 		},
 	)
 
@@ -69,11 +70,17 @@ func (s *Service) generatePostContent(ctx context.Context, post *models.Post) er
 		return fmt.Errorf("failed to create gemini contents: %w", err)
 	}
 
-	genaiResponse, err := s.gemini.GenerateContent(ctx, contents, retryConfig)
+	genaiResponse, err := s.gemini.GenerateContent(ctx, mainContents, retryConfig)
 
-	// Check if this is a hard block error by the model.
-	// If so make another gemini API call just with a text contents.
+	// Check if this is a hard block error by the model
 	_, blocked := errors.AsType[*gemini.BlockedError](err)
+
+	// Exit if fatal error
+	if !blocked && err != nil {
+		return fmt.Errorf("failed to generate LLM content: %w", err)
+	}
+
+	// If blocked make another gemini API call just with a text contents
 	if blocked {
 		slog.ErrorContext(
 			ctx, "failed to generate LLM content, trying again with text input",
@@ -82,7 +89,7 @@ func (s *Service) generatePostContent(ctx context.Context, post *models.Post) er
 		)
 
 		// Create text contents
-		contents = s.gemini.MakeTextContents(post)
+		textContents := s.gemini.MakeTextContents(post)
 
 		// Sleep with context in mind for 60-90 seconds.
 		// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
@@ -91,47 +98,54 @@ func (s *Service) generatePostContent(ctx context.Context, post *models.Post) er
 		}
 
 		// Generate content using Gemini, but now with text contents
-		genaiResponse, err = s.gemini.GenerateContent(ctx, contents, retryConfig)
+		genaiResponse, err = s.gemini.GenerateContent(ctx, textContents, retryConfig)
+
+		post.Summary = genaiResponse.Summary
+		post.Category = &models.Category{Name: genaiResponse.Category}
+
+		return nil
 	}
 
-	if err != nil {
-		return fmt.Errorf("failed to generate LLM content: %w", err)
-	}
-
-	post.OriginalTitle = genaiResponse.OriginalTitle
 	post.Summary = genaiResponse.Summary
 	post.Category = &models.Category{Name: genaiResponse.Category}
-	post.Directors = genaiResponse.Directors
-	post.ReleaseYear = genaiResponse.ReleaseYear
 
 	slog.InfoContext(
 		ctx,
-		"video results - first pass",
+		"video results - 1 pass",
 		"videoId", post.VideoID,
-		"original title", post.OriginalTitle,
-		"directors", post.Directors,
-		"releaseYear", post.ReleaseYear,
+		"original title", genaiResponse.OriginalTitle,
+		"directors", genaiResponse.Directors,
+		"releaseYear", genaiResponse.ReleaseYear,
 	)
 
-	// If not blocked and the video is more than 40 minutes long,
-	// make another call with the ending of the video to extract the credits.
-	if !blocked && videoDuration > 40*time.Minute {
+	// If not blocked make another two calls to extract other details
+	configs := []models.VideoPartConfig{
+		{
+			// Intro config
+			EndOffset:  5 * time.Minute,
+			FPS:        new(2.0),
+			Resolutuon: genai.PartMediaResolutionLevelMediaResolutionHigh,
+		},
+		{
+			// Outro config
+			StartOffset: videoDuration - 5*time.Minute,
+			FPS:         new(2.0),
+			Resolutuon:  genai.PartMediaResolutionLevelMediaResolutionHigh,
+		},
+	}
 
-		// Create video contents but now with just the last 5 minutes.
+	for i, config := range configs {
+
+		// Create video contents but now with just the FIRST and LAST 5 minutes.
 		// Increase the FPS to 2.0 and media resolution level to high.
 		// 5x60x2x280 = 168k tokens
-		contents, err = s.gemini.MakeVideoContents(
-			post.VideoID, models.VideoPartConfig{
-				StartOffset: videoDuration - 5*time.Minute,
-				FPS:         new(2.0),
-				Resolutuon:  genai.PartMediaResolutionLevelMediaResolutionHigh,
-			},
-		)
+		contents, err := s.gemini.MakeVideoContents(post.VideoID, config)
 
 		if err != nil {
 			slog.ErrorContext(
-				ctx, "failed to create gemini contents on the second pass",
+				ctx, "failed to create gemini contents",
 				"videoId", post.VideoID,
+				"pass", i+2,
 				"error", err,
 			)
 			// Abort with nil error, no need to continue.
@@ -146,18 +160,18 @@ func (s *Service) generatePostContent(ctx context.Context, post *models.Post) er
 		}
 
 		// Generate content using Gemini
-		genaiSecondResponse, err := s.gemini.GenerateContent(ctx, contents, retryConfig)
+		genaiResponse, err = s.gemini.GenerateContent(ctx, contents, retryConfig)
 
 		// Exit if context ended
 		if utils.IsContextErr(err) {
-			return fmt.Errorf("failed to generate LLM content on the second pass: %w", err)
+			return fmt.Errorf("failed to generate LLM content on the %d pass: %w", i+2, err)
 		}
 
 		// For every other error just log it
 		if err != nil {
 			slog.ErrorContext(
 				ctx,
-				"failed to generate LLM content on the second pass",
+				fmt.Sprintf("failed to generate LLM content on the %d pass", i+2),
 				"videoId", post.VideoID,
 				"error", err,
 			)
@@ -166,18 +180,32 @@ func (s *Service) generatePostContent(ctx context.Context, post *models.Post) er
 			return nil
 		}
 
-		post.Directors = genaiSecondResponse.Directors
-		post.ReleaseYear = genaiSecondResponse.ReleaseYear
-	}
+		// Append if any additional directors discovered
+		for _, director := range genaiResponse.Directors {
+			if !slices.Contains(post.Directors, director) {
+				post.Directors = append(post.Directors, director)
+			}
+		}
 
-	slog.InfoContext(
-		ctx,
-		"video results - second pass",
-		"videoId", post.VideoID,
-		"original title", post.OriginalTitle,
-		"directors", post.Directors,
-		"releaseYear", post.ReleaseYear,
-	)
+		// Assign original title from intro
+		if i == 0 {
+			post.OriginalTitle = genaiResponse.OriginalTitle
+		}
+
+		// Assign release year from outro
+		if i == 1 {
+			post.ReleaseYear = genaiResponse.ReleaseYear
+		}
+
+		slog.InfoContext(
+			ctx,
+			fmt.Sprintf("video results - %d pass", i+2),
+			"videoId", post.VideoID,
+			"original title", genaiResponse.OriginalTitle,
+			"directors", genaiResponse.Directors,
+			"releaseYear", genaiResponse.ReleaseYear,
+		)
+	}
 
 	return nil
 }
