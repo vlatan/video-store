@@ -106,8 +106,11 @@ func (s *Service) generatePostContent(ctx context.Context, post *models.Post) er
 		return nil
 	}
 
+	post.OriginalTitle = genaiResponse.OriginalTitle
 	post.Summary = genaiResponse.Summary
 	post.Category = &models.Category{Name: genaiResponse.Category}
+	post.Directors = genaiResponse.Directors
+	post.ReleaseYear = genaiResponse.ReleaseYear
 
 	slog.InfoContext(
 		ctx,
@@ -121,13 +124,17 @@ func (s *Service) generatePostContent(ctx context.Context, post *models.Post) er
 	// If not blocked make another two calls to extract other details
 	configs := []models.VideoPartConfig{
 		{
-			// Intro config
+			// Intro config, the first 5 minutes.
+			// Increase the FPS to 2.0 and media resolution level to high.
+			// 5x60x2x280 = 168k tokens
 			EndOffset:  5 * time.Minute,
 			FPS:        new(2.0),
 			Resolutuon: genai.PartMediaResolutionLevelMediaResolutionHigh,
 		},
 		{
-			// Outro config
+			// Outro config, the last 5 minutes.
+			// Increase the FPS to 2.0 and media resolution level to high.
+			// 5x60x2x280 = 168k tokens
 			StartOffset: videoDuration - 5*time.Minute,
 			FPS:         new(2.0),
 			Resolutuon:  genai.PartMediaResolutionLevelMediaResolutionHigh,
@@ -187,13 +194,13 @@ func (s *Service) generatePostContent(ctx context.Context, post *models.Post) er
 			}
 		}
 
-		// Assign original title from intro
-		if i == 0 {
+		// Assign original title if any
+		if genaiResponse.OriginalTitle != "" {
 			post.OriginalTitle = genaiResponse.OriginalTitle
 		}
 
-		// Assign release year from outro
-		if i == 1 {
+		// Assign release year if any
+		if genaiResponse.ReleaseYear != 0 {
 			post.ReleaseYear = genaiResponse.ReleaseYear
 		}
 
