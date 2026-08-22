@@ -19,7 +19,8 @@ func (s *Service) responseSchema() *genai.Schema {
 					"You MUST extract the title from the video frames' pixels.\n" +
 					"If the title is split into a main title and a subtitle across different frames, " +
 					"combine them into a single string (e.g. 'Main Title: Subtitle').\n" +
-					"Format the title in Title Case. Use only the English language.\n" +
+					"You must translate the title in English if presented in another language.\n" +
+					"Format the title in Title Case.\n" +
 					"Strictly IGNORE the audio track, transcript, and the metadata of the video.",
 			},
 			"summary": {
