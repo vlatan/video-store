@@ -136,8 +136,24 @@ func (w *Worker) generateContent(
 	video.OriginalTitle = genaiResponse.OriginalTitle
 	video.Summary = genaiResponse.Summary
 	video.Category = &models.Category{Name: genaiResponse.Category}
-	video.Directors = genaiResponse.Directors
 	video.ReleaseYear = genaiResponse.ReleaseYear
+
+	// Normalize and save the directors' names
+	for _, director := range genaiResponse.Directors {
+		name, err := utils.NormalizeName(director)
+		if err != nil {
+			slog.ErrorContext(
+				ctx,
+				"failed to normalize director's name",
+				"pass", 1,
+				"videoId", video.VideoID,
+				"original_name", director,
+				"error", err,
+			)
+			continue
+		}
+		video.Directors = append(video.Directors, name)
+	}
 
 	// If not blocked make another two calls to extract other details
 	configs := []models.VideoPartConfig{
@@ -170,6 +186,7 @@ func (w *Worker) generateContent(
 		if err != nil {
 			slog.ErrorContext(
 				ctx, "failed to create gemini contents",
+				"pass", 1,
 				"videoId", video.VideoID,
 				"pass", i+2,
 				"error", err,
@@ -205,7 +222,8 @@ func (w *Worker) generateContent(
 		if err != nil {
 			slog.ErrorContext(
 				ctx,
-				fmt.Sprintf("failed to generate LLM content on the %d pass", i+2),
+				"failed to generate LLM content",
+				"pass", i+2,
 				"videoId", video.VideoID,
 				"error", err,
 			)
@@ -214,8 +232,20 @@ func (w *Worker) generateContent(
 
 		// Append if any additional directors discovered
 		for _, director := range genaiResponse.Directors {
-			if !slices.Contains(video.Directors, director) {
-				video.Directors = append(video.Directors, director)
+			name, err := utils.NormalizeName(director)
+			if err != nil {
+				slog.ErrorContext(
+					ctx,
+					"failed to normalize director's name",
+					"pass", i+2,
+					"videoId", video.VideoID,
+					"original_name", director,
+					"error", err,
+				)
+				continue
+			}
+			if !slices.Contains(video.Directors, name) {
+				video.Directors = append(video.Directors, name)
 			}
 		}
 

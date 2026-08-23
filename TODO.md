@@ -1,3 +1,5 @@
+* Same directors have subtle different between passes.
+  For exmaple `Jérôme Fritel` and `Jerome Fritel`.
 * Create a flag so the posts don't get reprocessed
 * Create migration files and run the DB migration
 * Modify the upsert and get post queries

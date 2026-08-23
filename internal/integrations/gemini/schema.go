@@ -45,7 +45,8 @@ func (s *Service) responseSchema() *genai.Schema {
 					"Examples under which these names may appear: " +
 					"'Report by', 'Film by', 'Made by', 'Directed by', 'Director', 'Filmmaker', 'Reporter', 'Author'.\n" +
 					"Extract full name(s) only - no titles, role labels, or surrounding text.\n" +
-					"Format the names using standard capitalization.\n" +
+					"Format the name(s) using standard capitalization.\n" +
+					"Normalize the name(s) to standard English ASCII characters by stripping accents and diacritics.\n" +
 					"Strictly IGNORE the audio track, transcript, and the metadata of the video.\n" +
 					"Do NOT under any circumstances guess or infer the director(s) name(s) from your own knowledge.",
 			},

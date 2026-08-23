@@ -111,12 +111,29 @@ func (s *Service) generatePostContent(ctx context.Context, post *models.Post) er
 	post.OriginalTitle = genaiResponse.OriginalTitle
 	post.Summary = genaiResponse.Summary
 	post.Category = &models.Category{Name: genaiResponse.Category}
-	post.Directors = genaiResponse.Directors
 	post.ReleaseYear = genaiResponse.ReleaseYear
+
+	// Normalize and save the directors' names
+	for _, director := range genaiResponse.Directors {
+		name, err := utils.NormalizeName(director)
+		if err != nil {
+			slog.ErrorContext(
+				ctx,
+				"failed to normalize director's name",
+				"pass", 1,
+				"videoId", post.VideoID,
+				"original_name", director,
+				"error", err,
+			)
+			continue
+		}
+		post.Directors = append(post.Directors, name)
+	}
 
 	slog.InfoContext(
 		ctx,
-		"video results - 1 pass",
+		"video results",
+		"pass", 1,
 		"videoId", post.VideoID,
 		"original title", genaiResponse.OriginalTitle,
 		"directors", genaiResponse.Directors,
@@ -173,14 +190,15 @@ func (s *Service) generatePostContent(ctx context.Context, post *models.Post) er
 
 		// Exit if context ended
 		if utils.IsContextErr(err) {
-			return fmt.Errorf("failed to generate LLM content on the %d pass: %w", i+2, err)
+			return fmt.Errorf("failed to generate LLM content (%d pass): %w", i+2, err)
 		}
 
 		// For every other error just log it and exit with nil
 		if err != nil {
 			slog.ErrorContext(
 				ctx,
-				fmt.Sprintf("failed to generate LLM content on the %d pass", i+2),
+				"failed to generate LLM content",
+				"pass", i+2,
 				"videoId", post.VideoID,
 				"error", err,
 			)
@@ -189,8 +207,20 @@ func (s *Service) generatePostContent(ctx context.Context, post *models.Post) er
 
 		// Append if any additional directors discovered
 		for _, director := range genaiResponse.Directors {
-			if !slices.Contains(post.Directors, director) {
-				post.Directors = append(post.Directors, director)
+			name, err := utils.NormalizeName(director)
+			if err != nil {
+				slog.ErrorContext(
+					ctx,
+					"failed to normalize director's name",
+					"pass", i+2,
+					"videoId", post.VideoID,
+					"original_name", director,
+					"error", err,
+				)
+				continue
+			}
+			if !slices.Contains(post.Directors, name) {
+				post.Directors = append(post.Directors, name)
 			}
 		}
 
@@ -206,7 +236,8 @@ func (s *Service) generatePostContent(ctx context.Context, post *models.Post) er
 
 		slog.InfoContext(
 			ctx,
-			fmt.Sprintf("video results - %d pass", i+2),
+			"video results",
+			"pass", i+2,
 			"videoId", post.VideoID,
 			"original title", genaiResponse.OriginalTitle,
 			"directors", genaiResponse.Directors,
