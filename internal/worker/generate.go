@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"log/slog"
+	"slices"
 	"time"
 
 	"github.com/vlatan/video-store/internal/integrations/gemini"
@@ -38,10 +38,11 @@ func (w *Worker) generateContent(
 		)
 	}
 
-	// Create video contents.
+	// Create the main video contents.
 	// The first 40 minutes to keep within the 250k TPM quota.
+	// With low resolution and FPS of 1.0.
 	// 40x60x1x70 = 168k tokens
-	contents, err := w.gemini.MakeVideoContents(
+	mainContents, err := w.gemini.MakeVideoContents(
 		video.VideoID, models.VideoPartConfig{
 			EndOffset: min(videoDuration, 40*time.Minute),
 		},
@@ -68,7 +69,7 @@ func (w *Worker) generateContent(
 	}
 
 	// Generate content using Gemini
-	genaiResponse, err := w.gemini.GenerateContent(ctx, contents, w.geminiRetryConfig)
+	genaiResponse, err := w.gemini.GenerateContent(ctx, mainContents, w.geminiRetryConfig)
 
 	// Exit with error if RPD reached or context ended
 	if errors.Is(err, gemini.ErrDailyLimitReached) || utils.IsContextErr(err) {
@@ -77,18 +78,30 @@ func (w *Worker) generateContent(
 			video.VideoID, err)
 	}
 
-	// Check if this is a hard block error by the model.
-	// If so make another gemini API call just with a text contents.
+	// Check if this is a hard block error by the model
 	_, blocked := errors.AsType[*gemini.BlockedError](err)
+
+	// For every other error we just log and exit with nil error.
+	// The video was not summarized though.
+	if !blocked && err != nil {
+		slog.ErrorContext(
+			ctx, "failed to generate LLM content",
+			"videoId", video.VideoID,
+			"error", err,
+		)
+		return false, nil
+	}
+
+	// If blocked make another gemini API call just with a text contents
 	if blocked {
-		log.Printf(
-			"failed to generate content on video %q, "+
-				"trying again with text contents: %v",
-			video.VideoID, err,
+		slog.ErrorContext(
+			ctx, "failed to generate LLM content, trying again with text contents",
+			"videoId", video.VideoID,
+			"error", err,
 		)
 
 		// Create text contents
-		contents = w.gemini.MakeTextContents(video)
+		textContents := w.gemini.MakeTextContents(video)
 
 		// Sleep with context in mind for 60-90 seconds.
 		// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
@@ -105,7 +118,7 @@ func (w *Worker) generateContent(
 		}
 
 		// Generate content using Gemini, but now with text contents
-		genaiResponse, err = w.gemini.GenerateContent(ctx, contents, w.geminiRetryConfig)
+		genaiResponse, err = w.gemini.GenerateContent(ctx, textContents, w.geminiRetryConfig)
 
 		// Exit with error if RPD reached or context ended
 		if errors.Is(err, gemini.ErrDailyLimitReached) || utils.IsContextErr(err) {
@@ -113,16 +126,11 @@ func (w *Worker) generateContent(
 				"failed to generate content on video %q; %w",
 				video.VideoID, err)
 		}
-	}
 
-	// For every other error we just log and exit with nil error.
-	// The video was not summarized though.
-	if err != nil {
-		log.Printf(
-			"failed to generate content on video %q; %v",
-			video.VideoID, err,
-		)
-		return false, nil
+		video.Summary = genaiResponse.Summary
+		video.Category = &models.Category{Name: genaiResponse.Category}
+
+		return true, nil
 	}
 
 	video.OriginalTitle = genaiResponse.OriginalTitle
@@ -131,28 +139,39 @@ func (w *Worker) generateContent(
 	video.Directors = genaiResponse.Directors
 	video.ReleaseYear = genaiResponse.ReleaseYear
 
-	// If not blocked and the video is more than 40 minutes long,
-	// make another call with the ending of the video to extract the credits.
-	if !blocked && videoDuration > 40*time.Minute {
+	// If not blocked make another two calls to extract other details
+	configs := []models.VideoPartConfig{
+		{
+			// Intro config, the first 5 minutes.
+			// Increase the FPS to 2.0 and media resolution level to high.
+			// 5x60x2x280 = 168k tokens
+			EndOffset:  5 * time.Minute,
+			FPS:        new(2.0),
+			Resolutuon: genai.PartMediaResolutionLevelMediaResolutionHigh,
+		},
+		{
+			// Outro config, the last 5 minutes.
+			// Increase the FPS to 2.0 and media resolution level to high.
+			// 5x60x2x280 = 168k tokens
+			StartOffset: videoDuration - 5*time.Minute,
+			FPS:         new(2.0),
+			Resolutuon:  genai.PartMediaResolutionLevelMediaResolutionHigh,
+		},
+	}
 
-		// Create video contents but now with just the last 5 minutes.
+	for i, config := range configs {
+
+		// Create video contents but now with just the FIRST and LAST 5 minutes.
 		// Increase the FPS to 2.0 and media resolution level to high.
 		// 5x60x2x280 = 168k tokens
-		contents, err = w.gemini.MakeVideoContents(
-			video.VideoID, models.VideoPartConfig{
-				StartOffset: videoDuration - 5*time.Minute,
-				FPS:         new(2.0),
-				Resolutuon:  genai.PartMediaResolutionLevelMediaResolutionHigh,
-			},
-		)
+		contents, err := w.gemini.MakeVideoContents(video.VideoID, config)
 
 		// Just log the error and exit cleanly with true, nil.
-		// Also increase the framerate to 5 FPS.
 		if err != nil {
 			slog.ErrorContext(
-				ctx,
-				"failed to make video contents",
+				ctx, "failed to create gemini contents",
 				"videoId", video.VideoID,
+				"pass", i+2,
 				"error", err,
 			)
 			return true, nil
@@ -173,7 +192,7 @@ func (w *Worker) generateContent(
 		}
 
 		// Generate content using Gemini
-		genaiSecondResponse, err := w.gemini.GenerateContent(ctx, contents, w.geminiRetryConfig)
+		genaiResponse, err = w.gemini.GenerateContent(ctx, contents, w.geminiRetryConfig)
 
 		// Exit with error if RPD reached or context ended
 		if errors.Is(err, gemini.ErrDailyLimitReached) || utils.IsContextErr(err) {
@@ -182,18 +201,33 @@ func (w *Worker) generateContent(
 				video.VideoID, err)
 		}
 
-		// For every other error just log it
+		// For every other error just log it and exit with true, nil
 		if err != nil {
 			slog.ErrorContext(
 				ctx,
-				"failed to generate LLM content on the second pass",
+				fmt.Sprintf("failed to generate LLM content on the %d pass", i+2),
 				"videoId", video.VideoID,
 				"error", err,
 			)
+			return true, nil
 		}
 
-		video.Directors = genaiSecondResponse.Directors
-		video.ReleaseYear = genaiSecondResponse.ReleaseYear
+		// Append if any additional directors discovered
+		for _, director := range genaiResponse.Directors {
+			if !slices.Contains(video.Directors, director) {
+				video.Directors = append(video.Directors, director)
+			}
+		}
+
+		// Assign original title if any
+		if genaiResponse.OriginalTitle != "" {
+			video.OriginalTitle = genaiResponse.OriginalTitle
+		}
+
+		// Assign release year if any
+		if genaiResponse.ReleaseYear != 0 {
+			video.ReleaseYear = genaiResponse.ReleaseYear
+		}
 	}
 
 	return true, nil

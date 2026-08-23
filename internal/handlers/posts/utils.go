@@ -77,7 +77,9 @@ func (s *Service) generatePostContent(ctx context.Context, post *models.Post) er
 
 	// Exit if fatal error
 	if !blocked && err != nil {
-		return fmt.Errorf("failed to generate LLM content: %w", err)
+		return fmt.Errorf(
+			"failed to generate LLM content on video %q: %w", post.VideoID, err,
+		)
 	}
 
 	// If blocked make another gemini API call just with a text contents
@@ -174,7 +176,7 @@ func (s *Service) generatePostContent(ctx context.Context, post *models.Post) er
 			return fmt.Errorf("failed to generate LLM content on the %d pass: %w", i+2, err)
 		}
 
-		// For every other error just log it
+		// For every other error just log it and exit with nil
 		if err != nil {
 			slog.ErrorContext(
 				ctx,
@@ -182,8 +184,6 @@ func (s *Service) generatePostContent(ctx context.Context, post *models.Post) er
 				"videoId", post.VideoID,
 				"error", err,
 			)
-			// Abort with nil error, no need to continue.
-			// Salvage the generated content we already have.
 			return nil
 		}
 

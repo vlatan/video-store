@@ -1,5 +1,3 @@
-* Use three passes
-* Combine/consolidate the credits results between the passes
 * Create a flag so the posts don't get reprocessed
 * Create migration files and run the DB migration
 * Modify the upsert and get post queries
