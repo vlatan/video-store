@@ -144,18 +144,17 @@ func (s *Service) generatePostContent(ctx context.Context, post *models.Post) er
 	configs := []models.VideoPartConfig{
 		{
 			// Intro config, the first 5 minutes.
-			// Increase the FPS to 2.0 and media resolution level to high.
-			// 5x60x2x280 = 168k tokens
+			// Increase the media resolution level to high.
+			// 5x60x1x280 = 84k tokens
 			EndOffset:  5 * time.Minute,
-			FPS:        new(2.0),
 			Resolutuon: genai.PartMediaResolutionLevelMediaResolutionHigh,
 		},
 		{
-			// Outro config, the last 5 minutes.
-			// Increase the FPS to 2.0 and media resolution level to high.
-			// 5x60x2x280 = 168k tokens
-			StartOffset: videoDuration - 5*time.Minute,
-			FPS:         new(2.0),
+			// Outro config, the last 200 seconds.
+			// Increase the FPS to 3.0 and media resolution level to high.
+			// 200x3x280 = 168k tokens
+			StartOffset: videoDuration - 200*time.Second,
+			FPS:         new(3.0),
 			Resolutuon:  genai.PartMediaResolutionLevelMediaResolutionHigh,
 		},
 	}
@@ -163,8 +162,6 @@ func (s *Service) generatePostContent(ctx context.Context, post *models.Post) er
 	for i, config := range configs {
 
 		// Create video contents but now with just the FIRST and LAST 5 minutes.
-		// Increase the FPS to 2.0 and media resolution level to high.
-		// 5x60x2x280 = 168k tokens
 		contents, err := s.gemini.MakeVideoContents(post.VideoID, config)
 
 		if err != nil {
