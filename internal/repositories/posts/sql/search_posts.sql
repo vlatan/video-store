@@ -32,13 +32,29 @@ review_matches AS (
     WHERE pr.search_vector @@ st.or_query
     GROUP BY prat.post_id
 ),
--- Merge the IDs and save the total score
+-- Isolated GIN scan #3 - match credits and calculate scores
+credits_matches AS (
+    SELECT
+        pc.post_id,
+        (MAX(ts_rank(pc.search_vector, st.and_query, 32)) * 1.5) +
+        (MAX(ts_rank(pc.search_vector, st.or_query, 32)) * 0.75) +
+        (MAX(COALESCE(similarity(pc.name, st.raw_query), 0) * 0.25)) AS credits_score
+    FROM post_credits AS pc
+    CROSS JOIN search_terms AS st
+    WHERE pc.search_vector @@ st.or_query
+    GROUP BY pc.post_id
+),
+-- Sum the the total score for each post that matches the query
 combined_matches AS (
-    SELECT 
-        COALESCE(pm.id, rm.post_id) AS post_id,
-        COALESCE(pm.post_score, 0) + COALESCE(rm.review_score, 0) AS total_score
-    FROM post_matches AS pm
-    FULL OUTER JOIN review_matches AS rm ON pm.id = rm.post_id
+    SELECT post_id, SUM(score) AS total_score
+    FROM (
+        SELECT id AS post_id, post_score AS score FROM post_matches
+        UNION ALL
+        SELECT post_id, review_score FROM review_matches
+        UNION ALL
+        SELECT post_id, credits_score FROM credits_matches
+    )
+    GROUP BY post_id
 ),
 likes AS (
     SELECT post_id, COUNT(*) AS likes

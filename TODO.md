@@ -1,4 +1,4 @@
-* Create migration files and run the DB migration
+* Run the DB migration in prod before deploy
 * Modify the upsert and get post queries
 * Create a flag so the posts don't get reprocessed
 
