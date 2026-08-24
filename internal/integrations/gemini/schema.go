@@ -15,13 +15,13 @@ func (s *Service) responseSchema() *genai.Schema {
 			},
 			"original_title": {
 				Type: genai.TypeString,
-				Description: "Extract the complete original title visually displayed on the screen.\n" +
-					"You MUST extract the title from the video frames' pixels.\n" +
-					"If the title is split into a main title and a subtitle across different frames, " +
+				Description: "Extract the complete original title visually displayed on the video frames.\n" +
+					"If the title is split into a main title and a subtitle - even across different frames - " +
 					"combine them into a single string (e.g. 'Main Title: Subtitle').\n" +
-					"You must translate the title in English if presented in another language.\n" +
+					"Translate the title in English if presented in another language.\n" +
 					"Format the title in Title Case.\n" +
-					"Strictly IGNORE the audio track, transcript, and the metadata of the video.",
+					"If there isn't original title in the video frames do not guess or infer it from your own knowledge.\n" +
+					"You must read the pixels. Strictly ignore the audio track, transcript, and the metadata.",
 			},
 			"summary": {
 				Type: genai.TypeString,
@@ -40,25 +40,23 @@ func (s *Service) responseSchema() *genai.Schema {
 			"directors": {
 				Type:  genai.TypeArray,
 				Items: &genai.Schema{Type: genai.TypeString},
-				Description: "Extract the director(s) full name(s) visually displayed on the screen.\n" +
-					"You MUST extract the names from the video frames' pixels.\n" +
+				Description: "Extract the director(s) full name(s) visually displayed on the video frames.\n" +
 					"Examples under which these names may appear: " +
 					"'Report by', 'Film by', 'Made by', 'Directed by', 'Director', 'Filmmaker', 'Reporter', 'Author'.\n" +
 					"Extract full name(s) only - no titles, role labels, or surrounding text.\n" +
 					"Format the name(s) using standard capitalization.\n" +
 					"Normalize the name(s) to standard English ASCII characters by stripping accents and diacritics.\n" +
-					"Strictly IGNORE the audio track, transcript, and the metadata of the video.\n" +
-					"Do NOT under any circumstances guess or infer the director(s) name(s) from your own knowledge.",
+					"If there aren't directors in the video frames do NOT guess or infer them from your own knowledge.\n" +
+					"You must read the pixels. Strictly ignore the audio track, transcript, and the metadata.",
 			},
 			"release_year": {
 				Type: genai.TypeInteger,
-				Description: "Extract the 4-digit production, copyright, or release year visually displayed on the screen.\n" +
-					"You MUST extract the release year from the video frames' pixels.\n" +
+				Description: "Extract the 4-digit production year visually displayed on the video frames.\n" +
 					"This year usualy appears among the very last frames of the video, in the closing credits.\n" +
-					"If there are no closing credits - and thus no release year - do nothing, leave this field empty.\n" +
 					"If the year is rendered in Roman numerals convert it to a standard Arabic-numeral year.\n" +
-					"Strictly IGNORE the audio track, transcript, and the metadata of the video.\n" +
-					"Do NOT under any circumstances guess or infer the release year from your own knowledge.",
+					"If there are no closing credits - and thus no production year - leave this field empty.\n" +
+					"If there isn't production year in the video frames do NOT guess or infer it from your own knowledge.\n" +
+					"You must read the pixels. Strictly ignore the audio track, transcript, and the metadata.",
 			},
 		},
 		Required: []string{"summary", "category"},
