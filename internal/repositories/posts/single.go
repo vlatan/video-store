@@ -39,13 +39,19 @@ func (r *Repository) InsertPost(ctx context.Context, post *models.Post) (int64, 
 		post.Category = &models.Category{}
 	}
 
+	// Prepare the credits - directors
+	roles := make([]string, len(post.Directors))
+	for i := range post.Directors {
+		roles[i] = "Director"
+	}
+
 	query, err := r.GetQuery("insert_post.sql", nil)
 	if err != nil {
 		return 0, err
 	}
 
 	// Execute the query
-	result, err := r.db.Pool.Exec(
+	err = r.db.Pool.QueryRow(
 		ctx,
 		query,
 		post.VideoID,
@@ -53,6 +59,7 @@ func (r *Repository) InsertPost(ctx context.Context, post *models.Post) (int64, 
 		utils.ToNullString(post.PlaylistID),
 		post.Title,
 		utils.ToNullString(post.OriginalTitle),
+		utils.ToNullInt16(post.ReleaseYear),
 		thumbnails,
 		utils.ToNullString(post.Description),
 		utils.ToNullString(post.Summary),
@@ -61,9 +68,15 @@ func (r *Repository) InsertPost(ctx context.Context, post *models.Post) (int64, 
 		post.UploadDate,
 		utils.ToNullInt64(int64(post.UserActions.UserID)),
 		utils.ToNullString(post.Category.Name),
-	)
+		post.Directors,
+		roles,
+	).Scan(new(int64))
 
-	return result.RowsAffected(), err
+	if err != nil {
+		return 0, err
+	}
+
+	return 1, nil
 }
 
 // Get single post from DB based on a video ID
