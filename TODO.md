@@ -1,4 +1,5 @@
 * Run the DB migration in prod before deploy
+* Use different schema for different calls?
 * Modify the upsert and get post queries
 * Create a flag so the posts don't get reprocessed
 
