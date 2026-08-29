@@ -161,7 +161,7 @@ func (s *Service) generatePostContent(ctx context.Context, post *models.Post) er
 
 	for i, config := range configs {
 
-		// Create video contents but now with just the FIRST and LAST 5 minutes.
+		// Create video contents but now with just the FIRST and LAST x minutes.
 		contents, err := s.gemini.MakeVideoContents(post.VideoID, config)
 
 		if err != nil {
