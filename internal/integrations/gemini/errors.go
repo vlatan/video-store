@@ -12,9 +12,8 @@ type BlockedError struct {
 	Feedback *genai.GenerateContentResponsePromptFeedback
 }
 
-// Implement error interface
+// Error implements error interface for the BlockedError
 func (b *BlockedError) Error() string {
-
 	if b.Feedback == nil {
 		return "gemini returned no candidates with no reason"
 	}

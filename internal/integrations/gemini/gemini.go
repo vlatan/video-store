@@ -1,3 +1,4 @@
+// Package gemini creates a gemini service Service
 package gemini
 
 import (
@@ -11,13 +12,13 @@ import (
 	"google.golang.org/genai"
 )
 
-// Create new Gemini service
+// New creates new Gemini service
 func New(
 	ctx context.Context,
 	cfg *config.Config,
 	redisService *rdb.Service,
-	catsRepo *categories.Repository) (*Service, error) {
-
+	catsRepo *categories.Repository,
+) (*Service, error) {
 	// Configure new client
 	client, err := genai.NewClient(ctx, &genai.ClientConfig{APIKey: cfg.GeminiAPIKey})
 	if err != nil {
@@ -46,7 +47,6 @@ func New(
 			return catsRepo.GetCategories(ctx)
 		},
 	)
-
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +59,6 @@ func New(
 
 	// Configure genai
 	s.genaiConfig = &genai.GenerateContentConfig{
-
 		// Set low values for less randomness
 		Temperature: new(float32),
 		TopP:        new(float32),
