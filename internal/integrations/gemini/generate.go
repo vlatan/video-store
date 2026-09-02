@@ -17,6 +17,7 @@ import (
 func (s *Service) generateContent(
 	ctx context.Context,
 	contents []*genai.Content,
+	genaiConfig *genai.GenerateContentConfig,
 ) (*genai.GenerateContentResponse, error) {
 
 	// Consume minute and daily quotas before calling the API
@@ -28,7 +29,7 @@ func (s *Service) generateContent(
 		ctx,
 		s.config.GeminiModel,
 		contents,
-		s.genaiConfig,
+		genaiConfig,
 	)
 
 	if err != nil {
@@ -50,13 +51,14 @@ func (s *Service) generateContent(
 func (s *Service) GenerateContent(
 	ctx context.Context,
 	contents []*genai.Content,
-	rc *utils.RetryConfig,
+	genaiConfig *genai.GenerateContentConfig,
+	retryConfig *utils.RetryConfig,
 ) (*models.GenaiResponse, error) {
 
 	// Make the API call
-	result, err := utils.Retry(ctx, rc,
+	result, err := utils.Retry(ctx, retryConfig,
 		func() (*genai.GenerateContentResponse, error) {
-			return s.generateContent(ctx, contents)
+			return s.generateContent(ctx, contents, genaiConfig)
 		},
 		// Exit immediately if no candidates returned or RPD limit reached
 		func(err error) bool {

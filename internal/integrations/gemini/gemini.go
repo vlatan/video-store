@@ -57,30 +57,6 @@ func New(
 		s.catNames[i] = cat.Name
 	}
 
-	// Configure genai
-	s.genaiConfig = &genai.GenerateContentConfig{
-		// Set low values for less randomness
-		Temperature: new(float32),
-		TopP:        new(float32),
-		TopK:        new(float32(1.0)),
-
-		// Forces minimal chain-of-thought
-		ThinkingConfig: &genai.ThinkingConfig{
-			ThinkingLevel: genai.ThinkingLevelMinimal,
-		},
-
-		// Can't return JSON if using web search
-		ResponseMIMEType: "application/json",
-		// Tools: []*genai.Tool{{GoogleSearch: &genai.GoogleSearch{}}},
-
-		SafetySettings:    safetySettings,
-		ResponseSchema:    s.responseSchema(),
-		SystemInstruction: s.systemInstruction(),
-
-		// https://ai.google.dev/gemini-api/docs/media-resolution#global-media-resolution
-		MediaResolution: genai.MediaResolutionLow,
-	}
-
 	return s, nil
 }
 

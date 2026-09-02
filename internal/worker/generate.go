@@ -23,6 +23,8 @@ func (w *Worker) generateContent(
 	video *models.Post) (bool, error) {
 
 	// Nothing to update, summary and category are populated
+	// TODO: Need to make this condition different
+	// in order to extract the director(s) and production year
 	if video.Summary != "" &&
 		video.Category != nil &&
 		video.Category.Name != "" {

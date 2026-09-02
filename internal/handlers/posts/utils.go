@@ -45,12 +45,6 @@ func extractYouTubeID(rawURL string) (string, error) {
 
 func (s *Service) generatePostContent(ctx context.Context, post *models.Post) error {
 
-	retryConfig := &utils.RetryConfig{
-		MaxRetries: 1,
-		MaxJitter:  2 * time.Second,
-		Delay:      65 * time.Second,
-	}
-
 	videoDuration, err := post.Duration.Seconds()
 	if err != nil || videoDuration == 0 {
 		return fmt.Errorf("couldn't convert video's duration to seconds: %w", err)
@@ -70,7 +64,21 @@ func (s *Service) generatePostContent(ctx context.Context, post *models.Post) er
 		return fmt.Errorf("failed to create gemini contents: %w", err)
 	}
 
-	genaiResponse, err := s.gemini.GenerateContent(ctx, mainContents, retryConfig)
+	genaiConfig := s.gemini.NewGenaiConfig()
+	genaiConfig.ResponseSchema = s.gemini.SummarySchema()
+
+	retryConfig := &utils.RetryConfig{
+		MaxRetries: 1,
+		MaxJitter:  2 * time.Second,
+		Delay:      65 * time.Second,
+	}
+
+	genaiResponse, err := s.gemini.GenerateContent(
+		ctx,
+		mainContents,
+		genaiConfig,
+		retryConfig,
+	)
 
 	// Check if this is a hard block error by the model
 	_, blocked := errors.AsType[*gemini.BlockedError](err)
@@ -100,7 +108,12 @@ func (s *Service) generatePostContent(ctx context.Context, post *models.Post) er
 		}
 
 		// Generate content using Gemini, but now with text contents
-		genaiResponse, err = s.gemini.GenerateContent(ctx, textContents, retryConfig)
+		genaiResponse, err = s.gemini.GenerateContent(
+			ctx,
+			textContents,
+			genaiConfig,
+			retryConfig,
+		)
 
 		post.Summary = genaiResponse.Summary
 		post.Category = &models.Category{Name: genaiResponse.Category}
@@ -108,40 +121,11 @@ func (s *Service) generatePostContent(ctx context.Context, post *models.Post) er
 		return nil
 	}
 
-	post.OriginalTitle = genaiResponse.OriginalTitle
 	post.Summary = genaiResponse.Summary
 	post.Category = &models.Category{Name: genaiResponse.Category}
-	post.ReleaseYear = genaiResponse.ReleaseYear
 
-	// Normalize and save the directors' names
-	for _, director := range genaiResponse.Directors {
-		name, err := utils.NormalizeName(director)
-		if err != nil {
-			slog.ErrorContext(
-				ctx,
-				"failed to normalize director's name",
-				"pass", 1,
-				"videoId", post.VideoID,
-				"original_name", director,
-				"error", err,
-			)
-			continue
-		}
-		post.Directors = append(post.Directors, name)
-	}
-
-	slog.InfoContext(
-		ctx,
-		"video results",
-		"pass", 1,
-		"videoId", post.VideoID,
-		"original title", genaiResponse.OriginalTitle,
-		"directors", genaiResponse.Directors,
-		"releaseYear", genaiResponse.ReleaseYear,
-	)
-
-	// If not blocked make another two calls to extract other details
-	configs := []models.VideoPartConfig{
+	// Preaparre two separate part configs
+	partConfigs := []models.VideoPartConfig{
 		{
 			// Intro config, the first 5 minutes.
 			// Increase the media resolution level to high.
@@ -159,7 +143,13 @@ func (s *Service) generatePostContent(ctx context.Context, post *models.Post) er
 		},
 	}
 
-	for i, config := range configs {
+	schemas := []*genai.Schema{
+		s.gemini.IntroSchema(),
+		s.gemini.OutroSchema(),
+	}
+
+	// If not blocked make another two calls to extract other details
+	for i, config := range partConfigs {
 
 		// Create video contents but now with just the FIRST and LAST x minutes.
 		contents, err := s.gemini.MakeVideoContents(post.VideoID, config)
@@ -182,8 +172,11 @@ func (s *Service) generatePostContent(ctx context.Context, post *models.Post) er
 			return err
 		}
 
+		// Use appropriate schema
+		genaiConfig.ResponseSchema = schemas[i]
+
 		// Generate content using Gemini
-		genaiResponse, err = s.gemini.GenerateContent(ctx, contents, retryConfig)
+		genaiResponse, err = s.gemini.GenerateContent(ctx, contents, genaiConfig, retryConfig)
 
 		// Exit if context ended
 		if utils.IsContextErr(err) {

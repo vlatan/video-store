@@ -13,6 +13,7 @@ func (s *Service) MakeVideoContents(
 	videoID string,
 	config models.VideoPartConfig,
 ) ([]*genai.Content, error) {
+
 	if config.StartOffset < 0 || config.EndOffset < 0 {
 		return nil, fmt.Errorf(
 			"StartOffset %q and/or EndOffset %q < 0 for video %q",

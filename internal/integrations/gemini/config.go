@@ -2,7 +2,8 @@ package gemini
 
 import "google.golang.org/genai"
 
-func (s *Service) NewContentConfig() *genai.GenerateContentConfig {
+// NewGenaiConfig creates new Genau config with some hardcoded values
+func (s *Service) NewGenaiConfig() *genai.GenerateContentConfig {
 	return &genai.GenerateContentConfig{
 		// Set low values for less randomness
 		Temperature: new(float32),
@@ -19,7 +20,6 @@ func (s *Service) NewContentConfig() *genai.GenerateContentConfig {
 		// Tools: []*genai.Tool{{GoogleSearch: &genai.GoogleSearch{}}},
 
 		SafetySettings:    safetySettings,
-		ResponseSchema:    s.responseSchema(),
 		SystemInstruction: s.systemInstruction(),
 
 		// https://ai.google.dev/gemini-api/docs/media-resolution#global-media-resolution
