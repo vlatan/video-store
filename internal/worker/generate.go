@@ -70,8 +70,11 @@ func (w *Worker) generateContent(
 		)
 	}
 
+	genaiConfig := w.gemini.NewGenaiConfig()
+	genaiConfig.ResponseSchema = w.gemini.SummarySchema()
+
 	// Generate content using Gemini
-	genaiResponse, err := w.gemini.GenerateContent(ctx, mainContents, w.geminiRetryConfig)
+	genaiResponse, err := w.gemini.GenerateContent(ctx, mainContents, genaiConfig, w.geminiRetryConfig)
 
 	// Exit with error if RPD reached or context ended
 	if errors.Is(err, gemini.ErrDailyLimitReached) || utils.IsContextErr(err) {
@@ -120,7 +123,7 @@ func (w *Worker) generateContent(
 		}
 
 		// Generate content using Gemini, but now with text contents
-		genaiResponse, err = w.gemini.GenerateContent(ctx, textContents, w.geminiRetryConfig)
+		genaiResponse, err = w.gemini.GenerateContent(ctx, textContents, genaiConfig, w.geminiRetryConfig)
 
 		// Exit with error if RPD reached or context ended
 		if errors.Is(err, gemini.ErrDailyLimitReached) || utils.IsContextErr(err) {
@@ -135,30 +138,11 @@ func (w *Worker) generateContent(
 		return true, nil
 	}
 
-	video.OriginalTitle = genaiResponse.OriginalTitle
 	video.Summary = genaiResponse.Summary
 	video.Category = &models.Category{Name: genaiResponse.Category}
-	video.ReleaseYear = genaiResponse.ReleaseYear
-
-	// Normalize and save the directors' names
-	for _, director := range genaiResponse.Directors {
-		name, err := utils.NormalizeName(director)
-		if err != nil {
-			slog.ErrorContext(
-				ctx,
-				"failed to normalize director's name",
-				"pass", 1,
-				"videoId", video.VideoID,
-				"original_name", director,
-				"error", err,
-			)
-			continue
-		}
-		video.Directors = append(video.Directors, name)
-	}
 
 	// If not blocked make another two calls to extract other details
-	configs := []models.VideoPartConfig{
+	partConfigs := []models.VideoPartConfig{
 		{
 			// Intro config, the first 5 minutes.
 			// Increase the FPS to 2.0 and media resolution level to high.
@@ -177,7 +161,12 @@ func (w *Worker) generateContent(
 		},
 	}
 
-	for i, config := range configs {
+	schemas := []*genai.Schema{
+		w.gemini.IntroSchema(),
+		w.gemini.OutroSchema(),
+	}
+
+	for i, config := range partConfigs {
 
 		// Create video contents but now with just the FIRST and LAST 5 minutes.
 		// Increase the FPS to 2.0 and media resolution level to high.
@@ -210,8 +199,11 @@ func (w *Worker) generateContent(
 			)
 		}
 
+		// Use appropriate schema
+		genaiConfig.ResponseSchema = schemas[i]
+
 		// Generate content using Gemini
-		genaiResponse, err = w.gemini.GenerateContent(ctx, contents, w.geminiRetryConfig)
+		genaiResponse, err = w.gemini.GenerateContent(ctx, contents, genaiConfig, w.geminiRetryConfig)
 
 		// Exit with error if RPD reached or context ended
 		if errors.Is(err, gemini.ErrDailyLimitReached) || utils.IsContextErr(err) {
