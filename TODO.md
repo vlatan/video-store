@@ -1,4 +1,5 @@
-- Modify the upsert and get post queries
+- Modify the update post query
+- Addapt the update post and update generated data methods
 - Create a flag so the posts don't get reprocessed
 - Run the DB migration in prod before deploy
 
