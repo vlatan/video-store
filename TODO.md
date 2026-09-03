@@ -1,4 +1,3 @@
-- Adap the worket for different schemas
 - Modify the upsert and get post queries
 - Create a flag so the posts don't get reprocessed
 - Run the DB migration in prod before deploy

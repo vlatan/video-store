@@ -100,6 +100,7 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.
 		channelTitle sql.NullString
 		avgRating   sql.NullFloat64
 		ratingCount sql.NullInt64
+		releaseYear sql.NullInt16
 	)
 
 	// Get single row from DB
@@ -112,8 +113,10 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.
 		&post.Likes,
 		&avgRating,
 		&ratingCount,
+		&post.Directors,
 		&post.Description,
 		&summary,
+		&releaseYear,
 		&playlistID,
 		&playlistTitle,
 		&channelTitle,
@@ -127,9 +130,10 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.
 		return zero, err
 	}
 
-	// Assign the original title/summary if any
+	// Assign the original title, summary, release year if any
 	post.OriginalTitle = originalTitle.String
 	post.Summary = summary.String
+	post.ReleaseYear = releaseYear.Int16
 
 	// Gather playlist/channel info if any
 	post.Source = &models.Source{
