@@ -1,9 +1,9 @@
-- Update the post update FORM with release year and directors
-
 - Create a flag so the posts don't get reprocessed
+  Make sure to not flag the posts that don't ger processed due to gemini error 503
 - Run the DB migration in prod before deploy
 
 - Make `:= range` more performant by using index
+- Update the post update FORM with release year and directors
 
 - Make the checkmarks on the like/save green or yellow
 - Add close button to login menu
