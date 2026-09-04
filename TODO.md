@@ -1,5 +1,5 @@
-- Update the post update form with release year and directors
-- Addapt the update post and update generated data methods
+- Update the post update FORM with release year and directors
+
 - Create a flag so the posts don't get reprocessed
 - Run the DB migration in prod before deploy
 
