@@ -36,6 +36,7 @@ func (s *Service) SummarySchema() *genai.Schema {
 					"Focus entirely on the subject matter itself - " +
 					"people's names, events, and forces at the heart of the story.\n" +
 					"Make it feel compelling, informative, and human, not academic.\n" +
+					"Properly capitalize the sentences.\n" +
 					"Do NOT simply summarize or reference the video.\n" +
 					"Do NOT make the paragraph short.",
 			},
