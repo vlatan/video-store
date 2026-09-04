@@ -212,7 +212,7 @@ func (r *Repository) UpdatePost(
 	videoID, originalTitle, categorySlug, summary string,
 ) (int64, error) {
 
-	query, err := r.GetQuery("update_post.sql", nil)
+	query, err := r.GetQuery("update_post_form.sql", nil)
 	if err != nil {
 		return 0, err
 	}

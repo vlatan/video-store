@@ -108,12 +108,6 @@
 			<div class="metadata-block">
 
 				<div class="inner-metadata-block">
-					<span>
-						<strong>Duration:</strong>
-						<time itemprop="duration" datetime="{{ .CurrentPost.Duration }}">
-							{{ .CurrentPost.Duration.Human }}
-						</time>
-					</span>
 					{{ with .CurrentPost.Category }}
 					<span>
 						<strong>Category:</strong>
@@ -126,6 +120,26 @@
 						<a class="nav-item" href="/source/{{ .PlaylistID }}/">{{ .ChannelTitle }}</a>
 					</span>
 					{{ end }}
+					{{ with .CurrentPost.Directors }}
+					<span>
+						<strong>Directed By:</strong>
+						{{ range . }}
+						{{ .Name }},
+						{{ end }}
+					</span>
+					{{ end }}
+					{{ with .CurrentPost.ReleaseYear }}
+					<span>
+						<strong>Released In:</strong>
+						{{ . }}
+					</span>
+					{{ end }}
+					<span>
+						<strong>Duration:</strong>
+						<time itemprop="duration" datetime="{{ .CurrentPost.Duration }}">
+							{{ .CurrentPost.Duration.Human }}
+						</time>
+					</span>
 				</div>
 
 				<!-- Rating Widget -->
