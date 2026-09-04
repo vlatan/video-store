@@ -123,15 +123,18 @@
 					{{ with .CurrentPost.Directors }}
 					<span>
 						<strong>Directed By:</strong>
-						{{ range . }}
-						{{ .Name }},
+						{{ range $i, $name := . }}
+						{{- if $i }}, {{ end -}}
+						<span itemprop="director" itemscope itemtype="https://schema.org/Person">
+							<span itemprop="name">{{ $name }}</span>
+						</span>
 						{{ end }}
 					</span>
 					{{ end }}
 					{{ with .CurrentPost.ReleaseYear }}
 					<span>
-						<strong>Released In:</strong>
-						{{ . }}
+						<strong>Released:</strong>
+						<span itemprop="dateCreated" content="{{ . }}">{{ . }}</span>
 					</span>
 					{{ end }}
 					<span>
