@@ -1,4 +1,7 @@
-- Use ticker in a goroutine to check the redis lock and cancel the context
+- The generate post content needs to accept retry config and genai config.
+  It should check the genai quota.
+  It should reconcile the sleep before the first call.
+
 - Create a flag so the posts don't get reprocessed
   Make sure to not flag the posts that don't ger processed due to gemini error 503
 - Run the DB migration in prod before deploy
