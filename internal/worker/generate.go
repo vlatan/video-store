@@ -135,6 +135,7 @@ func (w *Worker) generateContent(
 		video.Summary = genaiResponse.Summary
 		video.Category = &models.Category{Name: genaiResponse.Category}
 
+		// Exit beacuse the original request was blocked and we used text contents
 		return true, nil
 	}
 
@@ -211,6 +212,7 @@ func (w *Worker) generateContent(
 		}
 
 		// For every other error just log it and exit with true, nil
+		// because we have a summary generated at this point.
 		if err != nil {
 			slog.ErrorContext(
 				ctx,
