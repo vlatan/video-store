@@ -168,9 +168,7 @@ func (w *Worker) generateContent(
 
 	for i, config := range partConfigs {
 
-		// Create video contents but now with just the FIRST and LAST 5 minutes.
-		// Increase the FPS to 2.0 and media resolution level to high.
-		// 5x60x2x280 = 168k tokens
+		// Create video contents but now with just the FIRST or LAST X minutes.
 		contents, err := w.gemini.MakeVideoContents(video.VideoID, config)
 
 		// Just log the error and exit cleanly with true, nil.
