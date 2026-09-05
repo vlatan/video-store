@@ -336,7 +336,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 			ctx, cancel := context.WithTimeout(detachedCtx, 30*time.Minute)
 			defer cancel()
 
-			if err := s.generatePostContent(ctx, post); err != nil {
+			if err := s.gemini.GeneratePostContent(ctx, post); err != nil {
 				slog.ErrorContext(
 					r.Context(),
 					"failed to generate/update LLM content",
