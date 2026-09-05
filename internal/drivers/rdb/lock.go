@@ -2,6 +2,7 @@ package rdb
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -62,7 +63,7 @@ func (l *RedisLock) CheckLock(ctx context.Context) error {
 	// Get the lock value
 	value, err := l.rdb.Client.Get(ctx, l.key).Result()
 
-	if err == redis.Nil {
+	if errors.Is(err, redis.Nil) {
 		return &LockError{"lock expired or deleted", err}
 	}
 

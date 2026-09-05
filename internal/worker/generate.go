@@ -62,14 +62,6 @@ func (w *Worker) generateContent(
 		return false, err
 	}
 
-	// Check if the worker still owns the lock before an expensive API call
-	if err = w.lock.CheckLock(ctx); err != nil {
-		return false, fmt.Errorf(
-			"this worker %q does not own the lock anymore; %w",
-			w.id, err,
-		)
-	}
-
 	genaiConfig := w.gemini.NewGenaiConfig()
 	genaiConfig.ResponseSchema = w.gemini.SummarySchema()
 
@@ -112,14 +104,6 @@ func (w *Worker) generateContent(
 		// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
 		if err := utils.SleepJitter(ctx, 60*time.Second, 90*time.Second); err != nil {
 			return false, err
-		}
-
-		// Check if the worker still owns the lock before an expensive API call
-		if err = w.lock.CheckLock(ctx); err != nil {
-			return false, fmt.Errorf(
-				"this worker %q does not own the lock anymore; %w",
-				w.id, err,
-			)
 		}
 
 		// Generate content using Gemini, but now with text contents
@@ -188,14 +172,6 @@ func (w *Worker) generateContent(
 		// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
 		if err := utils.SleepJitter(ctx, 60*time.Second, 90*time.Second); err != nil {
 			return false, err
-		}
-
-		// Check if the worker still owns the lock before an expensive API call
-		if err = w.lock.CheckLock(ctx); err != nil {
-			return false, fmt.Errorf(
-				"this worker %q does not own the lock anymore; %w",
-				w.id, err,
-			)
 		}
 
 		// Use appropriate schema

@@ -1,3 +1,4 @@
+- Use ticker in a goroutine to check the redis lock and cancel the context
 - Create a flag so the posts don't get reprocessed
   Make sure to not flag the posts that don't ger processed due to gemini error 503
 - Run the DB migration in prod before deploy
