@@ -104,7 +104,9 @@ func (s *Service) GeneratePostContent(ctx context.Context, post *models.Post) er
 	)
 
 	if err != nil {
-		return fmt.Errorf("failed to create gemini contents: %w", err)
+		return fmt.Errorf(
+			"failed to create gemini contents on video %q; %v",
+			post.VideoID, err)
 	}
 
 	genaiConfig := s.NewGenaiConfig()
@@ -129,7 +131,8 @@ func (s *Service) GeneratePostContent(ctx context.Context, post *models.Post) er
 	// Exit if fatal error
 	if !blocked && err != nil {
 		return fmt.Errorf(
-			"failed to generate LLM content on video %q: %w", post.VideoID, err,
+			"failed to generate LLM content on video %q: %w",
+			post.VideoID, err,
 		)
 	}
 
@@ -157,6 +160,13 @@ func (s *Service) GeneratePostContent(ctx context.Context, post *models.Post) er
 			genaiConfig,
 			retryConfig,
 		)
+
+		if err != nil {
+			return fmt.Errorf(
+				"failed to generate LLM content on video %q: %w",
+				post.VideoID, err,
+			)
+		}
 
 		post.Summary = genaiResponse.Summary
 		post.Category = &models.Category{Name: genaiResponse.Category}
@@ -187,7 +197,8 @@ func (s *Service) GeneratePostContent(ctx context.Context, post *models.Post) er
 		},
 	}
 
-	// If not blocked make another two calls to extract other details
+	// At this point we presumably have summary and category.
+	// If not blocked make another two calls to extract other details.
 	for i, config := range partConfigs {
 
 		// Create video contents but now with just the FIRST and LAST x minutes.
@@ -217,9 +228,13 @@ func (s *Service) GeneratePostContent(ctx context.Context, post *models.Post) er
 		// Generate content using Gemini
 		genaiResponse, err = s.GenerateContent(ctx, contents, genaiConfig, retryConfig)
 
-		// Exit if context ended
-		if utils.IsContextErr(err) {
-			return fmt.Errorf("failed to generate LLM content (%d pass): %w", i+2, err)
+		// Exit with error only if we need to terminate the worker's job,
+		// meaning only if RPD reached or context ended.
+		if errors.Is(err, ErrDailyLimitReached) || utils.IsContextErr(err) {
+			return fmt.Errorf(
+				"failed to generate LLM content on video %q; %w",
+				post.VideoID, err,
+			)
 		}
 
 		// For every other error just log it and exit with nil
@@ -263,6 +278,8 @@ func (s *Service) GeneratePostContent(ctx context.Context, post *models.Post) er
 			post.ReleaseYear = genaiResponse.ReleaseYear
 		}
 
+		// TODO: Remove this, only for debugging.
+		// Add the processed flag, probably OCR at the end of the summary text.
 		slog.InfoContext(
 			ctx,
 			"video results",

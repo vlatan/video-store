@@ -1,5 +1,4 @@
 - The generate post content needs to accept retry config and genai config.
-  It should check the genai quota.
   It should reconcile the sleep before the first call.
 
 - Create a flag so the posts don't get reprocessed
