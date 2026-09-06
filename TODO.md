@@ -1,5 +1,4 @@
-- Run the DB migration in prod before deploy
-
+- Upgrade libs
 - Make `:= range` more performant by using index
 - Make the directors links that list their films
 - Update the post update FORM with release year and directors
