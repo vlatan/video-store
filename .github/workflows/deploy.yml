@@ -53,20 +53,11 @@ jobs:
             - name: Checkout source code
               uses: actions/checkout@v7
 
-            - name: Set up Go and Cache Modules
-              uses: actions/setup-go@v7
-              with:
-                  go-version-file: "go.mod"
-                  cache: true
-
-            - name: Download dependencies
-              run: go mod download
-
             - name: Run gosec security scanner
               env:
                   GOTOOLCHAIN: auto
                   GO111MODULE: on
-              uses: securego/gosec@v2.29.0
+              uses: securego/gosec@master
               with:
                   args: ./...
 
