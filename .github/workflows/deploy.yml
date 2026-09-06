@@ -48,15 +48,15 @@ jobs:
 
     sast:
         runs-on: ubuntu-latest
+        env:
+            GOTOOLCHAIN: auto
+            GO111MODULE: on
 
         steps:
             - name: Checkout source code
               uses: actions/checkout@v7
 
             - name: Run gosec security scanner
-              env:
-                  GOTOOLCHAIN: auto
-                  GO111MODULE: on
               uses: securego/gosec@master
               with:
                   args: ./...
