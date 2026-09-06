@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"time"
 
 	"github.com/vlatan/video-store/internal/integrations/gemini"
 	"github.com/vlatan/video-store/internal/integrations/yt"
@@ -253,7 +254,15 @@ func (w *Worker) deleteVideos(
 func (w *Worker) insertVideos(ctx context.Context, videos []*models.Post) error {
 
 	// Insert new videos in DB
-	for _, video := range videos {
+	for i, video := range videos {
+
+		if i > 0 {
+			// Sleep with context in mind for 60-90 seconds.
+			// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
+			if err := utils.SleepJitter(ctx, 60*time.Second, 90*time.Second); err != nil {
+				return err
+			}
+		}
 
 		// Attempt to generate content
 		err := w.gemini.GeneratePostContent(ctx, video, w.geminiRetryConfig)
@@ -303,6 +312,11 @@ func (w *Worker) updateVideos(ctx context.Context, videos []*models.Post) error 
 	// Insert new videos in DB
 	for _, video := range videos {
 
+		// Sleep with context in mind for 60-90 seconds.
+		// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
+		if err := utils.SleepJitter(ctx, 60*time.Second, 90*time.Second); err != nil {
+			return err
+		}
 		// Try to generate post content with gemini
 		err := w.gemini.GeneratePostContent(ctx, video, w.geminiRetryConfig)
 
