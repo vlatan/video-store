@@ -123,12 +123,14 @@
 					{{ with .CurrentPost.Directors }}
 					<span>
 						<strong>Directed By:</strong>
-						{{ range $i, $name := . }}
-						{{- if $i }}, {{ end -}}
-						<span itemprop="director" itemscope itemtype="https://schema.org/Person">
-							<span itemprop="name">{{ $name }}</span>
+						<span>
+							{{ range $i, $name := . }}
+							{{- if $i }}, {{ end -}}
+							<!-- This needs to be glues like this for the comma to appear nicely -->
+							<span itemprop="director" itemscope itemtype="https://schema.org/Person"><span
+									itemprop="name">{{ $name }}</span></span>
+							{{- end -}}
 						</span>
-						{{ end }}
 					</span>
 					{{ end }}
 					{{ with .CurrentPost.ReleaseYear }}
