@@ -12,3 +12,5 @@ const (
 	FieldTypeInput FieldType = iota
 	FieldTypeTextarea
 )
+
+const OcrFlag = "<!-- OCR Done -->"
