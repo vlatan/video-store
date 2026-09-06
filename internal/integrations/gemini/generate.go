@@ -79,14 +79,16 @@ func (s *Service) GenerateContent(
 		return nil, err
 	}
 
-	response.Title = utils.NormalizeTitle(response.Title, utils.VideoTitleCutoffs)
 	response.OriginalTitle = utils.NormalizeTitle(response.OriginalTitle, utils.VideoTitleCutoffs)
 	response.Summary = utils.NormalizeDescription(response.Summary)
 
 	return &response, nil
 }
 
-func (s *Service) GeneratePostContent(ctx context.Context, post *models.Post) error {
+func (s *Service) GeneratePostContent(
+	ctx context.Context,
+	post *models.Post,
+	retryConfig *utils.RetryConfig) error {
 
 	videoDuration, err := post.Duration.Seconds()
 	if err != nil || videoDuration == 0 {
@@ -111,12 +113,6 @@ func (s *Service) GeneratePostContent(ctx context.Context, post *models.Post) er
 
 	genaiConfig := s.NewGenaiConfig()
 	genaiConfig.ResponseSchema = s.SummarySchema()
-
-	retryConfig := &utils.RetryConfig{
-		MaxRetries: 1,
-		MaxJitter:  2 * time.Second,
-		Delay:      65 * time.Second,
-	}
 
 	genaiResponse, err := s.GenerateContent(
 		ctx,
