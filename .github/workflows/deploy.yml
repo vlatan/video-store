@@ -125,4 +125,3 @@ jobs:
                       up --detach --remove-orphans \
                       --scale ${{ secrets.SERVICE_NAME }}=${{ secrets.SERVICE_REPLICAS }} \
                       ${{ secrets.SERVICE_NAME }}
-
