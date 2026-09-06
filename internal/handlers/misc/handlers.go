@@ -109,7 +109,7 @@ func (s *Service) StaticHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// About G703::
+	// About G703:
 	// ServeFileFS rejects any request where r.URL.Path contains ".."
 	// before name is ever used (net/http/fs.go), and path.Clean on a rooted
 	// path removes all ".." elements anyway. embed.FS also enforces
