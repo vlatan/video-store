@@ -82,6 +82,23 @@ func (s *Service) GenerateContent(
 	response.OriginalTitle = utils.NormalizeTitle(response.OriginalTitle, utils.VideoTitleCutoffs)
 	response.Summary = utils.NormalizeDescription(response.Summary)
 
+	var directors []string
+	for _, director := range response.Directors {
+		name, err := utils.NormalizeName(director)
+		if err == nil {
+			directors = append(directors, name)
+			continue
+		}
+		slog.ErrorContext(
+			ctx,
+			"failed to normalize director's name",
+			"original_director_name", director,
+			"original_title", response.OriginalTitle,
+			"error", err,
+		)
+	}
+	response.Directors = directors
+
 	return &response, nil
 }
 
@@ -241,20 +258,8 @@ func (s *Service) GeneratePostContent(
 
 		// Append if any additional directors discovered
 		for _, director := range genaiResponse.Directors {
-			name, err := utils.NormalizeName(director)
-			if err != nil {
-				slog.ErrorContext(
-					ctx,
-					"failed to normalize director's name",
-					"pass", i+2,
-					"videoId", post.VideoID,
-					"original_name", director,
-					"error", err,
-				)
-				continue
-			}
-			if !slices.Contains(post.Directors, name) {
-				post.Directors = append(post.Directors, name)
+			if !slices.Contains(post.Directors, director) {
+				post.Directors = append(post.Directors, director)
 			}
 		}
 
