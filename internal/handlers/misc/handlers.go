@@ -109,13 +109,19 @@ func (s *Service) StaticHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// About G703::
+	// ServeFileFS rejects any request where r.URL.Path contains ".."
+	// before name is ever used (net/http/fs.go), and path.Clean on a rooted
+	// path removes all ".." elements anyway. embed.FS also enforces
+	// fs.ValidPath as a second, independent check. Not exploitable.
+
 	// Serve favicon from the embedded FS if accessed in the root, i.e. /favicon.ico
 	if slices.Contains(utils.RootFavicons, r.URL.Path) {
 		filePath := filepath.Join("/static/favicons", path.Clean(r.URL.Path))
-		http.ServeFileFS(w, r, web.Files, filePath)
+		http.ServeFileFS(w, r, web.Files, filePath) // #nosec G703
 		return
 	}
 
 	// Serve from the embedded FS
-	http.ServeFileFS(w, r, web.Files, path.Clean(r.URL.Path))
+	http.ServeFileFS(w, r, web.Files, path.Clean(r.URL.Path)) // #nosec G703
 }

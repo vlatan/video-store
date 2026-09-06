@@ -4,9 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
+	"log/slog"
+	"strings"
+	"time"
 
-	"github.com/vlatan/video-store/internal/drivers/rdb"
+	"github.com/vlatan/video-store/internal/integrations/gemini"
 	"github.com/vlatan/video-store/internal/integrations/yt"
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/utils"
@@ -179,9 +181,11 @@ func (w *Worker) adoptVideos(
 			return err
 		}
 
-		log.Printf(
-			"Failed to update the playlist on video %q; %v",
-			dbVideo.VideoID, err,
+		slog.ErrorContext(
+			ctx,
+			"failed to update plaulist on video in DB",
+			"videoId", dbVideo.VideoID,
+			"error", err,
 		)
 	}
 
@@ -236,46 +240,95 @@ func (w *Worker) deleteVideos(
 			return nil, err
 		}
 
-		log.Printf(
-			"Could not delete the video %q in DB; %v",
-			dbVideo.VideoID, err,
+		slog.ErrorContext(
+			ctx,
+			"failed to delete video in DB",
+			"videoId", dbVideo.VideoID,
+			"error", err,
 		)
 	}
 
 	return validDbVideos, nil
 }
 
-// insertVideos summarizes videos and inserts them in database
+// insertVideos generates data for the videos and inserts them in database
 func (w *Worker) insertVideos(ctx context.Context, videos []*models.Post) error {
 
 	// Insert new videos in DB
-	for _, video := range videos {
+	for i, video := range videos {
 
-		// Attempt to generate content
-		_, err := w.generateContent(ctx, video)
+		if i > 0 {
+			// Sleep with context in mind for 60-90 seconds.
+			// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
+			if err := utils.SleepJitter(ctx, 60*time.Second, 90*time.Second); err != nil {
+				return err
+			}
+		}
 
-		// Exit early if context ended or lock not owned anymore.
-		// Ignore any other error including RPD limit, we'll insert the video in DB regardless.
-		if _, ok := errors.AsType[*rdb.LockError](err); ok || utils.IsContextErr(err) {
+		// Generate post summary and category
+		err := w.gemini.GeneratePostSummary(ctx, video, w.geminiRetryConfig)
+
+		// Exit early only if context ended
+		if utils.IsContextErr(err) {
 			return err
+		}
+
+		// For every other error just log it.
+		// Ignore any other errors, we'll insert the video in DB regardless.
+		if err != nil {
+			slog.ErrorContext(
+				ctx,
+				"failed to generate LLM post summary/category",
+				"videoId", video.VideoID,
+				"error", err,
+			)
+		}
+
+		// If generating summary was succesfull procede to generate OCR
+		if err == nil {
+
+			// Sleep with context in mind for 60-90 seconds.
+			// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
+			if err := utils.SleepJitter(ctx, 60*time.Second, 90*time.Second); err != nil {
+				return err
+			}
+
+			// Generate post original title, directors and release year
+			err := w.gemini.GeneratePostOcr(ctx, video, w.geminiRetryConfig)
+
+			// Exit early only if context ended
+			if utils.IsContextErr(err) {
+				return err
+			}
+
+			// For every other error just log it.
+			// Ignore any other errors, we'll insert the video in DB regardless.
+			if err != nil {
+				slog.ErrorContext(
+					ctx,
+					"failed to generate LLM post OCR",
+					"videoId", video.VideoID,
+					"error", err,
+				)
+			}
 		}
 
 		rowsAffected, err := w.postsRepo.InsertPost(ctx, video)
 		w.stats.InsertedDbVideos += rowsAffected
-
-		if err == nil {
-			continue
-		}
 
 		// Exit early if context ended
 		if utils.IsContextErr(err) {
 			return err
 		}
 
-		log.Printf(
-			"Failed to insert video %q in DB: %v",
-			video.VideoID, err,
-		)
+		if err != nil {
+			slog.ErrorContext(
+				ctx,
+				"failed to insert video in DB",
+				"videoId", video.VideoID,
+				"error", err,
+			)
+		}
 	}
 
 	return nil
@@ -287,39 +340,102 @@ func (w *Worker) updateVideos(ctx context.Context, videos []*models.Post) error 
 	// Insert new videos in DB
 	for _, video := range videos {
 
-		// Check the context first
-		if err := ctx.Err(); err != nil {
-			return err
+		var updated bool
+
+		// If post has no summary or category proceed to generate them
+		if video.Summary == "" || video.Category == nil {
+
+			// Sleep with context in mind for 60-90 seconds.
+			// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
+			if err := utils.SleepJitter(ctx, 60*time.Second, 90*time.Second); err != nil {
+				return err
+			}
+
+			// Generate post summary and category
+			err := w.gemini.GeneratePostSummary(ctx, video, w.geminiRetryConfig)
+
+			// Exit with error only if we need to terminate the worker's job,
+			// meaning only if RPD quota reached or context ended.
+			if errors.Is(err, gemini.ErrDailyLimitReached) || utils.IsContextErr(err) {
+				return fmt.Errorf(
+					"failed to generate LLM content on video %q; %w",
+					video.VideoID, err,
+				)
+			}
+
+			// For every other error just log it and move onto the next video
+			if err != nil {
+				slog.ErrorContext(
+					ctx,
+					"failed to generate LLM content",
+					"videoId", video.VideoID,
+					"error", err,
+				)
+				continue
+			}
+
+			updated = true
 		}
 
-		ok, err := w.generateContent(ctx, video)
+		// If video has no OCR data proceed to generate
+		if !strings.HasSuffix(video.Summary, models.OcrFlag) {
 
-		// Exit on any error, stop updating
-		if err != nil {
-			return err
+			// Sleep with context in mind for 60-90 seconds.
+			// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
+			if err := utils.SleepJitter(ctx, 60*time.Second, 90*time.Second); err != nil {
+				return err
+			}
+
+			// Generate post original title, directors and release year
+			err := w.gemini.GeneratePostOcr(ctx, video, w.geminiRetryConfig)
+
+			// Exit with error only if we need to terminate the worker's job,
+			// meaning only if RPD quota reached or context ended.
+			if errors.Is(err, gemini.ErrDailyLimitReached) || utils.IsContextErr(err) {
+				return fmt.Errorf(
+					"failed to generate LLM content on video %q; %w",
+					video.VideoID, err,
+				)
+			}
+
+			// For every other error just log it
+			if err != nil {
+				slog.ErrorContext(
+					ctx,
+					"failed to generate LLM post OCR",
+					"videoId", video.VideoID,
+					"error", err,
+				)
+
+				// If the summary was not updated then nothing was updated, move onto the next video
+				if !updated {
+					continue
+				}
+			}
+
+			updated = true
 		}
 
-		// If the video was not summarized, there's nothing to update
-		if !ok {
+		if !updated {
 			continue
 		}
 
-		rowsAffected, err := w.postsRepo.UpdateGeneratedData(ctx, video)
+		rowsAffected, err := w.postsRepo.UpdateGeneratedContent(ctx, video)
 		w.stats.UpdatedDbVideos += rowsAffected
-
-		if err == nil {
-			continue
-		}
 
 		// Exit early if context ended
 		if utils.IsContextErr(err) {
 			return err
 		}
 
-		log.Printf(
-			"Failed to update generated data in DB on video %q; %v",
-			video.VideoID, err,
-		)
+		if err != nil {
+			slog.ErrorContext(
+				ctx,
+				"failed to update generated data in DB",
+				"videoId", video.VideoID,
+				"error", err,
+			)
+		}
 	}
 
 	return nil

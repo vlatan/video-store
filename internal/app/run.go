@@ -2,7 +2,6 @@ package app
 
 import (
 	"fmt"
-	"log"
 	"net"
 	"net/http"
 )
@@ -41,7 +40,6 @@ func (a *App) Run() error {
 	}
 
 	<-done // Wait for the graceful shutdown to complete
-	log.Println("Graceful shutdown complete.")
 
 	return nil
 }

@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"log"
+	"log/slog"
 	"os/signal"
 	"syscall"
 	"time"
@@ -21,7 +22,7 @@ func (a *App) Shutdown(done chan<- struct{}) {
 	// This channel is closed by the sender and the program proceeds.
 	<-ctx.Done()
 
-	log.Println("Shutting down gracefully, press Ctrl+C again to force...")
+	slog.Info("Shutting down gracefully, press Ctrl+C again to force.")
 
 	// Cancel the context, stop watching for termination signals.
 	// Now if the user presses Ctrl+C again (or someone sends SIGINT, SIGTERM signal),
@@ -42,12 +43,9 @@ func (a *App) Shutdown(done chan<- struct{}) {
 	}
 
 	// Perform cleanup. Close the DB pool and Redis connections.
-	log.Println("Closing Database and Redis connections...")
 	if err := a.cleanup(); err != nil {
 		log.Printf("Error during cleanup: %v", err)
 	}
-
-	log.Println("Server exiting...")
 
 	// Notify the main goroutine that the shutdown is complete
 	done <- struct{}{}

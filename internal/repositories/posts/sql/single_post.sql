@@ -19,6 +19,15 @@ agg_rating AS (
     FROM post_rating AS prat
     JOIN target_post AS tp ON prat.post_id = tp.post_id
     GROUP BY tp.post_id
+),
+agg_directors AS (
+    SELECT
+        tp.post_id,
+        ARRAY_AGG(pc.name) AS directors
+    FROM post_credits AS pc
+    JOIN target_post AS tp ON pc.post_id = tp.post_id
+    WHERE pc.role = 'Director'
+    GROUP BY tp.post_id
 )
 SELECT
     post.id,
@@ -29,8 +38,10 @@ SELECT
     COALESCE(al.likes_count, 0) AS likes,
     arat.avg_rating,
     COALESCE(arat.rating_count, 0) AS rating_count,
+    COALESCE(ad.directors, '{}') AS directors,
     post.description,
     post.summary,
+    post.release_year,
     source.playlist_id,
     source.title,
     source.channel_title,
@@ -42,5 +53,6 @@ FROM post
 JOIN target_post AS tp ON tp.post_id = post.id
 LEFT JOIN agg_likes AS al ON al.post_id = post.id
 LEFT JOIN agg_rating AS arat ON arat.post_id = post.id
+LEFT JOIN agg_directors AS ad ON ad.post_id = post.id
 LEFT JOIN category AS cat ON cat.id = post.category_id
 LEFT JOIN playlist AS source ON source.id = post.playlist_db_id;

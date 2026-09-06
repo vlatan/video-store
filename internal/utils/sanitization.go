@@ -4,6 +4,10 @@ import (
 	"regexp"
 	"strings"
 	"unicode"
+
+	"golang.org/x/text/runes"
+	"golang.org/x/text/transform"
+	"golang.org/x/text/unicode/norm"
 )
 
 var VideoTitleCutoffs = []string{" I SLICE ", " // ", " | "}
@@ -220,4 +224,17 @@ func NormalizeDescription(text string) string {
 	text = urlRegex.ReplaceAllString(text, "")
 	text = emailRegex.ReplaceAllString(text, "")
 	return strings.ReplaceAll(text, "—", " - ")
+}
+
+// NormalizeName
+func NormalizeName(s string) (string, error) {
+
+	t := transform.Chain(
+		norm.NFD,                           // Decompose characters (e.g., 'ž', 'é')
+		runes.Remove(runes.In(unicode.Mn)), // Remove all Nonspacing Marks (diacritics)
+		norm.NFC,                           // Recompose remaining characters back to normal form
+	)
+
+	result, _, err := transform.String(t, s)
+	return result, err
 }

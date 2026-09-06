@@ -1,9 +1,9 @@
 package posts
 
 import (
+	"context"
 	"errors"
 	"fmt"
-	"log"
 	"log/slog"
 	"net/http"
 	"time"
@@ -326,13 +326,62 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Generate content in the background using Gemini.
-		// Give reasonable TTL for this to finish.
 		// In production no need to use it, the worker will
 		// generate the post content overnight.
 		go func() {
-			if err := s.generatePostContent(r, post, 30*time.Minute); err != nil {
-				log.Println(err)
+
+			// Detach the request context and
+			// give this goroutine reasonable time to finish
+			detachedCtx := context.WithoutCancel(r.Context())
+			ctx, cancel := context.WithTimeout(detachedCtx, 30*time.Minute)
+			defer cancel()
+
+			// Just give it a one try
+			retryConfig := &utils.RetryConfig{
+				MaxRetries: 1,
+				MaxJitter:  2 * time.Second,
+				Delay:      65 * time.Second,
 			}
+
+			if err := s.gemini.GeneratePostSummary(ctx, post, retryConfig); err != nil {
+				slog.ErrorContext(
+					r.Context(),
+					"failed to generate/update LLM post summary/category",
+					"path", r.URL.Path,
+					"videoId", post.VideoID,
+					"error", err,
+				)
+				// Exit early, do not try OCR nor DB update.
+				return
+			}
+
+			// Sleep with context in mind for 60-90 seconds.
+			// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
+			if err := utils.SleepJitter(ctx, 60*time.Second, 90*time.Second); err != nil {
+				return
+			}
+
+			if err := s.gemini.GeneratePostOcr(ctx, post, retryConfig); err != nil {
+				slog.ErrorContext(
+					r.Context(),
+					"failed to generate/update LLM post OCR data",
+					"path", r.URL.Path,
+					"videoId", post.VideoID,
+					"error", err,
+				)
+			}
+
+			_, err = s.postsRepo.UpdateGeneratedContent(ctx, post)
+			if err != nil {
+				slog.ErrorContext(
+					r.Context(),
+					"failed to update LLM content in DB",
+					"path", r.URL.Path,
+					"videoId", post.VideoID,
+					"error", err,
+				)
+			}
+
 		}()
 
 		// Check out the video

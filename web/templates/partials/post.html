@@ -108,12 +108,6 @@
 			<div class="metadata-block">
 
 				<div class="inner-metadata-block">
-					<span>
-						<strong>Duration:</strong>
-						<time itemprop="duration" datetime="{{ .CurrentPost.Duration }}">
-							{{ .CurrentPost.Duration.Human }}
-						</time>
-					</span>
 					{{ with .CurrentPost.Category }}
 					<span>
 						<strong>Category:</strong>
@@ -126,6 +120,31 @@
 						<a class="nav-item" href="/source/{{ .PlaylistID }}/">{{ .ChannelTitle }}</a>
 					</span>
 					{{ end }}
+					{{ with .CurrentPost.Directors }}
+					<span>
+						<strong>Directed By:</strong>
+						<span>
+							{{ range $i, $name := . }}
+							{{- if $i }}, {{ end -}}
+							<!-- This needs to be glues like this for the comma to appear nicely -->
+							<span itemprop="director" itemscope itemtype="https://schema.org/Person"><span
+									itemprop="name">{{ $name }}</span></span>
+							{{- end -}}
+						</span>
+					</span>
+					{{ end }}
+					{{ with .CurrentPost.ReleaseYear }}
+					<span>
+						<strong>Released:</strong>
+						<span itemprop="dateCreated" content="{{ . }}">{{ . }}</span>
+					</span>
+					{{ end }}
+					<span>
+						<strong>Duration:</strong>
+						<time itemprop="duration" datetime="{{ .CurrentPost.Duration }}">
+							{{ .CurrentPost.Duration.Human }}
+						</time>
+					</span>
 				</div>
 
 				<!-- Rating Widget -->

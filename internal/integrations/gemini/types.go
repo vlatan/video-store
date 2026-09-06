@@ -5,11 +5,10 @@ import (
 	"google.golang.org/genai"
 )
 
-// Gemini service
+// Service is Gemini struct
 type Service struct {
-	config      *config.Config
-	genaiConfig *genai.GenerateContentConfig
-	client      *genai.Client
-	limiter     *GeminiLimiter
-	catNames    []string
+	config   *config.Config
+	client   *genai.Client
+	limiter  *GeminiLimiter
+	catNames []string
 }

@@ -1,3 +1,4 @@
+// Package gemini creates a gemini service Service
 package gemini
 
 import (
@@ -11,13 +12,13 @@ import (
 	"google.golang.org/genai"
 )
 
-// Create new Gemini service
+// New creates new Gemini service
 func New(
 	ctx context.Context,
 	cfg *config.Config,
 	redisService *rdb.Service,
-	catsRepo *categories.Repository) (*Service, error) {
-
+	catsRepo *categories.Repository,
+) (*Service, error) {
 	// Configure new client
 	client, err := genai.NewClient(ctx, &genai.ClientConfig{APIKey: cfg.GeminiAPIKey})
 	if err != nil {
@@ -46,7 +47,6 @@ func New(
 			return catsRepo.GetCategories(ctx)
 		},
 	)
-
 	if err != nil {
 		return nil, err
 	}
@@ -55,22 +55,6 @@ func New(
 	s.catNames = make([]string, len(categories))
 	for i, cat := range categories {
 		s.catNames[i] = cat.Name
-	}
-
-	// Configure genai
-	temp, topP := float32(0.0), float32(0.1)
-	s.genaiConfig = &genai.GenerateContentConfig{
-		Temperature: &temp,
-		TopP:        &topP,
-
-		// Can't return JSON if using web search
-		ResponseMIMEType: "application/json",
-		// Tools: []*genai.Tool{{GoogleSearch: &genai.GoogleSearch{}}},
-
-		SafetySettings:    safetySettings,
-		ResponseSchema:    s.responseSchema(),
-		SystemInstruction: s.systemInstruction(),
-		MediaResolution:   genai.MediaResolutionLow,
 	}
 
 	return s, nil

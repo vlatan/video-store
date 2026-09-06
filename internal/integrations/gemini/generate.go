@@ -5,6 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
+	"slices"
+	"time"
 
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/utils"
@@ -17,6 +20,7 @@ import (
 func (s *Service) generateContent(
 	ctx context.Context,
 	contents []*genai.Content,
+	genaiConfig *genai.GenerateContentConfig,
 ) (*genai.GenerateContentResponse, error) {
 
 	// Consume minute and daily quotas before calling the API
@@ -28,7 +32,7 @@ func (s *Service) generateContent(
 		ctx,
 		s.config.GeminiModel,
 		contents,
-		s.genaiConfig,
+		genaiConfig,
 	)
 
 	if err != nil {
@@ -49,15 +53,15 @@ func (s *Service) generateContent(
 // Unmarshals the result if any and returns a genai response object.
 func (s *Service) GenerateContent(
 	ctx context.Context,
-	video *models.Post,
 	contents []*genai.Content,
-	rc *utils.RetryConfig,
+	genaiConfig *genai.GenerateContentConfig,
+	retryConfig *utils.RetryConfig,
 ) (*models.GenaiResponse, error) {
 
 	// Make the API call
-	result, err := utils.Retry(ctx, rc,
+	result, err := utils.Retry(ctx, retryConfig,
 		func() (*genai.GenerateContentResponse, error) {
-			return s.generateContent(ctx, contents)
+			return s.generateContent(ctx, contents, genaiConfig)
 		},
 		// Exit immediately if no candidates returned or RPD limit reached
 		func(err error) bool {
@@ -75,9 +79,222 @@ func (s *Service) GenerateContent(
 		return nil, err
 	}
 
-	response.Title = utils.NormalizeTitle(response.Title, utils.VideoTitleCutoffs)
 	response.OriginalTitle = utils.NormalizeTitle(response.OriginalTitle, utils.VideoTitleCutoffs)
 	response.Summary = utils.NormalizeDescription(response.Summary)
 
+	var directors []string
+	for _, director := range response.Directors {
+		name, err := utils.NormalizeName(director)
+		if err == nil {
+			directors = append(directors, name)
+			continue
+		}
+		slog.ErrorContext(
+			ctx,
+			"failed to normalize director's name",
+			"original_director_name", director,
+			"original_title", response.OriginalTitle,
+			"error", err,
+		)
+	}
+	response.Directors = directors
+
 	return &response, nil
+}
+
+// GeneratePostSummary generates post summary and category
+func (s *Service) GeneratePostSummary(
+	ctx context.Context,
+	post *models.Post,
+	retryConfig *utils.RetryConfig) error {
+
+	// Get video duration
+	videoDuration, err := post.Duration.Seconds()
+	if err != nil || videoDuration == 0 {
+		return fmt.Errorf(
+			"couldn't convert video's %q duration %q to seconds; %w",
+			post.VideoID, post.Duration, err,
+		)
+	}
+
+	// Create the video contents.
+	// The first 40 minutes to keep within the 250k TPM quota.
+	// With low resolution and FPS of 1.0.
+	// 40x60x1x70 = 168k tokens
+	mainContents, err := s.MakeVideoContents(
+		post.VideoID, models.VideoPartConfig{
+			EndOffset: min(videoDuration, 40*time.Minute),
+		},
+	)
+
+	if err != nil {
+		return fmt.Errorf(
+			"failed to create gemini contents on video %q; %v",
+			post.VideoID, err)
+	}
+
+	genaiConfig := s.NewGenaiConfig()
+	genaiConfig.ResponseSchema = s.SummarySchema()
+
+	genaiResponse, err := s.GenerateContent(
+		ctx,
+		mainContents,
+		genaiConfig,
+		retryConfig,
+	)
+
+	if err == nil {
+		post.Summary = genaiResponse.Summary
+		post.Category = &models.Category{Name: genaiResponse.Category}
+		return nil
+	}
+
+	// Check if this is a hard block error by the model
+	if _, blocked := errors.AsType[*BlockedError](err); !blocked {
+		return fmt.Errorf(
+			"failed to generate LLM content on video %q: %w",
+			post.VideoID, err,
+		)
+	}
+
+	// Make another gemini API call just with a text contents
+	slog.ErrorContext(
+		ctx,
+		"failed to generate LLM content, trying again with text input",
+		"videoId", post.VideoID,
+		"error", err,
+	)
+
+	// Create text contents
+	textContents := s.MakeTextContents(post)
+
+	// Sleep with context in mind for 60-90 seconds.
+	// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
+	if err := utils.SleepJitter(ctx, 60*time.Second, 90*time.Second); err != nil {
+		return err
+	}
+
+	// Generate content using Gemini, but now with text contents
+	genaiResponse, err = s.GenerateContent(
+		ctx,
+		textContents,
+		genaiConfig,
+		retryConfig,
+	)
+
+	if err != nil {
+		return fmt.Errorf(
+			"failed to generate LLM content on video %q: %w",
+			post.VideoID, err,
+		)
+	}
+
+	post.Summary = genaiResponse.Summary
+	post.Category = &models.Category{Name: genaiResponse.Category}
+
+	return nil
+}
+
+// GeneratePostOcr reads original title, directors and release year from screen
+func (s *Service) GeneratePostOcr(
+	ctx context.Context,
+	post *models.Post,
+	retryConfig *utils.RetryConfig) error {
+
+	// Get video duration
+	videoDuration, err := post.Duration.Seconds()
+	if err != nil || videoDuration == 0 {
+		return fmt.Errorf(
+			"couldn't convert video's %q duration %q to seconds; %w",
+			post.VideoID, post.Duration, err,
+		)
+	}
+
+	// Preaparre two separate schemas and part configs
+	schemas := []*genai.Schema{s.IntroSchema(), s.OutroSchema()}
+	partConfigs := []models.VideoPartConfig{
+		{
+			// Intro config, the first 5 minutes.
+			// Increase the media resolution level to high.
+			// 5x60x1x280 = 84k tokens
+			EndOffset:  5 * time.Minute,
+			Resolutuon: genai.PartMediaResolutionLevelMediaResolutionHigh,
+		},
+		{
+			// Outro config, the last 200 seconds.
+			// Increase the FPS to 3.0 and media resolution level to high.
+			// 200x3x280 = 168k tokens
+			StartOffset: videoDuration - 200*time.Second,
+			FPS:         new(3.0),
+			Resolutuon:  genai.PartMediaResolutionLevelMediaResolutionHigh,
+		},
+	}
+
+	// Make two calls to extract the OCR details
+	genaiConfig := s.NewGenaiConfig()
+	for i, config := range partConfigs {
+
+		// Create video contents but now with just the FIRST and LAST x minutes.
+		contents, err := s.MakeVideoContents(post.VideoID, config)
+
+		if err != nil {
+			return fmt.Errorf(
+				"failed to create gemini contents on video %q; %v",
+				post.VideoID, err)
+		}
+
+		// Sleep with context in mind for 60-90 seconds.
+		// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
+		if err := utils.SleepJitter(ctx, 60*time.Second, 90*time.Second); err != nil {
+			return err
+		}
+
+		// Use appropriate schema in the genai config
+		genaiConfig.ResponseSchema = schemas[i]
+
+		// Generate content using Gemini
+		genaiResponse, err := s.GenerateContent(ctx, contents, genaiConfig, retryConfig)
+
+		if err != nil {
+			return fmt.Errorf(
+				"failed to generate LLM content on video %q; %w",
+				post.VideoID, err,
+			)
+		}
+
+		// Assign original title if any
+		if genaiResponse.OriginalTitle != "" {
+			post.OriginalTitle = genaiResponse.OriginalTitle
+		}
+
+		// Append if any additional directors discovered
+		for _, director := range genaiResponse.Directors {
+			if !slices.Contains(post.Directors, director) {
+				post.Directors = append(post.Directors, director)
+			}
+		}
+
+		// Assign release year if any
+		if genaiResponse.ReleaseYear != 0 {
+			post.ReleaseYear = genaiResponse.ReleaseYear
+		}
+
+		//  Mark the OCR as done
+		if post.Summary != "" {
+			post.Summary += models.OcrFlag
+		}
+
+		// TODO: Remove this, only for debugging.
+		slog.InfoContext(
+			ctx,
+			"video results",
+			"pass", i+2,
+			"videoId", post.VideoID,
+			"original title", genaiResponse.OriginalTitle,
+			"directors", genaiResponse.Directors,
+			"releaseYear", genaiResponse.ReleaseYear,
+		)
+	}
+
+	return nil
 }

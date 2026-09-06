@@ -2,7 +2,6 @@ package gemini
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/vlatan/video-store/internal/models"
 	"google.golang.org/genai"
@@ -10,32 +9,41 @@ import (
 
 // MakeVideoContents creates Genai contents containing video file/URL
 // https://ai.google.dev/gemini-api/docs/video-understanding#clipping-intervals
-func (s *Service) MakeVideoContents(video *models.Post) ([]*genai.Content, error) {
+func (s *Service) MakeVideoContents(
+	videoID string,
+	config models.VideoPartConfig,
+) ([]*genai.Content, error) {
 
-	videoDuration, err := video.Duration.Seconds()
-	if err != nil || videoDuration == 0 {
+	if config.StartOffset < 0 || config.EndOffset < 0 {
 		return nil, fmt.Errorf(
-			"couldn't convert video's %q duration %q to seconds; %w",
-			video.VideoID, video.Duration, err,
+			"StartOffset %q and/or EndOffset %q < 0 for video %q",
+			config.StartOffset, config.EndOffset, videoID,
 		)
 	}
 
-	// Ready the video INTRO part
-	videoFps := 1.0
-	youtubeURL := "https://www.youtube.com/watch?v=" + video.VideoID
-	parts := []*genai.Part{
-		{
-			FileData: &genai.FileData{FileURI: youtubeURL, MIMEType: "video/*"},
-			VideoMetadata: &genai.VideoMetadata{
-				// <= 40 minutes to keep within the 250k TPM quota
-				EndOffset: min(videoDuration, 40*60) * time.Second,
-				FPS:       &videoFps,
-			},
+	if config.EndOffset != 0 && config.StartOffset >= config.EndOffset {
+		return nil, fmt.Errorf(
+			"StartOffset %q >= EndOffset %q for video %q",
+			config.StartOffset, config.EndOffset, videoID,
+		)
+	}
+
+	// Ready the video part
+	youtubeURL := "https://www.youtube.com/watch?v=" + videoID
+	part := &genai.Part{
+		FileData: &genai.FileData{FileURI: youtubeURL, MIMEType: "video/*"},
+		VideoMetadata: &genai.VideoMetadata{
+			StartOffset: config.StartOffset,
+			EndOffset:   config.EndOffset,
+			FPS:         config.FPS,
+		},
+		MediaResolution: &genai.PartMediaResolution{
+			Level: config.Resolutuon,
 		},
 	}
 
 	genaiContent := []*genai.Content{
-		genai.NewContentFromParts(parts, genai.RoleUser),
+		{Parts: []*genai.Part{part}},
 	}
 
 	return genaiContent, nil
@@ -43,7 +51,6 @@ func (s *Service) MakeVideoContents(video *models.Post) ([]*genai.Content, error
 
 // MakeTextContents creates Genai contents containing just text
 func (s *Service) MakeTextContents(video *models.Post) []*genai.Content {
-
 	youtubeURL := "https://www.youtube.com/watch?v=" + video.VideoID
 	parts := []*genai.Part{
 		genai.NewPartFromText("Title: " + sanitizePrompt(video.Title)),

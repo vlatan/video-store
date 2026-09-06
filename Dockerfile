@@ -2,7 +2,7 @@
 # https://docs.docker.com/build/building/variables/#scoping
 ARG TARGET="app"
 
-FROM golang:1.26-alpine AS builder
+FROM golang:1.27-alpine AS builder
 
 # Consume the TARGET build argument in the build stage
 ARG TARGET
@@ -24,7 +24,7 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o binary ./cmd/${TARGET}
 
 
 # Use small image for the final stage
-FROM alpine:3.21 AS alpine-base
+FROM alpine:3.24 AS alpine-base
 
 
 # The app will need curl in order to perform the healthcheck

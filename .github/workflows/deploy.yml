@@ -1,133 +1,128 @@
 name: Video Store CI/CD
 
 on:
-  push: &code_changes
-    branches: [main]
-    paths:
-      - '.github/**'
-      - 'cmd/**'
-      - 'internal/**'
-      - 'web/**'
-      - 'Dockerfile'
-      - 'go.mod'
-      - 'go.sum'
-  pull_request: *code_changes
+    push: &code_changes
+        branches: [main]
+        paths:
+            - ".github/**"
+            - "cmd/**"
+            - "internal/**"
+            - "web/**"
+            - "Dockerfile"
+            - "go.mod"
+            - "go.sum"
+    pull_request: *code_changes
 
 env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+    REGISTRY: ghcr.io
+    IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  tests:
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout source code
-      uses: actions/checkout@v7
-    
-    - name: Set up Go and Cache Modules
-      uses: actions/setup-go@v7
-      with:
-        go-version-file: 'go.mod'
-        cache: true
-      
-    - name: Run tests
-      run: go test -race -coverprofile=coverage.out ./...
-    
-    - name: Display coverage
-      run: go tool cover -func=coverage.out
+    tests:
+        runs-on: ubuntu-latest
 
-    - name: Generate coverage HTML
-      run: go tool cover -html=coverage.out -o coverage.html
+        steps:
+            - name: Checkout source code
+              uses: actions/checkout@v7
 
-    - name: Upload coverage report
-      uses: actions/upload-artifact@v7
-      with:
-        name: coverage-report
-        path: coverage.html
-  
-  sast:
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout source code
-        uses: actions/checkout@v7
-      
-      - name: Set up Go and Cache Modules
-        uses: actions/setup-go@v7
-        with:
-          go-version-file: 'go.mod'
-          cache: true
+            - name: Set up Go and Cache Modules
+              uses: actions/setup-go@v7
+              with:
+                  go-version-file: "go.mod"
+                  cache: true
 
-      - name: Run gosec security scanner
+            - name: Run tests
+              run: go test -race -coverprofile=coverage.out ./...
+
+            - name: Display coverage
+              run: go tool cover -func=coverage.out
+
+            - name: Generate coverage HTML
+              run: go tool cover -html=coverage.out -o coverage.html
+
+            - name: Upload coverage report
+              uses: actions/upload-artifact@v7
+              with:
+                  name: coverage-report
+                  path: coverage.html
+
+    sast:
+        runs-on: ubuntu-latest
         env:
-          GOTOOLCHAIN: auto
-          GO111MODULE: on
-        uses: securego/gosec@v2.27.1
-        with:
-          args: ./...
-  
-  build-push:
-    needs: [tests, sast]
-    if: github.event_name == 'push'
-    runs-on: ubuntu-latest
-  
-    permissions:
-      contents: read
-      packages: write
-    
-    strategy:
-      matrix:
-        target: [app, worker, backup]
+            GOTOOLCHAIN: auto
+            GO111MODULE: on
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v7
+        steps:
+            - name: Checkout source code
+              uses: actions/checkout@v7
 
-      - name: Log in to the container registry
-        uses: docker/login-action@v4
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+            - name: Run gosec security scanner
+              uses: securego/gosec@master
+              with:
+                  args: ./...
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
+    build-push:
+        needs: [tests, sast]
+        if: github.event_name == 'push'
+        runs-on: ubuntu-latest
 
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v7
-        with:
-          context: .
-          push: true
-          build-args: TARGET=${{ matrix.target }}
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-${{ matrix.target }}:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+        permissions:
+            contents: read
+            packages: write
 
-  deploy:
-    needs: build-push
-    if: github.event_name == 'push'
-    runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                target: [app, worker, backup]
 
-    steps:
-      - name: Deploy to VPS via SSH
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          port: ${{ secrets.SSH_PORT }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            set -e
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v7
 
-            # Pull fresh images
-            for service in app worker backup; do
-              docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-${service} &
-            done
-            wait
+            - name: Log in to the container registry
+              uses: docker/login-action@v4
+              with:
+                  registry: ${{ env.REGISTRY }}
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
 
-            # Recreate the service
-            docker compose -f ${{ secrets.COMPOSE_FILE }} \
-            up --detach --remove-orphans \
-            --scale ${{ secrets.SERVICE_NAME }}=${{ secrets.SERVICE_REPLICAS }} \
-            ${{ secrets.SERVICE_NAME }}
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v4
+
+            - name: Build and push Docker image
+              uses: docker/build-push-action@v7
+              with:
+                  context: .
+                  push: true
+                  build-args: TARGET=${{ matrix.target }}
+                  tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-${{ matrix.target }}:latest
+                  cache-from: type=gha
+                  cache-to: type=gha,mode=max
+
+    deploy:
+        needs: build-push
+        if: github.event_name == 'push'
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Deploy to VPS via SSH
+              uses: appleboy/ssh-action@v1
+              with:
+                  host: ${{ secrets.VPS_HOST }}
+                  port: ${{ secrets.SSH_PORT }}
+                  username: ${{ secrets.VPS_USER }}
+                  key: ${{ secrets.SSH_PRIVATE_KEY }}
+                  script: |
+                      set -e
+
+                      # Pull fresh images
+                      for service in app worker backup; do
+                        docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-${service} &
+                      done
+                      wait
+
+                      # Recreate the service
+                      docker compose -f ${{ secrets.COMPOSE_FILE }} \
+                      up --detach --remove-orphans \
+                      --scale ${{ secrets.SERVICE_NAME }}=${{ secrets.SERVICE_REPLICAS }} \
+                      ${{ secrets.SERVICE_NAME }}
+

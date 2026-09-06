@@ -1,17 +1,22 @@
-* Make the checkmarks on the like/save green or yellow
-* Add close button to login menu
-* Make search bar on small screens accross entire screen
+- Upgrade libs
+- Make `:= range` more performant by using index
+- Make the directors links that list their films
+- Update the post update FORM with release year and directors
 
-* Maybe use another gemini API call for the credits
-* Group videos by entity, create taxonomies
-* Create "Best of" landing pages for these clusters
-* Internal linking
+- Make the checkmarks on the like/save green or yellow
+- Add close button to login menu
+- Make search bar on small screens accross entire screen
 
-* Eventually remove tags and description from search vector
-* Write tests
+- Maybe use another gemini API call for the credits
+- Group videos by entity, create taxonomies
+- Create "Best of" landing pages for these clusters
+- Internal linking
 
-* Minify CSS and JS files during development.
+- Eventually remove tags and description from search vector
+- Write tests
+
+- Minify CSS and JS files during development.
   Calculate just etags on compile or on the fly in the route
 
-* Refactor JS in functions and classes
+- Refactor JS in functions and classes
   Use TypeScript
