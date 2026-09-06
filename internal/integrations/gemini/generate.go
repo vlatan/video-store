@@ -283,17 +283,6 @@ func (s *Service) GeneratePostOcr(
 		if post.Summary != "" {
 			post.Summary += models.OcrFlag
 		}
-
-		// TODO: Remove this, only for debugging.
-		slog.InfoContext(
-			ctx,
-			"video results",
-			"pass", i+2,
-			"videoId", post.VideoID,
-			"original title", genaiResponse.OriginalTitle,
-			"directors", genaiResponse.Directors,
-			"releaseYear", genaiResponse.ReleaseYear,
-		)
 	}
 
 	return nil
