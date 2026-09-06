@@ -90,9 +90,22 @@ func (s *Service) GeneratePostContent(
 	post *models.Post,
 	retryConfig *utils.RetryConfig) error {
 
+	// Nothing to update, summary and category are populated
+	// TODO: Need to make this condition different
+	// in order to extract the director(s) and production year
+	if post.Summary != "" &&
+		post.Category != nil &&
+		post.Category.Name != "" {
+		return nil
+	}
+
+	// Get video duration
 	videoDuration, err := post.Duration.Seconds()
 	if err != nil || videoDuration == 0 {
-		return fmt.Errorf("couldn't convert video's duration to seconds: %w", err)
+		return fmt.Errorf(
+			"couldn't convert video's %q duration %q to seconds; %w",
+			post.VideoID, post.Duration, err,
+		)
 	}
 
 	// Create the main video contents.
