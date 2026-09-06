@@ -1,45 +1,49 @@
-
-document.addEventListener('click', event => {
-
+document.addEventListener("click", (event) => {
     if (!(event.target instanceof Element)) return;
 
     // User Profile Dropdown menu
-    const dropContent = document.querySelector('.dropdown-content');
+    const dropContent = document.querySelector(".dropdown-content");
     if (dropContent) {
-        const notDropped = !dropContent.classList.contains('show-dropdown');
-        const usernameClicked = event.target.closest('.username');
-        const deleteAccountClicked = event.target.closest('.delete-account');
-        const menuNotClicked = !event.target.closest('.show-dropdown');
+        const notDropped = !dropContent.classList.contains("show-dropdown");
+        const usernameClicked = event.target.closest(".username");
+        const deleteAccountClicked = event.target.closest(".delete-account");
+        const menuNotClicked = !event.target.closest(".show-dropdown");
         if (notDropped && usernameClicked) {
-            dropContent.classList.add('show-dropdown');
+            dropContent.classList.add("show-dropdown");
         } else if (deleteAccountClicked || menuNotClicked) {
-            dropContent.classList.remove('show-dropdown');
+            dropContent.classList.remove("show-dropdown");
         }
     }
 
     // Categories Dropdown menu
-    const catDropContent = document.querySelector('.categories-dropdown-content');
+    const catDropContent = document.querySelector(
+        ".categories-dropdown-content",
+    );
     if (catDropContent) {
-        const catDropped = catDropContent.classList.contains('categories-show-dropdown');
-        const hamburgrIconClicked = event.target.closest('.hamburger-icon');
-        const closeIconClicked = event.target.closest('.categories-close-icon');
-        const catMenuClicked = event.target.closest('.categories-show-dropdown');
+        const catDropped = catDropContent.classList.contains(
+            "categories-show-dropdown",
+        );
+        const hamburgrIconClicked = event.target.closest(".hamburger-icon");
+        const closeIconClicked = event.target.closest(".categories-close-icon");
+        const catMenuClicked = event.target.closest(
+            ".categories-show-dropdown",
+        );
         if (!catDropped && hamburgrIconClicked) {
-            catDropContent.classList.add('categories-show-dropdown');
+            catDropContent.classList.add("categories-show-dropdown");
         } else if (!catMenuClicked || closeIconClicked) {
-            catDropContent.classList.remove('categories-show-dropdown');
+            catDropContent.classList.remove("categories-show-dropdown");
         }
     }
 
     // Mobile search form
-    const searchForm = document.getElementById('searchForm');
-    const logo = document.querySelector('a.logo');
-    const searchIcon = document.querySelector('.mobile-search-icon');
-    const hamburgerIcon = document.querySelector('.hamburger-icon');
-    const dropdowns = document.querySelectorAll('.dropdown');
-    const arrow = document.querySelector('.search-arrow-icon')
-    const arrowClicked = event.target.closest('.search-arrow-icon');
-    const searchFormClicked = event.target.closest('#searchForm');
+    const searchForm = document.getElementById("searchForm");
+    const logo = document.querySelector("a.logo");
+    const searchIcon = document.querySelector(".mobile-search-icon");
+    const hamburgerIcon = document.querySelector(".hamburger-icon");
+    const dropdowns = document.querySelectorAll(".dropdown");
+    const arrow = document.querySelector(".search-arrow-icon");
+    const arrowClicked = event.target.closest(".search-arrow-icon");
+    const searchFormClicked = event.target.closest("#searchForm");
 
     if (!(arrow instanceof SVGElement)) return;
     if (!(searchForm instanceof HTMLFormElement)) return;
@@ -47,9 +51,9 @@ document.addEventListener('click', event => {
     if (!(searchIcon instanceof SVGElement)) return;
     if (!(hamburgerIcon instanceof SVGElement)) return;
 
-    if (event.target.closest('.mobile-search-icon')) {
+    if (event.target.closest(".mobile-search-icon")) {
         arrow.style.display = "flex";
-        searchForm.style.display = 'flex'
+        searchForm.style.display = "flex";
         logo.style.display = "none";
         searchIcon.style.display = "none";
         hamburgerIcon.style.display = "none";
@@ -58,17 +62,16 @@ document.addEventListener('click', event => {
             dropdown.style.display = "none";
         }
     } else if (arrowClicked || !searchFormClicked) {
-        arrow.removeAttribute('style');
-        searchForm.removeAttribute('style');
-        logo.removeAttribute('style');
-        searchIcon.removeAttribute('style');
-        hamburgerIcon.removeAttribute('style');
+        arrow.removeAttribute("style");
+        searchForm.removeAttribute("style");
+        logo.removeAttribute("style");
+        searchIcon.removeAttribute("style");
+        hamburgerIcon.removeAttribute("style");
         for (const dropdown of dropdowns) {
-            dropdown.removeAttribute('style');
+            dropdown.removeAttribute("style");
         }
     }
 });
-
 
 // ==========================================================================
 // API request helpers
@@ -88,9 +91,9 @@ const postData = (url = "", data = {}) => {
     }
 
     return fetch(url, {
-        method: 'POST',
+        method: "POST",
         headers: headers,
-        body: JSON.stringify(data)
+        body: JSON.stringify(data),
     });
 };
 
@@ -108,10 +111,10 @@ const deleteData = (url = "") => {
     }
 
     return fetch(url, {
-        method: 'DELETE',
-        headers: headers
+        method: "DELETE",
+        headers: headers,
     });
-}
+};
 
 // Send GET request to backend
 const getData = (url = "", cursor = "") => {
@@ -121,143 +124,137 @@ const getData = (url = "", cursor = "") => {
     return fetch(reqUrl);
 };
 
-
 // ==========================================================================
 // Alerts - Flash Messages
 // ==========================================================================
 
-
 // Sleep time expects milliseconds
 const sleep = (time = 0) => {
-    return new Promise(resolve => setTimeout(resolve, time));
+    return new Promise((resolve) => setTimeout(resolve, time));
 };
 
 // Remove alert message
 /** @param {Element} alertEl */
 const dismissAlert = (alertEl) => {
-    const closeBtn = alertEl.querySelector('.alert-close');
-    closeBtn?.addEventListener('click', () => alertEl.remove());
+    const closeBtn = alertEl.querySelector(".alert-close");
+    closeBtn?.addEventListener("click", () => alertEl.remove());
     sleep(6000).then(() => alertEl.remove());
 };
 
 // Set alert message
-const setAlert = (message = '') => {
-
+const setAlert = (message = "") => {
     if (!message) return;
 
-    const alert = document.createElement('div');
-    alert.className = 'alert';
-    document.getElementById('footer')?.append(alert);
+    const alert = document.createElement("div");
+    alert.className = "alert";
+    document.getElementById("footer")?.append(alert);
 
-    const alertText = document.createElement('span')
-    alertText.className = 'alert-text';
+    const alertText = document.createElement("span");
+    alertText.className = "alert-text";
     alertText.innerText = message;
     alert.appendChild(alertText);
 
-    const alertClose = document.createElement('span')
-    alertClose.className = 'alert-close';
-    alertClose.innerHTML = '&times;';
+    const alertClose = document.createElement("span");
+    alertClose.className = "alert-close";
+    alertClose.innerHTML = "&times;";
     alert.appendChild(alertClose);
 
-    dismissAlert(alert)
+    dismissAlert(alert);
 };
 
-
 // Event listener for static HTML alert messages
-document.querySelectorAll('.alert').forEach(a => dismissAlert(a));
-
+document.querySelectorAll(".alert").forEach((a) => dismissAlert(a));
 
 // ==========================================================================
 // Dialogs
 // ==========================================================================
 
-document.querySelectorAll('[data-modal]').forEach(openDialogBtn => {
-
+document.querySelectorAll("[data-modal]").forEach((openDialogBtn) => {
     if (!(openDialogBtn instanceof HTMLElement)) return;
     const modalName = openDialogBtn.dataset.modal;
 
     const modalDialog = document.querySelector(`[data-body="${modalName}"]`);
     if (!(modalDialog instanceof HTMLDialogElement)) return;
 
-    const closeDialogBtns = modalDialog.querySelectorAll(`[data-close="${modalName}"]`);
+    const closeDialogBtns = modalDialog.querySelectorAll(
+        `[data-close="${modalName}"]`,
+    );
 
     // Open dialog on open button click
-    openDialogBtn.addEventListener('click', () => modalDialog.showModal());
+    openDialogBtn.addEventListener("click", () => modalDialog.showModal());
 
     // Close dialog on any close buttons click
-    closeDialogBtns.forEach(btn => {
-        btn.addEventListener('click', () => modalDialog.close());
+    closeDialogBtns.forEach((btn) => {
+        btn.addEventListener("click", () => modalDialog.close());
     });
 });
-
 
 // ==========================================================================
 // Cookies disclaimer
 // ==========================================================================
 
-const acceptCookies = localStorage.getItem('acceptCookies');
+const acceptCookies = localStorage.getItem("acceptCookies");
 const privacyPath = "/page/privacy/";
 const currentPath = window.location.pathname;
-if (currentPath !== privacyPath && acceptCookies !== 'true') {
-    const snackbar = document.createElement('div');
-    snackbar.classList.add('snackbar');
-    document.getElementById('footer')?.after(snackbar);
+if (currentPath !== privacyPath && acceptCookies !== "true") {
+    const snackbar = document.createElement("div");
+    snackbar.classList.add("snackbar");
+    document.getElementById("footer")?.after(snackbar);
 
-    const snackbarLabel = document.createElement('div');
-    snackbarLabel.classList.add('snackbar-label');
-    snackbarLabel.innerText = "We serve cookies on this site to analyze traffic, \
+    const snackbarLabel = document.createElement("div");
+    snackbarLabel.classList.add("snackbar-label");
+    snackbarLabel.innerText =
+        "We serve cookies on this site to analyze traffic, \
     remember your preferences, and optimize your experience.";
     snackbar.appendChild(snackbarLabel);
 
-    const snackbarActions = document.createElement('div');
-    snackbarActions.classList.add('snackbar-actions');
+    const snackbarActions = document.createElement("div");
+    snackbarActions.classList.add("snackbar-actions");
     snackbar.appendChild(snackbarActions);
 
-    const detailsLink = document.createElement('a');
-    detailsLink.classList.add('cookies-button');
+    const detailsLink = document.createElement("a");
+    detailsLink.classList.add("cookies-button");
     detailsLink.href = privacyPath;
-    detailsLink.target = '_blank';
+    detailsLink.target = "_blank";
     detailsLink.innerText = "More details";
     snackbarActions.appendChild(detailsLink);
 
-    const buttonOK = document.createElement('button');
-    buttonOK.classList.add('cookies-button');
+    const buttonOK = document.createElement("button");
+    buttonOK.classList.add("cookies-button");
     buttonOK.innerText = "OK";
     snackbarActions.appendChild(buttonOK);
 
-    buttonOK.addEventListener('click', () => {
-        localStorage.setItem('acceptCookies', 'true');
+    buttonOK.addEventListener("click", () => {
+        localStorage.setItem("acceptCookies", "true");
         snackbar.remove();
     });
 }
-
 
 // ==========================================================================
 // Form
 // ==========================================================================
 
-const mainForm = document.getElementById('main-form');
-const formInputs = mainForm?.querySelectorAll('.form-input');
-const formSubmit = mainForm?.querySelector('.form-button');
-const formSpinner = mainForm?.querySelector('.submit-spinner');
+const mainForm = document.getElementById("main-form");
+const formInputs = mainForm?.querySelectorAll(".form-input");
+const formSubmit = mainForm?.querySelector(".form-button");
+const formSpinner = mainForm?.querySelector(".submit-spinner");
 
-formSubmit?.addEventListener('click', () => {
-
+formSubmit?.addEventListener("click", () => {
     if (!formInputs) return;
 
     // Check if all required inputs have values
-    let ok = true
+    let ok = true;
     for (const inputElement of formInputs) {
         console.log(inputElement);
         if (!(inputElement instanceof HTMLInputElement)) continue;
-        if (inputElement.required && inputElement.value.trim() === '') {
-            ok = false
+        if (inputElement.required && inputElement.value.trim() === "") {
+            ok = false;
         }
     }
 
     if (ok) {
         if (formSpinner) {
-            formSpinner.classList.add('show')
+            formSpinner.classList.add("show");
         }
     }
 });

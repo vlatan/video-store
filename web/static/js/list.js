@@ -1,12 +1,12 @@
-document.addEventListener('click', async (event) => {
+document.addEventListener("click", async (event) => {
     if (!(event.target instanceof HTMLElement)) return;
-    const remove = event.target.closest('.remove-option');
+    const remove = event.target.closest(".remove-option");
     if (!(remove instanceof HTMLElement)) return;
 
-    let action = 'unlike';
+    let action = "unlike";
     let messageText = "Succesfully unliked.";
-    if (window.location.pathname.includes('favorites')) {
-        action = 'unfave';
+    if (window.location.pathname.includes("favorites")) {
+        action = "unfave";
         messageText = "Succesfully removed.";
     }
     const url = `/api/video/${remove.dataset.id}/${action}`;
