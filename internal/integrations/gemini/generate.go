@@ -148,7 +148,8 @@ func (s *Service) GeneratePostContent(
 	// If blocked make another gemini API call just with a text contents
 	if blocked {
 		slog.ErrorContext(
-			ctx, "failed to generate LLM content, trying again with text input",
+			ctx,
+			"failed to generate LLM content, trying again with text input",
 			"videoId", post.VideoID,
 			"error", err,
 		)
@@ -214,15 +215,9 @@ func (s *Service) GeneratePostContent(
 		contents, err := s.MakeVideoContents(post.VideoID, config)
 
 		if err != nil {
-			slog.ErrorContext(
-				ctx, "failed to create gemini contents",
-				"videoId", post.VideoID,
-				"pass", i+2,
-				"error", err,
-			)
-			// Abort with nil error, no need to continue.
-			// Salvage the generated content we already have.
-			return nil
+			return fmt.Errorf(
+				"failed to create gemini contents on video %q; %v",
+				post.VideoID, err)
 		}
 
 		// Sleep with context in mind for 60-90 seconds.
@@ -231,31 +226,17 @@ func (s *Service) GeneratePostContent(
 			return err
 		}
 
-		// Use appropriate schema
+		// Use appropriate schema in the genai config
 		genaiConfig.ResponseSchema = schemas[i]
 
 		// Generate content using Gemini
 		genaiResponse, err = s.GenerateContent(ctx, contents, genaiConfig, retryConfig)
 
-		// Exit with error only if we need to terminate the worker's job,
-		// meaning only if RPD reached or context ended.
-		if errors.Is(err, ErrDailyLimitReached) || utils.IsContextErr(err) {
+		if err != nil {
 			return fmt.Errorf(
 				"failed to generate LLM content on video %q; %w",
 				post.VideoID, err,
 			)
-		}
-
-		// For every other error just log it and exit with nil
-		if err != nil {
-			slog.ErrorContext(
-				ctx,
-				"failed to generate LLM content",
-				"pass", i+2,
-				"videoId", post.VideoID,
-				"error", err,
-			)
-			return nil
 		}
 
 		// Append if any additional directors discovered

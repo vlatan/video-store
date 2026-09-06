@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
+	"log/slog"
 
-	"github.com/vlatan/video-store/internal/drivers/rdb"
+	"github.com/vlatan/video-store/internal/integrations/gemini"
 	"github.com/vlatan/video-store/internal/integrations/yt"
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/utils"
@@ -179,9 +179,11 @@ func (w *Worker) adoptVideos(
 			return err
 		}
 
-		log.Printf(
-			"Failed to update the playlist on video %q; %v",
-			dbVideo.VideoID, err,
+		slog.ErrorContext(
+			ctx,
+			"failed to update plaulist on video in DB",
+			"videoId", dbVideo.VideoID,
+			"error", err,
 		)
 	}
 
@@ -236,9 +238,11 @@ func (w *Worker) deleteVideos(
 			return nil, err
 		}
 
-		log.Printf(
-			"Could not delete the video %q in DB; %v",
-			dbVideo.VideoID, err,
+		slog.ErrorContext(
+			ctx,
+			"failed to delete video in DB",
+			"videoId", dbVideo.VideoID,
+			"error", err,
 		)
 	}
 
@@ -252,12 +256,22 @@ func (w *Worker) insertVideos(ctx context.Context, videos []*models.Post) error 
 	for _, video := range videos {
 
 		// Attempt to generate content
-		_, err := w.generateContent(ctx, video)
+		err := w.gemini.GeneratePostContent(ctx, video, w.geminiRetryConfig)
 
-		// Exit early if context ended or lock not owned anymore.
-		// Ignore any other error including RPD limit, we'll insert the video in DB regardless.
-		if _, ok := errors.AsType[*rdb.LockError](err); ok || utils.IsContextErr(err) {
+		// Exit early only if context ended.
+		if utils.IsContextErr(err) {
 			return err
+		}
+
+		// For every other error just log it
+		// Ignore any other errors, we'll insert the video in DB regardless.
+		if err != nil {
+			slog.ErrorContext(
+				ctx,
+				"failed to generate LLM content",
+				"videoId", video.VideoID,
+				"error", err,
+			)
 		}
 
 		rowsAffected, err := w.postsRepo.InsertPost(ctx, video)
@@ -272,9 +286,11 @@ func (w *Worker) insertVideos(ctx context.Context, videos []*models.Post) error 
 			return err
 		}
 
-		log.Printf(
-			"Failed to insert video %q in DB: %v",
-			video.VideoID, err,
+		slog.ErrorContext(
+			ctx,
+			"failed to insert video in DB",
+			"videoId", video.VideoID,
+			"error", err,
 		)
 	}
 
@@ -287,20 +303,26 @@ func (w *Worker) updateVideos(ctx context.Context, videos []*models.Post) error 
 	// Insert new videos in DB
 	for _, video := range videos {
 
-		// Check the context first
-		if err := ctx.Err(); err != nil {
-			return err
+		// Try to generate post content with gemini
+		err := w.gemini.GeneratePostContent(ctx, video, w.geminiRetryConfig)
+
+		// Exit with error only if we need to terminate the worker's job,
+		// meaning only if RPD quota reached or context ended.
+		if errors.Is(err, gemini.ErrDailyLimitReached) || utils.IsContextErr(err) {
+			return fmt.Errorf(
+				"failed to generate LLM content on video %q; %w",
+				video.VideoID, err,
+			)
 		}
 
-		ok, err := w.generateContent(ctx, video)
-
-		// Exit on any error, stop updating
+		// For every other error just log it and move onto the next video
 		if err != nil {
-			return err
-		}
-
-		// If the video was not summarized, there's nothing to update
-		if !ok {
+			slog.ErrorContext(
+				ctx,
+				"failed to generate LLM content",
+				"videoId", video.VideoID,
+				"error", err,
+			)
 			continue
 		}
 
@@ -316,9 +338,11 @@ func (w *Worker) updateVideos(ctx context.Context, videos []*models.Post) error 
 			return err
 		}
 
-		log.Printf(
-			"Failed to update generated data in DB on video %q; %v",
-			video.VideoID, err,
+		slog.ErrorContext(
+			ctx,
+			"failed to update generated data in DB",
+			"videoId", video.VideoID,
+			"error", err,
 		)
 	}
 
