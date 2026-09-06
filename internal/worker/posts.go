@@ -398,7 +398,7 @@ func (w *Worker) updateVideos(ctx context.Context, videos []*models.Post) error 
 				)
 			}
 
-			// For every other error just log it,
+			// For every other error just log it
 			if err != nil {
 				slog.ErrorContext(
 					ctx,
