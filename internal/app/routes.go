@@ -104,11 +104,11 @@ func (a *App) RegisterRoutes() *App {
 	a.server.Handler = a.mw.ApplyToAll(
 		a.mw.CloseBody,                          // Absolute safety net for body memory leaks
 		a.mw.Compress,                           // Compress the response no matter what is it
+		http.NewCrossOriginProtection().Handler, // Provide modern CSRF protection
 		a.mw.CanonicalRedirect,                  // Redirect www to non-www
 		a.mw.MethodOverride,                     // Override a POST method if needed
 		a.mw.Logging,                            // Log the request, unless healthcheck
 		a.mw.LoadUser,                           // Load user data from seesion into context
-		http.NewCrossOriginProtection().Handler, // Provide modern CSRF protection
 		a.mw.AddHeaders,                         // Add standard headers to response
 		a.mw.LoadData,                           // Generate and store template data to context
 		a.mw.HandleErrors,                       // Provide response recorder, serve HTML/JSON errors
