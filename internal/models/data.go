@@ -78,7 +78,6 @@ type TemplateData struct {
 	Categories       []Category
 	FlashMessages    []*FlashMessage
 	SearchQuery      string
-	CSRFField        template.HTML
 	XMLDeclarations  []template.HTML
 	SitemapItems     []*SitemapItem
 	StaticFiles

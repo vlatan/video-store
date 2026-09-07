@@ -84,12 +84,6 @@ const postData = (url = "", data = {}) => {
     const headers = new Headers();
     headers.append("Content-Type", "application/json");
 
-    // If CSRF Token send with the POST request
-    const csrfTokens = document.getElementsByName("gorilla.csrf.Token");
-    if (csrfTokens.length > 0 && csrfTokens[0] instanceof HTMLInputElement) {
-        headers.append("X-CSRF-Token", csrfTokens[0].value);
-    }
-
     return fetch(url, {
         method: "POST",
         headers: headers,
@@ -103,12 +97,6 @@ const deleteData = (url = "") => {
 
     const headers = new Headers();
     headers.append("Content-Type", "application/json");
-
-    // If CSRF Token send with the POST request
-    const csrfTokens = document.getElementsByName("gorilla.csrf.Token");
-    if (csrfTokens.length > 0 && csrfTokens[0] instanceof HTMLInputElement) {
-        headers.append("X-CSRF-Token", csrfTokens[0].value);
-    }
 
     return fetch(url, {
         method: "DELETE",

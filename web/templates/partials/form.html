@@ -15,7 +15,6 @@
 {{ define "content" }}
 <div class="form-content">
     <form id="main-form" method="POST" action="">
-        {{ .CSRFField }}
         <fieldset class="form-group">
             <legend class="form-legend">{{ .Form.Legend }}</legend>
             {{ with .Form.Title }}

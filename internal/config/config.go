@@ -29,12 +29,10 @@ type Config struct {
 	Target   Target `env:"TARGET" envDefault:"app"`
 
 	// Sessions
-	CsrfKey             Secret `env:"CSRF_KEY"`
 	AuthKey             Secret `env:"AUTH_KEY"`
 	EncryptionKey       Secret `env:"ENCRYPTION_KEY"`
 	UserSessionName     string `env:"USER_SESSION_NAME" envDefault:"_app"`
 	FlashSessionName    string `env:"FLASH_SESSION_NAME" envDefault:"_app_flash"`
-	CsrfSessionName     string `env:"CSRF_SESSION_NAME" envDefault:"_app_csrf"`
 	RedirectSessionName string `env:"REDIRECT_SESSION_NAME" envDefault:"_app_redirect"`
 	OAuthSessionName    string `env:"OAUTH_SESSION_NAME" envDefault:"_app_oauth"`
 
@@ -129,7 +127,7 @@ func New() (*Config, error) {
 
 	// Check if the app has all the necessary secrets
 	if cfg.Target == App {
-		secrets := []Secret{cfg.CsrfKey, cfg.AuthKey, cfg.EncryptionKey}
+		secrets := []Secret{cfg.AuthKey, cfg.EncryptionKey}
 		for _, secret := range secrets {
 			if len(secret.Bytes) == 0 {
 				return nil, fmt.Errorf("empty or no secret key defined in env: %s", secret)

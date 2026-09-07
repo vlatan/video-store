@@ -36,7 +36,6 @@
 {{ if .CurrentUser.IsAdmin }}
 <dialog data-body="page" class="modal" closedby="any">
     <form class="modal-content" action="/page/{{ .CurrentPage.Slug }}/delete" method="POST">
-        {{ .CSRFField }}
         <input type="hidden" name="_method" value="DELETE">
         <span data-close="page" class="close-modal" title="Close">&times;</span>
         <h2>Delete Page</h2>
