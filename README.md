@@ -21,7 +21,6 @@ Via a background process a function is periodically called which goes through th
 
 Users can login via Google, Github and LinkedIn. The app doesn't store passwords so naturally it makes use of their OAuth 2.0 protocol for authorization..
 
-
 ## Run the app locally
 
 Set `DEBUG` to `true` in the `.env` file, as well as populate the entire `.env` file, according to the `example.env`.
@@ -57,39 +56,46 @@ Also edit your local `/etc/hosts` and map `127.0.0.1` to `dev.domain.com` and `d
 
 In this example the app can be accessed at `https://dev.domain.com` and the traefik dashboard at `https://dash.dev.domain.com`.
 
-The secret keys (`CSRF_KEY`, `AUTH_KEY`, `ENCRYPTION_KEY`) in the `.env` file need to be `base64` encoded. You can use the following recommended snippet from `gorilla/sessions` to generate different keys and encode them to `base64`:
-``` golang
+The secret keys (`AUTH_KEY`, `ENCRYPTION_KEY`) in the `.env` file need to be `base64` encoded. You can use the following recommended snippet from `gorilla/sessions` to generate different keys and encode them to `base64`:
+
+```golang
 key := securecookie.GenerateRandomKey(32)
 log.Println(base64.StdEncoding.EncodeToString(key))
 ```
 
 Put this alias in your `~/.bash_aliases` file and run `dcup` whenever you want to build and run the app. The app will run with [air](https://github.com/air-verse/air) which will provide live reloading.
-``` bash
+
+```bash
 alias dcup='docker compose up --build --detach --remove-orphans'
 ```
 
 To see the app logs in real time use this:
-``` bash
+
+```bash
 docker compose logs -f app
 ```
 
 Put this alias in your `~/.bash_aliases` file too and run `dcdown` to bring down the system.
-``` bash
+
+```bash
 alias down='docker compose down --remove-orphans && docker system prune --force'
 ```
 
 ### Run the worker
-``` bash
+
+```bash
 docker compose run --rm --build worker
 ```
 
 ### Run the backup
-``` bash
+
+```bash
 docker compose run --rm --build backup
 ```
 
 ### Access redis
-``` bash
+
+```bash
 docker compose exec -it redis redis-cli
 ```
 
@@ -97,65 +103,65 @@ docker compose exec -it redis redis-cli
 
 `-U` is the user, and `-d` is the database.
 
-``` bash
+```bash
 docker compose exec -it postgres psql -U xxx -d xxx
 ```
-
 
 ## Run the app in production
 
 No really a difference, the `app`, `worker` or the `backup` will be built by the same `Dockerfile` so you need the `TARGET` build argument to specify which one you want to build, as well as an environment variable since the code makes use of that too.
 
-
 ## Useful information for identifying memory leaks
 
 While logged in as admin visit the `/debug/heap` endpoint and the file will download. Rename it to `heap1`.  
 Stress the app locally by using:
-``` bash
+
+```bash
 for i in {1..5000}; do curl -s http://localhost:5000/ > /dev/null; done &
 for i in {1..5000}; do curl -s http://localhost:5000/ > /dev/null; done &
 for i in {1..5000}; do curl -s http://localhost:5000/ > /dev/null; done &
 wait
 ```
+
 Visit the `/debug/heap` endpoint again and download another heap profile file. Rename it to `heap2`.  
 Run a profile which will compare the base (`heap1`) and the next profile (`heap2`):
-``` bash
+
+```bash
 go tool pprof -base heap1 heap2
 ```
 
 Once inside the `pprof` CLI run `top`, or `top20` to see if there's memory increase.
 
-
 ## Run tests
 
 Produce coverage report and heat map.
 
-``` bash
-go test -race -coverprofile=coverage.out ./... && 
+```bash
+go test -race -coverprofile=coverage.out ./... &&
 go tool cover -html=coverage.out
 ```
 
 Target specific package.
-``` bash
-go test -race -coverprofile=coverage.out ./internal/integrations/gemini && 
+
+```bash
+go test -race -coverprofile=coverage.out ./internal/integrations/gemini &&
 go tool cover -html=coverage.out
 ```
-
-
 
 ## Dump/Restore DB data
 
 Run `export HISTCONTROL=ignorespace` so you're able to hide bash commands from the history if they start with empty space. This is probably already set on your system in the `~/.bashrc` file, but to be sure run it, there's no harm.
 
 Export the database URL vars you'll need. Leave an empty space before the export commands. From now on you can use these variables in dump and restore commands.
-``` bash
+
+```bash
  export PROD_DB_URL=postgresql://user:password@host:port/dbname
 ```
 
 The flag `-a` determines if you want to dump or restore the data with or without the schema. Include `-a` if you want the **DATA ONLY**.  
 These are the available dump formats.
 
-``` bash
+```bash
 -Fc = custom format (compressed, flexible)
 -Ft = tar format
 -Fp = plain SQL
@@ -163,67 +169,78 @@ These are the available dump formats.
 ```
 
 Dump from a remote database using URL. On the fly we're creating, running - and when done removing - our own temporary `postgres:16.3` container to match the remote postgres version.
-``` bash
+
+```bash
 docker run --rm -e PROD_DB_URL postgres:16.3 pg_dump -Fc -d $PROD_DB_URL > db.dump
 ```
 
 Dump from a running postgres container. Note, we're using `exec` to execute a command within the container.
-``` bash
+
+```bash
 docker compose exec -T <service_name> pg_dump -U <user> -Fc <db_name> > db.dump
 ```
 
 Restore the database if the dump is plain SQL.
-``` bash
+
+```bash
 docker compose exec -T <service_name> psql -U <user> -d <user> < db.dump
 ```
 
 Restore the database if the dump is NOT plain SQL.
-``` bash
+
+```bash
 docker compose exec -T <service_name> pg_restore -U <user> -d <db_name> --clean --no-owner < db.dump
 ```
-
 
 ## Database Golang migration commands
 
 Here's a little [PostgreSQL golang-migrate tutorial](https://github.com/golang-migrate/migrate/blob/master/database/postgres/TUTORIAL.md).
 
 Install the `golang-migrate` library.
-``` bash
+
+```bash
 go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
 ```
 
 Export the database URL in a variable. The empty space at the beginning is important so the command is not saved in the bash history. Change the values in the URL string accordingly.
-``` bash
+
+```bash
  export DATABASE_URL='postgres://username:password@host:port/database?sslmode=disable'
 ```
 
 You can bind a remote database locally if you have SSH access to the server, that is postgres needs to listen on `5432` on the host, meaning if postgres is a docker container its port needs to be mapped to `127.0.0.1:5432` on the host.
-``` bash
+
+```bash
 ssh -NL 5432:127.0.0.1:5432 user@ip
 ```
 
 Check the current version.
-``` bash
+
+```bash
 migrate -path migrations -database $DATABASE_URL version
 ```
 
 Create a specific migration file.
-``` bash
+
+```bash
 migrate create -ext sql -dir migrations -seq file_name
 ```
 
 Migrate up/forward. Supply how many steps you want to go up.
-``` bash
+
+```bash
 migrate -path migrations -database $DATABASE_URL up <steps>
 ```
 
 Migrate down/backward. Supply how many steps you want to go down.
-``` bash
+
+```bash
 migrate -path migrations -database $DATABASE_URL down <steps>
 ```
 
 Force a version. Useful for rollback from a dirty version to the previous version and trying again, or if you want to force a current dirty version you are sure it went okay.
-``` bash
+
+```bash
 migrate -path migrations -database $DATABASE_URL force <version_number>
 ```
 

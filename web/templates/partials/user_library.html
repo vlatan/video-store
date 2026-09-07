@@ -25,7 +25,6 @@
     <span>&ensp;-&ensp;{{ .Posts.TotalNum }} docs</span>
     {{ end }}
 </div>
-{{ .CSRFField }}
 
 <div id="scroller" class="scroll-content" {{ with .Posts -}} data-cursor="{{ .NextCursor }}" {{- end }}>
     {{ range $index, $item := .Posts.Items }}

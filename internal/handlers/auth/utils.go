@@ -262,16 +262,3 @@ func (s *Service) githubRevokeRequest(
 
 	return req, nil
 }
-
-func (s *Service) clearCSRFCookie(w http.ResponseWriter) {
-	cookie := &http.Cookie{
-		Name:     s.config.CsrfSessionName,
-		Value:    "",
-		Path:     "/",
-		MaxAge:   -1,
-		HttpOnly: true,
-		Secure:   true,
-		SameSite: http.SameSiteStrictMode,
-	}
-	http.SetCookie(w, cookie)
-}

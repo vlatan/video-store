@@ -7,8 +7,6 @@ import (
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/utils"
-
-	"github.com/gorilla/csrf"
 )
 
 // NewData creates new default data struct to be passed to the templates
@@ -37,7 +35,6 @@ func (s *service) NewData(w http.ResponseWriter, r *http.Request) *models.Templa
 		Categories:       categories,
 		CurrentURI:       r.RequestURI,
 		BaseCanonicalURL: baseURL,
-		CSRFField:        csrf.TemplateField(r),
 	}
 
 	// Check if the path needs flash messages

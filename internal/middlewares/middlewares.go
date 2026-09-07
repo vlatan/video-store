@@ -14,7 +14,6 @@ import (
 	"github.com/vlatan/video-store/internal/ui"
 	"github.com/vlatan/video-store/internal/utils"
 
-	"github.com/gorilla/csrf"
 	"github.com/klauspost/compress/gzhttp"
 )
 
@@ -271,41 +270,6 @@ func (s *Service) HandleErrors(next http.Handler) http.Handler {
 			recorder.body.Reset()
 			utils.HttpError(recorder, recorder.status)
 		}
-	})
-}
-
-// CsrfProtection creates CSRF middlware with added plain text option for local development
-func (s *Service) CsrfProtection(next http.Handler) http.Handler {
-
-	// Return the handler function
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-		// Anonimous users don't make POST requests,
-		// so no CSRF protection needed.
-		// gorilla/csrf sets Vary: Cookie header
-		// and we don't want that for anonimous requests,
-		// because we want to cache those.
-		user := models.GetUserFromContext(r)
-		if !user.IsAuthenticated() {
-			next.ServeHTTP(w, r)
-			return
-		}
-
-		// Set plain text (HTTP) schema if necessary
-		if s.config.Protocol != "https" {
-			r = csrf.PlaintextHTTPRequest(r)
-		}
-
-		// Create the csrf middleware as per the gorilla/csrf documentation
-		csrfMiddleware := csrf.Protect(
-			s.config.CsrfKey.Bytes,
-			csrf.CookieName(s.config.CsrfSessionName),
-			csrf.Secure(s.config.Protocol == "https"),
-			csrf.Path("/"),
-		)
-
-		// Wrap the next handler and serve http
-		csrfMiddleware(next).ServeHTTP(w, r)
 	})
 }
 

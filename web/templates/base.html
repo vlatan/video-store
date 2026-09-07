@@ -45,14 +45,14 @@
 	{{ if and .CurrentUser .CurrentUser.PublicID }}
 	<script>
 		window.dataLayer = window.dataLayer || [];
-		function gtag() { dataLayer.push(arguments); }
+		function gtag() {dataLayer.push(arguments);}
 		gtag('js', new Date());
-		gtag('config', '{{ .Config.GtagID }}', { 'user_id': '{{ .CurrentUser.PublicID }}' });
+		gtag('config', '{{ .Config.GtagID }}', {'user_id': '{{ .CurrentUser.PublicID }}'});
 	</script>
 	{{ else }}
 	<script>
 		window.dataLayer = window.dataLayer || [];
-		function gtag() { dataLayer.push(arguments); }
+		function gtag() {dataLayer.push(arguments);}
 		gtag('js', new Date());
 		gtag('config', '{{ .Config.GtagID }}');
 	</script>
@@ -158,7 +158,6 @@
 
 				<dialog data-body="account" class="modal" closedby="any">
 					<form class="modal-content" action="/account/delete?redirect={{ .CurrentURI }}" method="POST">
-						{{ .CSRFField }}
 						<input type="hidden" name="_method" value="DELETE">
 						<span data-close="account" class="close-modal" title="Close">&times;</span>
 						<h2 class="modal-title">Delete Account</h2>
