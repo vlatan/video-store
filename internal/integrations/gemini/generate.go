@@ -275,7 +275,7 @@ func (s *Service) GeneratePostOcr(
 		}
 
 		// Assign release year if any
-		if genaiResponse.ReleaseYear != 0 {
+		if genaiResponse.ReleaseYear >= 1000 && genaiResponse.ReleaseYear <= 9999 {
 			post.ReleaseYear = genaiResponse.ReleaseYear
 		}
 
