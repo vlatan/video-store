@@ -217,27 +217,29 @@ func (s *Service) GeneratePostOcr(
 			// Intro config, the first 5 minutes.
 			// Increase the media resolution level to high.
 			// 5x60x1x280 = 84k tokens
-			EndOffset:  5 * time.Minute,
-			Resolutuon: genai.PartMediaResolutionLevelMediaResolutionHigh,
+			Description: "INTRO",
+			EndOffset:   5 * time.Minute,
+			Resolutuon:  genai.PartMediaResolutionLevelMediaResolutionHigh,
 		},
-		{
+	}
+
+	// Check if the video is too long, genai will reject very high start offset
+	startOffset := videoDuration - 200*time.Second
+	if startOffset < 16*time.Hour {
+		partConfigs = append(partConfigs, models.VideoPartConfig{
 			// Outro config, the last 200 seconds.
 			// Increase the FPS to 3.0 and media resolution level to high.
 			// 200x3x280 = 168k tokens
-			StartOffset: videoDuration - 200*time.Second,
+			Description: "OUTRO",
+			StartOffset: startOffset,
 			FPS:         new(3.0),
 			Resolutuon:  genai.PartMediaResolutionLevelMediaResolutionHigh,
-		},
+		})
 	}
 
 	// Make two calls to extract the OCR details
 	genaiConfig := s.NewGenaiConfig()
 	for i, config := range partConfigs {
-
-		part := "INTRO"
-		if i > 0 {
-			part = "OUTRO"
-		}
 
 		// Create video contents but now with just the FIRST and LAST x minutes.
 		contents, err := s.MakeVideoContents(post.VideoID, config)
@@ -245,7 +247,7 @@ func (s *Service) GeneratePostOcr(
 		if err != nil {
 			return fmt.Errorf(
 				"failed to create gemini contents on %s on video %q: %w",
-				part, post.VideoID, err)
+				config.Description, post.VideoID, err)
 		}
 
 		// Sleep with context in mind for 60-90 seconds.
@@ -263,7 +265,7 @@ func (s *Service) GeneratePostOcr(
 		if err != nil {
 			return fmt.Errorf(
 				"failed to generate LLM content on %s on video %q: %w",
-				part, post.VideoID, err,
+				config.Description, post.VideoID, err,
 			)
 		}
 
