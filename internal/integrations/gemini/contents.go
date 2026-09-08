@@ -31,18 +31,8 @@ func (s *Service) MakeVideoContents(
 	// Ready the video part
 	youtubeURL := "https://www.youtube.com/watch?v=" + videoID
 	part := &genai.Part{
-		FileData: &genai.FileData{FileURI: youtubeURL, MIMEType: "video/*"},
-		VideoMetadata: &genai.VideoMetadata{
-			StartOffset: cfg.StartOffset,
-			EndOffset:   cfg.EndOffset,
-			FPS:         cfg.FPS,
-		},
-	}
-
-	if cfg.Resolutuon != "" {
-		part.MediaResolution = &genai.PartMediaResolution{
-			Level: cfg.Resolutuon,
-		}
+		FileData:        &genai.FileData{FileURI: youtubeURL, MIMEType: "video/*"},
+		MediaProcessing: genai.MediaProcessingAgentic,
 	}
 
 	genaiContent := []*genai.Content{

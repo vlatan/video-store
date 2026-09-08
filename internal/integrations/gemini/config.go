@@ -23,6 +23,6 @@ func (s *Service) NewGenaiConfig() *genai.GenerateContentConfig {
 		SystemInstruction: s.systemInstruction(),
 
 		// https://ai.google.dev/gemini-api/docs/media-resolution#global-media-resolution
-		MediaResolution: genai.MediaResolutionLow,
+		MediaResolution: genai.MediaResolutionHigh,
 	}
 }

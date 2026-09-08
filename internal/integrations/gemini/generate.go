@@ -122,9 +122,7 @@ func (s *Service) GeneratePostSummary(
 	// With low resolution and FPS of 1.0.
 	// 40x60x1x70 = 168k tokens
 	mainContents, err := s.MakeVideoContents(
-		post.VideoID, models.VideoPartConfig{
-			EndOffset: min(videoDuration, 40*time.Minute),
-		},
+		post.VideoID, models.VideoPartConfig{},
 	)
 
 	if err != nil {
@@ -218,8 +216,6 @@ func (s *Service) GeneratePostOcr(
 			// Increase the media resolution level to high.
 			// 5x60x1x280 = 84k tokens
 			Description: "INTRO",
-			EndOffset:   5 * time.Minute,
-			Resolutuon:  genai.PartMediaResolutionLevelMediaResolutionHigh,
 		},
 	}
 
@@ -231,9 +227,6 @@ func (s *Service) GeneratePostOcr(
 			// Increase the FPS to 3.0 and media resolution level to high.
 			// 200x3x280 = 168k tokens
 			Description: "OUTRO",
-			StartOffset: startOffset,
-			FPS:         new(3.0),
-			Resolutuon:  genai.PartMediaResolutionLevelMediaResolutionHigh,
 		})
 	}
 
