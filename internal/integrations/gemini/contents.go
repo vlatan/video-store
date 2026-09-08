@@ -12,6 +12,8 @@ func (s *Service) MakeVideoContents(
 	cfg models.VideoPartConfig,
 ) ([]*genai.Content, error) {
 
+	// TODO: Use NewPartFromURI
+
 	// Ready the video part
 	youtubeURL := "https://www.youtube.com/watch?v=" + videoID
 	part := &genai.Part{
