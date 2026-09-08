@@ -8,12 +8,24 @@ import (
 
 // The response from the Genai API
 type GenaiResponse struct {
-	Title         string   `json:"video_title"`
+	Main  `json:"main"`
+	Intro `json:"intro"`
+	Outro `json:"outro"`
+}
+
+type Main struct {
+	Summary  string `json:"summary"`
+	Category string `json:"category"`
+}
+
+type Intro struct {
 	OriginalTitle string   `json:"original_title"`
-	Summary       string   `json:"summary"`
-	Category      string   `json:"category"`
 	Directors     []string `json:"directors"`
-	ReleaseYear   int16    `json:"release_year"`
+}
+
+type Outro struct {
+	ReleaseYear int16    `json:"release_year"`
+	Directors   []string `json:"directors"`
 }
 
 type VideoPartConfig struct {

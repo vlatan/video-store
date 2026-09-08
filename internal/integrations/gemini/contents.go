@@ -1,8 +1,6 @@
 package gemini
 
 import (
-	"fmt"
-
 	"github.com/vlatan/video-store/internal/models"
 	"google.golang.org/genai"
 )
@@ -13,20 +11,6 @@ func (s *Service) MakeVideoContents(
 	videoID string,
 	cfg models.VideoPartConfig,
 ) ([]*genai.Content, error) {
-
-	if cfg.StartOffset < 0 || cfg.EndOffset < 0 {
-		return nil, fmt.Errorf(
-			"StartOffset %q and/or EndOffset %q < 0 for video %q",
-			cfg.StartOffset, cfg.EndOffset, videoID,
-		)
-	}
-
-	if cfg.EndOffset != 0 && cfg.StartOffset >= cfg.EndOffset {
-		return nil, fmt.Errorf(
-			"StartOffset %q >= EndOffset %q for video %q",
-			cfg.StartOffset, cfg.EndOffset, videoID,
-		)
-	}
 
 	// Ready the video part
 	youtubeURL := "https://www.youtube.com/watch?v=" + videoID

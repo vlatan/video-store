@@ -79,11 +79,12 @@ func (s *Service) GenerateContent(
 		return nil, err
 	}
 
-	response.OriginalTitle = utils.NormalizeTitle(response.OriginalTitle, utils.VideoTitleCutoffs)
-	response.Summary = utils.NormalizeDescription(response.Summary)
+	response.Intro.OriginalTitle = utils.NormalizeTitle(response.Intro.OriginalTitle, utils.VideoTitleCutoffs)
+	response.Main.Summary = utils.NormalizeDescription(response.Main.Summary)
 
 	var directors []string
-	for _, director := range response.Directors {
+	for _, director := range response.Intro.Directors {
+
 		name, err := utils.NormalizeName(director)
 		if err == nil {
 			directors = append(directors, name)
@@ -93,34 +94,41 @@ func (s *Service) GenerateContent(
 			ctx,
 			"failed to normalize director's name",
 			"original_director_name", director,
-			"original_title", response.OriginalTitle,
+			"original_title", response.Intro.OriginalTitle,
 			"error", err,
 		)
 	}
-	response.Directors = directors
+
+	for _, director := range response.Outro.Directors {
+
+		name, err := utils.NormalizeName(director)
+		if err != nil {
+			slog.ErrorContext(
+				ctx,
+				"failed to normalize director's name",
+				"original_director_name", director,
+				"original_title", response.Intro.OriginalTitle,
+				"error", err,
+			)
+			continue
+		}
+
+		if !slices.Contains(directors, director) {
+			directors = append(directors, name)
+		}
+	}
+
+	response.Intro.Directors = directors
 
 	return &response, nil
 }
 
 // GeneratePostSummary generates post summary and category
-func (s *Service) GeneratePostSummary(
+func (s *Service) GeneratePostContent(
 	ctx context.Context,
 	post *models.Post,
 	retryConfig *utils.RetryConfig) error {
 
-	// Get video duration
-	videoDuration, err := post.Duration.Seconds()
-	if err != nil || videoDuration == 0 {
-		return fmt.Errorf(
-			"couldn't convert video's %q duration %q to seconds: %w",
-			post.VideoID, post.Duration, err,
-		)
-	}
-
-	// Create the video contents.
-	// The first 40 minutes to keep within the 250k TPM quota.
-	// With low resolution and FPS of 1.0.
-	// 40x60x1x70 = 168k tokens
 	mainContents, err := s.MakeVideoContents(
 		post.VideoID, models.VideoPartConfig{},
 	)
@@ -132,7 +140,7 @@ func (s *Service) GeneratePostSummary(
 	}
 
 	genaiConfig := s.NewGenaiConfig()
-	genaiConfig.ResponseSchema = s.SummarySchema()
+	genaiConfig.ResponseSchema = s.Schema()
 
 	genaiResponse, err := s.GenerateContent(
 		ctx,
@@ -141,9 +149,18 @@ func (s *Service) GeneratePostSummary(
 		retryConfig,
 	)
 
+	// TODO: Rework and include the
+	// Mark the OCR as done
+	// if post.Summary != "" {
+	// 		post.Summary += models.OcrFlag
+	// }
+
 	if err == nil {
-		post.Summary = genaiResponse.Summary
-		post.Category = &models.Category{Name: genaiResponse.Category}
+		post.OriginalTitle = genaiResponse.Intro.OriginalTitle
+		post.Summary = genaiResponse.Main.Summary
+		post.Category = &models.Category{Name: genaiResponse.Main.Category}
+		post.Directors = genaiResponse.Intro.Directors
+		post.ReleaseYear = genaiResponse.Outro.ReleaseYear
 		return nil
 	}
 
@@ -187,103 +204,11 @@ func (s *Service) GeneratePostSummary(
 		)
 	}
 
-	post.Summary = genaiResponse.Summary
-	post.Category = &models.Category{Name: genaiResponse.Category}
-
-	return nil
-}
-
-// GeneratePostOcr reads original title, directors and release year from screen
-func (s *Service) GeneratePostOcr(
-	ctx context.Context,
-	post *models.Post,
-	retryConfig *utils.RetryConfig) error {
-
-	// Get video duration
-	videoDuration, err := post.Duration.Seconds()
-	if err != nil || videoDuration == 0 {
-		return fmt.Errorf(
-			"couldn't convert video's %q duration %q to seconds; %w",
-			post.VideoID, post.Duration, err,
-		)
-	}
-
-	// Preaparre two separate schemas and part configs
-	schemas := []*genai.Schema{s.IntroSchema(), s.OutroSchema()}
-	partConfigs := []models.VideoPartConfig{
-		{
-			// Intro config, the first 5 minutes.
-			// Increase the media resolution level to high.
-			// 5x60x1x280 = 84k tokens
-			Description: "INTRO",
-		},
-	}
-
-	// Check if the video is too long, genai will reject very high start offset
-	startOffset := videoDuration - 200*time.Second
-	if startOffset < 16*time.Hour {
-		partConfigs = append(partConfigs, models.VideoPartConfig{
-			// Outro config, the last 200 seconds.
-			// Increase the FPS to 3.0 and media resolution level to high.
-			// 200x3x280 = 168k tokens
-			Description: "OUTRO",
-		})
-	}
-
-	// Make two calls to extract the OCR details
-	genaiConfig := s.NewGenaiConfig()
-	for i, config := range partConfigs {
-
-		// Create video contents but now with just the FIRST and LAST x minutes.
-		contents, err := s.MakeVideoContents(post.VideoID, config)
-
-		if err != nil {
-			return fmt.Errorf(
-				"failed to create gemini contents on %s on video %q: %w",
-				config.Description, post.VideoID, err)
-		}
-
-		// Sleep with context in mind for 60-90 seconds.
-		// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
-		if err := utils.SleepJitter(ctx, 60*time.Second, 90*time.Second); err != nil {
-			return err
-		}
-
-		// Use appropriate schema in the genai config
-		genaiConfig.ResponseSchema = schemas[i]
-
-		// Generate content using Gemini
-		genaiResponse, err := s.GenerateContent(ctx, contents, genaiConfig, retryConfig)
-
-		if err != nil {
-			return fmt.Errorf(
-				"failed to generate LLM content on %s on video %q: %w",
-				config.Description, post.VideoID, err,
-			)
-		}
-
-		// Assign original title if any
-		if genaiResponse.OriginalTitle != "" {
-			post.OriginalTitle = genaiResponse.OriginalTitle
-		}
-
-		// Append if any additional directors discovered
-		for _, director := range genaiResponse.Directors {
-			if !slices.Contains(post.Directors, director) {
-				post.Directors = append(post.Directors, director)
-			}
-		}
-
-		// Assign release year if any
-		if genaiResponse.ReleaseYear >= 1000 && genaiResponse.ReleaseYear <= 9999 {
-			post.ReleaseYear = genaiResponse.ReleaseYear
-		}
-
-		//  Mark the OCR as done
-		if post.Summary != "" {
-			post.Summary += models.OcrFlag
-		}
-	}
+	post.OriginalTitle = genaiResponse.Intro.OriginalTitle
+	post.Summary = genaiResponse.Main.Summary
+	post.Category = &models.Category{Name: genaiResponse.Main.Category}
+	post.Directors = genaiResponse.Intro.Directors
+	post.ReleaseYear = genaiResponse.Outro.ReleaseYear
 
 	return nil
 }
