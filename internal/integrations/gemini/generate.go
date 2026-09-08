@@ -112,7 +112,7 @@ func (s *Service) GeneratePostSummary(
 	videoDuration, err := post.Duration.Seconds()
 	if err != nil || videoDuration == 0 {
 		return fmt.Errorf(
-			"couldn't convert video's %q duration %q to seconds; %w",
+			"couldn't convert video's %q duration %q to seconds: %w",
 			post.VideoID, post.Duration, err,
 		)
 	}
@@ -129,7 +129,7 @@ func (s *Service) GeneratePostSummary(
 
 	if err != nil {
 		return fmt.Errorf(
-			"failed to create gemini contents on video %q; %v",
+			"failed to create gemini contents on SUMMARY on video %q: %w",
 			post.VideoID, err)
 	}
 
@@ -152,7 +152,7 @@ func (s *Service) GeneratePostSummary(
 	// Check if this is a hard block error by the model
 	if _, blocked := errors.AsType[*BlockedError](err); !blocked {
 		return fmt.Errorf(
-			"failed to generate LLM content on video %q: %w",
+			"failed to generate LLM content on SUMMARY on video %q: %w",
 			post.VideoID, err,
 		)
 	}
@@ -160,7 +160,7 @@ func (s *Service) GeneratePostSummary(
 	// Make another gemini API call just with a text contents
 	slog.ErrorContext(
 		ctx,
-		"failed to generate LLM content, trying again with text input",
+		"failed to generate LLM content on SUMMARY, trying again with text input",
 		"videoId", post.VideoID,
 		"error", err,
 	)
@@ -184,7 +184,7 @@ func (s *Service) GeneratePostSummary(
 
 	if err != nil {
 		return fmt.Errorf(
-			"failed to generate LLM content on video %q: %w",
+			"failed to generate LLM content on SUMMARY on video %q: %w",
 			post.VideoID, err,
 		)
 	}
@@ -234,13 +234,18 @@ func (s *Service) GeneratePostOcr(
 	genaiConfig := s.NewGenaiConfig()
 	for i, config := range partConfigs {
 
+		part := "INTRO"
+		if i > 0 {
+			part = "OUTRO"
+		}
+
 		// Create video contents but now with just the FIRST and LAST x minutes.
 		contents, err := s.MakeVideoContents(post.VideoID, config)
 
 		if err != nil {
 			return fmt.Errorf(
-				"failed to create gemini contents on video %q; %v",
-				post.VideoID, err)
+				"failed to create gemini contents on %s on video %q: %w",
+				part, post.VideoID, err)
 		}
 
 		// Sleep with context in mind for 60-90 seconds.
@@ -257,8 +262,8 @@ func (s *Service) GeneratePostOcr(
 
 		if err != nil {
 			return fmt.Errorf(
-				"failed to generate LLM content on video %q; %w",
-				post.VideoID, err,
+				"failed to generate LLM content on %s on video %q: %w",
+				part, post.VideoID, err,
 			)
 		}
 

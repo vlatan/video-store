@@ -11,20 +11,20 @@ import (
 // https://ai.google.dev/gemini-api/docs/video-understanding#clipping-intervals
 func (s *Service) MakeVideoContents(
 	videoID string,
-	config models.VideoPartConfig,
+	cfg models.VideoPartConfig,
 ) ([]*genai.Content, error) {
 
-	if config.StartOffset < 0 || config.EndOffset < 0 {
+	if cfg.StartOffset < 0 || cfg.EndOffset < 0 {
 		return nil, fmt.Errorf(
 			"StartOffset %q and/or EndOffset %q < 0 for video %q",
-			config.StartOffset, config.EndOffset, videoID,
+			cfg.StartOffset, cfg.EndOffset, videoID,
 		)
 	}
 
-	if config.EndOffset != 0 && config.StartOffset >= config.EndOffset {
+	if cfg.EndOffset != 0 && cfg.StartOffset >= cfg.EndOffset {
 		return nil, fmt.Errorf(
 			"StartOffset %q >= EndOffset %q for video %q",
-			config.StartOffset, config.EndOffset, videoID,
+			cfg.StartOffset, cfg.EndOffset, videoID,
 		)
 	}
 
@@ -33,13 +33,16 @@ func (s *Service) MakeVideoContents(
 	part := &genai.Part{
 		FileData: &genai.FileData{FileURI: youtubeURL, MIMEType: "video/*"},
 		VideoMetadata: &genai.VideoMetadata{
-			StartOffset: config.StartOffset,
-			EndOffset:   config.EndOffset,
-			FPS:         config.FPS,
+			StartOffset: cfg.StartOffset,
+			EndOffset:   cfg.EndOffset,
+			FPS:         cfg.FPS,
 		},
-		MediaResolution: &genai.PartMediaResolution{
-			Level: config.Resolutuon,
-		},
+	}
+
+	if cfg.Resolutuon != "" {
+		part.MediaResolution = &genai.PartMediaResolution{
+			Level: cfg.Resolutuon,
+		}
 	}
 
 	genaiContent := []*genai.Content{
