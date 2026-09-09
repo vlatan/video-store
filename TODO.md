@@ -1,5 +1,4 @@
 - Account for long videos in agentic mode
-- Distinguish if the model is overloaded and if so do not retry with text contents
 - Consolidate the intro and outro into one directive
 - Update the post update FORM with release year and directors
 - Make `:= range` more performant by using index

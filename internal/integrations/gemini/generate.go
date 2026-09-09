@@ -42,7 +42,7 @@ func (s *Service) generateContent(
 	// Check if there are candidates at all.
 	// Gemini can return zero candidates if it applies hard block.
 	if len(response.Candidates) == 0 {
-		return nil, &BlockedError{response.PromptFeedback}
+		return nil, &NoCandidatesError{response.PromptFeedback}
 	}
 
 	return response, nil
@@ -65,8 +65,8 @@ func (s *Service) GenerateContent(
 		},
 		// Exit immediately if no candidates returned or RPD limit reached
 		func(err error) bool {
-			_, isBlockedError := errors.AsType[*BlockedError](err)
-			return isBlockedError || errors.Is(err, ErrDailyLimitReached)
+			_, isNoCandidatesError := errors.AsType[*NoCandidatesError](err)
+			return isNoCandidatesError || errors.Is(err, ErrDailyLimitReached)
 		},
 	)
 
@@ -129,86 +129,72 @@ func (s *Service) GeneratePostContent(
 	post *models.Post,
 	retryConfig *utils.RetryConfig) error {
 
-	mainContents, err := s.MakeVideoContents(
-		post.VideoID, models.VideoPartConfig{},
-	)
-
-	if err != nil {
-		return fmt.Errorf(
-			"failed to create gemini contents on SUMMARY on video %q: %w",
-			post.VideoID, err)
-	}
-
+	contents := s.MakeVideoContents(post.VideoID)
 	genaiConfig := s.NewGenaiConfig()
-	genaiConfig.ResponseSchema = s.Schema()
-
-	genaiResponse, err := s.GenerateContent(
-		ctx,
-		mainContents,
-		genaiConfig,
-		retryConfig,
-	)
-
-	// TODO: Rework and include the
-	// Mark the OCR as done
-	// if post.Summary != "" {
-	// 		post.Summary += models.OcrFlag
-	// }
-
-	if err == nil {
-		post.OriginalTitle = genaiResponse.Intro.OriginalTitle
-		post.Summary = genaiResponse.Main.Summary
-		post.Category = &models.Category{Name: genaiResponse.Main.Category}
-		post.Directors = genaiResponse.Intro.Directors
-		post.ReleaseYear = genaiResponse.Outro.ReleaseYear
-		return nil
-	}
+	genaiConfig.ResponseSchema = s.ResponseSchema()
+	genaiResponse, err := s.GenerateContent(ctx, contents, genaiConfig, retryConfig)
 
 	// Check if this is a hard block error by the model
-	if _, blocked := errors.AsType[*BlockedError](err); !blocked {
+	_, noCandidates := errors.AsType[*NoCandidatesError](err)
+
+	// Exit if any other errot
+	if err != nil && !noCandidates {
 		return fmt.Errorf(
-			"failed to generate LLM content on SUMMARY on video %q: %w",
+			"failed to generate LLM content on video %q: %w",
 			post.VideoID, err,
 		)
 	}
 
-	// Make another gemini API call just with a text contents
-	slog.ErrorContext(
-		ctx,
-		"failed to generate LLM content on SUMMARY, trying again with text input",
-		"videoId", post.VideoID,
-		"error", err,
-	)
+	// Log the no-candidates blocked error.
+	// Make another gemini API call just with a text contents.
+	if noCandidates {
 
-	// Create text contents
-	textContents := s.MakeTextContents(post)
-
-	// Sleep with context in mind for 60-90 seconds.
-	// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
-	if err := utils.SleepJitter(ctx, 60*time.Second, 90*time.Second); err != nil {
-		return err
-	}
-
-	// Generate content using Gemini, but now with text contents
-	genaiResponse, err = s.GenerateContent(
-		ctx,
-		textContents,
-		genaiConfig,
-		retryConfig,
-	)
-
-	if err != nil {
-		return fmt.Errorf(
-			"failed to generate LLM content on SUMMARY on video %q: %w",
-			post.VideoID, err,
+		slog.ErrorContext(
+			ctx,
+			"failed to generate LLM content trying again with text input",
+			"videoId", post.VideoID,
+			"error", err,
 		)
+
+		// Create text contents
+		textContents := s.MakeTextContents(post)
+
+		// Sleep with context in mind for 60-90 seconds.
+		// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
+		if err := utils.SleepJitter(ctx, 60*time.Second, 90*time.Second); err != nil {
+			return err
+		}
+
+		// Generate content using Gemini, but now with text contents
+		genaiResponse, err = s.GenerateContent(
+			ctx,
+			textContents,
+			genaiConfig,
+			retryConfig,
+		)
+
+		if err != nil {
+			return fmt.Errorf(
+				"failed to generate LLM content on video %q: %w",
+				post.VideoID, err,
+			)
+		}
 	}
 
-	post.OriginalTitle = genaiResponse.Intro.OriginalTitle
-	post.Summary = genaiResponse.Main.Summary
-	post.Category = &models.Category{Name: genaiResponse.Main.Category}
+	post.Summary = genaiResponse.Summary
+	post.Category = &models.Category{Name: genaiResponse.Category}
+	post.OriginalTitle = genaiResponse.OriginalTitle
 	post.Directors = genaiResponse.Intro.Directors
-	post.ReleaseYear = genaiResponse.Outro.ReleaseYear
+
+	// Assign release year if valid
+	if genaiResponse.ReleaseYear >= 1000 && genaiResponse.ReleaseYear <= 9999 {
+		post.ReleaseYear = genaiResponse.ReleaseYear
+	}
+
+	//  Flag this post as processed
+	if post.Summary != "" {
+		post.Summary += models.OcrFlag
+	}
 
 	return nil
 }

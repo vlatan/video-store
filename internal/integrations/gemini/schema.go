@@ -19,7 +19,7 @@ var directors = &genai.Schema{
 		"by stripping accents and diacritics.",
 }
 
-func (s *Service) Schema() *genai.Schema {
+func (s *Service) ResponseSchema() *genai.Schema {
 	return &genai.Schema{
 		Type: genai.TypeObject,
 		Properties: map[string]*genai.Schema{
