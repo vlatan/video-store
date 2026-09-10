@@ -117,28 +117,14 @@ func (s *Service) GeneratePostSummary(
 		)
 	}
 
-	// Create the video contents.
-	// The first 40 minutes to keep within the 250k TPM quota.
-	// With low resolution and FPS of 1.0.
-	// 40x60x1x70 = 168k tokens
-	mainContents, err := s.MakeVideoContents(
-		post.VideoID, models.VideoPartConfig{
-			EndOffset: min(videoDuration, 40*time.Minute),
-		},
-	)
-
-	if err != nil {
-		return fmt.Errorf(
-			"failed to create gemini contents on SUMMARY on video %q: %w",
-			post.VideoID, err)
-	}
-
+	// Create summary contents
+	summaryContents := s.NewSummaryContents(post.VideoID)
 	genaiConfig := s.NewGenaiConfig()
 	genaiConfig.ResponseSchema = s.SummarySchema()
 
 	genaiResponse, err := s.GenerateContent(
 		ctx,
-		mainContents,
+		summaryContents,
 		genaiConfig,
 		retryConfig,
 	)

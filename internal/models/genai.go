@@ -17,9 +17,10 @@ type GenaiResponse struct {
 }
 
 type VideoPartConfig struct {
-	Description string
-	StartOffset time.Duration
-	EndOffset   time.Duration
-	FPS         *float64
-	Resolutuon  genai.PartMediaResolutionLevel
+	Description      string
+	StartOffset      time.Duration
+	EndOffset        time.Duration
+	FPS              *float64
+	Resolutuon       genai.PartMediaResolutionLevel
+	MediaProcesssing genai.MediaProcessing
 }
