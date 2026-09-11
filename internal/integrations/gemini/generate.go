@@ -188,17 +188,22 @@ func (s *Service) GeneratePostOCR(
 	}
 
 	// Preapare two separate configs
-	configs := []run{{"INTRO", s.IntroSchema(), s.NewIntroContents(post.VideoID, 300*time.Second)}}
 	startOffset := videoDuration - 200*time.Second
+	ocrConfigs := []struct {
+		desc     string
+		schema   *genai.Schema
+		contents []*genai.Content
+	}{
+		{"INTRO", s.IntroSchema(), s.NewIntroContents(post.VideoID, 300*time.Second)},
+		{"OUTRO", s.OutroSchema(), s.NewOutroContents(post.VideoID, startOffset)},
+	}
 	if startOffset < 16*time.Hour {
-		configs = append(configs,
-			run{"OUTRO", s.OutroSchema(), s.NewOutroContents(post.VideoID, startOffset)},
-		)
+		ocrConfigs = ocrConfigs[:1]
 	}
 
 	// Make two calls to extract the OCR details
 	genaiConfig := s.NewGenaiConfig()
-	for _, cfg := range configs {
+	for _, cfg := range ocrConfigs {
 
 		// Sleep with context in mind for 60-90 seconds.
 		// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
