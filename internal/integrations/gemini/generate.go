@@ -172,7 +172,7 @@ func (s *Service) GeneratePostSummary(
 	return nil
 }
 
-// GeneratePostOcr reads original title, directors and release year from screen
+// GeneratePostOCR reads original title, directors and release year from screen
 func (s *Service) GeneratePostOCR(
 	ctx context.Context,
 	post *models.Post,
@@ -197,7 +197,9 @@ func (s *Service) GeneratePostOCR(
 		{"INTRO", s.IntroSchema(), s.NewIntroContents(post.VideoID, 300*time.Second)},
 		{"OUTRO", s.OutroSchema(), s.NewOutroContents(post.VideoID, startOffset)},
 	}
-	if startOffset < 16*time.Hour {
+
+	// Exclude the outro OCR because genai will reject very long start offset
+	if startOffset >= 16*time.Hour {
 		ocrConfigs = ocrConfigs[:1]
 	}
 

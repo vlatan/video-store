@@ -1,5 +1,4 @@
 - Rename blocked error
-- Finish simplifying making the video parts
 - Update the post update FORM with release year and directors
 - Make `:= range` more performant by using index
 - Make the directors links that list their films, and also the release years
