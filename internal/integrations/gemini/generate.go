@@ -111,7 +111,7 @@ func (s *Service) GeneratePostSummary(
 	// Create summary contents
 	summaryContents := s.NewSummaryContents(post.VideoID)
 	genaiConfig := s.NewGenaiConfig()
-	genaiConfig.ResponseSchema = s.SummarySchema()
+	genaiConfig.ResponseSchema = s.NewSummarySchema()
 
 	genaiResponse, err := s.GenerateContent(
 		ctx,
@@ -188,14 +188,14 @@ func (s *Service) GeneratePostOCR(
 	}
 
 	// Preapare two separate configs
-	startOffset := videoDuration - 200*time.Second
+	startOffset, endOffset := videoDuration-200*time.Second, 300*time.Second
 	ocrConfigs := []struct {
 		desc     string
 		schema   *genai.Schema
 		contents []*genai.Content
 	}{
-		{"INTRO", s.IntroSchema(), s.NewIntroContents(post.VideoID, 300*time.Second)},
-		{"OUTRO", s.OutroSchema(), s.NewOutroContents(post.VideoID, startOffset)},
+		{"INTRO", s.NewIntroSchema(), s.NewIntroContents(post.VideoID, endOffset)},
+		{"OUTRO", s.NewOutroSchema(), s.NewOutroContents(post.VideoID, startOffset)},
 	}
 
 	// Exclude the outro OCR because genai will reject very long start offset

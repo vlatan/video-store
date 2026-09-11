@@ -24,7 +24,7 @@ var directors = &genai.Schema{
 }
 
 // SummarySchema produces a summary schema
-func (s *Service) SummarySchema() *genai.Schema {
+func (s *Service) NewSummarySchema() *genai.Schema {
 	return &genai.Schema{
 		Type: genai.TypeObject,
 		Properties: map[string]*genai.Schema{
@@ -50,7 +50,7 @@ func (s *Service) SummarySchema() *genai.Schema {
 	}
 }
 
-func (s *Service) IntroSchema() *genai.Schema {
+func (s *Service) NewIntroSchema() *genai.Schema {
 	return &genai.Schema{
 		Type: genai.TypeObject,
 		Properties: map[string]*genai.Schema{
@@ -75,7 +75,7 @@ func (s *Service) IntroSchema() *genai.Schema {
 	}
 }
 
-func (s *Service) OutroSchema() *genai.Schema {
+func (s *Service) NewOutroSchema() *genai.Schema {
 	return &genai.Schema{
 		Type: genai.TypeObject,
 		Properties: map[string]*genai.Schema{
