@@ -12,3 +12,9 @@ type Service struct {
 	limiter  *GeminiLimiter
 	catNames []string
 }
+
+type run struct {
+	desc     string
+	schema   *genai.Schema
+	contents []*genai.Content
+}

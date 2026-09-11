@@ -26,12 +26,12 @@ func (s *Service) NewSummaryContents(videoID string) []*genai.Content {
 // NewIntroContents creates new contents
 // with ona part using static processing, high media resolution using the first 300 seconds.
 // https://ai.google.dev/gemini-api/docs/video-understanding#clipping-intervals
-func (s *Service) NewIntroContents(videoID string) []*genai.Content {
+func (s *Service) NewIntroContents(videoID string, endOffset time.Duration) []*genai.Content {
 	part := s.NewVideoPart(videoID)
 	part.MediaProcessing = genai.MediaProcessingStatic
 	resolution := genai.PartMediaResolutionLevelMediaResolutionHigh
 	part.MediaResolution = &genai.PartMediaResolution{Level: resolution}
-	part.VideoMetadata = &genai.VideoMetadata{EndOffset: 300 * time.Second}
+	part.VideoMetadata = &genai.VideoMetadata{EndOffset: endOffset}
 	return []*genai.Content{{Parts: []*genai.Part{part}}}
 }
 
@@ -39,20 +39,20 @@ func (s *Service) NewIntroContents(videoID string) []*genai.Content {
 // with ona part using static processing, high media resolution,
 // 3 frames per second and using the last 200 seconds.
 // https://ai.google.dev/gemini-api/docs/video-understanding#clipping-intervals
-func (s *Service) NewOutroContents(videoID string, videoDuration time.Duration) []*genai.Content {
+func (s *Service) NewOutroContents(videoID string, startOffset time.Duration) []*genai.Content {
 	part := s.NewVideoPart(videoID)
 	part.MediaProcessing = genai.MediaProcessingStatic
 	resolution := genai.PartMediaResolutionLevelMediaResolutionHigh
 	part.MediaResolution = &genai.PartMediaResolution{Level: resolution}
 	part.VideoMetadata = &genai.VideoMetadata{
-		StartOffset: videoDuration - 200*time.Second,
+		StartOffset: startOffset,
 		FPS:         new(3.0),
 	}
 	return []*genai.Content{{Parts: []*genai.Part{part}}}
 }
 
 // MakeTextContents creates Genai contents containing just text
-func (s *Service) MakeTextContents(video *models.Post) []*genai.Content {
+func (s *Service) NewTextContents(video *models.Post) []*genai.Content {
 	youtubeURL := "https://www.youtube.com/watch?v=" + video.VideoID
 	parts := []*genai.Part{
 		genai.NewPartFromText("Title: " + sanitizePrompt(video.Title)),

@@ -294,7 +294,7 @@ func (w *Worker) insertVideos(ctx context.Context, videos []*models.Post) error 
 			}
 
 			// Generate post original title, directors and release year
-			err := w.gemini.GeneratePostOcr(ctx, video, w.geminiRetryConfig)
+			err := w.gemini.GeneratePostOCR(ctx, video, w.geminiRetryConfig)
 
 			// Exit early only if context ended
 			if utils.IsContextErr(err) {
@@ -387,7 +387,7 @@ func (w *Worker) updateVideos(ctx context.Context, videos []*models.Post) error 
 			}
 
 			// Generate post original title, directors and release year
-			err := w.gemini.GeneratePostOcr(ctx, video, w.geminiRetryConfig)
+			err := w.gemini.GeneratePostOCR(ctx, video, w.geminiRetryConfig)
 
 			// Exit with error only if we need to terminate the worker's job,
 			// meaning only if RPD quota reached or context ended.
