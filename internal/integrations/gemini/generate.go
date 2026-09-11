@@ -42,7 +42,7 @@ func (s *Service) generateContent(
 	// Check if there are candidates at all.
 	// Gemini can return zero candidates if it applies hard block.
 	if len(response.Candidates) == 0 {
-		return nil, &BlockedError{response.PromptFeedback}
+		return nil, &NoCandidatesError{response.PromptFeedback}
 	}
 
 	return response, nil
@@ -65,8 +65,8 @@ func (s *Service) GenerateContent(
 		},
 		// Exit immediately if no candidates returned or RPD limit reached
 		func(err error) bool {
-			_, isBlockedError := errors.AsType[*BlockedError](err)
-			return isBlockedError || errors.Is(err, ErrDailyLimitReached)
+			_, blocked := errors.AsType[*NoCandidatesError](err)
+			return blocked || errors.Is(err, ErrDailyLimitReached)
 		},
 	)
 
@@ -127,7 +127,7 @@ func (s *Service) GeneratePostSummary(
 	}
 
 	// Check if this is a hard block error by the model
-	if _, blocked := errors.AsType[*BlockedError](err); !blocked {
+	if _, blocked := errors.AsType[*NoCandidatesError](err); !blocked {
 		return fmt.Errorf(
 			"failed to generate LLM content on SUMMARY on video %q: %w",
 			post.VideoID, err,
