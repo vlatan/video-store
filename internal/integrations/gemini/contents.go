@@ -1,66 +1,64 @@
 package gemini
 
 import (
-	"fmt"
+	"time"
 
 	"github.com/vlatan/video-store/internal/models"
 	"google.golang.org/genai"
 )
 
-// MakeVideoContents creates Genai contents containing video file/URL
-// https://ai.google.dev/gemini-api/docs/video-understanding#clipping-intervals
-func (s *Service) MakeVideoContents(
-	videoID string,
-	cfg models.VideoPartConfig,
-) ([]*genai.Content, error) {
-
-	if cfg.StartOffset < 0 || cfg.EndOffset < 0 {
-		return nil, fmt.Errorf(
-			"StartOffset %q and/or EndOffset %q < 0 for video %q",
-			cfg.StartOffset, cfg.EndOffset, videoID,
-		)
-	}
-
-	if cfg.EndOffset != 0 && cfg.StartOffset >= cfg.EndOffset {
-		return nil, fmt.Errorf(
-			"StartOffset %q >= EndOffset %q for video %q",
-			cfg.StartOffset, cfg.EndOffset, videoID,
-		)
-	}
-
-	// Ready the video part
+func (s *Service) NewVideoPart(videoID string) *genai.Part {
 	youtubeURL := "https://www.youtube.com/watch?v=" + videoID
-	part := &genai.Part{
-		FileData: &genai.FileData{FileURI: youtubeURL, MIMEType: "video/*"},
-		VideoMetadata: &genai.VideoMetadata{
-			StartOffset: cfg.StartOffset,
-			EndOffset:   cfg.EndOffset,
-			FPS:         cfg.FPS,
-		},
-	}
+	return genai.NewPartFromURI(youtubeURL, "video/*")
+}
 
-	if cfg.Resolutuon != "" {
-		part.MediaResolution = &genai.PartMediaResolution{
-			Level: cfg.Resolutuon,
-		}
-	}
+// NewSummaryContents creates new contents
+// with one part using agentic processing and low media resolution.
+// https://ai.google.dev/gemini-api/docs/video-understanding
+func (s *Service) NewSummaryContents(videoID string) []*genai.Content {
+	part := s.NewVideoPart(videoID)
+	part.MediaProcessing = genai.MediaProcessingAgentic
+	resolution := genai.PartMediaResolutionLevelMediaResolutionLow
+	part.MediaResolution = &genai.PartMediaResolution{Level: resolution}
+	return []*genai.Content{{Parts: []*genai.Part{part}}}
+}
 
-	genaiContent := []*genai.Content{
-		{Parts: []*genai.Part{part}},
-	}
+// NewIntroContents creates new contents
+// with ona part using static processing, high media resolution using the first 300 seconds.
+// https://ai.google.dev/gemini-api/docs/video-understanding#clipping-intervals
+func (s *Service) NewIntroContents(videoID string, endOffset time.Duration) []*genai.Content {
+	part := s.NewVideoPart(videoID)
+	part.MediaProcessing = genai.MediaProcessingStatic
+	resolution := genai.PartMediaResolutionLevelMediaResolutionHigh
+	part.MediaResolution = &genai.PartMediaResolution{Level: resolution}
+	part.VideoMetadata = &genai.VideoMetadata{EndOffset: endOffset}
+	return []*genai.Content{{Parts: []*genai.Part{part}}}
+}
 
-	return genaiContent, nil
+// NewOutroContents creates new contents
+// with ona part using static processing, high media resolution,
+// 3 frames per second and using the last 200 seconds.
+// https://ai.google.dev/gemini-api/docs/video-understanding#clipping-intervals
+func (s *Service) NewOutroContents(videoID string, startOffset time.Duration) []*genai.Content {
+	part := s.NewVideoPart(videoID)
+	part.MediaProcessing = genai.MediaProcessingStatic
+	resolution := genai.PartMediaResolutionLevelMediaResolutionHigh
+	part.MediaResolution = &genai.PartMediaResolution{Level: resolution}
+	part.VideoMetadata = &genai.VideoMetadata{
+		StartOffset: startOffset,
+		FPS:         new(3.0),
+	}
+	return []*genai.Content{{Parts: []*genai.Part{part}}}
 }
 
 // MakeTextContents creates Genai contents containing just text
-func (s *Service) MakeTextContents(video *models.Post) []*genai.Content {
+func (s *Service) NewTextContents(video *models.Post) []*genai.Content {
 	youtubeURL := "https://www.youtube.com/watch?v=" + video.VideoID
 	parts := []*genai.Part{
 		genai.NewPartFromText("Title: " + sanitizePrompt(video.Title)),
 		genai.NewPartFromText("Description: " + sanitizePrompt(video.Description)),
 		genai.NewPartFromText("YouTube URL: " + youtubeURL),
 	}
-
 	return []*genai.Content{
 		genai.NewContentFromParts(parts, genai.RoleUser),
 	}

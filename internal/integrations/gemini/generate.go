@@ -42,7 +42,7 @@ func (s *Service) generateContent(
 	// Check if there are candidates at all.
 	// Gemini can return zero candidates if it applies hard block.
 	if len(response.Candidates) == 0 {
-		return nil, &BlockedError{response.PromptFeedback}
+		return nil, &NoCandidatesError{response.PromptFeedback}
 	}
 
 	return response, nil
@@ -65,8 +65,8 @@ func (s *Service) GenerateContent(
 		},
 		// Exit immediately if no candidates returned or RPD limit reached
 		func(err error) bool {
-			_, isBlockedError := errors.AsType[*BlockedError](err)
-			return isBlockedError || errors.Is(err, ErrDailyLimitReached)
+			_, blocked := errors.AsType[*NoCandidatesError](err)
+			return blocked || errors.Is(err, ErrDailyLimitReached)
 		},
 	)
 
@@ -108,37 +108,14 @@ func (s *Service) GeneratePostSummary(
 	post *models.Post,
 	retryConfig *utils.RetryConfig) error {
 
-	// Get video duration
-	videoDuration, err := post.Duration.Seconds()
-	if err != nil || videoDuration == 0 {
-		return fmt.Errorf(
-			"couldn't convert video's %q duration %q to seconds: %w",
-			post.VideoID, post.Duration, err,
-		)
-	}
-
-	// Create the video contents.
-	// The first 40 minutes to keep within the 250k TPM quota.
-	// With low resolution and FPS of 1.0.
-	// 40x60x1x70 = 168k tokens
-	mainContents, err := s.MakeVideoContents(
-		post.VideoID, models.VideoPartConfig{
-			EndOffset: min(videoDuration, 40*time.Minute),
-		},
-	)
-
-	if err != nil {
-		return fmt.Errorf(
-			"failed to create gemini contents on SUMMARY on video %q: %w",
-			post.VideoID, err)
-	}
-
+	// Create summary contents
+	summaryContents := s.NewSummaryContents(post.VideoID)
 	genaiConfig := s.NewGenaiConfig()
-	genaiConfig.ResponseSchema = s.SummarySchema()
+	genaiConfig.ResponseSchema = s.NewSummarySchema()
 
 	genaiResponse, err := s.GenerateContent(
 		ctx,
-		mainContents,
+		summaryContents,
 		genaiConfig,
 		retryConfig,
 	)
@@ -150,7 +127,7 @@ func (s *Service) GeneratePostSummary(
 	}
 
 	// Check if this is a hard block error by the model
-	if _, blocked := errors.AsType[*BlockedError](err); !blocked {
+	if _, blocked := errors.AsType[*NoCandidatesError](err); !blocked {
 		return fmt.Errorf(
 			"failed to generate LLM content on SUMMARY on video %q: %w",
 			post.VideoID, err,
@@ -166,7 +143,7 @@ func (s *Service) GeneratePostSummary(
 	)
 
 	// Create text contents
-	textContents := s.MakeTextContents(post)
+	textContents := s.NewTextContents(post)
 
 	// Sleep with context in mind for 60-90 seconds.
 	// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
@@ -195,8 +172,8 @@ func (s *Service) GeneratePostSummary(
 	return nil
 }
 
-// GeneratePostOcr reads original title, directors and release year from screen
-func (s *Service) GeneratePostOcr(
+// GeneratePostOCR reads original title, directors and release year from screen
+func (s *Service) GeneratePostOCR(
 	ctx context.Context,
 	post *models.Post,
 	retryConfig *utils.RetryConfig) error {
@@ -210,45 +187,25 @@ func (s *Service) GeneratePostOcr(
 		)
 	}
 
-	// Preaparre two separate schemas and part configs
-	schemas := []*genai.Schema{s.IntroSchema(), s.OutroSchema()}
-	partConfigs := []models.VideoPartConfig{
-		{
-			// Intro config, the first 5 minutes.
-			// Increase the media resolution level to high.
-			// 5x60x1x280 = 84k tokens
-			Description: "INTRO",
-			EndOffset:   5 * time.Minute,
-			Resolutuon:  genai.PartMediaResolutionLevelMediaResolutionHigh,
-		},
+	// Preapare two separate configs
+	startOffset, endOffset := videoDuration-200*time.Second, 300*time.Second
+	ocrConfigs := []struct {
+		desc     string
+		schema   *genai.Schema
+		contents []*genai.Content
+	}{
+		{"INTRO", s.NewIntroSchema(), s.NewIntroContents(post.VideoID, endOffset)},
+		{"OUTRO", s.NewOutroSchema(), s.NewOutroContents(post.VideoID, startOffset)},
 	}
 
-	// Check if the video is too long, genai will reject very high start offset
-	startOffset := videoDuration - 200*time.Second
-	if startOffset < 16*time.Hour {
-		partConfigs = append(partConfigs, models.VideoPartConfig{
-			// Outro config, the last 200 seconds.
-			// Increase the FPS to 3.0 and media resolution level to high.
-			// 200x3x280 = 168k tokens
-			Description: "OUTRO",
-			StartOffset: startOffset,
-			FPS:         new(3.0),
-			Resolutuon:  genai.PartMediaResolutionLevelMediaResolutionHigh,
-		})
+	// Exclude the outro OCR because genai will reject very long start offset
+	if startOffset >= 16*time.Hour {
+		ocrConfigs = ocrConfigs[:1]
 	}
 
 	// Make two calls to extract the OCR details
 	genaiConfig := s.NewGenaiConfig()
-	for i, config := range partConfigs {
-
-		// Create video contents but now with just the FIRST and LAST x minutes.
-		contents, err := s.MakeVideoContents(post.VideoID, config)
-
-		if err != nil {
-			return fmt.Errorf(
-				"failed to create gemini contents on %s on video %q: %w",
-				config.Description, post.VideoID, err)
-		}
+	for _, cfg := range ocrConfigs {
 
 		// Sleep with context in mind for 60-90 seconds.
 		// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
@@ -257,15 +214,15 @@ func (s *Service) GeneratePostOcr(
 		}
 
 		// Use appropriate schema in the genai config
-		genaiConfig.ResponseSchema = schemas[i]
+		genaiConfig.ResponseSchema = cfg.schema
 
 		// Generate content using Gemini
-		genaiResponse, err := s.GenerateContent(ctx, contents, genaiConfig, retryConfig)
+		genaiResponse, err := s.GenerateContent(ctx, cfg.contents, genaiConfig, retryConfig)
 
 		if err != nil {
 			return fmt.Errorf(
 				"failed to generate LLM content on %s on video %q: %w",
-				config.Description, post.VideoID, err,
+				cfg.desc, post.VideoID, err,
 			)
 		}
 

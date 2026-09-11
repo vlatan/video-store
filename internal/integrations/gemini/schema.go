@@ -24,7 +24,7 @@ var directors = &genai.Schema{
 }
 
 // SummarySchema produces a summary schema
-func (s *Service) SummarySchema() *genai.Schema {
+func (s *Service) NewSummarySchema() *genai.Schema {
 	return &genai.Schema{
 		Type: genai.TypeObject,
 		Properties: map[string]*genai.Schema{
@@ -32,7 +32,7 @@ func (s *Service) SummarySchema() *genai.Schema {
 				Type: genai.TypeString,
 				Description: "Write an engaging one-paragraph blurb " +
 					"in the style of an IMDB film description.\n" +
-					"Use the audio track of the video to write this blurb.\n" +
+					"Use the audio track and the transcript of the video to write this blurb.\n" +
 					"Focus entirely on the subject matter itself - " +
 					"people's names, events, and forces at the heart of the story.\n" +
 					"Make it feel compelling, informative, and human, not academic.\n" +
@@ -50,7 +50,7 @@ func (s *Service) SummarySchema() *genai.Schema {
 	}
 }
 
-func (s *Service) IntroSchema() *genai.Schema {
+func (s *Service) NewIntroSchema() *genai.Schema {
 	return &genai.Schema{
 		Type: genai.TypeObject,
 		Properties: map[string]*genai.Schema{
@@ -75,7 +75,7 @@ func (s *Service) IntroSchema() *genai.Schema {
 	}
 }
 
-func (s *Service) OutroSchema() *genai.Schema {
+func (s *Service) NewOutroSchema() *genai.Schema {
 	return &genai.Schema{
 		Type: genai.TypeObject,
 		Properties: map[string]*genai.Schema{

@@ -361,7 +361,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			if err := s.gemini.GeneratePostOcr(ctx, post, retryConfig); err != nil {
+			if err := s.gemini.GeneratePostOCR(ctx, post, retryConfig); err != nil {
 				slog.ErrorContext(
 					r.Context(),
 					"failed to generate/update LLM post OCR data",
