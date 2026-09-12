@@ -34,6 +34,8 @@ const loadItems = async (url = "", cursor = "") => {
         // Iterate over the items in the response, create video cards
         // and append them as children to the scroller.
         for (const item of data.items) {
+            console.log("TITLE:", item.title);
+            console.log("ORIGINIAL TITLE:", item.original_title);
             const card = createVideoCard(item);
             scroller?.appendChild(card);
         }
@@ -76,10 +78,13 @@ if ("IntersectionObserver" in window) {
 /**
  * Builds a populated video card.
  *
- * @param {{video_id: string, thumbnail: {url: string}, title: string, srcset: string, id: string|number}} item
+ * @param {{video_id: string, thumbnail: {url: string}, title: string, original_title: string, srcset: string, id: string|number}} item
  * @returns {HTMLElement}
  */
 function createVideoCard(item) {
+    // Use the original title if any
+    const ogTitle = item.original_title ? item.original_title : item.title;
+
     // Create the anchor element
     const a = document.createElement("a");
     a.className = "video-link";
@@ -94,14 +99,14 @@ function createVideoCard(item) {
     const img = document.createElement("img");
     img.className = "video-img";
     img.src = item.thumbnail.url;
-    img.alt = item.title;
+    img.alt = ogTitle;
     img.srcset = item.srcset;
     span.appendChild(img);
 
     // Create the title
     const title = document.createElement("h2");
     title.className = "video-title";
-    title.textContent = item.title;
+    title.textContent = ogTitle;
     a.appendChild(title);
 
     if (window.location.pathname !== "/user/favorites/") return a;
