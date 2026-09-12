@@ -17,6 +17,7 @@
     <form id="main-form" method="POST" action="">
         <fieldset class="form-group">
             <legend class="form-legend">{{ .Form.Legend }}</legend>
+
             {{ with .Form.Title }}
             <div class="form-group">
                 <label class="form-label" for="title">{{ .Label }}</label>
@@ -24,6 +25,7 @@
                     value="{{ .Value }}" type="text">
             </div>
             {{ end }}
+
             {{ with .Form.Content }}
             <div class="form-group">
                 <label class="form-label" for="content">{{ .Label }}</label>
@@ -36,6 +38,7 @@
                 {{ end }}
             </div>
             {{ end }}
+
             {{ with .Form.Category }}
             {{ $currentCatName := .Value }}
             <div class="form-group">
@@ -54,6 +57,16 @@
                     <option value="{{ .Name }}" {{ $selected }}>{{ .Name }}</option>
                     {{ end }}
                 </select>
+            </div>
+            {{ end }}
+
+            {{ with .Form.Directors }}
+            <div class="form-group">
+                <label class="form-label" for="title">Directors</label>
+                {{ range . }}
+                <input class="form-input" name="directors" placeholder="{{ .Placeholder }}" required
+                    value="{{ .Value }}" type="text">
+                {{ end }}
             </div>
             {{ end }}
         </fieldset>

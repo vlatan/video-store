@@ -641,6 +641,18 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
+	if data.CurrentPost.Directors != nil {
+		for _, director := range data.CurrentPost.Directors {
+			data.Form.Directors = append(data.Form.Directors,
+				&models.FormGroup{
+					Label:       "Director",
+					Placeholder: "Add director...",
+					Value:       director,
+				},
+			)
+		}
+	}
+
 	data.Title = "Edit This Post"
 
 	switch r.Method {
