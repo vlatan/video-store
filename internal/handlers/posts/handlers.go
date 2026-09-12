@@ -641,16 +641,24 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	if data.CurrentPost.Directors != nil {
-		for _, director := range data.CurrentPost.Directors {
-			data.Form.Directors = append(data.Form.Directors,
-				&models.FormGroup{
-					Label:       "Director",
-					Placeholder: "Add director...",
-					Value:       director,
-				},
-			)
-		}
+	for _, director := range data.CurrentPost.Directors {
+		data.Form.Directors = append(data.Form.Directors,
+			&models.FormGroup{
+				Label:       "Director",
+				Placeholder: "Director's name...",
+				Value:       director,
+			},
+		)
+	}
+
+	// Add one empty director input if none
+	if len(data.Form.Directors) == 0 {
+		data.Form.Directors = append(data.Form.Directors,
+			&models.FormGroup{
+				Label:       "Director",
+				Placeholder: "Director's name...",
+			},
+		)
 	}
 
 	data.Title = "Edit This Post"
@@ -676,6 +684,9 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 		data.Form.Category.Value = r.FormValue("category")
 		data.Form.Content.Value = r.FormValue("content")
 
+		// TODO: Rebuild the form directors and maybe sanitize them
+		directors := r.Form["directors"]
+
 		// Update the page
 		rowsAffected, err := s.postsRepo.UpdatePost(
 			r.Context(),
@@ -683,6 +694,7 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 			data.Form.Title.Value,    // original title
 			data.Form.Category.Value, // category name
 			data.Form.Content.Value,  // summary
+			// directors,                // directors
 		)
 
 		if err != nil || rowsAffected == 0 {

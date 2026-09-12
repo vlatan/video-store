@@ -1,6 +1,5 @@
 - Update the post update FORM with release year and directors.
-  Figure out how to add directors where there are no directors?
-  Maybe split the form into page and post forms.
+  Update update_post_form query.
 
 - Make `:= range` more performant by using index
 - Make the directors links that list their films, and also the release years
