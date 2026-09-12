@@ -64,9 +64,13 @@
             <div class="form-group">
                 <label class="form-label" for="title">Directors</label>
                 {{ range . }}
-                <input class="form-input" name="directors" placeholder="{{ .Placeholder }}" required
-                    value="{{ .Value }}" type="text">
+                <div class="director-row">
+                    <input class="form-input" name="directors" placeholder="{{ .Placeholder }}" required
+                        value="{{ .Value }}" type="text">
+                    <button type="button" class="remove-director-btn">&times;</button>
+                </div>
                 {{ end }}
+                <button type="button" id="add-director-btn">+ Add Director</button>
             </div>
             {{ end }}
         </fieldset>
