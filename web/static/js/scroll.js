@@ -104,23 +104,21 @@ function createVideoCard(item) {
     title.textContent = item.title;
     a.appendChild(title);
 
+    if (window.location.pathname !== "/user/favorites/") return a;
+
     // Needs slight modification if this is user favorites scroll.
     // Wrap the anchor in another block and offer remove button.
-    if (window.location.pathname === "/user/favorites/") {
-        const wrapper = document.createElement("div");
-        wrapper.className = "video-block";
+    const wrapper = document.createElement("div");
+    wrapper.className = "video-block";
 
-        const removeBtn = document.createElement("button");
-        removeBtn.type = "button";
-        removeBtn.className = "remove-option";
-        removeBtn.setAttribute("data-id", `${item.video_id}`);
-        removeBtn.setAttribute("aria-label", "Close");
-        removeBtn.textContent = "\u00D7";
-        wrapper.appendChild(removeBtn);
+    const removeBtn = document.createElement("button");
+    removeBtn.type = "button";
+    removeBtn.className = "remove-option";
+    removeBtn.setAttribute("data-id", `${item.video_id}`);
+    removeBtn.setAttribute("aria-label", "Close");
+    removeBtn.textContent = "\u00D7";
+    wrapper.appendChild(removeBtn);
 
-        wrapper.appendChild(a);
-        return wrapper;
-    }
-
-    return a;
+    wrapper.appendChild(a);
+    return wrapper;
 }
