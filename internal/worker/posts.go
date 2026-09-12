@@ -337,7 +337,7 @@ func (w *Worker) insertVideos(ctx context.Context, videos []*models.Post) error 
 // updateVideos summarizes videos and updates them in database
 func (w *Worker) updateVideos(ctx context.Context, videos []*models.Post) error {
 
-	// Insert new videos in DB
+	// Update videos in DB
 	for _, video := range videos {
 
 		var updated bool
