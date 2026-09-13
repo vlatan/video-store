@@ -1,4 +1,3 @@
-
 WITH updated_post AS (
     UPDATE post
     SET

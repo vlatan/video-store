@@ -292,7 +292,7 @@ func (r *Repository) UpdateSource(ctx context.Context, videoID, playlistID strin
 	return result.RowsAffected(), err
 }
 
-// Update post description
+// UpdateGeneratedContent updates the post generated data
 func (r *Repository) UpdateGeneratedContent(ctx context.Context, post *models.Post) (int64, error) {
 
 	query, err := r.GetQuery("update_post_data.sql", nil)

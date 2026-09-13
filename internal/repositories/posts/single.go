@@ -207,23 +207,34 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.
 	return post, nil
 }
 
-func (r *Repository) UpdatePost(
-	ctx context.Context,
-	videoID, originalTitle, categorySlug, summary string,
-) (int64, error) {
+// UpdatePost updates post data
+func (r *Repository) UpdatePost(ctx context.Context, post *models.Post) (int64, error) {
 
 	query, err := r.GetQuery("update_post_form.sql", nil)
 	if err != nil {
 		return 0, err
 	}
 
-	result, err := r.db.Pool.Exec(
+	// Prepare the credits - directors
+	roles := make([]string, len(post.Directors))
+	for i := range post.Directors {
+		roles[i] = "Director"
+	}
+
+	err = r.db.Pool.QueryRow(
 		ctx,
 		query,
-		videoID,
-		utils.ToNullString(originalTitle),
-		categorySlug,
-		summary,
-	)
-	return result.RowsAffected(), err
+		post.VideoID,
+		utils.ToNullString(post.OriginalTitle),
+		post.Category.Name,
+		post.Summary,
+		post.Directors,
+		roles,
+	).Scan(new(int64))
+
+	if err != nil {
+		return 0, err
+	}
+
+	return 1, nil
 }

@@ -1,9 +1,11 @@
 package utils
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
 	"unicode"
+	"unicode/utf8"
 
 	"golang.org/x/text/runes"
 	"golang.org/x/text/transform"
@@ -237,4 +239,40 @@ func NormalizeName(s string) (string, error) {
 
 	result, _, err := transform.String(t, s)
 	return result, err
+}
+
+// NormalizeDirectors normalizes the names of the directors and removes duplicates
+// or names over 100 characters long.
+func NormalizeDirectors(raw []string) ([]string, error) {
+	seen := make(map[string]bool)
+	var clean []string
+
+	for _, name := range raw {
+		// Strip accidental leading/trailing spaces
+		name = strings.TrimSpace(name)
+
+		if name == "" {
+			continue
+		}
+
+		name, err := NormalizeName(name)
+		if err != nil {
+			return nil, fmt.Errorf("director name contains invalid characters %q: %w", name, err)
+		}
+
+		// Ignore duplicates
+		if seen[name] {
+			continue
+		}
+
+		// Reject overly long names using rune count
+		if utf8.RuneCountInString(name) > 100 {
+			return nil, fmt.Errorf("director name exceeds 100 characters %q", name)
+		}
+
+		seen[name] = true
+		clean = append(clean, name)
+	}
+
+	return clean, nil
 }

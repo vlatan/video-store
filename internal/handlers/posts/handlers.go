@@ -684,18 +684,42 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 		data.Form.Category.Value = r.FormValue("category")
 		data.Form.Content.Value = r.FormValue("content")
 
-		// TODO: Rebuild the form directors and maybe sanitize them
 		directors := r.Form["directors"]
+		for _, director := range directors {
+			data.Form.Directors = append(data.Form.Directors,
+				&models.FormGroup{
+					Label:       "Director",
+					Placeholder: "Director's name...",
+					Value:       director,
+				},
+			)
+		}
+
+		// Add one empty director input if none
+		if len(data.Form.Directors) == 0 {
+			data.Form.Directors = append(data.Form.Directors,
+				&models.FormGroup{
+					Label:       "Director",
+					Placeholder: "Director's name...",
+				},
+			)
+		}
+
+		directors, err = utils.NormalizeDirectors(directors)
+		if err != nil {
+			formError.Message = "Could not parse the directors"
+			data.Form.Error = &formError
+			s.ui.RenderHTML(w, r, "form.html", data)
+			return
+		}
+
+		data.CurrentPost.OriginalTitle = data.Form.Title.Value
+		data.CurrentPost.Category.Name = data.Form.Category.Value
+		data.CurrentPost.Summary = data.Form.Content.Value
+		data.CurrentPost.Directors = directors
 
 		// Update the page
-		rowsAffected, err := s.postsRepo.UpdatePost(
-			r.Context(),
-			videoID,
-			data.Form.Title.Value,    // original title
-			data.Form.Category.Value, // category name
-			data.Form.Content.Value,  // summary
-			// directors,                // directors
-		)
+		rowsAffected, err := s.postsRepo.UpdatePost(r.Context(), data.CurrentPost)
 
 		if err != nil || rowsAffected == 0 {
 			slog.ErrorContext(
