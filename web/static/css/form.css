@@ -130,10 +130,13 @@
 }
 
 .form-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     padding: 0.5rem 1rem;
     font-size: 1rem;
     border: 1px solid var(--primary-border-color);
-    border-radius: 5px;
+    border-radius: 10px;
     background-color: var(--secondary-background-color);
     cursor: pointer;
     line-height: normal;
@@ -174,4 +177,54 @@
     100% {
         transform: rotate(360deg);
     }
+}
+
+.directors-group,
+.directors-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.director-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.remove-director-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--secondary-background-color);
+    font-size: 1.2rem;
+    line-height: 1;
+    color: #fff;
+    cursor: pointer;
+    width: 35px;
+    aspect-ratio: 1 / 1;
+    border-radius: 50%;
+    border: 1px solid #fff;
+}
+
+.remove-director-btn:hover {
+    background-color: var(--primary-background-color);
+}
+
+.add-director-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--primary-border-color);
+    border-radius: 10px;
+    background-color: var(--secondary-background-color);
+    cursor: pointer;
+    line-height: normal;
+    margin-right: auto;
+    font-size: 0.85rem;
+}
+
+.add-director-btn:hover {
+    background-color: var(--primary-background-color);
 }

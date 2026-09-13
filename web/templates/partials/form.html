@@ -62,15 +62,20 @@
 
             {{ with .Form.Directors }}
             <div class="form-group">
-                <label class="form-label" for="title">Directors</label>
-                {{ range . }}
-                <div class="director-row">
-                    <input class="form-input" name="directors" placeholder="{{ .Placeholder }}" required
-                        value="{{ .Value }}" type="text">
-                    <button type="button" class="remove-director-btn">&times;</button>
+                <label class="form-label">Directors</label>
+                <div id="directors-group" class="directors-group">
+                    <div id="directors-list" class="directors-list">
+                        {{ range . }}
+                        <div class="director-row">
+                            <input class="form-input" name="directors" placeholder="{{ .Placeholder }}" required
+                                value="{{ .Value }}" type="text" maxlength="256">
+                            <button type="button" class="remove-director-btn">&times;</button>
+                        </div>
+                        {{ end }}
+                    </div>
+                    <button type="button" id="add-director-btn" class="add-director-btn">+ Add
+                        Director</button>
                 </div>
-                {{ end }}
-                <button type="button" id="add-director-btn">+ Add Director</button>
             </div>
             {{ end }}
         </fieldset>
@@ -90,4 +95,11 @@
         </div>
     </form>
 </div>
+{{ end }}
+
+
+{{ define "extra_scripts" }}
+{{ if .CurrentUser.IsAdmin }}
+<script defer src='{{ .AddVersion "/static/js/form.js" }}'></script>
+{{ end }}
 {{ end }}

@@ -1,5 +1,5 @@
-- Update the post update FORM with release year and directors.
-  Update update_post_form query.
+- Inspect the double OCR flag in summary
+- Update the post update FORM with release year
 
 - Make `:= range` more performant by using index
 - Make the directors links that list their films, and also the release years
