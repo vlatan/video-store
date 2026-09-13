@@ -61,8 +61,8 @@
             {{ end }}
 
             {{ with .Form.Directors }}
-            <div class="form-group">
-                <label class="form-label">Directors</label>
+            <fieldset class="directors-fieldset form-group">
+                <legend class="directors-legend form-label">Directors</legend>
                 <div id="directors-group" class="directors-group">
                     <div id="directors-list" class="directors-list">
                         {{ range . }}
@@ -76,7 +76,7 @@
                     <button type="button" id="add-director-btn" class="add-director-btn">+ Add
                         Director</button>
                 </div>
-            </div>
+            </fieldset>
             {{ end }}
         </fieldset>
         <div class="form-group button-group">

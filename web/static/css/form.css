@@ -179,6 +179,16 @@
     }
 }
 
+fieldset.directors-fieldset,
+legend.directors-legend {
+    all: unset;
+    display: flex;
+}
+
+legend.directors-legend {
+    margin-bottom: 0.5rem;
+}
+
 .directors-group,
 .directors-list {
     display: flex;
@@ -208,7 +218,9 @@
 }
 
 .remove-director-btn:hover {
-    background-color: var(--primary-background-color);
+    color: #000;
+    background-color: #fff;
+    border: 1px solid #000;
 }
 
 .add-director-btn {
