@@ -12,11 +12,15 @@ delete_credits AS (
     DELETE FROM post_credits AS pc
     USING updated_post AS up
     WHERE pc.post_id = up.id
+    RETURNING pc.post_id
 ),
 insert_credits AS (
     INSERT INTO post_credits (post_id, name, role)
     SELECT up.id, c.name, c.role 
     FROM updated_post AS up
     CROSS JOIN UNNEST($6::varchar(256)[], $7::varchar(256)[]) AS c(name, role)
+    -- This will always return at least count of one row.
+    -- It is here just to force credits deletion to run before the insert.
+    WHERE (SELECT count(*) FROM delete_credits) >= 0
 )
 SELECT id FROM updated_post;

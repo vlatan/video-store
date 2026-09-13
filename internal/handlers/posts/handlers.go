@@ -688,12 +688,11 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 		data.Form.Title.Value = r.FormValue("title")
 		data.Form.Category.Value = r.FormValue("category")
 		data.Form.Content.Value = r.FormValue("content")
-
 		directors := r.Form["directors"]
 
-		data.Form.Directors = nil
+		var formDirectors []*models.FormGroup
 		for _, director := range directors {
-			data.Form.Directors = append(data.Form.Directors,
+			formDirectors = append(formDirectors,
 				&models.FormGroup{
 					Label:       "Director",
 					Placeholder: "Director's name...",
@@ -703,8 +702,8 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Add one empty director input if none
-		if len(data.Form.Directors) == 0 {
-			data.Form.Directors = append(data.Form.Directors,
+		if len(formDirectors) == 0 {
+			formDirectors = append(formDirectors,
 				&models.FormGroup{
 					Label:       "Director",
 					Placeholder: "Director's name...",
@@ -712,6 +711,7 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 			)
 		}
 
+		data.Form.Directors = formDirectors
 		directors, err = utils.NormalizeDirectors(directors)
 		if err != nil {
 			slog.ErrorContext(
