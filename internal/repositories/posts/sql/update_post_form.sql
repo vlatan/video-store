@@ -3,7 +3,7 @@ WITH updated_post AS (
     SET
         original_title = $2,
         category_id = (SELECT id FROM category WHERE name = $3),
-        summary = $4,
+        summary = $4
     WHERE video_id = $1
     RETURNING id
 ),
@@ -19,5 +19,4 @@ insert_credits AS (
     CROSS JOIN UNNEST($5::varchar(256)[], $6::varchar(256)[]) AS c(name, role)
 )
 SELECT id FROM updated_post;
-
 

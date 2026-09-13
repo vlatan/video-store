@@ -673,6 +673,11 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 
 		err := r.ParseForm()
 		if err != nil {
+			slog.ErrorContext(
+				r.Context(), "failed to parse the form",
+				"path", r.URL.Path,
+				"error", err,
+			)
 			formError.Message = "Could not parse the form"
 			data.Form.Error = &formError
 			s.ui.RenderHTML(w, r, "form.html", data)
@@ -685,6 +690,8 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 		data.Form.Content.Value = r.FormValue("content")
 
 		directors := r.Form["directors"]
+
+		data.Form.Directors = nil
 		for _, director := range directors {
 			data.Form.Directors = append(data.Form.Directors,
 				&models.FormGroup{
@@ -707,6 +714,11 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 
 		directors, err = utils.NormalizeDirectors(directors)
 		if err != nil {
+			slog.ErrorContext(
+				r.Context(), "failed to normalize directors",
+				"path", r.URL.Path,
+				"error", err,
+			)
 			formError.Message = "Could not parse the directors"
 			data.Form.Error = &formError
 			s.ui.RenderHTML(w, r, "form.html", data)
@@ -718,7 +730,7 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 		data.CurrentPost.Summary = data.Form.Content.Value
 		data.CurrentPost.Directors = directors
 
-		// Update the page
+		// Update the post
 		rowsAffected, err := s.postsRepo.UpdatePost(r.Context(), data.CurrentPost)
 
 		if err != nil || rowsAffected == 0 {

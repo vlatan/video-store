@@ -266,7 +266,7 @@ func NormalizeDirectors(raw []string) ([]string, error) {
 		}
 
 		// Reject overly long names using rune count
-		if utf8.RuneCountInString(name) > 100 {
+		if utf8.RuneCountInString(name) > 256 {
 			return nil, fmt.Errorf("director name exceeds 100 characters %q", name)
 		}
 
