@@ -1,4 +1,3 @@
-- Inspect the double OCR flag in summary
 - Update the post update FORM with release year
 
 - Make `:= range` more performant by using index

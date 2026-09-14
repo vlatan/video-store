@@ -639,6 +639,11 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 			Label: "Category",
 			Value: data.CurrentPost.Category.Name,
 		},
+		ReleaseYear: &models.FormGroup{
+			Label:       "Release Year",
+			Placeholder: "Release year...",
+			Value:       data.CurrentPost.ReleaseYear,
+		},
 	}
 
 	for _, director := range data.CurrentPost.Directors {
