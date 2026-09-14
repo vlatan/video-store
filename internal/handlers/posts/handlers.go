@@ -701,15 +701,16 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// Get the title and the content from the form
+		// Get and assing back the values from the parsed form
 		data.Form.Title.Value = r.FormValue("title")
 		data.Form.Category.Value = r.FormValue("category")
 		data.Form.Content.Value = r.FormValue("content")
-		directors := r.Form["directors"]
+		data.Form.ReleaseYear.Value = r.FormValue("released")
 
-		var formDirectors []*models.FormGroup
+		directors := r.Form["directors"]
+		data.Form.Directors = nil
 		for _, director := range directors {
-			formDirectors = append(formDirectors,
+			data.Form.Directors = append(data.Form.Directors,
 				&models.FormGroup{
 					Label:       "Director",
 					Placeholder: "Director's name...",
@@ -719,8 +720,8 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Add one empty director input if none
-		if len(formDirectors) == 0 {
-			formDirectors = append(formDirectors,
+		if len(data.Form.Directors) == 0 {
+			data.Form.Directors = append(data.Form.Directors,
 				&models.FormGroup{
 					Label:       "Director",
 					Placeholder: "Director's name...",
@@ -728,7 +729,33 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 			)
 		}
 
-		data.Form.Directors = formDirectors
+		// Convert the release year to int16 before the DB upsert
+		i64, err := strconv.ParseInt(data.Form.ReleaseYear.Value, 10, 16)
+		if err != nil {
+			slog.ErrorContext(
+				r.Context(), "failed to parse release year",
+				"path", r.URL.Path,
+				"error", err,
+			)
+			formError.Message = "Could not parse the release year"
+			data.Form.Error = &formError
+			s.ui.RenderHTML(w, r, "form.html", data)
+			return
+		}
+
+		releaseYear := int16(i64)
+		if releaseYear < 1900 || releaseYear > int16(maxYear) {
+			slog.ErrorContext(
+				r.Context(), fmt.Sprintf("Year must be between 1900 and %d", maxYear),
+				"path", r.URL.Path,
+			)
+			formError.Message = "Could not parse the release year"
+			data.Form.Error = &formError
+			s.ui.RenderHTML(w, r, "form.html", data)
+			return
+		}
+
+		// Normalize the directors before DB upsert
 		directors, err = utils.NormalizeDirectors(directors)
 		if err != nil {
 			slog.ErrorContext(
@@ -742,10 +769,12 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		data.CurrentPost.OriginalTitle = data.Form.Title.Value
+		// Asign the new values to the current post
+		data.CurrentPost.OriginalTitle = utils.NormalizeTitle(data.Form.Title.Value, utils.VideoTitleCutoffs)
 		data.CurrentPost.Category.Name = data.Form.Category.Value
-		data.CurrentPost.Summary = data.Form.Content.Value
+		data.CurrentPost.Summary = utils.NormalizeDescription(data.Form.Content.Value)
 		data.CurrentPost.Directors = directors
+		data.CurrentPost.ReleaseYear = releaseYear
 
 		// Update the post
 		rowsAffected, err := s.postsRepo.UpdatePost(r.Context(), data.CurrentPost)

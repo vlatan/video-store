@@ -251,7 +251,8 @@ func (s *Service) GeneratePostOCR(
 		}
 
 		// Assign release year if any
-		if genaiResponse.ReleaseYear >= 1000 && genaiResponse.ReleaseYear <= 9999 {
+		maxYear := time.Now().Year() + 1
+		if genaiResponse.ReleaseYear >= 1900 && genaiResponse.ReleaseYear <= int16(maxYear) {
 			post.ReleaseYear = genaiResponse.ReleaseYear
 		}
 
