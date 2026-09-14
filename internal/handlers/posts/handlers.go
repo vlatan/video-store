@@ -372,7 +372,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 				)
 			}
 
-			_, err = s.postsRepo.UpdateGeneratedContent(ctx, post)
+			_, err = s.postsRepo.UpdatePost(ctx, post)
 			if err != nil {
 				slog.ErrorContext(
 					r.Context(),
