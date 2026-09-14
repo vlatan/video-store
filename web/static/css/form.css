@@ -240,3 +240,7 @@ legend.directors-legend {
 .add-director-btn:hover {
     background-color: var(--primary-background-color);
 }
+
+.released-input {
+    width: max-content;
+}

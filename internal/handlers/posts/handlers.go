@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/vlatan/video-store/internal/drivers/rdb"
@@ -621,6 +622,15 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 		data.CurrentPost.Category = &models.Category{}
 	}
 
+	// We need these for the release year in the form
+	var released string
+	maxYear := time.Now().Year() + 1
+	decade := (maxYear % 100) / 10
+	unit := maxYear % 10
+	if data.CurrentPost.ReleaseYear != 0 {
+		released = strconv.Itoa(int(data.CurrentPost.ReleaseYear))
+	}
+
 	// Populate needed data for the post form
 	data.Form = &models.Form{
 		Legend: "Edit Post",
@@ -640,9 +650,11 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 			Value: data.CurrentPost.Category.Name,
 		},
 		ReleaseYear: &models.FormGroup{
-			Label:       "Release Year",
-			Placeholder: "Release year...",
-			Value:       data.CurrentPost.ReleaseYear,
+			Label:       "Released",
+			Placeholder: "YYYY",
+			Value:       released,
+			Pattern:     fmt.Sprintf(`(19\d\d|20[0-%d]\d|20%d[0-%d])`, decade-1, decade, unit),
+			Title:       fmt.Sprintf("Year must be between 1900 and %d", maxYear),
 		},
 	}
 

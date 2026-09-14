@@ -46,6 +46,8 @@ type FormGroup struct {
 	Label       string
 	Placeholder string
 	Value       string
+	Pattern     string
+	Title       string
 }
 
 // Returns true if the field type is input

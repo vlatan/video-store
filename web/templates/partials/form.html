@@ -78,6 +78,15 @@
                 </div>
             </fieldset>
             {{ end }}
+
+            {{ with .Form.ReleaseYear }}
+            <div class="form-group">
+                <label class="form-label" for="released">{{ .Label }}</label>
+                <input class="form-input released-input" id="released" name="released" placeholder="{{ .Placeholder }}"
+                    value="{{ .Value }}" type="text" inputmode="numeric" maxlength="4" pattern="{{ .Pattern }}"
+                    title="{{ .Title }}">
+            </div>
+            {{ end }}
         </fieldset>
         <div class="form-group button-group">
             <button type="submit" class="form-button" id="submit" name="submit">Submit</button>
