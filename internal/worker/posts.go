@@ -420,7 +420,7 @@ func (w *Worker) updateVideos(ctx context.Context, videos []*models.Post) error 
 			continue
 		}
 
-		rowsAffected, err := w.postsRepo.UpdateGeneratedContent(ctx, video)
+		rowsAffected, err := w.postsRepo.UpdatePost(ctx, video)
 		w.stats.UpdatedDbVideos += rowsAffected
 
 		// Exit early if context ended

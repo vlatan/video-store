@@ -3,7 +3,8 @@ WITH updated_post AS (
     SET
         original_title = $2,
         category_id = (SELECT id FROM category WHERE name = $3),
-        summary = $4
+        summary = $4,
+        release_year = $5
     WHERE video_id = $1
     RETURNING id
 ),
@@ -17,10 +18,9 @@ insert_credits AS (
     INSERT INTO post_credits (post_id, name, role)
     SELECT up.id, c.name, c.role 
     FROM updated_post AS up
-    CROSS JOIN UNNEST($5::varchar(256)[], $6::varchar(256)[]) AS c(name, role)
-    -- This will always return at least count of one row.
+    CROSS JOIN UNNEST($6::varchar(256)[], $7::varchar(256)[]) AS c(name, role)
+    -- This will always return at least 1.
     -- It is here just to force credits deletion to run before the insert.
     WHERE (SELECT count(*) FROM delete_credits) >= 0
 )
 SELECT id FROM updated_post;
-
