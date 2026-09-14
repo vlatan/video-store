@@ -46,6 +46,8 @@ type FormGroup struct {
 	Label       string
 	Placeholder string
 	Value       string
+	Pattern     string
+	Title       string
 }
 
 // Returns true if the field type is input
@@ -59,11 +61,13 @@ func (ft FieldType) IsTextarea() bool {
 }
 
 type Form struct {
-	Legend   string
-	Title    *FormGroup
-	Content  *FormGroup
-	Category *FormGroup
-	Error    *FlashMessage
+	Legend      string
+	Title       *FormGroup
+	Content     *FormGroup
+	Category    *FormGroup
+	Directors   []*FormGroup
+	ReleaseYear *FormGroup
+	Error       *FlashMessage
 }
 
 // Data struct to pass to templates

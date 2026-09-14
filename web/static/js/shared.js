@@ -217,32 +217,3 @@ if (currentPath !== privacyPath && acceptCookies !== "true") {
         snackbar.remove();
     });
 }
-
-// ==========================================================================
-// Form
-// ==========================================================================
-
-const mainForm = document.getElementById("main-form");
-const formInputs = mainForm?.querySelectorAll(".form-input");
-const formSubmit = mainForm?.querySelector(".form-button");
-const formSpinner = mainForm?.querySelector(".submit-spinner");
-
-formSubmit?.addEventListener("click", () => {
-    if (!formInputs) return;
-
-    // Check if all required inputs have values
-    let ok = true;
-    for (const inputElement of formInputs) {
-        console.log(inputElement);
-        if (!(inputElement instanceof HTMLInputElement)) continue;
-        if (inputElement.required && inputElement.value.trim() === "") {
-            ok = false;
-        }
-    }
-
-    if (ok) {
-        if (formSpinner) {
-            formSpinner.classList.add("show");
-        }
-    }
-});

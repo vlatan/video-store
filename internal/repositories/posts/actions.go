@@ -292,39 +292,6 @@ func (r *Repository) UpdateSource(ctx context.Context, videoID, playlistID strin
 	return result.RowsAffected(), err
 }
 
-// Update post description
-func (r *Repository) UpdateGeneratedContent(ctx context.Context, post *models.Post) (int64, error) {
-
-	query, err := r.GetQuery("update_post_data.sql", nil)
-	if err != nil {
-		return 0, err
-	}
-
-	// Prepare the credits - directors
-	roles := make([]string, len(post.Directors))
-	for i := range post.Directors {
-		roles[i] = "Director"
-	}
-
-	err = r.db.Pool.QueryRow(
-		ctx,
-		query,
-		post.VideoID,
-		utils.ToNullString(post.OriginalTitle),
-		post.Category.Name,
-		post.Summary,
-		utils.ToNullInt16(post.ReleaseYear),
-		post.Directors,
-		roles,
-	).Scan(new(int64))
-
-	if err != nil {
-		return 0, err
-	}
-
-	return 1, nil
-}
-
 // Ban a post (move it to deleted table)
 func (r *Repository) BanPost(ctx context.Context, videoID string) (int64, error) {
 

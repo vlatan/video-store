@@ -79,6 +79,40 @@ func (r *Repository) InsertPost(ctx context.Context, post *models.Post) (int64, 
 	return 1, nil
 }
 
+// UpdatePost updates post's specific data:
+// OriginalTitle, Category, Summary, ReleaseYear, Directors
+func (r *Repository) UpdatePost(ctx context.Context, post *models.Post) (int64, error) {
+
+	query, err := r.GetQuery("update_post.sql", nil)
+	if err != nil {
+		return 0, err
+	}
+
+	// Prepare the credits - directors
+	roles := make([]string, len(post.Directors))
+	for i := range post.Directors {
+		roles[i] = "Director"
+	}
+
+	err = r.db.Pool.QueryRow(
+		ctx,
+		query,
+		post.VideoID,
+		utils.ToNullString(post.OriginalTitle),
+		post.Category.Name,
+		post.Summary,
+		utils.ToNullInt16(post.ReleaseYear),
+		post.Directors,
+		roles,
+	).Scan(new(int64))
+
+	if err != nil {
+		return 0, err
+	}
+
+	return 1, nil
+}
+
 // Get single post from DB based on a video ID
 func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.Post, error) {
 
@@ -205,25 +239,4 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.
 	post.Stars = [10]uint8{10, 9, 8, 7, 6, 5, 4, 3, 2, 1}
 
 	return post, nil
-}
-
-func (r *Repository) UpdatePost(
-	ctx context.Context,
-	videoID, originalTitle, categorySlug, summary string,
-) (int64, error) {
-
-	query, err := r.GetQuery("update_post_form.sql", nil)
-	if err != nil {
-		return 0, err
-	}
-
-	result, err := r.db.Pool.Exec(
-		ctx,
-		query,
-		videoID,
-		utils.ToNullString(originalTitle),
-		categorySlug,
-		summary,
-	)
-	return result.RowsAffected(), err
 }

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/vlatan/video-store/internal/drivers/rdb"
@@ -371,7 +372,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 				)
 			}
 
-			_, err = s.postsRepo.UpdateGeneratedContent(ctx, post)
+			_, err = s.postsRepo.UpdatePost(ctx, post)
 			if err != nil {
 				slog.ErrorContext(
 					r.Context(),
@@ -621,6 +622,15 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 		data.CurrentPost.Category = &models.Category{}
 	}
 
+	// We need these for the release year in the form
+	var released string
+	maxYear := time.Now().Year() + 1
+	decade := (maxYear % 100) / 10
+	unit := maxYear % 10
+	if data.CurrentPost.ReleaseYear != 0 {
+		released = strconv.Itoa(int(data.CurrentPost.ReleaseYear))
+	}
+
 	// Populate needed data for the post form
 	data.Form = &models.Form{
 		Legend: "Edit Post",
@@ -639,6 +649,33 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 			Label: "Category",
 			Value: data.CurrentPost.Category.Name,
 		},
+		ReleaseYear: &models.FormGroup{
+			Label:       "Released",
+			Placeholder: "YYYY",
+			Value:       released,
+			Pattern:     fmt.Sprintf(`(19\d\d|20[0-%d]\d|20%d[0-%d])`, decade-1, decade, unit),
+			Title:       fmt.Sprintf("Year must be between 1900 and %d", maxYear),
+		},
+	}
+
+	for _, director := range data.CurrentPost.Directors {
+		data.Form.Directors = append(data.Form.Directors,
+			&models.FormGroup{
+				Label:       "Director",
+				Placeholder: "Director's name...",
+				Value:       director,
+			},
+		)
+	}
+
+	// Add one empty director input if none
+	if len(data.Form.Directors) == 0 {
+		data.Form.Directors = append(data.Form.Directors,
+			&models.FormGroup{
+				Label:       "Director",
+				Placeholder: "Director's name...",
+			},
+		)
 	}
 
 	data.Title = "Edit This Post"
@@ -653,25 +690,94 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 
 		err := r.ParseForm()
 		if err != nil {
+			slog.ErrorContext(
+				r.Context(), "failed to parse the form",
+				"path", r.URL.Path,
+				"error", err,
+			)
 			formError.Message = "Could not parse the form"
 			data.Form.Error = &formError
 			s.ui.RenderHTML(w, r, "form.html", data)
 			return
 		}
 
-		// Get the title and the content from the form
+		// Get and assing back the values from the parsed form
 		data.Form.Title.Value = r.FormValue("title")
 		data.Form.Category.Value = r.FormValue("category")
 		data.Form.Content.Value = r.FormValue("content")
+		data.Form.ReleaseYear.Value = r.FormValue("released")
 
-		// Update the page
-		rowsAffected, err := s.postsRepo.UpdatePost(
-			r.Context(),
-			videoID,
-			data.Form.Title.Value,    // original title
-			data.Form.Category.Value, // category name
-			data.Form.Content.Value,  // summary
-		)
+		directors := r.Form["directors"]
+		data.Form.Directors = nil
+		for _, director := range directors {
+			data.Form.Directors = append(data.Form.Directors,
+				&models.FormGroup{
+					Label:       "Director",
+					Placeholder: "Director's name...",
+					Value:       director,
+				},
+			)
+		}
+
+		// Add one empty director input if none
+		if len(data.Form.Directors) == 0 {
+			data.Form.Directors = append(data.Form.Directors,
+				&models.FormGroup{
+					Label:       "Director",
+					Placeholder: "Director's name...",
+				},
+			)
+		}
+
+		// Convert the release year to int16 before the DB upsert.
+		// ParseInt bitSize=16 guarantees n fits in int16.
+		releaseYear, err := strconv.ParseInt(data.Form.ReleaseYear.Value, 10, 16)
+		if err != nil {
+			slog.ErrorContext(
+				r.Context(), "failed to parse release year",
+				"path", r.URL.Path,
+				"error", err,
+			)
+			formError.Message = "Could not parse the release year"
+			data.Form.Error = &formError
+			s.ui.RenderHTML(w, r, "form.html", data)
+			return
+		}
+
+		if releaseYear < 1900 || int(releaseYear) > maxYear {
+			slog.ErrorContext(
+				r.Context(), fmt.Sprintf("Year must be between 1900 and %d", maxYear),
+				"path", r.URL.Path,
+			)
+			formError.Message = "Could not parse the release year"
+			data.Form.Error = &formError
+			s.ui.RenderHTML(w, r, "form.html", data)
+			return
+		}
+
+		// Normalize the directors before DB upsert
+		directors, err = utils.NormalizeDirectors(directors)
+		if err != nil {
+			slog.ErrorContext(
+				r.Context(), "failed to normalize directors",
+				"path", r.URL.Path,
+				"error", err,
+			)
+			formError.Message = "Could not parse the directors"
+			data.Form.Error = &formError
+			s.ui.RenderHTML(w, r, "form.html", data)
+			return
+		}
+
+		// Asign the new values to the current post
+		data.CurrentPost.OriginalTitle = utils.NormalizeTitle(data.Form.Title.Value, utils.VideoTitleCutoffs)
+		data.CurrentPost.Category.Name = data.Form.Category.Value
+		data.CurrentPost.Summary = utils.NormalizeDescription(data.Form.Content.Value)
+		data.CurrentPost.Directors = directors
+		data.CurrentPost.ReleaseYear = int16(releaseYear)
+
+		// Update the post
+		rowsAffected, err := s.postsRepo.UpdatePost(r.Context(), data.CurrentPost)
 
 		if err != nil || rowsAffected == 0 {
 			slog.ErrorContext(

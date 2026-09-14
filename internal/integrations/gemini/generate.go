@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log/slog"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/vlatan/video-store/internal/models"
@@ -219,6 +220,17 @@ func (s *Service) GeneratePostOCR(
 		// Generate content using Gemini
 		genaiResponse, err := s.GenerateContent(ctx, cfg.contents, genaiConfig, retryConfig)
 
+		// Move onto the next call if this is a hard block error by the model
+		if _, blocked := errors.AsType[*NoCandidatesError](err); blocked {
+			slog.ErrorContext(
+				ctx,
+				fmt.Sprintf("failed to generate LLM content on %s", cfg.desc),
+				"videoId", post.VideoID,
+				"error", err,
+			)
+			continue
+		}
+
 		if err != nil {
 			return fmt.Errorf(
 				"failed to generate LLM content on %s on video %q: %w",
@@ -239,14 +251,16 @@ func (s *Service) GeneratePostOCR(
 		}
 
 		// Assign release year if any
-		if genaiResponse.ReleaseYear >= 1000 && genaiResponse.ReleaseYear <= 9999 {
+		maxYear := time.Now().Year() + 1
+		if genaiResponse.ReleaseYear >= 1900 && int(genaiResponse.ReleaseYear) <= maxYear {
 			post.ReleaseYear = genaiResponse.ReleaseYear
 		}
 
-		//  Mark the OCR as done
-		if post.Summary != "" {
-			post.Summary += models.OcrFlag
-		}
+	}
+
+	//  Mark the OCR as done
+	if post.Summary != "" && !strings.HasSuffix(post.Summary, models.OcrFlag) {
+		post.Summary += models.OcrFlag
 	}
 
 	return nil
