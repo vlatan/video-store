@@ -53,7 +53,7 @@
     background-color: var(--primary-background-color);
     color: var(--primary-font-color);
     padding: 0.35rem 0.75rem;
-    font-size: 1rem;
+    font-size: 0.9rem;
     border: 1px solid var(--primary-border-color);
     border-radius: 0.25rem;
     width: 250px;
@@ -242,5 +242,5 @@ legend.directors-legend {
 }
 
 .released-input {
-    width: max-content;
+    width: fit-content;
 }
