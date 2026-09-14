@@ -1,5 +1,4 @@
 - Update the post update FORM with release year
-  Fix JS to not activate spinner
   Code up the incoming release year to the backend
   Fix the query to accept release year
 

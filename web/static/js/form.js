@@ -3,28 +3,10 @@
 // ==========================================================================
 
 const mainForm = document.getElementById("main-form");
-const formSubmit = mainForm?.querySelector(".form-button");
 const formSpinner = mainForm?.querySelector(".submit-spinner");
 
-formSubmit?.addEventListener("click", () => {
-    const formInputs = mainForm?.querySelectorAll(".form-input");
-    if (!formInputs) return;
-
-    // Check if all required inputs have values
-    let ok = true;
-    for (const inputElement of formInputs) {
-        if (!(inputElement instanceof HTMLInputElement)) continue;
-        if (inputElement.required && inputElement.value.trim() === "") {
-            ok = false;
-            break;
-        }
-    }
-
-    if (ok) {
-        if (formSpinner) {
-            formSpinner.classList.add("show");
-        }
-    }
+mainForm?.addEventListener("submit", () => {
+    formSpinner?.classList.add("show");
 });
 
 // ==========================================================================
