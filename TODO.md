@@ -1,4 +1,7 @@
 - Update the post update FORM with release year
+  Fix JS to not activate spinner
+  Code up the incoming release year to the backend
+  Fix the query to accept release year
 
 - Make `:= range` more performant by using index
 - Make the directors links that list their films, and also the release years
