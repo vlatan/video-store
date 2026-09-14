@@ -729,8 +729,9 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 			)
 		}
 
-		// Convert the release year to int16 before the DB upsert
-		i64, err := strconv.ParseInt(data.Form.ReleaseYear.Value, 10, 16)
+		// Convert the release year to int16 before the DB upsert.
+		// ParseInt bitSize=16 guarantees n fits in int16.
+		releaseYear, err := strconv.ParseInt(data.Form.ReleaseYear.Value, 10, 16)
 		if err != nil {
 			slog.ErrorContext(
 				r.Context(), "failed to parse release year",
@@ -743,8 +744,7 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		releaseYear := int16(i64)
-		if releaseYear < 1900 || releaseYear > int16(maxYear) {
+		if releaseYear < 1900 || int(releaseYear) > maxYear {
 			slog.ErrorContext(
 				r.Context(), fmt.Sprintf("Year must be between 1900 and %d", maxYear),
 				"path", r.URL.Path,
@@ -774,7 +774,7 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 		data.CurrentPost.Category.Name = data.Form.Category.Value
 		data.CurrentPost.Summary = utils.NormalizeDescription(data.Form.Content.Value)
 		data.CurrentPost.Directors = directors
-		data.CurrentPost.ReleaseYear = releaseYear
+		data.CurrentPost.ReleaseYear = int16(releaseYear)
 
 		// Update the post
 		rowsAffected, err := s.postsRepo.UpdatePost(r.Context(), data.CurrentPost)
