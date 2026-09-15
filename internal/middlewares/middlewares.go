@@ -62,7 +62,7 @@ func (s *Service) IsAdmin(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-// LoadRequestID generates uniqiue ID and adds to context
+// LoadRequestID generates uniqiue ID and adds it to context
 func (s *Service) LoadRequestID(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
@@ -73,6 +73,7 @@ func (s *Service) LoadRequestID(next http.Handler) http.Handler {
 				slog.Any("error", err),
 			)
 			next.ServeHTTP(w, r)
+			return
 		}
 
 		reqID := hex.EncodeToString(bytes)
