@@ -8,7 +8,7 @@ import (
 
 type contextKey string
 
-const errorContextKey contextKey = "request_error"
+const errorContextKey contextKey = "requestError"
 
 // HttpError provides shorter handling of http error
 func HttpError(w http.ResponseWriter, status int) {

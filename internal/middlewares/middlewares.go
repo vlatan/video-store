@@ -361,11 +361,16 @@ func (s *Service) Logging(next http.Handler) http.Handler {
 		}
 
 		if user := models.GetUserFromContext(r); user.IsAuthenticated() {
-			slogArgs = append(slogArgs, slog.Int("userID", user.ID))
+			slogArgs = append(slogArgs, slog.Int("userId", user.ID))
 		}
 
 		if err := utils.GetErrorFromCtx(r); err != nil {
 			slogArgs = append(slogArgs, slog.Any("error", err.Error()))
+			slog.ErrorContext(r.Context(), "request failed", slogArgs...)
+			return
+		}
+
+		if st.status >= 400 {
 			slog.ErrorContext(r.Context(), "request failed", slogArgs...)
 			return
 		}
