@@ -10,7 +10,7 @@ import (
 
 type ctxKey string
 
-const requestIDKey ctxKey = "request_id"
+const requestIDContextKey ctxKey = "request_id"
 
 // ContextHandler is a wrapper arround a slog handler
 type ContextHandler struct {
@@ -24,7 +24,7 @@ func (h *ContextHandler) Handle(ctx context.Context, r slog.Record) error {
 	}
 
 	// Look for the request_id in the context
-	if reqID, ok := ctx.Value(requestIDKey).(string); ok {
+	if reqID, ok := ctx.Value(requestIDContextKey).(string); ok {
 		r.AddAttrs(slog.String("request_id", reqID))
 	}
 

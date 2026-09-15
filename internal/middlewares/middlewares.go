@@ -79,7 +79,7 @@ func (s *Service) LoadRequestID(next http.Handler) http.Handler {
 		}
 
 		reqID := hex.EncodeToString(bytes)
-		ctx := context.WithValue(r.Context(), requestIDKey, reqID)
+		ctx := context.WithValue(r.Context(), requestIDContextKey, reqID)
 		r = r.WithContext(ctx)
 
 		next.ServeHTTP(w, r)
@@ -362,6 +362,12 @@ func (s *Service) Logging(next http.Handler) http.Handler {
 
 		if user := models.GetUserFromContext(r); user.IsAuthenticated() {
 			slogArgs = append(slogArgs, slog.Int("userID", user.ID))
+		}
+
+		if err := utils.GetErrorFromCtx(r); err != nil {
+			slogArgs = append(slogArgs, slog.Any("error", err.Error()))
+			slog.ErrorContext(r.Context(), "request failed", slogArgs...)
+			return
 		}
 
 		slog.InfoContext(r.Context(), "request info", slogArgs...)
