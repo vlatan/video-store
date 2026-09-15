@@ -411,7 +411,6 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 	data := models.GetDataFromContext(r)
 
 	var (
-		err          error
 		post         models.Post
 		postReviews  models.Reviews
 		userActions  models.Actions
@@ -424,10 +423,11 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 	g.Go(func() error {
 
 		// Don't cache single post for logged in users
+		var taskErr error
 		if data.CurrentUser.IsAuthenticated() {
-			post, err = s.postsRepo.GetSinglePost(r.Context(), videoID)
+			post, taskErr = s.postsRepo.GetSinglePost(r.Context(), videoID)
 		} else {
-			post, err = rdb.GetCachedData(
+			post, taskErr = rdb.GetCachedData(
 				r.Context(),
 				s.rdb,
 				fmt.Sprintf(postCacheKey, videoID),
@@ -438,13 +438,13 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 			)
 		}
 
-		if err != nil {
+		if taskErr != nil {
 			slog.ErrorContext(
 				r.Context(), "failed to get the post from DB",
 				"path", r.URL.Path,
-				"error", err,
+				"error", taskErr,
 			)
-			return err
+			return taskErr
 		}
 
 		return nil
@@ -454,10 +454,11 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 	g.Go(func() error {
 
 		// Get post reviews, don't cache the reviews for logged in users
+		var taskErr error
 		if data.CurrentUser.IsAuthenticated() {
-			postReviews, err = s.postsRepo.GetPostReviews(r.Context(), videoID, "")
+			postReviews, taskErr = s.postsRepo.GetPostReviews(r.Context(), videoID, "")
 		} else {
-			postReviews, err = rdb.GetCachedData(
+			postReviews, taskErr = rdb.GetCachedData(
 				r.Context(),
 				s.rdb,
 				fmt.Sprintf(postReviewsCacheKey, videoID),
@@ -468,26 +469,26 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 			)
 		}
 
-		if err != nil {
+		if taskErr != nil {
 			slog.ErrorContext(
 				r.Context(), "failed to get the post reviews from DB",
 				"path", r.URL.Path,
-				"error", err,
+				"error", taskErr,
 			)
-			return err
+			return taskErr
 		}
 
 		// Get the user avatars
 		for i, review := range postReviews.Items {
-			localAvatarURL, err := s.avatars.Get(r.Context(), &review.User)
-			if err != nil {
+			localAvatarURL, taskErr := s.avatars.Get(r.Context(), &review.User)
+			if taskErr != nil {
 				slog.ErrorContext(
 					r.Context(), "failed to get user's avatar",
 					"path", r.URL.Path,
 					"userId", review.User.ID,
-					"error", err,
+					"error", taskErr,
 				)
-				return err
+				return taskErr
 			}
 			postReviews.Items[i].User.LocalAvatarURL = localAvatarURL
 		}
@@ -503,14 +504,11 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 	})
 
 	// Wait for the goroutines to finish
-	err = g.Wait()
-
-	if errors.Is(err, pgx.ErrNoRows) {
-		http.NotFound(w, r)
-		return
-	}
-
-	if err != nil {
+	if err := g.Wait(); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			http.NotFound(w, r)
+			return
+		}
 		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}
@@ -521,19 +519,20 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 		// Check whether the current user liked, faved, rated and/or reviewed the post
 		if data.CurrentUser.IsAuthenticated() {
 
-			userActions, err = s.usersRepo.GetUserActions(
+			var taskErr error
+			userActions, taskErr = s.usersRepo.GetUserActions(
 				r.Context(),
 				data.CurrentUser.ID,
 				post.ID,
 			)
 
-			if err != nil {
+			if taskErr != nil {
 				slog.ErrorContext(
 					r.Context(), "failed to get the user actions on this post",
 					"path", r.URL.Path,
-					"error", err,
+					"error", taskErr,
 				)
-				return err
+				return taskErr
 			}
 		}
 
@@ -569,7 +568,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 	})
 
 	// Wait for the goroutines to finish
-	if err = g.Wait(); err != nil {
+	if err := g.Wait(); err != nil {
 		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}
