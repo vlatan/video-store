@@ -2,6 +2,8 @@ package middlewares
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"log/slog"
 	"net/http"
 	"runtime/debug"
@@ -58,6 +60,27 @@ func (s *Service) IsAdmin(next http.HandlerFunc) http.HandlerFunc {
 		// Serve forbidden error
 		utils.HttpError(w, http.StatusForbidden)
 	}
+}
+
+// LoadRequestID generates uniqiue ID and adds to context
+func (s *Service) LoadRequestID(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		bytes := make([]byte, 8)
+		if _, err := rand.Read(bytes); err != nil {
+			slog.ErrorContext(
+				r.Context(), "failed to generate request ID",
+				slog.Any("error", err),
+			)
+			next.ServeHTTP(w, r)
+		}
+
+		reqID := hex.EncodeToString(bytes)
+		ctx := context.WithValue(r.Context(), requestIDKey, reqID)
+		r = r.WithContext(ctx)
+
+		next.ServeHTTP(w, r)
+	})
 }
 
 // LoadUser gets the user from session and stores it in the context
