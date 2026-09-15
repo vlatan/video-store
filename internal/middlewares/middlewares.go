@@ -4,7 +4,6 @@ import (
 	"context"
 	"log/slog"
 	"net/http"
-	"os"
 	"runtime/debug"
 	"slices"
 	"strings"
@@ -25,14 +24,7 @@ type Service struct {
 // New creates new middlewares service
 func New(ui ui.Service, config *config.Config) *Service {
 
-	var opts *slog.HandlerOptions
-	if config.Debug {
-		opts = &slog.HandlerOptions{Level: slog.LevelDebug}
-	}
-
-	handler := slog.NewJSONHandler(os.Stdout, opts)
-	logger := slog.New(handler)
-	slog.SetDefault(logger)
+	SetCustomLogger(config)
 
 	return &Service{
 		ui:     ui,
@@ -329,17 +321,24 @@ func (s *Service) Logging(next http.Handler) http.Handler {
 		st := NewStatusTracker(w)
 		next.ServeHTTP(st, r)
 
-		slog.InfoContext(
-			r.Context(),
-			"request info",
-			"method", r.Method,
-			"host", r.Host,
-			"path", r.URL.Path,
-			"query", r.URL.Query(),
-			"clientUa", r.Header.Get("User-Agent"),
-			"srcIp", srcIp,
-			"status", st.status,
-		)
+		slogArgs := []any{
+			slog.String("method", r.Method),
+			slog.String("host", r.Host),
+			slog.String("path", r.URL.Path),
+			slog.String("clientUa", r.Header.Get("User-Agent")),
+			slog.String("srcIp", srcIp),
+			slog.Int("status", st.status),
+		}
+
+		if queries := r.URL.Query(); len(queries) > 0 {
+			slogArgs = append(slogArgs, slog.Any("queries", queries))
+		}
+
+		if user := models.GetUserFromContext(r); user.IsAuthenticated() {
+			slogArgs = append(slogArgs, slog.Int("userID", user.ID))
+		}
+
+		slog.InfoContext(r.Context(), "request info", slogArgs...)
 	})
 }
 
