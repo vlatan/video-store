@@ -1,3 +1,4 @@
+- Sovle double logging, do not slog sepparately
 - Make `:= range` more performant by using index
 - Make the directors links that list their films, and also the release years
 

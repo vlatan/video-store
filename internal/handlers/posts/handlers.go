@@ -438,16 +438,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 			)
 		}
 
-		if taskErr != nil {
-			slog.ErrorContext(
-				r.Context(), "failed to get the post from DB",
-				"path", r.URL.Path,
-				"error", taskErr,
-			)
-			return taskErr
-		}
-
-		return nil
+		return taskErr
 	})
 
 	// Get reviews from DB in a goroutine
@@ -470,11 +461,6 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if taskErr != nil {
-			slog.ErrorContext(
-				r.Context(), "failed to get the post reviews from DB",
-				"path", r.URL.Path,
-				"error", taskErr,
-			)
 			return taskErr
 		}
 
@@ -482,12 +468,6 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 		for i, review := range postReviews.Items {
 			localAvatarURL, taskErr := s.avatars.Get(r.Context(), &review.User)
 			if taskErr != nil {
-				slog.ErrorContext(
-					r.Context(), "failed to get user's avatar",
-					"path", r.URL.Path,
-					"userId", review.User.ID,
-					"error", taskErr,
-				)
 				return taskErr
 			}
 			postReviews.Items[i].User.LocalAvatarURL = localAvatarURL
@@ -505,10 +485,18 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Wait for the goroutines to finish
 	if err := g.Wait(); err != nil {
+
+		slog.ErrorContext(
+			r.Context(), "failed to get a single post",
+			"path", r.URL.Path,
+			"error", err,
+		)
+
 		if errors.Is(err, pgx.ErrNoRows) {
 			http.NotFound(w, r)
 			return
 		}
+
 		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}
@@ -527,11 +515,6 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 			)
 
 			if taskErr != nil {
-				slog.ErrorContext(
-					r.Context(), "failed to get the user actions on this post",
-					"path", r.URL.Path,
-					"error", taskErr,
-				)
 				return taskErr
 			}
 		}
@@ -546,13 +529,16 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 	// Send related posts fetch in a goroutine
 	g.Go(func() error {
 
+		var (
+			taskErr error
+			posts   models.Posts
+		)
+
 		// Don't cache the related posts only for the admin.
-		// Ignore the error on related posts, no posts will be shown.
-		var posts models.Posts
 		if data.CurrentUser.IsAdmin() {
-			posts, _ = s.postsRepo.GetRelatedPosts(r.Context(), post.GetTitle())
+			posts, taskErr = s.postsRepo.GetRelatedPosts(r.Context(), post.GetTitle())
 		} else {
-			posts, _ = rdb.GetCachedData(
+			posts, taskErr = rdb.GetCachedData(
 				r.Context(),
 				s.rdb,
 				fmt.Sprintf(relatedPostsCacheKey, videoID),
@@ -563,12 +549,28 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 			)
 		}
 
+		// If error just log it, no related posts will be shown.
+		if taskErr != nil {
+			slog.ErrorContext(
+				r.Context(), "failed to get the related posts",
+				"path", r.URL.Path,
+				"error", taskErr,
+			)
+		}
+
 		relatedPosts = posts.Items
 		return nil
 	})
 
 	// Wait for the goroutines to finish
 	if err := g.Wait(); err != nil {
+
+		slog.ErrorContext(
+			r.Context(), "failed to get a single post",
+			"path", r.URL.Path,
+			"error", err,
+		)
+
 		utils.HttpError(w, http.StatusInternalServerError)
 		return
 	}
