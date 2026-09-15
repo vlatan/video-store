@@ -68,8 +68,10 @@ func (s *Service) LoadRequestID(next http.Handler) http.Handler {
 
 		bytes := make([]byte, 8)
 		if _, err := rand.Read(bytes); err != nil {
-			slog.ErrorContext(
+			slog.WarnContext(
 				r.Context(), "failed to generate request ID",
+				slog.String("method", r.Method),
+				slog.String("path", r.URL.Path),
 				slog.Any("error", err),
 			)
 			next.ServeHTTP(w, r)
