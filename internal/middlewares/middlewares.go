@@ -109,12 +109,10 @@ func (s *Service) LoadUser(next http.Handler) http.Handler {
 func (s *Service) LoadData(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		// Get user from context
-		user := models.GetUserFromContext(r)
 		// Generate the default data
 		data := s.ui.NewData(w, r)
 		// Attach the user to be able to be accessed from data too
-		data.CurrentUser = user
+		data.CurrentUser = models.GetUserFromContext(r)
 		// Store data to context
 		ctx := context.WithValue(r.Context(), models.DataContextKey, data)
 
