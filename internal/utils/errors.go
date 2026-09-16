@@ -4,14 +4,14 @@ import (
 	"context"
 	"errors"
 	"net/http"
+
+	"github.com/vlatan/video-store/internal/ctxerrors"
 )
 
-type contextKey string
-
-const errorContextKey contextKey = "requestError"
-
-// HttpError provides shorter handling of http error
-func HttpError(w http.ResponseWriter, status int) {
+// HttpError provides shorter handling of http error.
+// Adds an error to context if any.
+func HttpError(w http.ResponseWriter, r *http.Request, status int, err error) {
+	ctxerrors.Add(r.Context(), err)
 	http.Error(w, http.StatusText(status), status)
 }
 
@@ -19,21 +19,4 @@ func HttpError(w http.ResponseWriter, status int) {
 func IsContextErr(err error) bool {
 	return errors.Is(err, context.Canceled) ||
 		errors.Is(err, context.DeadlineExceeded)
-}
-
-// AttachError stores error in the context
-func AttachErrorToCtx(r *http.Request, err error) *http.Request {
-	if err == nil {
-		return r
-	}
-	ctx := context.WithValue(r.Context(), errorContextKey, err)
-	return r.WithContext(ctx)
-}
-
-// GetError retrieves error from the context
-func GetErrorFromCtx(r *http.Request) error {
-	if err, ok := r.Context().Value(errorContextKey).(error); ok {
-		return err
-	}
-	return nil
 }

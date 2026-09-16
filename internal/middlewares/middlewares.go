@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/vlatan/video-store/internal/config"
+	"github.com/vlatan/video-store/internal/ctxerrors"
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/ui"
 	"github.com/vlatan/video-store/internal/utils"
@@ -344,6 +345,10 @@ func (s *Service) Logging(next http.Handler) http.Handler {
 			srcIp = r.RemoteAddr
 		}
 
+		// Add errors collector to context
+		newCtx := ctxerrors.WithCollector(r.Context())
+		r = r.WithContext(newCtx)
+
 		st := NewStatusTracker(w)
 		next.ServeHTTP(st, r)
 
@@ -364,10 +369,14 @@ func (s *Service) Logging(next http.Handler) http.Handler {
 			slogArgs = append(slogArgs, slog.Int("userId", user.ID))
 		}
 
-		if err := utils.GetErrorFromCtx(r); err != nil {
-			slogArgs = append(slogArgs, slog.Any("error", err.Error()))
-			slog.ErrorContext(r.Context(), "request failed", slogArgs...)
-			return
+		errs := ctxerrors.Errors(r.Context())
+
+		if len(errs) > 0 {
+			errStrings := make([]string, len(errs))
+			for i, err := range errs {
+				errStrings[i] = err.Error()
+			}
+			slogArgs = append(slogArgs, slog.Any("errors", errs))
 		}
 
 		if st.status >= 400 {
@@ -375,7 +384,12 @@ func (s *Service) Logging(next http.Handler) http.Handler {
 			return
 		}
 
-		slog.InfoContext(r.Context(), "request info", slogArgs...)
+		if len(errs) > 0 {
+			slog.WarnContext(r.Context(), "request completed with errors", slogArgs...)
+			return
+		}
+
+		slog.InfoContext(r.Context(), "request completed", slogArgs...)
 	})
 }
 
