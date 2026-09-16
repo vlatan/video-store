@@ -325,39 +325,23 @@ func (s *Service) Logging(next http.Handler) http.Handler {
 			return
 		}
 
-		// Prioritize CF-Connecting-IP as recommended by Cloudflare
-		srcIp := r.Header.Get("CF-Connecting-IP")
-
-		// Fallback to True-Client-IP
-		if srcIp == "" {
-			srcIp = r.Header.Get("True-Client-IP")
-		}
-
-		// Fallback to X-Forwarded-For
-		if srcIp == "" {
-			xForwardedFor := r.Header.Get("X-Forwarded-For")
-			parts := strings.Split(xForwardedFor, ",")
-			srcIp = strings.TrimSpace(parts[0])
-		}
-
-		// Fallback to RemoteAddr
-		if srcIp == "" {
-			srcIp = r.RemoteAddr
-		}
-
 		// Add errors collector to context
 		newCtx := ctxerrors.WithCollector(r.Context())
 		r = r.WithContext(newCtx)
 
+		// Replace the response writer with custom one
 		st := NewStatusTracker(w)
+
+		// Serve the request
 		next.ServeHTTP(st, r)
 
+		// Log the request after it is finished
 		slogArgs := []any{
 			slog.String("method", r.Method),
 			slog.String("host", r.Host),
 			slog.String("path", r.URL.Path),
 			slog.String("clientUa", r.Header.Get("User-Agent")),
-			slog.String("srcIp", srcIp),
+			slog.String("clientIp", clientIp(r)),
 			slog.Int("status", st.status),
 		}
 
@@ -370,7 +354,6 @@ func (s *Service) Logging(next http.Handler) http.Handler {
 		}
 
 		errs := ctxerrors.Errors(r.Context())
-
 		if len(errs) > 0 {
 			errStrings := make([]string, len(errs))
 			for i, err := range errs {
