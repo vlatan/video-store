@@ -4,14 +4,10 @@ import (
 	"context"
 	"errors"
 	"net/http"
-
-	"github.com/vlatan/video-store/internal/ctxerrors"
 )
 
 // HttpError provides shorter handling of http error.
-// Adds an error to context if any.
-func HttpError(w http.ResponseWriter, r *http.Request, status int, err error) {
-	ctxerrors.Add(r.Context(), err)
+func HttpError(w http.ResponseWriter, status int) {
 	http.Error(w, http.StatusText(status), status)
 }
 
