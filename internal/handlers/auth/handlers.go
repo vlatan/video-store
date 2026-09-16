@@ -28,7 +28,7 @@ func (s *Service) AuthHandler(w http.ResponseWriter, r *http.Request) {
 	redirectTo := redirect.Sanitize(redirectURL, IsProtectedRoute)
 
 	// Check if the user is already logged in
-	if user := models.GetUserFromContext(r); user.IsAuthenticated() {
+	if user := models.GetUserFromContext(r.Context()); user.IsAuthenticated() {
 		redirect.Execute(w, r, redirectTo, http.StatusSeeOther)
 		return
 	}
@@ -95,7 +95,7 @@ func (s *Service) AuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	redirectTo := redirect.Sanitize(redirectURL, IsProtectedRoute)
 
 	// Check if the user is already logged in
-	if user := models.GetUserFromContext(r); user.IsAuthenticated() {
+	if user := models.GetUserFromContext(r.Context()); user.IsAuthenticated() {
 		redirect.Execute(w, r, redirectTo, http.StatusSeeOther)
 		return
 	}
@@ -239,7 +239,7 @@ func (s *Service) DeleteAccountHandler(w http.ResponseWriter, r *http.Request) {
 	redirectTo := redirect.Sanitize(redirectURL, IsProtectedRoute)
 
 	// Get the current user
-	currentUser := models.GetUserFromContext(r)
+	currentUser := models.GetUserFromContext(r.Context())
 
 	// Remove user session
 	if err := s.logoutUser(w, r); err != nil {

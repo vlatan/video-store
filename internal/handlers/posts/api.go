@@ -37,7 +37,7 @@ func (s *Service) HomeAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get current user
-	currentUser := models.GetUserFromContext(r)
+	currentUser := models.GetUserFromContext(r.Context())
 
 	var (
 		err   error
@@ -105,7 +105,7 @@ func (s *Service) CategoryPostsAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get current user
-	currentUser := models.GetUserFromContext(r)
+	currentUser := models.GetUserFromContext(r.Context())
 
 	var (
 		err   error
@@ -169,7 +169,7 @@ func (s *Service) SearchPostsAPI(w http.ResponseWriter, r *http.Request) {
 	redisKey += fmt.Sprintf(":cursor:%s", cursor)
 
 	// Get current user
-	currentUser := models.GetUserFromContext(r)
+	currentUser := models.GetUserFromContext(r.Context())
 
 	var (
 		err   error
@@ -228,7 +228,7 @@ func (s *Service) PostReviewsAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get current user
-	currentUser := models.GetUserFromContext(r)
+	currentUser := models.GetUserFromContext(r.Context())
 
 	var (
 		err     error
@@ -315,7 +315,7 @@ func (s *Service) PostActionAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get the current user
-	user := models.GetUserFromContext(r)
+	user := models.GetUserFromContext(r.Context())
 
 	switch action {
 	case "like":
@@ -354,7 +354,7 @@ func (s *Service) DeleteActionAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get the current user
-	user := models.GetUserFromContext(r)
+	user := models.GetUserFromContext(r.Context())
 
 	switch action {
 	case "unlike":

@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/vlatan/video-store/internal/config"
+	"github.com/vlatan/video-store/internal/models"
 )
 
 type ctxKey string
@@ -23,9 +24,14 @@ func (h *ContextHandler) Handle(ctx context.Context, r slog.Record) error {
 		return h.Handler.Handle(ctx, r)
 	}
 
-	// Look for the request_id in the context
+	// Look for the request ID in the context
 	if reqID, ok := ctx.Value(requestIDContextKey).(string); ok {
 		r.AddAttrs(slog.String("requestId", reqID))
+	}
+
+	// Look for a user in the context
+	if user := models.GetUserFromContext(ctx); user.IsAuthenticated() {
+		r.AddAttrs(slog.Int("userId", user.ID))
 	}
 
 	return h.Handler.Handle(ctx, r)

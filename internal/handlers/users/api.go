@@ -15,7 +15,7 @@ func (s *Service) UserFavoritesAPI(w http.ResponseWriter, r *http.Request) {
 	cursor := r.URL.Query().Get("cursor")
 
 	// Get current user
-	currentUser := models.GetUserFromContext(r)
+	currentUser := models.GetUserFromContext(r.Context())
 
 	posts, err := s.postsRepo.GetUserFavedPosts(r.Context(), currentUser.ID, cursor)
 

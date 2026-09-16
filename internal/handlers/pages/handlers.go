@@ -258,7 +258,7 @@ func (s *Service) DeletePageHandler(w http.ResponseWriter, r *http.Request) {
 	pageSlug := r.PathValue("slug")
 
 	// Get the current user
-	currentUser := models.GetUserFromContext(r)
+	currentUser := models.GetUserFromContext(r.Context())
 
 	rowsAffected, err := s.pagesRepo.DeletePage(r.Context(), pageSlug)
 	if err != nil {

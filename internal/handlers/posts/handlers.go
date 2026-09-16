@@ -827,7 +827,7 @@ func (s *Service) BanPostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get the current user
-	user := models.GetUserFromContext(r)
+	user := models.GetUserFromContext(r.Context())
 
 	rowsAffected, err := s.postsRepo.BanPost(r.Context(), videoID)
 	if err != nil {

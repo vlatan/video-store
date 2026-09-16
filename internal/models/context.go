@@ -1,6 +1,9 @@
 package models
 
-import "net/http"
+import (
+	"context"
+	"net/http"
+)
 
 type contextKey struct {
 	name string
@@ -13,8 +16,8 @@ var UserContextKey = contextKey{name: "user"}
 var DataContextKey = contextKey{name: "data"}
 
 // GetUserFromContext gets the user from context
-func GetUserFromContext(r *http.Request) *User {
-	user, _ := r.Context().Value(UserContextKey).(*User)
+func GetUserFromContext(ctx context.Context) *User {
+	user, _ := ctx.Value(UserContextKey).(*User)
 	return user // nil if user not in context
 }
 
