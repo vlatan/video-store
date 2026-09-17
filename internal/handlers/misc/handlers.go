@@ -2,14 +2,15 @@ package misc
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
-	"log/slog"
 	"net/http"
 	"path"
 	"path/filepath"
 	"slices"
 	"strings"
 
+	"github.com/vlatan/video-store/internal/ctxerrors"
 	"github.com/vlatan/video-store/internal/utils"
 	"github.com/vlatan/video-store/web"
 )
@@ -19,6 +20,7 @@ func (s *Service) TextHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Validate the path
 	if err := utils.ValidateFilePath(r.URL.Path); err != nil {
+		ctxerrors.Add(r.Context(), err)
 		http.NotFound(w, r)
 		return
 	}
@@ -26,17 +28,14 @@ func (s *Service) TextHandler(w http.ResponseWriter, r *http.Request) {
 	// Check if the text file exists
 	textFile, exists := s.ui.TextFiles()[r.URL.Path]
 	if !exists {
+		ctxerrors.Add(r.Context(), errors.New("text file does not exist"))
 		http.NotFound(w, r)
 		return
 	}
 
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	if _, err := w.Write(textFile.Bytes); err != nil {
-		slog.ErrorContext(
-			r.Context(), "failed to write response",
-			"path", r.URL.Path,
-			"error", err,
-		)
+		ctxerrors.Add(r.Context(), fmt.Errorf("failed to write response: %w", err))
 	}
 }
 
@@ -59,6 +58,7 @@ func (s *Service) StaticHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Validate the path
 	if err := utils.ValidateFilePath(r.URL.Path); err != nil {
+		ctxerrors.Add(r.Context(), err)
 		http.NotFound(w, r)
 		return
 	}
