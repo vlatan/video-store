@@ -6,11 +6,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"log/slog"
 	"net/http"
 	"strings"
 	"time"
 
+	"github.com/vlatan/video-store/internal/ctxerrors"
 	"github.com/vlatan/video-store/internal/models"
 
 	"golang.org/x/oauth2"
@@ -151,12 +151,7 @@ func (s *Service) revokeLogin(ctx context.Context, user *models.User) error {
 	// Get the refreshed token
 	newToken, err := provider.Config.TokenSource(ctx, token).Token()
 	if err != nil {
-		slog.ErrorContext(
-			ctx, "failed to refresh the token",
-			"userId", user.ID,
-			"provider", user.Provider,
-			"error", err,
-		)
+		ctxerrors.Add(ctx, fmt.Errorf("failed to refresh the token: %w", err))
 		user.AccessToken = newToken.AccessToken
 		user.Expiry = newToken.Expiry
 		if newToken.RefreshToken != "" {
@@ -225,7 +220,6 @@ func (s *Service) googleRevokeRequest(
 	}
 
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-
 	return req, nil
 }
 

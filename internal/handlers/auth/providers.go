@@ -77,7 +77,7 @@ func NewProviders(cfg *config.Config) Providers {
 func (p *Providers) GenerateState() (string, error) {
 	b := make([]byte, 16)
 	if _, err := rand.Read(b); err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to generate state: %w", err)
 	}
 	return hex.EncodeToString(b), nil
 }
