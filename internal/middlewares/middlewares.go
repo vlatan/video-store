@@ -353,7 +353,7 @@ func (s *Service) Logging(next http.Handler) http.Handler {
 			for i, err := range errs {
 				errStrings[i] = err.Error()
 			}
-			slogArgs = append(slogArgs, slog.Any("errors", errs))
+			slogArgs = append(slogArgs, slog.Any("errors", errStrings))
 		}
 
 		if st.status >= 400 {
