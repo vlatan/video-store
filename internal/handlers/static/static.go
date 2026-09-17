@@ -1,8 +1,7 @@
-package misc
+package static
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"net/http"
 	"path"
@@ -11,50 +10,23 @@ import (
 	"strings"
 
 	"github.com/vlatan/video-store/internal/ctxerrors"
+	"github.com/vlatan/video-store/internal/ui"
 	"github.com/vlatan/video-store/internal/utils"
 	"github.com/vlatan/video-store/web"
 )
 
-// TextHandler handles text files such as robots.txt, ads.txt, etc.
-func (s *Service) TextHandler(w http.ResponseWriter, r *http.Request) {
+type Service struct {
+	ui ui.Service
+}
 
-	// Validate the path
-	if err := utils.ValidateFilePath(r.URL.Path); err != nil {
-		ctxerrors.Add(r.Context(), err)
-		http.NotFound(w, r)
-		return
-	}
-
-	// Check if the text file exists
-	textFile, exists := s.ui.TextFiles()[r.URL.Path]
-	if !exists {
-		ctxerrors.Add(r.Context(), errors.New("text file does not exist"))
-		http.NotFound(w, r)
-		return
-	}
-
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	if _, err := w.Write(textFile.Bytes); err != nil {
-		ctxerrors.Add(r.Context(), fmt.Errorf("failed to write response: %w", err))
+func New(ui ui.Service) *Service {
+	return &Service{
+		ui: ui,
 	}
 }
 
-// DB and Redis health status
-// Wrap this with middlware that allows only admins
-func (s *Service) HealthAPI(w http.ResponseWriter, r *http.Request) {
-
-	// Construct joined map
-	data := map[string]any{
-		"redis_status":    s.rdb.Health(r.Context()),
-		"database_status": s.db.Health(r.Context()),
-		"server_status":   getServerStats(),
-	}
-
-	s.ui.WriteJSON(w, r, data)
-}
-
-// Handle static files
-func (s *Service) StaticHandler(w http.ResponseWriter, r *http.Request) {
+// Handler handles static files
+func (s *Service) Handler(w http.ResponseWriter, r *http.Request) {
 
 	// Validate the path
 	if err := utils.ValidateFilePath(r.URL.Path); err != nil {

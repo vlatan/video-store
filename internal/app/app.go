@@ -13,11 +13,13 @@ import (
 	"github.com/vlatan/video-store/internal/drivers/database"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/handlers/auth"
-	"github.com/vlatan/video-store/internal/handlers/misc"
+	"github.com/vlatan/video-store/internal/handlers/health"
 	"github.com/vlatan/video-store/internal/handlers/pages"
 	"github.com/vlatan/video-store/internal/handlers/posts"
 	"github.com/vlatan/video-store/internal/handlers/sitemaps"
 	"github.com/vlatan/video-store/internal/handlers/sources"
+	"github.com/vlatan/video-store/internal/handlers/static"
+	"github.com/vlatan/video-store/internal/handlers/text"
 	"github.com/vlatan/video-store/internal/handlers/users"
 	"github.com/vlatan/video-store/internal/integrations/gemini"
 	"github.com/vlatan/video-store/internal/integrations/r2"
@@ -40,8 +42,10 @@ type App struct {
 	pages    *pages.Service
 	sources  *sources.Service
 	sitemaps *sitemaps.Service
+	text     *text.Service
+	static   *static.Service
+	health   *health.Service
 	mw       *middlewares.Service
-	misc     *misc.Service
 	domain   string
 	cleanup  func() error
 	server   *http.Server
@@ -139,7 +143,9 @@ func New() (*App, error) {
 		pages:    pages.New(pagesRepo, rdb, ui, cfg),
 		sources:  sources.New(postsRepo, sourcesRepo, rdb, ui, cfg, yt),
 		sitemaps: sitemaps.New(postsRepo, rdb, ui, cfg),
-		misc:     misc.New(cfg, db, rdb, ui),
+		text:     text.New(ui),
+		static:   static.New(ui),
+		health:   health.New(db, rdb, ui),
 
 		// Middleware service
 		mw: middlewares.New(ui, cfg),
