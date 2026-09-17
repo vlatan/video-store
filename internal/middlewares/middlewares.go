@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
+	"errors"
 	"log/slog"
 	"net/http"
 	"runtime/debug"
@@ -349,11 +350,7 @@ func (s *Service) Logging(next http.Handler) http.Handler {
 
 		errs := ctxerrors.Errors(r.Context())
 		if len(errs) > 0 {
-			errStrings := make([]string, len(errs))
-			for i, err := range errs {
-				errStrings[i] = err.Error()
-			}
-			slogArgs = append(slogArgs, slog.Any("errors", errStrings))
+			slogArgs = append(slogArgs, slog.Any("error", errors.Join(errs...)))
 		}
 
 		if st.status >= 400 {

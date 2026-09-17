@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/vlatan/video-store/internal/ctxerrors"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/handlers/auth"
 	"github.com/vlatan/video-store/internal/models"
@@ -486,10 +487,9 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 	// Wait for the goroutines to finish
 	if err := g.Wait(); err != nil {
 
-		slog.ErrorContext(
-			r.Context(), "failed to get a single post",
-			"path", r.URL.Path,
-			"error", err,
+		ctxerrors.Add(
+			r.Context(),
+			fmt.Errorf("failed to fetch the post: %w", err),
 		)
 
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -551,10 +551,9 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 
 		// If error just log it, no related posts will be shown.
 		if taskErr != nil {
-			slog.ErrorContext(
-				r.Context(), "failed to get the related posts",
-				"path", r.URL.Path,
-				"error", taskErr,
+			ctxerrors.Add(
+				r.Context(),
+				fmt.Errorf("failed to fetch related posts: %w", taskErr),
 			)
 		}
 
@@ -565,10 +564,9 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 	// Wait for the goroutines to finish
 	if err := g.Wait(); err != nil {
 
-		slog.ErrorContext(
-			r.Context(), "failed to get a single post",
-			"path", r.URL.Path,
-			"error", err,
+		ctxerrors.Add(
+			r.Context(),
+			fmt.Errorf("failed to fetch the post: %w", err),
 		)
 
 		utils.HttpError(w, http.StatusInternalServerError)
