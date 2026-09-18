@@ -250,7 +250,9 @@ func (s *Service) DeleteAccountHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Attempt to remove the user avatar from R2 and redis
-	s.avatars.Delete(r.Context(), currentUser)
+	if err := s.avatars.Delete(r.Context(), currentUser); err != nil {
+		ctxerrors.Add(r.Context(), fmt.Errorf("failed to delete the user avatar: %w", err))
+	}
 
 	// Attempt to send revoke request
 	if currentUser.AccessToken != "" {
