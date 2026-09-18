@@ -52,7 +52,7 @@ func New(
 	return s
 }
 
-// SetAvatar gets user avatar path, either from Redis,
+// Get gets user avatar path, either from Redis,
 // or enques the avatar for downloading, converting to JPEG,
 // uploading to R2 and caching the path to Redis.
 // The function will return only breaking errors,
