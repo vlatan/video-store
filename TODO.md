@@ -1,3 +1,4 @@
+- Abandon constant context checking
 - Solve double logging, do not slog sepparately
   Search for HttpError, http.NotFound, slog. and log.
 
