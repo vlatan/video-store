@@ -117,80 +117,23 @@ func (s *Service) Save(ctx context.Context, user *models.User) error {
 	ttlKey := avatarCacheTTL + user.PublicID
 
 	// Check if already in cache (if returning user)
-	err := s.rdb.Client.Get(ctx, avatarKey).Err()
-
-	if err == nil {
-		return nil // Already cached, good to go
-	}
-
-	// Return early if context error
-	if utils.IsContextErr(err) {
-		return err
-	}
-
-	// Log redis non nil error and abandon further progress.
-	if !errors.Is(err, redis.Nil) {
-		slog.Error(
-			"failed to get avatar from Redis cache",
-			"error", err,
-		)
+	if err := s.rdb.Client.Get(ctx, avatarKey).Err(); err == nil {
 		return nil
 	}
 
-	// Cache miss (new user or expired/evicted cache): process synchronously
+	// Cache miss (new user or expired/evicted cache).
 	r2URL, err := s.refreshAvatar(ctx, user)
-
-	// Return early if context error
-	if utils.IsContextErr(err) {
+	if err != nil {
 		return err
-	}
-
-	// Swallow this error and abandon further progress
-	if err != nil || r2URL == "" {
-		slog.Error(
-			"failed to refresh the avatar",
-			"avatar", r2URL,
-			"error", err,
-		)
-		return nil
 	}
 
 	// Save to Redis
-	err = s.rdb.Client.Set(ctx, avatarKey, r2URL, 30*24*time.Hour).Err()
-
-	// Return early if context error
-	if utils.IsContextErr(err) {
+	if err := s.rdb.Client.Set(ctx, avatarKey, r2URL, 30*24*time.Hour).Err(); err != nil {
 		return err
-	}
-
-	// Swallow this error
-	if err != nil {
-		slog.Error(
-			"failed to save the avatar in Redis",
-			"redisKey", avatarKey,
-			"avatarURL", r2URL,
-			"error", err,
-		)
 	}
 
 	// Set the timer
-	err = s.rdb.Client.Set(ctx, ttlKey, "true", 24*time.Hour).Err()
-
-	// Return early if context error
-	if utils.IsContextErr(err) {
-		return err
-	}
-
-	// Swallow this error
-	if err != nil {
-		slog.Error(
-			"failed to reset the avatar TTL in Redis",
-			"redisKey", ttlKey,
-			"error", err,
-		)
-	}
-
-	return nil
+	return s.rdb.Client.Set(ctx, ttlKey, "true", 24*time.Hour).Err()
 }
 
 // Delete removes user avatar from object storages - R2 and Redis
