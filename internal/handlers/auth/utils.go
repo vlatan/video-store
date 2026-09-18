@@ -12,6 +12,7 @@ import (
 
 	"github.com/vlatan/video-store/internal/ctxerrors"
 	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/utils"
 
 	"golang.org/x/oauth2"
 )
@@ -85,6 +86,9 @@ func (s *Service) loginUser(w http.ResponseWriter, r *http.Request, user *models
 
 	// Download and save the avatar if not in Redis cache
 	if err := s.avatars.Save(r.Context(), user); err != nil {
+		if utils.IsContextErr(err) {
+			return err
+		}
 		ctxerrors.Add(r.Context(), fmt.Errorf("failed to save the user avatar: %w", err))
 	}
 
