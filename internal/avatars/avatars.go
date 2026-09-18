@@ -109,8 +109,7 @@ func (s *Service) Get(ctx context.Context, user *models.User) (string, error) {
 	return r2URL, nil
 }
 
-// Save ensures the avatar is cached, downloading it synchronously if missing.
-// Will return an error only if context ended.
+// Save ensures the avatar is cached, downloading it if missing
 func (s *Service) Save(ctx context.Context, user *models.User) error {
 
 	avatarKey := avatarCachePrefix + user.PublicID
