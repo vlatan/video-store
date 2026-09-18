@@ -26,7 +26,7 @@ func TestGetUserFromContext(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := GetUserFromContext(tt.request); got != tt.expected {
+			if got := GetUserFromContext(tt.request.Context()); got != tt.expected {
 				t.Errorf("got %v, want %v", got, tt.expected)
 			}
 		})

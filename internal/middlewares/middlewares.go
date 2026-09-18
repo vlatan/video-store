@@ -4,7 +4,6 @@ import (
 	"context"
 	"log/slog"
 	"net/http"
-	"os"
 	"runtime/debug"
 	"slices"
 	"strings"
@@ -25,14 +24,7 @@ type Service struct {
 // New creates new middlewares service
 func New(ui ui.Service, config *config.Config) *Service {
 
-	var opts *slog.HandlerOptions
-	if config.Debug {
-		opts = &slog.HandlerOptions{Level: slog.LevelDebug}
-	}
-
-	handler := slog.NewJSONHandler(os.Stdout, opts)
-	logger := slog.New(handler)
-	slog.SetDefault(logger)
+	SetCustomLogger(config)
 
 	return &Service{
 		ui:     ui,
@@ -44,7 +36,7 @@ func New(ui ui.Service, config *config.Config) *Service {
 func (s *Service) IsAuthenticated(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// If the user is authenticated move onto the next handler
-		if user := models.GetUserFromContext(r); user.IsAuthenticated() {
+		if user := models.GetUserFromContext(r.Context()); user.IsAuthenticated() {
 			next(w, r)
 			return
 		}
@@ -58,7 +50,7 @@ func (s *Service) IsAuthenticated(next http.HandlerFunc) http.HandlerFunc {
 func (s *Service) IsAdmin(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// If the user is admin move onto the next handler
-		if user := models.GetUserFromContext(r); user.IsAdmin() {
+		if user := models.GetUserFromContext(r.Context()); user.IsAdmin() {
 			next(w, r)
 			return
 		}
@@ -91,7 +83,7 @@ func (s *Service) LoadData(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		// Get user from context
-		user := models.GetUserFromContext(r)
+		user := models.GetUserFromContext(r.Context())
 		// Generate the default data
 		data := s.ui.NewData(w, r)
 		// Attach the user to be able to be accessed from data too
@@ -155,7 +147,7 @@ func (s *Service) RecoverPanic(next http.Handler) http.Handler {
 // PublicCache adds cache control header for non-admin users
 func (s *Service) PublicCache(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if user := models.GetUserFromContext(r); !user.IsAdmin() {
+		if user := models.GetUserFromContext(r.Context()); !user.IsAdmin() {
 			w.Header().Set("Cache-Control", "public, max-age=3600")
 		}
 		next(w, r)
@@ -185,7 +177,7 @@ func (s *Service) AddHeaders(next http.Handler) http.Handler {
 
 		// Add no cache headers if necessary
 		if !utils.IsFilePath(r.URL.Path) &&
-			models.GetUserFromContext(r).IsAuthenticated() {
+			models.GetUserFromContext(r.Context()).IsAuthenticated() {
 
 			w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 			w.Header().Set("Pragma", "no-cache")

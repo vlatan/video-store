@@ -39,7 +39,7 @@ func (s *Service) SourcePostsAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get current user
-	currentUser := models.GetUserFromContext(r)
+	currentUser := models.GetUserFromContext(r.Context())
 
 	var (
 		err   error
