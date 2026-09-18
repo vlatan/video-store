@@ -28,7 +28,7 @@ type ContextHandler struct {
 	slog.Handler
 }
 
-// Handle overwrites log handling and injects request ID from context into the log record
+// Handle overwrites slog handling and injects request details from context into the log record
 func (h *ContextHandler) Handle(ctx context.Context, r slog.Record) error {
 
 	if ctx == nil {
