@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log/slog"
 	"sync"
 	"time"
 
@@ -71,10 +70,8 @@ func (s *Service) Get(ctx context.Context, user *models.User) (string, error) {
 
 	// Log redis non nil error
 	if err != nil && !errors.Is(err, redis.Nil) {
-		slog.Error(
-			"failed to get avatar from Redis cache",
-			"avatar", r2URL,
-			"error", err,
+		ctxerrors.Add(ctx, fmt.Errorf(
+			"failed to get avatar %s from Redis: %w", r2URL, err),
 		)
 	}
 
@@ -94,10 +91,8 @@ func (s *Service) Get(ctx context.Context, user *models.User) (string, error) {
 
 	// Log redis error
 	if err != nil {
-		slog.Error(
-			"failed to get avatar's TTL from Redis cache",
-			"avatar", r2URL,
-			"error", err,
+		ctxerrors.Add(ctx, fmt.Errorf(
+			"failed to get avatar %s TTL from Redis: %w", r2URL, err),
 		)
 	}
 
@@ -144,7 +139,9 @@ func (s *Service) Delete(ctx context.Context, user *models.User) error {
 		if utils.IsContextErr(err) {
 			return err
 		}
-		ctxerrors.Add(ctx, fmt.Errorf("failed to remove avatar %s from R2: %w", user.PublicID, err))
+		ctxerrors.Add(ctx, fmt.Errorf(
+			"failed to remove avatar %s from R2: %w", user.PublicID, err),
+		)
 	}
 
 	// Delete user and admin avatar Redis cache values
@@ -156,7 +153,9 @@ func (s *Service) Delete(ctx context.Context, user *models.User) error {
 			if utils.IsContextErr(err) {
 				return err
 			}
-			ctxerrors.Add(ctx, fmt.Errorf("failed to remove avatar %s from Redis: %w", user.PublicID, err))
+			ctxerrors.Add(ctx, fmt.Errorf(
+				"failed to remove avatar %s from Redis: %w", user.PublicID, err),
+			)
 		}
 	}
 
