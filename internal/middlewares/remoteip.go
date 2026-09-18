@@ -6,7 +6,7 @@ import (
 )
 
 // GetSrcIp returns the client IP
-func clientIp(r *http.Request) string {
+func remoteIP(r *http.Request) string {
 
 	// Prioritize CF-Connecting-IP as recommended by Cloudflare
 	srcIp := r.Header.Get("CF-Connecting-IP")

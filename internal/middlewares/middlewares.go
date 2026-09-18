@@ -2,6 +2,8 @@ package middlewares
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"log/slog"
 	"net/http"
 	"runtime/debug"
@@ -74,6 +76,28 @@ func (s *Service) LoadUser(next http.Handler) http.Handler {
 		}
 
 		ctx := context.WithValue(r.Context(), models.UserContextKey, user)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+// LoadRequestID generates uniqiue ID and adds it to context
+func (s *Service) LoadRequestDetails(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		bytes := make([]byte, 8)
+		rand.Read(bytes)
+
+		details := &RequestDetails{
+			ID:        hex.EncodeToString(bytes),
+			Method:    r.Method,
+			Host:      r.Host,
+			Path:      r.URL.Path,
+			Queries:   r.URL.Query(),
+			RemoteIP:  remoteIP(r),
+			UserAgent: r.UserAgent(),
+		}
+
+		ctx := context.WithValue(r.Context(), ctxKey{}, details)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
@@ -301,26 +325,18 @@ func (s *Service) Logging(next http.Handler) http.Handler {
 		st := NewStatusTracker(w)
 		next.ServeHTTP(st, r)
 
-		// Log the request after it is finished
-		slogArgs := []any{
-			slog.String("method", r.Method),
-			slog.String("host", r.Host),
-			slog.String("path", r.URL.Path),
-			slog.String("clientUa", r.Header.Get("User-Agent")),
-			slog.String("clientIp", clientIp(r)),
-			slog.Int("status", st.status),
-		}
-
-		if queries := r.URL.Query(); len(queries) > 0 {
-			slogArgs = append(slogArgs, slog.Any("queries", queries))
-		}
-
 		if st.status >= 400 {
-			slog.ErrorContext(r.Context(), "request failed", slogArgs...)
+			slog.ErrorContext(
+				r.Context(), "request failed",
+				slog.Int("status", st.status),
+			)
 			return
 		}
 
-		slog.InfoContext(r.Context(), "request completed", slogArgs...)
+		slog.InfoContext(
+			r.Context(), "request completed",
+			slog.Int("status", st.status),
+		)
 
 	})
 }
