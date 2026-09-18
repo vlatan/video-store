@@ -40,6 +40,7 @@ func (h *ContextHandler) Handle(ctx context.Context, r slog.Record) error {
 		r.AddAttrs(slog.Int("userId", user.ID))
 	}
 
+	// Look for request details in context
 	if req, ok := ctx.Value(ctxKey{}).(*RequestDetails); ok {
 		r.AddAttrs(
 			slog.Group("httpRequest",
