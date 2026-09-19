@@ -154,8 +154,6 @@ func (s *Service) RecoverPanic(next http.Handler) http.Handler {
 
 			slog.ErrorContext(
 				r.Context(), "panic recovered",
-				slog.String("method", r.Method),
-				slog.String("path", r.URL.Path),
 				slog.Any("error", err),
 				slog.Any("stack", cleanLines),
 			)

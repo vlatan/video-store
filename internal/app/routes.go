@@ -92,7 +92,6 @@ func (a *App) RegisterRoutes() *App {
 			slog.ErrorContext(
 				r.Context(),
 				"failed to write response",
-				"path", r.URL.Path,
 				"error", err,
 			)
 		}

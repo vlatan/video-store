@@ -66,8 +66,8 @@ func (s *Service) SourcePostsAPI(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		slog.ErrorContext(
-			r.Context(), "failed to get source posts from DB",
-			"path", r.URL.Path,
+			r.Context(),
+			"failed to get source posts from DB",
 			"error", err,
 		)
 		utils.HttpError(w, http.StatusInternalServerError)
