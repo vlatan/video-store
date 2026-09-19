@@ -204,7 +204,8 @@ func (s *Service) Delete(ctx context.Context, user *models.User) error {
 	)
 
 	// Delete user and admin avatar Redis cache values
-	key, prefix := avatarCacheTTL+user.PublicID, avatarCachePrefix+user.PublicID
+	key := avatarCacheTTL + user.PublicID
+	prefix := avatarCachePrefix + user.PublicID
 	for _, key := range []string{key, prefix} {
 		errs = append(errs, s.rdb.Client.Del(ctx, key).Err())
 	}
