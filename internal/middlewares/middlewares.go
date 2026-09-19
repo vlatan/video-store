@@ -80,7 +80,7 @@ func (s *Service) LoadUser(next http.Handler) http.Handler {
 	})
 }
 
-// LoadRequestID generates uniqiue ID and adds it to context
+// LoadRequestDetails adds request details in the context
 func (s *Service) LoadRequestDetails(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
