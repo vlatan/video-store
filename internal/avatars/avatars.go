@@ -195,21 +195,18 @@ func (s *Service) Save(ctx context.Context, user *models.User) error {
 // Delete removes user avatar from object storages - R2 and Redis
 func (s *Service) Delete(ctx context.Context, user *models.User) error {
 
-	var errs []error
+	errs := make([]error, 0, 3)
 
 	// Attempt to delete the avatar image from R2
 	objectKey := fmt.Sprintf(avatarR2Path, user.PublicID)
-	err := s.r2s.DeleteObject(ctx, s.config.R2CdnBucketName, objectKey)
-	errs = append(errs, err)
+	errs = append(errs, s.r2s.DeleteObject(
+		ctx, s.config.R2CdnBucketName, objectKey),
+	)
 
 	// Delete user and admin avatar Redis cache values
-	for _, key := range []string{
-		avatarCacheTTL + user.PublicID,
-		avatarCachePrefix + user.PublicID,
-	} {
-		err := s.rdb.Client.Del(ctx, key).Err()
-		errs = append(errs, err)
-
+	key, prefix := avatarCacheTTL+user.PublicID, avatarCachePrefix+user.PublicID
+	for _, key := range []string{key, prefix} {
+		errs = append(errs, s.rdb.Client.Del(ctx, key).Err())
 	}
 
 	return errors.Join(errs...)

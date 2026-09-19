@@ -1,4 +1,6 @@
 - Remove request or user details in slogs in the code
+  Posts handlers next.
+
 - Make `:= range` more performant by using index
 - Make the directors links that list their films, and also the release years
 
