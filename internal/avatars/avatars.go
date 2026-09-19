@@ -192,7 +192,7 @@ func (s *Service) Save(ctx context.Context, user *models.User) error {
 	return nil
 }
 
-// Delete avatar from object storage if exists
+// Delete removes user avatar from object storages - R2 and Redis
 func (s *Service) Delete(ctx context.Context, user *models.User) error {
 
 	errs := make([]error, 0, 3)
