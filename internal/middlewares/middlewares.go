@@ -103,7 +103,7 @@ func (s *Service) LoadRequestDetails(next http.Handler) http.Handler {
 }
 
 // LoadData generates default data and stores it in the context
-func (s *Service) LoadData(next http.Handler) http.Handler {
+func (s *Service) LoadTemplateData(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		// Get user from context
