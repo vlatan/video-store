@@ -19,7 +19,7 @@ type RequestDetails struct {
 	Host      string
 	Path      string
 	Queries   url.Values
-	RemoteIP  string
+	RemoteIp  string
 	UserAgent string
 }
 
@@ -48,7 +48,7 @@ func (h *ContextHandler) Handle(ctx context.Context, r slog.Record) error {
 			slog.String("method", req.Method),
 			slog.String("host", req.Host),
 			slog.String("path", req.Path),
-			slog.String("remoteIp", req.RemoteIP),
+			slog.String("remoteIp", req.RemoteIp),
 			slog.String("userAgent", req.UserAgent),
 		}
 

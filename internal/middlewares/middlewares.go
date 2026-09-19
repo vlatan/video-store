@@ -93,7 +93,7 @@ func (s *Service) LoadRequestDetails(next http.Handler) http.Handler {
 			Host:      r.Host,
 			Path:      r.URL.Path,
 			Queries:   r.URL.Query(),
-			RemoteIP:  remoteIP(r),
+			RemoteIp:  remoteIp(r),
 			UserAgent: r.UserAgent(),
 		}
 
