@@ -19,11 +19,16 @@ import (
 type Service struct {
 	active map[string]struct{}
 	mu     sync.Mutex
-	Jobs   chan *models.User
+	jobs   chan job
 
 	config *config.Config
 	rdb    *rdb.Service
 	r2s    r2.Service
+}
+
+type job struct {
+	ctx  context.Context
+	user *models.User
 }
 
 func New(
@@ -36,7 +41,7 @@ func New(
 
 	s := &Service{
 		active: make(map[string]struct{}),
-		Jobs:   make(chan *models.User, bufferSize),
+		jobs:   make(chan job, bufferSize),
 
 		config: cfg,
 		rdb:    rdb,
@@ -70,8 +75,8 @@ func (s *Service) Get(ctx context.Context, user *models.User) (string, error) {
 
 	// Log redis non nil error
 	if err != nil && !errors.Is(err, redis.Nil) {
-		slog.Error(
-			"failed to get avatar from Redis cache",
+		slog.WarnContext(
+			ctx, "failed to get avatar from Redis cache",
 			"avatar", r2URL,
 			"error", err,
 		)
@@ -93,16 +98,17 @@ func (s *Service) Get(ctx context.Context, user *models.User) (string, error) {
 
 	// Log redis error
 	if err != nil {
-		slog.Error(
-			"failed to get avatar's TTL from Redis cache",
+		slog.WarnContext(
+			ctx, "failed to get avatar's TTL from Redis cache",
 			"avatar", r2URL,
 			"error", err,
 		)
 	}
 
-	// Enqueue the user for avatar processing if timer expired
+	// Enqueue the user for avatar processing if timer expired.
+	// Detach the context and carry it in the job.
 	if ttl <= 0 {
-		s.enqueue(user)
+		s.enqueue(job{context.WithoutCancel(ctx), user})
 	}
 
 	return r2URL, nil
