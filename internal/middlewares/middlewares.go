@@ -325,8 +325,16 @@ func (s *Service) Logging(next http.Handler) http.Handler {
 		st := NewStatusTracker(w)
 		next.ServeHTTP(st, r)
 
-		if st.status >= 400 {
+		if st.status >= 500 {
 			slog.ErrorContext(
+				r.Context(), "request failed",
+				slog.Int("status", st.status),
+			)
+			return
+		}
+
+		if st.status >= 400 {
+			slog.WarnContext(
 				r.Context(), "request failed",
 				slog.Int("status", st.status),
 			)
