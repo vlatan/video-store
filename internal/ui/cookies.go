@@ -49,10 +49,9 @@ func (s *service) GetUserFromSession(w http.ResponseWriter, r *http.Request) (*m
 		// Clear the session this is anonymous user
 		session.Options.MaxAge = -1
 		if err = session.Save(r, w); err != nil {
-			slog.ErrorContext(
-				r.Context(), "failed to clear the session for anonymous user",
-				"path", r.URL.Path,
-				"userId", id,
+			slog.WarnContext(
+				r.Context(),
+				"failed to clear the session for anonymous user",
 				"error", err,
 			)
 		}
@@ -78,10 +77,9 @@ func (s *service) GetUserFromSession(w http.ResponseWriter, r *http.Request) (*m
 		}
 
 		if err != nil {
-			slog.ErrorContext(
-				r.Context(), "failed to update user's last seen in DB",
-				"path", r.URL.Path,
-				"userId", id,
+			slog.WarnContext(
+				r.Context(),
+				"failed to update user's last seen in DB",
 				"error", err,
 			)
 		}
@@ -91,10 +89,9 @@ func (s *service) GetUserFromSession(w http.ResponseWriter, r *http.Request) (*m
 
 	// Save the session
 	if err = session.Save(r, w); err != nil {
-		slog.ErrorContext(
-			r.Context(), "failed to save session after updating user's last seen",
-			"path", r.URL.Path,
-			"userId", id,
+		slog.WarnContext(
+			r.Context(),
+			"failed to save session after updating user's last seen",
 			"error", err,
 		)
 	}
@@ -127,10 +124,9 @@ func (s *service) GetUserFromSession(w http.ResponseWriter, r *http.Request) (*m
 	}
 
 	if err != nil {
-		slog.ErrorContext(
-			r.Context(), "failed to get user's avatar",
-			"path", r.URL.Path,
-			"userId", user.ID,
+		slog.WarnContext(
+			r.Context(),
+			"failed to get user's avatar",
 			"error", err,
 		)
 	}
