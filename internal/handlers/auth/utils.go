@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"log/slog"
 	"net/http"
 	"strings"
@@ -109,7 +108,10 @@ func (s *Service) getRedirectFromSession(w http.ResponseWriter, r *http.Request)
 	session.Options.MaxAge = -1
 	session.Values = make(map[any]any)
 	if err := session.Save(r, w); err != nil {
-		log.Printf("failed to delete the redirect session; %v", err)
+		slog.WarnContext(
+			r.Context(), "failed to delete the redirect session",
+			"error", err,
+		)
 	}
 
 	return redirectTo
@@ -151,10 +153,8 @@ func (s *Service) revokeLogin(ctx context.Context, user *models.User) error {
 	// Get the refreshed token
 	newToken, err := provider.Config.TokenSource(ctx, token).Token()
 	if err != nil {
-		slog.ErrorContext(
+		slog.WarnContext(
 			ctx, "failed to refresh the token",
-			"userId", user.ID,
-			"provider", user.Provider,
 			"error", err,
 		)
 		user.AccessToken = newToken.AccessToken
@@ -225,7 +225,6 @@ func (s *Service) googleRevokeRequest(
 	}
 
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-
 	return req, nil
 }
 
