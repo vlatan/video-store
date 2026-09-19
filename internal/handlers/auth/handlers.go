@@ -276,7 +276,10 @@ func (s *Service) DeleteAccountHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Attempt to remove the avatar from R2 and redis
 	if err = s.avatars.Delete(r.Context(), currentUser); err != nil {
-		log.Printf("Failed to delete user avatar: %v", err)
+		slog.WarnContext(
+			r.Context(), "failed to delete user avatar",
+			"error", err,
+		)
 	}
 
 	// Attempt to send revoke request
