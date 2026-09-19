@@ -2,7 +2,6 @@ package rdb
 
 import (
 	"context"
-	"log"
 	"log/slog"
 	"reflect"
 	"time"
@@ -62,9 +61,8 @@ func GetCachedData[T any](
 
 	// Ignore/log non-nil errors
 	if err != redis.Nil {
-		slog.ErrorContext(
+		slog.WarnContext(
 			ctx, "failed to get data from Redis",
-			"key", key,
 			"error", err,
 		)
 	}
@@ -80,7 +78,10 @@ func GetCachedData[T any](
 	// the encoding.BinaryMarshaler interface if needed.
 	if err = rdb.Client.Set(ctx, key, data, ttl).Err(); err != nil {
 		// Don't return an error if unable to set redis cache
-		log.Printf("redis error for key %q: %v", key, err)
+		slog.WarnContext(
+			ctx, "failed to set data in Redis",
+			"error", err,
+		)
 	}
 
 	return data, nil
