@@ -63,7 +63,6 @@ func (s *Service) worker() {
 				// Log the error
 				slog.WarnContext(
 					ctx, "failed to refresh the avatar",
-					"avatar", r2URL,
 					"error", err,
 				)
 
@@ -71,7 +70,6 @@ func (s *Service) worker() {
 				if err := s.rdb.Client.Set(ctx, ttlKey, "true", 24*time.Hour).Err(); err != nil {
 					slog.WarnContext(
 						ctx, "failed to reset the avatar TTL in Redis",
-						"redisKey", ttlKey,
 						"error", err,
 					)
 				}
@@ -82,8 +80,6 @@ func (s *Service) worker() {
 			if err := s.rdb.Client.Set(ctx, avatarKey, r2URL, 30*24*time.Hour).Err(); err != nil {
 				slog.WarnContext(
 					ctx, "failed to save the avatar in Redis",
-					"redisKey", avatarKey,
-					"avatarURL", r2URL,
 					"error", err,
 				)
 			}
@@ -92,7 +88,6 @@ func (s *Service) worker() {
 			if err := s.rdb.Client.Set(ctx, ttlKey, "true", 24*time.Hour).Err(); err != nil {
 				slog.WarnContext(
 					ctx, "failed to reset the avatar TTL in Redis",
-					"redisKey", ttlKey,
 					"error", err,
 				)
 			}

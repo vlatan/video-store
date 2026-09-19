@@ -76,8 +76,7 @@ func (s *Service) Get(ctx context.Context, user *models.User) (string, error) {
 	// Log redis non nil error
 	if err != nil && !errors.Is(err, redis.Nil) {
 		slog.WarnContext(
-			ctx, "failed to get avatar from Redis cache",
-			"avatar", r2URL,
+			ctx, "failed to get avatar from Redis",
 			"error", err,
 		)
 	}
@@ -99,8 +98,7 @@ func (s *Service) Get(ctx context.Context, user *models.User) (string, error) {
 	// Log redis error
 	if err != nil {
 		slog.WarnContext(
-			ctx, "failed to get avatar's TTL from Redis cache",
-			"avatar", r2URL,
+			ctx, "failed to get avatar's TTL from Redis",
 			"error", err,
 		)
 	}
