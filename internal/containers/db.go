@@ -5,7 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
@@ -23,7 +23,10 @@ type dbContainer struct {
 // Terminate stops and removes the container
 func (db *dbContainer) Terminate(ctx context.Context) {
 	if err := db.container.Terminate(ctx); err != nil {
-		log.Printf("failed to terminate container: %v", err)
+		slog.WarnContext(
+			ctx, "failed to terminate container",
+			"error", err,
+		)
 	}
 }
 
@@ -128,7 +131,7 @@ func seedTestData(ctx context.Context, pool *pgxpool.Pool) error {
 		}
 	}
 
-	log.Println("Test data seeded successfully")
+	slog.InfoContext(ctx, "Test data seeded successfully")
 	return nil
 }
 
