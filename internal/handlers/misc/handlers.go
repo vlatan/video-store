@@ -19,6 +19,7 @@ func (s *Service) TextHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Validate the path
 	if err := utils.ValidateFilePath(r.URL.Path); err != nil {
+		slog.WarnContext(r.Context(), "invalid path")
 		http.NotFound(w, r)
 		return
 	}
@@ -26,6 +27,7 @@ func (s *Service) TextHandler(w http.ResponseWriter, r *http.Request) {
 	// Check if the text file exists
 	textFile, exists := s.ui.TextFiles()[r.URL.Path]
 	if !exists {
+		slog.WarnContext(r.Context(), "text file does not exist")
 		http.NotFound(w, r)
 		return
 	}
@@ -34,7 +36,6 @@ func (s *Service) TextHandler(w http.ResponseWriter, r *http.Request) {
 	if _, err := w.Write(textFile.Bytes); err != nil {
 		slog.ErrorContext(
 			r.Context(), "failed to write response",
-			"path", r.URL.Path,
 			"error", err,
 		)
 	}
@@ -59,6 +60,7 @@ func (s *Service) StaticHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Validate the path
 	if err := utils.ValidateFilePath(r.URL.Path); err != nil {
+		slog.WarnContext(r.Context(), "invalid path")
 		http.NotFound(w, r)
 		return
 	}
