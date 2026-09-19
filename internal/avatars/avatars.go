@@ -129,8 +129,8 @@ func (s *Service) Save(ctx context.Context, user *models.User) error {
 
 	// Log redis non nil error and abandon further progress.
 	if !errors.Is(err, redis.Nil) {
-		slog.Error(
-			"failed to get avatar from Redis cache",
+		slog.WarnContext(
+			ctx, "failed to get avatar from Redis",
 			"error", err,
 		)
 		return nil
@@ -146,9 +146,8 @@ func (s *Service) Save(ctx context.Context, user *models.User) error {
 
 	// Swallow this error and abandon further progress
 	if err != nil || r2URL == "" {
-		slog.Error(
-			"failed to refresh the avatar",
-			"avatar", r2URL,
+		slog.WarnContext(
+			ctx, "failed to refresh the avatar",
 			"error", err,
 		)
 		return nil
@@ -164,10 +163,8 @@ func (s *Service) Save(ctx context.Context, user *models.User) error {
 
 	// Swallow this error
 	if err != nil {
-		slog.Error(
-			"failed to save the avatar in Redis",
-			"redisKey", avatarKey,
-			"avatarURL", r2URL,
+		slog.WarnContext(
+			ctx, "failed to save the avatar in Redis",
 			"error", err,
 		)
 	}
@@ -182,9 +179,8 @@ func (s *Service) Save(ctx context.Context, user *models.User) error {
 
 	// Swallow this error
 	if err != nil {
-		slog.Error(
-			"failed to reset the avatar TTL in Redis",
-			"redisKey", ttlKey,
+		slog.WarnContext(
+			ctx, "failed to reset the avatar TTL in Redis",
 			"error", err,
 		)
 	}
