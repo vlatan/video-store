@@ -8,7 +8,7 @@
 <link rel="stylesheet" type="text/css" href='{{ .AddVersion "/static/css/content.css" }}'>
 {{ end }}
 
-{{ block "canonical" . }} <!-- Overwrite the canonical url on search -->
+{{ define "canonical" }} <!-- Overwrite canonical url on search -->
 <link rel="canonical" href="{{ .BaseCanonicalURL }}{{ with .SearchQuery }}?q={{ . }}{{ end }}" />
 {{ end }}
 
