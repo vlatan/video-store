@@ -62,43 +62,62 @@ func (s *Service) IsAdmin(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
+// LoadRequestaId adds request ID in the context
+func (s *Service) LoadRequestId(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		bytes := make([]byte, 8)
+		rand.Read(bytes)
+		ctx := context.WithValue(r.Context(), ctxKey{}, hex.EncodeToString(bytes))
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
 // LoadUser gets the user from session and stores it in the context
 func (s *Service) LoadUser(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-		// Get user from session and store in context
-		user, err := s.ui.GetUserFromSession(w, r) // Anonymous if nil
-
-		// Exit early if context ended
-		if utils.IsContextErr(err) {
-			utils.HttpError(w, http.StatusInternalServerError)
-			return
-		}
-
+		user, _ := s.ui.GetUserFromSession(w, r) // Anonymous if nil
 		ctx := context.WithValue(r.Context(), models.UserContextKey, user)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
-// LoadRequestDetails adds request details in the context
-func (s *Service) LoadRequestDetails(next http.Handler) http.Handler {
+// Logging logs basic data about the request
+func (s *Service) Logging(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		bytes := make([]byte, 8)
-		rand.Read(bytes)
-
-		details := &RequestDetails{
-			ID:        hex.EncodeToString(bytes),
-			Method:    r.Method,
-			Host:      r.Host,
-			Path:      r.URL.Path,
-			Queries:   r.URL.Query(),
-			RemoteIp:  remoteIp(r),
-			UserAgent: r.UserAgent(),
+		// Skip logging for request to /healthcheck
+		if r.URL.Path == "/healthcheck" {
+			next.ServeHTTP(w, r)
+			return
 		}
 
-		ctx := context.WithValue(r.Context(), ctxKey{}, details)
-		next.ServeHTTP(w, r.WithContext(ctx))
+		st := NewStatusTracker(w)
+		next.ServeHTTP(st, r)
+
+		attrs := []any{
+			slog.Int("status", st.status),
+			slog.String("method", r.Method),
+			slog.String("host", r.Host),
+			slog.String("path", r.URL.Path),
+			slog.String("remoteIp", remoteIp(r)),
+			slog.String("userAgent", r.UserAgent()),
+		}
+
+		if len(r.URL.Query()) > 0 {
+			attrs = append(attrs, slog.Any("queries", r.URL.Query()))
+		}
+
+		if st.status >= 500 {
+			slog.ErrorContext(r.Context(), "request failed", attrs...)
+			return
+		}
+
+		if st.status >= 400 {
+			slog.WarnContext(r.Context(), "request failed", attrs...)
+			return
+		}
+
+		slog.InfoContext(r.Context(), "request completed", attrs...)
 	})
 }
 
@@ -307,43 +326,6 @@ func (s *Service) Compress(next http.Handler) http.Handler {
 		// Create gzip handler and serve http with it
 		gzipHandler := gzhttp.GzipHandler(next)
 		gzipHandler.ServeHTTP(w, r)
-	})
-}
-
-// Logging logs basic data about the request
-func (s *Service) Logging(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-		// Skip logging for request to /healthcheck
-		if r.URL.Path == "/healthcheck" {
-			next.ServeHTTP(w, r)
-			return
-		}
-
-		st := NewStatusTracker(w)
-		next.ServeHTTP(st, r)
-
-		if st.status >= 500 {
-			slog.ErrorContext(
-				r.Context(), "request failed",
-				slog.Int("status", st.status),
-			)
-			return
-		}
-
-		if st.status >= 400 {
-			slog.WarnContext(
-				r.Context(), "request failed",
-				slog.Int("status", st.status),
-			)
-			return
-		}
-
-		slog.InfoContext(
-			r.Context(), "request completed",
-			slog.Int("status", st.status),
-		)
-
 	})
 }
 

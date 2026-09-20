@@ -40,23 +40,9 @@ func (h *ContextHandler) Handle(ctx context.Context, r slog.Record) error {
 		r.AddAttrs(slog.Int("userId", user.ID))
 	}
 
-	// Look for request details in context
-	if req, ok := ctx.Value(ctxKey{}).(*RequestDetails); ok {
-
-		attrs := []slog.Attr{
-			slog.String("requestId", req.ID),
-			slog.String("method", req.Method),
-			slog.String("host", req.Host),
-			slog.String("path", req.Path),
-			slog.String("remoteIp", req.RemoteIp),
-			slog.String("userAgent", req.UserAgent),
-		}
-
-		if len(req.Queries) > 0 {
-			attrs = append(attrs, slog.Any("queries", req.Queries))
-		}
-
-		r.AddAttrs(attrs...)
+	// Look for request ID in the context
+	if reqID, ok := ctx.Value(ctxKey{}).(string); ok {
+		r.AddAttrs(slog.String("requestId", reqID))
 	}
 
 	return h.Handler.Handle(ctx, r)
