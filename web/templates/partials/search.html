@@ -11,9 +11,8 @@
 {{ define "extra_meta" }}
 <meta property='og:title' content='{{ .Title }}'>
 <meta property='og:type' content='article'>
-<meta property='og:url' content='{{ .BaseCanonicalURL }}'>
-<!-- Do not index search pages -->
-<meta name="robots" content="noindex, follow">
+<meta property='og:url' content='{{ .BaseCanonicalURL }}{{ with .SearchQuery }}?q={{ . }}{{ end }}'>
+<meta name="robots" content="noindex, follow"> <!-- Do not index search pages -->
 {{ end }}
 
 {{ define "title_tag" }}
