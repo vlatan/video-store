@@ -8,6 +8,10 @@
 <link rel="stylesheet" type="text/css" href='{{ .AddVersion "/static/css/content.css" }}'>
 {{ end }}
 
+{{ block "canonical" . }} <!-- Overwrite the canonical url on search -->
+<link rel="canonical" href="{{ .BaseCanonicalURL }}{{ with .SearchQuery }}?q={{ . }}{{ end }}" />
+{{ end }}
+
 {{ define "extra_meta" }}
 <meta property='og:title' content='{{ .Title }}'>
 <meta property='og:type' content='article'>
