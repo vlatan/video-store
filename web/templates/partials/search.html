@@ -12,6 +12,8 @@
 <meta property='og:title' content='{{ .Title }}'>
 <meta property='og:type' content='article'>
 <meta property='og:url' content='{{ .BaseCanonicalURL }}'>
+<!-- Do not index search pages -->
+<meta name="robots" content="noindex, follow">
 {{ end }}
 
 {{ define "title_tag" }}
