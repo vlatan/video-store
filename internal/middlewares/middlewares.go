@@ -107,12 +107,12 @@ func (s *Service) Logging(next http.Handler) http.Handler {
 			attrs = append(attrs, slog.Any("queries", r.URL.Query()))
 		}
 
-		if st.status >= 500 {
+		if st.status >= http.StatusInternalServerError {
 			slog.ErrorContext(r.Context(), "request failed", attrs...)
 			return
 		}
 
-		if st.status >= 400 {
+		if st.status >= http.StatusBadRequest {
 			slog.WarnContext(r.Context(), "request failed", attrs...)
 			return
 		}
