@@ -297,7 +297,7 @@ func (s *Service) HandleErrors(next http.Handler) http.Handler {
 		recorder.Header().Set("Content-Type", "text/html; charset=utf-8")
 
 		// Try to render error template
-		if err := s.ui.ExecuteErrorTemplate(recorder, recorder.status, data); err != nil {
+		if err := s.ui.HTMLError(recorder, recorder.status, data); err != nil {
 			// Template failed, reset body in case it was written to
 			// and use plain text fallback
 			recorder.body.Reset()
