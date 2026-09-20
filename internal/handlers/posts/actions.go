@@ -176,9 +176,7 @@ func (s *Service) handleReview(w http.ResponseWriter, r *http.Request, userID in
 	}
 
 	if data.Rating < 1 || data.Rating > 10 {
-		slog.WarnContext(
-			r.Context(), "rating out of bounds",
-		)
+		slog.WarnContext(r.Context(), "rating out of bounds")
 		utils.HttpError(w, http.StatusBadRequest)
 		return
 	}
