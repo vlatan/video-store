@@ -2,6 +2,7 @@ package sitemaps
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -17,14 +18,13 @@ func (s *Service) getSitemapIndexFromDB(r *http.Request, args ...any) (models.Si
 	data, err := s.postsRepo.SitemapData(r.Context(), args...)
 	if err != nil {
 		return nil, fmt.Errorf(
-			"was unabale to fetch sitemap data on URI %q: %w",
-			r.RequestURI,
+			"failed to fetch sitemap data from DB: %w",
 			err,
 		)
 	}
 
 	if len(data) == 0 {
-		return nil, fmt.Errorf("fetched zero sitemap items on URI %q", r.RequestURI)
+		return nil, errors.New("fetched zero sitemap items")
 	}
 
 	// Get base absolute URL
@@ -40,7 +40,7 @@ func (s *Service) getSitemapIndexFromDB(r *http.Request, args ...any) (models.Si
 		item.Location = baseURL + item.Location
 
 		// If part exists adjust last modifed time for that part, and
-		// append the new item its to entries.
+		// append the new item to entries.
 		if part, ok := result[partKey]; ok {
 			part.LastModified, err = maxTime(part.LastModified, item.LastModified)
 			if err != nil {
@@ -104,17 +104,18 @@ func (s *Service) GetSitemapPart(r *http.Request, sitemapKey, partKey string) (*
 		return &part, nil
 	}
 
-	// Get data from DB and construct a sitemap
+	// Get data from DB and construct a sitemap index map
 	sitemapIndex, err := s.getSitemapIndexFromDB(r, s.sqlArgs...)
 	if err != nil {
 		return nil, err
 	}
 
-	// Store the sitemap in cache
+	// Store the sitemap index in cache
 	if err = s.CacheSitemapIndex(r.Context(), sitemapKey, sitemapIndex); err != nil {
 		return nil, err
 	}
 
+	// Return only the sitemap part
 	return sitemapIndex[partKey], nil
 }
 

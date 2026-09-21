@@ -1,4 +1,4 @@
-- Refactor slogs and error rendering from sitempams onwards
+- Refactor slogs and error rendering from sources onwards
   Finaly search for http.NotFound usage and replace with html error
 
 - Make `:= range` more performant by using index
