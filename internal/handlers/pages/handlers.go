@@ -47,6 +47,10 @@ func (s *Service) SinglePageHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if errors.Is(err, pgx.ErrNoRows) {
+		slog.WarnContext(
+			r.Context(), "failed to get the page from DB",
+			"error", err,
+		)
 		http.NotFound(w, r)
 		return
 	}
@@ -54,7 +58,6 @@ func (s *Service) SinglePageHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		slog.ErrorContext(
 			r.Context(), "failed to get the page from DB",
-			"path", r.URL.Path,
 			"error", err,
 		)
 		utils.HttpError(w, http.StatusInternalServerError)
@@ -77,6 +80,10 @@ func (s *Service) UpdatePageHandler(w http.ResponseWriter, r *http.Request) {
 	// Get the page data straight from DB
 	page, err := s.pagesRepo.GetSinglePage(r.Context(), slug)
 	if errors.Is(err, pgx.ErrNoRows) {
+		slog.WarnContext(
+			r.Context(), "failed to get the page from DB",
+			"error", err,
+		)
 		http.NotFound(w, r)
 		return
 	}
@@ -84,7 +91,6 @@ func (s *Service) UpdatePageHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		slog.ErrorContext(
 			r.Context(), "failed to get the page from DB",
-			"path", r.URL.Path,
 			"error", err,
 		)
 		utils.HttpError(w, http.StatusInternalServerError)
@@ -125,6 +131,10 @@ func (s *Service) UpdatePageHandler(w http.ResponseWriter, r *http.Request) {
 
 		err := r.ParseForm()
 		if err != nil {
+			slog.WarnContext(
+				r.Context(), "failed to parse the form",
+				"error", err,
+			)
 			formError.Message = "Could not parse the form"
 			data.Form.Error = &formError
 			s.ui.RenderHTML(w, r, "form.html", data)
@@ -144,9 +154,8 @@ func (s *Service) UpdatePageHandler(w http.ResponseWriter, r *http.Request) {
 		)
 
 		if err != nil || rowsAffected == 0 {
-			slog.ErrorContext(
+			slog.WarnContext(
 				r.Context(), "failed to update the page in DB",
-				"path", r.URL.Path,
 				"error", err,
 			)
 			formError.Message = "Could not update the page"
@@ -158,9 +167,8 @@ func (s *Service) UpdatePageHandler(w http.ResponseWriter, r *http.Request) {
 		// Delete the redis cache
 		redisKey := fmt.Sprintf(pageCacheKey, slug)
 		if err = s.rdb.Client.Del(r.Context(), redisKey).Err(); err != nil {
-			slog.ErrorContext(
+			slog.WarnContext(
 				r.Context(), "failed to delete the cache on page",
-				"path", r.URL.Path,
 				"error", err,
 			)
 			formError.Message = "Could not delete the cache on page"
@@ -210,6 +218,10 @@ func (s *Service) NewPageHandler(w http.ResponseWriter, r *http.Request) {
 
 		err := r.ParseForm()
 		if err != nil {
+			slog.WarnContext(
+				r.Context(), "failed to parse the form",
+				"error", err,
+			)
 			formError.Message = "Could not parse the form"
 			data.Form.Error = &formError
 			s.ui.RenderHTML(w, r, "form.html", data)
@@ -232,9 +244,8 @@ func (s *Service) NewPageHandler(w http.ResponseWriter, r *http.Request) {
 		)
 
 		if err != nil || rowsAffected == 0 {
-			slog.ErrorContext(
+			slog.WarnContext(
 				r.Context(), "failed to insert the page in DB",
-				"path", r.URL.Path,
 				"error", err,
 			)
 			formError.Message = "Could not create this page. Try changing the title."
@@ -254,18 +265,14 @@ func (s *Service) NewPageHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Service) DeletePageHandler(w http.ResponseWriter, r *http.Request) {
+
 	// Get the page slug from URL
 	pageSlug := r.PathValue("slug")
-
-	// Get the current user
-	currentUser := models.GetUserFromContext(r)
 
 	rowsAffected, err := s.pagesRepo.DeletePage(r.Context(), pageSlug)
 	if err != nil {
 		slog.ErrorContext(
 			r.Context(), "failed to delete the page from DB",
-			"path", r.URL.Path,
-			"userID", currentUser.ID,
 			"error", err,
 		)
 		utils.HttpError(w, http.StatusInternalServerError)
@@ -273,6 +280,7 @@ func (s *Service) DeletePageHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if rowsAffected == 0 {
+		slog.WarnContext(r.Context(), "no such page to delete")
 		http.NotFound(w, r)
 		return
 	}

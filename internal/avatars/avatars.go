@@ -19,11 +19,16 @@ import (
 type Service struct {
 	active map[string]struct{}
 	mu     sync.Mutex
-	Jobs   chan *models.User
+	jobs   chan job
 
 	config *config.Config
 	rdb    *rdb.Service
 	r2s    r2.Service
+}
+
+type job struct {
+	ctx  context.Context
+	user *models.User
 }
 
 func New(
@@ -36,7 +41,7 @@ func New(
 
 	s := &Service{
 		active: make(map[string]struct{}),
-		Jobs:   make(chan *models.User, bufferSize),
+		jobs:   make(chan job, bufferSize),
 
 		config: cfg,
 		rdb:    rdb,
@@ -70,9 +75,8 @@ func (s *Service) Get(ctx context.Context, user *models.User) (string, error) {
 
 	// Log redis non nil error
 	if err != nil && !errors.Is(err, redis.Nil) {
-		slog.Error(
-			"failed to get avatar from Redis cache",
-			"avatar", r2URL,
+		slog.WarnContext(
+			ctx, "failed to get avatar from Redis",
 			"error", err,
 		)
 	}
@@ -93,16 +97,16 @@ func (s *Service) Get(ctx context.Context, user *models.User) (string, error) {
 
 	// Log redis error
 	if err != nil {
-		slog.Error(
-			"failed to get avatar's TTL from Redis cache",
-			"avatar", r2URL,
+		slog.WarnContext(
+			ctx, "failed to get avatar's TTL from Redis",
 			"error", err,
 		)
 	}
 
-	// Enqueue the user for avatar processing if timer expired
+	// Enqueue the user for avatar processing if timer expired.
+	// Detach the context and carry it in the job.
 	if ttl <= 0 {
-		s.enqueue(user)
+		s.enqueue(job{context.WithoutCancel(ctx), user})
 	}
 
 	return r2URL, nil
@@ -129,8 +133,8 @@ func (s *Service) Save(ctx context.Context, user *models.User) error {
 
 	// Log redis non nil error and abandon further progress.
 	if !errors.Is(err, redis.Nil) {
-		slog.Error(
-			"failed to get avatar from Redis cache",
+		slog.WarnContext(
+			ctx, "failed to get avatar from Redis",
 			"error", err,
 		)
 		return nil
@@ -146,9 +150,8 @@ func (s *Service) Save(ctx context.Context, user *models.User) error {
 
 	// Swallow this error and abandon further progress
 	if err != nil || r2URL == "" {
-		slog.Error(
-			"failed to refresh the avatar",
-			"avatar", r2URL,
+		slog.WarnContext(
+			ctx, "failed to refresh the avatar",
 			"error", err,
 		)
 		return nil
@@ -164,10 +167,8 @@ func (s *Service) Save(ctx context.Context, user *models.User) error {
 
 	// Swallow this error
 	if err != nil {
-		slog.Error(
-			"failed to save the avatar in Redis",
-			"redisKey", avatarKey,
-			"avatarURL", r2URL,
+		slog.WarnContext(
+			ctx, "failed to save the avatar in Redis",
 			"error", err,
 		)
 	}
@@ -182,9 +183,8 @@ func (s *Service) Save(ctx context.Context, user *models.User) error {
 
 	// Swallow this error
 	if err != nil {
-		slog.Error(
-			"failed to reset the avatar TTL in Redis",
-			"redisKey", ttlKey,
+		slog.WarnContext(
+			ctx, "failed to reset the avatar TTL in Redis",
 			"error", err,
 		)
 	}
@@ -192,25 +192,22 @@ func (s *Service) Save(ctx context.Context, user *models.User) error {
 	return nil
 }
 
-// Delete avatar from object storage if exists
+// Delete removes user avatar from object storages - R2 and Redis
 func (s *Service) Delete(ctx context.Context, user *models.User) error {
 
 	errs := make([]error, 0, 3)
 
-	// Attemp to delete the avatar image from R2
+	// Attempt to delete the avatar image from R2
 	objectKey := fmt.Sprintf(avatarR2Path, user.PublicID)
-	err := s.r2s.DeleteObject(ctx, s.config.R2CdnBucketName, objectKey)
-	err = fmt.Errorf("failed to remove avatar %q from R2: %w", objectKey, err)
-	errs = append(errs, err)
+	errs = append(errs, s.r2s.DeleteObject(
+		ctx, s.config.R2CdnBucketName, objectKey),
+	)
 
 	// Delete user and admin avatar Redis cache values
-	for _, key := range []string{
-		avatarCacheTTL + user.PublicID,
-		avatarCachePrefix + user.PublicID,
-	} {
-		err := s.rdb.Client.Del(ctx, key).Err()
-		err = fmt.Errorf("failed to remove avatar %q from Redis: %w", key, err)
-		errs = append(errs, err)
+	key := avatarCacheTTL + user.PublicID
+	prefix := avatarCachePrefix + user.PublicID
+	for _, key := range []string{key, prefix} {
+		errs = append(errs, s.rdb.Client.Del(ctx, key).Err())
 	}
 
 	return errors.Join(errs...)

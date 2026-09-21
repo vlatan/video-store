@@ -41,8 +41,8 @@ type Service interface {
 	RenderHTML(w http.ResponseWriter, r *http.Request, templateName string, data *models.TemplateData)
 	// Write JSON error to response
 	JSONError(w http.ResponseWriter, r *http.Request, statusCode int)
-	// ExecuteErrorTemplate executes error.html template
-	ExecuteErrorTemplate(w io.Writer, status int, data *models.TemplateData) error
+	// HTMLError executes error.html template
+	HTMLError(w io.Writer, status int, data *models.TemplateData) error
 }
 
 type service struct {

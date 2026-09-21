@@ -34,8 +34,6 @@ const loadItems = async (url = "", cursor = "") => {
         // Iterate over the items in the response, create video cards
         // and append them as children to the scroller.
         for (const item of data.items) {
-            console.log("TITLE:", item.title);
-            console.log("ORIGINIAL TITLE:", item.original_title);
             const card = createVideoCard(item);
             scroller?.appendChild(card);
         }

@@ -17,9 +17,7 @@ func (s *Service) handleLike(w http.ResponseWriter, r *http.Request, userID int,
 
 	if err != nil {
 		slog.ErrorContext(
-			r.Context(), "user failed to like the video",
-			"path", r.URL.Path,
-			"userId", userID,
+			r.Context(), "failed to like the video",
 			"error", err,
 		)
 		utils.HttpError(w, http.StatusInternalServerError)
@@ -27,6 +25,7 @@ func (s *Service) handleLike(w http.ResponseWriter, r *http.Request, userID int,
 	}
 
 	if rowsAffected == 0 {
+		slog.WarnContext(r.Context(), "no such video to like")
 		http.NotFound(w, r)
 	}
 }
@@ -38,9 +37,7 @@ func (s *Service) handleUnlike(w http.ResponseWriter, r *http.Request, userID in
 
 	if err != nil {
 		slog.ErrorContext(
-			r.Context(), "user failed to unlike the video",
-			"path", r.URL.Path,
-			"userId", userID,
+			r.Context(), "failed to unlike the video",
 			"error", err,
 		)
 		utils.HttpError(w, http.StatusInternalServerError)
@@ -48,6 +45,7 @@ func (s *Service) handleUnlike(w http.ResponseWriter, r *http.Request, userID in
 	}
 
 	if rowsAffected == 0 {
+		slog.WarnContext(r.Context(), "no such video to unlike")
 		http.NotFound(w, r)
 	}
 }
@@ -59,9 +57,7 @@ func (s *Service) handleFave(w http.ResponseWriter, r *http.Request, userID int,
 
 	if err != nil {
 		slog.ErrorContext(
-			r.Context(), "user failed to favorite the video",
-			"path", r.URL.Path,
-			"userId", userID,
+			r.Context(), "failed to fave the video",
 			"error", err,
 		)
 		utils.HttpError(w, http.StatusInternalServerError)
@@ -69,6 +65,7 @@ func (s *Service) handleFave(w http.ResponseWriter, r *http.Request, userID int,
 	}
 
 	if rowsAffected == 0 {
+		slog.WarnContext(r.Context(), "no such video to fave")
 		http.NotFound(w, r)
 	}
 }
@@ -80,9 +77,7 @@ func (s *Service) handleUnfave(w http.ResponseWriter, r *http.Request, userID in
 
 	if err != nil {
 		slog.ErrorContext(
-			r.Context(), "user failed to unfavorite the video",
-			"path", r.URL.Path,
-			"userId", userID,
+			r.Context(), "failed to unfave the video",
 			"error", err,
 		)
 		utils.HttpError(w, http.StatusInternalServerError)
@@ -90,6 +85,7 @@ func (s *Service) handleUnfave(w http.ResponseWriter, r *http.Request, userID in
 	}
 
 	if rowsAffected == 0 {
+		slog.WarnContext(r.Context(), "no such video to unfave")
 		http.NotFound(w, r)
 	}
 }
@@ -104,8 +100,6 @@ func (s *Service) handleRate(w http.ResponseWriter, r *http.Request, userID int,
 	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
 		slog.ErrorContext(
 			r.Context(), "failed to decode post rating",
-			"path", r.URL.Path,
-			"userId", userID,
 			"error", err,
 		)
 		utils.HttpError(w, http.StatusInternalServerError)
@@ -113,10 +107,8 @@ func (s *Service) handleRate(w http.ResponseWriter, r *http.Request, userID int,
 	}
 
 	if data.Rating < 1 || data.Rating > 10 {
-		slog.ErrorContext(
+		slog.WarnContext(
 			r.Context(), "rating out of bounds",
-			"path", r.URL.Path,
-			"userId", userID,
 		)
 		utils.HttpError(w, http.StatusBadRequest)
 		return
@@ -125,15 +117,14 @@ func (s *Service) handleRate(w http.ResponseWriter, r *http.Request, userID int,
 	ratingStats, err := s.postsRepo.Rate(r.Context(), data.Rating, userID, videoID)
 
 	if errors.Is(err, pgx.ErrNoRows) {
+		slog.WarnContext(r.Context(), "no such video to rate")
 		http.NotFound(w, r)
 		return
 	}
 
 	if err != nil {
 		slog.ErrorContext(
-			r.Context(), "user failed to rate the video",
-			"path", r.URL.Path,
-			"userId", userID,
+			r.Context(), "failed to rate the video",
 			"error", err,
 		)
 		utils.HttpError(w, http.StatusInternalServerError)
@@ -149,15 +140,14 @@ func (s *Service) handleUnrate(w http.ResponseWriter, r *http.Request, userID in
 	ratingStats, err := s.postsRepo.Unrate(r.Context(), userID, videoID)
 
 	if errors.Is(err, pgx.ErrNoRows) {
+		slog.WarnContext(r.Context(), "no such video to unrate")
 		http.NotFound(w, r)
 		return
 	}
 
 	if err != nil {
 		slog.ErrorContext(
-			r.Context(), "user failed to delete their video rating/review",
-			"path", r.URL.Path,
-			"userId", userID,
+			r.Context(), "failed to unrate the video",
 			"error", err,
 		)
 		utils.HttpError(w, http.StatusInternalServerError)
@@ -179,8 +169,6 @@ func (s *Service) handleReview(w http.ResponseWriter, r *http.Request, userID in
 	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
 		slog.ErrorContext(
 			r.Context(), "failed to decode post review",
-			"path", r.URL.Path,
-			"userId", userID,
 			"error", err,
 		)
 		utils.HttpError(w, http.StatusInternalServerError)
@@ -188,20 +176,14 @@ func (s *Service) handleReview(w http.ResponseWriter, r *http.Request, userID in
 	}
 
 	if data.Rating < 1 || data.Rating > 10 {
-		slog.ErrorContext(
-			r.Context(), "rating out of bounds",
-			"path", r.URL.Path,
-			"userId", userID,
-		)
+		slog.WarnContext(r.Context(), "rating out of bounds")
 		utils.HttpError(w, http.StatusBadRequest)
 		return
 	}
 
 	if err := validateReview(data.Headline, data.Content); err != nil {
-		slog.ErrorContext(
+		slog.WarnContext(
 			r.Context(), "failed to validate the review",
-			"path", r.URL.Path,
-			"userId", userID,
 			"error", err,
 		)
 		utils.HttpError(w, http.StatusBadRequest)
@@ -218,15 +200,14 @@ func (s *Service) handleReview(w http.ResponseWriter, r *http.Request, userID in
 	)
 
 	if errors.Is(err, pgx.ErrNoRows) {
+		slog.WarnContext(r.Context(), "no such video to review")
 		http.NotFound(w, r)
 		return
 	}
 
 	if err != nil {
 		slog.ErrorContext(
-			r.Context(), "user failed to review the video",
-			"path", r.URL.Path,
-			"userId", userID,
+			r.Context(), "failed to review the video",
 			"error", err,
 		)
 		utils.HttpError(w, http.StatusInternalServerError)

@@ -1,4 +1,6 @@
-- Solve double logging, do not slog sepparately
+- Remove request or user details in slogs in the code
+  From sitemaps onwards
+
 - Make `:= range` more performant by using index
 - Make the directors links that list their films, and also the release years
 

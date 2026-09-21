@@ -8,10 +8,15 @@
 <link rel="stylesheet" type="text/css" href='{{ .AddVersion "/static/css/content.css" }}'>
 {{ end }}
 
+{{ define "canonical" }} <!-- Overwrite canonical url on search -->
+<link rel="canonical" href="{{ .BaseCanonicalURL }}{{ with .SearchQuery }}?q={{ . }}{{ end }}" />
+{{ end }}
+
 {{ define "extra_meta" }}
 <meta property='og:title' content='{{ .Title }}'>
 <meta property='og:type' content='article'>
-<meta property='og:url' content='{{ .BaseCanonicalURL }}'>
+<meta property='og:url' content='{{ .BaseCanonicalURL }}{{ with .SearchQuery }}?q={{ . }}{{ end }}'>
+<meta name="robots" content="noindex, follow"> <!-- Do not index search pages -->
 {{ end }}
 
 {{ define "title_tag" }}

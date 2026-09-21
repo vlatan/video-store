@@ -37,7 +37,7 @@ func (s *Service) HomeAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get current user
-	currentUser := models.GetUserFromContext(r)
+	currentUser := models.GetUserFromContext(r.Context())
 
 	var (
 		err   error
@@ -66,10 +66,15 @@ func (s *Service) HomeAPI(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		slog.ErrorContext(
 			r.Context(), "failed to get posts from DB",
-			"path", r.URL.Path,
 			"error", err,
 		)
 		utils.HttpError(w, http.StatusInternalServerError)
+		return
+	}
+
+	if len(posts.Items) == 0 {
+		slog.WarnContext(r.Context(), "no posts found in DB")
+		http.NotFound(w, r)
 		return
 	}
 
@@ -105,7 +110,7 @@ func (s *Service) CategoryPostsAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get current user
-	currentUser := models.GetUserFromContext(r)
+	currentUser := models.GetUserFromContext(r.Context())
 
 	var (
 		err   error
@@ -133,8 +138,7 @@ func (s *Service) CategoryPostsAPI(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		slog.ErrorContext(
-			r.Context(), "failed get posts from DB",
-			"path", r.URL.Path,
+			r.Context(), "failed to get posts from DB",
 			"error", err,
 		)
 		utils.HttpError(w, http.StatusInternalServerError)
@@ -142,6 +146,7 @@ func (s *Service) CategoryPostsAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(posts.Items) == 0 {
+		slog.WarnContext(r.Context(), "no posts found in DB")
 		http.NotFound(w, r)
 		return
 	}
@@ -169,7 +174,7 @@ func (s *Service) SearchPostsAPI(w http.ResponseWriter, r *http.Request) {
 	redisKey += fmt.Sprintf(":cursor:%s", cursor)
 
 	// Get current user
-	currentUser := models.GetUserFromContext(r)
+	currentUser := models.GetUserFromContext(r.Context())
 
 	var (
 		err   error
@@ -205,6 +210,12 @@ func (s *Service) SearchPostsAPI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if len(posts.Items) == 0 {
+		slog.WarnContext(r.Context(), "no posts found in DB")
+		http.NotFound(w, r)
+		return
+	}
+
 	s.ui.WriteJSON(w, r, posts)
 }
 
@@ -228,7 +239,7 @@ func (s *Service) PostReviewsAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get current user
-	currentUser := models.GetUserFromContext(r)
+	currentUser := models.GetUserFromContext(r.Context())
 
 	var (
 		err     error
@@ -252,8 +263,7 @@ func (s *Service) PostReviewsAPI(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		slog.ErrorContext(
-			r.Context(), "failed get reviews from DB",
-			"path", r.URL.Path,
+			r.Context(), "failed get post reviews from DB",
 			"error", err,
 		)
 		utils.HttpError(w, http.StatusInternalServerError)
@@ -261,6 +271,7 @@ func (s *Service) PostReviewsAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(reviews.Items) == 0 {
+		slog.WarnContext(r.Context(), "no post reviews found in DB")
 		http.NotFound(w, r)
 		return
 	}
@@ -270,9 +281,7 @@ func (s *Service) PostReviewsAPI(w http.ResponseWriter, r *http.Request) {
 		localAvatarURL, err := s.avatars.Get(r.Context(), &review.User)
 		if err != nil {
 			slog.ErrorContext(
-				r.Context(), "failed to get user's avatar",
-				"path", r.URL.Path,
-				"userId", review.User.ID,
+				r.Context(), "failed to get user avatar",
 				"error", err,
 			)
 
@@ -298,6 +307,7 @@ func (s *Service) PostActionAPI(w http.ResponseWriter, r *http.Request) {
 	// Validate the YT ID
 	videoID := r.PathValue("video")
 	if validVideoID.FindStringSubmatch(videoID) == nil {
+		slog.WarnContext(r.Context(), "invalid video id")
 		http.NotFound(w, r)
 		return
 	}
@@ -306,16 +316,13 @@ func (s *Service) PostActionAPI(w http.ResponseWriter, r *http.Request) {
 	action := r.PathValue("action")
 	allowedActions := []string{"like", "fave", "rate", "review"}
 	if !slices.Contains(allowedActions, action) {
-		slog.InfoContext(
-			r.Context(), "not a valid action on post",
-			"path", r.URL.Path,
-		)
+		slog.WarnContext(r.Context(), "not a valid action on post")
 		http.NotFound(w, r)
 		return
 	}
 
 	// Get the current user
-	user := models.GetUserFromContext(r)
+	user := models.GetUserFromContext(r.Context())
 
 	switch action {
 	case "like":
@@ -337,6 +344,7 @@ func (s *Service) DeleteActionAPI(w http.ResponseWriter, r *http.Request) {
 	// Validate the YT ID
 	videoID := r.PathValue("video")
 	if validVideoID.FindStringSubmatch(videoID) == nil {
+		slog.WarnContext(r.Context(), "invalid video id")
 		http.NotFound(w, r)
 		return
 	}
@@ -345,16 +353,13 @@ func (s *Service) DeleteActionAPI(w http.ResponseWriter, r *http.Request) {
 	action := r.PathValue("action")
 	allowedActions := []string{"unlike", "unfave", "unrate"}
 	if !slices.Contains(allowedActions, action) {
-		slog.InfoContext(
-			r.Context(), "not a valid action on post",
-			"path", r.URL.Path,
-		)
+		slog.WarnContext(r.Context(), "not a valid action on post")
 		http.NotFound(w, r)
 		return
 	}
 
 	// Get the current user
-	user := models.GetUserFromContext(r)
+	user := models.GetUserFromContext(r.Context())
 
 	switch action {
 	case "unlike":

@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
+	"log/slog"
 
 	tcredis "github.com/testcontainers/testcontainers-go/modules/redis"
 	"github.com/vlatan/video-store/internal/config"
@@ -17,7 +17,10 @@ type redisContainer struct {
 // Terminate stops and removes the container
 func (rc *redisContainer) Terminate(ctx context.Context) {
 	if err := rc.container.Terminate(ctx); err != nil {
-		log.Printf("failed to terminate container: %v", err)
+		slog.WarnContext(
+			ctx, "failed to terminate container",
+			"error", err,
+		)
 	}
 }
 

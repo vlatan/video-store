@@ -71,10 +71,15 @@ func (s *Service) HomeHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		slog.ErrorContext(
 			r.Context(), "failed to get posts from DB",
-			"path", r.URL.Path,
 			"error", err,
 		)
 		utils.HttpError(w, http.StatusInternalServerError)
+		return
+	}
+
+	if len(posts.Items) == 0 {
+		slog.WarnContext(r.Context(), "no posts found in DB")
+		http.NotFound(w, r)
 		return
 	}
 
@@ -130,8 +135,7 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		slog.ErrorContext(
-			r.Context(), "failed get posts from DB",
-			"path", r.URL.Path,
+			r.Context(), "failed to get posts from DB",
 			"error", err,
 		)
 		utils.HttpError(w, http.StatusInternalServerError)
@@ -139,6 +143,7 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(posts.Items) == 0 {
+		slog.WarnContext(r.Context(), "no posts found in DB")
 		http.NotFound(w, r)
 		return
 	}
@@ -154,6 +159,7 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 	// Get the search query
 	searchQuery := r.URL.Query().Get("q")
 	if searchQuery == "" {
+		slog.WarnContext(r.Context(), "empty search query")
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
 	}
@@ -197,10 +203,14 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		slog.ErrorContext(
 			r.Context(), "failed to get posts from DB",
-			"path", r.URL.Path,
 			"error", err,
 		)
 		utils.HttpError(w, http.StatusInternalServerError)
+		return
+	}
+	if len(posts.Items) == 0 {
+		slog.WarnContext(r.Context(), "no posts found in DB")
+		http.NotFound(w, r)
 		return
 	}
 
@@ -237,6 +247,10 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 
 		err := r.ParseForm()
 		if err != nil {
+			slog.WarnContext(
+				r.Context(), "failed to parse the form",
+				"error", err,
+			)
 			formError.Message = "Could not parse the form"
 			data.Form.Error = &formError
 			s.ui.RenderHTML(w, r, "form.html", data)
@@ -250,6 +264,10 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 		// Exctract the ID from the URL
 		videoID, err := extractYouTubeID(url)
 		if err != nil {
+			slog.WarnContext(
+				r.Context(), "failed to extract the video ID",
+				"error", err,
+			)
 			formError.Message = "Could not extract the video ID"
 			data.Form.Error = &formError
 			s.ui.RenderHTML(w, r, "form.html", data)
@@ -258,6 +276,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Validate the YT ID
 		if validVideoID.FindStringSubmatch(videoID) == nil {
+			slog.WarnContext(r.Context(), "invalid video id")
 			formError.Message = "Could not validate the video ID"
 			data.Form.Error = &formError
 			s.ui.RenderHTML(w, r, "form.html", data)
@@ -266,6 +285,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Check if the video is already posted
 		if err = s.postsRepo.PostExists(r.Context(), videoID); err == nil {
+			slog.WarnContext(r.Context(), "video already posted")
 			formError.Message = "Video already posted"
 			data.Form.Error = &formError
 			s.ui.RenderHTML(w, r, "form.html", data)
@@ -284,9 +304,8 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 		)
 
 		if err != nil {
-			slog.ErrorContext(
+			slog.WarnContext(
 				r.Context(), "failed get video data from YouTube",
-				"path", r.URL.Path,
 				"error", err,
 			)
 			formError.Message = "Unable to fetch the video from YouTube"
@@ -297,9 +316,8 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Validate the video data
 		if err := s.yt.ValidateYouTubeVideo(metadata[0]); err != nil {
-			slog.ErrorContext(
-				r.Context(), "failed get validate this video",
-				"path", r.URL.Path,
+			slog.WarnContext(
+				r.Context(), "failed to validate the video data",
 				"error", err,
 			)
 			formError.Message = utils.Capitalize(err.Error())
@@ -315,9 +333,8 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 		// Insert the video
 		rowsAffected, err := s.postsRepo.InsertPost(r.Context(), post)
 		if err != nil || rowsAffected == 0 {
-			slog.ErrorContext(
+			slog.WarnContext(
 				r.Context(), "failed to insert the post in DB",
-				"path", r.URL.Path,
 				"error", err,
 			)
 			formError.Message = "Could not insert the video in DB"
@@ -345,11 +362,9 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 			}
 
 			if err := s.gemini.GeneratePostSummary(ctx, post, retryConfig); err != nil {
-				slog.ErrorContext(
+				slog.WarnContext(
 					r.Context(),
 					"failed to generate/update LLM post summary/category",
-					"path", r.URL.Path,
-					"videoId", post.VideoID,
 					"error", err,
 				)
 				// Exit early, do not try OCR nor DB update.
@@ -363,26 +378,21 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 			}
 
 			if err := s.gemini.GeneratePostOCR(ctx, post, retryConfig); err != nil {
-				slog.ErrorContext(
+				slog.WarnContext(
 					r.Context(),
 					"failed to generate/update LLM post OCR data",
-					"path", r.URL.Path,
-					"videoId", post.VideoID,
 					"error", err,
 				)
 			}
 
 			_, err = s.postsRepo.UpdatePost(ctx, post)
 			if err != nil {
-				slog.ErrorContext(
+				slog.WarnContext(
 					r.Context(),
 					"failed to update LLM content in DB",
-					"path", r.URL.Path,
-					"videoId", post.VideoID,
 					"error", err,
 				)
 			}
-
 		}()
 
 		// Check out the video
@@ -403,6 +413,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Validate the YT ID
 	if validVideoID.FindStringSubmatch(videoID) == nil {
+		slog.WarnContext(r.Context(), "invalid video id")
 		http.NotFound(w, r)
 		return
 	}
@@ -486,16 +497,19 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 	// Wait for the goroutines to finish
 	if err := g.Wait(); err != nil {
 
-		slog.ErrorContext(
-			r.Context(), "failed to get a single post",
-			"path", r.URL.Path,
-			"error", err,
-		)
-
 		if errors.Is(err, pgx.ErrNoRows) {
+			slog.WarnContext(
+				r.Context(), "no such post in DB",
+				"error", err,
+			)
 			http.NotFound(w, r)
 			return
 		}
+
+		slog.ErrorContext(
+			r.Context(), "failed to get a single post",
+			"error", err,
+		)
 
 		utils.HttpError(w, http.StatusInternalServerError)
 		return
@@ -552,8 +566,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 		// If error just log it, no related posts will be shown.
 		if taskErr != nil {
 			slog.ErrorContext(
-				r.Context(), "failed to get the related posts",
-				"path", r.URL.Path,
+				r.Context(), "failed to get related posts",
 				"error", taskErr,
 			)
 		}
@@ -567,7 +580,6 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 
 		slog.ErrorContext(
 			r.Context(), "failed to get a single post",
-			"path", r.URL.Path,
 			"error", err,
 		)
 
@@ -593,6 +605,7 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Validate the YT ID
 	if validVideoID.FindStringSubmatch(videoID) == nil {
+		slog.WarnContext(r.Context(), "invalid video id")
 		http.NotFound(w, r)
 		return
 	}
@@ -600,6 +613,10 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 	// Get the post data straight from DB
 	post, err := s.postsRepo.GetSinglePost(r.Context(), videoID)
 	if errors.Is(err, pgx.ErrNoRows) {
+		slog.WarnContext(
+			r.Context(), "no such post in DB",
+			"error", err,
+		)
 		http.NotFound(w, r)
 		return
 	}
@@ -607,7 +624,6 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		slog.ErrorContext(
 			r.Context(), "failed to get the post from DB",
-			"path", r.URL.Path,
 			"error", err,
 		)
 		utils.HttpError(w, http.StatusInternalServerError)
@@ -691,9 +707,8 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 
 		err := r.ParseForm()
 		if err != nil {
-			slog.ErrorContext(
+			slog.WarnContext(
 				r.Context(), "failed to parse the form",
-				"path", r.URL.Path,
 				"error", err,
 			)
 			formError.Message = "Could not parse the form"
@@ -734,9 +749,8 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 		// ParseInt bitSize=16 guarantees n fits in int16.
 		releaseYear, err := strconv.ParseInt(data.Form.ReleaseYear.Value, 10, 16)
 		if err != nil {
-			slog.ErrorContext(
+			slog.WarnContext(
 				r.Context(), "failed to parse release year",
-				"path", r.URL.Path,
 				"error", err,
 			)
 			formError.Message = "Could not parse the release year"
@@ -746,9 +760,9 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if releaseYear < 1900 || int(releaseYear) > maxYear {
-			slog.ErrorContext(
-				r.Context(), fmt.Sprintf("Year must be between 1900 and %d", maxYear),
-				"path", r.URL.Path,
+			slog.WarnContext(
+				r.Context(),
+				fmt.Sprintf("Year must be between 1900 and %d", maxYear),
 			)
 			formError.Message = "Could not parse the release year"
 			data.Form.Error = &formError
@@ -761,7 +775,6 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			slog.ErrorContext(
 				r.Context(), "failed to normalize directors",
-				"path", r.URL.Path,
 				"error", err,
 			)
 			formError.Message = "Could not parse the directors"
@@ -783,7 +796,6 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil || rowsAffected == 0 {
 			slog.ErrorContext(
 				r.Context(), "failed to update the post in DB",
-				"path", r.URL.Path,
 				"error", err,
 			)
 			formError.Message = "Could not update the post in DB"
@@ -797,7 +809,6 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 		if err = s.rdb.Client.Del(r.Context(), redisKey).Err(); err != nil {
 			slog.ErrorContext(
 				r.Context(), "failed to delete the cache on post",
-				"path", r.URL.Path,
 				"error", err,
 			)
 			formError.Message = "Could not delete the cache on post"
@@ -822,19 +833,15 @@ func (s *Service) BanPostHandler(w http.ResponseWriter, r *http.Request) {
 	// Validate the YT ID
 	videoID := r.PathValue("video")
 	if validVideoID.FindStringSubmatch(videoID) == nil {
+		slog.WarnContext(r.Context(), "invalid video id")
 		http.NotFound(w, r)
 		return
 	}
 
-	// Get the current user
-	user := models.GetUserFromContext(r)
-
 	rowsAffected, err := s.postsRepo.BanPost(r.Context(), videoID)
 	if err != nil {
 		slog.ErrorContext(
-			r.Context(), "user failed to ban/delete the video",
-			"path", r.URL.Path,
-			"userId", user.ID,
+			r.Context(), "failed to ban/delete the video",
 			"error", err,
 		)
 		utils.HttpError(w, http.StatusInternalServerError)
@@ -842,6 +849,7 @@ func (s *Service) BanPostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if rowsAffected == 0 {
+		slog.WarnContext(r.Context(), "no such post to ban")
 		http.NotFound(w, r)
 		return
 	}

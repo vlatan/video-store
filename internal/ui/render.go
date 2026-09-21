@@ -19,7 +19,6 @@ func (s *service) WriteJSON(w http.ResponseWriter, r *http.Request, data any) {
 	if err != nil {
 		slog.ErrorContext(
 			r.Context(), "failed to encode JSON response",
-			"path", r.URL.Path,
 			"error", err,
 		)
 		utils.HttpError(w, http.StatusInternalServerError)
@@ -32,7 +31,6 @@ func (s *service) WriteJSON(w http.ResponseWriter, r *http.Request, data any) {
 		// Too late for recovery here, just log the error
 		slog.ErrorContext(
 			r.Context(), "failed to write data to response",
-			"path", r.URL.Path,
 			"error", err,
 		)
 	}
@@ -50,7 +48,6 @@ func (s *service) RenderHTML(
 	if !exists {
 		slog.ErrorContext(
 			r.Context(), "failed to find HTML template",
-			"path", r.URL.Path,
 			"template", templateName,
 		)
 		utils.HttpError(w, http.StatusInternalServerError)
@@ -74,7 +71,6 @@ func (s *service) RenderHTML(
 	if err := tmpl.ExecuteTemplate(w, templateName, data); err != nil {
 		slog.ErrorContext(
 			r.Context(), "failed to execute HTML template",
-			"path", r.URL.Path,
 			"template", templateName,
 			"error", err,
 		)

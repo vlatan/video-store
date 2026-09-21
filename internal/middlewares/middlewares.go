@@ -2,9 +2,10 @@ package middlewares
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"log/slog"
 	"net/http"
-	"os"
 	"runtime/debug"
 	"slices"
 	"strings"
@@ -25,14 +26,7 @@ type Service struct {
 // New creates new middlewares service
 func New(ui ui.Service, config *config.Config) *Service {
 
-	var opts *slog.HandlerOptions
-	if config.Debug {
-		opts = &slog.HandlerOptions{Level: slog.LevelDebug}
-	}
-
-	handler := slog.NewJSONHandler(os.Stdout, opts)
-	logger := slog.New(handler)
-	slog.SetDefault(logger)
+	SetCustomLogger(config)
 
 	return &Service{
 		ui:     ui,
@@ -44,7 +38,7 @@ func New(ui ui.Service, config *config.Config) *Service {
 func (s *Service) IsAuthenticated(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// If the user is authenticated move onto the next handler
-		if user := models.GetUserFromContext(r); user.IsAuthenticated() {
+		if user := models.GetUserFromContext(r.Context()); user.IsAuthenticated() {
 			next(w, r)
 			return
 		}
@@ -58,7 +52,7 @@ func (s *Service) IsAuthenticated(next http.HandlerFunc) http.HandlerFunc {
 func (s *Service) IsAdmin(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// If the user is admin move onto the next handler
-		if user := models.GetUserFromContext(r); user.IsAdmin() {
+		if user := models.GetUserFromContext(r.Context()); user.IsAdmin() {
 			next(w, r)
 			return
 		}
@@ -68,30 +62,71 @@ func (s *Service) IsAdmin(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
+// LoadRequestaId adds request ID in the context
+func (s *Service) LoadRequestId(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		bytes := make([]byte, 8)
+		rand.Read(bytes)
+		ctx := context.WithValue(r.Context(), ctxKey{}, hex.EncodeToString(bytes))
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
 // LoadUser gets the user from session and stores it in the context
 func (s *Service) LoadUser(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-		// Get user from session and store in context
-		user, err := s.ui.GetUserFromSession(w, r) // Anonymous if nil
-
-		// Exit early if context ended
-		if utils.IsContextErr(err) {
-			utils.HttpError(w, http.StatusInternalServerError)
-			return
-		}
-
+		user, _ := s.ui.GetUserFromSession(w, r) // Anonymous if nil
 		ctx := context.WithValue(r.Context(), models.UserContextKey, user)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
+// Logging logs basic data about the request
+func (s *Service) Logging(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		// Skip logging for request to /healthcheck
+		if r.URL.Path == "/healthcheck" {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		st := NewStatusTracker(w)
+		next.ServeHTTP(st, r)
+
+		attrs := []any{
+			slog.Int("status", st.status),
+			slog.String("method", r.Method),
+			slog.String("host", r.Host),
+			slog.String("path", r.URL.Path),
+			slog.String("remoteIp", remoteIp(r)),
+			slog.String("userAgent", r.UserAgent()),
+		}
+
+		if len(r.URL.Query()) > 0 {
+			attrs = append(attrs, slog.Any("queries", r.URL.Query()))
+		}
+
+		if st.status >= http.StatusInternalServerError {
+			slog.ErrorContext(r.Context(), "request failed", attrs...)
+			return
+		}
+
+		if st.status >= http.StatusBadRequest {
+			slog.WarnContext(r.Context(), "request failed", attrs...)
+			return
+		}
+
+		slog.InfoContext(r.Context(), "request completed", attrs...)
+	})
+}
+
 // LoadData generates default data and stores it in the context
-func (s *Service) LoadData(next http.Handler) http.Handler {
+func (s *Service) LoadTemplateData(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		// Get user from context
-		user := models.GetUserFromContext(r)
+		user := models.GetUserFromContext(r.Context())
 		// Generate the default data
 		data := s.ui.NewData(w, r)
 		// Attach the user to be able to be accessed from data too
@@ -138,8 +173,6 @@ func (s *Service) RecoverPanic(next http.Handler) http.Handler {
 
 			slog.ErrorContext(
 				r.Context(), "panic recovered",
-				slog.String("method", r.Method),
-				slog.String("path", r.URL.Path),
 				slog.Any("error", err),
 				slog.Any("stack", cleanLines),
 			)
@@ -155,7 +188,7 @@ func (s *Service) RecoverPanic(next http.Handler) http.Handler {
 // PublicCache adds cache control header for non-admin users
 func (s *Service) PublicCache(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if user := models.GetUserFromContext(r); !user.IsAdmin() {
+		if user := models.GetUserFromContext(r.Context()); !user.IsAdmin() {
 			w.Header().Set("Cache-Control", "public, max-age=3600")
 		}
 		next(w, r)
@@ -185,7 +218,7 @@ func (s *Service) AddHeaders(next http.Handler) http.Handler {
 
 		// Add no cache headers if necessary
 		if !utils.IsFilePath(r.URL.Path) &&
-			models.GetUserFromContext(r).IsAuthenticated() {
+			models.GetUserFromContext(r.Context()).IsAuthenticated() {
 
 			w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 			w.Header().Set("Pragma", "no-cache")
@@ -264,7 +297,7 @@ func (s *Service) HandleErrors(next http.Handler) http.Handler {
 		recorder.Header().Set("Content-Type", "text/html; charset=utf-8")
 
 		// Try to render error template
-		if err := s.ui.ExecuteErrorTemplate(recorder, recorder.status, data); err != nil {
+		if err := s.ui.HTMLError(recorder, recorder.status, data); err != nil {
 			// Template failed, reset body in case it was written to
 			// and use plain text fallback
 			recorder.body.Reset()
@@ -293,53 +326,6 @@ func (s *Service) Compress(next http.Handler) http.Handler {
 		// Create gzip handler and serve http with it
 		gzipHandler := gzhttp.GzipHandler(next)
 		gzipHandler.ServeHTTP(w, r)
-	})
-}
-
-// Logging logs basic data about the request
-func (s *Service) Logging(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-		// Skip logging for request to /healthcheck
-		if r.URL.Path == "/healthcheck" {
-			next.ServeHTTP(w, r)
-			return
-		}
-
-		// Prioritize CF-Connecting-IP as recommended by Cloudflare
-		srcIp := r.Header.Get("CF-Connecting-IP")
-
-		// Fallback to True-Client-IP
-		if srcIp == "" {
-			srcIp = r.Header.Get("True-Client-IP")
-		}
-
-		// Fallback to X-Forwarded-For
-		if srcIp == "" {
-			xForwardedFor := r.Header.Get("X-Forwarded-For")
-			parts := strings.Split(xForwardedFor, ",")
-			srcIp = strings.TrimSpace(parts[0])
-		}
-
-		// Fallback to RemoteAddr
-		if srcIp == "" {
-			srcIp = r.RemoteAddr
-		}
-
-		st := NewStatusTracker(w)
-		next.ServeHTTP(st, r)
-
-		slog.InfoContext(
-			r.Context(),
-			"request info",
-			"method", r.Method,
-			"host", r.Host,
-			"path", r.URL.Path,
-			"query", r.URL.Query(),
-			"clientUa", r.Header.Get("User-Agent"),
-			"srcIp", srcIp,
-			"status", st.status,
-		)
 	})
 }
 

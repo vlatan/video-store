@@ -15,7 +15,7 @@ import (
 
 // ExecuteErrorTemplate executes error.html template
 // A wrapper around tmpl.ExecuteTemplate
-func (s *service) ExecuteErrorTemplate(w io.Writer, status int, data *models.TemplateData) error {
+func (s *service) HTMLError(w io.Writer, status int, data *models.TemplateData) error {
 
 	// Check for the error template
 	tmpl, exists := s.templates["error.html"]
@@ -65,7 +65,6 @@ func (s *service) JSONError(w http.ResponseWriter, r *http.Request, statusCode i
 	if err != nil {
 		slog.ErrorContext(
 			r.Context(), "failed to encode JSON error",
-			"path", r.URL.Path,
 			"error", err,
 		)
 		utils.HttpError(w, statusCode)
@@ -81,7 +80,6 @@ func (s *service) JSONError(w http.ResponseWriter, r *http.Request, statusCode i
 		// Partial data already written to response, just log the error.
 		slog.ErrorContext(
 			r.Context(), "failed to write data to response",
-			"path", r.URL.Path,
 			"error", err,
 		)
 	}

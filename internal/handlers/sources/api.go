@@ -39,7 +39,7 @@ func (s *Service) SourcePostsAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get current user
-	currentUser := models.GetUserFromContext(r)
+	currentUser := models.GetUserFromContext(r.Context())
 
 	var (
 		err   error
@@ -66,8 +66,8 @@ func (s *Service) SourcePostsAPI(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		slog.ErrorContext(
-			r.Context(), "failed to get source posts from DB",
-			"path", r.URL.Path,
+			r.Context(),
+			"failed to get source posts from DB",
 			"error", err,
 		)
 		utils.HttpError(w, http.StatusInternalServerError)
