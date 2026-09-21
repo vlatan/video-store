@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
+	"errors"
 	"log/slog"
 	"net/http"
 	"runtime/debug"
@@ -11,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/vlatan/video-store/internal/config"
+	"github.com/vlatan/video-store/internal/ctxerr"
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/ui"
 	"github.com/vlatan/video-store/internal/utils"
@@ -91,7 +93,14 @@ func (s *Service) Logging(next http.Handler) http.Handler {
 			return
 		}
 
+		// Add errors collector to context. Use new request object with new context.
+		newCtx := ctxerr.WithCollector(r.Context())
+		r = r.WithContext(newCtx)
+
+		// Replace response writer with status tracker
 		st := NewStatusTracker(w)
+
+		// Serve the request
 		next.ServeHTTP(st, r)
 
 		attrs := []any{
@@ -107,6 +116,11 @@ func (s *Service) Logging(next http.Handler) http.Handler {
 			attrs = append(attrs, slog.Any("queries", r.URL.Query()))
 		}
 
+		errs := ctxerr.Errors(r.Context())
+		if len(errs) > 0 {
+			attrs = append(attrs, slog.Any("error", errors.Join(errs...)))
+		}
+
 		if st.status >= http.StatusInternalServerError {
 			slog.ErrorContext(r.Context(), "request failed", attrs...)
 			return
@@ -114,6 +128,11 @@ func (s *Service) Logging(next http.Handler) http.Handler {
 
 		if st.status >= http.StatusBadRequest {
 			slog.WarnContext(r.Context(), "request failed", attrs...)
+			return
+		}
+
+		if len(errs) > 0 {
+			slog.WarnContext(r.Context(), "request completed with errors", attrs...)
 			return
 		}
 
