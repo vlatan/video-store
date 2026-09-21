@@ -278,53 +278,6 @@ func (s *Service) CanonicalRedirect(next http.Handler) http.Handler {
 	})
 }
 
-// HandleErrors records the status code and body and serves rich errors if the response is error
-func (s *Service) HandleErrors(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-		// Create our custom response recorder
-		recorder := NewResponseRecorder(w)
-
-		// Defer the final response write until the function exits.
-		// This ensures that either the original response or the error response is written.
-		defer recorder.flush()
-
-		// Call the next handler in the chain,
-		// but write the response to the recorder,
-		// not to the actual response writer
-		next.ServeHTTP(recorder, r)
-
-		// We don't care if this is NOT an error
-		if recorder.status < http.StatusBadRequest {
-			return
-		}
-
-		// This is an error
-		// Clear any previously buffered body
-		recorder.body.Reset()
-
-		// Serve JSON error on API path
-		if strings.HasPrefix(r.URL.Path, "/api/") {
-			s.ui.JSONError(recorder, r, recorder.status)
-			return
-		}
-
-		// Default data
-		data := models.GetDataFromContext(r)
-
-		// Set HTML content type header becaue we will serve HTML error page
-		recorder.Header().Set("Content-Type", "text/html; charset=utf-8")
-
-		// Try to render error template
-		if err := s.ui.HTMLError(recorder, recorder.status, data); err != nil {
-			// Template failed, reset body in case it was written to
-			// and use plain text fallback
-			recorder.body.Reset()
-			utils.HttpError(recorder, recorder.status)
-		}
-	})
-}
-
 // Compress provides gzip compression to non-static pages
 func (s *Service) Compress(next http.Handler) http.Handler {
 
