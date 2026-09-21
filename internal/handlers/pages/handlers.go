@@ -10,7 +10,6 @@ import (
 	"github.com/vlatan/video-store/internal/handlers/auth"
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/redirect"
-	"github.com/vlatan/video-store/internal/utils"
 
 	slugify "github.com/gosimple/slug"
 	"github.com/jackc/pgx/v5"
@@ -51,7 +50,7 @@ func (s *Service) SinglePageHandler(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "failed to get the page from DB",
 			"error", err,
 		)
-		http.NotFound(w, r)
+		s.ui.HTMLError(w, r, data, http.StatusNotFound)
 		return
 	}
 
@@ -60,7 +59,7 @@ func (s *Service) SinglePageHandler(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "failed to get the page from DB",
 			"error", err,
 		)
-		utils.HttpError(w, http.StatusInternalServerError)
+		s.ui.HTMLError(w, r, data, http.StatusInternalServerError)
 		return
 	}
 
@@ -77,6 +76,9 @@ func (s *Service) UpdatePageHandler(w http.ResponseWriter, r *http.Request) {
 	// Get the page slug from URL
 	slug := r.PathValue("slug")
 
+	// Default data
+	data := models.GetDataFromContext(r)
+
 	// Get the page data straight from DB
 	page, err := s.pagesRepo.GetSinglePage(r.Context(), slug)
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -84,7 +86,7 @@ func (s *Service) UpdatePageHandler(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "failed to get the page from DB",
 			"error", err,
 		)
-		http.NotFound(w, r)
+		s.ui.HTMLError(w, r, data, http.StatusNotFound)
 		return
 	}
 
@@ -93,12 +95,9 @@ func (s *Service) UpdatePageHandler(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "failed to get the page from DB",
 			"error", err,
 		)
-		utils.HttpError(w, http.StatusInternalServerError)
+		s.ui.HTMLError(w, r, data, http.StatusInternalServerError)
 		return
 	}
-
-	// Default data
-	data := models.GetDataFromContext(r)
 
 	// Assign page data
 	data.CurrentPage = &page
@@ -183,7 +182,7 @@ func (s *Service) UpdatePageHandler(w http.ResponseWriter, r *http.Request) {
 		redirect.Execute(w, r, redirectTo, http.StatusFound)
 
 	default:
-		utils.HttpError(w, http.StatusMethodNotAllowed)
+		s.ui.HTMLError(w, r, data, http.StatusMethodNotAllowed)
 	}
 }
 
@@ -260,7 +259,7 @@ func (s *Service) NewPageHandler(w http.ResponseWriter, r *http.Request) {
 		redirect.Execute(w, r, redirectTo, http.StatusFound)
 
 	default:
-		utils.HttpError(w, http.StatusMethodNotAllowed)
+		s.ui.HTMLError(w, r, data, http.StatusMethodNotAllowed)
 	}
 }
 
@@ -269,19 +268,22 @@ func (s *Service) DeletePageHandler(w http.ResponseWriter, r *http.Request) {
 	// Get the page slug from URL
 	pageSlug := r.PathValue("slug")
 
+	// Compose data object
+	data := models.GetDataFromContext(r)
+
 	rowsAffected, err := s.pagesRepo.DeletePage(r.Context(), pageSlug)
 	if err != nil {
 		slog.ErrorContext(
 			r.Context(), "failed to delete the page from DB",
 			"error", err,
 		)
-		utils.HttpError(w, http.StatusInternalServerError)
+		s.ui.HTMLError(w, r, data, http.StatusInternalServerError)
 		return
 	}
 
 	if rowsAffected == 0 {
 		slog.WarnContext(r.Context(), "no such page to delete")
-		http.NotFound(w, r)
+		s.ui.HTMLError(w, r, data, http.StatusNotFound)
 		return
 	}
 
