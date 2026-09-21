@@ -24,7 +24,7 @@ func (s *service) HTMLError(
 	if !exists {
 		slog.WarnContext(
 			r.Context(),
-			fmt.Sprintf("%s template does not exist", tmplName),
+			fmt.Sprintf("invalid template %s", tmplName),
 		)
 		http.Error(w, http.StatusText(status), status)
 		return
@@ -59,10 +59,10 @@ func (s *service) HTMLError(
 
 	// Execute template to buffer to catch any errors before serving to client
 	var buf bytes.Buffer
-	if err := tmpl.Execute(&buf, data); err != nil {
+	if err := tmpl.ExecuteTemplate(&buf, tmplName, data); err != nil {
 		slog.WarnContext(
 			r.Context(),
-			fmt.Sprintf("failed to execute %s template", tmpl.Name()),
+			fmt.Sprintf("failed to execute %s template", tmplName),
 			"error", err,
 		)
 		http.Error(w, http.StatusText(status), status)
