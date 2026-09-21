@@ -1,26 +1,37 @@
 package ui
 
 import (
+	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"io"
 	"log/slog"
 	"net/http"
 	"strconv"
 
+	"github.com/vlatan/video-store/internal/ctxerr"
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/utils"
 )
 
 // ExecuteErrorTemplate executes error.html template
 // A wrapper around tmpl.ExecuteTemplate
-func (s *service) HTMLError(w io.Writer, status int, data *models.TemplateData) error {
+func (s *service) HTMLError(
+	w http.ResponseWriter,
+	r *http.Request,
+	data *models.TemplateData,
+	status int,
+	err error) {
+
+	// Add the original error to context
+	ctxerr.Add(r.Context(), err)
 
 	// Check for the error template
-	tmpl, exists := s.templates["error.html"]
+	tmplName := "error.html"
+	tmpl, exists := s.templates[tmplName]
 	if !exists {
-		return errors.New("error.html template does not exist")
+		ctxerr.Add(r.Context(), fmt.Errorf("%s template does not exist", tmplName))
+		http.Error(w, http.StatusText(status), status)
+		return
 	}
 
 	data.HTMLErrorData = &models.HTMLErrorData{
@@ -45,10 +56,30 @@ func (s *service) HTMLError(w io.Writer, status int, data *models.TemplateData) 
 		data.HTMLErrorData.Heading = fmt.Sprintf("Something went wrong (%d)", http.StatusInternalServerError)
 		data.HTMLErrorData.Text = "Sorry about that. We're working on fixing this."
 	default:
-		return fmt.Errorf("no error data for %d error template", status)
+		ctxerr.Add(r.Context(), fmt.Errorf("no template data for %d status", status))
+		http.Error(w, http.StatusText(status), status)
+		return
 	}
 
-	return tmpl.ExecuteTemplate(w, "error.html", data)
+	// Execute template to buffer to catch any errors before serving to client
+	var buf bytes.Buffer
+	if err := tmpl.Execute(&buf, data); err != nil {
+		ctxerr.Add(r.Context(), fmt.Errorf(
+			"failed to execute %s template: %w",
+			tmpl.Name(), err),
+		)
+		http.Error(w, http.StatusText(status), status)
+		return
+	}
+
+	// Write to response
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(status)
+	if _, err := buf.WriteTo(w); err != nil {
+		// Too late for recovery here.
+		// Partial data already written to response, just log the error.
+		ctxerr.Add(r.Context(), fmt.Errorf("failed to write to response: %w", err))
+	}
 }
 
 // Write JSON error to response

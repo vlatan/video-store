@@ -411,15 +411,17 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 	// Get video id from URL path
 	videoID := r.PathValue("video")
 
-	// Validate the YT ID
-	if validVideoID.FindStringSubmatch(videoID) == nil {
-		slog.WarnContext(r.Context(), "invalid video id")
-		http.NotFound(w, r)
-		return
-	}
-
 	// Generate the default data
 	data := models.GetDataFromContext(r)
+
+	// Validate the YT ID
+	if validVideoID.FindStringSubmatch(videoID) == nil {
+		s.ui.HTMLError(
+			w, r, data, http.StatusNotFound,
+			errors.New("invalid video id"),
+		)
+		return
+	}
 
 	var (
 		post         models.Post

@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
-	"errors"
 	"log/slog"
 	"net/http"
 	"runtime/debug"
@@ -118,7 +117,11 @@ func (s *Service) Logging(next http.Handler) http.Handler {
 
 		errs := ctxerr.Errors(r.Context())
 		if len(errs) > 0 {
-			attrs = append(attrs, slog.Any("error", errors.Join(errs...)))
+			errStrings := make([]string, len(errs))
+			for i, err := range errs {
+				errStrings[i] = err.Error()
+			}
+			attrs = append(attrs, slog.Any("errors", errStrings))
 		}
 
 		if st.status >= http.StatusInternalServerError {
