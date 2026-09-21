@@ -39,7 +39,7 @@ type Service interface {
 	// Write HTML template to response
 	RenderHTML(w http.ResponseWriter, r *http.Request, templateName string, data *models.TemplateData)
 	// Write JSON error to response
-	JSONError(w http.ResponseWriter, r *http.Request, status int)
+	JSONError(w http.ResponseWriter, r *http.Request, status int, err error)
 	// HTMLError executes error.html template
 	HTMLError(w http.ResponseWriter, r *http.Request, data *models.TemplateData, status int, err error)
 }

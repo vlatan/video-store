@@ -4,13 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"log/slog"
 	"net/http"
 	"strconv"
 
 	"github.com/vlatan/video-store/internal/ctxerr"
 	"github.com/vlatan/video-store/internal/models"
-	"github.com/vlatan/video-store/internal/utils"
 )
 
 // ExecuteErrorTemplate executes error.html template
@@ -72,9 +70,11 @@ func (s *service) HTMLError(
 		return
 	}
 
-	// Write to response
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	// Set status code and content type before writing the response
 	w.WriteHeader(status)
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+
+	// Write to response
 	if _, err := buf.WriteTo(w); err != nil {
 		// Too late for recovery here.
 		// Partial data already written to response, just log the error.
@@ -83,35 +83,33 @@ func (s *service) HTMLError(
 }
 
 // Write JSON error to response
-func (s *service) JSONError(w http.ResponseWriter, r *http.Request, statusCode int) {
+func (s *service) JSONError(w http.ResponseWriter, r *http.Request, status int, err error) {
+
+	// Add the original error to context
+	ctxerr.Add(r.Context(), err)
 
 	// Craft data
 	data := models.JSONErrorData{
-		Error: http.StatusText(statusCode),
-		Code:  statusCode,
+		Error: http.StatusText(status),
+		Code:  status,
 	}
 
 	// Encode data to JSON
 	jsonData, err := json.Marshal(data)
 	if err != nil {
-		slog.ErrorContext(
-			r.Context(), "failed to encode JSON error",
-			"error", err,
-		)
-		utils.HttpError(w, statusCode)
+		ctxerr.Add(r.Context(), fmt.Errorf("failed to encode JSON error: %w", err))
+		http.Error(w, http.StatusText(status), status)
 		return
 	}
 
 	// Set status code and content type before writing the response
-	w.WriteHeader(statusCode)
+	w.WriteHeader(status)
 	w.Header().Set("Content-Type", "application/json")
 
+	// Write to response
 	if _, err := w.Write(jsonData); err != nil {
 		// Too late for recovery here.
 		// Partial data already written to response, just log the error.
-		slog.ErrorContext(
-			r.Context(), "failed to write data to response",
-			"error", err,
-		)
+		ctxerr.Add(r.Context(), fmt.Errorf("failed to write to response: %w", err))
 	}
 }
