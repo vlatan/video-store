@@ -73,13 +73,13 @@ func (s *Service) HomeHandler(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "failed to get posts from DB",
 			"error", err,
 		)
-		utils.HttpError(w, http.StatusInternalServerError)
+		s.ui.HTMLError(w, r, data, http.StatusInternalServerError)
 		return
 	}
 
 	if len(posts.Items) == 0 {
 		slog.WarnContext(r.Context(), "no posts found in DB")
-		http.NotFound(w, r)
+		s.ui.HTMLError(w, r, data, http.StatusNotFound)
 		return
 	}
 
@@ -138,13 +138,13 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "failed to get posts from DB",
 			"error", err,
 		)
-		utils.HttpError(w, http.StatusInternalServerError)
+		s.ui.HTMLError(w, r, data, http.StatusInternalServerError)
 		return
 	}
 
 	if len(posts.Items) == 0 {
 		slog.WarnContext(r.Context(), "no posts found in DB")
-		http.NotFound(w, r)
+		s.ui.HTMLError(w, r, data, http.StatusNotFound)
 		return
 	}
 
@@ -205,12 +205,12 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "failed to get posts from DB",
 			"error", err,
 		)
-		utils.HttpError(w, http.StatusInternalServerError)
+		s.ui.HTMLError(w, r, data, http.StatusInternalServerError)
 		return
 	}
 	if len(posts.Items) == 0 {
 		slog.WarnContext(r.Context(), "no posts found in DB")
-		http.NotFound(w, r)
+		s.ui.HTMLError(w, r, data, http.StatusNotFound)
 		return
 	}
 
@@ -401,7 +401,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 		redirect.Execute(w, r, redirectTo, http.StatusFound)
 
 	default:
-		utils.HttpError(w, http.StatusMethodNotAllowed)
+		s.ui.HTMLError(w, r, data, http.StatusMethodNotAllowed)
 	}
 }
 
@@ -502,7 +502,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 				r.Context(), "no such post in DB",
 				"error", err,
 			)
-			http.NotFound(w, r)
+			s.ui.HTMLError(w, r, data, http.StatusNotFound)
 			return
 		}
 
@@ -511,7 +511,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 			"error", err,
 		)
 
-		utils.HttpError(w, http.StatusInternalServerError)
+		s.ui.HTMLError(w, r, data, http.StatusInternalServerError)
 		return
 	}
 
@@ -583,7 +583,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 			"error", err,
 		)
 
-		utils.HttpError(w, http.StatusInternalServerError)
+		s.ui.HTMLError(w, r, data, http.StatusInternalServerError)
 		return
 	}
 
@@ -603,10 +603,13 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 	// Get video id from URL path
 	videoID := r.PathValue("video")
 
+	// Generate the default data
+	data := models.GetDataFromContext(r)
+
 	// Validate the YT ID
 	if validVideoID.FindStringSubmatch(videoID) == nil {
 		slog.WarnContext(r.Context(), "invalid video id")
-		http.NotFound(w, r)
+		s.ui.HTMLError(w, r, data, http.StatusNotFound)
 		return
 	}
 
@@ -617,7 +620,7 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "no such post in DB",
 			"error", err,
 		)
-		http.NotFound(w, r)
+		s.ui.HTMLError(w, r, data, http.StatusNotFound)
 		return
 	}
 
@@ -626,12 +629,9 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "failed to get the post from DB",
 			"error", err,
 		)
-		utils.HttpError(w, http.StatusInternalServerError)
+		s.ui.HTMLError(w, r, data, http.StatusInternalServerError)
 		return
 	}
-
-	// Generate default data
-	data := models.GetDataFromContext(r)
 
 	// Assign post data
 	data.CurrentPost = &post
@@ -823,18 +823,21 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 		redirect.Execute(w, r, redirectTo, http.StatusFound)
 
 	default:
-		utils.HttpError(w, http.StatusMethodNotAllowed)
+		s.ui.HTMLError(w, r, data, http.StatusMethodNotAllowed)
 	}
 }
 
 // Handle a post ban
 func (s *Service) BanPostHandler(w http.ResponseWriter, r *http.Request) {
 
+	// Generate the default data
+	data := models.GetDataFromContext(r)
+
 	// Validate the YT ID
 	videoID := r.PathValue("video")
 	if validVideoID.FindStringSubmatch(videoID) == nil {
 		slog.WarnContext(r.Context(), "invalid video id")
-		http.NotFound(w, r)
+		s.ui.HTMLError(w, r, data, http.StatusNotFound)
 		return
 	}
 
@@ -844,13 +847,13 @@ func (s *Service) BanPostHandler(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "failed to ban/delete the video",
 			"error", err,
 		)
-		utils.HttpError(w, http.StatusInternalServerError)
+		s.ui.HTMLError(w, r, data, http.StatusInternalServerError)
 		return
 	}
 
 	if rowsAffected == 0 {
 		slog.WarnContext(r.Context(), "no such post to ban")
-		http.NotFound(w, r)
+		s.ui.HTMLError(w, r, data, http.StatusNotFound)
 		return
 	}
 
