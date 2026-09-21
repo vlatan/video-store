@@ -79,7 +79,11 @@ func (a *App) RegisterRoutes() *App {
 			w.Header().Set("Content-Type", "application/octet-stream")
 			runtime.GC()
 			if err := pprof.WriteHeapProfile(w); err != nil {
-				utils.HttpError(w, http.StatusInternalServerError)
+				// Too late for recovery here, just log the error
+				slog.WarnContext(
+					r.Context(), "failed to write data to response",
+					"error", err,
+				)
 			}
 		},
 	))
@@ -89,9 +93,9 @@ func (a *App) RegisterRoutes() *App {
 		w.Header().Set("X-Robots-Tag", "noindex")
 		w.WriteHeader(http.StatusOK)
 		if _, err := w.Write([]byte("OK")); err != nil {
-			slog.ErrorContext(
-				r.Context(),
-				"failed to write response",
+			// Too late for recovery here, just log the error
+			slog.WarnContext(
+				r.Context(), "failed to write data to response",
 				"error", err,
 			)
 		}
