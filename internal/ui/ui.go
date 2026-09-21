@@ -38,10 +38,10 @@ type Service interface {
 	WriteJSON(w http.ResponseWriter, r *http.Request, data any)
 	// Write HTML template to response
 	RenderHTML(w http.ResponseWriter, r *http.Request, templateName string, data *models.TemplateData)
-	// Write JSON error to response
-	JSONError(w http.ResponseWriter, r *http.Request, status int, err error)
+	// JSONError writes JSON error to response
+	JSONError(w http.ResponseWriter, r *http.Request, status int)
 	// HTMLError executes error.html template
-	HTMLError(w http.ResponseWriter, r *http.Request, data *models.TemplateData, status int, err error)
+	HTMLError(w http.ResponseWriter, r *http.Request, data *models.TemplateData, status int)
 }
 
 type service struct {

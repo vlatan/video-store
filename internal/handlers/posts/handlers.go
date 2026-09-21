@@ -416,10 +416,8 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Validate the YT ID
 	if validVideoID.FindStringSubmatch(videoID) == nil {
-		s.ui.HTMLError(
-			w, r, data, http.StatusNotFound,
-			errors.New("invalid video id"),
-		)
+		slog.WarnContext(r.Context(), "invalid video id")
+		s.ui.HTMLError(w, r, data, http.StatusNotFound)
 		return
 	}
 
