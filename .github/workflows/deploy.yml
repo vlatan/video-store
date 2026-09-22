@@ -19,6 +19,7 @@ env:
 
 jobs:
     tests:
+        name: Run tests
         runs-on: ubuntu-latest
 
         steps:
@@ -47,6 +48,7 @@ jobs:
                   path: coverage.html
 
     sast:
+        name: Run static application security testing
         runs-on: ubuntu-latest
         env:
             GOTOOLCHAIN: auto
@@ -62,6 +64,7 @@ jobs:
                   args: ./...
 
     build-push:
+        name: Build and push docker images
         needs: [tests, sast]
         if: github.event_name == 'push'
         runs-on: ubuntu-latest
@@ -99,9 +102,14 @@ jobs:
                   cache-to: type=gha,mode=max
 
     deploy:
+        name: Deploy to production
         needs: build-push
         if: github.event_name == 'push'
         runs-on: ubuntu-latest
+
+        environment:
+            name: production
+            url: https://factualdocs.com
 
         steps:
             - name: Deploy to VPS via SSH
