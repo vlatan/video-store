@@ -123,7 +123,7 @@ func (s *service) PutObject(
 	if err != nil {
 		if apiErr, ok := errors.AsType[smithy.APIError](err); ok && apiErr.ErrorCode() == "EntityTooLarge" {
 			return fmt.Errorf(
-				"error while uploading object to %s; The object is too large: %w",
+				"error while uploading object to %s; the object is too large: %w",
 				bucket, apiErr,
 			)
 		}
