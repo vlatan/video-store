@@ -1,10 +1,7 @@
-- Refactor slogs and error rendering from users onwards
-  Finaly search for http.NotFound and log. or print usage
-
 - Create appctx package and add ctx functions there
   Also break up misc and utils into smaller packages?
 
-- Investigate why home template wont execute with tmpl.Execute
+- Investigate why home template won't execute with tmpl.Execute
 
 - Make `:= range` more performant by using index
 - Make the directors links that list their films, and also the release years
