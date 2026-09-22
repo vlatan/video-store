@@ -90,11 +90,9 @@ func (s *Service) GenerateContent(
 			directors = append(directors, name)
 			continue
 		}
-		slog.ErrorContext(
+		slog.WarnContext(
 			ctx,
 			"failed to normalize director's name",
-			"original_director_name", director,
-			"original_title", response.OriginalTitle,
 			"error", err,
 		)
 	}
@@ -130,7 +128,7 @@ func (s *Service) GeneratePostSummary(
 	// Check if this is a hard block error by the model
 	if _, blocked := errors.AsType[*NoCandidatesError](err); !blocked {
 		return fmt.Errorf(
-			"failed to generate LLM content on SUMMARY on video %q: %w",
+			"failed to generate LLM content on SUMMARY on video %s: %w",
 			post.VideoID, err,
 		)
 	}
@@ -162,7 +160,7 @@ func (s *Service) GeneratePostSummary(
 
 	if err != nil {
 		return fmt.Errorf(
-			"failed to generate LLM content on SUMMARY on video %q: %w",
+			"failed to generate LLM content on SUMMARY on video %s: %w",
 			post.VideoID, err,
 		)
 	}
@@ -183,7 +181,7 @@ func (s *Service) GeneratePostOCR(
 	videoDuration, err := post.Duration.Seconds()
 	if err != nil || videoDuration == 0 {
 		return fmt.Errorf(
-			"couldn't convert video's %q duration %q to seconds; %w",
+			"couldn't convert video %s duration %s to seconds; %w",
 			post.VideoID, post.Duration, err,
 		)
 	}
@@ -233,7 +231,7 @@ func (s *Service) GeneratePostOCR(
 
 		if err != nil {
 			return fmt.Errorf(
-				"failed to generate LLM content on %s on video %q: %w",
+				"failed to generate LLM content on %s on video %s: %w",
 				cfg.desc, post.VideoID, err,
 			)
 		}
