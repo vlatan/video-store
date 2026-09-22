@@ -1,6 +1,8 @@
 - Refactor slogs and error rendering from users onwards
   Finaly search for http.NotFound usage and replace with html error
 
+- Create appctx package and add ctx functions there
+
 - Make `:= range` more performant by using index
 - Make the directors links that list their films, and also the release years
 
