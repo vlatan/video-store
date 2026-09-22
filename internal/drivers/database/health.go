@@ -3,7 +3,7 @@ package database
 import (
 	"context"
 	"fmt"
-	"log"
+	"log/slog"
 	"strings"
 	"time"
 )
@@ -22,7 +22,7 @@ func (s *Service) Health(ctx context.Context) map[string]any {
 	if err != nil {
 		stats["status"] = "down"
 		stats["error"] = fmt.Sprintf("db down: %v", err)
-		log.Printf("db down: %v", err)
+		slog.WarnContext(ctx, "DB down", "error", err)
 		return stats
 	}
 
