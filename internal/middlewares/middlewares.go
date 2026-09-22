@@ -93,7 +93,7 @@ func (s *Service) LoadRequestId(next http.Handler) http.Handler {
 func (s *Service) LoadUser(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user, _ := s.ui.GetUserFromSession(w, r) // Nil if anonymous or failed to fetch
-		ctx := context.WithValue(r.Context(), models.UserContextKey, user)
+		ctx := ctxv.WithValue(r.Context(), user)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
@@ -146,7 +146,7 @@ func (s *Service) LoadTemplateData(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		// Get user from context
-		user := models.GetUserFromContext(r.Context())
+		user := ctxv.Get[*models.User](r.Context())
 		// Generate the default data
 		data := s.ui.NewTemplateData(w, r)
 		// Attach the user to be able to be accessed from data too
@@ -213,7 +213,7 @@ func (s *Service) RecoverPanic(next http.Handler) http.Handler {
 // PublicCache adds cache control header for non-admin users
 func (s *Service) PublicCache(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if user := models.GetUserFromContext(r.Context()); !user.IsAdmin() {
+		if user := ctxv.Get[*models.User](r.Context()); !user.IsAdmin() {
 			w.Header().Set("Cache-Control", "public, max-age=3600")
 		}
 		next(w, r)
@@ -243,7 +243,7 @@ func (s *Service) AddHeaders(next http.Handler) http.Handler {
 
 		// Add no cache headers if necessary
 		if !utils.IsFilePath(r.URL.Path) &&
-			models.GetUserFromContext(r.Context()).IsAuthenticated() {
+			ctxv.Get[*models.User](r.Context()).IsAuthenticated() {
 
 			w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 			w.Header().Set("Pragma", "no-cache")

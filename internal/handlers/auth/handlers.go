@@ -238,7 +238,7 @@ func (s *Service) DeleteAccountHandler(w http.ResponseWriter, r *http.Request) {
 	redirectTo := redirect.Sanitize(redirectURL, IsProtectedRoute)
 
 	// Get the current user
-	currentUser := models.GetUserFromContext(r.Context())
+	currentUser := ctxv.Get[*models.User](r.Context())
 
 	// Remove user session
 	if err := s.logoutUser(w, r); err != nil {

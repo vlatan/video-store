@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/vlatan/video-store/internal/ctxv"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/models"
 )
@@ -38,7 +39,7 @@ func (s *Service) SourcePostsAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get current user
-	currentUser := models.GetUserFromContext(r.Context())
+	currentUser := ctxv.Get[*models.User](r.Context())
 
 	var (
 		err   error
