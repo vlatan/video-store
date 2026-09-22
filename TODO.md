@@ -1,5 +1,5 @@
 - Refactor slogs and error rendering from users onwards
-  Finaly search for http.NotFound usage and replace with html error
+  Finaly search for http.NotFound and log. or print usage
 
 - Create appctx package and add ctx functions there
 
