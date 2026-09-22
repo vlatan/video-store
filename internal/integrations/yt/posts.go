@@ -13,7 +13,10 @@ import (
 )
 
 // Get YouTube videos metadata, provided video IDs.
-func (s *Service) GetVideos(ctx context.Context, rc *utils.RetryConfig, videoIDs ...string) ([]*youtube.Video, error) {
+func (s *Service) GetVideos(
+	ctx context.Context,
+	rc *utils.RetryConfig,
+	videoIDs ...string) ([]*youtube.Video, error) {
 
 	var result []*youtube.Video
 	part := []string{"status", "snippet", "contentDetails"}
