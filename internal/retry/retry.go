@@ -1,4 +1,4 @@
-package utils
+package retry
 
 import (
 	"context"
@@ -8,11 +8,12 @@ import (
 	"math/rand/v2"
 	"time"
 
+	"github.com/vlatan/video-store/internal/utils"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc/status"
 )
 
-type RetryConfig struct {
+type Config struct {
 	MaxRetries int
 	MaxJitter  time.Duration
 	Delay      time.Duration
@@ -41,11 +42,11 @@ func extractRetryDelay(err error) (time.Duration, bool) {
 	return 0, false
 }
 
-// Retry retries a callable function with retry config supplied,
+// Do retries a callable function with retry config supplied,
 // and conditional exit early.
-func Retry[T any](
+func Do[T any](
 	ctx context.Context,
-	rc *RetryConfig,
+	cfg *Config,
 	callable func() (T, error),
 	shouldExitEarly ...func(error) bool,
 ) (T, error) {
@@ -56,10 +57,10 @@ func Retry[T any](
 	)
 
 	// Avoid zero or negative maxRetries
-	rc.MaxRetries = max(rc.MaxRetries, 1)
+	cfg.MaxRetries = max(cfg.MaxRetries, 1)
 
 	// Perform retries
-	for i := range rc.MaxRetries {
+	for i := range cfg.MaxRetries {
 
 		// Call the function
 		data, err := callable()
@@ -76,16 +77,16 @@ func Retry[T any](
 
 		// If this is the last iteration break the loop
 		lastError = err
-		if i+1 == rc.MaxRetries {
+		if i+1 == cfg.MaxRetries {
 			break
 		}
 
 		// Calculate the backoff (2^i) + jitter
 		var jitter time.Duration
-		if rc.MaxJitter > 0 {
-			jitter = rand.N(rc.MaxJitter) // #nosec G404
+		if cfg.MaxJitter > 0 {
+			jitter = rand.N(cfg.MaxJitter) // #nosec G404
 		}
-		sleepTime := rc.Delay*time.Duration(math.Pow(2, float64(i))) + jitter
+		sleepTime := cfg.Delay*time.Duration(math.Pow(2, float64(i))) + jitter
 
 		// Try to extract a delay value from the error
 		if retryDelay, ok := extractRetryDelay(lastError); ok {
@@ -99,10 +100,10 @@ func Retry[T any](
 		}
 
 		// Wait for either the sleep time or context to end
-		if err := Sleep(ctx, sleepTime); err != nil {
+		if err := utils.Sleep(ctx, sleepTime); err != nil {
 			return zero, errors.Join(err, lastError)
 		}
 	}
 
-	return zero, fmt.Errorf("%d max retries error; %w", rc.MaxRetries, lastError)
+	return zero, fmt.Errorf("%d max retries error; %w", cfg.MaxRetries, lastError)
 }

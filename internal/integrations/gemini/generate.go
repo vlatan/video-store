@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/retry"
 	"github.com/vlatan/video-store/internal/utils"
 	"google.golang.org/genai"
 )
@@ -56,11 +57,11 @@ func (s *Service) GenerateContent(
 	ctx context.Context,
 	contents []*genai.Content,
 	genaiConfig *genai.GenerateContentConfig,
-	retryConfig *utils.RetryConfig,
+	retryConfig *retry.Config,
 ) (*models.GenaiResponse, error) {
 
 	// Make the API call
-	result, err := utils.Retry(ctx, retryConfig,
+	result, err := retry.Do(ctx, retryConfig,
 		func() (*genai.GenerateContentResponse, error) {
 			return s.generateContent(ctx, contents, genaiConfig)
 		},
@@ -105,7 +106,7 @@ func (s *Service) GenerateContent(
 func (s *Service) GeneratePostSummary(
 	ctx context.Context,
 	post *models.Post,
-	retryConfig *utils.RetryConfig) error {
+	retryConfig *retry.Config) error {
 
 	// Create summary contents
 	summaryContents := s.NewSummaryContents(post.VideoID)
@@ -175,7 +176,7 @@ func (s *Service) GeneratePostSummary(
 func (s *Service) GeneratePostOCR(
 	ctx context.Context,
 	post *models.Post,
-	retryConfig *utils.RetryConfig) error {
+	retryConfig *retry.Config) error {
 
 	// Get video duration
 	videoDuration, err := post.Duration.Seconds()

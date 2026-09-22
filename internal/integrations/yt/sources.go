@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/retry"
 	"github.com/vlatan/video-store/internal/utils"
 
 	"google.golang.org/api/youtube/v3"
@@ -15,7 +16,7 @@ import (
 // Fetching can't be done at once, but in a paginated way
 func (s *Service) GetSourceItems(
 	ctx context.Context,
-	rc *utils.RetryConfig,
+	rc *retry.Config,
 	playlistID string) ([]*youtube.PlaylistItem, error) {
 
 	var result []*youtube.PlaylistItem
@@ -24,7 +25,7 @@ func (s *Service) GetSourceItems(
 
 	for {
 		// Get playlist items
-		response, err := utils.Retry(ctx, rc,
+		response, err := retry.Do(ctx, rc,
 			func() (*youtube.PlaylistItemListResponse, error) {
 				return s.youtube.PlaylistItems.
 					List(part).
@@ -59,7 +60,7 @@ func (s *Service) GetSourceItems(
 // Get playlists metadata, provided playlist ids.
 func (s *Service) GetSources(
 	ctx context.Context,
-	rc *utils.RetryConfig,
+	rc *retry.Config,
 	playlistIDs ...string) ([]*youtube.Playlist, error) {
 
 	var result []*youtube.Playlist
@@ -72,7 +73,7 @@ func (s *Service) GetSources(
 		end := min(i+batchSize, len(playlistIDs))
 		batch := playlistIDs[i:end]
 
-		response, err := utils.Retry(ctx, rc,
+		response, err := retry.Do(ctx, rc,
 			func() (*youtube.PlaylistListResponse, error) {
 				return s.youtube.Playlists.
 					List(part).
@@ -102,7 +103,7 @@ func (s *Service) GetSources(
 // Get channels metadata, provided channel ids.
 func (s *Service) GetChannels(
 	ctx context.Context,
-	rc *utils.RetryConfig,
+	rc *retry.Config,
 	channelIDs ...string) ([]*youtube.Channel, error) {
 
 	var result []*youtube.Channel
@@ -115,7 +116,7 @@ func (s *Service) GetChannels(
 		end := min(i+batchSize, len(channelIDs))
 		batch := channelIDs[i:end]
 
-		response, err := utils.Retry(ctx, rc,
+		response, err := retry.Do(ctx, rc,
 			func() (*youtube.ChannelListResponse, error) {
 				return s.youtube.Channels.
 					List(part).

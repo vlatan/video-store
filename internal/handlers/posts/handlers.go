@@ -14,6 +14,7 @@ import (
 	"github.com/vlatan/video-store/internal/handlers/auth"
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/redirect"
+	"github.com/vlatan/video-store/internal/retry"
 	"github.com/vlatan/video-store/internal/utils"
 	"golang.org/x/sync/errgroup"
 
@@ -224,7 +225,7 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 // Handle adding new post via form
 func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 
-	// Compose data object
+	// Get template data
 	data := ctxv.Get[*models.TemplateData](r.Context())
 
 	// Populate needed data for an empty form
@@ -296,7 +297,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 		// Fetch video data from YouTube
 		metadata, err := s.yt.GetVideos(
 			r.Context(),
-			&utils.RetryConfig{
+			&retry.Config{
 				MaxRetries: 3,
 				MaxJitter:  time.Second,
 				Delay:      time.Second,
@@ -356,7 +357,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 			defer cancel()
 
 			// Just give it a one try
-			retryConfig := &utils.RetryConfig{
+			retryConfig := &retry.Config{
 				MaxRetries: 1,
 				MaxJitter:  2 * time.Second,
 				Delay:      65 * time.Second,

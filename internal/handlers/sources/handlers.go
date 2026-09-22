@@ -11,7 +11,7 @@ import (
 	"github.com/vlatan/video-store/internal/handlers/auth"
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/redirect"
-	"github.com/vlatan/video-store/internal/utils"
+	"github.com/vlatan/video-store/internal/retry"
 )
 
 // Handle all sources page
@@ -126,7 +126,7 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 		// Fetch playlist metadata from YouTube
 		sources, err := s.yt.GetSources(
 			r.Context(),
-			&utils.RetryConfig{
+			&retry.Config{
 				MaxRetries: 3,
 				MaxJitter:  time.Second,
 				Delay:      time.Second,
@@ -148,7 +148,7 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 		channelID := sources[0].Snippet.ChannelId
 		channels, err := s.yt.GetChannels(
 			r.Context(),
-			&utils.RetryConfig{
+			&retry.Config{
 				MaxRetries: 3,
 				MaxJitter:  time.Second,
 				Delay:      time.Second,

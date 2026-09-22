@@ -1,4 +1,4 @@
-package utils
+package retry
 
 import (
 	"context"
@@ -78,12 +78,12 @@ func TestExtractRetryDelay(t *testing.T) {
 	}
 }
 
-func TestRetry(t *testing.T) {
+func TestDo(t *testing.T) {
 
 	type test struct {
 		name         string
 		ctx          context.Context
-		retryConfig  *RetryConfig
+		cfg          *Config
 		callable     func() (string, error)
 		expectedData string
 		wantErr      bool
@@ -93,7 +93,7 @@ func TestRetry(t *testing.T) {
 	noContext, cancel := context.WithCancel(ctx)
 	cancel()
 
-	rc := &RetryConfig{
+	rc := &Config{
 		MaxRetries: 3,
 		MaxJitter:  10 * time.Millisecond,
 		Delay:      100 * time.Millisecond,
@@ -103,7 +103,7 @@ func TestRetry(t *testing.T) {
 		{
 			name:         "success (1+ retries)",
 			ctx:          ctx,
-			retryConfig:  rc,
+			cfg:          rc,
 			callable:     func() (string, error) { return "foo", nil },
 			expectedData: "foo",
 			wantErr:      false,
@@ -111,7 +111,7 @@ func TestRetry(t *testing.T) {
 		{
 			name:         "error",
 			ctx:          ctx,
-			retryConfig:  rc,
+			cfg:          rc,
 			callable:     func() (string, error) { return "", errors.New("error") },
 			expectedData: "",
 			wantErr:      true,
@@ -119,7 +119,7 @@ func TestRetry(t *testing.T) {
 		{
 			name:         "error (no context)",
 			ctx:          noContext,
-			retryConfig:  rc,
+			cfg:          rc,
 			callable:     func() (string, error) { return "", errors.New("error") },
 			expectedData: "",
 			wantErr:      true,
@@ -127,7 +127,7 @@ func TestRetry(t *testing.T) {
 		{
 			name:         "gRPC error",
 			ctx:          ctx,
-			retryConfig:  rc,
+			cfg:          rc,
 			callable:     func() (string, error) { return "", makeGRPCError(100 * time.Millisecond) },
 			expectedData: "",
 			wantErr:      true,
@@ -135,7 +135,7 @@ func TestRetry(t *testing.T) {
 		{
 			name:         "gRPC error (gRPC delay > sleep time)",
 			ctx:          ctx,
-			retryConfig:  rc,
+			cfg:          rc,
 			callable:     func() (string, error) { return "", makeGRPCError(200 * time.Millisecond) },
 			expectedData: "",
 			wantErr:      true,
@@ -143,7 +143,7 @@ func TestRetry(t *testing.T) {
 		{
 			name:         "gRPC error (no context)",
 			ctx:          noContext,
-			retryConfig:  rc,
+			cfg:          rc,
 			callable:     func() (string, error) { return "", makeGRPCError(100 * time.Millisecond) },
 			expectedData: "",
 			wantErr:      true,
@@ -152,9 +152,9 @@ func TestRetry(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			data, err := Retry(
+			data, err := Do(
 				tt.ctx,
-				tt.retryConfig,
+				tt.cfg,
 				tt.callable,
 			)
 
