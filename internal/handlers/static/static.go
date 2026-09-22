@@ -1,4 +1,4 @@
-package misc
+package static
 
 import (
 	"bytes"
@@ -10,26 +10,21 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/vlatan/video-store/internal/ui"
 	"github.com/vlatan/video-store/internal/utils"
 	"github.com/vlatan/video-store/web"
 )
 
-// DB and Redis health status
-// Wrap this with middlware that allows only admins
-func (s *Service) HealthAPI(w http.ResponseWriter, r *http.Request) {
+type Service struct {
+	ui ui.Service
+}
 
-	// Construct joined map
-	data := map[string]any{
-		"redis_status":    s.rdb.Health(r.Context()),
-		"database_status": s.db.Health(r.Context()),
-		"server_status":   getServerStats(),
-	}
-
-	s.ui.WriteJSON(w, r, data)
+func New(ui ui.Service) *Service {
+	return &Service{ui: ui}
 }
 
 // Handle static files.
-func (s *Service) StaticHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Service) Handler(w http.ResponseWriter, r *http.Request) {
 
 	// Validate the path
 	if err := utils.ValidateFilePath(r.URL.Path); err != nil {
