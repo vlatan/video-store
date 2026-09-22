@@ -18,6 +18,7 @@ import (
 	"github.com/vlatan/video-store/internal/handlers/posts"
 	"github.com/vlatan/video-store/internal/handlers/sitemaps"
 	"github.com/vlatan/video-store/internal/handlers/sources"
+	"github.com/vlatan/video-store/internal/handlers/text"
 	"github.com/vlatan/video-store/internal/handlers/users"
 	"github.com/vlatan/video-store/internal/integrations/gemini"
 	"github.com/vlatan/video-store/internal/integrations/r2"
@@ -40,6 +41,7 @@ type App struct {
 	pages    *pages.Service
 	sources  *sources.Service
 	sitemaps *sitemaps.Service
+	text     *text.Service
 	mw       *middlewares.Service
 	misc     *misc.Service
 	domain   string
@@ -139,6 +141,7 @@ func New() (*App, error) {
 		pages:    pages.New(pagesRepo, rdb, ui, cfg),
 		sources:  sources.New(postsRepo, sourcesRepo, rdb, ui, cfg, yt),
 		sitemaps: sitemaps.New(postsRepo, rdb, ui, cfg),
+		text:     text.New(ui),
 		misc:     misc.New(cfg, db, rdb, ui),
 
 		// Middleware service
