@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/vlatan/video-store/internal/config"
+	"github.com/vlatan/video-store/internal/ctxv"
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/ui"
 	"github.com/vlatan/video-store/internal/utils"
@@ -39,7 +40,7 @@ func (s *Service) IsAuthenticated(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		// Get template data
-		data := models.GetDataFromContext(r)
+		data := ctxv.Get[*models.TemplateData](r.Context())
 
 		// If the user is authenticated move onto the next handler
 		if data.CurrentUser.IsAuthenticated() {
@@ -61,7 +62,7 @@ func (s *Service) IsAdmin(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		// Get template data
-		data := models.GetDataFromContext(r)
+		data := ctxv.Get[*models.TemplateData](r.Context())
 
 		// If the user is admin move onto the next handler
 		if data.CurrentUser.IsAdmin() {
@@ -151,7 +152,7 @@ func (s *Service) LoadTemplateData(next http.Handler) http.Handler {
 		// Attach the user to be able to be accessed from data too
 		data.CurrentUser = user
 		// Store data to context
-		ctx := context.WithValue(r.Context(), models.DataContextKey, data)
+		ctx := ctxv.WithValue(r.Context(), data)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
@@ -201,7 +202,7 @@ func (s *Service) RecoverPanic(next http.Handler) http.Handler {
 				return
 			}
 
-			data := models.GetDataFromContext(r)
+			data := ctxv.Get[*models.TemplateData](r.Context())
 			s.ui.HTMLError(w, r, data, http.StatusInternalServerError)
 		}()
 

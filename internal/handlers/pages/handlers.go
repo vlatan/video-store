@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/vlatan/video-store/internal/ctxv"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/handlers/auth"
 	"github.com/vlatan/video-store/internal/models"
@@ -24,7 +25,7 @@ func (s *Service) SinglePageHandler(w http.ResponseWriter, r *http.Request) {
 	pageSlug := r.PathValue("slug")
 
 	// Default data
-	data := models.GetDataFromContext(r)
+	data := ctxv.Get[*models.TemplateData](r.Context())
 
 	var (
 		err  error
@@ -77,7 +78,7 @@ func (s *Service) UpdatePageHandler(w http.ResponseWriter, r *http.Request) {
 	slug := r.PathValue("slug")
 
 	// Default data
-	data := models.GetDataFromContext(r)
+	data := ctxv.Get[*models.TemplateData](r.Context())
 
 	// Get the page data straight from DB
 	page, err := s.pagesRepo.GetSinglePage(r.Context(), slug)
@@ -190,7 +191,7 @@ func (s *Service) UpdatePageHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Service) NewPageHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Compose data object
-	data := models.GetDataFromContext(r)
+	data := ctxv.Get[*models.TemplateData](r.Context())
 
 	// Populate needed data for an empty form
 	data.Form = &models.Form{
@@ -269,7 +270,7 @@ func (s *Service) DeletePageHandler(w http.ResponseWriter, r *http.Request) {
 	pageSlug := r.PathValue("slug")
 
 	// Compose data object
-	data := models.GetDataFromContext(r)
+	data := ctxv.Get[*models.TemplateData](r.Context())
 
 	rowsAffected, err := s.pagesRepo.DeletePage(r.Context(), pageSlug)
 	if err != nil {

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/vlatan/video-store/internal/ctxv"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/handlers/auth"
 	"github.com/vlatan/video-store/internal/models"
@@ -17,7 +18,7 @@ import (
 func (s *Service) SourcesHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Get template data
-	data := models.GetDataFromContext(r)
+	data := ctxv.Get[*models.TemplateData](r.Context())
 
 	var (
 		err     error
@@ -63,7 +64,7 @@ func (s *Service) SourcesHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Compose data object
-	data := models.GetDataFromContext(r)
+	data := ctxv.Get[*models.TemplateData](r.Context())
 
 	// Populate needed data for an empty form
 	data.Form = &models.Form{
@@ -211,7 +212,7 @@ func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Generate template data
-	data := models.GetDataFromContext(r)
+	data := ctxv.Get[*models.TemplateData](r.Context())
 
 	var (
 		err   error

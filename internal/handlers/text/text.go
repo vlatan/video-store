@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/vlatan/video-store/internal/ctxv"
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/ui"
 	"github.com/vlatan/video-store/internal/utils"
@@ -21,7 +22,7 @@ func New(ui ui.Service) *Service {
 func (s *Service) Handler(w http.ResponseWriter, r *http.Request) {
 
 	// Get default data from context
-	data := models.GetDataFromContext(r)
+	data := ctxv.Get[*models.TemplateData](r.Context())
 
 	// Validate the path
 	if err := utils.ValidateFilePath(r.URL.Path); err != nil {

@@ -32,29 +32,3 @@ func TestGetUserFromContext(t *testing.T) {
 		})
 	}
 }
-
-func TestGetDataFromContext(t *testing.T) {
-
-	data := &TemplateData{Title: "Test"}
-	req := httptest.NewRequest("GET", "/", nil)
-	ctx := context.WithValue(req.Context(), DataContextKey, data)
-	dataReq := req.WithContext(ctx)
-
-	tests := []struct {
-		name     string
-		request  *http.Request
-		data     *TemplateData
-		expected *TemplateData
-	}{
-		{"no data in context", req, data, nil},
-		{"data in context", dataReq, data, data},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := GetDataFromContext(tt.request); got != tt.expected {
-				t.Errorf("got %v, want %v", got, tt.expected)
-			}
-		})
-	}
-}

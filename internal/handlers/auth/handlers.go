@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/vlatan/video-store/internal/ctxv"
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/redirect"
 
@@ -14,7 +15,7 @@ import (
 func (s *Service) AuthHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Generate the default data
-	data := models.GetDataFromContext(r)
+	data := ctxv.Get[*models.TemplateData](r.Context())
 
 	// Check if the provider exists
 	providerName := r.PathValue("provider")
@@ -94,8 +95,8 @@ func (s *Service) AuthHandler(w http.ResponseWriter, r *http.Request) {
 // Provider Auth callback
 func (s *Service) AuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 
-	// Generate the default data
-	data := models.GetDataFromContext(r)
+	// Get default data
+	data := ctxv.Get[*models.TemplateData](r.Context())
 
 	// Check if the provider exists
 	providerName := r.PathValue("provider")
