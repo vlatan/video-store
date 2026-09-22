@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/vlatan/video-store/internal/ctxv"
 	"github.com/vlatan/video-store/internal/integrations/gemini"
 	"github.com/vlatan/video-store/internal/integrations/yt"
 	"github.com/vlatan/video-store/internal/models"
@@ -125,7 +126,7 @@ func (w *Worker) getValidSourcesVideos(
 			}
 
 			// Exit early if context ended
-			if utils.IsContextErr(err) {
+			if ctxv.IsContextErr(err) {
 				return err
 			}
 
@@ -177,7 +178,7 @@ func (w *Worker) adoptVideos(
 		}
 
 		// Exit early if context ended
-		if utils.IsContextErr(err) {
+		if ctxv.IsContextErr(err) {
 			return err
 		}
 
@@ -236,7 +237,7 @@ func (w *Worker) deleteVideos(
 		}
 
 		// Exit early if context ended
-		if utils.IsContextErr(err) {
+		if ctxv.IsContextErr(err) {
 			return nil, err
 		}
 
@@ -269,7 +270,7 @@ func (w *Worker) insertVideos(ctx context.Context, videos []*models.Post) error 
 		err := w.gemini.GeneratePostSummary(ctx, video, w.geminiRetryConfig)
 
 		// Exit early only if context ended
-		if utils.IsContextErr(err) {
+		if ctxv.IsContextErr(err) {
 			return err
 		}
 
@@ -297,7 +298,7 @@ func (w *Worker) insertVideos(ctx context.Context, videos []*models.Post) error 
 			err := w.gemini.GeneratePostOCR(ctx, video, w.geminiRetryConfig)
 
 			// Exit early only if context ended
-			if utils.IsContextErr(err) {
+			if ctxv.IsContextErr(err) {
 				return err
 			}
 
@@ -317,7 +318,7 @@ func (w *Worker) insertVideos(ctx context.Context, videos []*models.Post) error 
 		w.stats.InsertedDbVideos += rowsAffected
 
 		// Exit early if context ended
-		if utils.IsContextErr(err) {
+		if ctxv.IsContextErr(err) {
 			return err
 		}
 
@@ -356,7 +357,7 @@ func (w *Worker) updateVideos(ctx context.Context, videos []*models.Post) error 
 
 			// Exit with error only if we need to terminate the worker's job,
 			// meaning only if RPD quota reached or context ended.
-			if errors.Is(err, gemini.ErrDailyLimitReached) || utils.IsContextErr(err) {
+			if errors.Is(err, gemini.ErrDailyLimitReached) || ctxv.IsContextErr(err) {
 				return fmt.Errorf(
 					"failed to generate LLM content on video %q; %w",
 					video.VideoID, err,
@@ -391,7 +392,7 @@ func (w *Worker) updateVideos(ctx context.Context, videos []*models.Post) error 
 
 			// Exit with error only if we need to terminate the worker's job,
 			// meaning only if RPD quota reached or context ended.
-			if errors.Is(err, gemini.ErrDailyLimitReached) || utils.IsContextErr(err) {
+			if errors.Is(err, gemini.ErrDailyLimitReached) || ctxv.IsContextErr(err) {
 				return fmt.Errorf(
 					"failed to generate LLM content on video %q; %w",
 					video.VideoID, err,
@@ -424,7 +425,7 @@ func (w *Worker) updateVideos(ctx context.Context, videos []*models.Post) error 
 		w.stats.UpdatedDbVideos += rowsAffected
 
 		// Exit early if context ended
-		if utils.IsContextErr(err) {
+		if ctxv.IsContextErr(err) {
 			return err
 		}
 
