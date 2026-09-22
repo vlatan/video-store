@@ -3,7 +3,7 @@ package posts
 import (
 	"context"
 	"encoding/json"
-	"log"
+	"log/slog"
 	"runtime"
 
 	"github.com/vlatan/video-store/internal/models"
@@ -15,7 +15,8 @@ import (
 func postProcessPosts(ctx context.Context, posts models.Posts) error {
 
 	g := new(errgroup.Group)
-	semaphore := make(chan struct{}, runtime.GOMAXPROCS(0))
+	maxConcurrency := runtime.GOMAXPROCS(0) * 8
+	semaphore := make(chan struct{}, maxConcurrency)
 	for i, post := range posts.Items {
 
 		g.Go(func() error {
@@ -36,10 +37,8 @@ func postProcessPosts(ctx context.Context, posts models.Posts) error {
 					return nil
 				}
 
-				log.Printf( // Just log the non-breaking error
-					"couldn't unmarshal the thumbs for post %s; %v",
-					post.VideoID, err,
-				)
+				// Just log the non-breaking error
+				slog.WarnContext(ctx, "failed to unmarshal thumbs", "error", err)
 
 				// Set empty Thumbnail so the HTML templates don't break
 				posts.Items[i].Thumbnail = &models.Thumbnail{}
