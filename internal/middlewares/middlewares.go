@@ -37,28 +37,44 @@ func New(ui ui.Service, config *config.Config) *Service {
 // IsAuthenticated checks if the user is authenticated
 func (s *Service) IsAuthenticated(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+
+		// Get template data
+		data := models.GetDataFromContext(r)
+
 		// If the user is authenticated move onto the next handler
-		if user := models.GetUserFromContext(r.Context()); user.IsAuthenticated() {
+		if data.CurrentUser.IsAuthenticated() {
 			next(w, r)
 			return
 		}
 
-		// Serve forbidden error
-		utils.HttpError(w, http.StatusForbidden)
+		if strings.HasPrefix(r.URL.Path, "/api/") {
+			s.ui.JSONError(w, r, http.StatusForbidden)
+			return
+		}
+
+		s.ui.HTMLError(w, r, data, http.StatusForbidden)
 	}
 }
 
 // IsAdmin checks if the user is admin
 func (s *Service) IsAdmin(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+
+		// Get template data
+		data := models.GetDataFromContext(r)
+
 		// If the user is admin move onto the next handler
-		if user := models.GetUserFromContext(r.Context()); user.IsAdmin() {
+		if data.CurrentUser.IsAdmin() {
 			next(w, r)
 			return
 		}
 
-		// Serve forbidden error
-		utils.HttpError(w, http.StatusForbidden)
+		if strings.HasPrefix(r.URL.Path, "/api/") {
+			s.ui.JSONError(w, r, http.StatusForbidden)
+			return
+		}
+
+		s.ui.HTMLError(w, r, data, http.StatusForbidden)
 	}
 }
 
@@ -75,7 +91,7 @@ func (s *Service) LoadRequestId(next http.Handler) http.Handler {
 // LoadUser gets the user from session and stores it in the context
 func (s *Service) LoadUser(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		user, _ := s.ui.GetUserFromSession(w, r) // Anonymous if nil
+		user, _ := s.ui.GetUserFromSession(w, r) // Nil if anonymous or failed to fetch
 		ctx := context.WithValue(r.Context(), models.UserContextKey, user)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
@@ -180,8 +196,13 @@ func (s *Service) RecoverPanic(next http.Handler) http.Handler {
 				slog.Any("stack", cleanLines),
 			)
 
-			// Send 500 to client
-			utils.HttpError(w, http.StatusInternalServerError)
+			if strings.HasPrefix(r.URL.Path, "/api/") {
+				s.ui.JSONError(w, r, http.StatusInternalServerError)
+				return
+			}
+
+			data := models.GetDataFromContext(r)
+			s.ui.HTMLError(w, r, data, http.StatusInternalServerError)
 		}()
 
 		next.ServeHTTP(w, r)

@@ -16,7 +16,7 @@ import (
 // Handle all sources page
 func (s *Service) SourcesHandler(w http.ResponseWriter, r *http.Request) {
 
-	// Generate template data
+	// Get template data
 	data := models.GetDataFromContext(r)
 
 	var (
