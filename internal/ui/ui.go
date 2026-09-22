@@ -31,7 +31,7 @@ type Service interface {
 	// Get the map containing the text files
 	TextFiles() models.TextFiles
 	// Create new template data
-	NewData(w http.ResponseWriter, r *http.Request) *models.TemplateData
+	NewTemplateData(w http.ResponseWriter, r *http.Request) *models.TemplateData
 	// Create new pagination struct
 	NewPagination(currentPage, totalRecords, pageSize int) *models.PaginationInfo
 	// Write JSON to response

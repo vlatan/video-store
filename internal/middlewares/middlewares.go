@@ -147,7 +147,7 @@ func (s *Service) LoadTemplateData(next http.Handler) http.Handler {
 		// Get user from context
 		user := models.GetUserFromContext(r.Context())
 		// Generate the default data
-		data := s.ui.NewData(w, r)
+		data := s.ui.NewTemplateData(w, r)
 		// Attach the user to be able to be accessed from data too
 		data.CurrentUser = user
 		// Store data to context

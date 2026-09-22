@@ -60,7 +60,7 @@ func (s *service) RenderHTML(
 	if err := tmpl.ExecuteTemplate(&buf, templateName, data); err != nil {
 		slog.WarnContext(
 			r.Context(),
-			fmt.Sprintf("failed to execute %s template", templateName),
+			fmt.Sprintf("failed to execute template %s", templateName),
 			"error", err,
 		)
 		s.HTMLError(w, r, data, http.StatusInternalServerError)

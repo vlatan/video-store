@@ -1,7 +1,7 @@
 package ui
 
 import (
-	"log"
+	"log/slog"
 	"net/http"
 
 	"github.com/vlatan/video-store/internal/drivers/rdb"
@@ -12,7 +12,7 @@ import (
 // NewData creates new default data struct to be passed to the templates
 // Instead of manualy envoking this function in each route it can be envoked in a middleware
 // and passed donwstream as value to the request context.
-func (s *service) NewData(w http.ResponseWriter, r *http.Request) *models.TemplateData {
+func (s *service) NewTemplateData(w http.ResponseWriter, r *http.Request) *models.TemplateData {
 
 	// Get the categories from cache
 	categories, _ := rdb.GetCachedData(
@@ -61,7 +61,11 @@ func (s *service) NewData(w http.ResponseWriter, r *http.Request) *models.Templa
 	// Clear the flash session created with s.store.Get
 	session.Options.MaxAge = -1
 	if err := session.Save(r, w); err != nil {
-		log.Printf("unable to clear/save the flash session; %v", err)
+		slog.WarnContext(
+			r.Context(),
+			"failed to clear the flash session",
+			"error", err,
+		)
 	}
 
 	// Put flash messages to data
