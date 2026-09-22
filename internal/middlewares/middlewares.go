@@ -1,7 +1,6 @@
 package middlewares
 
 import (
-	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"log/slog"
@@ -23,6 +22,8 @@ type Service struct {
 	ui     ui.Service
 	config *config.Config
 }
+
+type requestID string
 
 // New creates new middlewares service
 func New(ui ui.Service, config *config.Config) *Service {
@@ -84,7 +85,8 @@ func (s *Service) LoadRequestId(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		bytes := make([]byte, 8)
 		rand.Read(bytes)
-		ctx := context.WithValue(r.Context(), ctxKey{}, hex.EncodeToString(bytes))
+		id := hex.EncodeToString(bytes)
+		ctx := ctxv.WithValue(r.Context(), requestID(id))
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

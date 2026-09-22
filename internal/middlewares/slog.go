@@ -11,8 +11,6 @@ import (
 	"github.com/vlatan/video-store/internal/models"
 )
 
-type ctxKey struct{}
-
 // RequestDetails holds rich HTTP metadata
 type RequestDetails struct {
 	ID        string
@@ -42,8 +40,8 @@ func (h *ContextHandler) Handle(ctx context.Context, r slog.Record) error {
 	}
 
 	// Look for request ID in the context
-	if reqID, ok := ctx.Value(ctxKey{}).(string); ok {
-		r.AddAttrs(slog.String("requestId", reqID))
+	if reqID := ctxv.Get[requestID](ctx); reqID != "" {
+		r.AddAttrs(slog.Any("requestId", reqID))
 	}
 
 	return h.Handler.Handle(ctx, r)
