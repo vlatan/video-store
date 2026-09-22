@@ -2,7 +2,6 @@ package sitemaps
 
 import (
 	"html/template"
-	"log"
 	"log/slog"
 	"net/http"
 	"slices"
@@ -31,24 +30,30 @@ func (s *Service) SitemapPartHandler(w http.ResponseWriter, r *http.Request) {
 	// Extract the part from URL, i.e. "post-19.xml"
 	partKey := r.PathValue("part")
 
+	// Generate template data
+	data := models.GetDataFromContext(r)
+
 	// Check if this is xml page, base is now -> "post-19"
 	base, ok := strings.CutSuffix(partKey, ".xml")
 	if !ok {
-		http.NotFound(w, r)
+		slog.WarnContext(r.Context(), "sitemapt part has no xml extension")
+		s.ui.HTMLError(w, r, data, http.StatusNotFound)
 		return
 	}
 
 	// Find the last "-"
 	dashIdx := strings.LastIndex(base, "-")
 	if dashIdx == -1 {
-		http.NotFound(w, r)
+		slog.WarnContext(r.Context(), "sitemap part has no dash in its name")
+		s.ui.HTMLError(w, r, data, http.StatusNotFound)
 		return
 	}
 
 	// Validate the sitemap part type
 	prefix := base[:dashIdx]
 	if !slices.Contains(sitemapPartTypes, prefix) {
-		http.NotFound(w, r)
+		slog.WarnContext(r.Context(), "invalid sitemap part type")
+		s.ui.HTMLError(w, r, data, http.StatusNotFound)
 		return
 	}
 
@@ -56,7 +61,8 @@ func (s *Service) SitemapPartHandler(w http.ResponseWriter, r *http.Request) {
 	numStr := base[dashIdx+1:]
 	partNum, err := strconv.Atoi(numStr)
 	if err != nil || partNum < 0 || partNum >= sitemapPartsNum {
-		http.NotFound(w, r)
+		slog.WarnContext(r.Context(), "invalid sitemap part number")
+		s.ui.HTMLError(w, r, data, http.StatusNotFound)
 		return
 	}
 
@@ -66,19 +72,18 @@ func (s *Service) SitemapPartHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		slog.ErrorContext(
 			r.Context(), "failed to get the sitemap part",
-			"method", r.Method,
-			"path", r.URL.Path,
 			"error", err,
 		)
-	}
-
-	if err != nil || sitemapPart == nil {
-		http.NotFound(w, r)
+		s.ui.HTMLError(w, r, data, http.StatusInternalServerError)
 		return
 	}
 
-	// Get data from context and populate sitemap data
-	data := models.GetDataFromContext(r)
+	if sitemapPart == nil {
+		slog.WarnContext(r.Context(), "no sitemap part fetched")
+		s.ui.HTMLError(w, r, data, http.StatusNotFound)
+		return
+	}
+
 	data.SitemapItems = sitemapPart.Entries
 	data.XMLDeclarations = []template.HTML{
 		template.HTML(`<?xml version="1.0" encoding="UTF-8"?>`),
@@ -91,16 +96,20 @@ func (s *Service) SitemapPartHandler(w http.ResponseWriter, r *http.Request) {
 // Handle the sitemap index
 func (s *Service) SitemapIndexHandler(w http.ResponseWriter, r *http.Request) {
 
+	// Get data from context
+	data := models.GetDataFromContext(r)
+
 	sitemap, err := s.GetSitemapIndex(r, sitemapRedisKey)
 
 	if err != nil {
-		log.Printf("Couldn't get sitemap index: %v", err)
-		http.NotFound(w, r)
+		slog.ErrorContext(
+			r.Context(), "failed to get the sitemap index",
+			"error", err,
+		)
+		s.ui.HTMLError(w, r, data, http.StatusInternalServerError)
 		return
 	}
 
-	// Get data from context
-	data := models.GetDataFromContext(r)
 	for _, value := range sitemap {
 		data.SitemapItems = append(data.SitemapItems, &models.SitemapItem{
 			Location:     value.Location,

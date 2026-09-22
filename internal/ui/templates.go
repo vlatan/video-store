@@ -66,7 +66,7 @@ func loadTemplates(m *minify.M) (models.TemplateMap, error) {
 		if !strings.Contains(path, "sitemaps") {
 			baseTmpl, err = baseTemplate.Clone()
 			if err != nil {
-				return fmt.Errorf("couldn't clone the base %q template: %w", base, err)
+				return fmt.Errorf("failed to clone the base %s template: %w", base, err)
 			}
 		}
 
@@ -93,7 +93,10 @@ func loadTemplates(m *minify.M) (models.TemplateMap, error) {
 }
 
 // parseTemplate minifies and parses HTML template as per the tdewolff/minify docs.
-func parseFiles(m *minify.M, tmpl *template.Template, filepaths ...string) (*template.Template, error) {
+func parseFiles(
+	m *minify.M,
+	tmpl *template.Template,
+	filepaths ...string) (*template.Template, error) {
 
 	for _, fp := range filepaths {
 

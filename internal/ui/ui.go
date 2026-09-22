@@ -1,7 +1,6 @@
 package ui
 
 import (
-	"io"
 	"net/http"
 	"regexp"
 
@@ -32,17 +31,17 @@ type Service interface {
 	// Get the map containing the text files
 	TextFiles() models.TextFiles
 	// Create new template data
-	NewData(w http.ResponseWriter, r *http.Request) *models.TemplateData
+	NewTemplateData(w http.ResponseWriter, r *http.Request) *models.TemplateData
 	// Create new pagination struct
 	NewPagination(currentPage, totalRecords, pageSize int) *models.PaginationInfo
 	// Write JSON to response
 	WriteJSON(w http.ResponseWriter, r *http.Request, data any)
 	// Write HTML template to response
 	RenderHTML(w http.ResponseWriter, r *http.Request, templateName string, data *models.TemplateData)
-	// Write JSON error to response
-	JSONError(w http.ResponseWriter, r *http.Request, statusCode int)
+	// JSONError writes JSON error to response
+	JSONError(w http.ResponseWriter, r *http.Request, status int)
 	// HTMLError executes error.html template
-	HTMLError(w io.Writer, status int, data *models.TemplateData) error
+	HTMLError(w http.ResponseWriter, r *http.Request, data *models.TemplateData, status int)
 }
 
 type service struct {

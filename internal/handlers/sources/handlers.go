@@ -16,7 +16,7 @@ import (
 // Handle all sources page
 func (s *Service) SourcesHandler(w http.ResponseWriter, r *http.Request) {
 
-	// Generate template data
+	// Get template data
 	data := models.GetDataFromContext(r)
 
 	var (
@@ -41,15 +41,15 @@ func (s *Service) SourcesHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		slog.ErrorContext(
 			r.Context(), "failed to get sources from DB",
-			"path", r.URL.Path,
 			"error", err,
 		)
-		utils.HttpError(w, http.StatusInternalServerError)
+		s.ui.HTMLError(w, r, data, http.StatusInternalServerError)
 		return
 	}
 
 	if len(sources) == 0 {
-		http.NotFound(w, r)
+		slog.WarnContext(r.Context(), "no sources found in DB")
+		s.ui.HTMLError(w, r, data, http.StatusNotFound)
 		return
 	}
 
@@ -86,6 +86,10 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 
 		err := r.ParseForm()
 		if err != nil {
+			slog.WarnContext(
+				r.Context(), "failed to parse the form",
+				"error", err,
+			)
 			formError.Message = "Could not parse the form"
 			data.Form.Error = &formError
 			s.ui.RenderHTML(w, r, "form.html", data)
@@ -99,6 +103,10 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 		// Exctract the ID from the URL
 		playlistID, err := extractPlaylistID(url)
 		if err != nil {
+			slog.WarnContext(
+				r.Context(), "failed extract playlist ID",
+				"error", err,
+			)
 			formError.Message = "Could not extract the playlist ID"
 			data.Form.Error = &formError
 			s.ui.RenderHTML(w, r, "form.html", data)
@@ -107,6 +115,7 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Check if the playlist is already posted
 		if s.sourcesRepo.SourceExists(r.Context(), playlistID) {
+			slog.WarnContext(r.Context(), "playlist already posted")
 			formError.Message = "Playlist already posted"
 			data.Form.Error = &formError
 			s.ui.RenderHTML(w, r, "form.html", data)
@@ -126,8 +135,6 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			slog.ErrorContext(
 				r.Context(), "failed to get source metadata from YouTube",
-				"path", r.URL.Path,
-				"sourceId", playlistID,
 				"error", err,
 			)
 			formError.Message = "Unable to fetch the playlist from YouTube"
@@ -150,8 +157,6 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			slog.ErrorContext(
 				r.Context(), "failed to get channel metadata from YouTube",
-				"path", r.URL.Path,
-				"channelId", channelID,
 				"error", err,
 			)
 			formError.Message = "Unable to fetch channel info from YouTube"
@@ -169,8 +174,6 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil || rowsAffected == 0 {
 			slog.ErrorContext(
 				r.Context(), "failed to insert source in DB",
-				"path", r.URL.Path,
-				"sourceId", source.PlaylistID,
 				"error", err,
 			)
 			formError.Message = "Could not create source"
@@ -179,13 +182,13 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// Check out the souurce
+		// Check out the source
 		redirectURL := fmt.Sprintf("/source/%s/", playlistID)
 		redirectTo := redirect.Sanitize(redirectURL, auth.IsProtectedRoute)
 		redirect.Execute(w, r, redirectTo, http.StatusFound)
 
 	default:
-		utils.HttpError(w, http.StatusMethodNotAllowed)
+		s.ui.HTMLError(w, r, data, http.StatusMethodNotAllowed)
 	}
 }
 
@@ -236,15 +239,15 @@ func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		slog.ErrorContext(
 			r.Context(), "failed to get source posts from DB",
-			"path", r.URL.Path,
 			"error", err,
 		)
-		utils.HttpError(w, http.StatusInternalServerError)
+		s.ui.HTMLError(w, r, data, http.StatusInternalServerError)
 		return
 	}
 
 	if len(posts.Items) == 0 {
-		http.NotFound(w, r)
+		slog.WarnContext(r.Context(), "no source posts fetched from DB")
+		s.ui.HTMLError(w, r, data, http.StatusNotFound)
 		return
 	}
 

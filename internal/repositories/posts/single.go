@@ -194,7 +194,7 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.
 	safeHTMLSummary, err := utils.ParseMarkdown(post.Summary, utils.SimplePolicy())
 	if err != nil {
 		return zero, fmt.Errorf(
-			"could not convert markdown to html on %q: %v",
+			"could not convert markdown to html on %s: %v",
 			post.VideoID, err,
 		)
 	}
@@ -220,7 +220,10 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.
 	// Unserialize thumbnails
 	var thumbs models.Thumbnails
 	if err = json.Unmarshal(thumbnails, &thumbs); err != nil {
-		return zero, fmt.Errorf("video ID %q: %w", videoID, err)
+		return zero, fmt.Errorf(
+			"failed to unmarshal thumbs on video %s: %w",
+			videoID, err,
+		)
 	}
 
 	// Assign the biggest thumbnail to post

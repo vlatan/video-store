@@ -7,7 +7,6 @@ import (
 
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/models"
-	"github.com/vlatan/video-store/internal/utils"
 )
 
 // Handle posts in a certain source
@@ -70,12 +69,13 @@ func (s *Service) SourcePostsAPI(w http.ResponseWriter, r *http.Request) {
 			"failed to get source posts from DB",
 			"error", err,
 		)
-		utils.HttpError(w, http.StatusInternalServerError)
+		s.ui.JSONError(w, r, http.StatusInternalServerError)
 		return
 	}
 
 	if len(posts.Items) == 0 {
-		http.NotFound(w, r)
+		slog.WarnContext(r.Context(), "no source posts found in DB")
+		s.ui.JSONError(w, r, http.StatusNotFound)
 		return
 	}
 

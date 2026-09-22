@@ -37,28 +37,44 @@ func New(ui ui.Service, config *config.Config) *Service {
 // IsAuthenticated checks if the user is authenticated
 func (s *Service) IsAuthenticated(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+
+		// Get template data
+		data := models.GetDataFromContext(r)
+
 		// If the user is authenticated move onto the next handler
-		if user := models.GetUserFromContext(r.Context()); user.IsAuthenticated() {
+		if data.CurrentUser.IsAuthenticated() {
 			next(w, r)
 			return
 		}
 
-		// Serve forbidden error
-		utils.HttpError(w, http.StatusForbidden)
+		if strings.HasPrefix(r.URL.Path, "/api/") {
+			s.ui.JSONError(w, r, http.StatusForbidden)
+			return
+		}
+
+		s.ui.HTMLError(w, r, data, http.StatusForbidden)
 	}
 }
 
 // IsAdmin checks if the user is admin
 func (s *Service) IsAdmin(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+
+		// Get template data
+		data := models.GetDataFromContext(r)
+
 		// If the user is admin move onto the next handler
-		if user := models.GetUserFromContext(r.Context()); user.IsAdmin() {
+		if data.CurrentUser.IsAdmin() {
 			next(w, r)
 			return
 		}
 
-		// Serve forbidden error
-		utils.HttpError(w, http.StatusForbidden)
+		if strings.HasPrefix(r.URL.Path, "/api/") {
+			s.ui.JSONError(w, r, http.StatusForbidden)
+			return
+		}
+
+		s.ui.HTMLError(w, r, data, http.StatusForbidden)
 	}
 }
 
@@ -75,7 +91,7 @@ func (s *Service) LoadRequestId(next http.Handler) http.Handler {
 // LoadUser gets the user from session and stores it in the context
 func (s *Service) LoadUser(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		user, _ := s.ui.GetUserFromSession(w, r) // Anonymous if nil
+		user, _ := s.ui.GetUserFromSession(w, r) // Nil if anonymous or failed to fetch
 		ctx := context.WithValue(r.Context(), models.UserContextKey, user)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
@@ -91,7 +107,10 @@ func (s *Service) Logging(next http.Handler) http.Handler {
 			return
 		}
 
+		// Replace response writer with status tracker
 		st := NewStatusTracker(w)
+
+		// Serve the request
 		next.ServeHTTP(st, r)
 
 		attrs := []any{
@@ -128,7 +147,7 @@ func (s *Service) LoadTemplateData(next http.Handler) http.Handler {
 		// Get user from context
 		user := models.GetUserFromContext(r.Context())
 		// Generate the default data
-		data := s.ui.NewData(w, r)
+		data := s.ui.NewTemplateData(w, r)
 		// Attach the user to be able to be accessed from data too
 		data.CurrentUser = user
 		// Store data to context
@@ -177,8 +196,13 @@ func (s *Service) RecoverPanic(next http.Handler) http.Handler {
 				slog.Any("stack", cleanLines),
 			)
 
-			// Send 500 to client
-			utils.HttpError(w, http.StatusInternalServerError)
+			if strings.HasPrefix(r.URL.Path, "/api/") {
+				s.ui.JSONError(w, r, http.StatusInternalServerError)
+				return
+			}
+
+			data := models.GetDataFromContext(r)
+			s.ui.HTMLError(w, r, data, http.StatusInternalServerError)
 		}()
 
 		next.ServeHTTP(w, r)
@@ -256,53 +280,6 @@ func (s *Service) CanonicalRedirect(next http.Handler) http.Handler {
 
 		// Safe Redirect: Internal domain canonicalization
 		http.Redirect(w, r, canonical, http.StatusPermanentRedirect) // #nosec G710
-	})
-}
-
-// HandleErrors records the status code and body and serves rich errors if the response is error
-func (s *Service) HandleErrors(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-		// Create our custom response recorder
-		recorder := NewResponseRecorder(w)
-
-		// Defer the final response write until the function exits.
-		// This ensures that either the original response or the error response is written.
-		defer recorder.flush()
-
-		// Call the next handler in the chain,
-		// but write the response to the recorder,
-		// not to the actual response writer
-		next.ServeHTTP(recorder, r)
-
-		// We don't care if this is NOT an error
-		if recorder.status < http.StatusBadRequest {
-			return
-		}
-
-		// This is an error
-		// Clear any previously buffered body
-		recorder.body.Reset()
-
-		// Serve JSON error on API path
-		if strings.HasPrefix(r.URL.Path, "/api/") {
-			s.ui.JSONError(recorder, r, recorder.status)
-			return
-		}
-
-		// Default data
-		data := models.GetDataFromContext(r)
-
-		// Set HTML content type header becaue we will serve HTML error page
-		recorder.Header().Set("Content-Type", "text/html; charset=utf-8")
-
-		// Try to render error template
-		if err := s.ui.HTMLError(recorder, recorder.status, data); err != nil {
-			// Template failed, reset body in case it was written to
-			// and use plain text fallback
-			recorder.body.Reset()
-			utils.HttpError(recorder, recorder.status)
-		}
 	})
 }
 

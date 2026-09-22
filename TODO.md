@@ -1,5 +1,5 @@
-- Remove request or user details in slogs in the code
-  From sitemaps onwards
+- Create appctx package and add ctx functions there
+  Also break up misc and utils into smaller packages?
 
 - Make `:= range` more performant by using index
 - Make the directors links that list their films, and also the release years

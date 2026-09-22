@@ -18,12 +18,10 @@ func (s *Service) UserFavoritesHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		slog.ErrorContext(
-			r.Context(), "failed to get user's favorited posts from DB",
-			"path", r.URL.Path,
-			"userId", data.CurrentUser.ID,
+			r.Context(), "failed to get user fav posts from DB",
 			"error", err,
 		)
-		utils.HttpError(w, http.StatusInternalServerError)
+		s.ui.HTMLError(w, r, data, http.StatusInternalServerError)
 		return
 	}
 
@@ -44,15 +42,15 @@ func (s *Service) UsersHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		slog.ErrorContext(
 			r.Context(), "failed to get users from DB",
-			"path", r.URL.Path,
 			"error", err,
 		)
-		utils.HttpError(w, http.StatusInternalServerError)
+		s.ui.HTMLError(w, r, data, http.StatusInternalServerError)
 		return
 	}
 
 	if len(users.Items) == 0 {
-		http.NotFound(w, r)
+		slog.WarnContext(r.Context(), "no users found in DB")
+		s.ui.HTMLError(w, r, data, http.StatusNotFound)
 		return
 	}
 
@@ -61,12 +59,10 @@ func (s *Service) UsersHandler(w http.ResponseWriter, r *http.Request) {
 		localAvatarURL, err := s.avatars.Get(r.Context(), &user)
 		if err != nil {
 			slog.ErrorContext(
-				r.Context(), "failed to get user's avatar",
-				"path", r.URL.Path,
-				"userId", user.ID,
+				r.Context(), "failed to get user avatar",
 				"error", err,
 			)
-			utils.HttpError(w, http.StatusInternalServerError)
+			s.ui.HTMLError(w, r, data, http.StatusInternalServerError)
 			return
 		}
 		users.Items[i].LocalAvatarURL = localAvatarURL

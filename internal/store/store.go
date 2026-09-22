@@ -85,7 +85,10 @@ func (rs *redisStore) Get(r *http.Request, name string) (*sessions.Session, erro
 }
 
 // Save saves a session into Redis and a corresponding session ID in a cookie
-func (rs *redisStore) Save(r *http.Request, w http.ResponseWriter, session *sessions.Session) error {
+func (rs *redisStore) Save(
+	r *http.Request,
+	w http.ResponseWriter,
+	session *sessions.Session) error {
 
 	// If MaxAge is negative, delete the session
 	if session.Options.MaxAge < 0 {

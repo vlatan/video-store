@@ -81,8 +81,6 @@ func (r *Repository) Rate(ctx context.Context, rating uint8, userID int, videoID
 		if rbErr != nil && !errors.Is(rbErr, pgx.ErrTxClosed) {
 			slog.ErrorContext(
 				ctx, "transaction rollback on post rating failed",
-				"userId", userID,
-				"postId", videoID,
 				"error", rbErr,
 			)
 		}
@@ -146,8 +144,6 @@ func (r *Repository) Unrate(
 		if rbErr != nil && !errors.Is(rbErr, pgx.ErrTxClosed) {
 			slog.ErrorContext(
 				ctx, "transaction rollback on delete user rating failed",
-				"userId", userID,
-				"postId", videoID,
 				"error", rbErr,
 			)
 		}
@@ -212,8 +208,6 @@ func (r *Repository) Review(
 		if rbErr != nil && !errors.Is(rbErr, pgx.ErrTxClosed) {
 			slog.ErrorContext(
 				ctx, "transaction rollback on post review failed",
-				"userId", userID,
-				"postId", videoID,
 				"error", rbErr,
 			)
 		}
@@ -265,7 +259,7 @@ func (r *Repository) Review(
 	safeHTMLcontent, err := utils.ParseMarkdown(content, simplePolicy)
 	if err != nil {
 		return nil, fmt.Errorf(
-			"could not parse/sanitize markdown on video %q review: %v",
+			"could not parse/sanitize markdown on video %s review: %v",
 			videoID, err,
 		)
 	}

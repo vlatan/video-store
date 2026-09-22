@@ -6,7 +6,6 @@ import (
 
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/redirect"
-	"github.com/vlatan/video-store/internal/utils"
 
 	"golang.org/x/oauth2"
 )
@@ -14,12 +13,15 @@ import (
 // AuthHandler handles the entry point of the user authentication
 func (s *Service) AuthHandler(w http.ResponseWriter, r *http.Request) {
 
+	// Generate the default data
+	data := models.GetDataFromContext(r)
+
 	// Check if the provider exists
 	providerName := r.PathValue("provider")
 	provider, ok := s.providers[providerName]
 	if !ok {
-		slog.WarnContext(r.Context(), "no such provider name")
-		http.NotFound(w, r)
+		slog.WarnContext(r.Context(), "invalid provider name")
+		s.ui.HTMLError(w, r, data, http.StatusNotFound)
 		return
 	}
 
@@ -28,7 +30,7 @@ func (s *Service) AuthHandler(w http.ResponseWriter, r *http.Request) {
 	redirectTo := redirect.Sanitize(redirectURL, IsProtectedRoute)
 
 	// Check if the user is already logged in
-	if user := models.GetUserFromContext(r.Context()); user.IsAuthenticated() {
+	if data.CurrentUser.IsAuthenticated() {
 		slog.WarnContext(r.Context(), "user already logged in")
 		redirect.Execute(w, r, redirectTo, http.StatusSeeOther)
 		return
@@ -41,7 +43,7 @@ func (s *Service) AuthHandler(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "failed to generate oauth state",
 			"error", err,
 		)
-		utils.HttpError(w, http.StatusInternalServerError)
+		s.ui.HTMLError(w, r, data, http.StatusInternalServerError)
 		return
 	}
 
@@ -71,7 +73,7 @@ func (s *Service) AuthHandler(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "failed to save state/verifier session",
 			"error", err,
 		)
-		utils.HttpError(w, http.StatusInternalServerError)
+		s.ui.HTMLError(w, r, data, http.StatusInternalServerError)
 		return
 	}
 
@@ -92,12 +94,15 @@ func (s *Service) AuthHandler(w http.ResponseWriter, r *http.Request) {
 // Provider Auth callback
 func (s *Service) AuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 
+	// Generate the default data
+	data := models.GetDataFromContext(r)
+
 	// Check if the provider exists
 	providerName := r.PathValue("provider")
 	provider, ok := s.providers[providerName]
 	if !ok {
-		slog.WarnContext(r.Context(), "no such provider name")
-		http.NotFound(w, r)
+		slog.WarnContext(r.Context(), "invalid provider name")
+		s.ui.HTMLError(w, r, data, http.StatusNotFound)
 		return
 	}
 
@@ -106,7 +111,7 @@ func (s *Service) AuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	redirectTo := redirect.Sanitize(redirectURL, IsProtectedRoute)
 
 	// Check if the user is already logged in
-	if user := models.GetUserFromContext(r.Context()); user.IsAuthenticated() {
+	if data.CurrentUser.IsAuthenticated() {
 		slog.WarnContext(r.Context(), "user already logged in")
 		redirect.Execute(w, r, redirectTo, http.StatusSeeOther)
 		return

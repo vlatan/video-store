@@ -257,7 +257,10 @@ func NormalizeDirectors(raw []string) ([]string, error) {
 
 		name, err := NormalizeName(name)
 		if err != nil {
-			return nil, fmt.Errorf("director name contains invalid characters %q: %w", name, err)
+			return nil, fmt.Errorf(
+				"director name contains invalid characters %q: %w",
+				name, err,
+			)
 		}
 
 		// Ignore duplicates

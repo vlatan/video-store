@@ -1,7 +1,6 @@
 package ui
 
 import (
-	"log"
 	"log/slog"
 	"net/http"
 	"time"
@@ -19,12 +18,20 @@ func (s *service) StoreFlashMessage(
 ) {
 	session, err := s.store.Get(r, s.config.FlashSessionName)
 	if err != nil {
-		log.Println("Unable to get the flash session", err)
+		slog.WarnContext(
+			r.Context(),
+			"failed to get the flash session",
+			"error", err,
+		)
 	}
 
 	session.AddFlash(m)
 	if err = session.Save(r, w); err != nil {
-		log.Println("Unable to save the flash session", err)
+		slog.WarnContext(
+			r.Context(),
+			"failed to save the flash session",
+			"error", err,
+		)
 	}
 }
 
@@ -79,7 +86,7 @@ func (s *service) GetUserFromSession(w http.ResponseWriter, r *http.Request) (*m
 		if err != nil {
 			slog.WarnContext(
 				r.Context(),
-				"failed to update user's last seen in DB",
+				"failed to update user last seen in DB",
 				"error", err,
 			)
 		}
@@ -91,7 +98,7 @@ func (s *service) GetUserFromSession(w http.ResponseWriter, r *http.Request) (*m
 	if err = session.Save(r, w); err != nil {
 		slog.WarnContext(
 			r.Context(),
-			"failed to save session after updating user's last seen",
+			"failed to save session after updating user last seen",
 			"error", err,
 		)
 	}
@@ -126,7 +133,7 @@ func (s *service) GetUserFromSession(w http.ResponseWriter, r *http.Request) (*m
 	if err != nil {
 		slog.WarnContext(
 			r.Context(),
-			"failed to get user's avatar",
+			"failed to get user avatar",
 			"error", err,
 		)
 	}

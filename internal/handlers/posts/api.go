@@ -68,13 +68,13 @@ func (s *Service) HomeAPI(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "failed to get posts from DB",
 			"error", err,
 		)
-		utils.HttpError(w, http.StatusInternalServerError)
+		s.ui.JSONError(w, r, http.StatusInternalServerError)
 		return
 	}
 
 	if len(posts.Items) == 0 {
 		slog.WarnContext(r.Context(), "no posts found in DB")
-		http.NotFound(w, r)
+		s.ui.JSONError(w, r, http.StatusNotFound)
 		return
 	}
 
@@ -141,13 +141,13 @@ func (s *Service) CategoryPostsAPI(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "failed to get posts from DB",
 			"error", err,
 		)
-		utils.HttpError(w, http.StatusInternalServerError)
+		s.ui.JSONError(w, r, http.StatusInternalServerError)
 		return
 	}
 
 	if len(posts.Items) == 0 {
 		slog.WarnContext(r.Context(), "no posts found in DB")
-		http.NotFound(w, r)
+		s.ui.JSONError(w, r, http.StatusNotFound)
 		return
 	}
 
@@ -160,7 +160,7 @@ func (s *Service) SearchPostsAPI(w http.ResponseWriter, r *http.Request) {
 	// Get the search query
 	searchQuery := r.URL.Query().Get("q")
 	if searchQuery == "" {
-		http.NotFound(w, r)
+		s.ui.JSONError(w, r, http.StatusNotFound)
 		return
 	}
 
@@ -206,13 +206,13 @@ func (s *Service) SearchPostsAPI(w http.ResponseWriter, r *http.Request) {
 			"path", r.URL.Path,
 			"error", err,
 		)
-		utils.HttpError(w, http.StatusInternalServerError)
+		s.ui.JSONError(w, r, http.StatusInternalServerError)
 		return
 	}
 
 	if len(posts.Items) == 0 {
 		slog.WarnContext(r.Context(), "no posts found in DB")
-		http.NotFound(w, r)
+		s.ui.JSONError(w, r, http.StatusNotFound)
 		return
 	}
 
@@ -225,7 +225,7 @@ func (s *Service) PostReviewsAPI(w http.ResponseWriter, r *http.Request) {
 	// Validate the YT ID
 	videoID := r.PathValue("video")
 	if validVideoID.FindStringSubmatch(videoID) == nil {
-		http.NotFound(w, r)
+		s.ui.JSONError(w, r, http.StatusNotFound)
 		return
 	}
 
@@ -266,13 +266,13 @@ func (s *Service) PostReviewsAPI(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "failed get post reviews from DB",
 			"error", err,
 		)
-		utils.HttpError(w, http.StatusInternalServerError)
+		s.ui.JSONError(w, r, http.StatusInternalServerError)
 		return
 	}
 
 	if len(reviews.Items) == 0 {
 		slog.WarnContext(r.Context(), "no post reviews found in DB")
-		http.NotFound(w, r)
+		s.ui.JSONError(w, r, http.StatusNotFound)
 		return
 	}
 
@@ -284,8 +284,7 @@ func (s *Service) PostReviewsAPI(w http.ResponseWriter, r *http.Request) {
 				r.Context(), "failed to get user avatar",
 				"error", err,
 			)
-
-			utils.HttpError(w, http.StatusInternalServerError)
+			s.ui.JSONError(w, r, http.StatusInternalServerError)
 			return
 		}
 		reviews.Items[i].User.LocalAvatarURL = localAvatarURL
@@ -308,7 +307,7 @@ func (s *Service) PostActionAPI(w http.ResponseWriter, r *http.Request) {
 	videoID := r.PathValue("video")
 	if validVideoID.FindStringSubmatch(videoID) == nil {
 		slog.WarnContext(r.Context(), "invalid video id")
-		http.NotFound(w, r)
+		s.ui.JSONError(w, r, http.StatusNotFound)
 		return
 	}
 
@@ -317,7 +316,7 @@ func (s *Service) PostActionAPI(w http.ResponseWriter, r *http.Request) {
 	allowedActions := []string{"like", "fave", "rate", "review"}
 	if !slices.Contains(allowedActions, action) {
 		slog.WarnContext(r.Context(), "not a valid action on post")
-		http.NotFound(w, r)
+		s.ui.JSONError(w, r, http.StatusNotFound)
 		return
 	}
 
@@ -334,7 +333,7 @@ func (s *Service) PostActionAPI(w http.ResponseWriter, r *http.Request) {
 	case "review":
 		s.handleReview(w, r, user.ID, videoID)
 	default:
-		utils.HttpError(w, http.StatusBadRequest)
+		s.ui.JSONError(w, r, http.StatusBadRequest)
 	}
 }
 
@@ -345,7 +344,7 @@ func (s *Service) DeleteActionAPI(w http.ResponseWriter, r *http.Request) {
 	videoID := r.PathValue("video")
 	if validVideoID.FindStringSubmatch(videoID) == nil {
 		slog.WarnContext(r.Context(), "invalid video id")
-		http.NotFound(w, r)
+		s.ui.JSONError(w, r, http.StatusNotFound)
 		return
 	}
 
@@ -354,7 +353,7 @@ func (s *Service) DeleteActionAPI(w http.ResponseWriter, r *http.Request) {
 	allowedActions := []string{"unlike", "unfave", "unrate"}
 	if !slices.Contains(allowedActions, action) {
 		slog.WarnContext(r.Context(), "not a valid action on post")
-		http.NotFound(w, r)
+		s.ui.JSONError(w, r, http.StatusNotFound)
 		return
 	}
 
@@ -369,6 +368,6 @@ func (s *Service) DeleteActionAPI(w http.ResponseWriter, r *http.Request) {
 	case "unrate":
 		s.handleUnrate(w, r, user.ID, videoID)
 	default:
-		utils.HttpError(w, http.StatusBadRequest)
+		s.ui.JSONError(w, r, http.StatusBadRequest)
 	}
 }

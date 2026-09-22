@@ -1,26 +1,33 @@
 package ui
 
 import (
+	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"io"
 	"log/slog"
 	"net/http"
 	"strconv"
 
 	"github.com/vlatan/video-store/internal/models"
-	"github.com/vlatan/video-store/internal/utils"
 )
 
-// ExecuteErrorTemplate executes error.html template
-// A wrapper around tmpl.ExecuteTemplate
-func (s *service) HTMLError(w io.Writer, status int, data *models.TemplateData) error {
+// HTMLError executes error.html template
+func (s *service) HTMLError(
+	w http.ResponseWriter,
+	r *http.Request,
+	data *models.TemplateData,
+	status int) {
 
 	// Check for the error template
-	tmpl, exists := s.templates["error.html"]
+	tmplName := "error.html"
+	tmpl, exists := s.templates[tmplName]
 	if !exists {
-		return errors.New("error.html template does not exist")
+		slog.WarnContext(
+			r.Context(),
+			fmt.Sprintf("invalid template %s", tmplName),
+		)
+		http.Error(w, http.StatusText(status), status)
+		return
 	}
 
 	data.HTMLErrorData = &models.HTMLErrorData{
@@ -45,41 +52,68 @@ func (s *service) HTMLError(w io.Writer, status int, data *models.TemplateData) 
 		data.HTMLErrorData.Heading = fmt.Sprintf("Something went wrong (%d)", http.StatusInternalServerError)
 		data.HTMLErrorData.Text = "Sorry about that. We're working on fixing this."
 	default:
-		return fmt.Errorf("no error data for %d error template", status)
+		slog.WarnContext(r.Context(), fmt.Sprintf("no template data for %d status", status))
+		http.Error(w, http.StatusText(status), status)
+		return
 	}
 
-	return tmpl.ExecuteTemplate(w, "error.html", data)
+	// Execute template to buffer to catch any errors before serving to client
+	var buf bytes.Buffer
+	if err := tmpl.ExecuteTemplate(&buf, tmplName, data); err != nil {
+		slog.WarnContext(
+			r.Context(),
+			fmt.Sprintf("failed to execute %s template", tmplName),
+			"error", err,
+		)
+		http.Error(w, http.StatusText(status), status)
+		return
+	}
+
+	// Set status code and content type before writing the response
+	w.WriteHeader(status)
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+
+	// Write to response
+	if _, err := buf.WriteTo(w); err != nil {
+		// Too late for recovery here.
+		// Partial data already written to response, just log the error.
+		slog.WarnContext(
+			r.Context(), "failed to write to response",
+			"error", err,
+		)
+	}
 }
 
-// Write JSON error to response
-func (s *service) JSONError(w http.ResponseWriter, r *http.Request, statusCode int) {
+// JSONError writes JSON error to response
+func (s *service) JSONError(w http.ResponseWriter, r *http.Request, status int) {
 
 	// Craft data
 	data := models.JSONErrorData{
-		Error: http.StatusText(statusCode),
-		Code:  statusCode,
+		Error: http.StatusText(status),
+		Code:  status,
 	}
 
 	// Encode data to JSON
 	jsonData, err := json.Marshal(data)
 	if err != nil {
-		slog.ErrorContext(
+		slog.WarnContext(
 			r.Context(), "failed to encode JSON error",
 			"error", err,
 		)
-		utils.HttpError(w, statusCode)
+		http.Error(w, http.StatusText(status), status)
 		return
 	}
 
 	// Set status code and content type before writing the response
-	w.WriteHeader(statusCode)
+	w.WriteHeader(status)
 	w.Header().Set("Content-Type", "application/json")
 
+	// Write to response
 	if _, err := w.Write(jsonData); err != nil {
 		// Too late for recovery here.
 		// Partial data already written to response, just log the error.
-		slog.ErrorContext(
-			r.Context(), "failed to write data to response",
+		slog.WarnContext(
+			r.Context(), "failed to write to response",
 			"error", err,
 		)
 	}

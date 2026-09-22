@@ -10,6 +10,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/utils"
 	"github.com/vlatan/video-store/web"
 )
@@ -17,10 +18,13 @@ import (
 // TextHandler handles text files such as robots.txt, ads.txt, etc.
 func (s *Service) TextHandler(w http.ResponseWriter, r *http.Request) {
 
+	// Get default data from context
+	data := models.GetDataFromContext(r)
+
 	// Validate the path
 	if err := utils.ValidateFilePath(r.URL.Path); err != nil {
 		slog.WarnContext(r.Context(), "invalid path")
-		http.NotFound(w, r)
+		s.ui.HTMLError(w, r, data, http.StatusNotFound)
 		return
 	}
 
@@ -28,7 +32,7 @@ func (s *Service) TextHandler(w http.ResponseWriter, r *http.Request) {
 	textFile, exists := s.ui.TextFiles()[r.URL.Path]
 	if !exists {
 		slog.WarnContext(r.Context(), "text file does not exist")
-		http.NotFound(w, r)
+		s.ui.HTMLError(w, r, data, http.StatusNotFound)
 		return
 	}
 
@@ -55,13 +59,13 @@ func (s *Service) HealthAPI(w http.ResponseWriter, r *http.Request) {
 	s.ui.WriteJSON(w, r, data)
 }
 
-// Handle static files
+// Handle static files.
 func (s *Service) StaticHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Validate the path
 	if err := utils.ValidateFilePath(r.URL.Path); err != nil {
 		slog.WarnContext(r.Context(), "invalid path")
-		http.NotFound(w, r)
+		http.NotFound(w, r) // We don't use rich HTML errors for static content
 		return
 	}
 
