@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/vlatan/video-store/internal/models"
-	"github.com/vlatan/video-store/internal/utils"
+	"github.com/vlatan/video-store/internal/utils/ctxv"
 	"google.golang.org/api/youtube/v3"
 )
 
@@ -44,7 +44,7 @@ func (w *Worker) updateSources(
 		}
 
 		// Exit early if context ended
-		if utils.IsContextErr(err) {
+		if ctxv.IsContextErr(err) {
 			return err
 		}
 

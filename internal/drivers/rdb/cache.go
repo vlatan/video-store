@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/redis/go-redis/v9"
-	"github.com/vlatan/video-store/internal/utils"
+	"github.com/vlatan/video-store/internal/utils/ctxv"
 )
 
 // GetCachedData is generic wrapper getting and setting from cache,
@@ -55,7 +55,7 @@ func GetCachedData[T any](
 	}
 
 	// Exit early if context error
-	if utils.IsContextErr(err) {
+	if ctxv.IsContextErr(err) {
 		return zero, err
 	}
 

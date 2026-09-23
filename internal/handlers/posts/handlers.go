@@ -12,8 +12,12 @@ import (
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/handlers/auth"
 	"github.com/vlatan/video-store/internal/models"
-	"github.com/vlatan/video-store/internal/redirect"
-	"github.com/vlatan/video-store/internal/utils"
+	"github.com/vlatan/video-store/internal/utils/ctxv"
+	"github.com/vlatan/video-store/internal/utils/normalize"
+	"github.com/vlatan/video-store/internal/utils/redirect"
+	"github.com/vlatan/video-store/internal/utils/retry"
+	"github.com/vlatan/video-store/internal/utils/sleep"
+	"github.com/vlatan/video-store/internal/utils/stringx"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/jackc/pgx/v5"
@@ -41,8 +45,8 @@ func (s *Service) HomeHandler(w http.ResponseWriter, r *http.Request) {
 		redisKey += fmt.Sprintf(":%s", models.RatingCount)
 	}
 
-	// Generate template data
-	data := models.GetDataFromContext(r)
+	// Get template data
+	data := ctxv.Get[*models.TemplateData](r.Context())
 
 	var (
 		err   error
@@ -107,7 +111,7 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Generate template data (it gets all the categories too)
 	// This is probably wasteful for non-existing category
-	data := models.GetDataFromContext(r)
+	data := ctxv.Get[*models.TemplateData](r.Context())
 
 	var (
 		err   error
@@ -165,11 +169,11 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Generate the default data
-	data := models.GetDataFromContext(r)
+	data := ctxv.Get[*models.TemplateData](r.Context())
 	data.SearchQuery = searchQuery
 
 	start := time.Now()
-	encodedSearchQuery := utils.EscapeTrancateString(searchQuery, 100)
+	encodedSearchQuery := stringx.EscapeTrancate(searchQuery, 100)
 
 	// Construct the Redis key
 	redisKey := fmt.Sprintf("posts:search:%s", encodedSearchQuery)
@@ -223,8 +227,8 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 // Handle adding new post via form
 func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 
-	// Compose data object
-	data := models.GetDataFromContext(r)
+	// Get template data
+	data := ctxv.Get[*models.TemplateData](r.Context())
 
 	// Populate needed data for an empty form
 	data.Form = &models.Form{
@@ -295,7 +299,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 		// Fetch video data from YouTube
 		metadata, err := s.yt.GetVideos(
 			r.Context(),
-			&utils.RetryConfig{
+			&retry.Config{
 				MaxRetries: 3,
 				MaxJitter:  time.Second,
 				Delay:      time.Second,
@@ -320,7 +324,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 				r.Context(), "failed to validate the video data",
 				"error", err,
 			)
-			formError.Message = utils.Capitalize(err.Error())
+			formError.Message = stringx.Capitalize(err.Error())
 			data.Form.Error = &formError
 			s.ui.RenderHTML(w, r, "form.html", data)
 			return
@@ -355,7 +359,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 			defer cancel()
 
 			// Just give it a one try
-			retryConfig := &utils.RetryConfig{
+			retryConfig := &retry.Config{
 				MaxRetries: 1,
 				MaxJitter:  2 * time.Second,
 				Delay:      65 * time.Second,
@@ -373,7 +377,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 
 			// Sleep with context in mind for 60-90 seconds.
 			// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
-			if err := utils.SleepJitter(ctx, 60*time.Second, 90*time.Second); err != nil {
+			if err := sleep.Jitter(ctx, 60*time.Second, 90*time.Second); err != nil {
 				return
 			}
 
@@ -412,7 +416,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 	videoID := r.PathValue("video")
 
 	// Generate the default data
-	data := models.GetDataFromContext(r)
+	data := ctxv.Get[*models.TemplateData](r.Context())
 
 	// Validate the YT ID
 	if validVideoID.FindStringSubmatch(videoID) == nil {
@@ -604,7 +608,7 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 	videoID := r.PathValue("video")
 
 	// Generate the default data
-	data := models.GetDataFromContext(r)
+	data := ctxv.Get[*models.TemplateData](r.Context())
 
 	// Validate the YT ID
 	if validVideoID.FindStringSubmatch(videoID) == nil {
@@ -771,7 +775,7 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Normalize the directors before DB upsert
-		directors, err = utils.NormalizeDirectors(directors)
+		directors, err = normalize.Directors(directors)
 		if err != nil {
 			slog.ErrorContext(
 				r.Context(), "failed to normalize directors",
@@ -784,9 +788,12 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Asign the new values to the current post
-		data.CurrentPost.OriginalTitle = utils.NormalizeTitle(data.Form.Title.Value, utils.VideoTitleCutoffs)
+		data.CurrentPost.OriginalTitle = normalize.Title(
+			data.Form.Title.Value,
+			normalize.VideoTitleCutoffs,
+		)
 		data.CurrentPost.Category.Name = data.Form.Category.Value
-		data.CurrentPost.Summary = utils.NormalizeDescription(data.Form.Content.Value)
+		data.CurrentPost.Summary = normalize.Description(data.Form.Content.Value)
 		data.CurrentPost.Directors = directors
 		data.CurrentPost.ReleaseYear = int16(releaseYear)
 
@@ -831,7 +838,7 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Service) BanPostHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Generate the default data
-	data := models.GetDataFromContext(r)
+	data := ctxv.Get[*models.TemplateData](r.Context())
 
 	// Validate the YT ID
 	videoID := r.PathValue("video")

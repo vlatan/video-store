@@ -5,14 +5,14 @@ import (
 	"net/http"
 
 	"github.com/vlatan/video-store/internal/models"
-	"github.com/vlatan/video-store/internal/utils"
+	"github.com/vlatan/video-store/internal/utils/ctxv"
 )
 
 // Handle the user favorites page
 func (s *Service) UserFavoritesHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Generate template data
-	data := models.GetDataFromContext(r)
+	data := ctxv.Get[*models.TemplateData](r.Context())
 
 	posts, err := s.postsRepo.GetUserFavedPosts(r.Context(), data.CurrentUser.ID, "")
 
@@ -33,10 +33,10 @@ func (s *Service) UserFavoritesHandler(w http.ResponseWriter, r *http.Request) {
 // Users admin dashboard
 func (s *Service) UsersHandler(w http.ResponseWriter, r *http.Request) {
 	// Get the page number from the request query param
-	page := utils.GetPageNum(r)
+	page := GetPageNum(r)
 
-	// Generate template data
-	data := models.GetDataFromContext(r)
+	// Get template data
+	data := ctxv.Get[*models.TemplateData](r.Context())
 
 	users, err := s.usersRepo.GetUsers(r.Context(), page)
 	if err != nil {

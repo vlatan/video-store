@@ -11,7 +11,9 @@ import (
 	"time"
 
 	"github.com/vlatan/video-store/internal/models"
-	"github.com/vlatan/video-store/internal/utils"
+	"github.com/vlatan/video-store/internal/utils/normalize"
+	"github.com/vlatan/video-store/internal/utils/retry"
+	"github.com/vlatan/video-store/internal/utils/sleep"
 	"google.golang.org/genai"
 )
 
@@ -56,11 +58,11 @@ func (s *Service) GenerateContent(
 	ctx context.Context,
 	contents []*genai.Content,
 	genaiConfig *genai.GenerateContentConfig,
-	retryConfig *utils.RetryConfig,
+	retryConfig *retry.Config,
 ) (*models.GenaiResponse, error) {
 
 	// Make the API call
-	result, err := utils.Retry(ctx, retryConfig,
+	result, err := retry.Do(ctx, retryConfig,
 		func() (*genai.GenerateContentResponse, error) {
 			return s.generateContent(ctx, contents, genaiConfig)
 		},
@@ -80,12 +82,12 @@ func (s *Service) GenerateContent(
 		return nil, err
 	}
 
-	response.OriginalTitle = utils.NormalizeTitle(response.OriginalTitle, utils.VideoTitleCutoffs)
-	response.Summary = utils.NormalizeDescription(response.Summary)
+	response.OriginalTitle = normalize.Title(response.OriginalTitle, normalize.VideoTitleCutoffs)
+	response.Summary = normalize.Description(response.Summary)
 
 	var directors []string
 	for _, director := range response.Directors {
-		name, err := utils.NormalizeName(director)
+		name, err := normalize.Name(director)
 		if err == nil {
 			directors = append(directors, name)
 			continue
@@ -105,7 +107,7 @@ func (s *Service) GenerateContent(
 func (s *Service) GeneratePostSummary(
 	ctx context.Context,
 	post *models.Post,
-	retryConfig *utils.RetryConfig) error {
+	retryConfig *retry.Config) error {
 
 	// Create summary contents
 	summaryContents := s.NewSummaryContents(post.VideoID)
@@ -146,7 +148,7 @@ func (s *Service) GeneratePostSummary(
 
 	// Sleep with context in mind for 60-90 seconds.
 	// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
-	if err := utils.SleepJitter(ctx, 60*time.Second, 90*time.Second); err != nil {
+	if err := sleep.Jitter(ctx, 60*time.Second, 90*time.Second); err != nil {
 		return err
 	}
 
@@ -175,7 +177,7 @@ func (s *Service) GeneratePostSummary(
 func (s *Service) GeneratePostOCR(
 	ctx context.Context,
 	post *models.Post,
-	retryConfig *utils.RetryConfig) error {
+	retryConfig *retry.Config) error {
 
 	// Get video duration
 	videoDuration, err := post.Duration.Seconds()
@@ -208,7 +210,7 @@ func (s *Service) GeneratePostOCR(
 
 		// Sleep with context in mind for 60-90 seconds.
 		// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
-		if err := utils.SleepJitter(ctx, 60*time.Second, 90*time.Second); err != nil {
+		if err := sleep.Jitter(ctx, 60*time.Second, 90*time.Second); err != nil {
 			return err
 		}
 

@@ -9,15 +9,16 @@ import (
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/handlers/auth"
 	"github.com/vlatan/video-store/internal/models"
-	"github.com/vlatan/video-store/internal/redirect"
-	"github.com/vlatan/video-store/internal/utils"
+	"github.com/vlatan/video-store/internal/utils/ctxv"
+	"github.com/vlatan/video-store/internal/utils/redirect"
+	"github.com/vlatan/video-store/internal/utils/retry"
 )
 
 // Handle all sources page
 func (s *Service) SourcesHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Get template data
-	data := models.GetDataFromContext(r)
+	data := ctxv.Get[*models.TemplateData](r.Context())
 
 	var (
 		err     error
@@ -63,7 +64,7 @@ func (s *Service) SourcesHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Compose data object
-	data := models.GetDataFromContext(r)
+	data := ctxv.Get[*models.TemplateData](r.Context())
 
 	// Populate needed data for an empty form
 	data.Form = &models.Form{
@@ -125,7 +126,7 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 		// Fetch playlist metadata from YouTube
 		sources, err := s.yt.GetSources(
 			r.Context(),
-			&utils.RetryConfig{
+			&retry.Config{
 				MaxRetries: 3,
 				MaxJitter:  time.Second,
 				Delay:      time.Second,
@@ -147,7 +148,7 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 		channelID := sources[0].Snippet.ChannelId
 		channels, err := s.yt.GetChannels(
 			r.Context(),
-			&utils.RetryConfig{
+			&retry.Config{
 				MaxRetries: 3,
 				MaxJitter:  time.Second,
 				Delay:      time.Second,
@@ -211,7 +212,7 @@ func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Generate template data
-	data := models.GetDataFromContext(r)
+	data := ctxv.Get[*models.TemplateData](r.Context())
 
 	var (
 		err   error

@@ -12,10 +12,10 @@ import (
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/integrations/gemini"
 	"github.com/vlatan/video-store/internal/integrations/yt"
-	"github.com/vlatan/video-store/internal/repositories/categories"
-	"github.com/vlatan/video-store/internal/repositories/posts"
-	"github.com/vlatan/video-store/internal/repositories/sources"
-	"github.com/vlatan/video-store/internal/utils"
+	"github.com/vlatan/video-store/internal/repos/categories"
+	"github.com/vlatan/video-store/internal/repos/posts"
+	"github.com/vlatan/video-store/internal/repos/sources"
+	"github.com/vlatan/video-store/internal/utils/retry"
 )
 
 type Worker struct {
@@ -28,8 +28,8 @@ type Worker struct {
 	gemini            *gemini.Service
 	lock              *rdb.RedisLock
 	stats             WorkerStats
-	ytRetryConfig     *utils.RetryConfig
-	geminiRetryConfig *utils.RetryConfig
+	ytRetryConfig     *retry.Config
+	geminiRetryConfig *retry.Config
 	cleanup           func()
 }
 
@@ -84,12 +84,12 @@ func New(cfg *config.Config, ctx context.Context) (*Worker, error) {
 		config:      cfg,
 		youtube:     yt,
 		gemini:      gemini,
-		ytRetryConfig: &utils.RetryConfig{
+		ytRetryConfig: &retry.Config{
 			MaxRetries: 3,
 			MaxJitter:  time.Second,
 			Delay:      time.Second,
 		},
-		geminiRetryConfig: &utils.RetryConfig{
+		geminiRetryConfig: &retry.Config{
 			MaxRetries: 3,
 			MaxJitter:  2 * time.Second,
 			Delay:      65 * time.Second,

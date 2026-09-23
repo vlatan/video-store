@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/vlatan/video-store/internal/models"
-	"github.com/vlatan/video-store/internal/utils"
+	"github.com/vlatan/video-store/internal/utils/ctxv"
 )
 
 // Store flash message in a session
@@ -79,7 +79,7 @@ func (s *service) GetUserFromSession(w http.ResponseWriter, r *http.Request) (*m
 		_, err = s.usersRepo.UpdateLastUserSeen(r.Context(), id, now)
 
 		// Return early if context error
-		if utils.IsContextErr(err) {
+		if ctxv.IsContextErr(err) {
 			return nil, err
 		}
 
@@ -126,7 +126,7 @@ func (s *service) GetUserFromSession(w http.ResponseWriter, r *http.Request) (*m
 	user.LocalAvatarURL, err = s.avatars.Get(r.Context(), &user)
 
 	// Return early if context error
-	if utils.IsContextErr(err) {
+	if ctxv.IsContextErr(err) {
 		return nil, err
 	}
 

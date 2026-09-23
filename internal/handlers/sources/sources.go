@@ -4,8 +4,8 @@ import (
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/integrations/yt"
-	postsRepo "github.com/vlatan/video-store/internal/repositories/posts"
-	sourcesRepo "github.com/vlatan/video-store/internal/repositories/sources"
+	postsRepo "github.com/vlatan/video-store/internal/repos/posts"
+	sourcesRepo "github.com/vlatan/video-store/internal/repos/sources"
 	"github.com/vlatan/video-store/internal/ui"
 )
 

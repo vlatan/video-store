@@ -5,7 +5,7 @@ import (
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/integrations/r2"
-	"github.com/vlatan/video-store/internal/repositories/users"
+	"github.com/vlatan/video-store/internal/repos/users"
 	"github.com/vlatan/video-store/internal/ui"
 
 	"github.com/gorilla/sessions"

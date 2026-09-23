@@ -13,7 +13,7 @@ import (
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/integrations/r2"
 	"github.com/vlatan/video-store/internal/models"
-	"github.com/vlatan/video-store/internal/utils"
+	"github.com/vlatan/video-store/internal/utils/ctxv"
 )
 
 type Service struct {
@@ -69,7 +69,7 @@ func (s *Service) Get(ctx context.Context, user *models.User) (string, error) {
 	r2URL, err := s.rdb.Client.Get(ctx, avatarKey).Result()
 
 	// Return early if context error
-	if utils.IsContextErr(err) {
+	if ctxv.IsContextErr(err) {
 		return "", err
 	}
 
@@ -91,7 +91,7 @@ func (s *Service) Get(ctx context.Context, user *models.User) (string, error) {
 	ttl, err := s.rdb.Client.Exists(ctx, ttlKey).Result()
 
 	// Return early if context error
-	if utils.IsContextErr(err) {
+	if ctxv.IsContextErr(err) {
 		return "", err
 	}
 
@@ -127,7 +127,7 @@ func (s *Service) Save(ctx context.Context, user *models.User) error {
 	}
 
 	// Return early if context error
-	if utils.IsContextErr(err) {
+	if ctxv.IsContextErr(err) {
 		return err
 	}
 
@@ -144,7 +144,7 @@ func (s *Service) Save(ctx context.Context, user *models.User) error {
 	r2URL, err := s.refreshAvatar(ctx, user)
 
 	// Return early if context error
-	if utils.IsContextErr(err) {
+	if ctxv.IsContextErr(err) {
 		return err
 	}
 
@@ -161,7 +161,7 @@ func (s *Service) Save(ctx context.Context, user *models.User) error {
 	err = s.rdb.Client.Set(ctx, avatarKey, r2URL, 30*24*time.Hour).Err()
 
 	// Return early if context error
-	if utils.IsContextErr(err) {
+	if ctxv.IsContextErr(err) {
 		return err
 	}
 
@@ -177,7 +177,7 @@ func (s *Service) Save(ctx context.Context, user *models.User) error {
 	err = s.rdb.Client.Set(ctx, ttlKey, "true", 24*time.Hour).Err()
 
 	// Return early if context error
-	if utils.IsContextErr(err) {
+	if ctxv.IsContextErr(err) {
 		return err
 	}
 

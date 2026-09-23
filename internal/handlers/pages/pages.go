@@ -3,7 +3,7 @@ package pages
 import (
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
-	pagesRepo "github.com/vlatan/video-store/internal/repositories/pages"
+	pagesRepo "github.com/vlatan/video-store/internal/repos/pages"
 	"github.com/vlatan/video-store/internal/ui"
 )
 

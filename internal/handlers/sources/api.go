@@ -7,6 +7,7 @@ import (
 
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/utils/ctxv"
 )
 
 // Handle posts in a certain source
@@ -38,7 +39,7 @@ func (s *Service) SourcePostsAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get current user
-	currentUser := models.GetUserFromContext(r.Context())
+	currentUser := ctxv.Get[*models.User](r.Context())
 
 	var (
 		err   error

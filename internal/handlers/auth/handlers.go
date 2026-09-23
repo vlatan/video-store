@@ -5,7 +5,8 @@ import (
 	"net/http"
 
 	"github.com/vlatan/video-store/internal/models"
-	"github.com/vlatan/video-store/internal/redirect"
+	"github.com/vlatan/video-store/internal/utils/ctxv"
+	"github.com/vlatan/video-store/internal/utils/redirect"
 
 	"golang.org/x/oauth2"
 )
@@ -14,7 +15,7 @@ import (
 func (s *Service) AuthHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Generate the default data
-	data := models.GetDataFromContext(r)
+	data := ctxv.Get[*models.TemplateData](r.Context())
 
 	// Check if the provider exists
 	providerName := r.PathValue("provider")
@@ -94,8 +95,8 @@ func (s *Service) AuthHandler(w http.ResponseWriter, r *http.Request) {
 // Provider Auth callback
 func (s *Service) AuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 
-	// Generate the default data
-	data := models.GetDataFromContext(r)
+	// Get default data
+	data := ctxv.Get[*models.TemplateData](r.Context())
 
 	// Check if the provider exists
 	providerName := r.PathValue("provider")
@@ -237,7 +238,7 @@ func (s *Service) DeleteAccountHandler(w http.ResponseWriter, r *http.Request) {
 	redirectTo := redirect.Sanitize(redirectURL, IsProtectedRoute)
 
 	// Get the current user
-	currentUser := models.GetUserFromContext(r.Context())
+	currentUser := ctxv.Get[*models.User](r.Context())
 
 	// Remove user session
 	if err := s.logoutUser(w, r); err != nil {

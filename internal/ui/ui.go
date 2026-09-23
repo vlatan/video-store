@@ -9,8 +9,8 @@ import (
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/integrations/r2"
 	"github.com/vlatan/video-store/internal/models"
-	"github.com/vlatan/video-store/internal/repositories/categories"
-	"github.com/vlatan/video-store/internal/repositories/users"
+	"github.com/vlatan/video-store/internal/repos/categories"
+	"github.com/vlatan/video-store/internal/repos/users"
 
 	"github.com/gorilla/sessions"
 	"github.com/tdewolff/minify/v2"

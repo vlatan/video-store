@@ -1,7 +1,6 @@
 package middlewares
 
 import (
-	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"log/slog"
@@ -13,7 +12,8 @@ import (
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/ui"
-	"github.com/vlatan/video-store/internal/utils"
+	"github.com/vlatan/video-store/internal/utils/ctxv"
+	"github.com/vlatan/video-store/internal/utils/paths"
 
 	"github.com/klauspost/compress/gzhttp"
 )
@@ -22,6 +22,8 @@ type Service struct {
 	ui     ui.Service
 	config *config.Config
 }
+
+type requestID string
 
 // New creates new middlewares service
 func New(ui ui.Service, config *config.Config) *Service {
@@ -39,7 +41,7 @@ func (s *Service) IsAuthenticated(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		// Get template data
-		data := models.GetDataFromContext(r)
+		data := ctxv.Get[*models.TemplateData](r.Context())
 
 		// If the user is authenticated move onto the next handler
 		if data.CurrentUser.IsAuthenticated() {
@@ -61,7 +63,7 @@ func (s *Service) IsAdmin(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		// Get template data
-		data := models.GetDataFromContext(r)
+		data := ctxv.Get[*models.TemplateData](r.Context())
 
 		// If the user is admin move onto the next handler
 		if data.CurrentUser.IsAdmin() {
@@ -78,12 +80,13 @@ func (s *Service) IsAdmin(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-// LoadRequestaId adds request ID in the context
+// LoadRequestId adds request ID in the context
 func (s *Service) LoadRequestId(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		bytes := make([]byte, 8)
 		rand.Read(bytes)
-		ctx := context.WithValue(r.Context(), ctxKey{}, hex.EncodeToString(bytes))
+		id := hex.EncodeToString(bytes)
+		ctx := ctxv.WithValue(r.Context(), requestID(id))
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
@@ -92,7 +95,7 @@ func (s *Service) LoadRequestId(next http.Handler) http.Handler {
 func (s *Service) LoadUser(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user, _ := s.ui.GetUserFromSession(w, r) // Nil if anonymous or failed to fetch
-		ctx := context.WithValue(r.Context(), models.UserContextKey, user)
+		ctx := ctxv.WithValue(r.Context(), user)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
@@ -145,13 +148,13 @@ func (s *Service) LoadTemplateData(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		// Get user from context
-		user := models.GetUserFromContext(r.Context())
+		user := ctxv.Get[*models.User](r.Context())
 		// Generate the default data
 		data := s.ui.NewTemplateData(w, r)
 		// Attach the user to be able to be accessed from data too
 		data.CurrentUser = user
 		// Store data to context
-		ctx := context.WithValue(r.Context(), models.DataContextKey, data)
+		ctx := ctxv.WithValue(r.Context(), data)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
@@ -201,7 +204,7 @@ func (s *Service) RecoverPanic(next http.Handler) http.Handler {
 				return
 			}
 
-			data := models.GetDataFromContext(r)
+			data := ctxv.Get[*models.TemplateData](r.Context())
 			s.ui.HTMLError(w, r, data, http.StatusInternalServerError)
 		}()
 
@@ -212,7 +215,7 @@ func (s *Service) RecoverPanic(next http.Handler) http.Handler {
 // PublicCache adds cache control header for non-admin users
 func (s *Service) PublicCache(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if user := models.GetUserFromContext(r.Context()); !user.IsAdmin() {
+		if user := ctxv.Get[*models.User](r.Context()); !user.IsAdmin() {
 			w.Header().Set("Cache-Control", "public, max-age=3600")
 		}
 		next(w, r)
@@ -236,13 +239,13 @@ func (s *Service) AddHeaders(next http.Handler) http.Handler {
 		w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload")
 
 		// For no-files vary the browser cache for cookies
-		if !utils.IsFilePath(r.URL.Path) {
+		if !paths.IsFile(r.URL.Path) {
 			w.Header().Set("Vary", "Cookie")
 		}
 
 		// Add no cache headers if necessary
-		if !utils.IsFilePath(r.URL.Path) &&
-			models.GetUserFromContext(r.Context()).IsAuthenticated() {
+		if !paths.IsFile(r.URL.Path) &&
+			ctxv.Get[*models.User](r.Context()).IsAuthenticated() {
 
 			w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 			w.Header().Set("Pragma", "no-cache")
@@ -264,7 +267,7 @@ func (s *Service) CanonicalRedirect(next http.Handler) http.Handler {
 		}
 
 		// Get the full canonical URL including queries and fragments
-		canonical, _ := utils.CanonicalURLs(r, s.config.Protocol)
+		canonical, _ := paths.CanonicalURLs(r, s.config.Protocol)
 
 		// Reconstruct the actual incoming absolute URL
 		scheme := "http"
@@ -289,7 +292,7 @@ func (s *Service) Compress(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Check if the request serves static files
 		// Skip, because those are compressed on startup
-		if utils.IsStatic(r.URL.Path) {
+		if paths.IsStatic(r.URL.Path) {
 			next.ServeHTTP(w, r)
 			return
 		}

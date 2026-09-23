@@ -8,14 +8,14 @@ import (
 	"syscall"
 
 	"github.com/vlatan/video-store/internal/config"
-	"github.com/vlatan/video-store/internal/utils"
+	"github.com/vlatan/video-store/internal/utils/logx"
 	"github.com/vlatan/video-store/internal/worker"
 )
 
 func main() {
 
 	// Print separator at the end
-	defer utils.LogPlainln(strings.Repeat("-", 70))
+	defer logx.Plainln(strings.Repeat("-", 70))
 
 	// Listen for OS interruption and termination signals
 	sigCtx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)

@@ -8,9 +8,8 @@ import (
 
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/utils/ctxv"
 )
-
-type ctxKey struct{}
 
 // RequestDetails holds rich HTTP metadata
 type RequestDetails struct {
@@ -36,13 +35,13 @@ func (h *ContextHandler) Handle(ctx context.Context, r slog.Record) error {
 	}
 
 	// Look for a user in the context
-	if user := models.GetUserFromContext(ctx); user.IsAuthenticated() {
+	if user := ctxv.Get[*models.User](ctx); user.IsAuthenticated() {
 		r.AddAttrs(slog.Int("userId", user.ID))
 	}
 
 	// Look for request ID in the context
-	if reqID, ok := ctx.Value(ctxKey{}).(string); ok {
-		r.AddAttrs(slog.String("requestId", reqID))
+	if reqID := ctxv.Get[requestID](ctx); reqID != "" {
+		r.AddAttrs(slog.Any("requestId", reqID))
 	}
 
 	return h.Handler.Handle(ctx, r)

@@ -9,13 +9,13 @@ import (
 	"github.com/vlatan/video-store/internal/backup"
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/integrations/r2"
-	"github.com/vlatan/video-store/internal/utils"
+	"github.com/vlatan/video-store/internal/utils/logx"
 )
 
 func main() {
 
 	// Print separator at the end
-	defer utils.LogPlainln(strings.Repeat("-", 70))
+	defer logx.Plainln(strings.Repeat("-", 70))
 
 	// Give the backup a reasonable time to finish
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)

@@ -7,7 +7,7 @@ import (
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/models"
-	"github.com/vlatan/video-store/internal/repositories/categories"
+	"github.com/vlatan/video-store/internal/repos/categories"
 
 	"google.golang.org/genai"
 )
