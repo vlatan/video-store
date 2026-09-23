@@ -1,6 +1,3 @@
-- Create appctx package and add ctx functions there
-  Also break up utils into smaller packages?
-
 - Make `:= range` more performant by using index
 - Make the directors links that list their films, and also the release years
 
