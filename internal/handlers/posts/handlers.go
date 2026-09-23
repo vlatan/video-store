@@ -13,11 +13,11 @@ import (
 	"github.com/vlatan/video-store/internal/handlers/auth"
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/redirect"
-	"github.com/vlatan/video-store/internal/utils"
 	"github.com/vlatan/video-store/internal/utils/ctxv"
 	"github.com/vlatan/video-store/internal/utils/normalize"
 	"github.com/vlatan/video-store/internal/utils/retry"
 	"github.com/vlatan/video-store/internal/utils/sleep"
+	"github.com/vlatan/video-store/internal/utils/stringx"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/jackc/pgx/v5"
@@ -173,7 +173,7 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 	data.SearchQuery = searchQuery
 
 	start := time.Now()
-	encodedSearchQuery := utils.EscapeTrancateString(searchQuery, 100)
+	encodedSearchQuery := stringx.EscapeTrancate(searchQuery, 100)
 
 	// Construct the Redis key
 	redisKey := fmt.Sprintf("posts:search:%s", encodedSearchQuery)
@@ -324,7 +324,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 				r.Context(), "failed to validate the video data",
 				"error", err,
 			)
-			formError.Message = utils.Capitalize(err.Error())
+			formError.Message = stringx.Capitalize(err.Error())
 			data.Form.Error = &formError
 			s.ui.RenderHTML(w, r, "form.html", data)
 			return

@@ -11,7 +11,7 @@ import (
 
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/vlatan/video-store/internal/models"
-	"github.com/vlatan/video-store/internal/utils"
+	"github.com/vlatan/video-store/internal/utils/stringx"
 )
 
 // GetPostReviews gets posts reviews
@@ -64,7 +64,7 @@ func (r *Repository) GetPostReviews(ctx context.Context, videoID, cursor string)
 
 	// Define policies for review headline and content sanitization
 	strictPolicy := bluemonday.StrictPolicy()
-	simplePolicy := utils.SimplePolicy()
+	simplePolicy := stringx.SimplePolicy()
 
 	// Iterate over the rows
 	for rows.Next() {
@@ -109,7 +109,7 @@ func (r *Repository) GetPostReviews(ctx context.Context, videoID, cursor string)
 		review.HTMLHeadline = template.HTML(safeHeadline) // #nosec G203
 
 		// Convert to HTML and sanitize content
-		safeHTMLcontent, err := utils.ParseMarkdown(review.Content, simplePolicy)
+		safeHTMLcontent, err := stringx.ParseMarkdown(review.Content, simplePolicy)
 		if err != nil {
 			return zero, fmt.Errorf(
 				"could not parse/sanitize markdown on video %q review: %v",

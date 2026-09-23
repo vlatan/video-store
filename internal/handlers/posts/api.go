@@ -8,8 +8,8 @@ import (
 
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/models"
-	"github.com/vlatan/video-store/internal/utils"
 	"github.com/vlatan/video-store/internal/utils/ctxv"
+	"github.com/vlatan/video-store/internal/utils/stringx"
 )
 
 // Handle the Home page
@@ -168,7 +168,7 @@ func (s *Service) SearchPostsAPI(w http.ResponseWriter, r *http.Request) {
 	// Get the cursor if any
 	cursor := r.URL.Query().Get("cursor")
 
-	encodedSearchQuery := utils.EscapeTrancateString(searchQuery, 100)
+	encodedSearchQuery := stringx.EscapeTrancate(searchQuery, 100)
 
 	// Construct the Redis key
 	redisKey := fmt.Sprintf("posts:search:%s", encodedSearchQuery)

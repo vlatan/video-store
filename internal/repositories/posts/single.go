@@ -9,8 +9,8 @@ import (
 	"strings"
 
 	"github.com/vlatan/video-store/internal/models"
-	"github.com/vlatan/video-store/internal/utils"
 	"github.com/vlatan/video-store/internal/utils/nulls"
+	"github.com/vlatan/video-store/internal/utils/stringx"
 )
 
 // Check if the post exists
@@ -192,7 +192,7 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.
 	}
 
 	// Convert to HTML and sanitize the post summary
-	safeHTMLSummary, err := utils.ParseMarkdown(post.Summary, utils.SimplePolicy())
+	safeHTMLSummary, err := stringx.ParseMarkdown(post.Summary, stringx.SimplePolicy())
 	if err != nil {
 		return zero, fmt.Errorf(
 			"could not convert markdown to html on %s: %v",

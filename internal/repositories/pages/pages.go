@@ -9,8 +9,8 @@ import (
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/vlatan/video-store/internal/drivers/database"
 	"github.com/vlatan/video-store/internal/models"
-	"github.com/vlatan/video-store/internal/utils"
 	"github.com/vlatan/video-store/internal/utils/nulls"
+	"github.com/vlatan/video-store/internal/utils/stringx"
 )
 
 type Repository struct {
@@ -44,7 +44,7 @@ func (r *Repository) GetSinglePage(ctx context.Context, slug string) (models.Pag
 	page.Content = content.String
 
 	// Convert to HTML and sanitize the page content
-	safeHTMLContent, err := utils.ParseMarkdown(page.Content, bluemonday.UGCPolicy())
+	safeHTMLContent, err := stringx.ParseMarkdown(page.Content, bluemonday.UGCPolicy())
 	if err != nil {
 		return zero, fmt.Errorf(
 			"could not convert markdown to html on %q: %w",

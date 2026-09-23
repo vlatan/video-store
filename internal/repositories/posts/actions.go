@@ -11,7 +11,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/vlatan/video-store/internal/models"
-	"github.com/vlatan/video-store/internal/utils"
+	"github.com/vlatan/video-store/internal/utils/stringx"
 )
 
 // User likes a post
@@ -249,14 +249,14 @@ func (r *Repository) Review(
 
 	// Define policies for review headline and content sanitization
 	strictPolicy := bluemonday.StrictPolicy()
-	simplePolicy := utils.SimplePolicy()
+	simplePolicy := stringx.SimplePolicy()
 
 	// Sanitize headline
 	safeHeadline := strictPolicy.Sanitize(headline)
 	re.HTMLHeadline = template.HTML(safeHeadline) // #nosec G203
 
 	// Convert to HTML and sanitize content
-	safeHTMLcontent, err := utils.ParseMarkdown(content, simplePolicy)
+	safeHTMLcontent, err := stringx.ParseMarkdown(content, simplePolicy)
 	if err != nil {
 		return nil, fmt.Errorf(
 			"could not parse/sanitize markdown on video %s review: %v",
