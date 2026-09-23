@@ -80,7 +80,7 @@ func (s *Service) IsAdmin(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-// LoadRequestaId adds request ID in the context
+// LoadRequestId adds request ID in the context
 func (s *Service) LoadRequestId(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		bytes := make([]byte, 8)
