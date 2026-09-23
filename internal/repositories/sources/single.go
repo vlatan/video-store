@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 
 	"github.com/vlatan/video-store/internal/models"
-	"github.com/vlatan/video-store/internal/utils"
+	"github.com/vlatan/video-store/internal/utils/nulls"
 )
 
 // Check if source exists
@@ -42,11 +42,11 @@ func (r *Repository) InsertSource(ctx context.Context, source *models.Source) (i
 		source.PlaylistID,
 		source.ChannelID,
 		source.Title,
-		utils.ToNullString(source.ChannelTitle),
+		nulls.String(source.ChannelTitle),
 		thumbnails,
 		chThumbnails,
-		utils.ToNullString(source.Description),
-		utils.ToNullString(source.ChannelDescription),
+		nulls.String(source.Description),
+		nulls.String(source.ChannelDescription),
 		source.UserID,
 	)
 
@@ -79,11 +79,11 @@ func (r *Repository) UpdateSource(ctx context.Context, source *models.Source) (i
 		source.PlaylistID,
 		source.ChannelID,
 		source.Title,
-		utils.ToNullString(source.ChannelTitle),
+		nulls.String(source.ChannelTitle),
 		thumbnails,
 		chThumbnails,
-		utils.ToNullString(source.Description),
-		utils.ToNullString(source.ChannelDescription),
+		nulls.String(source.Description),
+		nulls.String(source.ChannelDescription),
 	)
 
 	return result.RowsAffected(), err

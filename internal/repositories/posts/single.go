@@ -10,6 +10,7 @@ import (
 
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/utils"
+	"github.com/vlatan/video-store/internal/utils/nulls"
 )
 
 // Check if the post exists
@@ -56,18 +57,18 @@ func (r *Repository) InsertPost(ctx context.Context, post *models.Post) (int64, 
 		query,
 		post.VideoID,
 		post.Provider,
-		utils.ToNullString(post.PlaylistID),
+		nulls.String(post.PlaylistID),
 		post.Title,
-		utils.ToNullString(post.OriginalTitle),
-		utils.ToNullInt16(post.ReleaseYear),
+		nulls.String(post.OriginalTitle),
+		nulls.Int16(post.ReleaseYear),
 		thumbnails,
-		utils.ToNullString(post.Description),
-		utils.ToNullString(post.Summary),
-		utils.ToNullString(post.Tags),
+		nulls.String(post.Description),
+		nulls.String(post.Summary),
+		nulls.String(post.Tags),
 		post.Duration,
 		post.UploadDate,
-		utils.ToNullInt64(int64(post.UserActions.UserID)),
-		utils.ToNullString(post.Category.Name),
+		nulls.Int64(int64(post.UserActions.UserID)),
+		nulls.String(post.Category.Name),
 		post.Directors,
 		roles,
 	).Scan(new(int64))
@@ -98,10 +99,10 @@ func (r *Repository) UpdatePost(ctx context.Context, post *models.Post) (int64, 
 		ctx,
 		query,
 		post.VideoID,
-		utils.ToNullString(post.OriginalTitle),
+		nulls.String(post.OriginalTitle),
 		post.Category.Name,
 		post.Summary,
-		utils.ToNullInt16(post.ReleaseYear),
+		nulls.Int16(post.ReleaseYear),
 		post.Directors,
 		roles,
 	).Scan(new(int64))

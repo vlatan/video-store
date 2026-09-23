@@ -10,6 +10,7 @@ import (
 	"github.com/vlatan/video-store/internal/drivers/database"
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/utils"
+	"github.com/vlatan/video-store/internal/utils/nulls"
 )
 
 type Repository struct {
@@ -60,14 +61,14 @@ func (r *Repository) GetSinglePage(ctx context.Context, slug string) (models.Pag
 // Update page
 func (r *Repository) UpdatePage(ctx context.Context, slug, title, content string) (int64, error) {
 	const query = "UPDATE page SET title = $2, content = $3 WHERE slug = $1;"
-	result, err := r.db.Pool.Exec(ctx, query, slug, title, utils.ToNullString(content))
+	result, err := r.db.Pool.Exec(ctx, query, slug, title, nulls.String(content))
 	return result.RowsAffected(), err
 }
 
 // Update page
 func (r *Repository) InsertPage(ctx context.Context, slug, title, content string) (int64, error) {
 	const query = "INSERT INTO page (slug, title, content) VALUES ($1, $2, $3);"
-	result, err := r.db.Pool.Exec(ctx, query, slug, title, utils.ToNullString(content))
+	result, err := r.db.Pool.Exec(ctx, query, slug, title, nulls.String(content))
 	return result.RowsAffected(), err
 }
 
