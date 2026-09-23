@@ -8,7 +8,7 @@ import (
 	"math/rand/v2"
 	"time"
 
-	"github.com/vlatan/video-store/internal/utils"
+	"github.com/vlatan/video-store/internal/utils/sleep"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc/status"
 )
@@ -100,7 +100,7 @@ func Do[T any](
 		}
 
 		// Wait for either the sleep time or context to end
-		if err := utils.Sleep(ctx, sleepTime); err != nil {
+		if err := sleep.Do(ctx, sleepTime); err != nil {
 			return zero, errors.Join(err, lastError)
 		}
 	}

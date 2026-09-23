@@ -17,6 +17,7 @@ import (
 	"github.com/vlatan/video-store/internal/utils/ctxv"
 	"github.com/vlatan/video-store/internal/utils/normalize"
 	"github.com/vlatan/video-store/internal/utils/retry"
+	"github.com/vlatan/video-store/internal/utils/sleep"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/jackc/pgx/v5"
@@ -376,7 +377,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 
 			// Sleep with context in mind for 60-90 seconds.
 			// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
-			if err := utils.SleepJitter(ctx, 60*time.Second, 90*time.Second); err != nil {
+			if err := sleep.Jitter(ctx, 60*time.Second, 90*time.Second); err != nil {
 				return
 			}
 

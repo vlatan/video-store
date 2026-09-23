@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"github.com/vlatan/video-store/internal/models"
-	"github.com/vlatan/video-store/internal/utils"
 	"github.com/vlatan/video-store/internal/utils/normalize"
 	"github.com/vlatan/video-store/internal/utils/retry"
+	"github.com/vlatan/video-store/internal/utils/sleep"
 	"google.golang.org/genai"
 )
 
@@ -148,7 +148,7 @@ func (s *Service) GeneratePostSummary(
 
 	// Sleep with context in mind for 60-90 seconds.
 	// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
-	if err := utils.SleepJitter(ctx, 60*time.Second, 90*time.Second); err != nil {
+	if err := sleep.Jitter(ctx, 60*time.Second, 90*time.Second); err != nil {
 		return err
 	}
 
@@ -210,7 +210,7 @@ func (s *Service) GeneratePostOCR(
 
 		// Sleep with context in mind for 60-90 seconds.
 		// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
-		if err := utils.SleepJitter(ctx, 60*time.Second, 90*time.Second); err != nil {
+		if err := sleep.Jitter(ctx, 60*time.Second, 90*time.Second); err != nil {
 			return err
 		}
 

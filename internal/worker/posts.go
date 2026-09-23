@@ -11,8 +11,8 @@ import (
 	"github.com/vlatan/video-store/internal/integrations/gemini"
 	"github.com/vlatan/video-store/internal/integrations/yt"
 	"github.com/vlatan/video-store/internal/models"
-	"github.com/vlatan/video-store/internal/utils"
 	"github.com/vlatan/video-store/internal/utils/ctxv"
+	"github.com/vlatan/video-store/internal/utils/sleep"
 )
 
 // getValidVideos gets valid videos from YT for given video ids,
@@ -261,7 +261,7 @@ func (w *Worker) insertVideos(ctx context.Context, videos []*models.Post) error 
 		if i > 0 {
 			// Sleep with context in mind for 60-90 seconds.
 			// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
-			if err := utils.SleepJitter(ctx, 60*time.Second, 90*time.Second); err != nil {
+			if err := sleep.Jitter(ctx, 60*time.Second, 90*time.Second); err != nil {
 				return err
 			}
 		}
@@ -290,7 +290,7 @@ func (w *Worker) insertVideos(ctx context.Context, videos []*models.Post) error 
 
 			// Sleep with context in mind for 60-90 seconds.
 			// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
-			if err := utils.SleepJitter(ctx, 60*time.Second, 90*time.Second); err != nil {
+			if err := sleep.Jitter(ctx, 60*time.Second, 90*time.Second); err != nil {
 				return err
 			}
 
@@ -348,7 +348,7 @@ func (w *Worker) updateVideos(ctx context.Context, videos []*models.Post) error 
 
 			// Sleep with context in mind for 60-90 seconds.
 			// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
-			if err := utils.SleepJitter(ctx, 60*time.Second, 90*time.Second); err != nil {
+			if err := sleep.Jitter(ctx, 60*time.Second, 90*time.Second); err != nil {
 				return err
 			}
 
@@ -383,7 +383,7 @@ func (w *Worker) updateVideos(ctx context.Context, videos []*models.Post) error 
 
 			// Sleep with context in mind for 60-90 seconds.
 			// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
-			if err := utils.SleepJitter(ctx, 60*time.Second, 90*time.Second); err != nil {
+			if err := sleep.Jitter(ctx, 60*time.Second, 90*time.Second); err != nil {
 				return err
 			}
 

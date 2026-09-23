@@ -2,12 +2,10 @@ package utils
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"log"
 	"net/http/httptest"
 	"testing"
-	"time"
 )
 
 func TestEscapeTrancateString(t *testing.T) {
@@ -66,32 +64,6 @@ func TestCapitalize(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := Capitalize(tt.input); got != tt.expected {
 				t.Errorf("got %q, want %q", got, tt.expected)
-			}
-		})
-	}
-}
-
-func TestSleep(t *testing.T) {
-
-	ctx := context.Background()
-	noCtx, cancel := context.WithCancel(ctx)
-	cancel()
-
-	tests := []struct {
-		name     string
-		ctx      context.Context
-		delay    time.Duration
-		weantErr bool
-	}{
-		{"no context", noCtx, 100 * time.Millisecond, true},
-		{"valid context", ctx, 100 * time.Millisecond, false},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			err := Sleep(tt.ctx, tt.delay)
-			if gotErr := err != nil; gotErr != tt.weantErr {
-				t.Errorf("got error = %v, want error = %t", err, tt.weantErr)
 			}
 		})
 	}
