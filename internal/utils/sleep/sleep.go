@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-// Sleep pauses the current goroutine
+// Do pauses the current goroutine
 // until the context is done or the delay elapses.
 func Do(ctx context.Context, delay time.Duration) error {
 	select {
@@ -18,7 +18,7 @@ func Do(ctx context.Context, delay time.Duration) error {
 	}
 }
 
-// SleepJitter sleeps with context in mind,
+// Jitter sleeps with context in mind,
 // for a random duration between min and max sleep time
 func Jitter(ctx context.Context, minSleep, maxSleep time.Duration) error {
 	if maxSleep < minSleep {
