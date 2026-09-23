@@ -9,8 +9,8 @@ import (
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/handlers/auth"
 	"github.com/vlatan/video-store/internal/models"
-	"github.com/vlatan/video-store/internal/redirect"
 	"github.com/vlatan/video-store/internal/utils/ctxv"
+	"github.com/vlatan/video-store/internal/utils/redirect"
 	"github.com/vlatan/video-store/internal/utils/retry"
 )
 

@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"github.com/vlatan/video-store/internal/models"
-	"github.com/vlatan/video-store/internal/redirect"
 	"github.com/vlatan/video-store/internal/utils/ctxv"
+	"github.com/vlatan/video-store/internal/utils/redirect"
 
 	"golang.org/x/oauth2"
 )
