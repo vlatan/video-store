@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/vlatan/video-store/internal/models"
-	"github.com/vlatan/video-store/internal/utils"
 	"github.com/vlatan/video-store/internal/utils/ctxv"
 )
 
@@ -34,7 +33,7 @@ func (s *Service) UserFavoritesHandler(w http.ResponseWriter, r *http.Request) {
 // Users admin dashboard
 func (s *Service) UsersHandler(w http.ResponseWriter, r *http.Request) {
 	// Get the page number from the request query param
-	page := utils.GetPageNum(r)
+	page := GetPageNum(r)
 
 	// Get template data
 	data := ctxv.Get[*models.TemplateData](r.Context())
