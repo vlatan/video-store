@@ -67,9 +67,6 @@ func LogPlainln(v ...any) {
 func SimplePolicy() *bluemonday.Policy {
 	p := bluemonday.NewPolicy()
 
-	// Allow structural block elements for paragraph breaks
-	p.AllowElements("p", "br")
-
 	// Allow basic text formatting (both markdown and inline html variants)
 	p.AllowElements("b", "strong", "i", "em", "u", "s", "strike")
 
