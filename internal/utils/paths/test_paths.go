@@ -83,7 +83,7 @@ func TestValidateFilePath(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := ValidateFilePath(tt.input)
+			err := Validate(tt.input)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("got error = %v, want error = %v", err, tt.wantErr)
 			}
@@ -118,7 +118,7 @@ func TestIsStatic(t *testing.T) {
 	}
 }
 
-func TestIsFilePath(t *testing.T) {
+func TestIsFile(t *testing.T) {
 
 	type test struct {
 		name, path string
@@ -139,7 +139,7 @@ func TestIsFilePath(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := IsFilePath(tt.path); got != tt.expected {
+			if got := IsFile(tt.path); got != tt.expected {
 				t.Errorf("got %t, want %t", got, tt.expected)
 			}
 		})

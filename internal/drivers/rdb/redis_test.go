@@ -36,7 +36,7 @@ func TestMain(m *testing.M) {
 func runTests(m *testing.M) int {
 
 	// Get the project root
-	projectRoot, err := paths.GetProjectRoot()
+	projectRoot, err := paths.ProjectRoot()
 	if err != nil {
 		log.Printf("Failed to get the project root; %v", err)
 		return 1

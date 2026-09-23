@@ -38,7 +38,7 @@ func (s *service) NewTemplateData(w http.ResponseWriter, r *http.Request) *model
 	}
 
 	// Check if the path needs flash messages
-	if paths.IsFilePath(r.URL.Path) {
+	if paths.IsFile(r.URL.Path) {
 		return data
 	}
 

@@ -1,4 +1,4 @@
-package sanitize
+package normalize
 
 import (
 	"fmt"
@@ -88,7 +88,7 @@ var wierdDoubleQuotes = map[rune]bool{
 }
 
 // Normalize the YouTube video title
-func NormalizeTitle(title string, cutOffs []string) string {
+func Title(title string, cutOffs []string) string {
 
 	// Cut off the title at certain substrings
 	for _, substring := range cutOffs {
@@ -189,7 +189,7 @@ func NormalizeTitle(title string, cutOffs []string) string {
 }
 
 // Normalize tags, remove duplicate words
-func NormalizeTags(tags []string, title, description string) (result string) {
+func Tags(tags []string, title, description string) (result string) {
 
 	// Assemble a map
 	seen := map[string]bool{
@@ -222,14 +222,14 @@ func NormalizeTags(tags []string, title, description string) (result string) {
 }
 
 // normalizeDescription removes URLs and emails from a text
-func NormalizeDescription(text string) string {
+func Description(text string) string {
 	text = urlRegex.ReplaceAllString(text, "")
 	text = emailRegex.ReplaceAllString(text, "")
 	return strings.ReplaceAll(text, "—", " - ")
 }
 
 // NormalizeName
-func NormalizeName(s string) (string, error) {
+func Name(s string) (string, error) {
 
 	t := transform.Chain(
 		norm.NFD,                           // Decompose characters (e.g., 'ž', 'é')
@@ -243,7 +243,7 @@ func NormalizeName(s string) (string, error) {
 
 // NormalizeDirectors normalizes the names of the directors and removes duplicates
 // or names over 100 characters long.
-func NormalizeDirectors(raw []string) ([]string, error) {
+func Directors(raw []string) ([]string, error) {
 	seen := make(map[string]bool)
 	var clean []string
 
@@ -255,7 +255,7 @@ func NormalizeDirectors(raw []string) ([]string, error) {
 			continue
 		}
 
-		name, err := NormalizeName(name)
+		name, err := Name(name)
 		if err != nil {
 			return nil, fmt.Errorf(
 				"director name contains invalid characters %q: %w",

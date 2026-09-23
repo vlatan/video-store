@@ -51,7 +51,7 @@ func CanonicalURLs(r *http.Request, protocol string) (full, base string) {
 }
 
 // Validates a path
-func ValidateFilePath(p string) error {
+func Validate(p string) error {
 	if p == "" {
 		return fmt.Errorf("no path supplied")
 	}
@@ -71,7 +71,7 @@ func IsStatic(path string) bool {
 }
 
 // NeedsSession checks if a route needs to read the session
-func IsFilePath(path string) bool {
+func IsFile(path string) bool {
 	notFiles := []string{"", ".txt", ".xml", ".xsl"}
 	return !slices.Contains(notFiles, filepath.Ext(path))
 }
@@ -79,7 +79,7 @@ func IsFilePath(path string) bool {
 // GetProjectRoot returns the absolute path to the project root.
 // It works by finding the directory of the caller of this func and navigating up
 // until it finds the go.mod file.
-func GetProjectRoot() (string, error) {
+func ProjectRoot() (string, error) {
 	_, filename, _, ok := runtime.Caller(1)
 	if !ok {
 		return "", errors.New("failed to get the caller information")

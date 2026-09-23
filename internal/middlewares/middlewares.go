@@ -239,12 +239,12 @@ func (s *Service) AddHeaders(next http.Handler) http.Handler {
 		w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload")
 
 		// For no-files vary the browser cache for cookies
-		if !paths.IsFilePath(r.URL.Path) {
+		if !paths.IsFile(r.URL.Path) {
 			w.Header().Set("Vary", "Cookie")
 		}
 
 		// Add no cache headers if necessary
-		if !paths.IsFilePath(r.URL.Path) &&
+		if !paths.IsFile(r.URL.Path) &&
 			ctxv.Get[*models.User](r.Context()).IsAuthenticated() {
 
 			w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")

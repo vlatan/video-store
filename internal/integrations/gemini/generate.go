@@ -12,8 +12,8 @@ import (
 
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/utils"
+	"github.com/vlatan/video-store/internal/utils/normalize"
 	"github.com/vlatan/video-store/internal/utils/retry"
-	"github.com/vlatan/video-store/internal/utils/sanitize"
 	"google.golang.org/genai"
 )
 
@@ -82,12 +82,12 @@ func (s *Service) GenerateContent(
 		return nil, err
 	}
 
-	response.OriginalTitle = sanitize.NormalizeTitle(response.OriginalTitle, sanitize.VideoTitleCutoffs)
-	response.Summary = sanitize.NormalizeDescription(response.Summary)
+	response.OriginalTitle = normalize.Title(response.OriginalTitle, normalize.VideoTitleCutoffs)
+	response.Summary = normalize.Description(response.Summary)
 
 	var directors []string
 	for _, director := range response.Directors {
-		name, err := sanitize.NormalizeName(director)
+		name, err := normalize.Name(director)
 		if err == nil {
 			directors = append(directors, name)
 			continue

@@ -25,7 +25,7 @@ func (s *Service) Handler(w http.ResponseWriter, r *http.Request) {
 	data := ctxv.Get[*models.TemplateData](r.Context())
 
 	// Validate the path
-	if err := paths.ValidateFilePath(r.URL.Path); err != nil {
+	if err := paths.Validate(r.URL.Path); err != nil {
 		slog.WarnContext(r.Context(), "invalid path")
 		s.ui.HTMLError(w, r, data, http.StatusNotFound)
 		return

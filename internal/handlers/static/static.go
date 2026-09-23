@@ -27,7 +27,7 @@ func New(ui ui.Service) *Service {
 func (s *Service) Handler(w http.ResponseWriter, r *http.Request) {
 
 	// Validate the path
-	if err := paths.ValidateFilePath(r.URL.Path); err != nil {
+	if err := paths.Validate(r.URL.Path); err != nil {
 		slog.WarnContext(r.Context(), "invalid path")
 		http.NotFound(w, r) // We don't use rich HTML errors for static content
 		return
