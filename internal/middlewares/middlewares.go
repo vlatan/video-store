@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/vlatan/video-store/internal/config"
-	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/ui"
 	"github.com/vlatan/video-store/internal/utils/ctxv"
 	"github.com/vlatan/video-store/internal/utils/paths"
@@ -41,7 +41,7 @@ func (s *Service) IsAuthenticated(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		// Get template data
-		data := ctxv.Get[*models.TemplateData](r.Context())
+		data := ctxv.Get[*types.TemplateData](r.Context())
 
 		// If the user is authenticated move onto the next handler
 		if data.CurrentUser.IsAuthenticated() {
@@ -63,7 +63,7 @@ func (s *Service) IsAdmin(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		// Get template data
-		data := ctxv.Get[*models.TemplateData](r.Context())
+		data := ctxv.Get[*types.TemplateData](r.Context())
 
 		// If the user is admin move onto the next handler
 		if data.CurrentUser.IsAdmin() {
@@ -148,7 +148,7 @@ func (s *Service) LoadTemplateData(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		// Get user from context
-		user := ctxv.Get[*models.User](r.Context())
+		user := ctxv.Get[*types.User](r.Context())
 		// Generate the default data
 		data := s.ui.NewTemplateData(w, r)
 		// Attach the user to be able to be accessed from data too
@@ -204,7 +204,7 @@ func (s *Service) RecoverPanic(next http.Handler) http.Handler {
 				return
 			}
 
-			data := ctxv.Get[*models.TemplateData](r.Context())
+			data := ctxv.Get[*types.TemplateData](r.Context())
 			s.ui.HTMLError(w, r, data, http.StatusInternalServerError)
 		}()
 
@@ -215,7 +215,7 @@ func (s *Service) RecoverPanic(next http.Handler) http.Handler {
 // PublicCache adds cache control header for non-admin users
 func (s *Service) PublicCache(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if user := ctxv.Get[*models.User](r.Context()); !user.IsAdmin() {
+		if user := ctxv.Get[*types.User](r.Context()); !user.IsAdmin() {
 			w.Header().Set("Cache-Control", "public, max-age=3600")
 		}
 		next(w, r)
@@ -245,7 +245,7 @@ func (s *Service) AddHeaders(next http.Handler) http.Handler {
 
 		// Add no cache headers if necessary
 		if !paths.IsFile(r.URL.Path) &&
-			ctxv.Get[*models.User](r.Context()).IsAuthenticated() {
+			ctxv.Get[*types.User](r.Context()).IsAuthenticated() {
 
 			w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 			w.Header().Set("Pragma", "no-cache")

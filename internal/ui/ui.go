@@ -8,9 +8,9 @@ import (
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/integrations/r2"
-	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/repos/categories"
 	"github.com/vlatan/video-store/internal/repos/users"
+	"github.com/vlatan/video-store/internal/types"
 
 	"github.com/gorilla/sessions"
 	"github.com/tdewolff/minify/v2"
@@ -23,31 +23,31 @@ import (
 
 type Service interface {
 	// Get the user from session
-	GetUserFromSession(w http.ResponseWriter, r *http.Request) (*models.User, error)
+	GetUserFromSession(w http.ResponseWriter, r *http.Request) (*types.User, error)
 	// Store flash message in a session
-	StoreFlashMessage(w http.ResponseWriter, r *http.Request, m *models.FlashMessage)
+	StoreFlashMessage(w http.ResponseWriter, r *http.Request, m *types.FlashMessage)
 	// Get the map containing the static files
-	StaticFiles() models.StaticFiles
+	StaticFiles() types.StaticFiles
 	// Get the map containing the text files
-	TextFiles() models.TextFiles
+	TextFiles() types.TextFiles
 	// Create new template data
-	NewTemplateData(w http.ResponseWriter, r *http.Request) *models.TemplateData
+	NewTemplateData(w http.ResponseWriter, r *http.Request) *types.TemplateData
 	// Create new pagination struct
-	NewPagination(currentPage, totalRecords, pageSize int) *models.PaginationInfo
+	NewPagination(currentPage, totalRecords, pageSize int) *types.PaginationInfo
 	// Write JSON to response
 	WriteJSON(w http.ResponseWriter, r *http.Request, data any)
 	// Write HTML template to response
-	RenderHTML(w http.ResponseWriter, r *http.Request, templateName string, data *models.TemplateData)
+	RenderHTML(w http.ResponseWriter, r *http.Request, templateName string, data *types.TemplateData)
 	// JSONError writes JSON error to response
 	JSONError(w http.ResponseWriter, r *http.Request, status int)
 	// HTMLError executes error.html template
-	HTMLError(w http.ResponseWriter, r *http.Request, data *models.TemplateData, status int)
+	HTMLError(w http.ResponseWriter, r *http.Request, data *types.TemplateData, status int)
 }
 
 type service struct {
-	templates   models.TemplateMap
-	textFiles   models.TextFiles
-	staticFiles models.StaticFiles
+	templates   types.TemplateMap
+	textFiles   types.TextFiles
+	staticFiles types.StaticFiles
 	rdb         *rdb.Service
 	r2s         r2.Service
 	config      *config.Config

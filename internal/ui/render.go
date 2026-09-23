@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"path/filepath"
 
-	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/types"
 )
 
 // WriteJSON converts the data into JSON-formatted string
@@ -43,7 +43,7 @@ func (s *service) RenderHTML(
 	w http.ResponseWriter,
 	r *http.Request,
 	templateName string,
-	data *models.TemplateData) {
+	data *types.TemplateData) {
 
 	tmpl, exists := s.templates[templateName]
 	if !exists {

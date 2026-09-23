@@ -10,7 +10,7 @@ import (
 
 	"github.com/vlatan/video-store/internal/integrations/gemini"
 	"github.com/vlatan/video-store/internal/integrations/yt"
-	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/ctxv"
 	"github.com/vlatan/video-store/internal/utils/sleep"
 )
@@ -20,7 +20,7 @@ import (
 func (w *Worker) getValidVideos(
 	ctx context.Context,
 	videoIds []string,
-	destMap map[string]*models.Post,
+	destMap map[string]*types.Post,
 ) error {
 
 	// Get orphans metadata from YT
@@ -60,7 +60,7 @@ func (w *Worker) getValidVideos(
 func (w *Worker) getValidSourcesVideos(
 	ctx context.Context,
 	playlistIds []string,
-	destMap map[string]*models.Post,
+	destMap map[string]*types.Post,
 ) error {
 
 	// Get valid videos from playlists
@@ -146,8 +146,8 @@ func (w *Worker) getValidSourcesVideos(
 // Exits with error only if context ended, any other error is just logged.
 func (w *Worker) adoptVideos(
 	ctx context.Context,
-	videos []*models.Post,
-	sourceMap map[string]*models.Post,
+	videos []*types.Post,
+	sourceMap map[string]*types.Post,
 ) error {
 
 	for _, dbVideo := range videos {
@@ -199,11 +199,11 @@ func (w *Worker) adoptVideos(
 // Exits with error only if context ended, any other error is just logged.
 func (w *Worker) deleteVideos(
 	ctx context.Context,
-	dbVideos []*models.Post,
-	destMap map[string]*models.Post,
-) ([]*models.Post, error) {
+	dbVideos []*types.Post,
+	destMap map[string]*types.Post,
+) ([]*types.Post, error) {
 
-	var validDbVideos []*models.Post
+	var validDbVideos []*types.Post
 	for _, dbVideo := range dbVideos {
 
 		// Check the context first
@@ -253,7 +253,7 @@ func (w *Worker) deleteVideos(
 }
 
 // insertVideos generates data for the videos and inserts them in database
-func (w *Worker) insertVideos(ctx context.Context, videos []*models.Post) error {
+func (w *Worker) insertVideos(ctx context.Context, videos []*types.Post) error {
 
 	// Insert new videos in DB
 	for i, video := range videos {
@@ -336,7 +336,7 @@ func (w *Worker) insertVideos(ctx context.Context, videos []*models.Post) error 
 }
 
 // updateVideos summarizes videos and updates them in database
-func (w *Worker) updateVideos(ctx context.Context, videos []*models.Post) error {
+func (w *Worker) updateVideos(ctx context.Context, videos []*types.Post) error {
 
 	// Update videos in DB
 	for _, video := range videos {
@@ -379,7 +379,7 @@ func (w *Worker) updateVideos(ctx context.Context, videos []*models.Post) error 
 		}
 
 		// If video has no OCR data proceed to generate
-		if !strings.HasSuffix(video.Summary, models.OcrFlag) {
+		if !strings.HasSuffix(video.Summary, types.OcrFlag) {
 
 			// Sleep with context in mind for 60-90 seconds.
 			// Min sleep needs to be 60s to avoid the genai 250k TPM quota.

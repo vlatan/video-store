@@ -1,4 +1,4 @@
-package models
+package types
 
 type PaginationInfo struct {
 	CurrentPage  int

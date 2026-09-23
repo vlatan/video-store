@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/vlatan/video-store/internal/drivers/rdb"
-	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/ctxv"
 )
 
@@ -26,12 +26,12 @@ func (s *Service) SourcePostsAPI(w http.ResponseWriter, r *http.Request) {
 	redisKey := fmt.Sprintf("source:%s:posts", sourceID)
 
 	switch orderBy {
-	case models.Likes:
-		redisKey += fmt.Sprintf(":%s", models.Likes)
-	case models.AvgRating:
-		redisKey += fmt.Sprintf(":%s", models.AvgRating)
-	case models.RatingCount:
-		redisKey += fmt.Sprintf(":%s", models.RatingCount)
+	case types.Likes:
+		redisKey += fmt.Sprintf(":%s", types.Likes)
+	case types.AvgRating:
+		redisKey += fmt.Sprintf(":%s", types.AvgRating)
+	case types.RatingCount:
+		redisKey += fmt.Sprintf(":%s", types.RatingCount)
 	}
 
 	if cursor != "" {
@@ -39,11 +39,11 @@ func (s *Service) SourcePostsAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get current user
-	currentUser := ctxv.Get[*models.User](r.Context())
+	currentUser := ctxv.Get[*types.User](r.Context())
 
 	var (
 		err   error
-		posts models.Posts
+		posts types.Posts
 	)
 
 	if currentUser.IsAdmin() {
@@ -56,7 +56,7 @@ func (s *Service) SourcePostsAPI(w http.ResponseWriter, r *http.Request) {
 			s.rdb,
 			redisKey,
 			s.config.CacheTimeout,
-			func() (models.Posts, error) {
+			func() (types.Posts, error) {
 				return s.postsRepo.GetSourcePosts(
 					r.Context(), sourceID, cursor, orderBy,
 				)

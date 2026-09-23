@@ -4,7 +4,7 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/ui"
 	"github.com/vlatan/video-store/internal/utils/ctxv"
 	"github.com/vlatan/video-store/internal/utils/paths"
@@ -22,7 +22,7 @@ func New(ui ui.Service) *Service {
 func (s *Service) Handler(w http.ResponseWriter, r *http.Request) {
 
 	// Get default data from context
-	data := ctxv.Get[*models.TemplateData](r.Context())
+	data := ctxv.Get[*types.TemplateData](r.Context())
 
 	// Validate the path
 	if err := paths.Validate(r.URL.Path); err != nil {

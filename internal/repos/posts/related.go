@@ -3,13 +3,13 @@ package posts
 import (
 	"context"
 
-	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/types"
 )
 
 // Get post's related posts based on provided title as search query
-func (r *Repository) GetRelatedPosts(ctx context.Context, title string) (models.Posts, error) {
+func (r *Repository) GetRelatedPosts(ctx context.Context, title string) (types.Posts, error) {
 
-	var zero, posts models.Posts
+	var zero, posts types.Posts
 	nrp := r.config.NumRelatedPosts
 
 	// Search the DB for posts

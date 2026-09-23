@@ -9,19 +9,19 @@ import (
 	"strings"
 
 	"github.com/tdewolff/minify/v2"
-	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/web"
 )
 
 // GetStaticFiles gets the map containing the static files
-func (s *service) StaticFiles() models.StaticFiles {
+func (s *service) StaticFiles() types.StaticFiles {
 	return s.staticFiles
 }
 
 // Create minified versions of the static files and cache them in memory.
-func loadStaticFiles(m *minify.M, dir string) (models.StaticFiles, error) {
+func loadStaticFiles(m *minify.M, dir string) (types.StaticFiles, error) {
 
-	sf := make(models.StaticFiles)
+	sf := make(types.StaticFiles)
 
 	// Function used to process each file/dir in the root, including the root
 	walkDirFunc := func(path string, info fs.DirEntry, err error) error {
@@ -77,7 +77,7 @@ func loadStaticFiles(m *minify.M, dir string) (models.StaticFiles, error) {
 		}
 
 		// Save the current data
-		sf[name] = &models.FileInfo{
+		sf[name] = &types.FileInfo{
 			MediaType: mediaType,
 			ModTime:   stat.ModTime(),
 			Etag:      etag,

@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/normalize"
 	"github.com/vlatan/video-store/internal/utils/retry"
 	"github.com/vlatan/video-store/internal/utils/sleep"
@@ -59,7 +59,7 @@ func (s *Service) GenerateContent(
 	contents []*genai.Content,
 	genaiConfig *genai.GenerateContentConfig,
 	retryConfig *retry.Config,
-) (*models.GenaiResponse, error) {
+) (*types.GenaiResponse, error) {
 
 	// Make the API call
 	result, err := retry.Do(ctx, retryConfig,
@@ -77,7 +77,7 @@ func (s *Service) GenerateContent(
 		return nil, err
 	}
 
-	var response models.GenaiResponse
+	var response types.GenaiResponse
 	if err = json.Unmarshal([]byte(result.Text()), &response); err != nil {
 		return nil, err
 	}
@@ -106,7 +106,7 @@ func (s *Service) GenerateContent(
 // GeneratePostSummary generates post summary and category
 func (s *Service) GeneratePostSummary(
 	ctx context.Context,
-	post *models.Post,
+	post *types.Post,
 	retryConfig *retry.Config) error {
 
 	// Create summary contents
@@ -123,7 +123,7 @@ func (s *Service) GeneratePostSummary(
 
 	if err == nil {
 		post.Summary = genaiResponse.Summary
-		post.Category = &models.Category{Name: genaiResponse.Category}
+		post.Category = &types.Category{Name: genaiResponse.Category}
 		return nil
 	}
 
@@ -168,7 +168,7 @@ func (s *Service) GeneratePostSummary(
 	}
 
 	post.Summary = genaiResponse.Summary
-	post.Category = &models.Category{Name: genaiResponse.Category}
+	post.Category = &types.Category{Name: genaiResponse.Category}
 
 	return nil
 }
@@ -176,7 +176,7 @@ func (s *Service) GeneratePostSummary(
 // GeneratePostOCR reads original title, directors and release year from screen
 func (s *Service) GeneratePostOCR(
 	ctx context.Context,
-	post *models.Post,
+	post *types.Post,
 	retryConfig *retry.Config) error {
 
 	// Get video duration
@@ -259,8 +259,8 @@ func (s *Service) GeneratePostOCR(
 	}
 
 	//  Mark the OCR as done
-	if post.Summary != "" && !strings.HasSuffix(post.Summary, models.OcrFlag) {
-		post.Summary += models.OcrFlag
+	if post.Summary != "" && !strings.HasSuffix(post.Summary, types.OcrFlag) {
+		post.Summary += types.OcrFlag
 	}
 
 	return nil

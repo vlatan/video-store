@@ -5,14 +5,14 @@ import (
 	"net/http"
 
 	"github.com/vlatan/video-store/internal/drivers/rdb"
-	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/paths"
 )
 
 // NewData creates new default data struct to be passed to the templates
 // Instead of manualy envoking this function in each route it can be envoked in a middleware
 // and passed donwstream as value to the request context.
-func (s *service) NewTemplateData(w http.ResponseWriter, r *http.Request) *models.TemplateData {
+func (s *service) NewTemplateData(w http.ResponseWriter, r *http.Request) *types.TemplateData {
 
 	// Get the categories from cache
 	categories, _ := rdb.GetCachedData(
@@ -20,7 +20,7 @@ func (s *service) NewTemplateData(w http.ResponseWriter, r *http.Request) *model
 		s.rdb,
 		"categories",
 		s.config.CacheTimeout,
-		func() (models.Categories, error) {
+		func() (types.Categories, error) {
 			return s.catsRepo.GetCategories(r.Context())
 		},
 	)
@@ -29,7 +29,7 @@ func (s *service) NewTemplateData(w http.ResponseWriter, r *http.Request) *model
 	_, baseURL := paths.CanonicalURLs(r, s.config.Protocol)
 
 	// Construct the data
-	data := &models.TemplateData{
+	data := &types.TemplateData{
 		StaticFiles:      s.StaticFiles(),
 		Config:           s.config,
 		Categories:       categories,
@@ -51,9 +51,9 @@ func (s *service) NewTemplateData(w http.ResponseWriter, r *http.Request) *model
 	session, _ := s.store.Get(r, s.config.FlashSessionName)
 	flashes := session.Flashes()
 
-	var flashMessages []*models.FlashMessage
+	var flashMessages []*types.FlashMessage
 	for _, v := range flashes {
-		if flash, ok := v.(*models.FlashMessage); ok && flash != nil {
+		if flash, ok := v.(*types.FlashMessage); ok && flash != nil {
 			flashMessages = append(flashMessages, flash)
 		}
 	}

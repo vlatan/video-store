@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/tdewolff/minify/v2"
-	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/web"
 )
 
@@ -28,9 +28,9 @@ var needsContent = []string{
 }
 
 // loadTemplates parses the templates and create a template map
-func loadTemplates(m *minify.M) (models.TemplateMap, error) {
+func loadTemplates(m *minify.M) (types.TemplateMap, error) {
 
-	templateMap := make(models.TemplateMap)
+	templateMap := make(types.TemplateMap)
 	baseTemplate, err := parseFiles(m, nil, base)
 	if err != nil {
 		return nil, err

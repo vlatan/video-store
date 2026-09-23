@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/normalize"
 	"github.com/vlatan/video-store/internal/utils/retry"
 
@@ -144,8 +144,8 @@ func (s *Service) GetChannels(
 }
 
 // Create source object
-func (s *Service) NewYouTubeSource(playlist *youtube.Playlist, channel *youtube.Channel) *models.Source {
-	var source models.Source
+func (s *Service) NewYouTubeSource(playlist *youtube.Playlist, channel *youtube.Channel) *types.Source {
+	var source types.Source
 	source.PlaylistID = playlist.Id
 	source.ChannelID = playlist.Snippet.ChannelId
 
@@ -158,7 +158,7 @@ func (s *Service) NewYouTubeSource(playlist *youtube.Playlist, channel *youtube.
 	source.ChannelDescription = normalize.Description(channel.Snippet.Description)
 
 	// Assign the playlist thumbnails
-	source.Thumbnails = &models.Thumbnails{}
+	source.Thumbnails = &types.Thumbnails{}
 	source.Thumbnails.Default = playlist.Snippet.Thumbnails.Default
 	source.Thumbnails.Medium = playlist.Snippet.Thumbnails.Medium
 	source.Thumbnails.High = playlist.Snippet.Thumbnails.High
@@ -166,7 +166,7 @@ func (s *Service) NewYouTubeSource(playlist *youtube.Playlist, channel *youtube.
 	source.Thumbnails.Maxres = playlist.Snippet.Thumbnails.Maxres
 
 	// Assign the channel thumbnails
-	source.ChannelThumbnails = &models.Thumbnails{}
+	source.ChannelThumbnails = &types.Thumbnails{}
 	source.ChannelThumbnails.Default = channel.Snippet.Thumbnails.Default
 	source.ChannelThumbnails.Medium = channel.Snippet.Thumbnails.Medium
 	source.ChannelThumbnails.High = channel.Snippet.Thumbnails.High

@@ -11,11 +11,11 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/types"
 )
 
 // refreshAvatar reuploads the user avatar at R2 if changed
-func (s *Service) refreshAvatar(ctx context.Context, user *models.User) (string, error) {
+func (s *Service) refreshAvatar(ctx context.Context, user *types.User) (string, error) {
 
 	// Download the avatar from remote location
 	data, err := s.downloadAvatar(ctx, user)
@@ -93,7 +93,7 @@ func (s *Service) refreshAvatar(ctx context.Context, user *models.User) (string,
 }
 
 // downloadAvatar downloads avatar from a remote source
-func (s *Service) downloadAvatar(ctx context.Context, user *models.User) ([]byte, error) {
+func (s *Service) downloadAvatar(ctx context.Context, user *types.User) ([]byte, error) {
 
 	// Create a request with context
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, user.AvatarURL, nil)

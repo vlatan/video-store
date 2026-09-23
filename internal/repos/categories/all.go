@@ -3,11 +3,11 @@ package categories
 import (
 	"context"
 
-	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/types"
 )
 
 // Get all valid categories
-func (r *Repository) GetCategories(ctx context.Context) (models.Categories, error) {
+func (r *Repository) GetCategories(ctx context.Context) (types.Categories, error) {
 
 	query, err := r.GetQuery("all_categories.sql", nil)
 	if err != nil {
@@ -20,11 +20,11 @@ func (r *Repository) GetCategories(ctx context.Context) (models.Categories, erro
 	}
 	defer rows.Close()
 
-	var categories models.Categories
+	var categories types.Categories
 	for rows.Next() {
 
 		// Get categories from DB
-		var category models.Category
+		var category types.Category
 		if err := rows.Scan(&category.Name, &category.Slug, &category.UpdatedAt); err != nil {
 			return nil, err
 		}

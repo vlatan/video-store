@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/nulls"
 )
 
@@ -17,7 +17,7 @@ func (r *Repository) SourceExists(ctx context.Context, playlistID string) bool {
 }
 
 // Add new source to DB
-func (r *Repository) InsertSource(ctx context.Context, source *models.Source) (int64, error) {
+func (r *Repository) InsertSource(ctx context.Context, source *types.Source) (int64, error) {
 	// Marshal the playlist thumbnails
 	thumbnails, err := json.Marshal(source.Thumbnails)
 	if err != nil {
@@ -54,7 +54,7 @@ func (r *Repository) InsertSource(ctx context.Context, source *models.Source) (i
 }
 
 // Update a source
-func (r *Repository) UpdateSource(ctx context.Context, source *models.Source) (int64, error) {
+func (r *Repository) UpdateSource(ctx context.Context, source *types.Source) (int64, error) {
 	// Marshal the playlist thumbnails
 	thumbnails, err := json.Marshal(source.Thumbnails)
 	if err != nil {

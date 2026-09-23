@@ -4,11 +4,11 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/types"
 )
 
 // Get all the posts from DB
-func (r *Repository) GetAllPosts(ctx context.Context) ([]*models.Post, error) {
+func (r *Repository) GetAllPosts(ctx context.Context) ([]*types.Post, error) {
 
 	query, err := r.GetQuery("all_posts.sql", nil)
 	if err != nil {
@@ -25,9 +25,9 @@ func (r *Repository) GetAllPosts(ctx context.Context) ([]*models.Post, error) {
 	defer rows.Close()
 
 	// Iterate over the rows
-	var posts []*models.Post
+	var posts []*types.Post
 	for rows.Next() {
-		var post models.Post
+		var post types.Post
 		var playlistID, originalTitle, summary, categoryName sql.NullString
 
 		// Scan each row
@@ -51,7 +51,7 @@ func (r *Repository) GetAllPosts(ctx context.Context) ([]*models.Post, error) {
 		post.PlaylistID = playlistID.String
 		post.OriginalTitle = originalTitle.String
 		post.Summary = summary.String
-		post.Category = &models.Category{Name: categoryName.String}
+		post.Category = &types.Category{Name: categoryName.String}
 
 		// Include the processed post in the result
 		posts = append(posts, &post)

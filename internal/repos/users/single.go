@@ -4,12 +4,12 @@ import (
 	"context"
 	"time"
 
-	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/nulls"
 )
 
 // Add or update a user
-func (r *Repository) UpsertUser(ctx context.Context, u *models.User) (int, error) {
+func (r *Repository) UpsertUser(ctx context.Context, u *types.User) (int, error) {
 
 	query, err := r.GetQuery("upsert_user.sql", nil)
 	if err != nil {

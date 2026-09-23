@@ -4,7 +4,7 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/ctxv"
 )
 
@@ -15,7 +15,7 @@ func (s *Service) UserFavoritesAPI(w http.ResponseWriter, r *http.Request) {
 	cursor := r.URL.Query().Get("cursor")
 
 	// Get current user
-	currentUser := ctxv.Get[*models.User](r.Context())
+	currentUser := ctxv.Get[*types.User](r.Context())
 
 	posts, err := s.postsRepo.GetUserFavedPosts(r.Context(), currentUser.ID, cursor)
 

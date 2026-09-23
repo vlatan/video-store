@@ -6,7 +6,7 @@ import (
 	"maps"
 	"slices"
 
-	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/types"
 	"google.golang.org/api/youtube/v3"
 )
 
@@ -33,7 +33,7 @@ func (w *Worker) Process(ctx context.Context) error {
 	// ###################################################################
 
 	// Extract playlist IDs and create DB sources map
-	dbSourcesMap := make(map[string]*models.Source, len(dbSources))
+	dbSourcesMap := make(map[string]*types.Source, len(dbSources))
 	playlistIds := make([]string, len(dbSources))
 	for i, source := range dbSources {
 		dbSourcesMap[source.PlaylistID] = &source
@@ -98,7 +98,7 @@ func (w *Worker) Process(ctx context.Context) error {
 	w.stats.FetchedDbVideos = len(dbVideos)
 
 	// Define map that will accumulate all valid YT videos
-	ytVideosMap := make(map[string]*models.Post)
+	ytVideosMap := make(map[string]*types.Post)
 
 	// GET THE ORPHAN VALID VIDEOS FROM YOUTUBE
 	// ###################################################################

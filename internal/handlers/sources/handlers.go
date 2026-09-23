@@ -8,7 +8,7 @@ import (
 
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/handlers/auth"
-	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/ctxv"
 	"github.com/vlatan/video-store/internal/utils/redirect"
 	"github.com/vlatan/video-store/internal/utils/retry"
@@ -18,11 +18,11 @@ import (
 func (s *Service) SourcesHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Get template data
-	data := ctxv.Get[*models.TemplateData](r.Context())
+	data := ctxv.Get[*types.TemplateData](r.Context())
 
 	var (
 		err     error
-		sources models.Sources
+		sources types.Sources
 	)
 
 	if data.CurrentUser.IsAdmin() {
@@ -33,7 +33,7 @@ func (s *Service) SourcesHandler(w http.ResponseWriter, r *http.Request) {
 			s.rdb,
 			"sources",
 			s.config.CacheTimeout,
-			func() (models.Sources, error) {
+			func() (types.Sources, error) {
 				return s.sourcesRepo.GetAllSources(r.Context())
 			},
 		)
@@ -64,12 +64,12 @@ func (s *Service) SourcesHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Compose data object
-	data := ctxv.Get[*models.TemplateData](r.Context())
+	data := ctxv.Get[*types.TemplateData](r.Context())
 
 	// Populate needed data for an empty form
-	data.Form = &models.Form{
+	data.Form = &types.Form{
 		Legend: "New Playlist",
-		Content: &models.FormGroup{
+		Content: &types.FormGroup{
 			Label:       "Post YouTube Playlist URL",
 			Placeholder: "Playlist URL here...",
 		},
@@ -83,7 +83,7 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 
 	case "POST":
 
-		var formError models.FlashMessage
+		var formError types.FlashMessage
 
 		err := r.ParseForm()
 		if err != nil {
@@ -203,20 +203,20 @@ func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
 	redisKey := fmt.Sprintf("source:%s:posts", sourceID)
 
 	switch orderBy {
-	case models.Likes:
-		redisKey += fmt.Sprintf(":%s", models.Likes)
-	case models.AvgRating:
-		redisKey += fmt.Sprintf(":%s", models.AvgRating)
-	case models.RatingCount:
-		redisKey += fmt.Sprintf(":%s", models.RatingCount)
+	case types.Likes:
+		redisKey += fmt.Sprintf(":%s", types.Likes)
+	case types.AvgRating:
+		redisKey += fmt.Sprintf(":%s", types.AvgRating)
+	case types.RatingCount:
+		redisKey += fmt.Sprintf(":%s", types.RatingCount)
 	}
 
 	// Generate template data
-	data := ctxv.Get[*models.TemplateData](r.Context())
+	data := ctxv.Get[*types.TemplateData](r.Context())
 
 	var (
 		err   error
-		posts models.Posts
+		posts types.Posts
 	)
 
 	if data.CurrentUser.IsAdmin() {
@@ -229,7 +229,7 @@ func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
 			s.rdb,
 			redisKey,
 			s.config.CacheTimeout,
-			func() (models.Posts, error) {
+			func() (types.Posts, error) {
 				return s.postsRepo.GetSourcePosts(
 					r.Context(), sourceID, "", orderBy,
 				)

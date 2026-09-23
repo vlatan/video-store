@@ -11,7 +11,7 @@ import (
 
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/handlers/auth"
-	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/ctxv"
 	"github.com/vlatan/video-store/internal/utils/normalize"
 	"github.com/vlatan/video-store/internal/utils/redirect"
@@ -37,20 +37,20 @@ func (s *Service) HomeHandler(w http.ResponseWriter, r *http.Request) {
 	redisKey := "home:posts"
 
 	switch orderBy {
-	case models.Likes:
-		redisKey += fmt.Sprintf(":%s", models.Likes)
-	case models.AvgRating:
-		redisKey += fmt.Sprintf(":%s", models.AvgRating)
-	case models.RatingCount:
-		redisKey += fmt.Sprintf(":%s", models.RatingCount)
+	case types.Likes:
+		redisKey += fmt.Sprintf(":%s", types.Likes)
+	case types.AvgRating:
+		redisKey += fmt.Sprintf(":%s", types.AvgRating)
+	case types.RatingCount:
+		redisKey += fmt.Sprintf(":%s", types.RatingCount)
 	}
 
 	// Get template data
-	data := ctxv.Get[*models.TemplateData](r.Context())
+	data := ctxv.Get[*types.TemplateData](r.Context())
 
 	var (
 		err   error
-		posts models.Posts
+		posts types.Posts
 	)
 
 	// Don't cache the home results only for the admin
@@ -64,7 +64,7 @@ func (s *Service) HomeHandler(w http.ResponseWriter, r *http.Request) {
 			s.rdb,
 			redisKey,
 			s.config.CacheTimeout,
-			func() (models.Posts, error) {
+			func() (types.Posts, error) {
 				return s.postsRepo.GetHomePosts(
 					r.Context(), "", orderBy,
 				)
@@ -101,21 +101,21 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 	redisKey := fmt.Sprintf("category:%s:posts", slug)
 
 	switch orderBy {
-	case models.Likes:
-		redisKey += fmt.Sprintf(":%s", models.Likes)
-	case models.AvgRating:
-		redisKey += fmt.Sprintf(":%s", models.AvgRating)
-	case models.RatingCount:
-		redisKey += fmt.Sprintf(":%s", models.RatingCount)
+	case types.Likes:
+		redisKey += fmt.Sprintf(":%s", types.Likes)
+	case types.AvgRating:
+		redisKey += fmt.Sprintf(":%s", types.AvgRating)
+	case types.RatingCount:
+		redisKey += fmt.Sprintf(":%s", types.RatingCount)
 	}
 
 	// Generate template data (it gets all the categories too)
 	// This is probably wasteful for non-existing category
-	data := ctxv.Get[*models.TemplateData](r.Context())
+	data := ctxv.Get[*types.TemplateData](r.Context())
 
 	var (
 		err   error
-		posts models.Posts
+		posts types.Posts
 	)
 
 	// Don't cache the category posts only for the admin
@@ -129,7 +129,7 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 			s.rdb,
 			redisKey,
 			s.config.CacheTimeout,
-			func() (models.Posts, error) {
+			func() (types.Posts, error) {
 				return s.postsRepo.GetCategoryPosts(
 					r.Context(), slug, "", orderBy,
 				)
@@ -169,7 +169,7 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Generate the default data
-	data := ctxv.Get[*models.TemplateData](r.Context())
+	data := ctxv.Get[*types.TemplateData](r.Context())
 	data.SearchQuery = searchQuery
 
 	start := time.Now()
@@ -180,7 +180,7 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		err   error
-		posts models.Posts
+		posts types.Posts
 	)
 
 	// Don't cache the search results only for the admin
@@ -194,7 +194,7 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 			s.rdb,
 			redisKey,
 			s.config.CacheTimeout,
-			func() (models.Posts, error) {
+			func() (types.Posts, error) {
 				return s.postsRepo.SearchPosts(
 					r.Context(), searchQuery, s.config.PostsPerPage, "",
 				)
@@ -228,12 +228,12 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Get template data
-	data := ctxv.Get[*models.TemplateData](r.Context())
+	data := ctxv.Get[*types.TemplateData](r.Context())
 
 	// Populate needed data for an empty form
-	data.Form = &models.Form{
+	data.Form = &types.Form{
 		Legend: "New Video",
-		Content: &models.FormGroup{
+		Content: &types.FormGroup{
 			Label:       "Post YouTube Video URL",
 			Placeholder: "Video URL here...",
 		},
@@ -247,7 +247,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 
 	case "POST":
 
-		var formError models.FlashMessage
+		var formError types.FlashMessage
 
 		err := r.ParseForm()
 		if err != nil {
@@ -332,7 +332,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Create post object
 		post := s.yt.NewYouTubePost(metadata[0], "")
-		post.UserActions = models.Actions{UserID: data.CurrentUser.ID}
+		post.UserActions = types.Actions{UserID: data.CurrentUser.ID}
 
 		// Insert the video
 		rowsAffected, err := s.postsRepo.InsertPost(r.Context(), post)
@@ -416,7 +416,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 	videoID := r.PathValue("video")
 
 	// Generate the default data
-	data := ctxv.Get[*models.TemplateData](r.Context())
+	data := ctxv.Get[*types.TemplateData](r.Context())
 
 	// Validate the YT ID
 	if validVideoID.FindStringSubmatch(videoID) == nil {
@@ -426,10 +426,10 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var (
-		post         models.Post
-		postReviews  models.Reviews
-		userActions  models.Actions
-		relatedPosts []models.Post
+		post         types.Post
+		postReviews  types.Reviews
+		userActions  types.Actions
+		relatedPosts []types.Post
 	)
 
 	g := new(errgroup.Group)
@@ -447,7 +447,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 				s.rdb,
 				fmt.Sprintf(postCacheKey, videoID),
 				s.config.CacheTimeout,
-				func() (models.Post, error) {
+				func() (types.Post, error) {
 					return s.postsRepo.GetSinglePost(r.Context(), videoID)
 				},
 			)
@@ -469,7 +469,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 				s.rdb,
 				fmt.Sprintf(postReviewsCacheKey, videoID),
 				s.config.CacheTimeout,
-				func() (models.Reviews, error) {
+				func() (types.Reviews, error) {
 					return s.postsRepo.GetPostReviews(r.Context(), videoID, "")
 				},
 			)
@@ -549,7 +549,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 
 		var (
 			taskErr error
-			posts   models.Posts
+			posts   types.Posts
 		)
 
 		// Don't cache the related posts only for the admin.
@@ -561,7 +561,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 				s.rdb,
 				fmt.Sprintf(relatedPostsCacheKey, videoID),
 				s.config.CacheTimeout,
-				func() (models.Posts, error) {
+				func() (types.Posts, error) {
 					return s.postsRepo.GetRelatedPosts(r.Context(), post.GetTitle())
 				},
 			)
@@ -608,7 +608,7 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 	videoID := r.PathValue("video")
 
 	// Generate the default data
-	data := ctxv.Get[*models.TemplateData](r.Context())
+	data := ctxv.Get[*types.TemplateData](r.Context())
 
 	// Validate the YT ID
 	if validVideoID.FindStringSubmatch(videoID) == nil {
@@ -640,7 +640,7 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 	// Assign post data
 	data.CurrentPost = &post
 	if data.CurrentPost.Category == nil {
-		data.CurrentPost.Category = &models.Category{}
+		data.CurrentPost.Category = &types.Category{}
 	}
 
 	// We need these for the release year in the form
@@ -653,24 +653,24 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Populate needed data for the post form
-	data.Form = &models.Form{
+	data.Form = &types.Form{
 		Legend: "Edit Post",
-		Title: &models.FormGroup{
+		Title: &types.FormGroup{
 			Label:       "Title",
 			Placeholder: "Your title...",
 			Value:       data.CurrentPost.GetTitle(),
 		},
-		Content: &models.FormGroup{
-			Type:        models.FieldTypeTextarea,
+		Content: &types.FormGroup{
+			Type:        types.FieldTypeTextarea,
 			Label:       "Content",
 			Placeholder: "You can use markdown...",
 			Value:       data.CurrentPost.Summary,
 		},
-		Category: &models.FormGroup{
+		Category: &types.FormGroup{
 			Label: "Category",
 			Value: data.CurrentPost.Category.Name,
 		},
-		ReleaseYear: &models.FormGroup{
+		ReleaseYear: &types.FormGroup{
 			Label:       "Released",
 			Placeholder: "YYYY",
 			Value:       released,
@@ -681,7 +681,7 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 
 	for _, director := range data.CurrentPost.Directors {
 		data.Form.Directors = append(data.Form.Directors,
-			&models.FormGroup{
+			&types.FormGroup{
 				Label:       "Director",
 				Placeholder: "Director's name...",
 				Value:       director,
@@ -692,7 +692,7 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 	// Add one empty director input if none
 	if len(data.Form.Directors) == 0 {
 		data.Form.Directors = append(data.Form.Directors,
-			&models.FormGroup{
+			&types.FormGroup{
 				Label:       "Director",
 				Placeholder: "Director's name...",
 			},
@@ -707,7 +707,7 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 		s.ui.RenderHTML(w, r, "form.html", data)
 
 	case "POST":
-		var formError models.FlashMessage
+		var formError types.FlashMessage
 
 		err := r.ParseForm()
 		if err != nil {
@@ -731,7 +731,7 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 		data.Form.Directors = nil
 		for _, director := range directors {
 			data.Form.Directors = append(data.Form.Directors,
-				&models.FormGroup{
+				&types.FormGroup{
 					Label:       "Director",
 					Placeholder: "Director's name...",
 					Value:       director,
@@ -742,7 +742,7 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 		// Add one empty director input if none
 		if len(data.Form.Directors) == 0 {
 			data.Form.Directors = append(data.Form.Directors,
-				&models.FormGroup{
+				&types.FormGroup{
 					Label:       "Director",
 					Placeholder: "Director's name...",
 				},
@@ -838,7 +838,7 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Service) BanPostHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Generate the default data
-	data := ctxv.Get[*models.TemplateData](r.Context())
+	data := ctxv.Get[*types.TemplateData](r.Context())
 
 	// Validate the YT ID
 	videoID := r.PathValue("video")
@@ -864,7 +864,7 @@ func (s *Service) BanPostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	successDelete := models.FlashMessage{
+	successDelete := types.FlashMessage{
 		Message:  "The video has been deleted!",
 		Category: "info",
 	}

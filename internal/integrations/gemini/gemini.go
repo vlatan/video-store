@@ -6,8 +6,8 @@ import (
 
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
-	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/repos/categories"
+	"github.com/vlatan/video-store/internal/types"
 
 	"google.golang.org/genai"
 )
@@ -43,7 +43,7 @@ func New(
 		redisService,
 		"categories",
 		s.config.CacheTimeout,
-		func() (models.Categories, error) {
+		func() (types.Categories, error) {
 			return catsRepo.GetCategories(ctx)
 		},
 	)

@@ -4,10 +4,10 @@ import (
 	"context"
 	"time"
 
-	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/types"
 )
 
-func (r *Repository) SitemapData(ctx context.Context, args ...any) ([]*models.SitemapItem, error) {
+func (r *Repository) SitemapData(ctx context.Context, args ...any) ([]*types.SitemapItem, error) {
 
 	// Get query
 	query, err := r.GetQuery("sitemap_data.sql", nil)
@@ -25,9 +25,9 @@ func (r *Repository) SitemapData(ctx context.Context, args ...any) ([]*models.Si
 	defer rows.Close()
 
 	// Iterate over the rows
-	var data []*models.SitemapItem
+	var data []*types.SitemapItem
 	for rows.Next() {
-		var item models.SitemapItem
+		var item types.SitemapItem
 		var lastModified *time.Time
 
 		// Paste post from row to struct, thumbnails in a separate var

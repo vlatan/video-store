@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/ctxv"
 )
 
@@ -17,7 +17,7 @@ import (
 func (s *Service) SitemapStyleHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Get data from context
-	data := ctxv.Get[*models.TemplateData](r.Context())
+	data := ctxv.Get[*types.TemplateData](r.Context())
 	data.XMLDeclarations = []template.HTML{
 		template.HTML(`<?xml version="1.0" encoding="UTF-8"?>`),
 	}
@@ -32,7 +32,7 @@ func (s *Service) SitemapPartHandler(w http.ResponseWriter, r *http.Request) {
 	partKey := r.PathValue("part")
 
 	// Generate template data
-	data := ctxv.Get[*models.TemplateData](r.Context())
+	data := ctxv.Get[*types.TemplateData](r.Context())
 
 	// Check if this is xml page, base is now -> "post-19"
 	base, ok := strings.CutSuffix(partKey, ".xml")
@@ -98,7 +98,7 @@ func (s *Service) SitemapPartHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Service) SitemapIndexHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Get data from context
-	data := ctxv.Get[*models.TemplateData](r.Context())
+	data := ctxv.Get[*types.TemplateData](r.Context())
 
 	sitemap, err := s.GetSitemapIndex(r, sitemapRedisKey)
 
@@ -112,7 +112,7 @@ func (s *Service) SitemapIndexHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, value := range sitemap {
-		data.SitemapItems = append(data.SitemapItems, &models.SitemapItem{
+		data.SitemapItems = append(data.SitemapItems, &types.SitemapItem{
 			Location:     value.Location,
 			LastModified: value.LastModified,
 		})

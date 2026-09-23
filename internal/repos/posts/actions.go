@@ -10,7 +10,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/microcosm-cc/bluemonday"
-	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/stringx"
 )
 
@@ -64,9 +64,9 @@ func (r *Repository) Unfave(ctx context.Context, userID int, videoID string) (in
 
 // Rate records user's post rating,
 // Returns a struct with rating count and average rating for the video.
-func (r *Repository) Rate(ctx context.Context, rating uint8, userID int, videoID string) (models.RatingStats, error) {
+func (r *Repository) Rate(ctx context.Context, rating uint8, userID int, videoID string) (types.RatingStats, error) {
 
-	var zero, rs models.RatingStats
+	var zero, rs types.RatingStats
 
 	// Start trannsaction
 	tx, err := r.db.Pool.Begin(ctx)
@@ -127,9 +127,9 @@ func (r *Repository) Rate(ctx context.Context, rating uint8, userID int, videoID
 func (r *Repository) Unrate(
 	ctx context.Context,
 	userID int,
-	videoID string) (models.RatingStats, error) {
+	videoID string) (types.RatingStats, error) {
 
-	var zero, rs models.RatingStats
+	var zero, rs types.RatingStats
 
 	// Start trannsaction
 	tx, err := r.db.Pool.Begin(ctx)
@@ -192,8 +192,8 @@ func (r *Repository) Review(
 	userID int, videoID string,
 	rating uint8, headline, content string) (map[string]any, error) {
 
-	var rs models.RatingStats
-	var re models.Review
+	var rs types.RatingStats
+	var re types.Review
 
 	// Start trannsaction
 	tx, err := r.db.Pool.Begin(ctx)

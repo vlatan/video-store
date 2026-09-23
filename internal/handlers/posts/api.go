@@ -7,7 +7,7 @@ import (
 	"slices"
 
 	"github.com/vlatan/video-store/internal/drivers/rdb"
-	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/ctxv"
 	"github.com/vlatan/video-store/internal/utils/stringx"
 )
@@ -25,12 +25,12 @@ func (s *Service) HomeAPI(w http.ResponseWriter, r *http.Request) {
 	redisKey := "home:posts"
 
 	switch orderBy {
-	case models.Likes:
-		redisKey += fmt.Sprintf(":%s", models.Likes)
-	case models.AvgRating:
-		redisKey += fmt.Sprintf(":%s", models.AvgRating)
-	case models.RatingCount:
-		redisKey += fmt.Sprintf(":%s", models.RatingCount)
+	case types.Likes:
+		redisKey += fmt.Sprintf(":%s", types.Likes)
+	case types.AvgRating:
+		redisKey += fmt.Sprintf(":%s", types.AvgRating)
+	case types.RatingCount:
+		redisKey += fmt.Sprintf(":%s", types.RatingCount)
 	}
 
 	if cursor != "" {
@@ -38,11 +38,11 @@ func (s *Service) HomeAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get current user
-	currentUser := ctxv.Get[*models.User](r.Context())
+	currentUser := ctxv.Get[*types.User](r.Context())
 
 	var (
 		err   error
-		posts models.Posts
+		posts types.Posts
 	)
 
 	// Don't cache the home results only for the admin
@@ -56,7 +56,7 @@ func (s *Service) HomeAPI(w http.ResponseWriter, r *http.Request) {
 			s.rdb,
 			redisKey,
 			s.config.CacheTimeout,
-			func() (models.Posts, error) {
+			func() (types.Posts, error) {
 				return s.postsRepo.GetHomePosts(
 					r.Context(), cursor, orderBy,
 				)
@@ -98,12 +98,12 @@ func (s *Service) CategoryPostsAPI(w http.ResponseWriter, r *http.Request) {
 	redisKey := fmt.Sprintf("category:%s:posts", slug)
 
 	switch orderBy {
-	case models.Likes:
-		redisKey += fmt.Sprintf(":%s", models.Likes)
-	case models.AvgRating:
-		redisKey += fmt.Sprintf(":%s", models.AvgRating)
-	case models.RatingCount:
-		redisKey += fmt.Sprintf(":%s", models.RatingCount)
+	case types.Likes:
+		redisKey += fmt.Sprintf(":%s", types.Likes)
+	case types.AvgRating:
+		redisKey += fmt.Sprintf(":%s", types.AvgRating)
+	case types.RatingCount:
+		redisKey += fmt.Sprintf(":%s", types.RatingCount)
 	}
 
 	if cursor != "" {
@@ -111,11 +111,11 @@ func (s *Service) CategoryPostsAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get current user
-	currentUser := ctxv.Get[*models.User](r.Context())
+	currentUser := ctxv.Get[*types.User](r.Context())
 
 	var (
 		err   error
-		posts models.Posts
+		posts types.Posts
 	)
 
 	// Don't cache the category posts only for the admin
@@ -129,7 +129,7 @@ func (s *Service) CategoryPostsAPI(w http.ResponseWriter, r *http.Request) {
 			s.rdb,
 			redisKey,
 			s.config.CacheTimeout,
-			func() (models.Posts, error) {
+			func() (types.Posts, error) {
 				return s.postsRepo.GetCategoryPosts(
 					r.Context(), slug, cursor, orderBy,
 				)
@@ -175,11 +175,11 @@ func (s *Service) SearchPostsAPI(w http.ResponseWriter, r *http.Request) {
 	redisKey += fmt.Sprintf(":cursor:%s", cursor)
 
 	// Get current user
-	currentUser := ctxv.Get[*models.User](r.Context())
+	currentUser := ctxv.Get[*types.User](r.Context())
 
 	var (
 		err   error
-		posts models.Posts
+		posts types.Posts
 	)
 
 	// Don't cache the search results only for the admin
@@ -193,7 +193,7 @@ func (s *Service) SearchPostsAPI(w http.ResponseWriter, r *http.Request) {
 			s.rdb,
 			redisKey,
 			s.config.CacheTimeout,
-			func() (models.Posts, error) {
+			func() (types.Posts, error) {
 				return s.postsRepo.SearchPosts(
 					r.Context(), searchQuery, s.config.PostsPerPage, cursor,
 				)
@@ -240,11 +240,11 @@ func (s *Service) PostReviewsAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get current user
-	currentUser := ctxv.Get[*models.User](r.Context())
+	currentUser := ctxv.Get[*types.User](r.Context())
 
 	var (
 		err     error
-		reviews models.Reviews
+		reviews types.Reviews
 	)
 
 	// Get post reviews, don't cache sthe reviews for logged in users
@@ -256,7 +256,7 @@ func (s *Service) PostReviewsAPI(w http.ResponseWriter, r *http.Request) {
 			s.rdb,
 			redisKey,
 			s.config.CacheTimeout,
-			func() (models.Reviews, error) {
+			func() (types.Reviews, error) {
 				return s.postsRepo.GetPostReviews(r.Context(), videoID, cursor)
 			},
 		)
@@ -322,7 +322,7 @@ func (s *Service) PostActionAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get the current user
-	user := ctxv.Get[*models.User](r.Context())
+	user := ctxv.Get[*types.User](r.Context())
 
 	switch action {
 	case "like":
@@ -359,7 +359,7 @@ func (s *Service) DeleteActionAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get the current user
-	user := ctxv.Get[*models.User](r.Context())
+	user := ctxv.Get[*types.User](r.Context())
 
 	switch action {
 	case "unlike":

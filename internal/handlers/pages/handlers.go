@@ -8,7 +8,7 @@ import (
 
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/handlers/auth"
-	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/ctxv"
 	"github.com/vlatan/video-store/internal/utils/redirect"
 
@@ -25,11 +25,11 @@ func (s *Service) SinglePageHandler(w http.ResponseWriter, r *http.Request) {
 	pageSlug := r.PathValue("slug")
 
 	// Default data
-	data := ctxv.Get[*models.TemplateData](r.Context())
+	data := ctxv.Get[*types.TemplateData](r.Context())
 
 	var (
 		err  error
-		page models.Page
+		page types.Page
 	)
 
 	if data.CurrentUser.IsAdmin() {
@@ -40,7 +40,7 @@ func (s *Service) SinglePageHandler(w http.ResponseWriter, r *http.Request) {
 			s.rdb,
 			fmt.Sprintf(pageCacheKey, pageSlug),
 			s.config.CacheTimeout,
-			func() (models.Page, error) {
+			func() (types.Page, error) {
 				return s.pagesRepo.GetSinglePage(r.Context(), pageSlug)
 			},
 		)
@@ -78,7 +78,7 @@ func (s *Service) UpdatePageHandler(w http.ResponseWriter, r *http.Request) {
 	slug := r.PathValue("slug")
 
 	// Default data
-	data := ctxv.Get[*models.TemplateData](r.Context())
+	data := ctxv.Get[*types.TemplateData](r.Context())
 
 	// Get the page data straight from DB
 	page, err := s.pagesRepo.GetSinglePage(r.Context(), slug)
@@ -104,15 +104,15 @@ func (s *Service) UpdatePageHandler(w http.ResponseWriter, r *http.Request) {
 	data.CurrentPage = &page
 
 	// Populate needed data for the page form
-	data.Form = &models.Form{
+	data.Form = &types.Form{
 		Legend: "Edit Page",
-		Title: &models.FormGroup{
+		Title: &types.FormGroup{
 			Label:       "Title",
 			Placeholder: "Your title...",
 			Value:       page.Title,
 		},
-		Content: &models.FormGroup{
-			Type:        models.FieldTypeTextarea,
+		Content: &types.FormGroup{
+			Type:        types.FieldTypeTextarea,
 			Label:       "Content",
 			Placeholder: "You can use markdown...",
 			Value:       page.Content,
@@ -127,7 +127,7 @@ func (s *Service) UpdatePageHandler(w http.ResponseWriter, r *http.Request) {
 		s.ui.RenderHTML(w, r, "form.html", data)
 
 	case "POST":
-		var formError models.FlashMessage
+		var formError types.FlashMessage
 
 		err := r.ParseForm()
 		if err != nil {
@@ -191,17 +191,17 @@ func (s *Service) UpdatePageHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Service) NewPageHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Compose data object
-	data := ctxv.Get[*models.TemplateData](r.Context())
+	data := ctxv.Get[*types.TemplateData](r.Context())
 
 	// Populate needed data for an empty form
-	data.Form = &models.Form{
+	data.Form = &types.Form{
 		Legend: "Edit Page",
-		Title: &models.FormGroup{
+		Title: &types.FormGroup{
 			Label:       "Title",
 			Placeholder: "Your title...",
 		},
-		Content: &models.FormGroup{
-			Type:        models.FieldTypeTextarea,
+		Content: &types.FormGroup{
+			Type:        types.FieldTypeTextarea,
 			Label:       "Content",
 			Placeholder: "You can use markdown...",
 		},
@@ -214,7 +214,7 @@ func (s *Service) NewPageHandler(w http.ResponseWriter, r *http.Request) {
 		s.ui.RenderHTML(w, r, "form.html", data)
 
 	case "POST":
-		var formError models.FlashMessage
+		var formError types.FlashMessage
 
 		err := r.ParseForm()
 		if err != nil {
@@ -270,7 +270,7 @@ func (s *Service) DeletePageHandler(w http.ResponseWriter, r *http.Request) {
 	pageSlug := r.PathValue("slug")
 
 	// Compose data object
-	data := ctxv.Get[*models.TemplateData](r.Context())
+	data := ctxv.Get[*types.TemplateData](r.Context())
 
 	rowsAffected, err := s.pagesRepo.DeletePage(r.Context(), pageSlug)
 	if err != nil {
@@ -288,7 +288,7 @@ func (s *Service) DeletePageHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	successDelete := models.FlashMessage{
+	successDelete := types.FlashMessage{
 		Message:  "The page has been deleted",
 		Category: "info",
 	}
