@@ -10,10 +10,10 @@ import (
 	"strings"
 
 	"github.com/vlatan/video-store/internal/config"
-	"github.com/vlatan/video-store/internal/ctxv"
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/ui"
 	"github.com/vlatan/video-store/internal/utils"
+	"github.com/vlatan/video-store/internal/utils/ctxv"
 
 	"github.com/klauspost/compress/gzhttp"
 )
