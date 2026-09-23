@@ -1,4 +1,4 @@
-package utils
+package logx
 
 import (
 	"bytes"
@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestLogPlainln(t *testing.T) {
+func TestPlainln(t *testing.T) {
 	var buf bytes.Buffer
 	original := log.Writer()
 	log.SetOutput(&buf)
@@ -25,7 +25,7 @@ func TestLogPlainln(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Cleanup(buf.Reset)
-			LogPlainln(tt.input...)
+			Plainln(tt.input...)
 			if buf.String() != tt.expected {
 				t.Errorf("got: %q, expected %q", buf.String(), tt.expected)
 			}
