@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"slices"
 
-	"github.com/vlatan/video-store/internal/ctxv"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/utils"
+	"github.com/vlatan/video-store/internal/utils/ctxv"
 )
 
 // Handle the Home page

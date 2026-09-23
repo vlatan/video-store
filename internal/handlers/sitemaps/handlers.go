@@ -9,8 +9,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/vlatan/video-store/internal/ctxv"
 	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/utils/ctxv"
 )
 
 // Serve the xml style, whixh is xsl

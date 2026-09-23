@@ -8,11 +8,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/vlatan/video-store/internal/ctxv"
 	"github.com/vlatan/video-store/internal/integrations/gemini"
 	"github.com/vlatan/video-store/internal/integrations/yt"
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/utils"
+	"github.com/vlatan/video-store/internal/utils/ctxv"
 )
 
 // getValidVideos gets valid videos from YT for given video ids,

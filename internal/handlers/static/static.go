@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"github.com/vlatan/video-store/internal/ui"
-	"github.com/vlatan/video-store/internal/utils"
+	"github.com/vlatan/video-store/internal/utils/paths"
 	"github.com/vlatan/video-store/web"
 )
 
@@ -27,7 +27,7 @@ func New(ui ui.Service) *Service {
 func (s *Service) Handler(w http.ResponseWriter, r *http.Request) {
 
 	// Validate the path
-	if err := utils.ValidateFilePath(r.URL.Path); err != nil {
+	if err := paths.ValidateFilePath(r.URL.Path); err != nil {
 		slog.WarnContext(r.Context(), "invalid path")
 		http.NotFound(w, r) // We don't use rich HTML errors for static content
 		return
@@ -86,7 +86,7 @@ func (s *Service) Handler(w http.ResponseWriter, r *http.Request) {
 	// fs.ValidPath as a second, independent check. Not exploitable.
 
 	// Serve favicon from the embedded FS if accessed in the root, i.e. /favicon.ico
-	if slices.Contains(utils.RootFavicons, r.URL.Path) {
+	if slices.Contains(paths.RootFavicons, r.URL.Path) {
 		filePath := filepath.Join("/static/favicons", path.Clean(r.URL.Path))
 		http.ServeFileFS(w, r, web.Files, filePath) // #nosec G703
 		return

@@ -4,10 +4,10 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/vlatan/video-store/internal/ctxv"
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/ui"
-	"github.com/vlatan/video-store/internal/utils"
+	"github.com/vlatan/video-store/internal/utils/ctxv"
+	"github.com/vlatan/video-store/internal/utils/paths"
 )
 
 type Service struct {
@@ -25,7 +25,7 @@ func (s *Service) Handler(w http.ResponseWriter, r *http.Request) {
 	data := ctxv.Get[*models.TemplateData](r.Context())
 
 	// Validate the path
-	if err := utils.ValidateFilePath(r.URL.Path); err != nil {
+	if err := paths.ValidateFilePath(r.URL.Path); err != nil {
 		slog.WarnContext(r.Context(), "invalid path")
 		s.ui.HTMLError(w, r, data, http.StatusNotFound)
 		return

@@ -1,4 +1,4 @@
-package utils
+package paths
 
 import (
 	"errors"
@@ -11,6 +11,17 @@ import (
 	"slices"
 	"strings"
 )
+
+// Favicons used in the website
+var RootFavicons = []string{
+	"/android-chrome-192x192.png",
+	"/android-chrome-512x512.png",
+	"/apple-touch-icon.png",
+	"/favicon-16x16.png",
+	"/favicon-32x32.png",
+	"/favicon.ico",
+	"/site.webmanifest",
+}
 
 // CanonicalURLs returns both the full canonical URL (with queries/fragments)
 // and the base canonical URL (without queries/fragments).

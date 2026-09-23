@@ -11,7 +11,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/containers"
-	"github.com/vlatan/video-store/internal/utils"
+	"github.com/vlatan/video-store/internal/utils/paths"
 )
 
 var ( // Package global variables
@@ -36,7 +36,7 @@ func TestMain(m *testing.M) {
 func runTests(m *testing.M) int {
 
 	// Get the project root
-	projectRoot, err := utils.GetProjectRoot()
+	projectRoot, err := paths.GetProjectRoot()
 	if err != nil {
 		log.Printf("Failed to get the project root; %v", err)
 		return 1

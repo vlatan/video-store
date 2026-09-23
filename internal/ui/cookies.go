@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/vlatan/video-store/internal/ctxv"
 	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/utils/ctxv"
 )
 
 // Store flash message in a session

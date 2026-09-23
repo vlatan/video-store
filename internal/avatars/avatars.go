@@ -10,10 +10,10 @@ import (
 
 	"github.com/redis/go-redis/v9"
 	"github.com/vlatan/video-store/internal/config"
-	"github.com/vlatan/video-store/internal/ctxv"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/integrations/r2"
 	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/utils/ctxv"
 )
 
 type Service struct {

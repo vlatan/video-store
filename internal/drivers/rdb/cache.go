@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/redis/go-redis/v9"
-	"github.com/vlatan/video-store/internal/ctxv"
+	"github.com/vlatan/video-store/internal/utils/ctxv"
 )
 
 // GetCachedData is generic wrapper getting and setting from cache,

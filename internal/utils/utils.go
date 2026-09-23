@@ -12,17 +12,6 @@ import (
 	"github.com/yuin/goldmark"
 )
 
-// Favicons used in the website
-var RootFavicons = []string{
-	"/android-chrome-192x192.png",
-	"/android-chrome-512x512.png",
-	"/apple-touch-icon.png",
-	"/favicon-16x16.png",
-	"/favicon-32x32.png",
-	"/favicon.ico",
-	"/site.webmanifest",
-}
-
 // Takes a query and a max length,
 // then returns an escaped and truncated string.
 // If maxLenght <= 0 returns the original query.
