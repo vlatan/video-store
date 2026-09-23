@@ -15,7 +15,7 @@ import (
 	"github.com/vlatan/video-store/internal/repositories/categories"
 	"github.com/vlatan/video-store/internal/repositories/posts"
 	"github.com/vlatan/video-store/internal/repositories/sources"
-	"github.com/vlatan/video-store/internal/retry"
+	"github.com/vlatan/video-store/internal/utils/retry"
 )
 
 type Worker struct {

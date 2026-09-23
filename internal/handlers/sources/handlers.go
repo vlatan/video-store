@@ -11,7 +11,7 @@ import (
 	"github.com/vlatan/video-store/internal/handlers/auth"
 	"github.com/vlatan/video-store/internal/models"
 	"github.com/vlatan/video-store/internal/redirect"
-	"github.com/vlatan/video-store/internal/retry"
+	"github.com/vlatan/video-store/internal/utils/retry"
 )
 
 // Handle all sources page
