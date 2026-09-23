@@ -6,8 +6,8 @@ import (
 	"fmt"
 
 	"github.com/vlatan/video-store/internal/models"
-	"github.com/vlatan/video-store/internal/utils"
 	"github.com/vlatan/video-store/internal/utils/retry"
+	"github.com/vlatan/video-store/internal/utils/sanitize"
 
 	"google.golang.org/api/youtube/v3"
 )
@@ -150,12 +150,12 @@ func (s *Service) NewYouTubeSource(playlist *youtube.Playlist, channel *youtube.
 	source.ChannelID = playlist.Snippet.ChannelId
 
 	// Normalize the titles
-	source.Title = utils.NormalizeTitle(playlist.Snippet.Title, utils.SourceTitleCutoffs)
-	source.ChannelTitle = utils.NormalizeTitle(channel.Snippet.Title, utils.SourceTitleCutoffs)
+	source.Title = sanitize.NormalizeTitle(playlist.Snippet.Title, sanitize.SourceTitleCutoffs)
+	source.ChannelTitle = sanitize.NormalizeTitle(channel.Snippet.Title, sanitize.SourceTitleCutoffs)
 
 	// Normalize the descriptions
-	source.Description = utils.NormalizeDescription(playlist.Snippet.Description)
-	source.ChannelDescription = utils.NormalizeDescription(channel.Snippet.Description)
+	source.Description = sanitize.NormalizeDescription(playlist.Snippet.Description)
+	source.ChannelDescription = sanitize.NormalizeDescription(channel.Snippet.Description)
 
 	// Assign the playlist thumbnails
 	source.Thumbnails = &models.Thumbnails{}

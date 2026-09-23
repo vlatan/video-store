@@ -16,6 +16,7 @@ import (
 	"github.com/vlatan/video-store/internal/utils"
 	"github.com/vlatan/video-store/internal/utils/ctxv"
 	"github.com/vlatan/video-store/internal/utils/retry"
+	"github.com/vlatan/video-store/internal/utils/sanitize"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/jackc/pgx/v5"
@@ -773,7 +774,7 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Normalize the directors before DB upsert
-		directors, err = utils.NormalizeDirectors(directors)
+		directors, err = sanitize.NormalizeDirectors(directors)
 		if err != nil {
 			slog.ErrorContext(
 				r.Context(), "failed to normalize directors",
@@ -786,9 +787,12 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Asign the new values to the current post
-		data.CurrentPost.OriginalTitle = utils.NormalizeTitle(data.Form.Title.Value, utils.VideoTitleCutoffs)
+		data.CurrentPost.OriginalTitle = sanitize.NormalizeTitle(
+			data.Form.Title.Value,
+			sanitize.VideoTitleCutoffs,
+		)
 		data.CurrentPost.Category.Name = data.Form.Category.Value
-		data.CurrentPost.Summary = utils.NormalizeDescription(data.Form.Content.Value)
+		data.CurrentPost.Summary = sanitize.NormalizeDescription(data.Form.Content.Value)
 		data.CurrentPost.Directors = directors
 		data.CurrentPost.ReleaseYear = int16(releaseYear)
 

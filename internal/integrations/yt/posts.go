@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/vlatan/video-store/internal/models"
-	"github.com/vlatan/video-store/internal/utils"
 	"github.com/vlatan/video-store/internal/utils/retry"
+	"github.com/vlatan/video-store/internal/utils/sanitize"
 
 	"google.golang.org/api/youtube/v3"
 )
@@ -114,9 +114,9 @@ func (s *Service) NewYouTubePost(video *youtube.Video, playlistID string) *model
 	post.Thumbnails = (*models.Thumbnails)(video.Snippet.Thumbnails)
 
 	// Normalize title, description and tags
-	post.Title = utils.NormalizeTitle(video.Snippet.Title, utils.VideoTitleCutoffs)
-	post.Description = utils.NormalizeDescription(video.Snippet.Description)
-	post.Tags = utils.NormalizeTags(video.Snippet.Tags, post.Title, post.Description)
+	post.Title = sanitize.NormalizeTitle(video.Snippet.Title, sanitize.VideoTitleCutoffs)
+	post.Description = sanitize.NormalizeDescription(video.Snippet.Description)
+	post.Tags = sanitize.NormalizeTags(video.Snippet.Tags, post.Title, post.Description)
 
 	// Get video duration
 	post.Duration = models.ISO8601Duration(video.ContentDetails.Duration)
