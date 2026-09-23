@@ -8,11 +8,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/types"
 )
 
 // Get a limited number of posts with cursor
-func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (models.Posts, error) {
+func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (types.Posts, error) {
 
 	// The first argument is the limit ($1).
 	// Peek for one post beoynd the limit to see if there's next page,
@@ -24,17 +24,17 @@ func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (
 	order := "upload_date DESC, id DESC"
 
 	orderingOptions := map[string]struct{ order, where string }{
-		models.Likes: {
-			fmt.Sprintf("%s DESC, %s", models.Likes, order),
-			fmt.Sprintf("WHERE (%s, upload_date, id) < ($2, $3, $4)", models.Likes),
+		types.Likes: {
+			fmt.Sprintf("%s DESC, %s", types.Likes, order),
+			fmt.Sprintf("WHERE (%s, upload_date, id) < ($2, $3, $4)", types.Likes),
 		},
-		models.AvgRating: {
-			fmt.Sprintf("%s DESC NULLS LAST, %s", models.AvgRating, order),
-			fmt.Sprintf("WHERE (%s, upload_date, id) < ($2, $3, $4)", models.AvgRating),
+		types.AvgRating: {
+			fmt.Sprintf("%s DESC NULLS LAST, %s", types.AvgRating, order),
+			fmt.Sprintf("WHERE (%s, upload_date, id) < ($2, $3, $4)", types.AvgRating),
 		},
-		models.RatingCount: {
-			fmt.Sprintf("%s DESC, %s", models.RatingCount, order),
-			fmt.Sprintf("WHERE (%s, upload_date, id) < ($2, $3, $4)", models.RatingCount),
+		types.RatingCount: {
+			fmt.Sprintf("%s DESC, %s", types.RatingCount, order),
+			fmt.Sprintf("WHERE (%s, upload_date, id) < ($2, $3, $4)", types.RatingCount),
 		},
 	}
 
@@ -44,7 +44,7 @@ func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (
 	}
 
 	// If cursor supplied construct the additional args and WHERE clause
-	var zero, posts models.Posts
+	var zero, posts types.Posts
 	if cursor != "" {
 
 		cursorParts, err := decodeCursor(cursor)
@@ -87,7 +87,7 @@ func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (
 	for rows.Next() {
 
 		var (
-			post          models.Post
+			post          types.Post
 			originalTitle sql.NullString
 			avgRating     sql.NullFloat64
 			ratingCount   sql.NullInt64
@@ -114,7 +114,7 @@ func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (
 
 		// Attach ratings if any
 		if avgRating.Valid && ratingCount.Valid {
-			post.RatingStats = &models.RatingStats{
+			post.RatingStats = &types.RatingStats{
 				Avg:   avgRating.Float64,
 				Count: ratingCount.Int64,
 			}
@@ -148,15 +148,15 @@ func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (
 
 	// Modify the cursor if there's ordering
 	switch orderBy {
-	case models.Likes:
+	case types.Likes:
 		cursorStr = fmt.Sprintf("%d,%s", lastPost.Likes, cursorStr)
-	case models.AvgRating:
+	case types.AvgRating:
 		var avgRating float64
 		if lastPost.RatingStats != nil {
 			avgRating = lastPost.RatingStats.Avg
 		}
 		cursorStr = fmt.Sprintf("%.2f,%s", avgRating, cursorStr)
-	case models.RatingCount:
+	case types.RatingCount:
 		var ratingCount int64
 		if lastPost.RatingStats != nil {
 			ratingCount = lastPost.RatingStats.Count

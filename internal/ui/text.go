@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/vlatan/video-store/internal/config"
-	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/types"
 )
 
 var weirdBots = []string{
@@ -26,20 +26,20 @@ var weirdBots = []string{
 }
 
 // GetStaticFiles gets the map containing the static files
-func (s *service) TextFiles() models.TextFiles {
+func (s *service) TextFiles() types.TextFiles {
 	return s.textFiles
 }
 
 // PaparseTextFiles parses the text files that app needs and serves
-func parseTextFiles(cfg *config.Config) models.TextFiles {
-	tf := make(models.TextFiles)
+func parseTextFiles(cfg *config.Config) types.TextFiles {
+	tf := make(types.TextFiles)
 
 	if robotsTxt := buildRobotsTxt(cfg); robotsTxt != nil {
-		tf["/robots.txt"] = &models.FileInfo{Bytes: robotsTxt}
+		tf["/robots.txt"] = &types.FileInfo{Bytes: robotsTxt}
 	}
 
 	if adsTxt := builAdsTxt(cfg); adsTxt != nil {
-		tf["/ads.txt"] = &models.FileInfo{Bytes: adsTxt}
+		tf["/ads.txt"] = &types.FileInfo{Bytes: adsTxt}
 	}
 
 	return tf

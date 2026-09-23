@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"github.com/vlatan/video-store/internal/config"
-	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/types"
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
@@ -86,7 +86,7 @@ func (p *Providers) GenerateState() (string, error) {
 func (p *Providers) FetchUserProfile(
 	ctx context.Context,
 	provider *OAuthProvider,
-	token *oauth2.Token) (*models.User, error) {
+	token *oauth2.Token) (*types.User, error) {
 
 	client := provider.Config.Client(ctx, token)
 	resp, err := client.Get(provider.UserURL)
@@ -111,7 +111,7 @@ func (p *Providers) FetchUserProfile(
 		return nil, fmt.Errorf("failed to decode %s user: %w", provider.Provider, err)
 	}
 
-	var user models.User
+	var user types.User
 	user.Provider = provider.Provider
 	user.AccessToken = token.AccessToken
 	user.RefreshToken = token.RefreshToken

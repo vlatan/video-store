@@ -3,11 +3,11 @@ package ui
 import (
 	"math"
 
-	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/types"
 )
 
 // Create new pagination struct that contains all the info about the pagination element
-func (s *service) NewPagination(currentPage, totalRecords, pageSize int) *models.PaginationInfo {
+func (s *service) NewPagination(currentPage, totalRecords, pageSize int) *types.PaginationInfo {
 
 	// Total pages are the celing division between total records and the records on one page
 	totalPages := int(math.Ceil(float64(totalRecords) / float64(pageSize)))
@@ -19,7 +19,7 @@ func (s *service) NewPagination(currentPage, totalRecords, pageSize int) *models
 	// Current page can't be greater than total pages
 	currentPage = min(currentPage, totalPages)
 
-	return &models.PaginationInfo{
+	return &types.PaginationInfo{
 		CurrentPage:  currentPage,
 		TotalPages:   totalPages,
 		TotalRecords: totalRecords,
@@ -29,7 +29,7 @@ func (s *service) NewPagination(currentPage, totalRecords, pageSize int) *models
 }
 
 // Creates the page number sequence with ellipsis
-func generatePageNumbers(currentPage, totalPages int) (pages []models.PageInfo) {
+func generatePageNumbers(currentPage, totalPages int) (pages []types.PageInfo) {
 
 	// No pages if just one page
 	if totalPages <= 1 {
@@ -37,7 +37,7 @@ func generatePageNumbers(currentPage, totalPages int) (pages []models.PageInfo) 
 	}
 
 	// Always show the first page
-	pages = append(pages, models.PageInfo{
+	pages = append(pages, types.PageInfo{
 		Number:     1,
 		IsCurrent:  currentPage == 1,
 		IsEllipsis: false,
@@ -49,7 +49,7 @@ func generatePageNumbers(currentPage, totalPages int) (pages []models.PageInfo) 
 
 	// Add ellipsis after first page if needed
 	if start > 2 {
-		pages = append(pages, models.PageInfo{
+		pages = append(pages, types.PageInfo{
 			IsCurrent:  false,
 			IsEllipsis: true,
 		})
@@ -57,7 +57,7 @@ func generatePageNumbers(currentPage, totalPages int) (pages []models.PageInfo) 
 
 	// Add the range of pages around current page
 	for i := start; i <= end; i++ {
-		pages = append(pages, models.PageInfo{
+		pages = append(pages, types.PageInfo{
 			Number:     i,
 			IsCurrent:  i == currentPage,
 			IsEllipsis: false,
@@ -66,7 +66,7 @@ func generatePageNumbers(currentPage, totalPages int) (pages []models.PageInfo) 
 
 	// Add ellipsis before last page if needed
 	if end < totalPages-1 {
-		pages = append(pages, models.PageInfo{
+		pages = append(pages, types.PageInfo{
 			IsCurrent:  false,
 			IsEllipsis: true,
 		})
@@ -74,7 +74,7 @@ func generatePageNumbers(currentPage, totalPages int) (pages []models.PageInfo) 
 
 	// Always show last page (if it's not page 1)
 	if totalPages > 1 {
-		pages = append(pages, models.PageInfo{
+		pages = append(pages, types.PageInfo{
 			Number:     totalPages,
 			IsCurrent:  currentPage == totalPages,
 			IsEllipsis: false,

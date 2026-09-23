@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/normalize"
 	"github.com/vlatan/video-store/internal/utils/retry"
 
@@ -87,7 +87,7 @@ func (s *Service) ValidateYouTubeVideo(video *youtube.Video) error {
 		return &ValidationError{"this video is not fully broadcasted"}
 	}
 
-	duration := models.ISO8601Duration(video.ContentDetails.Duration)
+	duration := types.ISO8601Duration(video.ContentDetails.Duration)
 	seconds, err := duration.Seconds()
 
 	if err != nil {
@@ -104,14 +104,14 @@ func (s *Service) ValidateYouTubeVideo(video *youtube.Video) error {
 }
 
 // Create post object
-func (s *Service) NewYouTubePost(video *youtube.Video, playlistID string) *models.Post {
-	var post models.Post
+func (s *Service) NewYouTubePost(video *youtube.Video, playlistID string) *types.Post {
+	var post types.Post
 	post.VideoID = video.Id
 	post.PlaylistID = playlistID
 	post.Provider = "YouTube"
 
 	// Assign the thumbnails
-	post.Thumbnails = (*models.Thumbnails)(video.Snippet.Thumbnails)
+	post.Thumbnails = (*types.Thumbnails)(video.Snippet.Thumbnails)
 
 	// Normalize title, description and tags
 	post.Title = normalize.Title(video.Snippet.Title, normalize.VideoTitleCutoffs)
@@ -119,7 +119,7 @@ func (s *Service) NewYouTubePost(video *youtube.Video, playlistID string) *model
 	post.Tags = normalize.Tags(video.Snippet.Tags, post.Title, post.Description)
 
 	// Get video duration
-	post.Duration = models.ISO8601Duration(video.ContentDetails.Duration)
+	post.Duration = types.ISO8601Duration(video.ContentDetails.Duration)
 
 	// Parse the upload date into an object
 	parsedTime, _ := time.Parse("2006-01-02T15:04:05Z", video.Snippet.PublishedAt)

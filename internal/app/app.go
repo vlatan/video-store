@@ -25,13 +25,13 @@ import (
 	"github.com/vlatan/video-store/internal/integrations/r2"
 	"github.com/vlatan/video-store/internal/integrations/yt"
 	"github.com/vlatan/video-store/internal/middlewares"
-	"github.com/vlatan/video-store/internal/models"
 	catsRepo "github.com/vlatan/video-store/internal/repos/categories"
 	pagesRepo "github.com/vlatan/video-store/internal/repos/pages"
 	postsRepo "github.com/vlatan/video-store/internal/repos/posts"
 	sourcesRepo "github.com/vlatan/video-store/internal/repos/sources"
 	usersRepo "github.com/vlatan/video-store/internal/repos/users"
 	redisStore "github.com/vlatan/video-store/internal/store"
+	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/ui"
 )
 
@@ -58,7 +58,7 @@ func New() (*App, error) {
 	ctx := context.Background()
 
 	// Register types with gob to be able to use them in sessions
-	gob.Register(&models.FlashMessage{})
+	gob.Register(&types.FlashMessage{})
 	gob.Register(time.Time{})
 
 	// Init config

@@ -5,13 +5,13 @@ import (
 	"database/sql"
 	"errors"
 
-	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/types"
 )
 
 // Get random posts, but exclude posts with the exact title match
-func (r *Repository) GetRandomPosts(ctx context.Context, title string, limit int) (models.Posts, error) {
+func (r *Repository) GetRandomPosts(ctx context.Context, title string, limit int) (types.Posts, error) {
 
-	var zero, posts models.Posts
+	var zero, posts types.Posts
 	if title == "" {
 		return zero, errors.New("title can't be empty string")
 	}
@@ -34,7 +34,7 @@ func (r *Repository) GetRandomPosts(ctx context.Context, title string, limit int
 	for rows.Next() {
 
 		var (
-			post          models.Post
+			post          types.Post
 			originalTitle sql.NullString
 			avgRating     sql.NullFloat64
 			ratingCount   sql.NullInt64
@@ -57,7 +57,7 @@ func (r *Repository) GetRandomPosts(ctx context.Context, title string, limit int
 
 		// Attach ratings if any
 		if avgRating.Valid && ratingCount.Valid {
-			post.RatingStats = &models.RatingStats{
+			post.RatingStats = &types.RatingStats{
 				Avg:   avgRating.Float64,
 				Count: ratingCount.Int64,
 			}

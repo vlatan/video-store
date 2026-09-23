@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/vlatan/video-store/internal/config"
-	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/ctxv"
 )
 
@@ -35,7 +35,7 @@ func (h *ContextHandler) Handle(ctx context.Context, r slog.Record) error {
 	}
 
 	// Look for a user in the context
-	if user := ctxv.Get[*models.User](ctx); user.IsAuthenticated() {
+	if user := ctxv.Get[*types.User](ctx); user.IsAuthenticated() {
 		r.AddAttrs(slog.Int("userId", user.ID))
 	}
 

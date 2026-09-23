@@ -8,7 +8,7 @@ import (
 
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/vlatan/video-store/internal/drivers/database"
-	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/nulls"
 	"github.com/vlatan/video-store/internal/utils/stringx"
 )
@@ -24,9 +24,9 @@ func New(db *database.Service) *Repository {
 }
 
 // Get single page from DB
-func (r *Repository) GetSinglePage(ctx context.Context, slug string) (models.Page, error) {
+func (r *Repository) GetSinglePage(ctx context.Context, slug string) (types.Page, error) {
 
-	var zero, page models.Page
+	var zero, page types.Page
 	var content sql.NullString
 
 	// Get single row from DB

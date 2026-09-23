@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/types"
 )
 
 // Get posts based on a user search query using a cursor
@@ -18,7 +18,7 @@ func (r *Repository) SearchPosts(
 	ctx context.Context,
 	searchTerm string,
 	limit int,
-	cursor string) (models.Posts, error) {
+	cursor string) (types.Posts, error) {
 
 	// Construct the SQL parts as well as the arguments.
 	// The search term and limit are the first two arguments ($1 and $2).
@@ -27,7 +27,7 @@ func (r *Repository) SearchPosts(
 	total := "COUNT(*) OVER()"
 	args := []any{searchTerm, limit + 1}
 
-	var zero, posts models.Posts
+	var zero, posts types.Posts
 
 	// Build args and SQL parts.
 	// If cursor (meanining this is not the first page),
@@ -72,7 +72,7 @@ func (r *Repository) SearchPosts(
 	for rows.Next() {
 
 		var (
-			post          models.Post
+			post          types.Post
 			originalTitle sql.NullString
 			totalNum      int
 			avgRating     sql.NullFloat64
@@ -101,7 +101,7 @@ func (r *Repository) SearchPosts(
 
 		// Attach ratings if any
 		if avgRating.Valid && ratingCount.Valid {
-			post.RatingStats = &models.RatingStats{
+			post.RatingStats = &types.RatingStats{
 				Avg:   avgRating.Float64,
 				Count: ratingCount.Int64,
 			}

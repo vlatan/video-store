@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/types"
 
 	"golang.org/x/oauth2"
 )
@@ -44,7 +44,7 @@ func IsProtectedRoute(path string) bool {
 }
 
 // Store user info in our own session
-func (s *Service) loginUser(w http.ResponseWriter, r *http.Request, user *models.User) error {
+func (s *Service) loginUser(w http.ResponseWriter, r *http.Request, user *types.User) error {
 
 	// Make user public ID
 	var err error
@@ -135,7 +135,7 @@ func (s *Service) logoutUser(w http.ResponseWriter, r *http.Request) error {
 }
 
 // revokeLogin sends a revoke request to the provider API to self-deauthorize
-func (s *Service) revokeLogin(ctx context.Context, user *models.User) error {
+func (s *Service) revokeLogin(ctx context.Context, user *types.User) error {
 
 	// Get the provider config
 	provider, exists := s.providers[user.Provider]
@@ -211,7 +211,7 @@ func (s *Service) revokeLogin(ctx context.Context, user *models.User) error {
 // googleRevokeRequest deletes Google OAuth app authorization
 func (s *Service) googleRevokeRequest(
 	ctx context.Context,
-	user *models.User) (*http.Request, error) {
+	user *types.User) (*http.Request, error) {
 
 	// Google revoke endpoint
 	url := "https://oauth2.googleapis.com/revoke"
@@ -231,7 +231,7 @@ func (s *Service) googleRevokeRequest(
 // githubRevokeRequest deletes GitHub OAuth app authorization
 func (s *Service) githubRevokeRequest(
 	ctx context.Context,
-	user *models.User) (*http.Request, error) {
+	user *types.User) (*http.Request, error) {
 
 	// GitHub revoke endpoint
 	url := fmt.Sprintf(

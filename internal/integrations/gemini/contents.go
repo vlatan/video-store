@@ -3,7 +3,7 @@ package gemini
 import (
 	"time"
 
-	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/types"
 	"google.golang.org/genai"
 )
 
@@ -52,7 +52,7 @@ func (s *Service) NewOutroContents(videoID string, startOffset time.Duration) []
 }
 
 // MakeTextContents creates Genai contents containing just text
-func (s *Service) NewTextContents(video *models.Post) []*genai.Content {
+func (s *Service) NewTextContents(video *types.Post) []*genai.Content {
 	youtubeURL := "https://www.youtube.com/watch?v=" + video.VideoID
 	parts := []*genai.Part{
 		genai.NewPartFromText("Title: " + sanitizePrompt(video.Title)),

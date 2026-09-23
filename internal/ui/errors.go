@@ -8,14 +8,14 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/types"
 )
 
 // HTMLError executes error.html template
 func (s *service) HTMLError(
 	w http.ResponseWriter,
 	r *http.Request,
-	data *models.TemplateData,
+	data *types.TemplateData,
 	status int) {
 
 	// Check for the error template
@@ -30,7 +30,7 @@ func (s *service) HTMLError(
 		return
 	}
 
-	data.HTMLErrorData = &models.HTMLErrorData{
+	data.HTMLErrorData = &types.HTMLErrorData{
 		Title: strconv.Itoa(status),
 	}
 
@@ -88,7 +88,7 @@ func (s *service) HTMLError(
 func (s *service) JSONError(w http.ResponseWriter, r *http.Request, status int) {
 
 	// Craft data
-	data := models.JSONErrorData{
+	data := types.JSONErrorData{
 		Error: http.StatusText(status),
 		Code:  status,
 	}

@@ -4,13 +4,13 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/types"
 )
 
 // Check if the user liked and/or faved a post
-func (r *Repository) GetUserActions(ctx context.Context, userID, postID int) (models.Actions, error) {
+func (r *Repository) GetUserActions(ctx context.Context, userID, postID int) (types.Actions, error) {
 
-	var zero, actions models.Actions
+	var zero, actions types.Actions
 	query, err := r.GetQuery("actions_user.sql", nil)
 	if err != nil {
 		return zero, err

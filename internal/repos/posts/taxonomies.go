@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/types"
 )
 
 // Get a limited number of posts from one category with cursor
@@ -18,7 +18,7 @@ func (r *Repository) GetCategoryPosts(
 	categorySlug,
 	cursor,
 	orderBy string,
-) (models.Posts, error) {
+) (types.Posts, error) {
 
 	return r.queryTaxonomyPosts(
 		ctx,
@@ -35,7 +35,7 @@ func (r *Repository) GetSourcePosts(
 	playlistID,
 	cursor,
 	orderBy string,
-) (models.Posts, error) {
+) (types.Posts, error) {
 
 	return r.queryTaxonomyPosts(
 		ctx,
@@ -53,7 +53,7 @@ func (r *Repository) queryTaxonomyPosts(
 	taxonomyID,
 	cursor,
 	orderBy string,
-) (models.Posts, error) {
+) (types.Posts, error) {
 
 	// The taxonomy slug and the limit are the first two arguments ($1 and $2)
 	// Peek for one post beoynd the limit to see if there's next page,
@@ -66,17 +66,17 @@ func (r *Repository) queryTaxonomyPosts(
 	order := "upload_date DESC, id DESC"
 
 	orderingOptions := map[string]struct{ order, where string }{
-		models.Likes: {
-			fmt.Sprintf("%s DESC, %s", models.Likes, order),
-			fmt.Sprintf("WHERE (%s, upload_date, id) < ($3, $4, $5)", models.Likes),
+		types.Likes: {
+			fmt.Sprintf("%s DESC, %s", types.Likes, order),
+			fmt.Sprintf("WHERE (%s, upload_date, id) < ($3, $4, $5)", types.Likes),
 		},
-		models.AvgRating: {
-			fmt.Sprintf("%s DESC NULLS LAST, %s", models.AvgRating, order),
-			fmt.Sprintf("WHERE (%s, upload_date, id) < ($3, $4, $5)", models.AvgRating),
+		types.AvgRating: {
+			fmt.Sprintf("%s DESC NULLS LAST, %s", types.AvgRating, order),
+			fmt.Sprintf("WHERE (%s, upload_date, id) < ($3, $4, $5)", types.AvgRating),
 		},
-		models.RatingCount: {
-			fmt.Sprintf("%s DESC, %s", models.RatingCount, order),
-			fmt.Sprintf("WHERE (%s, upload_date, id) < ($3, $4, $5)", models.RatingCount),
+		types.RatingCount: {
+			fmt.Sprintf("%s DESC, %s", types.RatingCount, order),
+			fmt.Sprintf("WHERE (%s, upload_date, id) < ($3, $4, $5)", types.RatingCount),
 		},
 	}
 
@@ -86,7 +86,7 @@ func (r *Repository) queryTaxonomyPosts(
 	}
 
 	// If cursor supplied construct the additional args and WHERE clause
-	var zero, posts models.Posts
+	var zero, posts types.Posts
 	if cursor != "" {
 
 		total = "0"
@@ -127,7 +127,7 @@ func (r *Repository) queryTaxonomyPosts(
 	// Iterate over the rows
 	for rows.Next() {
 		var (
-			post                         models.Post
+			post                         types.Post
 			originalTitle, playlistTitle sql.NullString
 			totalNum                     int
 			avgRating                    sql.NullFloat64
@@ -156,7 +156,7 @@ func (r *Repository) queryTaxonomyPosts(
 
 		// Attach ratings if any
 		if avgRating.Valid && ratingCount.Valid {
-			post.RatingStats = &models.RatingStats{
+			post.RatingStats = &types.RatingStats{
 				Avg:   avgRating.Float64,
 				Count: ratingCount.Int64,
 			}
@@ -194,15 +194,15 @@ func (r *Repository) queryTaxonomyPosts(
 
 	// Modify the cursor if there's ordering
 	switch orderBy {
-	case models.Likes:
+	case types.Likes:
 		cursorStr = fmt.Sprintf("%d,%s", lastPost.Likes, cursorStr)
-	case models.AvgRating:
+	case types.AvgRating:
 		var avgRating float64
 		if lastPost.RatingStats != nil {
 			avgRating = lastPost.RatingStats.Avg
 		}
 		cursorStr = fmt.Sprintf("%.2f,%s", avgRating, cursorStr)
-	case models.RatingCount:
+	case types.RatingCount:
 		var ratingCount int64
 		if lastPost.RatingStats != nil {
 			ratingCount = lastPost.RatingStats.Count

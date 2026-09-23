@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/ctxv"
 )
 
@@ -14,7 +14,7 @@ import (
 func (s *service) StoreFlashMessage(
 	w http.ResponseWriter,
 	r *http.Request,
-	m *models.FlashMessage,
+	m *types.FlashMessage,
 ) {
 	session, err := s.store.Get(r, s.config.FlashSessionName)
 	if err != nil {
@@ -36,7 +36,7 @@ func (s *service) StoreFlashMessage(
 }
 
 // Get the user from session
-func (s *service) GetUserFromSession(w http.ResponseWriter, r *http.Request) (*models.User, error) {
+func (s *service) GetUserFromSession(w http.ResponseWriter, r *http.Request) (*types.User, error) {
 
 	// Check for a user cookie, if not this is anonymous user
 	if _, err := r.Cookie(s.config.UserSessionName); err != nil {
@@ -111,7 +111,7 @@ func (s *service) GetUserFromSession(w http.ResponseWriter, r *http.Request) (*m
 	avatarURL, _ := session.Values["AvatarURL"].(string)
 	accessToken, _ := session.Values["AccessToken"].(string)
 
-	user := models.User{
+	user := types.User{
 		ID:             id,
 		ProviderUserId: providerUserId,
 		Email:          email,

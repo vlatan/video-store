@@ -8,14 +8,14 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/types"
 )
 
 // Get user's favorited posts
 func (r *Repository) GetUserFavedPosts(
 	ctx context.Context,
 	userID int,
-	cursor string) (models.Posts, error) {
+	cursor string) (types.Posts, error) {
 
 	// The user ID and the limit are the first two arguments ($1 and $2)
 	// Peek for one post beoynd the limit to see if there's next page,
@@ -27,7 +27,7 @@ func (r *Repository) GetUserFavedPosts(
 	total := "COUNT(*) OVER()"
 
 	// If cursor supplied construct the additional args and WHERE clause
-	var zero, posts models.Posts
+	var zero, posts types.Posts
 	if cursor != "" {
 
 		total = "0"
@@ -64,7 +64,7 @@ func (r *Repository) GetUserFavedPosts(
 
 		var (
 			totalNum      int
-			post          models.Post
+			post          types.Post
 			originalTitle sql.NullString
 			avgRating     sql.NullFloat64
 			ratingCount   sql.NullInt64
@@ -94,7 +94,7 @@ func (r *Repository) GetUserFavedPosts(
 
 		// Attach ratings if any
 		if avgRating.Valid && ratingCount.Valid {
-			post.RatingStats = &models.RatingStats{
+			post.RatingStats = &types.RatingStats{
 				Avg:   avgRating.Float64,
 				Count: ratingCount.Int64,
 			}

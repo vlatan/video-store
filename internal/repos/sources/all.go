@@ -5,11 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/types"
 )
 
 // Get a limited number of sources with offset
-func (r *Repository) GetAllSources(ctx context.Context) (models.Sources, error) {
+func (r *Repository) GetAllSources(ctx context.Context) (types.Sources, error) {
 
 	query, err := r.GetQuery("all_sources.sql", nil)
 	if err != nil {
@@ -23,10 +23,10 @@ func (r *Repository) GetAllSources(ctx context.Context) (models.Sources, error) 
 
 	defer rows.Close()
 
-	var sources models.Sources
+	var sources types.Sources
 	for rows.Next() {
 		// Get categories from DB
-		var source models.Source
+		var source types.Source
 		var thumbnails []byte
 
 		if err := rows.Scan(
@@ -41,14 +41,14 @@ func (r *Repository) GetAllSources(ctx context.Context) (models.Sources, error) 
 		}
 
 		// Unserialize thumbnails
-		var channelThumbs models.Thumbnails
+		var channelThumbs types.Thumbnails
 		if err = json.Unmarshal(thumbnails, &channelThumbs); err != nil {
 			msg := "could not ummarshal the channel thumbs on playlist"
 			return nil, fmt.Errorf("%s: %q: %w", msg, source.PlaylistID, err)
 		}
 
 		source.ChannelThumbnails = &channelThumbs
-		source.Thumbnail = (*models.Thumbnail)(channelThumbs.Medium)
+		source.Thumbnail = (*types.Thumbnail)(channelThumbs.Medium)
 
 		// Include the category in the result
 		sources = append(sources, source)

@@ -8,7 +8,7 @@ import (
 	"html/template"
 	"strings"
 
-	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/nulls"
 	"github.com/vlatan/video-store/internal/utils/stringx"
 )
@@ -28,7 +28,7 @@ func (r *Repository) IsPostBanned(ctx context.Context, videoID string) error {
 }
 
 // Insert post in DB
-func (r *Repository) InsertPost(ctx context.Context, post *models.Post) (int64, error) {
+func (r *Repository) InsertPost(ctx context.Context, post *types.Post) (int64, error) {
 
 	// Marshal the thumbnails
 	thumbnails, err := json.Marshal(post.Thumbnails)
@@ -37,7 +37,7 @@ func (r *Repository) InsertPost(ctx context.Context, post *models.Post) (int64, 
 	}
 
 	if post.Category == nil {
-		post.Category = &models.Category{}
+		post.Category = &types.Category{}
 	}
 
 	// Prepare the credits - directors
@@ -82,7 +82,7 @@ func (r *Repository) InsertPost(ctx context.Context, post *models.Post) (int64, 
 
 // UpdatePost updates post's specific data:
 // OriginalTitle, Category, Summary, ReleaseYear, Directors
-func (r *Repository) UpdatePost(ctx context.Context, post *models.Post) (int64, error) {
+func (r *Repository) UpdatePost(ctx context.Context, post *types.Post) (int64, error) {
 
 	query, err := r.GetQuery("update_post.sql", nil)
 	if err != nil {
@@ -115,9 +115,9 @@ func (r *Repository) UpdatePost(ctx context.Context, post *models.Post) (int64, 
 }
 
 // Get single post from DB based on a video ID
-func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.Post, error) {
+func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (types.Post, error) {
 
-	var zero, post models.Post
+	var zero, post types.Post
 	query, err := r.GetQuery("single_post.sql", nil)
 	if err != nil {
 		return zero, err
@@ -171,7 +171,7 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.
 	post.ReleaseYear = releaseYear.Int16
 
 	// Gather playlist/channel info if any
-	post.Source = &models.Source{
+	post.Source = &types.Source{
 		PlaylistID:   playlistID.String,
 		Title:        playlistTitle.String,
 		ChannelTitle: channelTitle.String,
@@ -185,7 +185,7 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.
 
 	// Define category if valid
 	if categorySlug.Valid && categoryName.Valid {
-		post.Category = &models.Category{
+		post.Category = &types.Category{
 			Slug: categorySlug.String,
 			Name: categoryName.String,
 		}
@@ -212,14 +212,14 @@ func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (models.
 
 	// Attach ratings if any
 	if avgRating.Valid && ratingCount.Valid {
-		post.RatingStats = &models.RatingStats{
+		post.RatingStats = &types.RatingStats{
 			Avg:   avgRating.Float64,
 			Count: ratingCount.Int64,
 		}
 	}
 
 	// Unserialize thumbnails
-	var thumbs models.Thumbnails
+	var thumbs types.Thumbnails
 	if err = json.Unmarshal(thumbnails, &thumbs); err != nil {
 		return zero, fmt.Errorf(
 			"failed to unmarshal thumbs on video %s: %w",

@@ -4,7 +4,7 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/ctxv"
 )
 
@@ -12,7 +12,7 @@ import (
 func (s *Service) UserFavoritesHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Generate template data
-	data := ctxv.Get[*models.TemplateData](r.Context())
+	data := ctxv.Get[*types.TemplateData](r.Context())
 
 	posts, err := s.postsRepo.GetUserFavedPosts(r.Context(), data.CurrentUser.ID, "")
 
@@ -36,7 +36,7 @@ func (s *Service) UsersHandler(w http.ResponseWriter, r *http.Request) {
 	page := GetPageNum(r)
 
 	// Get template data
-	data := ctxv.Get[*models.TemplateData](r.Context())
+	data := ctxv.Get[*types.TemplateData](r.Context())
 
 	users, err := s.usersRepo.GetUsers(r.Context(), page)
 	if err != nil {

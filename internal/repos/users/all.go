@@ -4,17 +4,17 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/vlatan/video-store/internal/models"
+	"github.com/vlatan/video-store/internal/types"
 )
 
 // Get users with limit and offset
-func (r *Repository) GetUsers(ctx context.Context, page int) (models.Users, error) {
+func (r *Repository) GetUsers(ctx context.Context, page int) (types.Users, error) {
 
 	// Calculate the limit and offset
 	limit := r.config.PostsPerPage
 	offset := (page - 1) * limit
 
-	var zero, users models.Users
+	var zero, users types.Users
 
 	query, err := r.GetQuery("offset_users.sql", nil)
 	if err != nil {
@@ -34,7 +34,7 @@ func (r *Repository) GetUsers(ctx context.Context, page int) (models.Users, erro
 	for rows.Next() {
 
 		var totalNum int
-		var user models.User
+		var user types.User
 		var name, email, avatarURL, publicID sql.NullString
 
 		// Get user row data to destination
