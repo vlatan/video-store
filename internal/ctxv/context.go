@@ -14,7 +14,7 @@ func Get[T any](ctx context.Context) T {
 }
 
 // WithValue adds value to context and returns the new context.
-// Do not use primitive types, create new type definition for the ctx key to be unique.
+// Do not use primitive type, create new type definition for the ctx key to be unique.
 func WithValue[T any](ctx context.Context, val T) context.Context {
 	return context.WithValue(ctx, ctxKey[T]{}, val)
 }
