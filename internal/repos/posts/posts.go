@@ -7,7 +7,7 @@ import (
 
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/drivers/database"
-	repo "github.com/vlatan/video-store/internal/repositories"
+	repo "github.com/vlatan/video-store/internal/repos"
 )
 
 //go:embed sql/*.sql

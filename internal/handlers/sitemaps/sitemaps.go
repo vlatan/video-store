@@ -3,7 +3,7 @@ package sitemaps
 import (
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
-	postsRepo "github.com/vlatan/video-store/internal/repositories/posts"
+	postsRepo "github.com/vlatan/video-store/internal/repos/posts"
 	"github.com/vlatan/video-store/internal/ui"
 )
 

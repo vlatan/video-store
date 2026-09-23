@@ -12,9 +12,9 @@ import (
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/integrations/gemini"
 	"github.com/vlatan/video-store/internal/integrations/yt"
-	"github.com/vlatan/video-store/internal/repositories/categories"
-	"github.com/vlatan/video-store/internal/repositories/posts"
-	"github.com/vlatan/video-store/internal/repositories/sources"
+	"github.com/vlatan/video-store/internal/repos/categories"
+	"github.com/vlatan/video-store/internal/repos/posts"
+	"github.com/vlatan/video-store/internal/repos/sources"
 	"github.com/vlatan/video-store/internal/utils/retry"
 )
 
