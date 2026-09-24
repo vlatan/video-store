@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/joho/godotenv"
-	"github.com/vlatan/video-store/internal/utils/paths"
+	"github.com/vlatan/video-store/internal/utils/pathx"
 )
 
 var ( // Package global variables
@@ -30,7 +30,7 @@ func TestMain(m *testing.M) {
 // runTests performs a setup and runs all the tests in this package
 func runTests(m *testing.M) int {
 	// Get the project root
-	projectRoot, err := paths.ProjectRoot()
+	projectRoot, err := pathx.ProjectRoot()
 	if err != nil {
 		log.Printf("Failed to get the project root; %v", err)
 		return 1

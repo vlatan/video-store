@@ -1,4 +1,4 @@
-package paths
+package pathx
 
 import (
 	"errors"

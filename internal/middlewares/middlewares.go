@@ -13,7 +13,7 @@ import (
 	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/ui"
 	"github.com/vlatan/video-store/internal/utils/ctxv"
-	"github.com/vlatan/video-store/internal/utils/paths"
+	"github.com/vlatan/video-store/internal/utils/pathx"
 
 	"github.com/klauspost/compress/gzhttp"
 )
@@ -237,12 +237,12 @@ func (s *Service) AddHeaders(next http.Handler) http.Handler {
 		w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload")
 
 		// For no-files vary the browser cache for cookies
-		if !paths.IsFile(r.URL.Path) {
+		if !pathx.IsFile(r.URL.Path) {
 			w.Header().Set("Vary", "Cookie")
 		}
 
 		// Add no cache headers if necessary
-		if !paths.IsFile(r.URL.Path) &&
+		if !pathx.IsFile(r.URL.Path) &&
 			ctxv.Get[*types.User](r.Context()).IsAuthenticated() {
 
 			w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
@@ -265,7 +265,7 @@ func (s *Service) CanonicalRedirect(next http.Handler) http.Handler {
 		}
 
 		// Get the full canonical URL including queries and fragments
-		canonical, _ := paths.CanonicalURLs(r, s.config.Protocol)
+		canonical, _ := pathx.CanonicalURLs(r, s.config.Protocol)
 
 		// Reconstruct the actual incoming absolute URL
 		scheme := "http"
@@ -293,7 +293,7 @@ func (s *Service) Compress(next http.Handler) http.Handler {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Skip static files, those are compressed on startup
-		if paths.IsStatic(r.URL.Path) {
+		if pathx.IsStatic(r.URL.Path) {
 			next.ServeHTTP(w, r)
 			return
 		}

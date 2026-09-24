@@ -7,7 +7,7 @@ import (
 	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/ui"
 	"github.com/vlatan/video-store/internal/utils/ctxv"
-	"github.com/vlatan/video-store/internal/utils/paths"
+	"github.com/vlatan/video-store/internal/utils/pathx"
 )
 
 type Service struct {
@@ -25,7 +25,7 @@ func (s *Service) Handler(w http.ResponseWriter, r *http.Request) {
 	data := ctxv.Get[*types.TemplateData](r.Context())
 
 	// Validate the path
-	if err := paths.Validate(r.URL.Path); err != nil {
+	if err := pathx.Validate(r.URL.Path); err != nil {
 		slog.WarnContext(r.Context(), "invalid path")
 		s.ui.HTMLError(w, r, data, http.StatusNotFound)
 		return

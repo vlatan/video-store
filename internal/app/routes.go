@@ -6,7 +6,7 @@ import (
 	"runtime"
 	"runtime/pprof"
 
-	"github.com/vlatan/video-store/internal/utils/paths"
+	"github.com/vlatan/video-store/internal/utils/pathx"
 )
 
 // RegisterRoutes registers routes and
@@ -68,7 +68,7 @@ func (a *App) RegisterRoutes() *App {
 	mux.HandleFunc("GET /robots.txt", a.mw.PublicCache(a.text.Handler))
 
 	// Register favicons serving from root
-	for _, favicon := range paths.RootFavicons {
+	for _, favicon := range pathx.RootFavicons {
 		mux.HandleFunc("GET "+favicon, a.static.Handler)
 	}
 
