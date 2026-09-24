@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/vlatan/video-store/internal/types"
-	"github.com/vlatan/video-store/internal/utils/nulls"
+	"github.com/vlatan/video-store/internal/utils/sqlnull"
 )
 
 // Add or update a user
@@ -23,9 +23,9 @@ func (r *Repository) UpsertUser(ctx context.Context, u *types.User) (int, error)
 		u.ProviderUserId,
 		u.Provider,
 		u.PublicID,
-		nulls.String(u.Name),
-		nulls.String(u.Email),
-		nulls.String(u.AvatarURL),
+		sqlnull.String(u.Name),
+		sqlnull.String(u.Email),
+		sqlnull.String(u.AvatarURL),
 	).Scan(&id)
 
 	return id, err

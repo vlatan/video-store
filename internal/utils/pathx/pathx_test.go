@@ -1,4 +1,4 @@
-package paths
+package pathx
 
 import (
 	"net/http/httptest"

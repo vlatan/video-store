@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/vlatan/video-store/internal/types"
-	"github.com/vlatan/video-store/internal/utils/nulls"
+	"github.com/vlatan/video-store/internal/utils/sqlnull"
 	"github.com/vlatan/video-store/internal/utils/stringx"
 )
 
@@ -57,18 +57,18 @@ func (r *Repository) InsertPost(ctx context.Context, post *types.Post) (int64, e
 		query,
 		post.VideoID,
 		post.Provider,
-		nulls.String(post.PlaylistID),
+		sqlnull.String(post.PlaylistID),
 		post.Title,
-		nulls.String(post.OriginalTitle),
-		nulls.Int16(post.ReleaseYear),
+		sqlnull.String(post.OriginalTitle),
+		sqlnull.Int16(post.ReleaseYear),
 		thumbnails,
-		nulls.String(post.Description),
-		nulls.String(post.Summary),
-		nulls.String(post.Tags),
+		sqlnull.String(post.Description),
+		sqlnull.String(post.Summary),
+		sqlnull.String(post.Tags),
 		post.Duration,
 		post.UploadDate,
-		nulls.Int64(int64(post.UserActions.UserID)),
-		nulls.String(post.Category.Name),
+		sqlnull.Int64(int64(post.UserActions.UserID)),
+		sqlnull.String(post.Category.Name),
 		post.Directors,
 		roles,
 	).Scan(new(int64))
@@ -99,10 +99,10 @@ func (r *Repository) UpdatePost(ctx context.Context, post *types.Post) (int64, e
 		ctx,
 		query,
 		post.VideoID,
-		nulls.String(post.OriginalTitle),
+		sqlnull.String(post.OriginalTitle),
 		post.Category.Name,
 		post.Summary,
-		nulls.Int16(post.ReleaseYear),
+		sqlnull.Int16(post.ReleaseYear),
 		post.Directors,
 		roles,
 	).Scan(new(int64))

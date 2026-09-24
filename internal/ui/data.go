@@ -6,7 +6,7 @@ import (
 
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/types"
-	"github.com/vlatan/video-store/internal/utils/paths"
+	"github.com/vlatan/video-store/internal/utils/pathx"
 )
 
 // NewData creates new default data struct to be passed to the templates
@@ -26,7 +26,7 @@ func (s *service) NewTemplateData(w http.ResponseWriter, r *http.Request) *types
 	)
 
 	// Get the base canonical URL without queries and fragments
-	_, baseURL := paths.CanonicalURLs(r, s.config.Protocol)
+	_, baseURL := pathx.CanonicalURLs(r, s.config.Protocol)
 
 	// Construct the data
 	data := &types.TemplateData{
@@ -38,7 +38,7 @@ func (s *service) NewTemplateData(w http.ResponseWriter, r *http.Request) *types
 	}
 
 	// Check if the path needs flash messages
-	if paths.IsFile(r.URL.Path) {
+	if pathx.IsFile(r.URL.Path) {
 		return data
 	}
 
