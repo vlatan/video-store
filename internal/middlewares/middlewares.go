@@ -27,9 +27,7 @@ type requestID string
 
 // New creates new middlewares service
 func New(ui ui.Service, config *config.Config) *Service {
-
 	SetCustomLogger(config)
-
 	return &Service{
 		ui:     ui,
 		config: config,
@@ -289,9 +287,12 @@ func (s *Service) CanonicalRedirect(next http.Handler) http.Handler {
 // Compress provides gzip compression to non-static pages
 func (s *Service) Compress(next http.Handler) http.Handler {
 
+	// Create gzip handler.
+	// This is singleton, it is created just once, uses sync.Once.
+	gzipHandler := gzhttp.GzipHandler(next)
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Check if the request serves static files
-		// Skip, because those are compressed on startup
+		// Skip static files, those are compressed on startup
 		if paths.IsStatic(r.URL.Path) {
 			next.ServeHTTP(w, r)
 			return
@@ -303,8 +304,7 @@ func (s *Service) Compress(next http.Handler) http.Handler {
 			return
 		}
 
-		// Create gzip handler and serve http with it
-		gzipHandler := gzhttp.GzipHandler(next)
+		// Serve http with the gzip handled
 		gzipHandler.ServeHTTP(w, r)
 	})
 }
