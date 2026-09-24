@@ -9,7 +9,7 @@ import (
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/vlatan/video-store/internal/drivers/database"
 	"github.com/vlatan/video-store/internal/types"
-	"github.com/vlatan/video-store/internal/utils/nulls"
+	"github.com/vlatan/video-store/internal/utils/sqlnull"
 	"github.com/vlatan/video-store/internal/utils/stringx"
 )
 
@@ -61,14 +61,14 @@ func (r *Repository) GetSinglePage(ctx context.Context, slug string) (types.Page
 // Update page
 func (r *Repository) UpdatePage(ctx context.Context, slug, title, content string) (int64, error) {
 	const query = "UPDATE page SET title = $2, content = $3 WHERE slug = $1;"
-	result, err := r.db.Pool.Exec(ctx, query, slug, title, nulls.String(content))
+	result, err := r.db.Pool.Exec(ctx, query, slug, title, sqlnull.String(content))
 	return result.RowsAffected(), err
 }
 
 // Update page
 func (r *Repository) InsertPage(ctx context.Context, slug, title, content string) (int64, error) {
 	const query = "INSERT INTO page (slug, title, content) VALUES ($1, $2, $3);"
-	result, err := r.db.Pool.Exec(ctx, query, slug, title, nulls.String(content))
+	result, err := r.db.Pool.Exec(ctx, query, slug, title, sqlnull.String(content))
 	return result.RowsAffected(), err
 }
 
