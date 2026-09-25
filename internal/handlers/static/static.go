@@ -64,7 +64,7 @@ func (s *Service) Handler(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the client accepts gzip
 	if strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
-		if ok && fileInfo.Compressed != nil && len(fileInfo.Compressed) > 0 {
+		if ok && len(fileInfo.Compressed) > 0 {
 			w.Header().Set("Content-Encoding", "gzip")
 			w.Header().Set("Content-Length", fmt.Sprintf("%d", len(fileInfo.Compressed)))
 			http.ServeContent(w, r, r.URL.Path, fileInfo.ModTime, bytes.NewReader(fileInfo.Compressed))
@@ -73,7 +73,7 @@ func (s *Service) Handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Serve the file content if we have bytes stored
-	if ok && fileInfo.Bytes != nil && len(fileInfo.Bytes) > 0 {
+	if ok && len(fileInfo.Bytes) > 0 {
 		w.Header().Set("Content-Length", fmt.Sprintf("%d", len(fileInfo.Bytes)))
 		http.ServeContent(w, r, r.URL.Path, fileInfo.ModTime, bytes.NewReader(fileInfo.Bytes))
 		return

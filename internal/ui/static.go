@@ -88,13 +88,18 @@ func loadStaticFiles(m *minify.M, dir string) (types.StaticFiles, error) {
 			return nil
 		}
 
-		// Attach the regular bytes
-		sf[name].Bytes = b
-
 		// Minify the content
 		mb, err := m.Bytes(mediaType, b)
 		if err != nil {
 			return err
+		}
+
+		// Save the minified bytes
+		sf[name].Bytes = mb
+
+		// Exit if file too small, don't compress
+		if len(mb) <= 1024 {
+			return nil
 		}
 
 		// Gzip the content
