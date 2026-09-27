@@ -137,15 +137,15 @@ Once inside the `pprof` CLI run `top`, or `top20` to see if there's memory incre
 Produce coverage report and heat map.
 
 ```bash
-go test -race -coverprofile=coverage.out ./... &&
-go tool cover -html=coverage.out
+go test -race -coverprofile=cover.out ./... &&
+go tool cover -html=cover.out -o cover.html
 ```
 
 Target specific package.
 
 ```bash
-go test -race -coverprofile=coverage.out ./internal/integrations/gemini &&
-go tool cover -html=coverage.out
+go test -race -coverprofile=cover.out ./internal/integrations/gemini &&
+go tool cover -html=cover.out -o cover.html
 ```
 
 ## Dump/Restore DB data
