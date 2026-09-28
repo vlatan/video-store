@@ -9,15 +9,15 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/vlatan/video-store/internal/ctxd"
 	"github.com/vlatan/video-store/internal/types"
-	"github.com/vlatan/video-store/internal/utils/ctxv"
 )
 
 // Serve the xml style, whixh is xsl
 func (s *Service) SitemapStyleHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Get data from context
-	data := ctxv.Get[*types.TemplateData](r.Context())
+	data := ctxd.GetTmplData(r.Context())
 	data.XMLDeclarations = []template.HTML{
 		template.HTML(`<?xml version="1.0" encoding="UTF-8"?>`),
 	}
@@ -31,8 +31,8 @@ func (s *Service) SitemapPartHandler(w http.ResponseWriter, r *http.Request) {
 	// Extract the part from URL, i.e. "post-19.xml"
 	partKey := r.PathValue("part")
 
-	// Generate template data
-	data := ctxv.Get[*types.TemplateData](r.Context())
+	// Get template data
+	data := ctxd.GetTmplData(r.Context())
 
 	// Check if this is xml page, base is now -> "post-19"
 	base, ok := strings.CutSuffix(partKey, ".xml")
@@ -98,7 +98,7 @@ func (s *Service) SitemapPartHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Service) SitemapIndexHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Get data from context
-	data := ctxv.Get[*types.TemplateData](r.Context())
+	data := ctxd.GetTmplData(r.Context())
 
 	sitemap, err := s.GetSitemapIndex(r, sitemapRedisKey)
 

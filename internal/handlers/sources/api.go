@@ -5,9 +5,9 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/vlatan/video-store/internal/ctxd"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/types"
-	"github.com/vlatan/video-store/internal/utils/ctxv"
 )
 
 // Handle posts in a certain source
@@ -39,7 +39,7 @@ func (s *Service) SourcePostsAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get current user
-	currentUser := ctxv.Get[*types.User](r.Context())
+	currentUser := ctxd.GetUser(r.Context())
 
 	var (
 		err   error

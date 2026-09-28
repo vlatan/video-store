@@ -10,9 +10,8 @@ import (
 	"strings"
 
 	"github.com/vlatan/video-store/internal/config"
-	"github.com/vlatan/video-store/internal/types"
+	"github.com/vlatan/video-store/internal/ctxd"
 	"github.com/vlatan/video-store/internal/ui"
-	"github.com/vlatan/video-store/internal/utils/ctxv"
 	"github.com/vlatan/video-store/internal/utils/pathx"
 
 	"github.com/klauspost/compress/gzhttp"
@@ -22,8 +21,6 @@ type Service struct {
 	ui     ui.Service
 	config *config.Config
 }
-
-type requestID string
 
 // New creates new middlewares service
 func New(ui ui.Service, config *config.Config) *Service {
@@ -39,7 +36,7 @@ func (s *Service) IsAuthenticated(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		// Get template data
-		data := ctxv.Get[*types.TemplateData](r.Context())
+		data := ctxd.GetTmplData(r.Context())
 
 		// If the user is authenticated move onto the next handler
 		if data.CurrentUser.IsAuthenticated() {
@@ -61,7 +58,7 @@ func (s *Service) IsAdmin(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		// Get template data
-		data := ctxv.Get[*types.TemplateData](r.Context())
+		data := ctxd.GetTmplData(r.Context())
 
 		// If the user is admin move onto the next handler
 		if data.CurrentUser.IsAdmin() {
@@ -84,7 +81,7 @@ func (s *Service) LoadRequestId(next http.Handler) http.Handler {
 		bytes := make([]byte, 8)
 		rand.Read(bytes)
 		id := hex.EncodeToString(bytes)
-		ctx := ctxv.WithValue(r.Context(), requestID(id))
+		ctx := ctxd.WithReqID(r.Context(), id)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
@@ -93,7 +90,7 @@ func (s *Service) LoadRequestId(next http.Handler) http.Handler {
 func (s *Service) LoadUser(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user, _ := s.ui.GetUserFromSession(w, r) // Nil if anonymous or failed to fetch
-		ctx := ctxv.WithValue(r.Context(), user)
+		ctx := ctxd.WithUser(r.Context(), user)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
@@ -146,13 +143,13 @@ func (s *Service) LoadTemplateData(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		// Get user from context
-		user := ctxv.Get[*types.User](r.Context())
+		user := ctxd.GetUser(r.Context())
 		// Generate the default data
 		data := s.ui.NewTemplateData(w, r)
 		// Attach the user to be able to be accessed from data too
 		data.CurrentUser = user
 		// Store data to context
-		ctx := ctxv.WithValue(r.Context(), data)
+		ctx := ctxd.WithTmplData(r.Context(), data)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
@@ -202,7 +199,7 @@ func (s *Service) RecoverPanic(next http.Handler) http.Handler {
 				return
 			}
 
-			data := ctxv.Get[*types.TemplateData](r.Context())
+			data := ctxd.GetTmplData(r.Context())
 			s.ui.HTMLError(w, r, data, http.StatusInternalServerError)
 		}()
 
@@ -213,7 +210,7 @@ func (s *Service) RecoverPanic(next http.Handler) http.Handler {
 // PublicCache adds cache control header for non-admin users
 func (s *Service) PublicCache(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if user := ctxv.Get[*types.User](r.Context()); !user.IsAdmin() {
+		if ctxd.GetUser(r.Context()).IsAdmin() {
 			w.Header().Set("Cache-Control", "public, max-age=3600")
 		}
 		next(w, r)
@@ -243,7 +240,7 @@ func (s *Service) AddHeaders(next http.Handler) http.Handler {
 
 		// Add no cache headers if necessary
 		if !pathx.IsFile(r.URL.Path) &&
-			ctxv.Get[*types.User](r.Context()).IsAuthenticated() {
+			ctxd.GetUser(r.Context()).IsAuthenticated() {
 
 			w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 			w.Header().Set("Pragma", "no-cache")

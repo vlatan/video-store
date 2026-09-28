@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"slices"
 
+	"github.com/vlatan/video-store/internal/ctxd"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/types"
-	"github.com/vlatan/video-store/internal/utils/ctxv"
 	"github.com/vlatan/video-store/internal/utils/stringx"
 )
 
@@ -38,7 +38,7 @@ func (s *Service) HomeAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get current user
-	currentUser := ctxv.Get[*types.User](r.Context())
+	currentUser := ctxd.GetUser(r.Context())
 
 	var (
 		err   error
@@ -111,7 +111,7 @@ func (s *Service) CategoryPostsAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get current user
-	currentUser := ctxv.Get[*types.User](r.Context())
+	currentUser := ctxd.GetUser(r.Context())
 
 	var (
 		err   error
@@ -175,7 +175,7 @@ func (s *Service) SearchPostsAPI(w http.ResponseWriter, r *http.Request) {
 	redisKey += fmt.Sprintf(":cursor:%s", cursor)
 
 	// Get current user
-	currentUser := ctxv.Get[*types.User](r.Context())
+	currentUser := ctxd.GetUser(r.Context())
 
 	var (
 		err   error
@@ -240,7 +240,7 @@ func (s *Service) PostReviewsAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get current user
-	currentUser := ctxv.Get[*types.User](r.Context())
+	currentUser := ctxd.GetUser(r.Context())
 
 	var (
 		err     error
@@ -322,7 +322,7 @@ func (s *Service) PostActionAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get the current user
-	user := ctxv.Get[*types.User](r.Context())
+	user := ctxd.GetUser(r.Context())
 
 	switch action {
 	case "like":
@@ -359,7 +359,7 @@ func (s *Service) DeleteActionAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get the current user
-	user := ctxv.Get[*types.User](r.Context())
+	user := ctxd.GetUser(r.Context())
 
 	switch action {
 	case "unlike":

@@ -4,8 +4,7 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/vlatan/video-store/internal/types"
-	"github.com/vlatan/video-store/internal/utils/ctxv"
+	"github.com/vlatan/video-store/internal/ctxd"
 	"github.com/vlatan/video-store/internal/utils/redirect"
 
 	"golang.org/x/oauth2"
@@ -14,8 +13,8 @@ import (
 // AuthHandler handles the entry point of the user authentication
 func (s *Service) AuthHandler(w http.ResponseWriter, r *http.Request) {
 
-	// Generate the default data
-	data := ctxv.Get[*types.TemplateData](r.Context())
+	// Get template data from context
+	data := ctxd.GetTmplData(r.Context())
 
 	// Check if the provider exists
 	providerName := r.PathValue("provider")
@@ -95,8 +94,8 @@ func (s *Service) AuthHandler(w http.ResponseWriter, r *http.Request) {
 // Provider Auth callback
 func (s *Service) AuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 
-	// Get default data
-	data := ctxv.Get[*types.TemplateData](r.Context())
+	// Get template data from context
+	data := ctxd.GetTmplData(r.Context())
 
 	// Check if the provider exists
 	providerName := r.PathValue("provider")
@@ -238,7 +237,7 @@ func (s *Service) DeleteAccountHandler(w http.ResponseWriter, r *http.Request) {
 	redirectTo := redirect.Sanitize(redirectURL, IsProtectedRoute)
 
 	// Get the current user
-	currentUser := ctxv.Get[*types.User](r.Context())
+	currentUser := ctxd.GetUser(r.Context())
 
 	// Remove user session
 	if err := s.logoutUser(w, r); err != nil {

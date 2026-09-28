@@ -7,8 +7,7 @@ import (
 	"os"
 
 	"github.com/vlatan/video-store/internal/config"
-	"github.com/vlatan/video-store/internal/types"
-	"github.com/vlatan/video-store/internal/utils/ctxv"
+	"github.com/vlatan/video-store/internal/ctxd"
 )
 
 // RequestDetails holds rich HTTP metadata
@@ -35,13 +34,13 @@ func (h *ContextHandler) Handle(ctx context.Context, r slog.Record) error {
 	}
 
 	// Look for a user in the context
-	if user := ctxv.Get[*types.User](ctx); user.IsAuthenticated() {
+	if user := ctxd.GetUser(ctx); user.IsAuthenticated() {
 		r.AddAttrs(slog.Int("userId", user.ID))
 	}
 
 	// Look for request ID in the context
-	if reqID := ctxv.Get[requestID](ctx); reqID != "" {
-		r.AddAttrs(slog.Any("requestId", reqID))
+	if reqID := ctxd.GetReqID(ctx); reqID != "" {
+		r.AddAttrs(slog.String("requestId", reqID))
 	}
 
 	return h.Handler.Handle(ctx, r)
