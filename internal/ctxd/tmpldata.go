@@ -12,7 +12,7 @@ func GetTmplData(ctx context.Context) *types.TemplateData {
 	return ctxv.Get[*types.TemplateData](ctx)
 }
 
-// WithTmplData adds template data from context and returns the new context
+// WithTmplData adds template data to context and returns the new context
 func WithTmplData(ctx context.Context, data *types.TemplateData) context.Context {
 	return ctxv.WithValue(ctx, data)
 }
