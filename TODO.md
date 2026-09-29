@@ -1,3 +1,5 @@
+- Don't add tmpl data in context?
+- Make delete source endpoint
 - Make the checkmarks on the like/save green or yellow
 - Make search bar on small screens accross entire screen
 - Make the years (and possibly directors) link to films listing
