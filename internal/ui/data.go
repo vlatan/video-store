@@ -9,8 +9,8 @@ import (
 	"github.com/vlatan/video-store/internal/utils/pathx"
 )
 
-// NewTmplData creates new default data struct to be passed to the templates
-func (s *service) NewTmplData(w http.ResponseWriter, r *http.Request) *types.TemplateData {
+// TmplData creates new default data struct to be passed to the templates
+func (s *service) TmplData(w http.ResponseWriter, r *http.Request) *types.TemplateData {
 
 	// Get the categories from cache
 	categories, _ := rdb.GetCachedData(

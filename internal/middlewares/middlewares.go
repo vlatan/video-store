@@ -226,7 +226,7 @@ func (s *Service) LoadTmplData(next http.Handler) http.Handler {
 		// Get user from context
 		user := ctxd.GetUser(r.Context())
 		// Generate the default data
-		data := s.ui.NewTmplData(w, r)
+		data := s.ui.TmplData(w, r)
 		// Attach the user to be able to be accessed from data too
 		data.CurrentUser = user
 		// Store data to context
