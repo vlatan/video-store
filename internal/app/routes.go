@@ -24,8 +24,8 @@ func (a *App) RegisterRoutes() *App {
 	mux.HandleFunc("/video/{video}/edit", a.mw.IsAdmin(a.posts.UpdatePostHandler))
 	mux.HandleFunc("DELETE /video/{video}/delete", a.mw.IsAdmin(a.posts.BanPostHandler))
 	mux.HandleFunc("GET /api/video/{video}/reviews", a.posts.PostReviewsAPI)
-	mux.HandleFunc("POST /api/video/{video}/{action}", a.mw.IsAuthenticated(a.posts.PostActionAPI))
-	mux.HandleFunc("DELETE /api/video/{video}/{action}", a.mw.IsAuthenticated(a.posts.DeleteActionAPI))
+	mux.HandleFunc("POST /api/video/{video}/{action}", a.mw.IsAuth(a.posts.PostActionAPI))
+	mux.HandleFunc("DELETE /api/video/{video}/{action}", a.mw.IsAuth(a.posts.DeleteActionAPI))
 
 	// Categories
 	mux.HandleFunc("GET /category/{category}/{$}", a.posts.CategoryPostsHandler)
@@ -46,7 +46,7 @@ func (a *App) RegisterRoutes() *App {
 	// Authentication
 	mux.HandleFunc("GET /auth/{provider}", a.auth.AuthHandler)
 	mux.HandleFunc("GET /auth/{provider}/callback", a.auth.AuthCallbackHandler)
-	mux.HandleFunc("GET /logout/{provider}", a.mw.IsAuthenticated(a.auth.LogoutHandler))
+	mux.HandleFunc("GET /logout/{provider}", a.mw.IsAuth(a.auth.LogoutHandler))
 
 	// Sitemaps
 	mux.HandleFunc("GET /sitemap.xsl", a.mw.PublicCache(a.sitemaps.SitemapStyleHandler))
@@ -54,9 +54,9 @@ func (a *App) RegisterRoutes() *App {
 	mux.HandleFunc("GET /sitemap.xml", a.mw.PublicCache(a.sitemaps.SitemapIndexHandler))
 
 	// Users
-	mux.HandleFunc("DELETE /account/delete", a.mw.IsAuthenticated(a.auth.DeleteAccountHandler))
-	mux.HandleFunc("GET /user/favorites/{$}", a.mw.IsAuthenticated(a.users.UserFavoritesHandler))
-	mux.HandleFunc("GET /api/user/favorites/{$}", a.mw.IsAuthenticated(a.users.UserFavoritesAPI))
+	mux.HandleFunc("DELETE /account/delete", a.mw.IsAuth(a.auth.DeleteAccountHandler))
+	mux.HandleFunc("GET /user/favorites/{$}", a.mw.IsAuth(a.users.UserFavoritesHandler))
+	mux.HandleFunc("GET /api/user/favorites/{$}", a.mw.IsAuth(a.users.UserFavoritesAPI))
 	mux.HandleFunc("GET /users/{$}", a.mw.IsAdmin(a.users.UsersHandler))
 
 	// The rest

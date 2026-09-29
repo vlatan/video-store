@@ -31,8 +31,8 @@ func New(ui ui.Service, config *config.Config) *Service {
 	}
 }
 
-// IsAuthenticated checks if the user is authenticated
-func (s *Service) IsAuthenticated(next http.HandlerFunc) http.HandlerFunc {
+// IsAuth checks if the user is authenticated
+func (s *Service) IsAuth(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		// Get template data
