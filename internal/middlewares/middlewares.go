@@ -31,48 +31,95 @@ func New(ui ui.Service, config *config.Config) *Service {
 	}
 }
 
-// IsAuth checks if the user is authenticated
-func (s *Service) IsAuth(next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-
-		// Get template data
-		data := ctxd.GetTmplData(r.Context())
-
-		// If the user is authenticated move onto the next handler
-		if data.CurrentUser.IsAuthenticated() {
-			next(w, r)
-			return
-		}
-
-		if strings.HasPrefix(r.URL.Path, "/api/") {
-			s.ui.JSONError(w, r, http.StatusForbidden)
-			return
-		}
-
-		s.ui.HTMLError(w, r, data, http.StatusForbidden)
-	}
+// CloseBody closes the body after a request
+func (s *Service) CloseBody(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Close request body for ALL requests to prevent resource leaks
+		defer r.Body.Close()
+		next.ServeHTTP(w, r)
+	})
 }
 
-// IsAdmin checks if the user is admin
-func (s *Service) IsAdmin(next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+// Compress provides gzip compression to non-static pages
+func (s *Service) Compress(next http.Handler) http.Handler {
 
-		// Get template data
-		data := ctxd.GetTmplData(r.Context())
+	// Create gzip handler.
+	// This is singleton, it is created just once, uses sync.Once.
+	gzipHandler := gzhttp.GzipHandler(next)
 
-		// If the user is admin move onto the next handler
-		if data.CurrentUser.IsAdmin() {
-			next(w, r)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Skip static files, those are compressed on startup
+		if pathx.IsStatic(r.URL.Path) {
+			next.ServeHTTP(w, r)
 			return
 		}
 
-		if strings.HasPrefix(r.URL.Path, "/api/") {
-			s.ui.JSONError(w, r, http.StatusForbidden)
+		// Skip the memory profiling route
+		if strings.HasPrefix(r.URL.Path, "/debug") {
+			next.ServeHTTP(w, r)
 			return
 		}
 
-		s.ui.HTMLError(w, r, data, http.StatusForbidden)
-	}
+		// Serve http with the gzip handled
+		gzipHandler.ServeHTTP(w, r)
+	})
+}
+
+// CanonicalRedirect cleans non-canonical URI and redirects to the clean cannonical version
+func (s *Service) CanonicalRedirect(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		// Skip internal container healtcheck
+		if r.URL.Path == "/healthcheck" {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// Get the full canonical URL including queries and fragments
+		canonical, _ := pathx.CanonicalURLs(r, s.config.Protocol)
+
+		// Reconstruct the actual incoming absolute URL
+		scheme := "http"
+		if isHTTPS := r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https"; isHTTPS {
+			scheme = "https"
+		}
+		actual := scheme + "://" + r.Host + r.RequestURI
+
+		if actual == canonical {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// Safe Redirect: Internal domain canonicalization
+		http.Redirect(w, r, canonical, http.StatusPermanentRedirect) // #nosec G710
+	})
+}
+
+// MethodOverride checks POST requests for a hidden "_method" field,
+// and overrides the request method with that value.
+func (s *Service) MethodOverride(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		// Check the request method
+		if r.Method != http.MethodPost {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// Check for a standard HTML form submit
+		contentType := r.Header.Get("Content-Type")
+		if !strings.HasPrefix(contentType, "application/x-www-form-urlencoded") {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// Check for a _method form value
+		if method := strings.TrimSpace(r.PostFormValue("_method")); method != "" {
+			r.Method = strings.ToUpper(method)
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }
 
 // LoadRequestId adds request ID in the context
@@ -138,6 +185,40 @@ func (s *Service) Logging(next http.Handler) http.Handler {
 	})
 }
 
+// AddHeaders adds  various headers to the response
+func (s *Service) AddHeaders(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		// Prevent MIME type sniffing
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+
+		// XSS Protection
+		w.Header().Set("X-XSS-Protection", "1; mode=block")
+
+		// Prevent clickjacking
+		w.Header().Set("X-Frame-Options", "SAMEORIGIN")
+
+		// HSTS (HTTPS only)
+		w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload")
+
+		// For no-files vary the browser cache for cookies
+		if !pathx.IsFile(r.URL.Path) {
+			w.Header().Set("Vary", "Cookie")
+		}
+
+		// Add no cache headers if necessary
+		if !pathx.IsFile(r.URL.Path) &&
+			ctxd.GetUser(r.Context()).IsAuthenticated() {
+
+			w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+			w.Header().Set("Pragma", "no-cache")
+			w.Header().Set("Expires", "0")
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 // LoadData generates default data and stores it in the context
 func (s *Service) LoadTmplData(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -152,15 +233,6 @@ func (s *Service) LoadTmplData(next http.Handler) http.Handler {
 		ctx := ctxd.WithTmplData(r.Context(), data)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
-	})
-}
-
-// CloseBody closes the body after a request
-func (s *Service) CloseBody(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Close request body for ALL requests to prevent resource leaks
-		defer r.Body.Close()
-		next.ServeHTTP(w, r)
 	})
 }
 
@@ -217,120 +289,48 @@ func (s *Service) PublicCache(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-// AddHeaders adds  various headers to the response
-func (s *Service) AddHeaders(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+// IsAuth checks if the user is authenticated
+func (s *Service) IsAuth(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 
-		// Prevent MIME type sniffing
-		w.Header().Set("X-Content-Type-Options", "nosniff")
+		// Get template data
+		data := ctxd.GetTmplData(r.Context())
 
-		// XSS Protection
-		w.Header().Set("X-XSS-Protection", "1; mode=block")
-
-		// Prevent clickjacking
-		w.Header().Set("X-Frame-Options", "SAMEORIGIN")
-
-		// HSTS (HTTPS only)
-		w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload")
-
-		// For no-files vary the browser cache for cookies
-		if !pathx.IsFile(r.URL.Path) {
-			w.Header().Set("Vary", "Cookie")
+		// If the user is authenticated move onto the next handler
+		if data.CurrentUser.IsAuthenticated() {
+			next(w, r)
+			return
 		}
 
-		// Add no cache headers if necessary
-		if !pathx.IsFile(r.URL.Path) &&
-			ctxd.GetUser(r.Context()).IsAuthenticated() {
-
-			w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
-			w.Header().Set("Pragma", "no-cache")
-			w.Header().Set("Expires", "0")
+		if strings.HasPrefix(r.URL.Path, "/api/") {
+			s.ui.JSONError(w, r, http.StatusForbidden)
+			return
 		}
 
-		next.ServeHTTP(w, r)
-	})
+		s.ui.HTMLError(w, r, data, http.StatusForbidden)
+	}
 }
 
-// CanonicalRedirect cleans non-canonical URI and redirects to the clean cannonical version
-func (s *Service) CanonicalRedirect(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+// IsAdmin checks if the user is admin
+func (s *Service) IsAdmin(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 
-		// Skip internal container healtcheck
-		if r.URL.Path == "/healthcheck" {
-			next.ServeHTTP(w, r)
+		// Get template data
+		data := ctxd.GetTmplData(r.Context())
+
+		// If the user is admin move onto the next handler
+		if data.CurrentUser.IsAdmin() {
+			next(w, r)
 			return
 		}
 
-		// Get the full canonical URL including queries and fragments
-		canonical, _ := pathx.CanonicalURLs(r, s.config.Protocol)
-
-		// Reconstruct the actual incoming absolute URL
-		scheme := "http"
-		if isHTTPS := r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https"; isHTTPS {
-			scheme = "https"
-		}
-		actual := scheme + "://" + r.Host + r.RequestURI
-
-		if actual == canonical {
-			next.ServeHTTP(w, r)
+		if strings.HasPrefix(r.URL.Path, "/api/") {
+			s.ui.JSONError(w, r, http.StatusForbidden)
 			return
 		}
 
-		// Safe Redirect: Internal domain canonicalization
-		http.Redirect(w, r, canonical, http.StatusPermanentRedirect) // #nosec G710
-	})
-}
-
-// Compress provides gzip compression to non-static pages
-func (s *Service) Compress(next http.Handler) http.Handler {
-
-	// Create gzip handler.
-	// This is singleton, it is created just once, uses sync.Once.
-	gzipHandler := gzhttp.GzipHandler(next)
-
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Skip static files, those are compressed on startup
-		if pathx.IsStatic(r.URL.Path) {
-			next.ServeHTTP(w, r)
-			return
-		}
-
-		// Skip the memory profiling route
-		if strings.HasPrefix(r.URL.Path, "/debug") {
-			next.ServeHTTP(w, r)
-			return
-		}
-
-		// Serve http with the gzip handled
-		gzipHandler.ServeHTTP(w, r)
-	})
-}
-
-// MethodOverride checks POST requests for a hidden "_method" field,
-// and overrides the request method with that value.
-func (s *Service) MethodOverride(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-		// Check the request method
-		if r.Method != http.MethodPost {
-			next.ServeHTTP(w, r)
-			return
-		}
-
-		// Check for a standard HTML form submit
-		contentType := r.Header.Get("Content-Type")
-		if !strings.HasPrefix(contentType, "application/x-www-form-urlencoded") {
-			next.ServeHTTP(w, r)
-			return
-		}
-
-		// Check for a _method form value
-		if method := strings.TrimSpace(r.PostFormValue("_method")); method != "" {
-			r.Method = strings.ToUpper(method)
-		}
-
-		next.ServeHTTP(w, r)
-	})
+		s.ui.HTMLError(w, r, data, http.StatusForbidden)
+	}
 }
 
 // ApplyToAll chain middlewares that apply to all handlers
