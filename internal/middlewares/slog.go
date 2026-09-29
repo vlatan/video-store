@@ -3,23 +3,11 @@ package middlewares
 import (
 	"context"
 	"log/slog"
-	"net/url"
 	"os"
 
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/ctxd"
 )
-
-// RequestDetails holds rich HTTP metadata
-type RequestDetails struct {
-	ID        string
-	Method    string
-	Host      string
-	Path      string
-	Queries   url.Values
-	RemoteIp  string
-	UserAgent string
-}
 
 // ContextHandler is a wrapper arround a slog handler
 type ContextHandler struct {
