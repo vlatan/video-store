@@ -223,6 +223,11 @@ func (s *Service) AddHeaders(next http.Handler) http.Handler {
 func (s *Service) LoadTmplData(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
+		// Template data not needed if JSON response
+		if strings.HasPrefix(r.URL.Path, "/api/") {
+			next.ServeHTTP(w, r)
+			return
+		}
 		// Get user from context
 		user := ctxd.GetUser(r.Context())
 		// Generate the default data
@@ -293,11 +298,8 @@ func (s *Service) PublicCache(next http.HandlerFunc) http.HandlerFunc {
 func (s *Service) IsAuth(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		// Get template data
-		data := ctxd.GetTmplData(r.Context())
-
 		// If the user is authenticated move onto the next handler
-		if data.CurrentUser.IsAuthenticated() {
+		if ctxd.GetUser(r.Context()).IsAuthenticated() {
 			next(w, r)
 			return
 		}
@@ -307,6 +309,7 @@ func (s *Service) IsAuth(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
+		data := ctxd.GetTmplData(r.Context())
 		s.ui.HTMLError(w, r, data, http.StatusForbidden)
 	}
 }
@@ -315,11 +318,8 @@ func (s *Service) IsAuth(next http.HandlerFunc) http.HandlerFunc {
 func (s *Service) IsAdmin(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		// Get template data
-		data := ctxd.GetTmplData(r.Context())
-
 		// If the user is admin move onto the next handler
-		if data.CurrentUser.IsAdmin() {
+		if ctxd.GetUser(r.Context()).IsAdmin() {
 			next(w, r)
 			return
 		}
@@ -329,6 +329,7 @@ func (s *Service) IsAdmin(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
+		data := ctxd.GetTmplData(r.Context())
 		s.ui.HTMLError(w, r, data, http.StatusForbidden)
 	}
 }
