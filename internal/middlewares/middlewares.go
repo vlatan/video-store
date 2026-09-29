@@ -139,13 +139,13 @@ func (s *Service) Logging(next http.Handler) http.Handler {
 }
 
 // LoadData generates default data and stores it in the context
-func (s *Service) LoadTemplateData(next http.Handler) http.Handler {
+func (s *Service) LoadTmplData(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		// Get user from context
 		user := ctxd.GetUser(r.Context())
 		// Generate the default data
-		data := s.ui.NewTemplateData(w, r)
+		data := s.ui.NewTmplData(w, r)
 		// Attach the user to be able to be accessed from data too
 		data.CurrentUser = user
 		// Store data to context

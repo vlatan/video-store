@@ -9,10 +9,8 @@ import (
 	"github.com/vlatan/video-store/internal/utils/pathx"
 )
 
-// NewData creates new default data struct to be passed to the templates
-// Instead of manualy envoking this function in each route it can be envoked in a middleware
-// and passed donwstream as value to the request context.
-func (s *service) NewTemplateData(w http.ResponseWriter, r *http.Request) *types.TemplateData {
+// NewTmplData creates new default data struct to be passed to the templates
+func (s *service) NewTmplData(w http.ResponseWriter, r *http.Request) *types.TemplateData {
 
 	// Get the categories from cache
 	categories, _ := rdb.GetCachedData(
