@@ -42,6 +42,6 @@ func (s *service) TmplData(w http.ResponseWriter, r *http.Request) *types.Templa
 	}
 
 	// Get flash messages from session and attach to data
-	data.FlashMessages = s.sess.Flashes(w, r)
+	data.FlashMessages = s.session.Flashes(w, r)
 	return data
 }

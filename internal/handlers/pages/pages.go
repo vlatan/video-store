@@ -4,14 +4,14 @@ import (
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	pagesRepo "github.com/vlatan/video-store/internal/repos/pages"
-	"github.com/vlatan/video-store/internal/sess"
+	"github.com/vlatan/video-store/internal/store"
 	"github.com/vlatan/video-store/internal/ui"
 )
 
 type Service struct {
 	pagesRepo *pagesRepo.Repository
 	rdb       *rdb.Service
-	sess      *sess.Service
+	session   *store.Service
 	ui        ui.Service
 	config    *config.Config
 }
@@ -19,14 +19,14 @@ type Service struct {
 func New(
 	pagesRepo *pagesRepo.Repository,
 	rdb *rdb.Service,
-	sess *sess.Service,
+	store *store.Service,
 	ui ui.Service,
 	config *config.Config,
 ) *Service {
 	return &Service{
 		pagesRepo: pagesRepo,
 		rdb:       rdb,
-		sess:      sess,
+		session:   store,
 		ui:        ui,
 		config:    config,
 	}

@@ -1,4 +1,4 @@
-package sess
+package store
 
 import (
 	"log/slog"
@@ -11,7 +11,7 @@ func (s *Service) AddRedirectURL(
 	r *http.Request,
 	url string) error {
 	// Store this redirect URL in a session
-	session, _ := s.store.Get(r, s.config.RedirectSessionName)
+	session, _ := s.Get(r, s.config.RedirectSessionName)
 	session.Values["redirect"] = url
 	return session.Save(r, w)
 }
@@ -20,7 +20,7 @@ func (s *Service) AddRedirectURL(
 func (s *Service) RedirectURL(w http.ResponseWriter, r *http.Request) string {
 
 	redirectTo := "/"
-	session, _ := s.store.Get(r, s.config.RedirectSessionName)
+	session, _ := s.Get(r, s.config.RedirectSessionName)
 	if url, _ := session.Values["redirect"].(string); url != "" {
 		redirectTo = url
 	}

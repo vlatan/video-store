@@ -61,7 +61,7 @@ func (s *Service) loginUser(w http.ResponseWriter, r *http.Request, user *types.
 	user.LastSeen = new(time.Now())
 
 	// Add user to session
-	if err := s.sess.AddUser(w, r, user); err != nil {
+	if err := s.session.AddUser(w, r, user); err != nil {
 		return err
 	}
 

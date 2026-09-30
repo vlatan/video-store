@@ -1,4 +1,4 @@
-package sess
+package store
 
 import (
 	"encoding/gob"
@@ -13,8 +13,8 @@ import (
 )
 
 type Service struct {
+	sessions.Store
 	config    *config.Config
-	store     sessions.Store
 	usersRepo *users.Repository
 	avatars   *avatars.Service
 }
@@ -33,8 +33,8 @@ func New(
 	gob.Register(time.Time{})
 
 	return &Service{
+		Store:     newRedisStore(config, rdb, keyPrefix, maxAge),
 		config:    config,
-		store:     newRedisStore(config, rdb, keyPrefix, maxAge),
 		usersRepo: usersRepo,
 		avatars:   avatars,
 	}

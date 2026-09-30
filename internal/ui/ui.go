@@ -10,7 +10,7 @@ import (
 	"github.com/vlatan/video-store/internal/integrations/r2"
 	"github.com/vlatan/video-store/internal/repos/categories"
 	"github.com/vlatan/video-store/internal/repos/users"
-	"github.com/vlatan/video-store/internal/sess"
+	"github.com/vlatan/video-store/internal/store"
 	"github.com/vlatan/video-store/internal/types"
 
 	"github.com/tdewolff/minify/v2"
@@ -47,7 +47,7 @@ type service struct {
 	rdb         *rdb.Service
 	r2s         r2.Service
 	config      *config.Config
-	sess        *sess.Service
+	session     *store.Service
 	catsRepo    *categories.Repository
 	usersRepo   *users.Repository
 	avatars     *avatars.Service
@@ -63,7 +63,7 @@ func New(
 	avatars *avatars.Service,
 	rdb *rdb.Service,
 	r2s r2.Service,
-	sess *sess.Service,
+	store *store.Service,
 	config *config.Config,
 ) (Service, error) {
 
@@ -101,7 +101,7 @@ func New(
 		rdb:         rdb,
 		r2s:         r2s,
 		config:      config,
-		sess:        sess,
+		session:     store,
 		catsRepo:    catsRepo,
 		usersRepo:   usersRepo,
 		avatars:     avatars,

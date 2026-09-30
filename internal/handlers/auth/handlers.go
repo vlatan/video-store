@@ -57,7 +57,7 @@ func (s *Service) AuthHandler(w http.ResponseWriter, r *http.Request) {
 	url := provider.Config.AuthCodeURL(state, opts...)
 
 	// Add state and verifier to session
-	if err := s.sess.AddState(w, r, state, verifier); err != nil {
+	if err := s.session.AddState(w, r, state, verifier); err != nil {
 		slog.ErrorContext(
 			r.Context(), "failed to save state/verifier to session",
 			"error", err,
@@ -67,7 +67,7 @@ func (s *Service) AuthHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Add redirect URL to session
-	if err := s.sess.AddRedirectURL(w, r, redirectTo.String()); err != nil {
+	if err := s.session.AddRedirectURL(w, r, redirectTo.String()); err != nil {
 		slog.WarnContext(
 			r.Context(), "failed to save redirect session",
 			"error", err,
@@ -94,7 +94,7 @@ func (s *Service) AuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get from session the origin URL of the user
-	redirectURL := s.sess.RedirectURL(w, r)
+	redirectURL := s.session.RedirectURL(w, r)
 	redirectTo := redirect.Sanitize(redirectURL, IsProtectedRoute)
 
 	// Check if the user is already logged in
@@ -108,18 +108,18 @@ func (s *Service) AuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	code, state := r.URL.Query().Get("code"), r.URL.Query().Get("state")
 	if code == "" || state == "" {
 		slog.WarnContext(r.Context(), "no code/state received")
-		s.sess.AddFlash(w, r, &failedLogin)
+		s.session.AddFlash(w, r, &failedLogin)
 		redirect.Execute(w, r, redirectTo, http.StatusSeeOther)
 		return
 	}
 
 	// Get the state/verifier oauth session we saved on the start of the flow
-	sessionState, sessionVerifier := s.sess.State(w, r)
+	sessionState, sessionVerifier := s.session.State(w, r)
 
 	// Check the state parameter
 	if sessionState != state {
 		slog.WarnContext(r.Context(), "invalide state parameter")
-		s.sess.AddFlash(w, r, &failedLogin)
+		s.session.AddFlash(w, r, &failedLogin)
 		redirect.Execute(w, r, redirectTo, http.StatusSeeOther)
 		return
 	}
@@ -136,7 +136,7 @@ func (s *Service) AuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "token exchange failed",
 			"error", err,
 		)
-		s.sess.AddFlash(w, r, &failedLogin)
+		s.session.AddFlash(w, r, &failedLogin)
 		redirect.Execute(w, r, redirectTo, http.StatusSeeOther)
 		return
 	}
@@ -148,14 +148,14 @@ func (s *Service) AuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "failed to fetch user profile",
 			"error", err,
 		)
-		s.sess.AddFlash(w, r, &failedLogin)
+		s.session.AddFlash(w, r, &failedLogin)
 		redirect.Execute(w, r, redirectTo, http.StatusSeeOther)
 		return
 	}
 
 	if user.ProviderUserId == "" {
 		slog.WarnContext(r.Context(), "failed to get the provider user ID")
-		s.sess.AddFlash(w, r, &failedLogin)
+		s.session.AddFlash(w, r, &failedLogin)
 		redirect.Execute(w, r, redirectTo, http.StatusSeeOther)
 		return
 	}
@@ -166,12 +166,12 @@ func (s *Service) AuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "failed to login the user",
 			"error", err,
 		)
-		s.sess.AddFlash(w, r, &failedLogin)
+		s.session.AddFlash(w, r, &failedLogin)
 		redirect.Execute(w, r, redirectTo, http.StatusSeeOther)
 		return
 	}
 
-	s.sess.AddFlash(w, r, &successLogin)
+	s.session.AddFlash(w, r, &successLogin)
 	redirect.Execute(w, r, redirectTo, http.StatusSeeOther)
 }
 
@@ -184,17 +184,17 @@ func (s *Service) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	redirectTo := redirect.Sanitize(redirectURL, IsProtectedRoute)
 
 	// Remove user's session
-	if err := s.sess.DeleteUser(w, r); err != nil {
+	if err := s.session.DeleteUser(w, r); err != nil {
 		slog.WarnContext(
 			r.Context(), "failed to logout the user",
 			"error", err,
 		)
-		s.sess.AddFlash(w, r, &failedLogout)
+		s.session.AddFlash(w, r, &failedLogout)
 		redirect.Execute(w, r, redirectTo, http.StatusSeeOther)
 		return
 	}
 
-	s.sess.AddFlash(w, r, &successLogout)
+	s.session.AddFlash(w, r, &successLogout)
 	redirect.Execute(w, r, redirectTo, http.StatusSeeOther)
 }
 
@@ -210,12 +210,12 @@ func (s *Service) DeleteAccountHandler(w http.ResponseWriter, r *http.Request) {
 	currentUser := ctxd.GetUser(r.Context())
 
 	// Remove user session
-	if err := s.sess.DeleteUser(w, r); err != nil {
+	if err := s.session.DeleteUser(w, r); err != nil {
 		slog.WarnContext(
 			r.Context(), "failed to logout the user",
 			"error", err,
 		)
-		s.sess.AddFlash(w, r, &failedDeleteAccount)
+		s.session.AddFlash(w, r, &failedDeleteAccount)
 		redirect.Execute(w, r, redirectTo, http.StatusFound)
 		return
 	}
@@ -227,14 +227,14 @@ func (s *Service) DeleteAccountHandler(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "failed to delete the user from DB",
 			"error", err,
 		)
-		s.sess.AddFlash(w, r, &failedDeleteAccount)
+		s.session.AddFlash(w, r, &failedDeleteAccount)
 		redirect.Execute(w, r, redirectTo, http.StatusFound)
 		return
 	}
 
 	if rowsAffected == 0 {
 		slog.WarnContext(r.Context(), "no such user to delete from DB")
-		s.sess.AddFlash(w, r, &failedDeleteAccount)
+		s.session.AddFlash(w, r, &failedDeleteAccount)
 		redirect.Execute(w, r, redirectTo, http.StatusFound)
 		return
 	}
@@ -257,6 +257,6 @@ func (s *Service) DeleteAccountHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	s.sess.AddFlash(w, r, &successDeleteAccount)
+	s.session.AddFlash(w, r, &successDeleteAccount)
 	redirect.Execute(w, r, redirectTo, http.StatusFound)
 }

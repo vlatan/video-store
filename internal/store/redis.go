@@ -1,4 +1,4 @@
-package sess
+package store
 
 import (
 	"crypto/rand"

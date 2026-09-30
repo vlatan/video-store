@@ -1,4 +1,4 @@
-package sess
+package store
 
 import (
 	"log/slog"
@@ -14,7 +14,7 @@ func (s *Service) AddUser(w http.ResponseWriter, r *http.Request, user *types.Us
 
 	// Get a session. We're ignoring the error resulted from decoding an
 	// existing session: Get() always returns a session, even if empty map[]
-	session, _ := s.store.Get(r, s.config.UserSessionName)
+	session, _ := s.Get(r, s.config.UserSessionName)
 
 	// Store user values in session
 	session.Values["ID"] = user.ID
@@ -35,7 +35,7 @@ func (s *Service) AddUser(w http.ResponseWriter, r *http.Request, user *types.Us
 
 // DeleteUser deletes user session
 func (s *Service) DeleteUser(w http.ResponseWriter, r *http.Request) error {
-	session, _ := s.store.Get(r, s.config.UserSessionName)
+	session, _ := s.Get(r, s.config.UserSessionName)
 	session.Options.MaxAge = -1
 	return session.Save(r, w)
 }
@@ -44,7 +44,7 @@ func (s *Service) DeleteUser(w http.ResponseWriter, r *http.Request) error {
 func (s *Service) User(w http.ResponseWriter, r *http.Request) (*types.User, error) {
 
 	// Get session from store
-	session, _ := s.store.Get(r, s.config.UserSessionName)
+	session, _ := s.Get(r, s.config.UserSessionName)
 
 	// Get user row ID from session
 	id, _ := session.Values["ID"].(int)
