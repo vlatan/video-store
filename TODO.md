@@ -1,3 +1,4 @@
+- Rename avatar to singular
 - Modify sess.User to not do unrelated work
 - Do not use tmpl data and sessions on healthcheck
 - Don't add tmpl data in context?
