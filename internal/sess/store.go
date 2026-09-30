@@ -137,7 +137,9 @@ func (rs *redisStore) Save(
 	}
 
 	// Set cookie with session ID
-	http.SetCookie(w, sessions.NewCookie(session.Name(), session.ID, session.Options))
+	http.SetCookie(w, sessions.NewCookie(
+		session.Name(), session.ID, session.Options,
+	))
 
 	return nil
 }
@@ -159,7 +161,9 @@ func (rs *redisStore) delete(
 	}
 
 	// Delete the cookie
-	http.SetCookie(w, sessions.NewCookie(session.Name(), "", session.Options))
+	http.SetCookie(w, sessions.NewCookie(
+		session.Name(), "", session.Options,
+	))
 
 	return nil
 }
