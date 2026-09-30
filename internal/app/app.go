@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"encoding/gob"
 	"fmt"
 	"net/http"
 	"runtime"
@@ -30,8 +29,7 @@ import (
 	postsRepo "github.com/vlatan/video-store/internal/repos/posts"
 	sourcesRepo "github.com/vlatan/video-store/internal/repos/sources"
 	usersRepo "github.com/vlatan/video-store/internal/repos/users"
-	redisStore "github.com/vlatan/video-store/internal/store"
-	"github.com/vlatan/video-store/internal/types"
+	"github.com/vlatan/video-store/internal/sess"
 	"github.com/vlatan/video-store/internal/ui"
 )
 
@@ -57,10 +55,6 @@ func New() (*App, error) {
 
 	ctx := context.Background()
 
-	// Register types with gob to be able to use them in sessions
-	gob.Register(&types.FlashMessage{})
-	gob.Register(time.Time{})
-
 	// Init config
 	cfg, err := config.New()
 	if err != nil {
@@ -78,9 +72,6 @@ func New() (*App, error) {
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create Redis service: %w", err)
 	}
-
-	// Create session store
-	store := redisStore.New(cfg, rdb, "session", 86400*30)
 
 	// Create Cloudflare R2 service
 	r2s, err := r2.New(ctx, cfg)
@@ -127,8 +118,11 @@ func New() (*App, error) {
 		return nil, fmt.Errorf("couldn't create Gemini service: %w", err)
 	}
 
+	// Create session service
+	ss := sess.New(cfg, rdb, usersRepo, as, "session", 86400*30)
+
 	// Create user interface service
-	ui, err := ui.New(usersRepo, catsRepo, as, rdb, r2s, store, cfg)
+	ui, err := ui.New(usersRepo, catsRepo, as, rdb, r2s, ss, cfg)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create UI service: %w", err)
 	}
@@ -137,16 +131,16 @@ func New() (*App, error) {
 	a := &App{
 
 		// Handlers services
-		auth:     auth.New(usersRepo, as, store, rdb, r2s, ui, cfg),
+		auth:     auth.New(usersRepo, as, ss, rdb, r2s, ui, cfg),
 		users:    users.New(usersRepo, postsRepo, as, rdb, r2s, ui, cfg),
-		posts:    posts.New(postsRepo, usersRepo, as, rdb, ui, cfg, yt, gemini),
-		pages:    pages.New(pagesRepo, rdb, ui, cfg),
+		posts:    posts.New(postsRepo, usersRepo, as, rdb, ss, ui, cfg, yt, gemini),
+		pages:    pages.New(pagesRepo, rdb, ss, ui, cfg),
 		sources:  sources.New(postsRepo, sourcesRepo, rdb, ui, cfg, yt),
 		sitemaps: sitemaps.New(postsRepo, rdb, ui, cfg),
 		text:     text.New(ui),
 		health:   health.New(db, rdb, ui),
 		static:   static.New(ui),
-		mw:       middlewares.New(ui, cfg),
+		mw:       middlewares.New(cfg, ss, ui),
 
 		// The domain we're serving this app on
 		domain: cfg.Domain,

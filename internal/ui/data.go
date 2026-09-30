@@ -1,9 +1,9 @@
 package ui
 
 import (
-	"log/slog"
 	"net/http"
 
+	"github.com/vlatan/video-store/internal/ctxd"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/pathx"
@@ -33,40 +33,15 @@ func (s *service) TmplData(w http.ResponseWriter, r *http.Request) *types.Templa
 		Categories:       categories,
 		CurrentURI:       r.RequestURI,
 		BaseCanonicalURL: baseURL,
+		CurrentUser:      ctxd.GetUser(r.Context()),
 	}
 
 	// Check if the path needs flash messages
-	if pathx.IsFile(r.URL.Path) {
+	if pathx.IsFile(r.URL.Path) || pathx.IsStatic(r.URL.Path) {
 		return data
 	}
 
-	// Check for flash cookie
-	if _, err := r.Cookie(s.config.FlashSessionName); err != nil {
-		return data
-	}
-
-	// Get any flash messages from session
-	session, _ := s.store.Get(r, s.config.FlashSessionName)
-	flashes := session.Flashes()
-
-	var flashMessages []*types.FlashMessage
-	for _, v := range flashes {
-		if flash, ok := v.(*types.FlashMessage); ok && flash != nil {
-			flashMessages = append(flashMessages, flash)
-		}
-	}
-
-	// Clear the flash session created with s.store.Get
-	session.Options.MaxAge = -1
-	if err := session.Save(r, w); err != nil {
-		slog.WarnContext(
-			r.Context(),
-			"failed to clear the flash session",
-			"error", err,
-		)
-	}
-
-	// Put flash messages to data
-	data.FlashMessages = flashMessages
+	// Get flash messages from session and attach to data
+	data.FlashMessages = s.sess.Flashes(w, r)
 	return data
 }

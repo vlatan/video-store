@@ -8,6 +8,7 @@ import (
 	"github.com/vlatan/video-store/internal/integrations/yt"
 	postsRepo "github.com/vlatan/video-store/internal/repos/posts"
 	usersRepo "github.com/vlatan/video-store/internal/repos/users"
+	"github.com/vlatan/video-store/internal/sess"
 	"github.com/vlatan/video-store/internal/ui"
 )
 
@@ -16,6 +17,7 @@ type Service struct {
 	usersRepo *usersRepo.Repository
 	avatars   *avatars.Service
 	rdb       *rdb.Service
+	sess      *sess.Service
 	ui        ui.Service
 	config    *config.Config
 	yt        *yt.Service
@@ -27,6 +29,7 @@ func New(
 	usersRepo *usersRepo.Repository,
 	avatars *avatars.Service,
 	rdb *rdb.Service,
+	sess *sess.Service,
 	ui ui.Service,
 	config *config.Config,
 	yt *yt.Service,
@@ -37,6 +40,7 @@ func New(
 		usersRepo: usersRepo,
 		avatars:   avatars,
 		rdb:       rdb,
+		sess:      sess,
 		ui:        ui,
 		config:    config,
 		yt:        yt,

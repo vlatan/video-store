@@ -1,0 +1,44 @@
+package sess
+
+import (
+	"log/slog"
+	"net/http"
+)
+
+// AddRedirectURL adds redirect url to session
+func (s *Service) AddRedirectURL(
+	w http.ResponseWriter,
+	r *http.Request,
+	url string) error {
+	// Store this redirect URL in a session
+	session, _ := s.store.Get(r, s.config.RedirectSessionName)
+	session.Values["redirect"] = url
+	return session.Save(r, w)
+}
+
+// RedirectURL gets the redirect url from session
+func (s *Service) RedirectURL(w http.ResponseWriter, r *http.Request) string {
+
+	// Check for flash cookie
+	if _, err := r.Cookie(s.config.RedirectSessionName); err != nil {
+		return "/"
+	}
+
+	redirectTo := "/"
+	session, _ := s.store.Get(r, s.config.RedirectSessionName)
+	if url, ok := session.Values["redirect"].(string); ok && url != "" {
+		redirectTo = url
+	}
+
+	// Clear the redirect session created with s.store.Get
+	session.Options.MaxAge = -1
+	session.Values = make(map[any]any)
+	if err := session.Save(r, w); err != nil {
+		slog.WarnContext(
+			r.Context(), "failed to delete the redirect session",
+			"error", err,
+		)
+	}
+
+	return redirectTo
+}

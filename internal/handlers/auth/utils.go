@@ -54,80 +54,19 @@ func (s *Service) loginUser(w http.ResponseWriter, r *http.Request, user *types.
 	}
 
 	// Update or insert user
-	id, err := s.usersRepo.UpsertUser(r.Context(), user)
+	user.ID, err = s.usersRepo.UpsertUser(r.Context(), user)
 	if err != nil {
 		return err
 	}
+	user.LastSeen = new(time.Now())
 
-	// Get a session. We're ignoring the error resulted from decoding an
-	// existing session: Get() always returns a session, even if empty map[]
-	session, _ := s.store.Get(r, s.config.UserSessionName)
-	now := time.Now()
-
-	// Store user values in session
-	session.Values["ID"] = id
-	session.Values["ProviderUserId"] = user.ProviderUserId
-	session.Values["Email"] = user.Email
-	session.Values["Name"] = user.Name
-	session.Values["Provider"] = user.Provider
-	session.Values["AvatarURL"] = user.AvatarURL
-	session.Values["PublicID"] = user.PublicID
-	session.Values["AccessToken"] = user.AccessToken
-	session.Values["RefreshToken"] = user.RefreshToken
-	session.Values["LastSeen"] = now
-	session.Values["LastSeenDB"] = now
-
-	// Save the session
-	if err := session.Save(r, w); err != nil {
+	// Add user to session
+	if err := s.sess.AddUser(w, r, user); err != nil {
 		return err
 	}
 
 	// Download and save the avatar if not in Redis cache
 	if err := s.avatars.Save(r.Context(), user); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// Retrieve the user final redirect value
-func (s *Service) getRedirectFromSession(w http.ResponseWriter, r *http.Request) string {
-
-	// Check for flash cookie
-	if _, err := r.Cookie(s.config.RedirectSessionName); err != nil {
-		return "/"
-	}
-
-	redirectTo := "/"
-	session, _ := s.store.Get(r, s.config.RedirectSessionName)
-	if url, ok := session.Values["redirect"].(string); ok && url != "" {
-		redirectTo = url
-	}
-
-	// Clear the redirect session created with s.store.Get
-	session.Options.MaxAge = -1
-	session.Values = make(map[any]any)
-	if err := session.Save(r, w); err != nil {
-		slog.WarnContext(
-			r.Context(), "failed to delete the redirect session",
-			"error", err,
-		)
-	}
-
-	return redirectTo
-}
-
-// Logout the user, delete the session
-func (s *Service) logoutUser(w http.ResponseWriter, r *http.Request) error {
-	// Invalidate the user session
-	session, err := s.store.Get(r, s.config.UserSessionName)
-	if err != nil {
-		return err
-	}
-
-	session.Options.MaxAge = -1
-	session.Values = make(map[any]any)
-	if err = session.Save(r, w); err != nil {
 		return err
 	}
 

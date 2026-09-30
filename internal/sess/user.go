@@ -1,4 +1,4 @@
-package ui
+package sess
 
 import (
 	"log/slog"
@@ -9,34 +9,45 @@ import (
 	"github.com/vlatan/video-store/internal/utils/ctxv"
 )
 
-// Store flash message in a session.
-// No error if flashing fails.
-func (s *service) StoreFlashMessage(
-	w http.ResponseWriter,
-	r *http.Request,
-	m *types.FlashMessage,
-) {
-	session, err := s.store.Get(r, s.config.FlashSessionName)
-	if err != nil {
-		slog.WarnContext(
-			r.Context(),
-			"failed to get the flash session",
-			"error", err,
-		)
-	}
+// AddUser adds user to session
+func (s *Service) AddUser(w http.ResponseWriter, r *http.Request, user *types.User) error {
 
-	session.AddFlash(m)
-	if err = session.Save(r, w); err != nil {
-		slog.WarnContext(
-			r.Context(),
-			"failed to save the flash session",
-			"error", err,
-		)
-	}
+	// Get a session. We're ignoring the error resulted from decoding an
+	// existing session: Get() always returns a session, even if empty map[]
+	session, _ := s.store.Get(r, s.config.UserSessionName)
+
+	// Store user values in session
+	session.Values["ID"] = user.ID
+	session.Values["ProviderUserId"] = user.ProviderUserId
+	session.Values["Email"] = user.Email
+	session.Values["Name"] = user.Name
+	session.Values["Provider"] = user.Provider
+	session.Values["AvatarURL"] = user.AvatarURL
+	session.Values["PublicID"] = user.PublicID
+	session.Values["AccessToken"] = user.AccessToken
+	session.Values["RefreshToken"] = user.RefreshToken
+	session.Values["LastSeen"] = user.LastSeen
+	session.Values["LastSeenDB"] = user.LastSeen
+
+	// Save the session
+	return session.Save(r, w)
 }
 
-// Get the user from session
-func (s *service) GetUserFromSession(w http.ResponseWriter, r *http.Request) (*types.User, error) {
+// DeleteUser deletes user session
+func (s *Service) DeleteUser(w http.ResponseWriter, r *http.Request) error {
+
+	session, err := s.store.Get(r, s.config.UserSessionName)
+	if err != nil {
+		return err
+	}
+
+	session.Options.MaxAge = -1
+	session.Values = make(map[any]any)
+	return session.Save(r, w)
+}
+
+// User gets the user from session
+func (s *Service) User(w http.ResponseWriter, r *http.Request) (*types.User, error) {
 
 	// Check for a user cookie, if not this is anonymous user
 	if _, err := r.Cookie(s.config.UserSessionName); err != nil {

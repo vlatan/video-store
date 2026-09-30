@@ -6,15 +6,14 @@ import (
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/integrations/r2"
 	"github.com/vlatan/video-store/internal/repos/users"
+	"github.com/vlatan/video-store/internal/sess"
 	"github.com/vlatan/video-store/internal/ui"
-
-	"github.com/gorilla/sessions"
 )
 
 type Service struct {
 	usersRepo *users.Repository
 	avatars   *avatars.Service
-	store     sessions.Store
+	sess      *sess.Service
 	rdb       *rdb.Service
 	r2s       r2.Service
 	ui        ui.Service
@@ -25,7 +24,7 @@ type Service struct {
 func New(
 	usersRepo *users.Repository,
 	avatars *avatars.Service,
-	store sessions.Store,
+	sess *sess.Service,
 	rdb *rdb.Service,
 	r2s r2.Service,
 	ui ui.Service,
@@ -34,7 +33,7 @@ func New(
 	return &Service{
 		usersRepo: usersRepo,
 		avatars:   avatars,
-		store:     store,
+		sess:      sess,
 		rdb:       rdb,
 		r2s:       r2s,
 		ui:        ui,

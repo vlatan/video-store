@@ -11,6 +11,7 @@ import (
 
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/ctxd"
+	"github.com/vlatan/video-store/internal/sess"
 	"github.com/vlatan/video-store/internal/ui"
 	"github.com/vlatan/video-store/internal/utils/pathx"
 
@@ -18,16 +19,18 @@ import (
 )
 
 type Service struct {
-	ui     ui.Service
 	config *config.Config
+	sess   *sess.Service
+	ui     ui.Service
 }
 
 // New creates new middlewares service
-func New(ui ui.Service, config *config.Config) *Service {
+func New(config *config.Config, sess *sess.Service, ui ui.Service) *Service {
 	SetCustomLogger(config)
 	return &Service{
-		ui:     ui,
 		config: config,
+		sess:   sess,
+		ui:     ui,
 	}
 }
 
@@ -136,7 +139,7 @@ func (s *Service) LoadRequestId(next http.Handler) http.Handler {
 // LoadUser gets the user from session and stores it in the context
 func (s *Service) LoadUser(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		user, _ := s.ui.GetUserFromSession(w, r) // Nil if anonymous or failed to fetch
+		user, _ := s.sess.User(w, r) // Nil if anonymous or failed to fetch
 		ctx := ctxd.WithUser(r.Context(), user)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})

@@ -1,0 +1,41 @@
+package sess
+
+import (
+	"encoding/gob"
+	"time"
+
+	"github.com/gorilla/sessions"
+	"github.com/vlatan/video-store/internal/avatars"
+	"github.com/vlatan/video-store/internal/config"
+	"github.com/vlatan/video-store/internal/drivers/rdb"
+	"github.com/vlatan/video-store/internal/repos/users"
+	"github.com/vlatan/video-store/internal/types"
+)
+
+type Service struct {
+	config    *config.Config
+	store     sessions.Store
+	usersRepo *users.Repository
+	avatars   *avatars.Service
+}
+
+func New(
+	config *config.Config,
+	rdb *rdb.Service,
+	usersRepo *users.Repository,
+	avatars *avatars.Service,
+	keyPrefix string,
+	maxAge int,
+) *Service {
+
+	// Register types with gob to be able to use them in sessions
+	gob.Register(&types.FlashMessage{})
+	gob.Register(time.Time{})
+
+	return &Service{
+		config:    config,
+		store:     newRedisStore(config, rdb, keyPrefix, maxAge),
+		usersRepo: usersRepo,
+		avatars:   avatars,
+	}
+}

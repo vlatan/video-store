@@ -1,4 +1,4 @@
-package store
+package sess
 
 import (
 	"crypto/rand"
@@ -23,7 +23,7 @@ type redisStore struct {
 	codec     securecookie.Codec
 }
 
-func New(
+func newRedisStore(
 	config *config.Config,
 	rdb *rdb.Service,
 	keyPrefix string,

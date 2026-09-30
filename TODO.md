@@ -1,3 +1,4 @@
+- Modify sess.User to not do unrelated work
 - Don't add tmpl data in context?
 - Make delete source endpoint
 - Make the checkmarks on the like/save green or yellow

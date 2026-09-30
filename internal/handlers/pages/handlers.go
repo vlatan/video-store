@@ -293,6 +293,6 @@ func (s *Service) DeletePageHandler(w http.ResponseWriter, r *http.Request) {
 		Category: "info",
 	}
 
-	s.ui.StoreFlashMessage(w, r, &successDelete)
+	s.sess.AddFlash(w, r, &successDelete)
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }

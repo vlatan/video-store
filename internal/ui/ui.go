@@ -10,9 +10,9 @@ import (
 	"github.com/vlatan/video-store/internal/integrations/r2"
 	"github.com/vlatan/video-store/internal/repos/categories"
 	"github.com/vlatan/video-store/internal/repos/users"
+	"github.com/vlatan/video-store/internal/sess"
 	"github.com/vlatan/video-store/internal/types"
 
-	"github.com/gorilla/sessions"
 	"github.com/tdewolff/minify/v2"
 	"github.com/tdewolff/minify/v2/css"
 	"github.com/tdewolff/minify/v2/html"
@@ -22,10 +22,6 @@ import (
 )
 
 type Service interface {
-	// Get the user from session
-	GetUserFromSession(w http.ResponseWriter, r *http.Request) (*types.User, error)
-	// Store flash message in a session
-	StoreFlashMessage(w http.ResponseWriter, r *http.Request, m *types.FlashMessage)
 	// Get the map containing the static files
 	StaticFiles() types.StaticFiles
 	// Get the map containing the text files
@@ -51,7 +47,7 @@ type service struct {
 	rdb         *rdb.Service
 	r2s         r2.Service
 	config      *config.Config
-	store       sessions.Store
+	sess        *sess.Service
 	catsRepo    *categories.Repository
 	usersRepo   *users.Repository
 	avatars     *avatars.Service
@@ -67,7 +63,7 @@ func New(
 	avatars *avatars.Service,
 	rdb *rdb.Service,
 	r2s r2.Service,
-	store sessions.Store,
+	sess *sess.Service,
 	config *config.Config,
 ) (Service, error) {
 
@@ -105,7 +101,7 @@ func New(
 		rdb:         rdb,
 		r2s:         r2s,
 		config:      config,
-		store:       store,
+		sess:        sess,
 		catsRepo:    catsRepo,
 		usersRepo:   usersRepo,
 		avatars:     avatars,
