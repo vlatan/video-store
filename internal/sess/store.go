@@ -44,20 +44,39 @@ func newRedisStore(
 
 // New creates a new session without loading it from the store
 func (rs *redisStore) New(r *http.Request, name string) (*sessions.Session, error) {
-	session := rs.newSession(name)
+
+	// Create new gorilla session object, provided the custom Redis store
+	session := sessions.NewSession(rs, name)
+
+	// Small max age to 10 minutes for all sessions
+	// other than for the user session
+	maxAge := 600
+	if session.Name() == rs.config.UserSessionName {
+		maxAge = rs.maxAge
+	}
+
+	session.Options = &sessions.Options{
+		Path:     "/",
+		MaxAge:   maxAge,
+		Secure:   true,
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+	}
+
 	session.IsNew = true
 	return session, nil
 }
 
 // Get fetches session from Redis or if none creates a new session
 func (rs *redisStore) Get(r *http.Request, name string) (*sessions.Session, error) {
-	// Create new session object
-	session := rs.newSession(name)
+
+	// Create new session object.
+	// Err is always nil, session.IsNew is set to true.
+	session, _ := rs.New(r, name)
 
 	// Get the cookie
 	cookie, err := r.Cookie(name)
 	if err != nil {
-		session.IsNew = true
 		return session, nil
 	}
 
@@ -65,18 +84,15 @@ func (rs *redisStore) Get(r *http.Request, name string) (*sessions.Session, erro
 	key := rs.buildKey(session.Name(), cookie.Value)
 	val, err := rs.rdb.Client.Get(r.Context(), key).Result()
 	if err == redis.Nil {
-		session.IsNew = true
 		return session, nil
 	}
 
 	if err != nil {
-		session.IsNew = true
 		return session, fmt.Errorf("could not get the session from Redis: %w", err)
 	}
 
 	// Decode session data
 	if err = rs.codec.Decode(name, val, &session.Values); err != nil {
-		session.IsNew = true
 		return session, fmt.Errorf("could not decode the session from Redis: %w", err)
 	}
 
@@ -138,27 +154,6 @@ func (rs *redisStore) Save(
 	})
 
 	return nil
-}
-
-// newSession creates a new session object
-func (rs *redisStore) newSession(name string) *sessions.Session {
-	session := sessions.NewSession(rs, name)
-
-	// Small max age to 10 minutes for all sessions
-	// other than for the user session
-	maxAge := 600
-	if session.Name() == rs.config.UserSessionName {
-		maxAge = rs.maxAge
-	}
-
-	session.Options = &sessions.Options{
-		Path:     "/",
-		MaxAge:   maxAge,
-		Secure:   true,
-		HttpOnly: true,
-		SameSite: http.SameSiteLaxMode,
-	}
-	return session
 }
 
 // deleteSession deletes a session from Redis and deletes the cookie
