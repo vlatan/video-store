@@ -28,11 +28,6 @@ func (s *Service) AddFlash(
 // Flashes gets any flash messages from session
 func (s *Service) Flashes(w http.ResponseWriter, r *http.Request) []*types.FlashMessage {
 
-	// Check for flash cookie
-	if _, err := r.Cookie(s.config.FlashSessionName); err != nil {
-		return nil
-	}
-
 	// Get any flash messages from session
 	session, _ := s.store.Get(r, s.config.FlashSessionName)
 	flashes := session.Flashes()

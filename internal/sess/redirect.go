@@ -19,18 +19,13 @@ func (s *Service) AddRedirectURL(
 // RedirectURL gets the redirect url from session
 func (s *Service) RedirectURL(w http.ResponseWriter, r *http.Request) string {
 
-	// Check for flash cookie
-	if _, err := r.Cookie(s.config.RedirectSessionName); err != nil {
-		return "/"
-	}
-
 	redirectTo := "/"
 	session, _ := s.store.Get(r, s.config.RedirectSessionName)
-	if url, ok := session.Values["redirect"].(string); ok && url != "" {
+	if url, _ := session.Values["redirect"].(string); url != "" {
 		redirectTo = url
 	}
 
-	// Clear the redirect session created with s.store.Get
+	// Clear the redirect session
 	session.Options.MaxAge = -1
 	session.Values = make(map[any]any)
 	if err := session.Save(r, w); err != nil {

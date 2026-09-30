@@ -29,17 +29,12 @@ func (s *Service) AddState(
 
 func (s *Service) State(w http.ResponseWriter, r *http.Request) (string, string) {
 
-	// Check for oauth cookie
-	if _, err := r.Cookie(s.config.OAuthSessionName); err != nil {
-		return "", ""
-	}
-
 	// Get the state/verifier oauth session we saved on the start of the flow
 	session, _ := s.store.Get(r, s.config.OAuthSessionName)
 	state, _ := session.Values["state"].(string)
 	verifier, _ := session.Values["verifier"].(string)
 
-	// Delete the session
+	// Clear the oauth session
 	session.Options.MaxAge = -1
 	if err := session.Save(r, w); err != nil {
 		slog.WarnContext(

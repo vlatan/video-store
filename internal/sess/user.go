@@ -35,46 +35,30 @@ func (s *Service) AddUser(w http.ResponseWriter, r *http.Request, user *types.Us
 
 // DeleteUser deletes user session
 func (s *Service) DeleteUser(w http.ResponseWriter, r *http.Request) error {
-
-	// Check for a user cookie
-	if _, err := r.Cookie(s.config.UserSessionName); err != nil {
-		return err
-	}
-
 	session, _ := s.store.Get(r, s.config.UserSessionName)
 	session.Options.MaxAge = -1
-	session.Values = make(map[any]any)
 	return session.Save(r, w)
 }
 
 // User gets the user from session
 func (s *Service) User(w http.ResponseWriter, r *http.Request) (*types.User, error) {
 
-	// Check for a user cookie, if not this is anonymous user
-	if _, err := r.Cookie(s.config.UserSessionName); err != nil {
-		return nil, err
-	}
-
 	// Get session from store
-	session, err := s.store.Get(r, s.config.UserSessionName)
-	if session == nil || err != nil {
-		return nil, err
-	}
+	session, _ := s.store.Get(r, s.config.UserSessionName)
 
 	// Get user row ID from session
-	id, ok := session.Values["ID"].(int)
-	if !ok || id == 0 {
+	id, _ := session.Values["ID"].(int)
 
-		// Clear the session this is anonymous user
+	// Clear the session this is anonymous user
+	if id == 0 {
 		session.Options.MaxAge = -1
-		if err = session.Save(r, w); err != nil {
+		if err := session.Save(r, w); err != nil {
 			slog.WarnContext(
 				r.Context(),
 				"failed to clear the session for anonymous user",
 				"error", err,
 			)
 		}
-
 		return nil, nil
 	}
 
@@ -88,7 +72,7 @@ func (s *Service) User(w http.ResponseWriter, r *http.Request) (*types.User, err
 	// Check if the last seen is out of sync for an entire day
 	if !sameDate(lastSeenDB, now) {
 
-		_, err = s.usersRepo.UpdateLastUserSeen(r.Context(), id, now)
+		_, err := s.usersRepo.UpdateLastUserSeen(r.Context(), id, now)
 
 		// Return early if context error
 		if ctxv.IsContextErr(err) {
@@ -107,7 +91,7 @@ func (s *Service) User(w http.ResponseWriter, r *http.Request) (*types.User, err
 	}
 
 	// Save the session
-	if err = session.Save(r, w); err != nil {
+	if err := session.Save(r, w); err != nil {
 		slog.WarnContext(
 			r.Context(),
 			"failed to save session after updating user last seen",
@@ -135,6 +119,7 @@ func (s *Service) User(w http.ResponseWriter, r *http.Request) (*types.User, err
 		Config:         s.config,
 	}
 
+	var err error
 	user.LocalAvatarURL, err = s.avatars.Get(r.Context(), &user)
 
 	// Return early if context error
