@@ -9,8 +9,8 @@ import (
 	"github.com/vlatan/video-store/internal/utils/ctxv"
 )
 
-// Store flash message in a session
-// No error if flashing fails
+// Store flash message in a session.
+// No error if flashing fails.
 func (s *service) StoreFlashMessage(
 	w http.ResponseWriter,
 	r *http.Request,
