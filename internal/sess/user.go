@@ -36,11 +36,12 @@ func (s *Service) AddUser(w http.ResponseWriter, r *http.Request, user *types.Us
 // DeleteUser deletes user session
 func (s *Service) DeleteUser(w http.ResponseWriter, r *http.Request) error {
 
-	session, err := s.store.Get(r, s.config.UserSessionName)
-	if err != nil {
+	// Check for a user cookie
+	if _, err := r.Cookie(s.config.UserSessionName); err != nil {
 		return err
 	}
 
+	session, _ := s.store.Get(r, s.config.UserSessionName)
 	session.Options.MaxAge = -1
 	session.Values = make(map[any]any)
 	return session.Save(r, w)
