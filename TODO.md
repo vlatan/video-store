@@ -1,4 +1,5 @@
 - Modify sess.User to not do unrelated work
+- Maybe use the IsNew flag to determine if session should be deleted
 - Do not use tmpl data and sessions on healthcheck
 - Don't add tmpl data in context?
 - Make delete source endpoint

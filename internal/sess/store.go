@@ -96,6 +96,7 @@ func (rs *redisStore) Get(r *http.Request, name string) (*sessions.Session, erro
 		return session, fmt.Errorf("could not decode the session from Redis: %w", err)
 	}
 
+	session.ID = cookie.Value
 	session.IsNew = false
 	return session, nil
 }
@@ -107,7 +108,7 @@ func (rs *redisStore) Save(
 	session *sessions.Session) error {
 
 	// If MaxAge is negative, delete the session
-	if session.Options.MaxAge < 0 {
+	if session.Options.MaxAge <= 0 {
 		if err := rs.deleteSession(r, w, session); err != nil {
 			return fmt.Errorf("could not delete the session: %w", err)
 		}
@@ -120,21 +121,15 @@ func (rs *redisStore) Save(
 		return fmt.Errorf("could not encode the session data: %w", err)
 	}
 
-	var sessionID string
-
-	// Get session ID from cookie if it exists
-	if cookie, err := r.Cookie(session.Name()); err == nil {
-		sessionID = cookie.Value
-	} else {
-		// Generate new session ID
-		sessionID, err = rs.generateSessionID()
+	if session.ID == "" {
+		session.ID, err = rs.generateSessionID()
 		if err != nil {
 			return fmt.Errorf("could not generate session ID: %w", err)
 		}
 	}
 
 	// Save to Redis
-	key := rs.buildKey(session.Name(), sessionID)
+	key := rs.buildKey(session.Name(), session.ID)
 	expiration := time.Duration(session.Options.MaxAge) * time.Second
 	err = rs.rdb.Client.Set(r.Context(), key, encoded, expiration).Err()
 	if err != nil {
@@ -144,7 +139,7 @@ func (rs *redisStore) Save(
 	// Set cookie with session ID
 	http.SetCookie(w, &http.Cookie{
 		Name:     session.Name(),
-		Value:    sessionID,
+		Value:    session.ID,
 		Path:     session.Options.Path,
 		Domain:   session.Options.Domain,
 		MaxAge:   session.Options.MaxAge,
@@ -162,15 +157,9 @@ func (rs *redisStore) deleteSession(
 	w http.ResponseWriter,
 	session *sessions.Session) error {
 
-	// Check if the cookie exists
-	cookie, err := r.Cookie(session.Name())
-	if err != nil {
-		return err
-	}
-
 	// Delete from redis
-	key := rs.buildKey(session.Name(), cookie.Value)
-	if err = rs.rdb.Client.Del(r.Context(), key).Err(); err != nil {
+	key := rs.buildKey(session.Name(), session.ID)
+	if err := rs.rdb.Client.Del(r.Context(), key).Err(); err != nil {
 		return err
 	}
 
