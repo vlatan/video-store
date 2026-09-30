@@ -109,7 +109,7 @@ func (rs *redisStore) Save(
 
 	// If MaxAge is negative, delete the session
 	if session.Options.MaxAge <= 0 {
-		if err := rs.deleteSession(r, w, session); err != nil {
+		if err := rs.delete(r, w, session); err != nil {
 			return fmt.Errorf("could not delete the session: %w", err)
 		}
 		return nil
@@ -137,26 +137,21 @@ func (rs *redisStore) Save(
 	}
 
 	// Set cookie with session ID
-	http.SetCookie(w, &http.Cookie{
-		Name:     session.Name(),
-		Value:    session.ID,
-		Path:     session.Options.Path,
-		Domain:   session.Options.Domain,
-		MaxAge:   session.Options.MaxAge,
-		Secure:   true,
-		HttpOnly: true,
-		SameSite: http.SameSiteLaxMode,
-	})
+	http.SetCookie(w, sessions.NewCookie(session.Name(), session.ID, session.Options))
 
 	return nil
 }
 
 // deleteSession deletes a session from Redis and deletes the cookie
-func (rs *redisStore) deleteSession(
+func (rs *redisStore) delete(
 	r *http.Request,
 	w http.ResponseWriter,
 	session *sessions.Session) error {
 
+	// Skip if session was never persisted
+	if session.IsNew || session.ID == "" {
+		return nil
+	}
 	// Delete from redis
 	key := rs.buildKey(session.Name(), session.ID)
 	if err := rs.rdb.Client.Del(r.Context(), key).Err(); err != nil {
@@ -164,16 +159,7 @@ func (rs *redisStore) deleteSession(
 	}
 
 	// Delete the cookie
-	http.SetCookie(w, &http.Cookie{
-		Name:     session.Name(),
-		Value:    "",
-		Path:     session.Options.Path,
-		Domain:   session.Options.Domain,
-		MaxAge:   -1,
-		Secure:   true,
-		HttpOnly: true,
-		SameSite: http.SameSiteLaxMode,
-	})
+	http.SetCookie(w, sessions.NewCookie(session.Name(), "", session.Options))
 
 	return nil
 }
