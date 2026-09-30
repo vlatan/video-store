@@ -74,7 +74,7 @@ func (rs *redisStore) Get(r *http.Request, name string) (*sessions.Session, erro
 	// Err is always nil, session.IsNew is set to true.
 	session, _ := rs.New(r, name)
 
-	// Get the cookie
+	// Check if there's cookie
 	cookie, err := r.Cookie(name)
 	if err != nil {
 		return session, nil
