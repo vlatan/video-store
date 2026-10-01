@@ -1,5 +1,3 @@
-- Modify sess.User to not do unrelated work
-
 - Make delete source endpoint
 - Make the checkmarks on the like/save green or yellow
 - Make search bar on small screens accross entire screen

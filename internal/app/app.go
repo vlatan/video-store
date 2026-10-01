@@ -119,7 +119,7 @@ func New() (*App, error) {
 	}
 
 	// Create session service
-	store := store.New(cfg, rdb, usersRepo, av, "session", 86400*30)
+	store := store.New(cfg, rdb, "session", 86400*30)
 
 	// Create user interface service
 	ui, err := ui.New(usersRepo, catsRepo, rdb, r2s, store, cfg)
@@ -140,7 +140,7 @@ func New() (*App, error) {
 		text:     text.New(ui),
 		health:   health.New(db, rdb, ui),
 		static:   static.New(ui),
-		mw:       middlewares.New(cfg, store, ui),
+		mw:       middlewares.New(cfg, store, usersRepo, av, ui),
 
 		// The domain we're serving this app on
 		domain: cfg.Domain,

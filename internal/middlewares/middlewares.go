@@ -8,9 +8,12 @@ import (
 	"runtime/debug"
 	"slices"
 	"strings"
+	"time"
 
+	"github.com/vlatan/video-store/internal/avatar"
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/ctxd"
+	"github.com/vlatan/video-store/internal/repos/users"
 	"github.com/vlatan/video-store/internal/store"
 	"github.com/vlatan/video-store/internal/ui"
 	"github.com/vlatan/video-store/internal/utils/pathx"
@@ -19,18 +22,27 @@ import (
 )
 
 type Service struct {
-	config  *config.Config
-	session *store.Service
-	ui      ui.Service
+	config    *config.Config
+	session   *store.Service
+	usersRepo *users.Repository
+	avatar    *avatar.Service
+	ui        ui.Service
 }
 
 // New creates new middlewares service
-func New(config *config.Config, store *store.Service, ui ui.Service) *Service {
+func New(
+	config *config.Config,
+	store *store.Service,
+	usersRepo *users.Repository,
+	avatar *avatar.Service,
+	ui ui.Service) *Service {
 	SetCustomLogger(config)
 	return &Service{
-		config:  config,
-		session: store,
-		ui:      ui,
+		config:    config,
+		session:   store,
+		usersRepo: usersRepo,
+		avatar:    avatar,
+		ui:        ui,
 	}
 }
 
@@ -136,11 +148,57 @@ func (s *Service) LoadRequestId(next http.Handler) http.Handler {
 	})
 }
 
-// LoadUser gets the user from session and stores it in the context
+// LoadUser gets the user data from session and DB and stores it in the context
 func (s *Service) LoadUser(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		user, _ := s.session.User(w, r) // Nil if anonymous or failed to fetch
-		ctx := ctxd.WithUser(r.Context(), user)
+
+		// Fetch the user ID and tokens from session
+		sessUser := s.session.User(w, r) // Nil if anonymous or failed to fetch
+		if sessUser == nil {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// Fetch the user data from DB
+		user, err := s.usersRepo.GetSingleUser(r.Context(), sessUser.ID)
+		if err != nil {
+			slog.WarnContext(
+				r.Context(), "failed to ger user from DB",
+				"error", err,
+			)
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// Attach tokens and config to user object
+		user.AccessToken = sessUser.AccessToken
+		user.RefreshToken = sessUser.RefreshToken
+		user.Expiry = sessUser.Expiry
+		user.Config = s.config
+
+		// Update last seen in DB if necessary
+		if time.Since(*user.LastSeen) > 24*time.Hour {
+			_, err := s.usersRepo.UpdateLastSeen(r.Context(), user.ID)
+			if err != nil {
+				slog.WarnContext(
+					r.Context(),
+					"failed to update user last seen in DB",
+					"error", err,
+				)
+			}
+		}
+
+		// Try to get the user avatar
+		user.LocalAvatarURL, err = s.avatar.Get(r.Context(), &user)
+		if err != nil {
+			slog.WarnContext(
+				r.Context(),
+				"failed to get user avatar",
+				"error", err,
+			)
+		}
+
+		ctx := ctxd.WithUser(r.Context(), &user)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
