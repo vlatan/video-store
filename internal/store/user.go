@@ -120,7 +120,7 @@ func (s *Service) User(w http.ResponseWriter, r *http.Request) (*types.User, err
 	}
 
 	var err error
-	user.LocalAvatarURL, err = s.avatars.Get(r.Context(), &user)
+	user.LocalAvatarURL, err = s.avatar.Get(r.Context(), &user)
 
 	// Return early if context error
 	if ctxv.IsContextErr(err) {

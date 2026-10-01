@@ -479,7 +479,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Get the user avatars
 		for i, review := range postReviews.Items {
-			localAvatarURL, taskErr := s.avatars.Get(r.Context(), &review.User)
+			localAvatarURL, taskErr := s.avatar.Get(r.Context(), &review.User)
 			if taskErr != nil {
 				return taskErr
 			}

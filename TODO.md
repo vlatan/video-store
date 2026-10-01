@@ -1,4 +1,3 @@
-- Rename avatar to singular
 - Modify sess.User to not do unrelated work
 
 - Make delete source endpoint

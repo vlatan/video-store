@@ -53,7 +53,7 @@ func (s *Service) UsersHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Assign R2 avatars to users
 	for i, user := range users.Items {
-		localAvatarURL, err := s.avatars.Get(r.Context(), &user)
+		localAvatarURL, err := s.avatar.Get(r.Context(), &user)
 		if err != nil {
 			slog.ErrorContext(
 				r.Context(), "failed to get user avatar",

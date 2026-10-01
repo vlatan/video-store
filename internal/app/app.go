@@ -7,7 +7,7 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/vlatan/video-store/internal/avatars"
+	"github.com/vlatan/video-store/internal/avatar"
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/drivers/database"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
@@ -81,7 +81,7 @@ func New() (*App, error) {
 
 	// Create avatars service
 	maxConcurrency := runtime.GOMAXPROCS(0) * 8
-	as := avatars.New(maxConcurrency, 500, cfg, rdb, r2s)
+	av := avatar.New(maxConcurrency, 500, cfg, rdb, r2s)
 
 	// Create DB repositories
 	catsRepo, err := catsRepo.New(db, nil)
@@ -119,10 +119,10 @@ func New() (*App, error) {
 	}
 
 	// Create session service
-	store := store.New(cfg, rdb, usersRepo, as, "session", 86400*30)
+	store := store.New(cfg, rdb, usersRepo, av, "session", 86400*30)
 
 	// Create user interface service
-	ui, err := ui.New(usersRepo, catsRepo, as, rdb, r2s, store, cfg)
+	ui, err := ui.New(usersRepo, catsRepo, rdb, r2s, store, cfg)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create UI service: %w", err)
 	}
@@ -131,9 +131,9 @@ func New() (*App, error) {
 	a := &App{
 
 		// Handlers services
-		auth:     auth.New(usersRepo, as, store, rdb, r2s, ui, cfg),
-		users:    users.New(usersRepo, postsRepo, as, rdb, r2s, ui, cfg),
-		posts:    posts.New(postsRepo, usersRepo, as, rdb, store, ui, cfg, yt, gemini),
+		auth:     auth.New(usersRepo, av, store, rdb, r2s, ui, cfg),
+		users:    users.New(usersRepo, postsRepo, av, rdb, r2s, ui, cfg),
+		posts:    posts.New(postsRepo, usersRepo, av, rdb, store, ui, cfg, yt, gemini),
 		pages:    pages.New(pagesRepo, rdb, store, ui, cfg),
 		sources:  sources.New(postsRepo, sourcesRepo, rdb, ui, cfg, yt),
 		sitemaps: sitemaps.New(postsRepo, rdb, ui, cfg),

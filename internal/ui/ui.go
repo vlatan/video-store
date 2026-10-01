@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"regexp"
 
-	"github.com/vlatan/video-store/internal/avatars"
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/integrations/r2"
@@ -50,7 +49,6 @@ type service struct {
 	session     *store.Service
 	catsRepo    *categories.Repository
 	usersRepo   *users.Repository
-	avatars     *avatars.Service
 }
 
 var validJS = regexp.MustCompile("^(application|text)/(x-)?(java|ecma)script$")
@@ -60,7 +58,6 @@ var validXML = regexp.MustCompile("[/+]xml$")
 func New(
 	usersRepo *users.Repository,
 	catsRepo *categories.Repository,
-	avatars *avatars.Service,
 	rdb *rdb.Service,
 	r2s r2.Service,
 	store *store.Service,
@@ -104,6 +101,5 @@ func New(
 		session:     store,
 		catsRepo:    catsRepo,
 		usersRepo:   usersRepo,
-		avatars:     avatars,
 	}, nil
 }

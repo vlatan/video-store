@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/gorilla/sessions"
-	"github.com/vlatan/video-store/internal/avatars"
+	"github.com/vlatan/video-store/internal/avatar"
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/repos/users"
@@ -16,14 +16,14 @@ type Service struct {
 	sessions.Store
 	config    *config.Config
 	usersRepo *users.Repository
-	avatars   *avatars.Service
+	avatar    *avatar.Service
 }
 
 func New(
 	config *config.Config,
 	rdb *rdb.Service,
 	usersRepo *users.Repository,
-	avatars *avatars.Service,
+	avatar *avatar.Service,
 	keyPrefix string,
 	maxAge int,
 ) *Service {
@@ -36,6 +36,6 @@ func New(
 		Store:     newRedisStore(config, rdb, keyPrefix, maxAge),
 		config:    config,
 		usersRepo: usersRepo,
-		avatars:   avatars,
+		avatar:    avatar,
 	}
 }
