@@ -96,6 +96,7 @@ func (s *Service) revokeLogin(ctx context.Context, user *types.User) error {
 			ctx, "failed to refresh the token",
 			"error", err,
 		)
+	} else {
 		user.AccessToken = newToken.AccessToken
 		user.Expiry = newToken.Expiry
 		if newToken.RefreshToken != "" {
