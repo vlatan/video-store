@@ -141,7 +141,7 @@ func (s *Service) Save(ctx context.Context, user *types.User) error {
 	}
 
 	// Cache miss (new user or expired/evicted cache): process synchronously
-	r2URL, err := s.refreshAvatar(ctx, user)
+	r2URL, err := s.refresh(ctx, user)
 
 	// Return early if context error
 	if ctxv.IsContextErr(err) {

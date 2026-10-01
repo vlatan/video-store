@@ -51,7 +51,7 @@ func (s *Service) worker() {
 			defer s.release(job.user.PublicID)
 
 			// Download and if avatar changed convert to JPEG and reupload to R2
-			r2URL, err := s.refreshAvatar(ctx, job.user)
+			r2URL, err := s.refresh(ctx, job.user)
 
 			// Redis keys
 			ttlKey := avatarCacheTTL + job.user.PublicID
