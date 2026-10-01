@@ -36,12 +36,5 @@ func (s *service) TmplData(w http.ResponseWriter, r *http.Request) *types.Templa
 		CurrentUser:      ctxd.GetUser(r.Context()),
 	}
 
-	// Check if the path needs flash messages
-	if pathx.IsFile(r.URL.Path) || pathx.IsStatic(r.URL.Path) {
-		return data
-	}
-
-	// Get flash messages from session and attach to data
-	data.FlashMessages = s.session.Flashes(w, r)
 	return data
 }

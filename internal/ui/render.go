@@ -55,6 +55,9 @@ func (s *service) RenderHTML(
 		return
 	}
 
+	// Get flash messages from session and attach to data
+	data.FlashMessages = s.session.Flashes(w, r)
+
 	// Execute template to buffer to catch any errors before serving to client
 	var buf bytes.Buffer
 	if err := tmpl.ExecuteTemplate(&buf, templateName, data); err != nil {
@@ -77,6 +80,7 @@ func (s *service) RenderHTML(
 		contentType = "text/html"
 	}
 
+	// Set content type header
 	header := fmt.Sprintf("%s; charset=utf-8", contentType)
 	w.Header().Set("Content-Type", header)
 
