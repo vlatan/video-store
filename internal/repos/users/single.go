@@ -2,7 +2,6 @@ package users
 
 import (
 	"context"
-	"time"
 
 	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/sqlnull"
@@ -37,8 +36,12 @@ func (r *Repository) DeleteUser(ctx context.Context, userID int) (int64, error) 
 	return result.RowsAffected(), err
 }
 
-func (r *Repository) UpdateLastUserSeen(ctx context.Context, userID int, now time.Time) (int64, error) {
-	const query = "UPDATE app_user SET last_seen = $2 WHERE id = $1"
-	result, err := r.db.Pool.Exec(ctx, query, userID, now)
+func (r *Repository) UpdateLastSeen(ctx context.Context, userID int) (int64, error) {
+	const query = `
+		UPDATE app_user 
+		SET last_seen = now() 
+		WHERE id = $1 AND last_seen < now() - interval '1 day'
+	`
+	result, err := r.db.Pool.Exec(ctx, query, userID)
 	return result.RowsAffected(), err
 }

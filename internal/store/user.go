@@ -70,7 +70,7 @@ func (s *Service) User(w http.ResponseWriter, r *http.Request) (*types.User, err
 	// Check if the last seen is out of sync for an entire day
 	if !sameDate(lastSeenDB, now) {
 
-		_, err := s.usersRepo.UpdateLastUserSeen(r.Context(), id, now)
+		_, err := s.usersRepo.UpdateLastSeen(r.Context(), id)
 
 		// Return early if context error
 		if ctxv.IsContextErr(err) {
