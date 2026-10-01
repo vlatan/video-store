@@ -36,8 +36,7 @@ func (s *Service) AddUser(w http.ResponseWriter, r *http.Request, user *types.Us
 // DeleteUser deletes user session
 func (s *Service) DeleteUser(w http.ResponseWriter, r *http.Request) error {
 	session, _ := s.Get(r, s.config.UserSessionName)
-	session.Options.MaxAge = -1
-	return session.Save(r, w)
+	return s.Clear(r, w, session)
 }
 
 // User gets the user from session
