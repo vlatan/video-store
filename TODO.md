@@ -1,4 +1,3 @@
-- Don't add tmpl data in context?
 - Make delete source endpoint
 - Make the checkmarks on the like/save green or yellow
 - Make search bar on small screens accross entire screen

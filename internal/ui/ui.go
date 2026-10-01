@@ -4,15 +4,14 @@ import (
 	"net/http"
 	"regexp"
 
-	"github.com/vlatan/video-store/internal/avatars"
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/integrations/r2"
 	"github.com/vlatan/video-store/internal/repos/categories"
 	"github.com/vlatan/video-store/internal/repos/users"
+	"github.com/vlatan/video-store/internal/store"
 	"github.com/vlatan/video-store/internal/types"
 
-	"github.com/gorilla/sessions"
 	"github.com/tdewolff/minify/v2"
 	"github.com/tdewolff/minify/v2/css"
 	"github.com/tdewolff/minify/v2/html"
@@ -22,15 +21,11 @@ import (
 )
 
 type Service interface {
-	// Get the user from session
-	GetUserFromSession(w http.ResponseWriter, r *http.Request) (*types.User, error)
-	// Store flash message in a session
-	StoreFlashMessage(w http.ResponseWriter, r *http.Request, m *types.FlashMessage)
 	// Get the map containing the static files
 	StaticFiles() types.StaticFiles
 	// Get the map containing the text files
 	TextFiles() types.TextFiles
-	// Create new template data
+	// Create new default template data
 	TmplData(w http.ResponseWriter, r *http.Request) *types.TemplateData
 	// Create new pagination struct
 	NewPagination(currentPage, totalRecords, pageSize int) *types.PaginationInfo
@@ -51,10 +46,9 @@ type service struct {
 	rdb         *rdb.Service
 	r2s         r2.Service
 	config      *config.Config
-	store       sessions.Store
+	session     *store.Service
 	catsRepo    *categories.Repository
 	usersRepo   *users.Repository
-	avatars     *avatars.Service
 }
 
 var validJS = regexp.MustCompile("^(application|text)/(x-)?(java|ecma)script$")
@@ -64,10 +58,9 @@ var validXML = regexp.MustCompile("[/+]xml$")
 func New(
 	usersRepo *users.Repository,
 	catsRepo *categories.Repository,
-	avatars *avatars.Service,
 	rdb *rdb.Service,
 	r2s r2.Service,
-	store sessions.Store,
+	store *store.Service,
 	config *config.Config,
 ) (Service, error) {
 
@@ -105,9 +98,8 @@ func New(
 		rdb:         rdb,
 		r2s:         r2s,
 		config:      config,
-		store:       store,
+		session:     store,
 		catsRepo:    catsRepo,
 		usersRepo:   usersRepo,
-		avatars:     avatars,
 	}, nil
 }

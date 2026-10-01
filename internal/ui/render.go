@@ -42,41 +42,43 @@ func (s *service) WriteJSON(w http.ResponseWriter, r *http.Request, data any) {
 func (s *service) RenderHTML(
 	w http.ResponseWriter,
 	r *http.Request,
-	templateName string,
+	tmplName string,
 	data *types.TemplateData) {
 
-	tmpl, exists := s.templates[templateName]
+	tmpl, exists := s.templates[tmplName]
 	if !exists {
 		slog.WarnContext(
 			r.Context(),
-			fmt.Sprintf("invalid template %s", templateName),
-		)
-		s.HTMLError(w, r, data, http.StatusInternalServerError)
-		return
-	}
-
-	// Execute template to buffer to catch any errors before serving to client
-	var buf bytes.Buffer
-	if err := tmpl.ExecuteTemplate(&buf, templateName, data); err != nil {
-		slog.WarnContext(
-			r.Context(),
-			fmt.Sprintf("failed to execute template %s", templateName),
-			"error", err,
+			fmt.Sprintf("invalid template %s", tmplName),
 		)
 		s.HTMLError(w, r, data, http.StatusInternalServerError)
 		return
 	}
 
 	var contentType string
-	switch filepath.Ext(templateName) {
+	switch filepath.Ext(tmplName) {
 	case ".xml":
 		contentType = "text/xml"
 	case ".xsl":
 		contentType = "text/xsl"
 	default:
+		// If HTML page get flash messages from session and add to data
+		data.FlashMessages = s.session.Flashes(w, r)
 		contentType = "text/html"
 	}
+	// Execute template to buffer to catch any errors before serving to client
+	var buf bytes.Buffer
+	if err := tmpl.ExecuteTemplate(&buf, tmplName, data); err != nil {
+		slog.WarnContext(
+			r.Context(),
+			fmt.Sprintf("failed to execute template %s", tmplName),
+			"error", err,
+		)
+		s.HTMLError(w, r, data, http.StatusInternalServerError)
+		return
+	}
 
+	// Set content type header
 	header := fmt.Sprintf("%s; charset=utf-8", contentType)
 	w.Header().Set("Content-Type", header)
 

@@ -17,11 +17,6 @@ import (
 	_ "golang.org/x/image/webp" // Register WebP decoder
 )
 
-// We need an interface to avoid circular imports
-type Queuer interface {
-	Enqueue(u *User) bool
-}
-
 // Collection of users
 type Users struct {
 	TotalNum int

@@ -1,4 +1,4 @@
-package avatars
+package avatar
 
 // Avatars constants
 const (

@@ -1,209 +1,33 @@
 package store
 
 import (
-	"crypto/rand"
-	"encoding/hex"
-	"fmt"
-	"net/http"
+	"encoding/gob"
 	"time"
 
-	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
-	"github.com/redis/go-redis/v9"
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
+	"github.com/vlatan/video-store/internal/types"
 )
 
-// redisStore implements sessions.Store (New, Get and Save)
-type redisStore struct {
-	config    *config.Config
-	rdb       *rdb.Service
-	keyPrefix string
-	maxAge    int
-	codec     securecookie.Codec
+type Service struct {
+	sessions.Store
+	config *config.Config
 }
 
 func New(
 	config *config.Config,
 	rdb *rdb.Service,
 	keyPrefix string,
-	maxAge int) *redisStore {
+	maxAge int,
+) *Service {
 
-	return &redisStore{
-		config:    config,
-		rdb:       rdb,
-		keyPrefix: keyPrefix,
-		maxAge:    maxAge,
-		codec: securecookie.New(
-			config.AuthKey.Bytes,
-			config.EncryptionKey.Bytes,
-		),
+	// Register types with gob to be able to use them in sessions
+	gob.Register(&types.FlashMessage{})
+	gob.Register(time.Time{})
+
+	return &Service{
+		Store:  newRedisStore(config, rdb, keyPrefix, maxAge),
+		config: config,
 	}
-
-}
-
-// New creates a new session without loading it from the store
-func (rs *redisStore) New(r *http.Request, name string) (*sessions.Session, error) {
-	session := rs.newSession(name)
-	session.IsNew = true
-	return session, nil
-}
-
-// Get fetches session from Redis or if none creates a new session
-func (rs *redisStore) Get(r *http.Request, name string) (*sessions.Session, error) {
-	// Create new session object
-	session := rs.newSession(name)
-
-	// Get the cookie
-	cookie, err := r.Cookie(name)
-	if err != nil {
-		session.IsNew = true
-		return session, nil
-	}
-
-	// Get from Redis
-	key := rs.buildKey(session.Name(), cookie.Value)
-	val, err := rs.rdb.Client.Get(r.Context(), key).Result()
-	if err == redis.Nil {
-		session.IsNew = true
-		return session, nil
-	}
-
-	if err != nil {
-		session.IsNew = true
-		return session, fmt.Errorf("could not get the session from Redis: %w", err)
-	}
-
-	// Decode session data
-	if err = rs.codec.Decode(name, val, &session.Values); err != nil {
-		session.IsNew = true
-		return session, fmt.Errorf("could not decode the session from Redis: %w", err)
-	}
-
-	session.IsNew = false
-	return session, nil
-}
-
-// Save saves a session into Redis and a corresponding session ID in a cookie
-func (rs *redisStore) Save(
-	r *http.Request,
-	w http.ResponseWriter,
-	session *sessions.Session) error {
-
-	// If MaxAge is negative, delete the session
-	if session.Options.MaxAge < 0 {
-		if err := rs.deleteSession(r, w, session); err != nil {
-			return fmt.Errorf("could not delete the session: %w", err)
-		}
-		return nil
-	}
-
-	// Encode session data
-	encoded, err := rs.codec.Encode(session.Name(), session.Values)
-	if err != nil {
-		return fmt.Errorf("could not encode the session data: %w", err)
-	}
-
-	var sessionID string
-
-	// Get session ID from cookie if it exists
-	if cookie, err := r.Cookie(session.Name()); err == nil {
-		sessionID = cookie.Value
-	} else {
-		// Generate new session ID
-		sessionID, err = rs.generateSessionID()
-		if err != nil {
-			return fmt.Errorf("could not generate session ID: %w", err)
-		}
-	}
-
-	// Save to Redis
-	key := rs.buildKey(session.Name(), sessionID)
-	expiration := time.Duration(session.Options.MaxAge) * time.Second
-	err = rs.rdb.Client.Set(r.Context(), key, encoded, expiration).Err()
-	if err != nil {
-		return fmt.Errorf("could not save the session to Redis: %w", err)
-	}
-
-	// Set cookie with session ID
-	http.SetCookie(w, &http.Cookie{
-		Name:     session.Name(),
-		Value:    sessionID,
-		Path:     session.Options.Path,
-		Domain:   session.Options.Domain,
-		MaxAge:   session.Options.MaxAge,
-		Secure:   true,
-		HttpOnly: true,
-		SameSite: http.SameSiteLaxMode,
-	})
-
-	return nil
-}
-
-// newSession creates a new session object
-func (rs *redisStore) newSession(name string) *sessions.Session {
-	session := sessions.NewSession(rs, name)
-
-	// Small max age to 10 minutes for all sessions
-	// other than for the user session
-	maxAge := 600
-	if session.Name() == rs.config.UserSessionName {
-		maxAge = rs.maxAge
-	}
-
-	session.Options = &sessions.Options{
-		Path:     "/",
-		MaxAge:   maxAge,
-		Secure:   true,
-		HttpOnly: true,
-		SameSite: http.SameSiteLaxMode,
-	}
-	return session
-}
-
-// deleteSession deletes a session from Redis and deletes the cookie
-func (rs *redisStore) deleteSession(
-	r *http.Request,
-	w http.ResponseWriter,
-	session *sessions.Session) error {
-
-	// Check if the cookie exists
-	cookie, err := r.Cookie(session.Name())
-	if err != nil {
-		return err
-	}
-
-	// Delete from redis
-	key := rs.buildKey(session.Name(), cookie.Value)
-	if err = rs.rdb.Client.Del(r.Context(), key).Err(); err != nil {
-		return err
-	}
-
-	// Delete the cookie
-	http.SetCookie(w, &http.Cookie{
-		Name:     session.Name(),
-		Value:    "",
-		Path:     session.Options.Path,
-		Domain:   session.Options.Domain,
-		MaxAge:   -1,
-		Secure:   true,
-		HttpOnly: true,
-		SameSite: http.SameSiteLaxMode,
-	})
-
-	return nil
-}
-
-// generateSessionID generates a random session ID
-func (rs *redisStore) generateSessionID() (string, error) {
-	bytes := make([]byte, 32)
-	if _, err := rand.Read(bytes); err != nil {
-		return "", err
-	}
-	return hex.EncodeToString(bytes), nil
-}
-
-// buildKey is building a Redis key for the session
-func (rs *redisStore) buildKey(sessionName, sessionID string) string {
-	return fmt.Sprintf("%s:%s:%s", rs.keyPrefix, sessionName, sessionID)
 }

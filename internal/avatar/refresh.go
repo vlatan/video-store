@@ -1,4 +1,4 @@
-package avatars
+package avatar
 
 import (
 	"bytes"
@@ -15,10 +15,10 @@ import (
 )
 
 // refreshAvatar reuploads the user avatar at R2 if changed
-func (s *Service) refreshAvatar(ctx context.Context, user *types.User) (string, error) {
+func (s *Service) refresh(ctx context.Context, user *types.User) (string, error) {
 
 	// Download the avatar from remote location
-	data, err := s.downloadAvatar(ctx, user)
+	data, err := s.download(ctx, user)
 	if err != nil {
 		return "", fmt.Errorf("failed to download avatar; %w", err)
 	}
@@ -93,7 +93,7 @@ func (s *Service) refreshAvatar(ctx context.Context, user *types.User) (string, 
 }
 
 // downloadAvatar downloads avatar from a remote source
-func (s *Service) downloadAvatar(ctx context.Context, user *types.User) ([]byte, error) {
+func (s *Service) download(ctx context.Context, user *types.User) ([]byte, error) {
 
 	// Create a request with context
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, user.AvatarURL, nil)

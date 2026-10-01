@@ -1,4 +1,4 @@
-package avatars
+package avatar
 
 import (
 	"context"
@@ -106,7 +106,8 @@ func (s *Service) Get(ctx context.Context, user *types.User) (string, error) {
 	// Enqueue the user for avatar processing if timer expired.
 	// Detach the context and carry it in the job.
 	if ttl <= 0 {
-		s.enqueue(job{context.WithoutCancel(ctx), user})
+		detachedCtx := context.WithoutCancel(ctx)
+		s.enqueue(job{detachedCtx, user})
 	}
 
 	return r2URL, nil
@@ -141,7 +142,7 @@ func (s *Service) Save(ctx context.Context, user *types.User) error {
 	}
 
 	// Cache miss (new user or expired/evicted cache): process synchronously
-	r2URL, err := s.refreshAvatar(ctx, user)
+	r2URL, err := s.refresh(ctx, user)
 
 	// Return early if context error
 	if ctxv.IsContextErr(err) {

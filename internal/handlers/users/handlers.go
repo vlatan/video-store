@@ -3,15 +3,13 @@ package users
 import (
 	"log/slog"
 	"net/http"
-
-	"github.com/vlatan/video-store/internal/ctxd"
 )
 
 // Handle the user favorites page
 func (s *Service) UserFavoritesHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Get template data
-	data := ctxd.GetTmplData(r.Context())
+	data := s.ui.TmplData(w, r)
 
 	posts, err := s.postsRepo.GetUserFavedPosts(r.Context(), data.CurrentUser.ID, "")
 
@@ -35,7 +33,7 @@ func (s *Service) UsersHandler(w http.ResponseWriter, r *http.Request) {
 	page := GetPageNum(r)
 
 	// Get template data
-	data := ctxd.GetTmplData(r.Context())
+	data := s.ui.TmplData(w, r)
 
 	users, err := s.usersRepo.GetUsers(r.Context(), page)
 	if err != nil {
@@ -55,7 +53,7 @@ func (s *Service) UsersHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Assign R2 avatars to users
 	for i, user := range users.Items {
-		localAvatarURL, err := s.avatars.Get(r.Context(), &user)
+		localAvatarURL, err := s.avatar.Get(r.Context(), &user)
 		if err != nil {
 			slog.ErrorContext(
 				r.Context(), "failed to get user avatar",
