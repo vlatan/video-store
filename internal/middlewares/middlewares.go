@@ -1,6 +1,7 @@
 package middlewares
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"log/slog"
@@ -178,14 +179,22 @@ func (s *Service) LoadUser(next http.Handler) http.Handler {
 
 		// Update last seen in DB if necessary
 		if time.Since(*user.LastSeen) > 24*time.Hour {
-			_, err := s.usersRepo.UpdateLastSeen(r.Context(), user.ID)
-			if err != nil {
-				slog.WarnContext(
-					r.Context(),
-					"failed to update user last seen in DB",
-					"error", err,
-				)
-			}
+			go func() {
+				// Detach the request context and
+				// give this goroutine 5 seconds to finish.
+				detachedCtx := context.WithoutCancel(r.Context())
+				ctx, cancel := context.WithTimeout(detachedCtx, 5*time.Second)
+				defer cancel()
+
+				_, err := s.usersRepo.UpdateLastSeen(ctx, user.ID)
+				if err != nil {
+					slog.WarnContext(
+						r.Context(),
+						"failed to update user last seen in DB",
+						"error", err,
+					)
+				}
+			}()
 		}
 
 		// Try to get the user avatar

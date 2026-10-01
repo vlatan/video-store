@@ -106,7 +106,8 @@ func (s *Service) Get(ctx context.Context, user *types.User) (string, error) {
 	// Enqueue the user for avatar processing if timer expired.
 	// Detach the context and carry it in the job.
 	if ttl <= 0 {
-		s.enqueue(job{context.WithoutCancel(ctx), user})
+		detachedCtx := context.WithoutCancel(ctx)
+		s.enqueue(job{detachedCtx, user})
 	}
 
 	return r2URL, nil
