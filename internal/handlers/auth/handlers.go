@@ -249,7 +249,7 @@ func (s *Service) DeleteAccountHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Attempt to send revoke request
 	if currentUser.AccessToken != "" {
-		if err := s.revokeLogin(r.Context(), currentUser); err != nil {
+		if err := s.revoke(r.Context(), currentUser); err != nil {
 			slog.WarnContext(
 				r.Context(), "failed to delete/revoke app authorization",
 				"error", err,
