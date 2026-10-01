@@ -40,8 +40,7 @@ func (s *Service) Flashes(w http.ResponseWriter, r *http.Request) []*types.Flash
 	}
 
 	// Clear the flash session
-	session.Options.MaxAge = -1
-	if err := session.Save(r, w); err != nil {
+	if err := s.Clear(r, w, session); err != nil {
 		slog.WarnContext(
 			r.Context(),
 			"failed to clear the flash session",

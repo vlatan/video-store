@@ -51,11 +51,10 @@ func (s *Service) User(w http.ResponseWriter, r *http.Request) (*types.User, err
 
 	// Clear the session this is anonymous user
 	if id == 0 {
-		session.Options.MaxAge = -1
-		if err := session.Save(r, w); err != nil {
+		if err := s.Clear(r, w, session); err != nil {
 			slog.WarnContext(
 				r.Context(),
-				"failed to clear the session for anonymous user",
+				"failed to clear the anon user session ",
 				"error", err,
 			)
 		}

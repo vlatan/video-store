@@ -35,11 +35,10 @@ func (s *Service) State(w http.ResponseWriter, r *http.Request) (string, string)
 	verifier, _ := session.Values["verifier"].(string)
 
 	// Clear the oauth session
-	session.Options.MaxAge = -1
-	if err := session.Save(r, w); err != nil {
+	if err := s.Clear(r, w, session); err != nil {
 		slog.WarnContext(
 			r.Context(),
-			"failed to delete the oauth state/verifier sesssion",
+			"failed to clear the oauth state/verifier sesssion",
 			"error", err,
 		)
 	}
