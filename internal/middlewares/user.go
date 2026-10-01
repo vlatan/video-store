@@ -7,11 +7,18 @@ import (
 	"time"
 
 	"github.com/vlatan/video-store/internal/ctxd"
+	"github.com/vlatan/video-store/internal/utils/pathx"
 )
 
 // LoadUser gets the user data from session and DB and stores it in the context
 func (s *Service) LoadUser(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		// Skip static files, they don't need user
+		if pathx.IsStatic(r.URL.Path) {
+			next.ServeHTTP(w, r)
+			return
+		}
 
 		// Fetch the user ID and tokens from session
 		sessUser := s.session.User(w, r) // Nil if anonymous or failed to fetch
@@ -67,6 +74,7 @@ func (s *Service) LoadUser(next http.Handler) http.Handler {
 			)
 		}
 
+		// Put user in context
 		ctx := ctxd.WithUser(r.Context(), &user)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
