@@ -55,9 +55,17 @@ func (s *service) RenderHTML(
 		return
 	}
 
-	// Get flash messages from session and attach to data
-	data.FlashMessages = s.session.Flashes(w, r)
-
+	var contentType string
+	switch filepath.Ext(tmplName) {
+	case ".xml":
+		contentType = "text/xml"
+	case ".xsl":
+		contentType = "text/xsl"
+	default:
+		// If HTML page get flash messages from session and add to data
+		data.FlashMessages = s.session.Flashes(w, r)
+		contentType = "text/html"
+	}
 	// Execute template to buffer to catch any errors before serving to client
 	var buf bytes.Buffer
 	if err := tmpl.ExecuteTemplate(&buf, tmplName, data); err != nil {
@@ -68,16 +76,6 @@ func (s *service) RenderHTML(
 		)
 		s.HTMLError(w, r, data, http.StatusInternalServerError)
 		return
-	}
-
-	var contentType string
-	switch filepath.Ext(tmplName) {
-	case ".xml":
-		contentType = "text/xml"
-	case ".xsl":
-		contentType = "text/xsl"
-	default:
-		contentType = "text/html"
 	}
 
 	// Set content type header
