@@ -57,6 +57,11 @@ func (s *service) HTMLError(
 		return
 	}
 
+	// Generate default data if data not supplied
+	if data == nil {
+		data = s.TmplData(w, r)
+	}
+
 	// Execute template to buffer to catch any errors before serving to client
 	var buf bytes.Buffer
 	if err := tmpl.ExecuteTemplate(&buf, tmplName, data); err != nil {
