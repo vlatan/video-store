@@ -113,7 +113,6 @@ func (a *App) RegisterRoutes() *App {
 		a.mw.LoadUser,                           // Load user data from seesion into context
 		a.mw.Logging,                            // Log the request, unless healthcheck
 		a.mw.AddHeaders,                         // Add standard headers to response
-		a.mw.LoadTmplData,                       // Generate and store template data to context
 		http.NewCrossOriginProtection().Handler, // Provide modern CSRF protection
 		a.mw.RecoverPanic,                       // Log panic in mux and return 500 error response to client
 	)(mux)

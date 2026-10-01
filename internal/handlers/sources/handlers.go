@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/vlatan/video-store/internal/ctxd"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/handlers/auth"
 	"github.com/vlatan/video-store/internal/types"
@@ -18,7 +17,7 @@ import (
 func (s *Service) SourcesHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Get template data
-	data := ctxd.GetTmplData(r.Context())
+	data := s.ui.TmplData(w, r)
 
 	var (
 		err     error
@@ -63,8 +62,8 @@ func (s *Service) SourcesHandler(w http.ResponseWriter, r *http.Request) {
 // Handle adding new post via form
 func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 
-	// Compose data object
-	data := ctxd.GetTmplData(r.Context())
+	// Get template data
+	data := s.ui.TmplData(w, r)
 
 	// Populate needed data for an empty form
 	data.Form = &types.Form{
@@ -212,7 +211,7 @@ func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get template data
-	data := ctxd.GetTmplData(r.Context())
+	data := s.ui.TmplData(w, r)
 
 	var (
 		err   error

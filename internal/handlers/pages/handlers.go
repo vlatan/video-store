@@ -6,7 +6,6 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/vlatan/video-store/internal/ctxd"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/handlers/auth"
 	"github.com/vlatan/video-store/internal/types"
@@ -24,8 +23,8 @@ func (s *Service) SinglePageHandler(w http.ResponseWriter, r *http.Request) {
 	// Get the page slug from URL
 	pageSlug := r.PathValue("slug")
 
-	// Get template data from context
-	data := ctxd.GetTmplData(r.Context())
+	// Get template data
+	data := s.ui.TmplData(w, r)
 
 	var (
 		err  error
@@ -77,8 +76,8 @@ func (s *Service) UpdatePageHandler(w http.ResponseWriter, r *http.Request) {
 	// Get the page slug from URL
 	slug := r.PathValue("slug")
 
-	// Get template data from context
-	data := ctxd.GetTmplData(r.Context())
+	// Get template data
+	data := s.ui.TmplData(w, r)
 
 	// Get the page data straight from DB
 	page, err := s.pagesRepo.GetSinglePage(r.Context(), slug)
@@ -190,8 +189,8 @@ func (s *Service) UpdatePageHandler(w http.ResponseWriter, r *http.Request) {
 // Create new page
 func (s *Service) NewPageHandler(w http.ResponseWriter, r *http.Request) {
 
-	// Get template data from context
-	data := ctxd.GetTmplData(r.Context())
+	// Get template data
+	data := s.ui.TmplData(w, r)
 
 	// Populate needed data for an empty form
 	data.Form = &types.Form{
@@ -269,8 +268,8 @@ func (s *Service) DeletePageHandler(w http.ResponseWriter, r *http.Request) {
 	// Get the page slug from URL
 	pageSlug := r.PathValue("slug")
 
-	// Get template data from context
-	data := ctxd.GetTmplData(r.Context())
+	// Get template data
+	data := s.ui.TmplData(w, r)
 
 	rowsAffected, err := s.pagesRepo.DeletePage(r.Context(), pageSlug)
 	if err != nil {

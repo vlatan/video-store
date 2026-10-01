@@ -4,7 +4,6 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/vlatan/video-store/internal/ctxd"
 	"github.com/vlatan/video-store/internal/ui"
 	"github.com/vlatan/video-store/internal/utils/pathx"
 )
@@ -20,8 +19,8 @@ func New(ui ui.Service) *Service {
 // TextHandler handles text files such as robots.txt, ads.txt, etc.
 func (s *Service) Handler(w http.ResponseWriter, r *http.Request) {
 
-	// Get default data from context
-	data := ctxd.GetTmplData(r.Context())
+	// Get template data
+	data := s.ui.TmplData(w, r)
 
 	// Validate the path
 	if err := pathx.Validate(r.URL.Path); err != nil {

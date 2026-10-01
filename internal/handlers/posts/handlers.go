@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/vlatan/video-store/internal/ctxd"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/handlers/auth"
 	"github.com/vlatan/video-store/internal/types"
@@ -46,7 +45,7 @@ func (s *Service) HomeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get template data
-	data := ctxd.GetTmplData(r.Context())
+	data := s.ui.TmplData(w, r)
 
 	var (
 		err   error
@@ -109,9 +108,8 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 		redisKey += fmt.Sprintf(":%s", types.RatingCount)
 	}
 
-	// Generate template data (it gets all the categories too)
-	// This is probably wasteful for non-existing category
-	data := ctxd.GetTmplData(r.Context())
+	// Get template data
+	data := s.ui.TmplData(w, r)
 
 	var (
 		err   error
@@ -168,8 +166,8 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get the default data
-	data := ctxd.GetTmplData(r.Context())
+	// Get template data
+	data := s.ui.TmplData(w, r)
 	data.SearchQuery = searchQuery
 
 	start := time.Now()
@@ -228,7 +226,7 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Get template data
-	data := ctxd.GetTmplData(r.Context())
+	data := s.ui.TmplData(w, r)
 
 	// Populate needed data for an empty form
 	data.Form = &types.Form{
@@ -415,8 +413,8 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 	// Get video id from URL path
 	videoID := r.PathValue("video")
 
-	// Generate the default data
-	data := ctxd.GetTmplData(r.Context())
+	// Get template data
+	data := s.ui.TmplData(w, r)
 
 	// Validate the YT ID
 	if validVideoID.FindStringSubmatch(videoID) == nil {
@@ -607,8 +605,8 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 	// Get video id from URL path
 	videoID := r.PathValue("video")
 
-	// Get the default data
-	data := ctxd.GetTmplData(r.Context())
+	// Get template data
+	data := s.ui.TmplData(w, r)
 
 	// Validate the YT ID
 	if validVideoID.FindStringSubmatch(videoID) == nil {
@@ -837,8 +835,8 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 // Handle a post ban
 func (s *Service) BanPostHandler(w http.ResponseWriter, r *http.Request) {
 
-	// Get the default data
-	data := ctxd.GetTmplData(r.Context())
+	// Get template data
+	data := s.ui.TmplData(w, r)
 
 	// Validate the YT ID
 	videoID := r.PathValue("video")

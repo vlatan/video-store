@@ -222,28 +222,6 @@ func (s *Service) AddHeaders(next http.Handler) http.Handler {
 	})
 }
 
-// LoadData generates default data and stores it in the context
-func (s *Service) LoadTmplData(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-		// Template data not needed if JSON response
-		if strings.HasPrefix(r.URL.Path, "/api/") {
-			next.ServeHTTP(w, r)
-			return
-		}
-		// Get user from context
-		user := ctxd.GetUser(r.Context())
-		// Generate the default data
-		data := s.ui.TmplData(w, r)
-		// Attach the user to be able to be accessed from data too
-		data.CurrentUser = user
-		// Store data to context
-		ctx := ctxd.WithTmplData(r.Context(), data)
-
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
-}
-
 // RecoverPanic captures panic logs it, and serves 500 error to the client
 func (s *Service) RecoverPanic(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -279,7 +257,7 @@ func (s *Service) RecoverPanic(next http.Handler) http.Handler {
 				return
 			}
 
-			data := ctxd.GetTmplData(r.Context())
+			data := s.ui.TmplData(w, r)
 			s.ui.HTMLError(w, r, data, http.StatusInternalServerError)
 		}()
 
@@ -312,7 +290,7 @@ func (s *Service) IsAuth(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		data := ctxd.GetTmplData(r.Context())
+		data := s.ui.TmplData(w, r)
 		s.ui.HTMLError(w, r, data, http.StatusForbidden)
 	}
 }
@@ -332,7 +310,7 @@ func (s *Service) IsAdmin(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		data := ctxd.GetTmplData(r.Context())
+		data := s.ui.TmplData(w, r)
 		s.ui.HTMLError(w, r, data, http.StatusForbidden)
 	}
 }

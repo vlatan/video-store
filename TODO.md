@@ -1,7 +1,6 @@
 - Rename avatar to singular
 - Modify sess.User to not do unrelated work
-- Do not use tmpl data and sessions on healthcheck
-- Don't add tmpl data in context?
+
 - Make delete source endpoint
 - Make the checkmarks on the like/save green or yellow
 - Make search bar on small screens accross entire screen

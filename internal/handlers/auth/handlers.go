@@ -13,8 +13,8 @@ import (
 // AuthHandler handles the entry point of the user authentication
 func (s *Service) AuthHandler(w http.ResponseWriter, r *http.Request) {
 
-	// Get template data from context
-	data := ctxd.GetTmplData(r.Context())
+	// Get template data
+	data := s.ui.TmplData(w, r)
 
 	// Check if the provider exists
 	providerName := r.PathValue("provider")
@@ -81,8 +81,8 @@ func (s *Service) AuthHandler(w http.ResponseWriter, r *http.Request) {
 // Provider Auth callback
 func (s *Service) AuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 
-	// Get template data from context
-	data := ctxd.GetTmplData(r.Context())
+	// Get template data
+	data := s.ui.TmplData(w, r)
 
 	// Check if the provider exists
 	providerName := r.PathValue("provider")
