@@ -749,27 +749,30 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Convert the release year to int16 before the DB upsert.
 		// ParseInt bitSize=16 guarantees n fits in int16.
-		releaseYear, err := strconv.ParseInt(data.Form.ReleaseYear.Value, 10, 16)
-		if err != nil {
-			slog.WarnContext(
-				r.Context(), "failed to parse release year",
-				"error", err,
-			)
-			formError.Message = "Could not parse the release year"
-			data.Form.Error = &formError
-			s.ui.RenderHTML(w, r, "form.html", data)
-			return
-		}
+		var releaseYear int64
+		if data.Form.ReleaseYear.Value != "" {
+			releaseYear, err = strconv.ParseInt(data.Form.ReleaseYear.Value, 10, 16)
+			if err != nil {
+				slog.WarnContext(
+					r.Context(), "failed to parse release year",
+					"error", err,
+				)
+				formError.Message = "Could not parse the release year"
+				data.Form.Error = &formError
+				s.ui.RenderHTML(w, r, "form.html", data)
+				return
+			}
 
-		if releaseYear < 1900 || int(releaseYear) > maxYear {
-			slog.WarnContext(
-				r.Context(),
-				fmt.Sprintf("Year must be between 1900 and %d", maxYear),
-			)
-			formError.Message = "Could not parse the release year"
-			data.Form.Error = &formError
-			s.ui.RenderHTML(w, r, "form.html", data)
-			return
+			if releaseYear < 1900 || int(releaseYear) > maxYear {
+				slog.WarnContext(
+					r.Context(),
+					fmt.Sprintf("Year must be between 1900 and %d", maxYear),
+				)
+				formError.Message = "Could not parse the release year"
+				data.Form.Error = &formError
+				s.ui.RenderHTML(w, r, "form.html", data)
+				return
+			}
 		}
 
 		// Normalize the directors before DB upsert
