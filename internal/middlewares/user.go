@@ -41,11 +41,14 @@ func (s *Service) LoadUser(next http.Handler) http.Handler {
 				return nil, err
 			}
 
-			// Attach tokens and config to user object
+			// Attach tokens and admin identity to user object
 			user.AccessToken = sessUser.AccessToken
 			user.RefreshToken = sessUser.RefreshToken
 			user.Expiry = sessUser.Expiry
-			user.Config = s.config
+			user.Admin = types.AdminIdentity{
+				Provider:       s.config.AdminProvider,
+				ProviderUserId: s.config.AdminProviderUserId,
+			}
 
 			// Update last seen in DB in background if necessary
 			if time.Since(*user.LastSeen) > 24*time.Hour {
