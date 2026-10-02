@@ -1,7 +1,3 @@
-- Do not put the entire user in context.
-  Put just the user ID, needed for logging.
-  Call the DB with user loader singleton placed in context only where user needed.
-
 - Make delete source endpoint
 - Make the checkmarks on the like/save green or yellow
 - Make search bar on small screens accross entire screen
