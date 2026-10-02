@@ -35,7 +35,7 @@ func GetUser(ctx context.Context) *types.User {
 	}
 
 	// Get the user
-	user, err := loader.Get()
+	user, err := loader.Get(ctx)
 	if err != nil {
 		slog.WarnContext(
 			ctx, "failed to get the user",

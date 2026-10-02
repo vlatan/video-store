@@ -4,6 +4,7 @@ import (
 
 	// #nosec G501
 
+	"context"
 	"crypto/sha256"
 	"encoding/json"
 	"errors"
@@ -89,16 +90,26 @@ func (u *User) MakePublicID() (string, error) {
 }
 
 type UserLoader struct {
-	once sync.Once
+	mu   sync.Mutex
+	done bool
 	user *User
-	err  error
-	Load func() (*User, error)
+	Load func(ctx context.Context) (*User, error)
 }
 
-// Get gets the user just once
-// with whichever func is provided as load() func in the loader.
-// Whoever calls this instance of the loader again will get just the values.
-func (l *UserLoader) Get() (*User, error) {
-	l.once.Do(func() { l.user, l.err = l.Load() })
-	return l.user, l.err
+// Get gets cached user after the first call, doesn't cache errors.
+func (l *UserLoader) Get(ctx context.Context) (*User, error) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
+	if l.done {
+		return l.user, nil
+	}
+
+	user, err := l.Load(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	l.user, l.done = user, true
+	return l.user, nil
 }
