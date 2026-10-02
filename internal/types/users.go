@@ -3,7 +3,7 @@ package types
 import (
 
 	// #nosec G501
-	"context"
+
 	"crypto/sha256"
 	"encoding/json"
 	"errors"
@@ -98,7 +98,7 @@ type UserLoader struct {
 // Get gets the user just once
 // with whichever func is provided as load() func in the loader.
 // Whoever calls this instance of the loader again will get just the values.
-func (l *UserLoader) Get(ctx context.Context) (*User, error) {
+func (l *UserLoader) Get() (*User, error) {
 	l.once.Do(func() { l.user, l.err = l.Load() })
 	return l.user, l.err
 }
