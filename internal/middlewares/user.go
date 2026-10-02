@@ -35,7 +35,7 @@ func (s *Service) LoadUser(next http.Handler) http.Handler {
 		ctx = ctxd.WithUserLoader(ctx, &types.UserLoader{
 
 			// Define the Load function.
-			// Enclose the logic necessary to do get the user.
+			// Enclose the logic necessary to get the user.
 			Load: func() (*types.User, error) {
 
 				// Fetch the user data from DB
@@ -56,10 +56,10 @@ func (s *Service) LoadUser(next http.Handler) http.Handler {
 						// Detach the request context and
 						// give this goroutine 5 seconds to finish.
 						detachedCtx := context.WithoutCancel(r.Context())
-						ctx, cancel := context.WithTimeout(detachedCtx, 5*time.Second)
+						goroutineCtx, cancel := context.WithTimeout(detachedCtx, 5*time.Second)
 						defer cancel()
 
-						_, err := s.usersRepo.UpdateLastSeen(ctx, user.ID)
+						_, err := s.usersRepo.UpdateLastSeen(goroutineCtx, user.ID)
 						if err != nil {
 							slog.WarnContext(
 								r.Context(),

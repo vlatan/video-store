@@ -2,6 +2,7 @@ package ctxd
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/ctxv"
@@ -26,9 +27,21 @@ func WithUserLoader(ctx context.Context, userLoader *types.UserLoader) context.C
 
 // GetUser gets user from context
 func GetUser(ctx context.Context) *types.User {
+
+	// Check if the loader is in the context at all
 	loader := ctxv.Get[*types.UserLoader](ctx)
-	if loader != nil {
-		return loader.Get(ctx)
+	if loader == nil {
+		return nil
 	}
-	return nil
+
+	// Get the user
+	user, err := loader.Get(ctx)
+	if err != nil {
+		slog.WarnContext(
+			ctx, "failed to get the user",
+			"error", err,
+		)
+	}
+
+	return user
 }

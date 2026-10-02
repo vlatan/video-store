@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log/slog"
 	"sync"
 	"time"
 
@@ -99,13 +98,7 @@ type UserLoader struct {
 // Get gets the user just once
 // with whichever func is provided as load() func in the loader.
 // Whoever calls this instance of the loader again will get just the values.
-func (l *UserLoader) Get(ctx context.Context) *User {
+func (l *UserLoader) Get(ctx context.Context) (*User, error) {
 	l.once.Do(func() { l.user, l.err = l.Load() })
-	if l.err != nil {
-		slog.WarnContext(
-			ctx, "failed to load the user",
-			"error", l.err,
-		)
-	}
-	return l.user
+	return l.user, l.err
 }
