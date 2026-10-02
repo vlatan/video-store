@@ -47,16 +47,16 @@ func (s *Service) LoadUser(next http.Handler) http.Handler {
 			user.Expiry = sessUser.Expiry
 			user.Config = s.config
 
-			// Update last seen in DB if necessary
+			// Update last seen in DB in background if necessary
 			if time.Since(*user.LastSeen) > 24*time.Hour {
 				go func() {
 					// Detach the request context and
 					// give this goroutine 5 seconds to finish.
 					detachedCtx := context.WithoutCancel(ctx)
-					goroutineCtx, cancel := context.WithTimeout(detachedCtx, 5*time.Second)
+					goCtx, cancel := context.WithTimeout(detachedCtx, 5*time.Second)
 					defer cancel()
 
-					_, err := s.usersRepo.UpdateLastSeen(goroutineCtx, user.ID)
+					_, err := s.usersRepo.UpdateLastSeen(goCtx, user.ID)
 					if err != nil {
 						slog.WarnContext(
 							r.Context(),
