@@ -21,9 +21,9 @@ func (h *ContextHandler) Handle(ctx context.Context, r slog.Record) error {
 		return h.Handler.Handle(ctx, r)
 	}
 
-	// Look for a user in the context
-	if user := ctxd.GetUser(ctx); user.IsAuthenticated() {
-		r.AddAttrs(slog.Int("userId", user.ID))
+	// Look for a user ID in the context
+	if userID := ctxd.GetUserID(ctx); userID != 0 {
+		r.AddAttrs(slog.Int("userId", userID))
 	}
 
 	// Look for request ID in the context

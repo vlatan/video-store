@@ -3,10 +3,13 @@ package types
 import (
 
 	// #nosec G501
+	"context"
 	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
+	"sync"
 	"time"
 
 	"github.com/vlatan/video-store/internal/config"
@@ -84,4 +87,25 @@ func (u *User) MakePublicID() (string, error) {
 	publicID := fmt.Sprintf("%s:%s:%s", u.Provider, u.ProviderUserId, u.Email)
 	hashBytes := sha256.Sum256([]byte(publicID))
 	return fmt.Sprintf("%x", hashBytes), nil
+}
+
+type UserLoader struct {
+	once sync.Once
+	user *User
+	err  error
+	Load func() (*User, error)
+}
+
+// Get gets the user just once
+// with whichever func is provided as load() func in the loader.
+// Whoever calls this instance of the loader again will get just the values.
+func (l *UserLoader) Get(ctx context.Context) *User {
+	l.once.Do(func() { l.user, l.err = l.Load() })
+	if l.err != nil {
+		slog.WarnContext(
+			ctx, "failed to load the user",
+			"error", l.err,
+		)
+	}
+	return l.user
 }
