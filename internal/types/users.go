@@ -58,7 +58,7 @@ func (u *User) IsAuthenticated() bool {
 func (u *User) IsAdmin(cfg *config.Config) bool {
 	return u.IsAuthenticated() &&
 		u.Provider == cfg.AdminProvider &&
-		u.ProviderUserId == cfg.AdminProviderUserId
+		u.ProviderUserId == cfg.AdminProviderId
 }
 
 // Make a user public ID

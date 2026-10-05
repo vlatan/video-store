@@ -71,8 +71,8 @@ type Config struct {
 	LinkedInOAuthScopes       []string `env:"LINKEDIN_OAUTH_SCOPES"`
 
 	// Admin settings
-	AdminProviderUserId string `env:"ADMIN_PROVIDER_USER_ID"`
-	AdminProvider       string `env:"ADMIN_PROVIDER"`
+	AdminProviderId string `env:"ADMIN_PROVIDER_ID"`
+	AdminProvider   string `env:"ADMIN_PROVIDER"`
 
 	// AdSense
 	AdSenseAccount string `env:"ADSENSE_ACCOUNT"`
