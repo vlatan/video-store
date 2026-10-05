@@ -46,7 +46,7 @@ func (s *Service) SourcePostsAPI(w http.ResponseWriter, r *http.Request) {
 		posts types.Posts
 	)
 
-	if currentUser.IsAdmin() {
+	if currentUser.IsAdmin(s.config) {
 		posts, err = s.postsRepo.GetSourcePosts(
 			r.Context(), sourceID, cursor, orderBy,
 		)

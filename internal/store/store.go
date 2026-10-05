@@ -23,6 +23,7 @@ func New(
 ) *Service {
 
 	// Register types with gob to be able to use them in sessions
+	gob.Register(&SessionUser{})
 	gob.Register(&types.FlashMessage{})
 	gob.Register(time.Time{})
 

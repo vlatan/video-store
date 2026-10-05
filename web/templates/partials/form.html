@@ -108,7 +108,7 @@
 
 
 {{ define "extra_scripts" }}
-{{ if .CurrentUser.IsAdmin }}
+{{ if .CurrentUser.IsAdmin .Config }}
 <script defer src='{{ .AddVersion "/static/js/form.js" }}'></script>
 {{ end }}
 {{ end }}

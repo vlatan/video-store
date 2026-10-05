@@ -53,7 +53,7 @@ func (s *Service) HomeHandler(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// Don't cache the home results only for the admin
-	if data.CurrentUser.IsAdmin() {
+	if data.CurrentUser.IsAdmin(s.config) {
 		posts, err = s.postsRepo.GetHomePosts(
 			r.Context(), "", orderBy,
 		)
@@ -117,7 +117,7 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// Don't cache the category posts only for the admin
-	if data.CurrentUser.IsAdmin() {
+	if data.CurrentUser.IsAdmin(s.config) {
 		posts, err = s.postsRepo.GetCategoryPosts(
 			r.Context(), slug, "", orderBy,
 		)
@@ -182,7 +182,7 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// Don't cache the search results only for the admin
-	if data.CurrentUser.IsAdmin() {
+	if data.CurrentUser.IsAdmin(s.config) {
 		posts, err = s.postsRepo.SearchPosts(
 			r.Context(), searchQuery, s.config.PostsPerPage, "",
 		)
@@ -551,7 +551,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 		)
 
 		// Don't cache the related posts only for the admin.
-		if data.CurrentUser.IsAdmin() {
+		if data.CurrentUser.IsAdmin(s.config) {
 			posts, taskErr = s.postsRepo.GetRelatedPosts(r.Context(), post.GetTitle())
 		} else {
 			posts, taskErr = rdb.GetCachedData(

@@ -31,7 +31,7 @@ func (s *Service) SinglePageHandler(w http.ResponseWriter, r *http.Request) {
 		page types.Page
 	)
 
-	if data.CurrentUser.IsAdmin() {
+	if data.CurrentUser.IsAdmin(s.config) {
 		page, err = s.pagesRepo.GetSinglePage(r.Context(), pageSlug)
 	} else {
 		page, err = rdb.GetCachedData(

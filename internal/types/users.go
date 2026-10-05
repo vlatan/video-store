@@ -4,44 +4,36 @@ import (
 
 	// #nosec G501
 
-	"context"
 	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"sync"
 	"time"
 
 	_ "image/gif" // Register GIF decoder
 	_ "image/png" // Register PNG decoder
 
+	"github.com/vlatan/video-store/internal/config"
 	_ "golang.org/x/image/webp" // Register WebP decoder
 )
 
-// Store the admin identity
-type AdminIdentity struct {
-	Provider       string `json:"-"`
-	ProviderUserId string `json:"-"`
-}
-
 // ============================================================================= //
 
-// User struct to store in the USER info in session
+// User struct to store the user data
 type User struct {
-	ID             int           `json:"-"`
-	ProviderUserId string        `json:"-"`
-	Email          string        `json:"-"`
-	Name           string        `json:"name,omitempty"`
-	Provider       string        `json:"-"`
-	AvatarURL      string        `json:"avatar_url,omitempty"`
-	PublicID       string        `json:"public_id,omitempty"`
-	LocalAvatarURL string        `json:"local_avatar_url,omitempty"`
-	AccessToken    string        `json:"-"`
-	RefreshToken   string        `json:"-"`
-	Expiry         time.Time     `json:"-"`
-	LastSeen       *time.Time    `json:"last_seen,omitempty"`
-	CreatedAt      *time.Time    `json:"created_at,omitempty"`
-	Admin          AdminIdentity `json:"-"`
+	ID             int        `json:"-"`
+	Provider       string     `json:"-"`
+	ProviderUserId string     `json:"-"`
+	Email          string     `json:"-"`
+	Name           string     `json:"name,omitempty"`
+	PublicID       string     `json:"public_id,omitempty"`
+	AvatarURL      string     `json:"avatar_url,omitempty"`
+	LocalAvatarURL string     `json:"local_avatar_url,omitempty"`
+	AccessToken    string     `json:"-"`
+	RefreshToken   string     `json:"-"`
+	Expiry         time.Time  `json:"-"`
+	LastSeen       *time.Time `json:"last_seen,omitempty"`
+	CreatedAt      *time.Time `json:"created_at,omitempty"`
 }
 
 // MarshalBinary implements the encoding.BinaryMarshaler interface
@@ -57,15 +49,16 @@ func (u *User) UnmarshalBinary(data []byte) error {
 // IsAuthenticated reports whether the user is a real, loaded user
 func (u *User) IsAuthenticated() bool {
 	return u != nil &&
-		u.ProviderUserId != "" &&
-		u.Provider != ""
+		u.ID != 0 &&
+		u.Provider != "" &&
+		u.ProviderUserId != ""
 }
 
 // IsAdmin reports whether the user matches the configured admin
-func (u *User) IsAdmin() bool {
+func (u *User) IsAdmin(cfg *config.Config) bool {
 	return u.IsAuthenticated() &&
-		u.ProviderUserId == u.Admin.ProviderUserId &&
-		u.Provider == u.Admin.Provider
+		u.Provider == cfg.AdminProvider &&
+		u.ProviderUserId == cfg.AdminProviderId
 }
 
 // Make a user public ID
@@ -97,31 +90,4 @@ func (u Users) MarshalBinary() (data []byte, err error) {
 // UnmarshalBinary implements the encoding.BinaryUnmarshaler interface
 func (u *Users) UnmarshalBinary(data []byte) error {
 	return json.Unmarshal(data, u)
-}
-
-// ============================================================================= //
-
-type UserLoader struct {
-	mu   sync.Mutex
-	done bool
-	user *User
-	Load func(ctx context.Context) (*User, error)
-}
-
-// Get gets cached user after the first call, doesn't cache errors.
-func (l *UserLoader) Get(ctx context.Context) (*User, error) {
-	l.mu.Lock()
-	defer l.mu.Unlock()
-
-	if l.done {
-		return l.user, nil
-	}
-
-	user, err := l.Load(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	l.user, l.done = user, true
-	return l.user, nil
 }

@@ -14,6 +14,8 @@ import (
 	"github.com/vlatan/video-store/internal/types"
 )
 
+const sourceHashKey = "source-hash"
+
 // refreshAvatar reuploads the user avatar at R2 if changed
 func (s *Service) refresh(ctx context.Context, user *types.User) (string, error) {
 
@@ -46,7 +48,7 @@ func (s *Service) refresh(ctx context.Context, user *types.User) (string, error)
 
 	// If object source unchanged avatar not changed, return it
 	if err == nil && head.Metadata != nil {
-		storedHash, exists := head.Metadata["source-hash"]
+		storedHash, exists := head.Metadata[sourceHashKey]
 		if exists && storedHash == sourceHash {
 			return avatar, nil
 		}
@@ -78,7 +80,7 @@ func (s *Service) refresh(ctx context.Context, user *types.User) (string, error)
 		fmt.Sprintf(avatarR2Path, user.PublicID),
 		bytes.NewReader(buf.Bytes()),
 		"image/jpeg",
-		map[string]string{"source-hash": sourceHash},
+		map[string]string{sourceHashKey: sourceHash},
 	)
 
 	if err != nil {
