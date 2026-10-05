@@ -57,6 +57,7 @@ func (u *User) UnmarshalBinary(data []byte) error {
 // IsAuthenticated reports whether the user is a real, loaded user
 func (u *User) IsAuthenticated() bool {
 	return u != nil &&
+		u.ID != 0 &&
 		u.ProviderUserId != "" &&
 		u.Provider != ""
 }
