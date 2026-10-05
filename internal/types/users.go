@@ -4,12 +4,10 @@ import (
 
 	// #nosec G501
 
-	"context"
 	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"sync"
 	"time"
 
 	_ "image/gif" // Register GIF decoder
@@ -17,6 +15,8 @@ import (
 
 	_ "golang.org/x/image/webp" // Register WebP decoder
 )
+
+// ============================================================================= //
 
 // Store the admin identity
 type AdminIdentity struct {
@@ -26,22 +26,22 @@ type AdminIdentity struct {
 
 // ============================================================================= //
 
-// User struct to store in the USER info in session
+// User struct to store the user data
 type User struct {
-	ID             int           `json:"-"`
-	ProviderUserId string        `json:"-"`
-	Email          string        `json:"-"`
-	Name           string        `json:"name,omitempty"`
-	Provider       string        `json:"-"`
-	AvatarURL      string        `json:"avatar_url,omitempty"`
-	PublicID       string        `json:"public_id,omitempty"`
-	LocalAvatarURL string        `json:"local_avatar_url,omitempty"`
-	AccessToken    string        `json:"-"`
-	RefreshToken   string        `json:"-"`
-	Expiry         time.Time     `json:"-"`
-	LastSeen       *time.Time    `json:"last_seen,omitempty"`
-	CreatedAt      *time.Time    `json:"created_at,omitempty"`
-	Admin          AdminIdentity `json:"-"`
+	ID             int            `json:"-"`
+	Provider       string         `json:"-"`
+	ProviderUserId string         `json:"-"`
+	Email          string         `json:"-"`
+	Name           string         `json:"name,omitempty"`
+	PublicID       string         `json:"public_id,omitempty"`
+	AvatarURL      string         `json:"avatar_url,omitempty"`
+	LocalAvatarURL string         `json:"local_avatar_url,omitempty"`
+	AccessToken    string         `json:"-"`
+	RefreshToken   string         `json:"-"`
+	Expiry         time.Time      `json:"-"`
+	LastSeen       *time.Time     `json:"last_seen,omitempty"`
+	CreatedAt      *time.Time     `json:"created_at,omitempty"`
+	Admin          *AdminIdentity `json:"-"`
 }
 
 // MarshalBinary implements the encoding.BinaryMarshaler interface
@@ -97,31 +97,4 @@ func (u Users) MarshalBinary() (data []byte, err error) {
 // UnmarshalBinary implements the encoding.BinaryUnmarshaler interface
 func (u *Users) UnmarshalBinary(data []byte) error {
 	return json.Unmarshal(data, u)
-}
-
-// ============================================================================= //
-
-type UserLoader struct {
-	mu   sync.Mutex
-	done bool
-	user *User
-	Load func(ctx context.Context) (*User, error)
-}
-
-// Get gets cached user after the first call, doesn't cache errors.
-func (l *UserLoader) Get(ctx context.Context) (*User, error) {
-	l.mu.Lock()
-	defer l.mu.Unlock()
-
-	if l.done {
-		return l.user, nil
-	}
-
-	user, err := l.Load(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	l.user, l.done = user, true
-	return l.user, nil
 }

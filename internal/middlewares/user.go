@@ -21,70 +21,62 @@ func (s *Service) LoadUser(next http.Handler) http.Handler {
 			return
 		}
 
-		// Fetch the user ID and tokens from session
-		sessUser := s.session.User(w, r) // Nil if anonymous or failed to fetch
-		if sessUser == nil {
+		// Fetch the user from session
+		user := s.session.User(w, r) // Nil if anonymous or failed to fetch
+		if user == nil {
 			next.ServeHTTP(w, r)
 			return
 		}
 
-		// Put user ID in context
-		ctx := ctxd.WithUserID(r.Context(), sessUser.ID)
+		// Update last seen in session and in DB in background if necessary
+		if time.Since(*user.LastSeen) > 24*time.Hour {
 
-		// Define the Load function.
-		// Enclose the logic necessary to get the user.
-		loadFunc := func(ctx context.Context) (*types.User, error) {
-
-			// Fetch the user data from DB
-			user, err := s.usersRepo.GetSingleUser(ctx, sessUser.ID)
-			if err != nil {
-				return nil, err
-			}
-
-			// Attach tokens and admin identity to user object
-			user.AccessToken = sessUser.AccessToken
-			user.RefreshToken = sessUser.RefreshToken
-			user.Expiry = sessUser.Expiry
-			user.Admin = types.AdminIdentity{
-				Provider:       s.config.AdminProvider,
-				ProviderUserId: s.config.AdminProviderUserId,
-			}
-
-			// Update last seen in DB in background if necessary
-			if time.Since(*user.LastSeen) > 24*time.Hour {
-				go func() {
-					// Detach the request context and
-					// give this goroutine 5 seconds to finish.
-					detachedCtx := context.WithoutCancel(ctx)
-					goCtx, cancel := context.WithTimeout(detachedCtx, 5*time.Second)
-					defer cancel()
-
-					_, err := s.usersRepo.UpdateLastSeen(goCtx, user.ID)
-					if err != nil {
-						slog.WarnContext(
-							r.Context(),
-							"failed to update user last seen in DB",
-							"error", err,
-						)
-					}
-				}()
-			}
-
-			// Try to get the user avatar
-			user.LocalAvatarURL, err = s.avatar.Get(ctx, &user)
-			if err != nil {
+			user.LastSeen = new(time.Now())
+			if err := s.session.AddUser(w, r, user); err != nil {
 				slog.WarnContext(
 					r.Context(),
-					"failed to get user avatar",
+					"failed to update user last seen in session",
 					"error", err,
 				)
 			}
 
-			return &user, nil
+			go func() {
+				// Detach the request context and
+				// give this goroutine 5 seconds to finish.
+				detachedCtx := context.WithoutCancel(r.Context())
+				goCtx, cancel := context.WithTimeout(detachedCtx, 5*time.Second)
+				defer cancel()
+
+				_, err := s.usersRepo.UpdateLastSeen(goCtx, user.ID)
+				if err != nil {
+					slog.WarnContext(
+						r.Context(),
+						"failed to update user last seen in DB",
+						"error", err,
+					)
+				}
+			}()
 		}
 
-		// Put user loader reference in context
-		ctx = ctxd.WithUserLoader(ctx, &types.UserLoader{Load: loadFunc})
+		// Attach admin identity to user object
+		user.Admin = &types.AdminIdentity{
+			Provider:       s.config.AdminProvider,
+			ProviderUserId: s.config.AdminProviderUserId,
+		}
+
+		// Try to get the user avatar
+		var err error
+		user.LocalAvatarURL, err = s.avatar.Get(r.Context(), user)
+		if err != nil {
+			slog.WarnContext(
+				r.Context(),
+				"failed to get user avatar",
+				"error", err,
+			)
+		}
+
+		// Put user in context
+		ctx := ctxd.WithUser(r.Context(), user)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

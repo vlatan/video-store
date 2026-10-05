@@ -22,8 +22,8 @@ func (h *ContextHandler) Handle(ctx context.Context, r slog.Record) error {
 	}
 
 	// Look for a user ID in the context
-	if userID := ctxd.GetUserID(ctx); userID != 0 {
-		r.AddAttrs(slog.Int("userId", userID))
+	if user := ctxd.GetUser(ctx); user != nil && user.ID != 0 {
+		r.AddAttrs(slog.Int("userId", user.ID))
 	}
 
 	// Look for request ID in the context
