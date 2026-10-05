@@ -15,6 +15,12 @@ type Service struct {
 	config *config.Config
 }
 
+// sessionUser struct to store user data in session.
+// Exactly the same as the User but without the marshal and unmarshal binary methods,
+// so JSON marshaler is not used in Redis Scan method
+// so all the fields are encoded in Redis store by the gorillas's securecookie codec.
+type sessionUser types.User
+
 func New(
 	config *config.Config,
 	rdb *rdb.Service,
@@ -23,7 +29,7 @@ func New(
 ) *Service {
 
 	// Register types with gob to be able to use them in sessions
-	gob.Register(&SessionUser{})
+	gob.Register(&sessionUser{})
 	gob.Register(&types.FlashMessage{})
 	gob.Register(time.Time{})
 
