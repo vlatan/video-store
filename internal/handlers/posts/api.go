@@ -46,7 +46,7 @@ func (s *Service) HomeAPI(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// Don't cache the home results only for the admin
-	if currentUser.IsAdmin() {
+	if currentUser.IsAdmin(s.config) {
 		posts, err = s.postsRepo.GetHomePosts(
 			r.Context(), cursor, orderBy,
 		)
@@ -119,7 +119,7 @@ func (s *Service) CategoryPostsAPI(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// Don't cache the category posts only for the admin
-	if currentUser.IsAdmin() {
+	if currentUser.IsAdmin(s.config) {
 		posts, err = s.postsRepo.GetCategoryPosts(
 			r.Context(), slug, cursor, orderBy,
 		)
@@ -183,7 +183,7 @@ func (s *Service) SearchPostsAPI(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// Don't cache the search results only for the admin
-	if currentUser.IsAdmin() {
+	if currentUser.IsAdmin(s.config) {
 		posts, err = s.postsRepo.SearchPosts(
 			r.Context(), searchQuery, s.config.PostsPerPage, cursor,
 		)

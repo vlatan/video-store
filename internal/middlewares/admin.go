@@ -12,7 +12,7 @@ func (s *Service) IsAdmin(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		// If the user is admin move onto the next handler
-		if ctxd.GetUser(r.Context()).IsAdmin() {
+		if ctxd.GetUser(r.Context()).IsAdmin(s.config) {
 			next(w, r)
 			return
 		}

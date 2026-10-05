@@ -9,7 +9,7 @@ import (
 // PublicCache adds cache control header for non-admin users
 func (s *Service) PublicCache(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if ctxd.GetUser(r.Context()).IsAdmin() {
+		if ctxd.GetUser(r.Context()).IsAdmin(s.config) {
 			w.Header().Set("Cache-Control", "public, max-age=3600")
 		}
 		next(w, r)

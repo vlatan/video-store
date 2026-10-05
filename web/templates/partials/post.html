@@ -270,7 +270,7 @@
 			</span> -->
 		</div>
 
-		{{ else if .CurrentUser.IsAdmin }}
+		{{ else if .CurrentUser.IsAdmin .Config }}
 		<div class="unpublished">
 			<p>UNPUBLISHED DESCRIPTION:</p>
 			<div class="video-description">
@@ -447,7 +447,7 @@
 
 	<div class="sidebar_wrap">
 
-		{{ if .CurrentUser.IsAdmin }}
+		{{ if .CurrentUser.IsAdmin .Config }}
 		<span class="admin-buttons">
 			<button data-modal="video" class="modal-button">Delete</button>
 			<a href="/video/{{ .CurrentPost.VideoID }}/edit" class="modal-button edit-content">Edit</a>
@@ -474,7 +474,7 @@
 	</div>
 </article>
 
-{{ if .CurrentUser.IsAdmin }}
+{{ if .CurrentUser.IsAdmin .Config }}
 <dialog data-body="video" class="modal" closedby="any">
 	<form class="modal-content" action="/video/{{ .CurrentPost.VideoID }}/delete" method="POST">
 		<input type="hidden" name="_method" value="DELETE">

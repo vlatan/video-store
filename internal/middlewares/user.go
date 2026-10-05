@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/vlatan/video-store/internal/ctxd"
-	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/pathx"
 )
 
@@ -56,12 +55,6 @@ func (s *Service) LoadUser(next http.Handler) http.Handler {
 					)
 				}
 			}()
-		}
-
-		// Attach admin identity to user object
-		user.Admin = &types.AdminIdentity{
-			Provider:       s.config.AdminProvider,
-			ProviderUserId: s.config.AdminProviderUserId,
 		}
 
 		// Try to get the user avatar
