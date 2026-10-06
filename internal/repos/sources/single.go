@@ -55,6 +55,12 @@ func (r *Repository) InsertSource(ctx context.Context, source *types.Source) (in
 
 // Update a source
 func (r *Repository) UpdateSource(ctx context.Context, source *types.Source) (int64, error) {
+
+	query, err := r.GetQuery("update_source.sql", nil)
+	if err != nil {
+		return 0, err
+	}
+
 	// Marshal the playlist thumbnails
 	thumbnails, err := json.Marshal(source.Thumbnails)
 	if err != nil {
@@ -63,11 +69,6 @@ func (r *Repository) UpdateSource(ctx context.Context, source *types.Source) (in
 
 	// Marshal the channel thumbnails
 	chThumbnails, err := json.Marshal(source.ChannelThumbnails)
-	if err != nil {
-		return 0, err
-	}
-
-	query, err := r.GetQuery("update_source.sql", nil)
 	if err != nil {
 		return 0, err
 	}
@@ -86,5 +87,12 @@ func (r *Repository) UpdateSource(ctx context.Context, source *types.Source) (in
 		sqlnull.String(source.ChannelDescription),
 	)
 
+	return result.RowsAffected(), err
+}
+
+// DeleteSource deletes a source
+func (r *Repository) DeleteSource(ctx context.Context, playlistID string) (int64, error) {
+	const query = "DELETE FROM playlist WHERE playlist_id = $1;"
+	result, err := r.db.Pool.Exec(ctx, query, playlistID)
 	return result.RowsAffected(), err
 }
