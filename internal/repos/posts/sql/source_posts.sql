@@ -13,7 +13,7 @@ ratings AS (
 ),
 posts AS (
     SELECT 
-        p.title AS playlist_title,
+        p.channel_title,
         post.id,
         video_id, 
         post.title,

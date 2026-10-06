@@ -128,7 +128,7 @@ func (r *Repository) queryTaxonomyPosts(
 	for rows.Next() {
 		var (
 			post                         types.Post
-			originalTitle, playlistTitle sql.NullString
+			originalTitle, taxonomyTitle sql.NullString
 			totalNum                     int
 			avgRating                    sql.NullFloat64
 			ratingCount                  sql.NullInt64
@@ -136,7 +136,7 @@ func (r *Repository) queryTaxonomyPosts(
 
 		// Paste post from row to struct, thumbnails in a separate var
 		if err = rows.Scan(
-			&playlistTitle,
+			&taxonomyTitle,
 			&post.ID,
 			&post.VideoID,
 			&post.Title,
@@ -152,7 +152,7 @@ func (r *Repository) queryTaxonomyPosts(
 		}
 
 		post.OriginalTitle = originalTitle.String
-		posts.Title = playlistTitle.String
+		posts.Title = taxonomyTitle.String
 
 		// Attach ratings if any
 		if avgRating.Valid && ratingCount.Valid {
