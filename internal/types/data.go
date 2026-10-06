@@ -44,6 +44,8 @@ type TemplateData struct {
 	Title            string
 	CurrentPost      *Post
 	CurrentPage      *Page
+	CurrentCategory  *Category
+	CurrentSource    *Source
 	CurrentUser      *User
 	CurrentURI       string
 	BaseCanonicalURL string

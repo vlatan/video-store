@@ -110,6 +110,7 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Get template data
 	data := s.ui.TmplData(w, r)
+	data.CurrentCategory = &types.Category{Slug: slug}
 
 	var (
 		err   error

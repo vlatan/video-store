@@ -212,6 +212,7 @@ func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Get template data
 	data := s.ui.TmplData(w, r)
+	data.CurrentSource = &types.Source{PlaylistID: sourceID}
 
 	var (
 		err   error
