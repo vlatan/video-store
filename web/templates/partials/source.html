@@ -22,8 +22,8 @@
 <div class="content-title-wrap">
     <div class="content-title">
         <h1>{{ .Title }}</h1>
-        {{ if .Posts.TotalNum }}
-        <span>&ensp;-&ensp;{{ .Posts.TotalNum }} docs</span>
+        {{ with .Posts.TotalNum }}
+        <span>&ensp;-&ensp;{{ . }} docs</span>
         {{ end }}
     </div>
 
