@@ -40,6 +40,7 @@ func (a *App) RegisterRoutes() *App {
 	// Sources
 	mux.HandleFunc("/source/new", a.mw.IsAdmin(a.sources.NewSourceHandler))
 	mux.HandleFunc("GET /source/{source}/{$}", a.sources.SourcePostsHandler)
+	mux.HandleFunc("DELETE /source/{source}/delete", a.mw.IsAdmin(a.sources.DeleteSourceHandler))
 	mux.HandleFunc("GET /api/source/{source}/{$}", a.sources.SourcePostsAPI)
 	mux.HandleFunc("GET /sources/{$}", a.sources.SourcesHandler)
 
