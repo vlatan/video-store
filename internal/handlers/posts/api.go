@@ -339,7 +339,7 @@ func (s *Service) PostActionAPI(w http.ResponseWriter, r *http.Request) {
 }
 
 // DeleteActionAPI performs DELETE action on a video
-func (s *Service) DeleteActionAPI(w http.ResponseWriter, r *http.Request) {
+func (s *Service) UndoPostActionAPI(w http.ResponseWriter, r *http.Request) {
 
 	// Validate the YT ID
 	videoID := r.PathValue("video")
