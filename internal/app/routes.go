@@ -25,7 +25,7 @@ func (a *App) RegisterRoutes() *App {
 	mux.HandleFunc("DELETE /video/{video}/delete", a.mw.IsAdmin(a.posts.BanPostHandler))
 	mux.HandleFunc("GET /api/video/{video}/reviews", a.posts.PostReviewsAPI)
 	mux.HandleFunc("POST /api/video/{video}/{action}", a.mw.IsAuth(a.posts.PostActionAPI))
-	mux.HandleFunc("DELETE /api/video/{video}/{action}", a.mw.IsAuth(a.posts.DeleteActionAPI))
+	mux.HandleFunc("DELETE /api/video/{video}/{action}", a.mw.IsAuth(a.posts.UndoPostActionAPI))
 
 	// Categories
 	mux.HandleFunc("GET /category/{category}/{$}", a.posts.CategoryPostsHandler)
@@ -40,6 +40,7 @@ func (a *App) RegisterRoutes() *App {
 	// Sources
 	mux.HandleFunc("/source/new", a.mw.IsAdmin(a.sources.NewSourceHandler))
 	mux.HandleFunc("GET /source/{source}/{$}", a.sources.SourcePostsHandler)
+	mux.HandleFunc("DELETE /source/{source}/delete", a.mw.IsAdmin(a.sources.DeleteSourceHandler))
 	mux.HandleFunc("GET /api/source/{source}/{$}", a.sources.SourcePostsAPI)
 	mux.HandleFunc("GET /sources/{$}", a.sources.SourcesHandler)
 

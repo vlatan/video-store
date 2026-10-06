@@ -212,6 +212,7 @@ func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Get template data
 	data := s.ui.TmplData(w, r)
+	data.CurrentSource = &types.Source{PlaylistID: sourceID}
 
 	var (
 		err   error
@@ -257,4 +258,37 @@ func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	data.Title = data.Posts.Title
 	s.ui.RenderHTML(w, r, "source.html", data)
+}
+
+// DeleteSourceHandler deletes a source
+func (s *Service) DeleteSourceHandler(w http.ResponseWriter, r *http.Request) {
+
+	// Get the source ID from path
+	playlistID := r.PathValue("source")
+	rowsAffected, err := s.sourcesRepo.DeleteSource(r.Context(), playlistID)
+
+	if err != nil {
+		slog.ErrorContext(
+			r.Context(), "failed to delete the source",
+			"error", err,
+		)
+		data := s.ui.TmplData(w, r)
+		s.ui.HTMLError(w, r, data, http.StatusInternalServerError)
+		return
+	}
+
+	if rowsAffected == 0 {
+		slog.WarnContext(r.Context(), "no such source to delete")
+		data := s.ui.TmplData(w, r)
+		s.ui.HTMLError(w, r, data, http.StatusNotFound)
+		return
+	}
+
+	successDelete := types.FlashMessage{
+		Message:  "The source has been deleted!",
+		Category: "info",
+	}
+
+	s.session.AddFlash(w, r, &successDelete)
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }

@@ -135,7 +135,7 @@ func New() (*App, error) {
 		users:    users.New(usersRepo, postsRepo, av, rdb, r2s, ui, cfg),
 		posts:    posts.New(postsRepo, usersRepo, av, rdb, store, ui, cfg, yt, gemini),
 		pages:    pages.New(pagesRepo, rdb, store, ui, cfg),
-		sources:  sources.New(postsRepo, sourcesRepo, rdb, ui, cfg, yt),
+		sources:  sources.New(cfg, rdb, store, postsRepo, sourcesRepo, ui, yt),
 		sitemaps: sitemaps.New(postsRepo, rdb, ui, cfg),
 		text:     text.New(ui),
 		health:   health.New(db, rdb, ui),

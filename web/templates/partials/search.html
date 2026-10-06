@@ -25,15 +25,17 @@
 
 {{ define "content" }}
 <div class="content-title-wrap">
-    {{ if .Posts.TotalNum }}
-    <h1 class="content-title visually-hidden">Search results for: {{ .SearchQuery }}</h1>
-    <span>
-        <strong>{{ .Posts.TotalNum }}</strong> results <small>({{ .Posts.TimeTook }} seconds)</small>
-    </span>
-    {{ else }}
-    <h1 class="content-title visually-hidden">No search results found for: {{ .SearchQuery }}</h1>
-    <span>Sorry, no matching results for this query.</span>
-    {{ end }}
+    <div class="content-title">
+        {{ if .Posts.TotalNum }}
+        <h1 class="visually-hidden">Search results for: {{ .SearchQuery }}</h1>
+        <span>
+            <strong>{{ .Posts.TotalNum }}</strong> results <small>({{ .Posts.TimeTook }} seconds)</small>
+        </span>
+        {{ else }}
+        <h1 class="visually-hidden">No search results found for: {{ .SearchQuery }}</h1>
+        <span>Sorry, no matching results for this query.</span>
+        {{ end }}
+    </div>
 </div>
 {{ template "content.html" . }}
 {{ end }}

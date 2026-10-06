@@ -20,10 +20,12 @@
 
 {{ define "content" }}
 <div class="content-title-wrap">
-    <h1 class="content-title">{{ .Title }}</h1>
-    {{ if .Posts.TotalNum }}
-    <span>&ensp;-&ensp;{{ .Posts.TotalNum }} docs</span>
-    {{ end }}
+    <div class="content-title">
+        <h1>{{ .Title }}</h1>
+        {{ if .Posts.TotalNum }}
+        <span>&ensp;-&ensp;{{ .Posts.TotalNum }} docs</span>
+        {{ end }}
+    </div>
 </div>
 {{ template "content.html" . }}
 {{ end }}
