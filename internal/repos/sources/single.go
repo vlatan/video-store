@@ -92,7 +92,15 @@ func (r *Repository) UpdateSource(ctx context.Context, source *types.Source) (in
 
 // DeleteSource deletes a source
 func (r *Repository) DeleteSource(ctx context.Context, playlistID string) (int64, error) {
-	const query = "DELETE FROM playlist WHERE playlist_id = $1;"
+
+	// Source deletion will cascade to posts deletion and so on
+	query := "DELETE FROM playlist WHERE playlist_id = $1;"
+
+	// Account if the source is in fact the orphan videos
+	if playlistID == "other" {
+		query = "DELETE FROM post WHERE playlist_db_id IS NULL;"
+	}
+
 	result, err := r.db.Pool.Exec(ctx, query, playlistID)
 	return result.RowsAffected(), err
 }

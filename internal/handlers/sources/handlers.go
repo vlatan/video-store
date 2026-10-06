@@ -278,7 +278,7 @@ func (s *Service) DeleteSourceHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if rowsAffected == 0 {
-		slog.WarnContext(r.Context(), "no such post to ban")
+		slog.WarnContext(r.Context(), "no such source to delete")
 		data := s.ui.TmplData(w, r)
 		s.ui.HTMLError(w, r, data, http.StatusNotFound)
 		return
