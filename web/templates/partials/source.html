@@ -27,7 +27,7 @@
         {{ end }}
     </div>
 
-    {{ if .CurrentUser.IsAdmin .Config }}
+    {{ if and (.CurrentUser.IsAdmin .Config) (ne .CurrentSource.PlaylistID "other") }}
     <span class="admin-buttons">
         <button data-modal="source" class="modal-button">Delete</button>
     </span>
@@ -37,7 +37,7 @@
 {{ end }}
 
 
-{{ if .CurrentUser.IsAdmin .Config }}
+{{ if and (.CurrentUser.IsAdmin .Config) (ne .CurrentSource.PlaylistID "other") }}
 <dialog data-body="source" class="modal" closedby="any">
     <form class="modal-content" action="/source/{{ .CurrentSource.PlaylistID }}/delete" method="POST">
         <input type="hidden" name="_method" value="DELETE">
