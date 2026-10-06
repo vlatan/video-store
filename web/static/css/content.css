@@ -126,10 +126,14 @@ h2.video-title {
 .content-title-wrap {
     display: flex;
     align-items: center;
+    gap: var(--content-padding);
     margin-bottom: var(--content-padding);
 }
 
-.content-title {
+.content-title,
+.content-title h1 {
+    display: flex;
+    align-items: center;
     font-size: 1rem;
     line-height: normal;
     font-weight: normal;
