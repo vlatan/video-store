@@ -32,8 +32,8 @@ func (a *App) RegisterRoutes() *App {
 	mux.HandleFunc("GET /api/category/{category}/{$}", a.posts.CategoryPostsAPI)
 
 	// Release Year
-	mux.HandleFunc("GET /year/{year}/{$}", a.posts.CategoryPostsHandler)
-	mux.HandleFunc("GET /api/year/{year}/{$}", a.posts.CategoryPostsAPI)
+	mux.HandleFunc("GET /year/{year}/{$}", a.posts.YearPostsHandler)
+	mux.HandleFunc("GET /api/year/{year}/{$}", a.posts.YearPostsAPI)
 
 	// Pages
 	mux.HandleFunc("GET /page/{slug}/{$}", a.pages.SinglePageHandler)

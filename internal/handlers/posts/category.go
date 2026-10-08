@@ -73,7 +73,7 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	data.Posts = &posts
 	data.Title = data.Posts.Title
-	s.ui.RenderHTML(w, r, "category.html", data)
+	s.ui.RenderHTML(w, r, "taxonomy.html", data)
 }
 
 // Handle posts in a certain category

@@ -46,6 +46,7 @@ type TemplateData struct {
 	CurrentPage      *Page
 	CurrentCategory  *Category
 	CurrentSource    *Source
+	CurrentYear      int16
 	CurrentUser      *User
 	CurrentURI       string
 	BaseCanonicalURL string

@@ -23,7 +23,7 @@ const sitemaps = "templates/sitemaps"
 var needsContent = []string{
 	"home.html",
 	"search.html",
-	"category.html",
+	"taxonomy.html",
 	"source.html",
 }
 
