@@ -120,6 +120,14 @@
 						<a class="nav-item" href="/source/{{ .PlaylistID }}/">{{ .ChannelTitle }}</a>
 					</span>
 					{{ end }}
+					{{ with .CurrentPost.ReleaseYear }}
+					<span>
+						<strong>Released:</strong>
+						<a class="nav-item" href="/year/{{ . }}/" itemprop="dateCreated" content="{{ . }}">
+							{{ . }}
+						</a>
+					</span>
+					{{ end }}
 					{{ with .CurrentPost.Directors }}
 					<span>
 						<strong>Directed By:</strong>
@@ -131,12 +139,6 @@
 									itemprop="name">{{ $name }}</span></span>
 							{{- end -}}
 						</span>
-					</span>
-					{{ end }}
-					{{ with .CurrentPost.ReleaseYear }}
-					<span>
-						<strong>Released:</strong>
-						<span itemprop="dateCreated" content="{{ . }}">{{ . }}</span>
 					</span>
 					{{ end }}
 					<span>

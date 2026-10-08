@@ -82,7 +82,7 @@ func (s *Service) YearPostsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data.Posts = &posts
-	data.Title = fmt.Sprintf("%s %d", data.Posts.Title, data.CurrentYear)
+	data.Title = fmt.Sprintf("%s: %d", data.Posts.Title, data.CurrentYear)
 	s.ui.RenderHTML(w, r, "taxonomy.html", data)
 }
 
