@@ -24,7 +24,6 @@ var needsContent = []string{
 	"home.html",
 	"search.html",
 	"taxonomy.html",
-	"source.html",
 }
 
 // loadTemplates parses the templates and create a template map
