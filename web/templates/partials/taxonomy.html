@@ -1,0 +1,35 @@
+{{ template "base.html" . }}
+
+{{ define "extra_preload_css" }}
+<link rel="preload" href='{{ .AddVersion "/static/css/content.css" }}' as="style">
+{{ end }}
+
+{{ define "extra_css" }}
+<link rel="stylesheet" type="text/css" href='{{ .AddVersion "/static/css/content.css" }}'>
+{{ end }}
+
+{{ define "extra_meta" }}
+<meta property='og:title' content='{{ .Title }}'>
+<meta property='og:type' content='article'>
+<meta property='og:url' content='{{ .BaseCanonicalURL }}'>
+{{ end }}
+
+{{ define "title_tag" }}
+{{ .Title }} - {{ .Config.AppName }}
+{{ end }}
+
+{{ define "content" }}
+<div class="content-title-wrap">
+    <div class="content-title">
+        <h1>{{ .Title }}</h1>
+        {{ if .Posts.TotalNum }}
+        <span>&ensp;-&ensp;{{ .Posts.TotalNum }} docs</span>
+        {{ end }}
+    </div>
+</div>
+{{ template "content.html" . }}
+{{ end }}
+
+{{ define "extra_scripts" }}
+<script defer src='{{ .AddVersion "/static/js/scroll.js" }}'></script>
+{{ end }}
