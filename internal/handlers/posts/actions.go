@@ -5,9 +5,83 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"slices"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/vlatan/video-store/internal/ctxd"
 )
+
+// PostActionAPI performs POST action on a video
+func (s *Service) PostActionAPI(w http.ResponseWriter, r *http.Request) {
+
+	// Validate the YT ID
+	videoID := r.PathValue("video")
+	if validVideoID.FindStringSubmatch(videoID) == nil {
+		slog.WarnContext(r.Context(), "invalid video id")
+		s.ui.JSONError(w, r, http.StatusNotFound)
+		return
+	}
+
+	// Validate the action
+	action := r.PathValue("action")
+	allowedActions := []string{"like", "fave", "rate", "review"}
+	if !slices.Contains(allowedActions, action) {
+		slog.WarnContext(r.Context(), "not a valid action on post")
+		s.ui.JSONError(w, r, http.StatusNotFound)
+		return
+	}
+
+	// Get the current user
+	user := ctxd.GetUser(r.Context())
+
+	switch action {
+	case "like":
+		s.handleLike(w, r, user.ID, videoID)
+	case "fave":
+		s.handleFave(w, r, user.ID, videoID)
+	case "rate":
+		s.handleRate(w, r, user.ID, videoID)
+	case "review":
+		s.handleReview(w, r, user.ID, videoID)
+	default:
+		s.ui.JSONError(w, r, http.StatusBadRequest)
+	}
+}
+
+// UndoPostActionAPI undoes action on a video
+func (s *Service) UndoPostActionAPI(w http.ResponseWriter, r *http.Request) {
+
+	// Validate the YT ID
+	videoID := r.PathValue("video")
+	if validVideoID.FindStringSubmatch(videoID) == nil {
+		slog.WarnContext(r.Context(), "invalid video id")
+		s.ui.JSONError(w, r, http.StatusNotFound)
+		return
+	}
+
+	// Validate the action
+	action := r.PathValue("action")
+	allowedActions := []string{"unlike", "unfave", "unrate"}
+	if !slices.Contains(allowedActions, action) {
+		slog.WarnContext(r.Context(), "not a valid action on post")
+		s.ui.JSONError(w, r, http.StatusNotFound)
+		return
+	}
+
+	// Get the current user
+	user := ctxd.GetUser(r.Context())
+
+	switch action {
+	case "unlike":
+		s.handleUnlike(w, r, user.ID, videoID)
+	case "unfave":
+		s.handleUnfave(w, r, user.ID, videoID)
+	case "unrate":
+		s.handleUnrate(w, r, user.ID, videoID)
+	default:
+		s.ui.JSONError(w, r, http.StatusBadRequest)
+	}
+}
 
 // Handle a post like from user
 func (s *Service) handleLike(w http.ResponseWriter, r *http.Request, userID int, videoID string) {

@@ -46,6 +46,23 @@ func (r *Repository) GetSourcePosts(
 	)
 }
 
+// Get a limited number of posts from one category with cursor
+func (r *Repository) GetYearPosts(
+	ctx context.Context,
+	releaseYear,
+	cursor,
+	orderBy string,
+) (types.Posts, error) {
+
+	return r.queryTaxonomyPosts(
+		ctx,
+		"year_posts.sql",
+		releaseYear,
+		cursor,
+		orderBy,
+	)
+}
+
 // Query the DB for posts based on variadic arguments
 func (r *Repository) queryTaxonomyPosts(
 	ctx context.Context,
@@ -55,7 +72,7 @@ func (r *Repository) queryTaxonomyPosts(
 	orderBy string,
 ) (types.Posts, error) {
 
-	// The taxonomy slug and the limit are the first two arguments ($1 and $2)
+	// The taxonomy ID and the limit are the first two arguments ($1 and $2)
 	// Peek for one post beoynd the limit to see if there's next page,
 	// meaning whether to construct and send the next cursor at all.
 	args := []any{taxonomyID, r.config.PostsPerPage + 1}

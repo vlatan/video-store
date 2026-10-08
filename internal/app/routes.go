@@ -31,6 +31,10 @@ func (a *App) RegisterRoutes() *App {
 	mux.HandleFunc("GET /category/{category}/{$}", a.posts.CategoryPostsHandler)
 	mux.HandleFunc("GET /api/category/{category}/{$}", a.posts.CategoryPostsAPI)
 
+	// Release Year
+	mux.HandleFunc("GET /year/{year}/{$}", a.posts.CategoryPostsHandler)
+	mux.HandleFunc("GET /api/year/{year}/{$}", a.posts.CategoryPostsAPI)
+
 	// Pages
 	mux.HandleFunc("GET /page/{slug}/{$}", a.pages.SinglePageHandler)
 	mux.HandleFunc("/page/{slug}/edit", a.mw.IsAdmin(a.pages.UpdatePageHandler))
