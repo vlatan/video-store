@@ -23,7 +23,7 @@
     <div class="content-title">
         <h1>{{ .Title }}</h1>
         {{ if .Posts.TotalNum }}
-        <span>&ensp;-&ensp;{{ .Posts.TotalNum }} docs</span>
+        <span>&ensp;-&ensp;<span id="faved-counter">{{ .Posts.TotalNum }}</span> docs</span>
         {{ end }}
     </div>
 </div>
