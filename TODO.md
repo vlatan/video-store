@@ -1,5 +1,6 @@
-- Make search bar on small screens accross entire screen
 - Make the years (and possibly directors) link to films listing
+- Make search bar on small screens accross entire screen
+
 - Write tests
 - Internal linking?
 - Remove YT tags and description from search vector?
