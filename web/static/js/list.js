@@ -11,7 +11,7 @@ document.addEventListener("click", async (event) => {
     }
     const url = `/api/video/${remove.dataset.id}/${action}`;
     try {
-        const res = await postData(url);
+        const res = await deleteData(url);
         if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
         remove.parentElement?.remove();
         setAlert(messageText);
