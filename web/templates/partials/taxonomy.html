@@ -12,6 +12,9 @@
 <meta property='og:title' content='{{ .Title }}'>
 <meta property='og:type' content='article'>
 <meta property='og:url' content='{{ .BaseCanonicalURL }}'>
+{{ if .CurrentYear }} <!-- Do not index relese year taxonomy -->
+<meta name="robots" content="noindex, follow">
+{{ end }}
 {{ end }}
 
 {{ define "title_tag" }}
@@ -22,12 +25,13 @@
 <div class="content-title-wrap">
     <div class="content-title">
         <h1>{{ .Title }}</h1>
-        {{ with .Posts.TotalNum }}
-        <span>&ensp;-&ensp;{{ . }} docs</span>
+        {{ if .Posts.TotalNum }}
+        <span>&ensp;-&ensp;{{ .Posts.TotalNum }} docs</span>
         {{ end }}
     </div>
 
-    {{ if and (.CurrentUser.IsAdmin .Config) (ne .CurrentSource.PlaylistID "other") }}
+    <!-- Add delete button if source taxonomy -->
+    {{ if and .CurrentSource (.CurrentUser.IsAdmin .Config) (ne .CurrentSource.PlaylistID "other") }}
     <span class="admin-buttons">
         <button data-modal="source" class="modal-button">Delete</button>
     </span>
@@ -37,7 +41,8 @@
 {{ end }}
 
 
-{{ if and (.CurrentUser.IsAdmin .Config) (ne .CurrentSource.PlaylistID "other") }}
+<!-- Add delete dialog if source taxonomy -->
+{{ if and .CurrentSource (.CurrentUser.IsAdmin .Config) (ne .CurrentSource.PlaylistID "other") }}
 <dialog data-body="source" class="modal" closedby="any">
     <form class="modal-content" action="/source/{{ .CurrentSource.PlaylistID }}/delete" method="POST">
         <input type="hidden" name="_method" value="DELETE">

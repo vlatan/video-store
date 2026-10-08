@@ -23,8 +23,7 @@ const sitemaps = "templates/sitemaps"
 var needsContent = []string{
 	"home.html",
 	"search.html",
-	"category.html",
-	"source.html",
+	"taxonomy.html",
 }
 
 // loadTemplates parses the templates and create a template map

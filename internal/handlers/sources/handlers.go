@@ -257,7 +257,7 @@ func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
 		data.Posts.Title = "Other Uploads"
 	}
 	data.Title = data.Posts.Title
-	s.ui.RenderHTML(w, r, "source.html", data)
+	s.ui.RenderHTML(w, r, "taxonomy.html", data)
 }
 
 // DeleteSourceHandler deletes a source
