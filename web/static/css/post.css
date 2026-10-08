@@ -225,6 +225,11 @@ h1.video-title {
     background: var(--primary-background-color);
 }
 
+.like [data-liked],
+.fave [data-saved] {
+    color: var(--yellow);
+}
+
 /* ############# Post Dialogs ############# */
 
 .post-dialog {
