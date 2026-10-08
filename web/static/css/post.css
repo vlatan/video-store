@@ -465,7 +465,7 @@ h1.video-title {
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    border-top: 1px solid var(--secondary-border-color);
+    border-top: 1px solid var(--primary-border-color);
     padding-top: 2.3rem;
     width: 100%;
 }
@@ -549,7 +549,7 @@ h1.video-title {
     align-items: center;
     justify-content: space-between;
     gap: 0.5rem;
-    border-top: 1px solid var(--secondary-border-color);
+    border-top: 1px solid var(--primary-border-color);
     padding-top: 2rem;
 }
 
