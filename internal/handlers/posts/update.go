@@ -13,6 +13,7 @@ import (
 	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/normalize"
 	"github.com/vlatan/video-store/internal/utils/redirect"
+	"github.com/vlatan/video-store/internal/utils/stringx"
 )
 
 // UpdatePostHandler handles the post update
@@ -163,32 +164,17 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 			)
 		}
 
-		// Convert the release year to int16 before the DB upsert.
-		// ParseInt bitSize=16 guarantees n fits in int16.
-		var releaseYear int64
-		if data.Form.ReleaseYear.Value != "" {
-			releaseYear, err = strconv.ParseInt(data.Form.ReleaseYear.Value, 10, 16)
-			if err != nil {
-				slog.WarnContext(
-					r.Context(), "failed to parse release year",
-					"error", err,
-				)
-				formError.Message = "Could not parse the release year"
-				data.Form.Error = &formError
-				s.ui.RenderHTML(w, r, "form.html", data)
-				return
-			}
-
-			if releaseYear < 1900 || int(releaseYear) > maxYear {
-				slog.WarnContext(
-					r.Context(),
-					fmt.Sprintf("Year must be between 1900 and %d", maxYear),
-				)
-				formError.Message = "Could not parse the release year"
-				data.Form.Error = &formError
-				s.ui.RenderHTML(w, r, "form.html", data)
-				return
-			}
+		// Convert the release year to valid int16 year
+		releaseYear, err := stringx.ParseReleaseYear(data.Form.ReleaseYear.Value)
+		if err != nil {
+			slog.WarnContext(
+				r.Context(), "failed to parse release year",
+				"error", err,
+			)
+			formError.Message = "Could not parse the release year"
+			data.Form.Error = &formError
+			s.ui.RenderHTML(w, r, "form.html", data)
+			return
 		}
 
 		// Normalize the directors before DB upsert
@@ -212,7 +198,7 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 		data.CurrentPost.Category.Name = data.Form.Category.Value
 		data.CurrentPost.Summary = normalize.Description(data.Form.Content.Value)
 		data.CurrentPost.Directors = directors
-		data.CurrentPost.ReleaseYear = int16(releaseYear)
+		data.CurrentPost.ReleaseYear = releaseYear
 
 		// Update the post
 		rowsAffected, err := s.postsRepo.UpdatePost(r.Context(), data.CurrentPost)

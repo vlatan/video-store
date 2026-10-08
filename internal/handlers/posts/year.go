@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"strconv"
 
 	"github.com/vlatan/video-store/internal/ctxd"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/types"
+	"github.com/vlatan/video-store/internal/utils/stringx"
 )
 
 // YearPostsHandler handles posts in a certain release year
@@ -20,19 +20,17 @@ func (s *Service) YearPostsHandler(w http.ResponseWriter, r *http.Request) {
 	// Get template data
 	data := s.ui.TmplData(w, r)
 
-	// Convert the release year to int16.
-	// ParseInt bitSize=16 guarantees n fits in int16.
-	yearInt, err := strconv.ParseInt(year, 10, 16)
+	// Convert the release year to valid int16 year
+	var err error
+	data.CurrentYear, err = stringx.ParseReleaseYear(year)
 	if err != nil {
-		slog.ErrorContext(
+		slog.WarnContext(
 			r.Context(), "failed to parse release year",
 			"error", err,
 		)
 		s.ui.HTMLError(w, r, data, http.StatusNotFound)
 		return
 	}
-
-	data.CurrentYear = int16(yearInt)
 
 	// Construct the Redis key
 	redisKey := fmt.Sprintf("year:%s:posts", year)
@@ -46,7 +44,8 @@ func (s *Service) YearPostsHandler(w http.ResponseWriter, r *http.Request) {
 		redisKey += fmt.Sprintf(":%s", types.RatingCount)
 	}
 
-	// Don't cache the category posts only for the admin
+	// Don't cache the release year posts only for the admin.
+	// We can pass the release year as string here no problem.
 	var posts types.Posts
 	if data.CurrentUser.IsAdmin(s.config) {
 		posts, err = s.postsRepo.GetYearPosts(
@@ -82,7 +81,7 @@ func (s *Service) YearPostsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data.Posts = &posts
-	data.Title = fmt.Sprintf("%s: %d", data.Posts.Title, data.CurrentYear)
+	data.Title = fmt.Sprintf("%s: %s", data.Posts.Title, year)
 	s.ui.RenderHTML(w, r, "taxonomy.html", data)
 }
 
@@ -92,9 +91,8 @@ func (s *Service) YearPostsAPI(w http.ResponseWriter, r *http.Request) {
 	// Get the category slug
 	year := r.PathValue("year")
 
-	// Convert the release year to int16.
-	// ParseInt bitSize=16 guarantees n fits in int16.
-	_, err := strconv.ParseInt(year, 10, 16)
+	// Try to parse the relesea year
+	_, err := stringx.ParseReleaseYear(year)
 	if err != nil {
 		slog.ErrorContext(
 			r.Context(), "failed to parse release year",
