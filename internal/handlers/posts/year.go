@@ -22,7 +22,7 @@ func (s *Service) YearPostsHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Convert the release year to valid int16 year
 	var err error
-	data.CurrentYear, err = stringx.ParseReleaseYear(year)
+	data.CurrentYear, err = stringx.ParseYear(year)
 	if err != nil {
 		slog.WarnContext(
 			r.Context(), "failed to parse release year",
@@ -92,7 +92,7 @@ func (s *Service) YearPostsAPI(w http.ResponseWriter, r *http.Request) {
 	year := r.PathValue("year")
 
 	// Try to parse the relesea year
-	_, err := stringx.ParseReleaseYear(year)
+	_, err := stringx.ParseYear(year)
 	if err != nil {
 		slog.ErrorContext(
 			r.Context(), "failed to parse release year",

@@ -165,7 +165,7 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Convert the release year to valid int16 year
-		releaseYear, err := stringx.ParseReleaseYear(data.Form.ReleaseYear.Value)
+		releaseYear, err := stringx.ParseYear(data.Form.ReleaseYear.Value)
 		if err != nil {
 			slog.WarnContext(
 				r.Context(), "failed to parse release year",
