@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/vlatan/video-store/internal/types"
+	"github.com/vlatan/video-store/internal/utils/stringx"
 )
 
 // Get a limited number of posts with cursor
@@ -47,7 +48,7 @@ func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (
 	var zero, posts types.Posts
 	if cursor != "" {
 
-		cursorParts, err := decodeCursor(cursor)
+		cursorParts, err := stringx.DecodeCursor(cursor)
 		if err != nil {
 			return zero, err
 		}
@@ -129,7 +130,7 @@ func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (
 	}
 
 	// Post-process the posts, prepare the thumbnails
-	if err = postProcessPosts(ctx, posts); err != nil {
+	if err = posts.ProcessThumbs(ctx); err != nil {
 		return zero, err
 	}
 

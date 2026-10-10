@@ -6,10 +6,10 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/vlatan/video-store/internal/types"
+	"github.com/vlatan/video-store/internal/utils/stringx"
 )
 
 // Get a limited number of posts from one category with cursor
@@ -107,7 +107,7 @@ func (r *Repository) queryTaxonomyPosts(
 	if cursor != "" {
 
 		total = "0"
-		cursorParts, err := decodeCursor(cursor)
+		cursorParts, err := stringx.DecodeCursor(cursor)
 		if err != nil {
 			return zero, err
 		}
@@ -192,7 +192,7 @@ func (r *Repository) queryTaxonomyPosts(
 	}
 
 	// Post-process the posts, prepare the thumbnails
-	if err = postProcessPosts(ctx, posts); err != nil {
+	if err = posts.ProcessThumbs(ctx); err != nil {
 		return zero, err
 	}
 
@@ -230,14 +230,4 @@ func (r *Repository) queryTaxonomyPosts(
 	posts.NextCursor = base64.StdEncoding.EncodeToString([]byte(cursorStr))
 
 	return posts, nil
-}
-
-// decodeCursor decodes base64 string, splits the string on comma
-// and returns a slice of strings
-func decodeCursor(cursor string) ([]string, error) {
-	decodedCursor, err := base64.StdEncoding.DecodeString(cursor)
-	if err != nil {
-		return nil, fmt.Errorf("could not decode the cursor; %w", err)
-	}
-	return strings.Split(string(decodedCursor), ","), nil
 }

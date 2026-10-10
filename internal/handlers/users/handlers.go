@@ -11,7 +11,7 @@ func (s *Service) UserFavoritesHandler(w http.ResponseWriter, r *http.Request) {
 	// Get template data
 	data := s.ui.TmplData(w, r)
 
-	posts, err := s.postsRepo.GetUserFavedPosts(r.Context(), data.CurrentUser.ID, "")
+	posts, err := s.usersRepo.GetUserFavedPosts(r.Context(), data.CurrentUser.ID, "")
 
 	if err != nil {
 		slog.ErrorContext(

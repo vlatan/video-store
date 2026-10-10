@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/vlatan/video-store/internal/types"
+	"github.com/vlatan/video-store/internal/utils/stringx"
 )
 
 // Get posts based on a user search query using a cursor
@@ -35,7 +36,7 @@ func (r *Repository) SearchPosts(
 	if cursor != "" {
 
 		total = "0"
-		cursorParts, err := decodeCursor(cursor)
+		cursorParts, err := stringx.DecodeCursor(cursor)
 		if err != nil {
 			return zero, err
 		}
@@ -119,7 +120,7 @@ func (r *Repository) SearchPosts(
 	}
 
 	// Post-process the posts, prepare the thumbnail
-	if err = postProcessPosts(ctx, posts); err != nil {
+	if err = posts.ProcessThumbs(ctx); err != nil {
 		return zero, err
 	}
 

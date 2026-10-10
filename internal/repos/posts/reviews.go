@@ -34,7 +34,7 @@ func (r *Repository) GetPostReviews(ctx context.Context, videoID, cursor string)
 	if cursor != "" {
 
 		total = "0"
-		cursorParts, err := decodeCursor(cursor)
+		cursorParts, err := stringx.DecodeCursor(cursor)
 		if err != nil {
 			return zero, err
 		}

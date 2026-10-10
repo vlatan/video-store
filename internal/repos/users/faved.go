@@ -1,4 +1,4 @@
-package posts
+package users
 
 import (
 	"context"
@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/vlatan/video-store/internal/types"
+	"github.com/vlatan/video-store/internal/utils/stringx"
 )
 
 // Get user's favorited posts
@@ -31,7 +32,7 @@ func (r *Repository) GetUserFavedPosts(
 	if cursor != "" {
 
 		total = "0"
-		cursorParts, err := decodeCursor(cursor)
+		cursorParts, err := stringx.DecodeCursor(cursor)
 		if err != nil {
 			return zero, err
 		}
@@ -113,7 +114,7 @@ func (r *Repository) GetUserFavedPosts(
 	}
 
 	// Post-process the posts, prepare the thumbnails
-	if err = postProcessPosts(ctx, posts); err != nil {
+	if err = posts.ProcessThumbs(ctx); err != nil {
 		return zero, err
 	}
 
