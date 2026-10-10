@@ -4,12 +4,13 @@ import (
 	"context"
 
 	"github.com/vlatan/video-store/internal/types"
+	"github.com/vlatan/video-store/internal/utils/stringx"
 )
 
 // Get all valid categories
 func (r *Repository) GetCategories(ctx context.Context) (types.Categories, error) {
 
-	query, err := r.GetQuery("all_categories.sql", nil)
+	query, err := stringx.GetQuery(r.tmpl, "all_categories.sql", nil)
 	if err != nil {
 		return nil, err
 	}

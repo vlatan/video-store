@@ -55,7 +55,7 @@ func (r *Repository) SearchPosts(
 	}
 
 	sqlParts := struct{ TotalCount, WhereCondition string }{total, where}
-	query, err := r.GetQuery("search_posts.sql", sqlParts)
+	query, err := stringx.GetQuery(r.tmpl, "search_posts.sql", sqlParts)
 	if err != nil {
 		return zero, err
 	}

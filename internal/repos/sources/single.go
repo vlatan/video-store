@@ -6,6 +6,7 @@ import (
 
 	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/sqlnull"
+	"github.com/vlatan/video-store/internal/utils/stringx"
 )
 
 // Check if source exists
@@ -30,7 +31,7 @@ func (r *Repository) InsertSource(ctx context.Context, source *types.Source) (in
 		return 0, err
 	}
 
-	query, err := r.GetQuery("insert_source.sql", nil)
+	query, err := stringx.GetQuery(r.tmpl, "insert_source.sql", nil)
 	if err != nil {
 		return 0, err
 	}
@@ -56,7 +57,7 @@ func (r *Repository) InsertSource(ctx context.Context, source *types.Source) (in
 // Update a source
 func (r *Repository) UpdateSource(ctx context.Context, source *types.Source) (int64, error) {
 
-	query, err := r.GetQuery("update_source.sql", nil)
+	query, err := stringx.GetQuery(r.tmpl, "update_source.sql", nil)
 	if err != nil {
 		return 0, err
 	}

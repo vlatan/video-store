@@ -6,6 +6,7 @@ import (
 	"errors"
 
 	"github.com/vlatan/video-store/internal/types"
+	"github.com/vlatan/video-store/internal/utils/stringx"
 )
 
 // Get random posts, but exclude posts with the exact title match
@@ -16,7 +17,7 @@ func (r *Repository) GetRandomPosts(ctx context.Context, title string, limit int
 		return zero, errors.New("title can't be empty string")
 	}
 
-	query, err := r.GetQuery("random_posts.sql", nil)
+	query, err := stringx.GetQuery(r.tmpl, "random_posts.sql", nil)
 	if err != nil {
 		return zero, err
 	}

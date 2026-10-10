@@ -46,7 +46,7 @@ func (r *Repository) InsertPost(ctx context.Context, post *types.Post) (int64, e
 		roles[i] = "Director"
 	}
 
-	query, err := r.GetQuery("insert_post.sql", nil)
+	query, err := stringx.GetQuery(r.tmpl, "insert_post.sql", nil)
 	if err != nil {
 		return 0, err
 	}
@@ -84,7 +84,7 @@ func (r *Repository) InsertPost(ctx context.Context, post *types.Post) (int64, e
 // OriginalTitle, Category, Summary, ReleaseYear, Directors
 func (r *Repository) UpdatePost(ctx context.Context, post *types.Post) (int64, error) {
 
-	query, err := r.GetQuery("update_post.sql", nil)
+	query, err := stringx.GetQuery(r.tmpl, "update_post.sql", nil)
 	if err != nil {
 		return 0, err
 	}
@@ -118,7 +118,7 @@ func (r *Repository) UpdatePost(ctx context.Context, post *types.Post) (int64, e
 func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (types.Post, error) {
 
 	var zero, post types.Post
-	query, err := r.GetQuery("single_post.sql", nil)
+	query, err := stringx.GetQuery(r.tmpl, "single_post.sql", nil)
 	if err != nil {
 		return zero, err
 	}

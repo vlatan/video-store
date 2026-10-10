@@ -48,7 +48,7 @@ func (r *Repository) GetPostReviews(ctx context.Context, videoID, cursor string)
 	}
 
 	sqlParts := struct{ TotalCount, AndCondition string }{total, andCondition}
-	query, err := r.GetQuery("post_reviews.sql", sqlParts)
+	query, err := stringx.GetQuery(r.tmpl, "post_reviews.sql", sqlParts)
 	if err != nil {
 		return zero, err
 	}

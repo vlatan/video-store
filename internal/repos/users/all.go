@@ -5,6 +5,7 @@ import (
 	"database/sql"
 
 	"github.com/vlatan/video-store/internal/types"
+	"github.com/vlatan/video-store/internal/utils/stringx"
 )
 
 // Get users with limit and offset
@@ -16,7 +17,7 @@ func (r *Repository) GetUsers(ctx context.Context, page int) (types.Users, error
 
 	var zero, users types.Users
 
-	query, err := r.GetQuery("offset_users.sql", nil)
+	query, err := stringx.GetQuery(r.tmpl, "offset_users.sql", nil)
 	if err != nil {
 		return zero, err
 	}

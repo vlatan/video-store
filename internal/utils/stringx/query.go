@@ -1,4 +1,4 @@
-package repo
+package stringx
 
 import (
 	"bytes"
@@ -7,11 +7,10 @@ import (
 
 // GetQuery executes named template SQL query from the tmpl object
 func GetQuery(tmpl *template.Template, name string, sqlParts any) (string, error) {
-	var buf bytes.Buffer
 
 	// Execute the specific SQL query by its filename
-	err := tmpl.ExecuteTemplate(&buf, name, sqlParts)
-	if err != nil {
+	var buf bytes.Buffer
+	if err := tmpl.ExecuteTemplate(&buf, name, sqlParts); err != nil {
 		return "", err
 	}
 

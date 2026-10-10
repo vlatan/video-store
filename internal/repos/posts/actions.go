@@ -17,7 +17,7 @@ import (
 // User likes a post
 func (r *Repository) Like(ctx context.Context, userID int, videoID string) (int64, error) {
 
-	query, err := r.GetQuery("like_post.sql", nil)
+	query, err := stringx.GetQuery(r.tmpl, "like_post.sql", nil)
 	if err != nil {
 		return 0, err
 	}
@@ -29,7 +29,7 @@ func (r *Repository) Like(ctx context.Context, userID int, videoID string) (int6
 // User unlikes a post
 func (r *Repository) Unlike(ctx context.Context, userID int, videoID string) (int64, error) {
 
-	query, err := r.GetQuery("unlike_post.sql", nil)
+	query, err := stringx.GetQuery(r.tmpl, "unlike_post.sql", nil)
 	if err != nil {
 		return 0, err
 	}
@@ -41,7 +41,7 @@ func (r *Repository) Unlike(ctx context.Context, userID int, videoID string) (in
 // User favorites a post
 func (r *Repository) Fave(ctx context.Context, userID int, videoID string) (int64, error) {
 
-	query, err := r.GetQuery("fave_post.sql", nil)
+	query, err := stringx.GetQuery(r.tmpl, "fave_post.sql", nil)
 	if err != nil {
 		return 0, err
 	}
@@ -53,7 +53,7 @@ func (r *Repository) Fave(ctx context.Context, userID int, videoID string) (int6
 // User unfavorites a post
 func (r *Repository) Unfave(ctx context.Context, userID int, videoID string) (int64, error) {
 
-	query, err := r.GetQuery("unfave_post.sql", nil)
+	query, err := stringx.GetQuery(r.tmpl, "unfave_post.sql", nil)
 	if err != nil {
 		return 0, err
 	}
@@ -86,7 +86,7 @@ func (r *Repository) Rate(ctx context.Context, rating uint8, userID int, videoID
 		}
 	}()
 
-	query, err := r.GetQuery("rate_post.sql", nil)
+	query, err := stringx.GetQuery(r.tmpl, "rate_post.sql", nil)
 	if err != nil {
 		return zero, err
 	}
@@ -149,7 +149,7 @@ func (r *Repository) Unrate(
 		}
 	}()
 
-	query, err := r.GetQuery("unrate_post.sql", nil)
+	query, err := stringx.GetQuery(r.tmpl, "unrate_post.sql", nil)
 	if err != nil {
 		return zero, err
 	}
@@ -213,7 +213,7 @@ func (r *Repository) Review(
 		}
 	}()
 
-	query, err := r.GetQuery("review_post.sql", nil)
+	query, err := stringx.GetQuery(r.tmpl, "review_post.sql", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -277,7 +277,7 @@ func (r *Repository) Review(
 // Update a playlist
 func (r *Repository) UpdateSource(ctx context.Context, videoID, playlistID string) (int64, error) {
 
-	query, err := r.GetQuery("update_post_source.sql", nil)
+	query, err := stringx.GetQuery(r.tmpl, "update_post_source.sql", nil)
 	if err != nil {
 		return 0, err
 	}
@@ -289,7 +289,7 @@ func (r *Repository) UpdateSource(ctx context.Context, videoID, playlistID strin
 // Ban a post (move it to deleted table)
 func (r *Repository) BanPost(ctx context.Context, videoID string) (int64, error) {
 
-	query, err := r.GetQuery("ban_post.sql", nil)
+	query, err := stringx.GetQuery(r.tmpl, "ban_post.sql", nil)
 	if err != nil {
 		return 0, err
 	}
@@ -309,7 +309,7 @@ func (r *Repository) DeletePost(ctx context.Context, videoID string) (int64, err
 func (r *Repository) GetUserActions(ctx context.Context, userID, postID int) (types.Actions, error) {
 
 	var zero, actions types.Actions
-	query, err := r.GetQuery("user_actions.sql", nil)
+	query, err := stringx.GetQuery(r.tmpl, "user_actions.sql", nil)
 	if err != nil {
 		return zero, err
 	}

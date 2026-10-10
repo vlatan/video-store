@@ -69,7 +69,7 @@ func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (
 	}
 
 	sqlParts := struct{ WhereCondition, OrderByWhat string }{where, order}
-	query, err := r.GetQuery("home_posts.sql", sqlParts)
+	query, err := stringx.GetQuery(r.tmpl, "home_posts.sql", sqlParts)
 
 	if err != nil {
 		return zero, err

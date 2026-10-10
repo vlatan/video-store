@@ -6,12 +6,13 @@ import (
 	"fmt"
 
 	"github.com/vlatan/video-store/internal/types"
+	"github.com/vlatan/video-store/internal/utils/stringx"
 )
 
 // Get a limited number of sources with offset
 func (r *Repository) GetAllSources(ctx context.Context) (types.Sources, error) {
 
-	query, err := r.GetQuery("all_sources.sql", nil)
+	query, err := stringx.GetQuery(r.tmpl, "all_sources.sql", nil)
 	if err != nil {
 		return nil, err
 	}

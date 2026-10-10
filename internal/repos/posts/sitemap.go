@@ -5,12 +5,13 @@ import (
 	"time"
 
 	"github.com/vlatan/video-store/internal/types"
+	"github.com/vlatan/video-store/internal/utils/stringx"
 )
 
 func (r *Repository) SitemapData(ctx context.Context, args ...any) ([]*types.SitemapItem, error) {
 
 	// Get query
-	query, err := r.GetQuery("sitemap_data.sql", nil)
+	query, err := stringx.GetQuery(r.tmpl, "sitemap_data.sql", nil)
 	if err != nil {
 		return nil, err
 	}

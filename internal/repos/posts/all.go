@@ -5,12 +5,13 @@ import (
 	"database/sql"
 
 	"github.com/vlatan/video-store/internal/types"
+	"github.com/vlatan/video-store/internal/utils/stringx"
 )
 
 // Get all the posts from DB
 func (r *Repository) GetAllPosts(ctx context.Context) ([]*types.Post, error) {
 
-	query, err := r.GetQuery("all_posts.sql", nil)
+	query, err := stringx.GetQuery(r.tmpl, "all_posts.sql", nil)
 	if err != nil {
 		return nil, err
 	}

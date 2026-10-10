@@ -128,7 +128,7 @@ func (r *Repository) queryTaxonomyPosts(
 	}
 
 	sqlParts := struct{ TotalCount, WhereCondition, OrderByWhat string }{total, where, order}
-	query, err := r.GetQuery(sqlFilename, sqlParts)
+	query, err := stringx.GetQuery(r.tmpl, sqlFilename, sqlParts)
 	if err != nil {
 		return zero, err
 	}
