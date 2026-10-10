@@ -7,14 +7,12 @@ import (
 	"github.com/vlatan/video-store/internal/integrations/gemini"
 	"github.com/vlatan/video-store/internal/integrations/yt"
 	postsRepo "github.com/vlatan/video-store/internal/repos/posts"
-	usersRepo "github.com/vlatan/video-store/internal/repos/users"
 	"github.com/vlatan/video-store/internal/store"
 	"github.com/vlatan/video-store/internal/ui"
 )
 
 type Service struct {
 	postsRepo *postsRepo.Repository
-	usersRepo *usersRepo.Repository
 	avatar    *avatar.Service
 	rdb       *rdb.Service
 	session   *store.Service
@@ -26,7 +24,6 @@ type Service struct {
 
 func New(
 	postsRepo *postsRepo.Repository,
-	usersRepo *usersRepo.Repository,
 	avatar *avatar.Service,
 	rdb *rdb.Service,
 	store *store.Service,
@@ -37,7 +34,6 @@ func New(
 ) *Service {
 	return &Service{
 		postsRepo: postsRepo,
-		usersRepo: usersRepo,
 		avatar:    avatar,
 		rdb:       rdb,
 		session:   store,

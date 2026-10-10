@@ -133,7 +133,7 @@ func New() (*App, error) {
 		// Handlers services
 		auth:     auth.New(usersRepo, av, store, rdb, r2s, ui, cfg),
 		users:    users.New(usersRepo, postsRepo, av, rdb, r2s, ui, cfg),
-		posts:    posts.New(postsRepo, usersRepo, av, rdb, store, ui, cfg, yt, gemini),
+		posts:    posts.New(postsRepo, av, rdb, store, ui, cfg, yt, gemini),
 		pages:    pages.New(pagesRepo, rdb, store, ui, cfg),
 		sources:  sources.New(cfg, rdb, store, postsRepo, sourcesRepo, ui, yt),
 		sitemaps: sitemaps.New(postsRepo, rdb, ui, cfg),

@@ -129,7 +129,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 		if data.CurrentUser.IsAuthenticated() {
 
 			var taskErr error
-			userActions, taskErr = s.usersRepo.GetUserActions(
+			userActions, taskErr = s.postsRepo.GetUserActions(
 				r.Context(),
 				data.CurrentUser.ID,
 				post.ID,
