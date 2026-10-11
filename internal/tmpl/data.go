@@ -9,7 +9,7 @@ import (
 	"github.com/vlatan/video-store/internal/utils/pathx"
 )
 
-// TmplData creates new default data struct to be passed to the templates
+// Data creates new default data struct to be passed to the templates
 func (s *Service) Data(w http.ResponseWriter, r *http.Request) *types.TemplateData {
 
 	// Get the categories from cache
