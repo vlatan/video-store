@@ -18,7 +18,6 @@ import (
 	"github.com/vlatan/video-store/internal/handlers/sitemaps"
 	"github.com/vlatan/video-store/internal/handlers/sources"
 	"github.com/vlatan/video-store/internal/handlers/static"
-	"github.com/vlatan/video-store/internal/handlers/text"
 	"github.com/vlatan/video-store/internal/handlers/users"
 	"github.com/vlatan/video-store/internal/integrations/gemini"
 	"github.com/vlatan/video-store/internal/integrations/r2"
@@ -30,6 +29,7 @@ import (
 	sourcesRepo "github.com/vlatan/video-store/internal/repos/sources"
 	usersRepo "github.com/vlatan/video-store/internal/repos/users"
 	"github.com/vlatan/video-store/internal/store"
+	"github.com/vlatan/video-store/internal/text"
 	"github.com/vlatan/video-store/internal/ui"
 )
 
