@@ -26,13 +26,12 @@ func (s *Service) AuthHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Where we should redirect the user when the login finishes
-	redirectURL := r.URL.Query().Get("redirect")
-	redirectTo := redirect.Sanitize(redirectURL, IsProtectedRoute)
+	redirectTo := r.URL.Query().Get("redirect")
 
 	// Check if the user is already logged in
 	if data.CurrentUser.IsAuthenticated() {
 		slog.WarnContext(r.Context(), "user already logged in")
-		redirect.Execute(w, r, redirectTo, http.StatusSeeOther)
+		redirect.Safe(w, r, redirectTo, http.StatusSeeOther)
 		return
 	}
 
@@ -67,7 +66,7 @@ func (s *Service) AuthHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Add redirect URL to session
-	if err := s.session.AddRedirectURL(w, r, redirectTo.String()); err != nil {
+	if err := s.session.AddRedirectURL(w, r, redirectTo); err != nil {
 		slog.WarnContext(
 			r.Context(), "failed to save redirect session",
 			"error", err,
@@ -94,13 +93,12 @@ func (s *Service) AuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get from session the origin URL of the user
-	redirectURL := s.session.RedirectURL(w, r)
-	redirectTo := redirect.Sanitize(redirectURL, IsProtectedRoute)
+	redirectTo := s.session.RedirectURL(w, r)
 
 	// Check if the user is already logged in
 	if data.CurrentUser.IsAuthenticated() {
 		slog.WarnContext(r.Context(), "user already logged in")
-		redirect.Execute(w, r, redirectTo, http.StatusSeeOther)
+		redirect.Safe(w, r, redirectTo, http.StatusSeeOther)
 		return
 	}
 
@@ -109,7 +107,7 @@ func (s *Service) AuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	if code == "" || state == "" {
 		slog.WarnContext(r.Context(), "no code/state received")
 		s.session.AddFlash(w, r, &failedLogin)
-		redirect.Execute(w, r, redirectTo, http.StatusSeeOther)
+		redirect.Safe(w, r, redirectTo, http.StatusSeeOther)
 		return
 	}
 
@@ -120,7 +118,7 @@ func (s *Service) AuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	if sessionState != state {
 		slog.WarnContext(r.Context(), "invalide state parameter")
 		s.session.AddFlash(w, r, &failedLogin)
-		redirect.Execute(w, r, redirectTo, http.StatusSeeOther)
+		redirect.Safe(w, r, redirectTo, http.StatusSeeOther)
 		return
 	}
 
@@ -137,7 +135,7 @@ func (s *Service) AuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 			"error", err,
 		)
 		s.session.AddFlash(w, r, &failedLogin)
-		redirect.Execute(w, r, redirectTo, http.StatusSeeOther)
+		redirect.Safe(w, r, redirectTo, http.StatusSeeOther)
 		return
 	}
 
@@ -149,14 +147,14 @@ func (s *Service) AuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 			"error", err,
 		)
 		s.session.AddFlash(w, r, &failedLogin)
-		redirect.Execute(w, r, redirectTo, http.StatusSeeOther)
+		redirect.Safe(w, r, redirectTo, http.StatusSeeOther)
 		return
 	}
 
 	if user.ProviderUserId == "" {
 		slog.WarnContext(r.Context(), "failed to get the provider user ID")
 		s.session.AddFlash(w, r, &failedLogin)
-		redirect.Execute(w, r, redirectTo, http.StatusSeeOther)
+		redirect.Safe(w, r, redirectTo, http.StatusSeeOther)
 		return
 	}
 
@@ -167,12 +165,12 @@ func (s *Service) AuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 			"error", err,
 		)
 		s.session.AddFlash(w, r, &failedLogin)
-		redirect.Execute(w, r, redirectTo, http.StatusSeeOther)
+		redirect.Safe(w, r, redirectTo, http.StatusSeeOther)
 		return
 	}
 
 	s.session.AddFlash(w, r, &successLogin)
-	redirect.Execute(w, r, redirectTo, http.StatusSeeOther)
+	redirect.Safe(w, r, redirectTo, http.StatusSeeOther)
 }
 
 // Logout user, delete sessions.
@@ -180,8 +178,7 @@ func (s *Service) AuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Service) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 
 	// The origin URL of the user
-	redirectURL := r.URL.Query().Get("redirect")
-	redirectTo := redirect.Sanitize(redirectURL, IsProtectedRoute)
+	redirectTo := r.URL.Query().Get("redirect")
 
 	// Remove user's session
 	if err := s.session.DeleteUser(w, r); err != nil {
@@ -190,12 +187,12 @@ func (s *Service) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 			"error", err,
 		)
 		s.session.AddFlash(w, r, &failedLogout)
-		redirect.Execute(w, r, redirectTo, http.StatusSeeOther)
+		redirect.Safe(w, r, redirectTo, http.StatusSeeOther)
 		return
 	}
 
 	s.session.AddFlash(w, r, &successLogout)
-	redirect.Execute(w, r, redirectTo, http.StatusSeeOther)
+	redirect.Safe(w, r, redirectTo, http.StatusSeeOther)
 }
 
 // Delete the user account
@@ -203,8 +200,7 @@ func (s *Service) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Service) DeleteAccountHandler(w http.ResponseWriter, r *http.Request) {
 
 	// The origin URL of the user
-	redirectURL := r.URL.Query().Get("redirect")
-	redirectTo := redirect.Sanitize(redirectURL, IsProtectedRoute)
+	redirectTo := r.URL.Query().Get("redirect")
 
 	// Get the current user
 	currentUser := ctxd.GetUser(r.Context())
@@ -216,7 +212,7 @@ func (s *Service) DeleteAccountHandler(w http.ResponseWriter, r *http.Request) {
 			"error", err,
 		)
 		s.session.AddFlash(w, r, &failedDeleteAccount)
-		redirect.Execute(w, r, redirectTo, http.StatusFound)
+		redirect.Safe(w, r, redirectTo, http.StatusFound)
 		return
 	}
 
@@ -228,14 +224,14 @@ func (s *Service) DeleteAccountHandler(w http.ResponseWriter, r *http.Request) {
 			"error", err,
 		)
 		s.session.AddFlash(w, r, &failedDeleteAccount)
-		redirect.Execute(w, r, redirectTo, http.StatusFound)
+		redirect.Safe(w, r, redirectTo, http.StatusFound)
 		return
 	}
 
 	if rowsAffected == 0 {
 		slog.WarnContext(r.Context(), "no such user to delete from DB")
 		s.session.AddFlash(w, r, &failedDeleteAccount)
-		redirect.Execute(w, r, redirectTo, http.StatusFound)
+		redirect.Safe(w, r, redirectTo, http.StatusFound)
 		return
 	}
 
@@ -258,5 +254,5 @@ func (s *Service) DeleteAccountHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s.session.AddFlash(w, r, &successDeleteAccount)
-	redirect.Execute(w, r, redirectTo, http.StatusFound)
+	redirect.Safe(w, r, redirectTo, http.StatusFound)
 }

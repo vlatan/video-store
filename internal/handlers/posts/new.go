@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/vlatan/video-store/internal/handlers/auth"
 	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/redirect"
 	"github.com/vlatan/video-store/internal/utils/retry"
@@ -191,9 +190,8 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 		}()
 
 		// Check out the video
-		redirectURL := fmt.Sprintf("/video/%s/", videoID)
-		redirectTo := redirect.Sanitize(redirectURL, auth.IsProtectedRoute)
-		redirect.Execute(w, r, redirectTo, http.StatusFound)
+		redirectTo := fmt.Sprintf("/video/%s/", videoID)
+		redirect.Safe(w, r, redirectTo, http.StatusFound)
 
 	default:
 		s.ui.HTMLError(w, r, data, http.StatusMethodNotAllowed)

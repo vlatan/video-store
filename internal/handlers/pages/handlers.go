@@ -7,7 +7,6 @@ import (
 	"net/http"
 
 	"github.com/vlatan/video-store/internal/drivers/rdb"
-	"github.com/vlatan/video-store/internal/handlers/auth"
 	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/redirect"
 
@@ -177,9 +176,8 @@ func (s *Service) UpdatePageHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Check out the updated page
-		redirectURL := fmt.Sprintf("/page/%s/", slug)
-		redirectTo := redirect.Sanitize(redirectURL, auth.IsProtectedRoute)
-		redirect.Execute(w, r, redirectTo, http.StatusFound)
+		redirectTo := fmt.Sprintf("/page/%s/", slug)
+		redirect.Safe(w, r, redirectTo, http.StatusFound)
 
 	default:
 		s.ui.HTMLError(w, r, data, http.StatusMethodNotAllowed)
@@ -254,9 +252,8 @@ func (s *Service) NewPageHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Check out the updated page
-		redirectURL := fmt.Sprintf("/page/%s/", pageSlug)
-		redirectTo := redirect.Sanitize(redirectURL, auth.IsProtectedRoute)
-		redirect.Execute(w, r, redirectTo, http.StatusFound)
+		redirectTo := fmt.Sprintf("/page/%s/", pageSlug)
+		redirect.Safe(w, r, redirectTo, http.StatusFound)
 
 	default:
 		s.ui.HTMLError(w, r, data, http.StatusMethodNotAllowed)

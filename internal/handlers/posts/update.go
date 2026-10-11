@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/vlatan/video-store/internal/handlers/auth"
 	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/normalize"
 	"github.com/vlatan/video-store/internal/utils/redirect"
@@ -228,9 +227,8 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Check out the updated page
-		redirectURL := fmt.Sprintf("/video/%s/", videoID)
-		redirectTo := redirect.Sanitize(redirectURL, auth.IsProtectedRoute)
-		redirect.Execute(w, r, redirectTo, http.StatusFound)
+		redirectTo := fmt.Sprintf("/video/%s/", videoID)
+		redirect.Safe(w, r, redirectTo, http.StatusFound)
 
 	default:
 		s.ui.HTMLError(w, r, data, http.StatusMethodNotAllowed)
