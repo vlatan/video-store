@@ -3,8 +3,8 @@ package middlewares
 import (
 	"github.com/vlatan/video-store/internal/avatar"
 	"github.com/vlatan/video-store/internal/config"
+	"github.com/vlatan/video-store/internal/drivers/store"
 	"github.com/vlatan/video-store/internal/repos/users"
-	"github.com/vlatan/video-store/internal/store"
 	"github.com/vlatan/video-store/internal/ui"
 )
 
@@ -13,7 +13,7 @@ type Service struct {
 	session   *store.Service
 	usersRepo *users.Repository
 	avatar    *avatar.Service
-	ui        ui.Service
+	ui        *ui.Service
 }
 
 // New creates new middlewares service
@@ -22,7 +22,7 @@ func New(
 	store *store.Service,
 	usersRepo *users.Repository,
 	avatar *avatar.Service,
-	ui ui.Service) *Service {
+	ui *ui.Service) *Service {
 	SetCustomLogger(config)
 	return &Service{
 		config:    config,

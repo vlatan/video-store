@@ -13,7 +13,7 @@ import (
 
 // WriteJSON converts the data into JSON-formatted string
 // and writes the output to response
-func (s *service) WriteJSON(w http.ResponseWriter, r *http.Request, data any) {
+func (s *Service) WriteJSON(w http.ResponseWriter, r *http.Request, data any) {
 
 	// Encode data to JSON
 	jsonData, err := json.Marshal(data)
@@ -39,7 +39,7 @@ func (s *service) WriteJSON(w http.ResponseWriter, r *http.Request, data any) {
 
 // RenderHTML checks if template exists in the collection of templates (map),
 // executes the given template and writes the output to the response.
-func (s *service) RenderHTML(
+func (s *Service) RenderHTML(
 	w http.ResponseWriter,
 	r *http.Request,
 	tmplName string,

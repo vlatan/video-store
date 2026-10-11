@@ -20,7 +20,7 @@ var sitemapPartTypes = []string{
 type Service struct {
 	postsRepo *postsRepo.Repository
 	rdb       *rdb.Service
-	ui        ui.Service
+	ui        *ui.Service
 	config    *config.Config
 	sqlArgs   []any
 }
@@ -28,7 +28,7 @@ type Service struct {
 func New(
 	postsRepo *postsRepo.Repository,
 	rdb *rdb.Service,
-	ui ui.Service,
+	ui *ui.Service,
 	config *config.Config,
 ) *Service {
 

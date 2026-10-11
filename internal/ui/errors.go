@@ -12,7 +12,7 @@ import (
 )
 
 // HTMLError executes error.html template
-func (s *service) HTMLError(
+func (s *Service) HTMLError(
 	w http.ResponseWriter,
 	r *http.Request,
 	data *types.TemplateData,
@@ -85,7 +85,7 @@ func (s *service) HTMLError(
 }
 
 // JSONError writes JSON error to response
-func (s *service) JSONError(w http.ResponseWriter, r *http.Request, status int) {
+func (s *Service) JSONError(w http.ResponseWriter, r *http.Request, status int) {
 
 	// Craft data
 	data := types.JSONErrorData{

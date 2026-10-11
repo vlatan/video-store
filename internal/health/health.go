@@ -11,10 +11,10 @@ import (
 type Service struct {
 	db  *database.Service
 	rdb *rdb.Service
-	ui  ui.Service
+	ui  *ui.Service
 }
 
-func New(db *database.Service, rdb *rdb.Service, ui ui.Service) *Service {
+func New(db *database.Service, rdb *rdb.Service, ui *ui.Service) *Service {
 	return &Service{
 		db:  db,
 		rdb: rdb,

@@ -26,7 +26,7 @@ var weirdBots = []string{
 }
 
 // GetStaticFiles gets the map containing the static files
-func (s *service) TextFiles() types.TextFiles {
+func (s *Service) TextFiles() types.TextFiles {
 	return s.textFiles
 }
 

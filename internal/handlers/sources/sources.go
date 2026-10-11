@@ -3,10 +3,10 @@ package sources
 import (
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
+	"github.com/vlatan/video-store/internal/drivers/store"
 	"github.com/vlatan/video-store/internal/integrations/yt"
 	postsRepo "github.com/vlatan/video-store/internal/repos/posts"
 	sourcesRepo "github.com/vlatan/video-store/internal/repos/sources"
-	"github.com/vlatan/video-store/internal/store"
 	"github.com/vlatan/video-store/internal/ui"
 )
 
@@ -16,7 +16,7 @@ type Service struct {
 	session     *store.Service
 	postsRepo   *postsRepo.Repository
 	sourcesRepo *sourcesRepo.Repository
-	ui          ui.Service
+	ui          *ui.Service
 	yt          *yt.Service
 }
 
@@ -26,7 +26,7 @@ func New(
 	store *store.Service,
 	postsRepo *postsRepo.Repository,
 	sourcesRepo *sourcesRepo.Repository,
-	ui ui.Service,
+	ui *ui.Service,
 	yt *yt.Service,
 ) *Service {
 	return &Service{

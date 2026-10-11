@@ -10,7 +10,7 @@ import (
 )
 
 // TmplData creates new default data struct to be passed to the templates
-func (s *service) TmplData(w http.ResponseWriter, r *http.Request) *types.TemplateData {
+func (s *Service) TmplData(w http.ResponseWriter, r *http.Request) *types.TemplateData {
 
 	// Get the categories from cache
 	categories, _ := rdb.GetCachedData(

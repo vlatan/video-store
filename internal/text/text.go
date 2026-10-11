@@ -9,10 +9,10 @@ import (
 )
 
 type Service struct {
-	ui ui.Service
+	ui *ui.Service
 }
 
-func New(ui ui.Service) *Service {
+func New(ui *ui.Service) *Service {
 	return &Service{ui: ui}
 }
 

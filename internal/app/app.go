@@ -12,6 +12,7 @@ import (
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/drivers/database"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
+	"github.com/vlatan/video-store/internal/drivers/store"
 	"github.com/vlatan/video-store/internal/handlers/pages"
 	"github.com/vlatan/video-store/internal/handlers/posts"
 	"github.com/vlatan/video-store/internal/handlers/sitemaps"
@@ -28,7 +29,6 @@ import (
 	sourcesRepo "github.com/vlatan/video-store/internal/repos/sources"
 	usersRepo "github.com/vlatan/video-store/internal/repos/users"
 	"github.com/vlatan/video-store/internal/static"
-	"github.com/vlatan/video-store/internal/store"
 	"github.com/vlatan/video-store/internal/text"
 	"github.com/vlatan/video-store/internal/ui"
 )

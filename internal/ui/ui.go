@@ -1,15 +1,14 @@
 package ui
 
 import (
-	"net/http"
 	"regexp"
 
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
+	"github.com/vlatan/video-store/internal/drivers/store"
 	"github.com/vlatan/video-store/internal/integrations/r2"
 	"github.com/vlatan/video-store/internal/repos/categories"
 	"github.com/vlatan/video-store/internal/repos/users"
-	"github.com/vlatan/video-store/internal/store"
 	"github.com/vlatan/video-store/internal/types"
 
 	"github.com/tdewolff/minify/v2"
@@ -20,26 +19,7 @@ import (
 	"github.com/tdewolff/minify/v2/xml"
 )
 
-type Service interface {
-	// Get the map containing the static files
-	StaticFiles() types.StaticFiles
-	// Get the map containing the text files
-	TextFiles() types.TextFiles
-	// Create new default template data
-	TmplData(w http.ResponseWriter, r *http.Request) *types.TemplateData
-	// Create new pagination struct
-	NewPagination(currentPage, totalRecords, pageSize int) *types.PaginationInfo
-	// Write JSON to response
-	WriteJSON(w http.ResponseWriter, r *http.Request, data any)
-	// Write HTML template to response
-	RenderHTML(w http.ResponseWriter, r *http.Request, templateName string, data *types.TemplateData)
-	// JSONError writes JSON error to response
-	JSONError(w http.ResponseWriter, r *http.Request, status int)
-	// HTMLError executes error.html template
-	HTMLError(w http.ResponseWriter, r *http.Request, data *types.TemplateData, status int)
-}
-
-type service struct {
+type Service struct {
 	templates   types.TemplateMap
 	textFiles   types.TextFiles
 	staticFiles types.StaticFiles
@@ -62,7 +42,7 @@ func New(
 	r2s r2.Service,
 	store *store.Service,
 	config *config.Config,
-) (Service, error) {
+) (*Service, error) {
 
 	m := minify.New()
 
@@ -91,7 +71,7 @@ func New(
 		return nil, err
 	}
 
-	return &service{
+	return &Service{
 		templates:   templates,
 		staticFiles: staticFiles,
 		textFiles:   parseTextFiles(config),
