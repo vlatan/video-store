@@ -2,6 +2,7 @@ package types
 
 import (
 	"html/template"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -70,6 +71,7 @@ func (td *TemplateData) AddVersion(path string) string {
 	if fi, ok := td.StaticFiles[path]; ok && fi.Etag != "" {
 		return path + "?v=" + fi.Etag
 	}
+	slog.Warn("file not versioned", "path", path)
 	return path
 }
 
