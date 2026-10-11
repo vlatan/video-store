@@ -7,11 +7,11 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/vlatan/video-store/internal/auth"
 	"github.com/vlatan/video-store/internal/avatar"
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/drivers/database"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
-	"github.com/vlatan/video-store/internal/handlers/auth"
 	"github.com/vlatan/video-store/internal/handlers/health"
 	"github.com/vlatan/video-store/internal/handlers/pages"
 	"github.com/vlatan/video-store/internal/handlers/posts"
