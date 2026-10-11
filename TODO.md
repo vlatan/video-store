@@ -1,3 +1,4 @@
+- Rename ui to tmpl and bring types into the package
 - Make redis generic cache func a method
 - Do not dissallow search/ in robots.txt use noindes, follow
 
