@@ -2,7 +2,6 @@ package types
 
 import (
 	"html/template"
-	"log/slog"
 	"strings"
 	"time"
 
@@ -57,22 +56,12 @@ type TemplateData struct {
 	SearchQuery      string
 	XMLDeclarations  []template.HTML
 	SitemapItems     []*SitemapItem
-	StaticFiles
 	*config.Config
 	*HTMLErrorData
 	*PaginationInfo
 	*Posts
 	*Users
 	*Form
-}
-
-// Add version query string to file
-func (td *TemplateData) AddVersion(path string) string {
-	if fi, ok := td.StaticFiles[path]; ok && fi.Etag != "" {
-		return path + "?v=" + fi.Etag
-	}
-	slog.Warn("file not versioned", "path", path)
-	return path
 }
 
 // Split string helper function for templates

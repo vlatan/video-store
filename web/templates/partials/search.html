@@ -1,11 +1,11 @@
 {{ template "base.html" . }}
 
 {{ define "extra_preload_css" }}
-<link rel="preload" href='{{ .AddVersion "/static/css/content.css" }}' as="style">
+<link rel="preload" href='{{ AddVersion "/static/css/content.css" }}' as="style">
 {{ end }}
 
 {{ define "extra_css" }}
-<link rel="stylesheet" type="text/css" href='{{ .AddVersion "/static/css/content.css" }}'>
+<link rel="stylesheet" type="text/css" href='{{ AddVersion "/static/css/content.css" }}'>
 {{ end }}
 
 {{ define "canonical" }} <!-- Overwrite canonical url on search -->
@@ -42,6 +42,6 @@
 
 {{ define "extra_scripts" }}
 {{ if and .Posts.TotalNum (gt .Posts.TotalNum .Config.PostsPerPage) }}
-<script defer src='{{ .AddVersion "/static/js/scroll.js" }}'></script>
+<script defer src='{{ AddVersion "/static/js/scroll.js" }}'></script>
 {{ end }}
 {{ end }}

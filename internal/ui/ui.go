@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"html/template"
 	"regexp"
 
 	"github.com/vlatan/video-store/internal/config"
@@ -14,11 +15,16 @@ import (
 	"github.com/tdewolff/minify/v2/xml"
 )
 
+type versioner interface {
+	AddVersion(path string) string
+}
+
 type Service struct {
 	cfg       *config.Config
 	rdb       *rdb.Service
 	session   *store.Service
 	catsRepo  *categories.Repository
+	versioner versioner
 	templates types.TemplateMap
 }
 
@@ -30,6 +36,7 @@ func New(
 	rdb *rdb.Service,
 	store *store.Service,
 	catsRepo *categories.Repository,
+	v versioner,
 ) (*Service, error) {
 
 	m := minify.New()
@@ -45,7 +52,11 @@ func New(
 	m.AddFunc("text/html", htmlMinifier.Minify)
 	m.AddFuncRegexp(validXML, xml.Minify)
 
-	templates, err := loadTemplates(m)
+	funcs := template.FuncMap{
+		"AddVersion": v.AddVersion,
+	}
+
+	templates, err := loadTemplates(m, funcs)
 	if err != nil {
 		return nil, err
 	}

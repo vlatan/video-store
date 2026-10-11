@@ -121,15 +121,15 @@ func New() (*App, error) {
 	// Create session service
 	store := store.New(cfg, rdb, "session", 86400*30)
 
-	// Create user interface service
-	ui, err := ui.New(cfg, rdb, store, catsRepo)
-	if err != nil {
-		return nil, fmt.Errorf("couldn't create UI service: %w", err)
-	}
-
 	static, err := static.New()
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create static files service: %w", err)
+	}
+
+	// Create user interface service
+	ui, err := ui.New(cfg, rdb, store, catsRepo, static)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't create UI service: %w", err)
 	}
 
 	// Create new app service
