@@ -1,5 +1,6 @@
 - Make redis generic cache func a method
 - Do not dissallow search/ in robots.txt use noindes, follow
+- Remove interfaces on the producer side
 
 - Make search bar on small screens accross entire screen
 - Write tests
