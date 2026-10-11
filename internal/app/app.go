@@ -122,7 +122,7 @@ func New() (*App, error) {
 	store := store.New(cfg, rdb, "session", 86400*30)
 
 	// Create user interface service
-	ui, err := ui.New(usersRepo, catsRepo, rdb, r2s, store, cfg)
+	ui, err := ui.New(cfg, rdb, store, catsRepo)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create UI service: %w", err)
 	}

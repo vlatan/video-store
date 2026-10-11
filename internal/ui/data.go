@@ -17,18 +17,18 @@ func (s *Service) TmplData(w http.ResponseWriter, r *http.Request) *types.Templa
 		r.Context(),
 		s.rdb,
 		"categories",
-		s.config.CacheTimeout,
+		s.cfg.CacheTimeout,
 		func() (types.Categories, error) {
 			return s.catsRepo.GetCategories(r.Context())
 		},
 	)
 
 	// Get the base canonical URL without queries and fragments
-	_, baseURL := pathx.CanonicalURLs(r, s.config.Protocol)
+	_, baseURL := pathx.CanonicalURLs(r, s.cfg.Protocol)
 
 	// Construct the data
 	data := &types.TemplateData{
-		Config:           s.config,
+		Config:           s.cfg,
 		Categories:       categories,
 		CurrentURI:       r.RequestURI,
 		BaseCanonicalURL: baseURL,

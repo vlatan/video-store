@@ -6,9 +6,7 @@ import (
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/drivers/store"
-	"github.com/vlatan/video-store/internal/integrations/r2"
 	"github.com/vlatan/video-store/internal/repos/categories"
-	"github.com/vlatan/video-store/internal/repos/users"
 	"github.com/vlatan/video-store/internal/types"
 
 	"github.com/tdewolff/minify/v2"
@@ -17,27 +15,21 @@ import (
 )
 
 type Service struct {
-	templates   types.TemplateMap
-	textFiles   types.TextFiles
-	staticFiles types.StaticFiles
-	rdb         *rdb.Service
-	r2s         *r2.Service
-	config      *config.Config
-	session     *store.Service
-	catsRepo    *categories.Repository
-	usersRepo   *users.Repository
+	cfg       *config.Config
+	rdb       *rdb.Service
+	session   *store.Service
+	catsRepo  *categories.Repository
+	templates types.TemplateMap
 }
 
 var validXML = regexp.MustCompile("[/+]xml$")
 
 // Walk the partials directory and parse the templates.
 func New(
-	usersRepo *users.Repository,
-	catsRepo *categories.Repository,
+	cfg *config.Config,
 	rdb *rdb.Service,
-	r2s *r2.Service,
 	store *store.Service,
-	config *config.Config,
+	catsRepo *categories.Repository,
 ) (*Service, error) {
 
 	m := minify.New()
@@ -59,12 +51,10 @@ func New(
 	}
 
 	return &Service{
-		templates: templates,
+		cfg:       cfg,
 		rdb:       rdb,
-		r2s:       r2s,
-		config:    config,
 		session:   store,
 		catsRepo:  catsRepo,
-		usersRepo: usersRepo,
+		templates: templates,
 	}, nil
 }

@@ -62,7 +62,6 @@ func (s *Service) RenderHTML(
 	case ".xsl":
 		contentType = "text/xsl"
 	default:
-		// If HTML page get flash messages from session and add to data
 		data.FlashMessages = s.session.Flashes(w, r)
 		contentType = "text/html"
 	}

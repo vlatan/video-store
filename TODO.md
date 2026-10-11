@@ -1,3 +1,4 @@
+- Make add version func work
 - Make redis generic cache func a method
 - Do not dissallow search/ in robots.txt use noindes, follow
 
