@@ -2,14 +2,11 @@ package types
 
 import (
 	"html/template"
-	"strings"
 	"time"
 
 	"github.com/vlatan/video-store/internal/config"
 )
 
-type TextFiles map[string]*FileInfo
-type StaticFiles map[string]*FileInfo
 type TemplateMap map[string]*template.Template
 
 type FileInfo struct {
@@ -62,14 +59,4 @@ type TemplateData struct {
 	*Posts
 	*Users
 	*Form
-}
-
-// Split string helper function for templates
-func (td *TemplateData) Split(s, sep string) []string {
-	return strings.Split(s, sep)
-}
-
-// Get time now
-func (td *TemplateData) Now() time.Time {
-	return time.Now()
 }

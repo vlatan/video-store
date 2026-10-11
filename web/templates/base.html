@@ -6,7 +6,7 @@
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-	{{ $app_name_words := .Split .Config.AppName " " }}
+	{{ $app_name_words := Split .Config.AppName " " }}
 
 	{{ block "preload_css" . }}
 	<link rel="preload" href='{{ AddVersion "/static/css/shared.css" }}' as="style">
@@ -256,7 +256,7 @@
 		{{ end }}
 
 		<footer class="site-footer">
-			<span class="site-copy">{{ .Config.AppName }} &copy; {{ .Now.Year }}</span>
+			<span class="site-copy">{{ .Config.AppName }} &copy; {{ Now.Year }}</span>
 			<a class="nav-item" href="/sources/">Sources</a>
 			<a class="nav-item" href="/page/about/">About</a>
 			<!-- Needs absolute URL for Google OAuth branding -->

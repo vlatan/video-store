@@ -3,6 +3,8 @@ package ui
 import (
 	"html/template"
 	"regexp"
+	"strings"
+	"time"
 
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
@@ -54,6 +56,8 @@ func New(
 
 	funcs := template.FuncMap{
 		"AddVersion": v.AddVersion,
+		"Split":      strings.Split,
+		"Now":        time.Now,
 	}
 
 	templates, err := loadTemplates(m, funcs)
