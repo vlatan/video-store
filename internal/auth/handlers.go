@@ -10,8 +10,8 @@ import (
 	"golang.org/x/oauth2"
 )
 
-// AuthHandler handles the entry point of the user authentication
-func (s *Service) AuthHandler(w http.ResponseWriter, r *http.Request) {
+// Begin handles the entry point of the user authentication
+func (s *Service) Begin(w http.ResponseWriter, r *http.Request) {
 
 	// Get template data
 	data := s.ui.TmplData(w, r)
@@ -77,8 +77,8 @@ func (s *Service) AuthHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
 }
 
-// Provider Auth callback
-func (s *Service) AuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
+// Callback handles the provider auth callback
+func (s *Service) Callback(w http.ResponseWriter, r *http.Request) {
 
 	// Get template data
 	data := s.ui.TmplData(w, r)
@@ -173,9 +173,8 @@ func (s *Service) AuthCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	redirect.Safe(w, r, redirectTo, http.StatusSeeOther)
 }
 
-// Logout user, delete sessions.
-// Wrap this with middleware to allow only authnenticated users.
-func (s *Service) LogoutHandler(w http.ResponseWriter, r *http.Request) {
+// Logout logs out user, delete sessions.
+func (s *Service) Logout(w http.ResponseWriter, r *http.Request) {
 
 	// The origin URL of the user
 	redirectTo := r.URL.Query().Get("redirect")
@@ -195,9 +194,8 @@ func (s *Service) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	redirect.Safe(w, r, redirectTo, http.StatusSeeOther)
 }
 
-// Delete the user account
-// Wrap this with middleware to allow only authnenticated users
-func (s *Service) DeleteAccountHandler(w http.ResponseWriter, r *http.Request) {
+// Delete deletes the user account
+func (s *Service) Delete(w http.ResponseWriter, r *http.Request) {
 
 	// The origin URL of the user
 	redirectTo := r.URL.Query().Get("redirect")

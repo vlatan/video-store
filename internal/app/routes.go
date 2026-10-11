@@ -49,9 +49,10 @@ func (a *App) RegisterRoutes() *App {
 	mux.HandleFunc("GET /sources/{$}", a.sources.SourcesHandler)
 
 	// Authentication
-	mux.HandleFunc("GET /auth/{provider}", a.auth.AuthHandler)
-	mux.HandleFunc("GET /auth/{provider}/callback", a.auth.AuthCallbackHandler)
-	mux.HandleFunc("GET /logout/{provider}", a.mw.IsAuth(a.auth.LogoutHandler))
+	mux.HandleFunc("GET /auth/{provider}", a.auth.Begin)
+	mux.HandleFunc("GET /auth/{provider}/callback", a.auth.Callback)
+	mux.HandleFunc("GET /logout/{provider}", a.mw.IsAuth(a.auth.Logout))
+	mux.HandleFunc("DELETE /account/delete", a.mw.IsAuth(a.auth.Delete))
 
 	// Sitemaps
 	mux.HandleFunc("GET /sitemap.xsl", a.mw.PublicCache(a.sitemaps.SitemapStyleHandler))
@@ -59,7 +60,6 @@ func (a *App) RegisterRoutes() *App {
 	mux.HandleFunc("GET /sitemap.xml", a.mw.PublicCache(a.sitemaps.SitemapIndexHandler))
 
 	// Users
-	mux.HandleFunc("DELETE /account/delete", a.mw.IsAuth(a.auth.DeleteAccountHandler))
 	mux.HandleFunc("GET /user/favorites/{$}", a.mw.IsAuth(a.users.UserFavoritesHandler))
 	mux.HandleFunc("GET /api/user/favorites/{$}", a.mw.IsAuth(a.users.UserFavoritesAPI))
 	mux.HandleFunc("GET /users/{$}", a.mw.IsAdmin(a.users.UsersHandler))
