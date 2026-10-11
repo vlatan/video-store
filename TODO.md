@@ -1,6 +1,6 @@
 - Continue creating domains
 - Return Base data type from tmpl ad embed in domains data
-- Do not dissallow search/ in robots.txt use noindes, follow
+- Do not dissallow search/ in robots.txt use noindex, follow
 
 - Make search bar on small screens accross entire screen
 - Write tests

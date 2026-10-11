@@ -1,10 +1,7 @@
 package app
 
 import (
-	"log/slog"
 	"net/http"
-	"runtime"
-	"runtime/pprof"
 
 	"github.com/vlatan/video-store/internal/utils/pathx"
 )
@@ -64,47 +61,24 @@ func (a *App) RegisterRoutes() *App {
 	mux.HandleFunc("GET /api/user/favorites/{$}", a.mw.IsAuth(a.users.UserFavoritesAPI))
 	mux.HandleFunc("GET /users/{$}", a.mw.IsAdmin(a.users.UsersHandler))
 
-	// The rest
+	// Search
 	mux.HandleFunc("GET /search/{$}", a.posts.SearchPostsHandler)
 	mux.HandleFunc("GET /api/search/{$}", a.posts.SearchPostsAPI)
-	mux.HandleFunc("GET /api/health/{$}", a.mw.IsAdmin(a.health.Handle))
-	mux.HandleFunc("GET /static/", a.static.Handle)
-	mux.HandleFunc("GET /ads.txt", a.mw.PublicCache(a.text.Handle))
-	mux.HandleFunc("GET /robots.txt", a.mw.PublicCache(a.text.Handle))
 
-	// Register favicons serving from root
+	// Static
+	mux.HandleFunc("GET /static/", a.static.Handle)
 	for _, favicon := range pathx.RootFavicons {
 		mux.HandleFunc("GET "+favicon, a.static.Handle)
 	}
 
-	// Route for memory profiling
-	mux.HandleFunc("GET /debug/heap", a.mw.IsAdmin(
-		func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("X-Robots-Tag", "noindex")
-			w.Header().Set("Content-Type", "application/octet-stream")
-			runtime.GC()
-			if err := pprof.WriteHeapProfile(w); err != nil {
-				// Too late for recovery here, just log the error
-				slog.WarnContext(
-					r.Context(), "failed to write data to response",
-					"error", err,
-				)
-			}
-		},
-	))
+	// Text
+	mux.HandleFunc("GET /robots.txt", a.mw.PublicCache(a.text.Handle))
+	mux.HandleFunc("GET /ads.txt", a.mw.PublicCache(a.text.Handle))
 
-	// Simple health check
-	mux.HandleFunc("GET /healthcheck", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("X-Robots-Tag", "noindex")
-		w.WriteHeader(http.StatusOK)
-		if _, err := w.Write([]byte("OK")); err != nil {
-			// Too late for recovery here, just log the error
-			slog.WarnContext(
-				r.Context(), "failed to write data to response",
-				"error", err,
-			)
-		}
-	})
+	// Health
+	mux.HandleFunc("GET /api/health/{$}", a.mw.IsAdmin(a.health.Info))
+	mux.HandleFunc("GET /healthcheck", a.health.Check)
+	mux.HandleFunc("GET /debug/heap", a.mw.IsAdmin(a.health.Debug))
 
 	// Chain middlewares that apply to all requests.
 	// The order is important.
