@@ -127,6 +127,11 @@ func New() (*App, error) {
 		return nil, fmt.Errorf("couldn't create UI service: %w", err)
 	}
 
+	static, err := static.New()
+	if err != nil {
+		return nil, fmt.Errorf("couldn't create static files service: %w", err)
+	}
+
 	// Create new app service
 	a := &App{
 
@@ -139,7 +144,7 @@ func New() (*App, error) {
 		sitemaps: sitemaps.New(postsRepo, rdb, ui, cfg),
 		text:     text.New(ui),
 		health:   health.New(db, rdb, ui),
-		static:   static.New(ui),
+		static:   static,
 		mw:       middlewares.New(cfg, store, usersRepo, av, ui),
 
 		// The domain we're serving this app on

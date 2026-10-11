@@ -7,20 +7,38 @@ import (
 	"net/http"
 	"path"
 	"path/filepath"
+	"regexp"
 	"slices"
 	"strings"
 
-	"github.com/vlatan/video-store/internal/ui"
+	"github.com/tdewolff/minify/v2"
+	"github.com/tdewolff/minify/v2/css"
+	"github.com/tdewolff/minify/v2/js"
+	"github.com/tdewolff/minify/v2/json"
+	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/pathx"
 	"github.com/vlatan/video-store/web"
 )
 
+var validJS = regexp.MustCompile("^(application|text)/(x-)?(java|ecma)script$")
+
 type Service struct {
-	ui *ui.Service
+	staticFiles map[string]*types.FileInfo
 }
 
-func New(ui *ui.Service) *Service {
-	return &Service{ui: ui}
+func New() (*Service, error) {
+
+	m := minify.New()
+	m.AddFunc("text/css", css.Minify)
+	m.AddFuncRegexp(validJS, js.Minify)
+	m.AddFunc("application/manifest+json", json.Minify)
+
+	sf, err := loadStaticFiles(m, "static")
+	if err != nil {
+		return nil, err
+	}
+
+	return &Service{sf}, nil
 }
 
 // Handle handles static files
@@ -38,7 +56,7 @@ func (s *Service) Handle(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Vary", "Accept-Encoding")
 
 	// Get the file information
-	fileInfo, ok := s.ui.StaticFiles()[r.URL.Path]
+	fileInfo, ok := s.staticFiles[r.URL.Path]
 
 	// Set Etag if etag available
 	if ok && fileInfo.Etag != "" {

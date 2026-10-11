@@ -1,9 +1,9 @@
-package ui
+package static
 
 import (
 	"bytes"
 	"compress/gzip"
-	"crypto/md5" // #nosec G501
+	"crypto/md5"
 	"fmt"
 	"io/fs"
 	"strings"
@@ -13,15 +13,10 @@ import (
 	"github.com/vlatan/video-store/web"
 )
 
-// GetStaticFiles gets the map containing the static files
-func (s *Service) StaticFiles() types.StaticFiles {
-	return s.staticFiles
-}
+// loadStaticFiles walks the dir and saves minified versions of the found files in a map
+func loadStaticFiles(m *minify.M, dir string) (map[string]*types.FileInfo, error) {
 
-// Create minified versions of the static files and cache them in memory.
-func loadStaticFiles(m *minify.M, dir string) (types.StaticFiles, error) {
-
-	sf := make(types.StaticFiles)
+	sf := make(map[string]*types.FileInfo)
 
 	// Function used to process each file/dir in the root, including the root
 	walkDirFunc := func(path string, info fs.DirEntry, err error) error {

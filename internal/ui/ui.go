@@ -12,10 +12,7 @@ import (
 	"github.com/vlatan/video-store/internal/types"
 
 	"github.com/tdewolff/minify/v2"
-	"github.com/tdewolff/minify/v2/css"
 	"github.com/tdewolff/minify/v2/html"
-	"github.com/tdewolff/minify/v2/js"
-	"github.com/tdewolff/minify/v2/json"
 	"github.com/tdewolff/minify/v2/xml"
 )
 
@@ -31,7 +28,6 @@ type Service struct {
 	usersRepo   *users.Repository
 }
 
-var validJS = regexp.MustCompile("^(application|text)/(x-)?(java|ecma)script$")
 var validXML = regexp.MustCompile("[/+]xml$")
 
 // Walk the partials directory and parse the templates.
@@ -55,31 +51,21 @@ func New(
 
 	// Use the custom HTML in a minifier function
 	m.AddFunc("text/html", htmlMinifier.Minify)
-
-	m.AddFunc("text/css", css.Minify)
-	m.AddFuncRegexp(validJS, js.Minify)
 	m.AddFuncRegexp(validXML, xml.Minify)
-	m.AddFunc("application/manifest+json", json.Minify)
 
 	templates, err := loadTemplates(m)
 	if err != nil {
 		return nil, err
 	}
 
-	staticFiles, err := loadStaticFiles(m, "static")
-	if err != nil {
-		return nil, err
-	}
-
 	return &Service{
-		templates:   templates,
-		staticFiles: staticFiles,
-		textFiles:   parseTextFiles(config),
-		rdb:         rdb,
-		r2s:         r2s,
-		config:      config,
-		session:     store,
-		catsRepo:    catsRepo,
-		usersRepo:   usersRepo,
+		templates: templates,
+		textFiles: parseTextFiles(config),
+		rdb:       rdb,
+		r2s:       r2s,
+		config:    config,
+		session:   store,
+		catsRepo:  catsRepo,
+		usersRepo: usersRepo,
 	}, nil
 }

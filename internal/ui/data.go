@@ -28,7 +28,6 @@ func (s *Service) TmplData(w http.ResponseWriter, r *http.Request) *types.Templa
 
 	// Construct the data
 	data := &types.TemplateData{
-		StaticFiles:      s.StaticFiles(),
 		Config:           s.config,
 		Categories:       categories,
 		CurrentURI:       r.RequestURI,
