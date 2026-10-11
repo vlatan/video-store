@@ -10,13 +10,13 @@ import (
 	"github.com/vlatan/video-store/internal/ui"
 )
 
-type userRepo interface {
+type usersRepo interface {
 	UpsertUser(context.Context, *types.User) (int, error)
 	DeleteUser(context.Context, int) (int64, error)
 }
 
 type Service struct {
-	repo      userRepo
+	repo      usersRepo
 	avatar    *avatar.Service
 	session   *store.Service
 	ui        ui.Service
@@ -25,7 +25,7 @@ type Service struct {
 }
 
 func New(
-	repo userRepo,
+	repo usersRepo,
 	avatar *avatar.Service,
 	store *store.Service,
 	ui ui.Service,
