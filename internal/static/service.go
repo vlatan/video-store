@@ -11,6 +11,10 @@ import (
 
 var validJS = regexp.MustCompile("^(application|text)/(x-)?(java|ecma)script$")
 
+type Service struct {
+	staticFiles staticFiles
+}
+
 func New() (*Service, error) {
 
 	m := minify.New()

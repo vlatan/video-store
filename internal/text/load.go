@@ -4,6 +4,8 @@ import (
 	"github.com/vlatan/video-store/internal/config"
 )
 
+type textFiles map[string][]byte
+
 // loadTextFiles parses loads text files into map
 func loadTextFiles(cfg *config.Config) textFiles {
 

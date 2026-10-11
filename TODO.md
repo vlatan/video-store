@@ -1,5 +1,5 @@
 - Continue creating domains
-- Bring types to tmpl
+- Bring types to tmpl?
 - Make redis generic cache func a method
 - Do not dissallow search/ in robots.txt use noindes, follow
 

@@ -18,6 +18,19 @@ import (
 
 var validXML = regexp.MustCompile("[/+]xml$")
 
+type versioner interface {
+	AddVersion(path string) string
+}
+
+type Service struct {
+	cfg       *config.Config
+	rdb       *rdb.Service
+	session   *store.Service
+	catsRepo  *categories.Repository
+	versioner versioner
+	templates templateMap
+}
+
 // Walk the partials directory and parse the templates.
 func New(
 	cfg *config.Config,

@@ -7,10 +7,21 @@ import (
 	"fmt"
 	"io/fs"
 	"strings"
+	"time"
 
 	"github.com/tdewolff/minify/v2"
 	"github.com/vlatan/video-store/web"
 )
+
+type fileInfo struct {
+	Bytes      []byte
+	Compressed []byte
+	MediaType  string
+	ModTime    time.Time
+	Etag       string
+}
+
+type staticFiles map[string]*fileInfo
 
 // loadStaticFiles walks the dir and saves minified versions of the found files in a map
 func loadStaticFiles(m *minify.M, dir string) (staticFiles, error) {
