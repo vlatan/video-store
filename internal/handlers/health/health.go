@@ -22,9 +22,8 @@ func New(db *database.Service, rdb *rdb.Service, ui ui.Service) *Service {
 	}
 }
 
-// DB and Redis health status
-// Wrap this with middlware that allows only admins
-func (s *Service) API(w http.ResponseWriter, r *http.Request) {
+// Handle handles DB and Redis health status
+func (s *Service) Handle(w http.ResponseWriter, r *http.Request) {
 
 	// Construct joined map
 	data := map[string]any{

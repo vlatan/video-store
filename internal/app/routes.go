@@ -67,7 +67,7 @@ func (a *App) RegisterRoutes() *App {
 	// The rest
 	mux.HandleFunc("GET /search/{$}", a.posts.SearchPostsHandler)
 	mux.HandleFunc("GET /api/search/{$}", a.posts.SearchPostsAPI)
-	mux.HandleFunc("GET /api/health/{$}", a.mw.IsAdmin(a.health.API))
+	mux.HandleFunc("GET /api/health/{$}", a.mw.IsAdmin(a.health.Handle))
 	mux.HandleFunc("GET /static/", a.static.Handle)
 	mux.HandleFunc("GET /ads.txt", a.mw.PublicCache(a.text.Handle))
 	mux.HandleFunc("GET /robots.txt", a.mw.PublicCache(a.text.Handle))
