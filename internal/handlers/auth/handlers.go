@@ -221,7 +221,7 @@ func (s *Service) DeleteAccountHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Delete the user from DB
-	rowsAffected, err := s.usersRepo.DeleteUser(r.Context(), currentUser.ID)
+	rowsAffected, err := s.repo.DeleteUser(r.Context(), currentUser.ID)
 	if err != nil {
 		slog.WarnContext(
 			r.Context(), "failed to delete the user from DB",
