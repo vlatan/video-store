@@ -19,12 +19,6 @@ type HTMLErrorData struct {
 	Text    string
 }
 
-// Specific data for the JSON response
-type JSONErrorData struct {
-	Error string `json:"error"`
-	Code  int    `json:"code"`
-}
-
 // Data struct to pass to templates
 type TemplateData struct {
 	Title            string

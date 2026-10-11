@@ -88,10 +88,10 @@ func (s *Service) HTMLError(
 func (s *Service) JSONError(w http.ResponseWriter, r *http.Request, status int) {
 
 	// Craft data
-	data := types.JSONErrorData{
-		Error: http.StatusText(status),
-		Code:  status,
-	}
+	data := struct {
+		Error string `json:"error"`
+		Code  int    `json:"code"`
+	}{http.StatusText(status), status}
 
 	// Encode data to JSON
 	jsonData, err := json.Marshal(data)
