@@ -1,3 +1,5 @@
+- Make redis generic cache func a method
+
 - Make search bar on small screens accross entire screen
 - Write tests
 - Internal linking?
