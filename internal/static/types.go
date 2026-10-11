@@ -1,8 +1,18 @@
 package static
 
-import "github.com/vlatan/video-store/internal/types"
+import (
+	"time"
+)
 
-type staticFiles map[string]*types.FileInfo
+type fileInfo struct {
+	Bytes      []byte
+	Compressed []byte
+	MediaType  string
+	ModTime    time.Time
+	Etag       string
+}
+
+type staticFiles map[string]*fileInfo
 
 type Service struct {
 	staticFiles staticFiles

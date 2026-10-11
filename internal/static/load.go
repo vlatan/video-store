@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/tdewolff/minify/v2"
-	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/web"
 )
 
@@ -72,7 +71,7 @@ func loadStaticFiles(m *minify.M, dir string) (staticFiles, error) {
 		}
 
 		// Save the current data
-		sf[name] = &types.FileInfo{
+		sf[name] = &fileInfo{
 			MediaType: mediaType,
 			ModTime:   stat.ModTime(),
 			Etag:      etag,

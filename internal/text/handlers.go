@@ -29,7 +29,7 @@ func (s *Service) Handle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	if _, err := w.Write(textFile.Bytes); err != nil {
+	if _, err := w.Write(textFile); err != nil {
 		slog.ErrorContext(
 			r.Context(), "failed to write response",
 			"error", err,

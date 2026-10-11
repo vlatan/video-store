@@ -2,10 +2,9 @@ package text
 
 import (
 	"github.com/vlatan/video-store/internal/tmpl"
-	"github.com/vlatan/video-store/internal/types"
 )
 
-type textFiles map[string]*types.FileInfo
+type textFiles map[string][]byte
 
 type Service struct {
 	textFiles textFiles

@@ -2,18 +2,9 @@ package types
 
 import (
 	"html/template"
-	"time"
 
 	"github.com/vlatan/video-store/internal/config"
 )
-
-type FileInfo struct {
-	Bytes      []byte
-	Compressed []byte
-	MediaType  string
-	ModTime    time.Time
-	Etag       string
-}
 
 // Flash message object to store to session for the next page
 type FlashMessage struct {
