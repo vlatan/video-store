@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/vlatan/video-store/internal/ctxd"
-	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/pathx"
 )
@@ -13,9 +12,8 @@ import (
 func (s *Service) Data(w http.ResponseWriter, r *http.Request) *types.TemplateData {
 
 	// Get the categories from cache
-	categories, _ := rdb.GetCachedData(
+	categories, _ := s.rdb.Get(
 		r.Context(),
-		s.rdb,
 		"categories",
 		s.cfg.CacheTimeout,
 		func() (types.Categories, error) {

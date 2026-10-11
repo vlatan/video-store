@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/redirect"
 	"github.com/vlatan/video-store/internal/utils/retry"
@@ -26,9 +25,8 @@ func (s *Service) SourcesHandler(w http.ResponseWriter, r *http.Request) {
 	if data.CurrentUser.IsAdmin(s.config) {
 		sources, err = s.sourcesRepo.GetAllSources(r.Context())
 	} else {
-		sources, err = rdb.GetCachedData(
+		sources, err = s.rdb.Get(
 			r.Context(),
-			s.rdb,
 			"sources",
 			s.config.CacheTimeout,
 			func() (types.Sources, error) {
@@ -222,9 +220,8 @@ func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
 			r.Context(), sourceID, "", orderBy,
 		)
 	} else {
-		posts, err = rdb.GetCachedData(
+		posts, err = s.rdb.Get(
 			r.Context(),
-			s.rdb,
 			redisKey,
 			s.config.CacheTimeout,
 			func() (types.Posts, error) {

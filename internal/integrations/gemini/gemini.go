@@ -16,7 +16,7 @@ import (
 func New(
 	ctx context.Context,
 	cfg *config.Config,
-	redisService *rdb.Service,
+	rs *rdb.Service,
 	catsRepo *categories.Repository,
 ) (*Service, error) {
 	// Configure new client
@@ -26,7 +26,7 @@ func New(
 	}
 
 	// Configure new limiter
-	limiter, err := NewLimiter(cfg, redisService)
+	limiter, err := NewLimiter(cfg, rs)
 	if err != nil {
 		return nil, err
 	}
@@ -38,9 +38,8 @@ func New(
 	}
 
 	// Get the categories from cache or DB
-	categories, err := rdb.GetCachedData(
+	categories, err := rs.Get(
 		ctx,
-		redisService,
 		"categories",
 		s.config.CacheTimeout,
 		func() (types.Categories, error) {

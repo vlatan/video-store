@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/vlatan/video-store/internal/ctxd"
-	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/types"
 )
 
@@ -43,9 +42,8 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 			r.Context(), slug, "", orderBy,
 		)
 	} else {
-		posts, err = rdb.GetCachedData(
+		posts, err = s.rdb.Get(
 			r.Context(),
-			s.rdb,
 			redisKey,
 			s.config.CacheTimeout,
 			func() (types.Posts, error) {
@@ -118,9 +116,8 @@ func (s *Service) CategoryPostsAPI(w http.ResponseWriter, r *http.Request) {
 			r.Context(), slug, cursor, orderBy,
 		)
 	} else {
-		posts, err = rdb.GetCachedData(
+		posts, err = s.rdb.Get(
 			r.Context(),
-			s.rdb,
 			redisKey,
 			s.config.CacheTimeout,
 			func() (types.Posts, error) {

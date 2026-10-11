@@ -7,7 +7,6 @@ import (
 	"net/http"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/types"
 	"golang.org/x/sync/errgroup"
 )
@@ -45,9 +44,8 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 		if data.CurrentUser.IsAuthenticated() {
 			post, taskErr = s.postsRepo.GetSinglePost(r.Context(), videoID)
 		} else {
-			post, taskErr = rdb.GetCachedData(
+			post, taskErr = s.rdb.Get(
 				r.Context(),
-				s.rdb,
 				fmt.Sprintf(postCacheKey, videoID),
 				s.config.CacheTimeout,
 				func() (types.Post, error) {
@@ -67,9 +65,8 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 		if data.CurrentUser.IsAuthenticated() {
 			postReviews, taskErr = s.postsRepo.GetPostReviews(r.Context(), videoID, "")
 		} else {
-			postReviews, taskErr = rdb.GetCachedData(
+			postReviews, taskErr = s.rdb.Get(
 				r.Context(),
-				s.rdb,
 				fmt.Sprintf(postReviewsCacheKey, videoID),
 				s.config.CacheTimeout,
 				func() (types.Reviews, error) {
@@ -159,9 +156,8 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 		if data.CurrentUser.IsAdmin(s.config) {
 			posts, taskErr = s.postsRepo.GetRelatedPosts(r.Context(), post.GetTitle())
 		} else {
-			posts, taskErr = rdb.GetCachedData(
+			posts, taskErr = s.rdb.Get(
 				r.Context(),
-				s.rdb,
 				fmt.Sprintf(relatedPostsCacheKey, videoID),
 				s.config.CacheTimeout,
 				func() (types.Posts, error) {

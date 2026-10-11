@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func TestGetCachedData(t *testing.T) {
+func TestGet(t *testing.T) {
 
 	validCallable := func() (int, error) { return 1, nil }
 	errorCallable := func() (int, error) { return 0, errors.New("test") }
@@ -39,13 +39,13 @@ func TestGetCachedData(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := GetCachedData(tt.ctx, tt.rdb, tt.name, time.Minute, tt.callable)
+			_, err := tt.rdb.Get(tt.ctx, tt.name, time.Minute, tt.callable)
 			if gotErr := err != nil; gotErr != tt.wantErr {
 				t.Errorf("got error = %v, want error = %t", err, tt.wantErr)
 			}
 
 			// Run the func again to fetch from cache
-			_, err = GetCachedData(tt.ctx, tt.rdb, tt.name, time.Minute, tt.callable)
+			_, err = tt.rdb.Get(tt.ctx, tt.name, time.Minute, tt.callable)
 			if gotErr := err != nil; gotErr != tt.wantErr {
 				t.Errorf("got error = %v, want error = %t", err, tt.wantErr)
 			}

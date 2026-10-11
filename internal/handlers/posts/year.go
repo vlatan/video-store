@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/vlatan/video-store/internal/ctxd"
-	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/stringx"
 )
@@ -52,9 +51,8 @@ func (s *Service) YearPostsHandler(w http.ResponseWriter, r *http.Request) {
 			r.Context(), year, "", orderBy,
 		)
 	} else {
-		posts, err = rdb.GetCachedData(
+		posts, err = s.rdb.Get(
 			r.Context(),
-			s.rdb,
 			redisKey,
 			s.config.CacheTimeout,
 			func() (types.Posts, error) {
@@ -134,9 +132,8 @@ func (s *Service) YearPostsAPI(w http.ResponseWriter, r *http.Request) {
 			r.Context(), year, cursor, orderBy,
 		)
 	} else {
-		posts, err = rdb.GetCachedData(
+		posts, err = s.rdb.Get(
 			r.Context(),
-			s.rdb,
 			redisKey,
 			s.config.CacheTimeout,
 			func() (types.Posts, error) {

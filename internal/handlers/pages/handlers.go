@@ -6,7 +6,6 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/redirect"
 
@@ -33,9 +32,8 @@ func (s *Service) SinglePageHandler(w http.ResponseWriter, r *http.Request) {
 	if data.CurrentUser.IsAdmin(s.config) {
 		page, err = s.pagesRepo.GetSinglePage(r.Context(), pageSlug)
 	} else {
-		page, err = rdb.GetCachedData(
+		page, err = s.rdb.Get(
 			r.Context(),
-			s.rdb,
 			fmt.Sprintf(pageCacheKey, pageSlug),
 			s.config.CacheTimeout,
 			func() (types.Page, error) {

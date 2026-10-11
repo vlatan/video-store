@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/vlatan/video-store/internal/ctxd"
-	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/types"
 )
 
@@ -41,9 +40,8 @@ func (s *Service) PostReviewsAPI(w http.ResponseWriter, r *http.Request) {
 	if currentUser.IsAuthenticated() {
 		reviews, err = s.postsRepo.GetPostReviews(r.Context(), videoID, cursor)
 	} else {
-		reviews, err = rdb.GetCachedData(
+		reviews, err = s.rdb.Get(
 			r.Context(),
-			s.rdb,
 			redisKey,
 			s.config.CacheTimeout,
 			func() (types.Reviews, error) {

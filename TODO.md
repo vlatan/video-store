@@ -1,6 +1,5 @@
 - Continue creating domains
-- Bring types to tmpl?
-- Make redis generic cache func a method
+- Return Base data type from tmpl ad embed in domains data
 - Do not dissallow search/ in robots.txt use noindes, follow
 
 - Make search bar on small screens accross entire screen

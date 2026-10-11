@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/vlatan/video-store/internal/ctxd"
-	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/stringx"
 )
@@ -44,9 +43,8 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 			r.Context(), searchQuery, s.config.PostsPerPage, "",
 		)
 	} else {
-		posts, err = rdb.GetCachedData(
+		posts, err = s.rdb.Get(
 			r.Context(),
-			s.rdb,
 			redisKey,
 			s.config.CacheTimeout,
 			func() (types.Posts, error) {
@@ -112,9 +110,8 @@ func (s *Service) SearchPostsAPI(w http.ResponseWriter, r *http.Request) {
 			r.Context(), searchQuery, s.config.PostsPerPage, cursor,
 		)
 	} else {
-		posts, err = rdb.GetCachedData(
+		posts, err = s.rdb.Get(
 			r.Context(),
-			s.rdb,
 			redisKey,
 			s.config.CacheTimeout,
 			func() (types.Posts, error) {
