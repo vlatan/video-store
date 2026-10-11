@@ -142,7 +142,7 @@ func New() (*App, error) {
 		pages:    pages.New(pagesRepo, rdb, store, ui, cfg),
 		sources:  sources.New(cfg, rdb, store, postsRepo, sourcesRepo, ui, yt),
 		sitemaps: sitemaps.New(postsRepo, rdb, ui, cfg),
-		text:     text.New(ui),
+		text:     text.New(cfg, ui),
 		health:   health.New(db, rdb, ui),
 		static:   static,
 		mw:       middlewares.New(cfg, store, usersRepo, av, ui),

@@ -60,7 +60,6 @@ func New(
 
 	return &Service{
 		templates: templates,
-		textFiles: parseTextFiles(config),
 		rdb:       rdb,
 		r2s:       r2s,
 		config:    config,

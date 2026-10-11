@@ -1,11 +1,10 @@
-package ui
+package text
 
 import (
 	"fmt"
 	"strings"
 
 	"github.com/vlatan/video-store/internal/config"
-	"github.com/vlatan/video-store/internal/types"
 )
 
 var weirdBots = []string{
@@ -23,26 +22,6 @@ var weirdBots = []string{
 	"BLEXBot",
 	"magpie-crawler",
 	"Thinkbot",
-}
-
-// GetStaticFiles gets the map containing the static files
-func (s *Service) TextFiles() types.TextFiles {
-	return s.textFiles
-}
-
-// PaparseTextFiles parses the text files that app needs and serves
-func parseTextFiles(cfg *config.Config) types.TextFiles {
-	tf := make(types.TextFiles)
-
-	if robotsTxt := buildRobotsTxt(cfg); robotsTxt != nil {
-		tf["/robots.txt"] = &types.FileInfo{Bytes: robotsTxt}
-	}
-
-	if adsTxt := builAdsTxt(cfg); adsTxt != nil {
-		tf["/ads.txt"] = &types.FileInfo{Bytes: adsTxt}
-	}
-
-	return tf
 }
 
 // buildRobotsTxt build the content of the robots.txt file

@@ -4,16 +4,22 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/vlatan/video-store/internal/config"
+	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/ui"
 	"github.com/vlatan/video-store/internal/utils/pathx"
 )
 
 type Service struct {
-	ui *ui.Service
+	textFiles map[string]*types.FileInfo
+	ui        *ui.Service
 }
 
-func New(ui *ui.Service) *Service {
-	return &Service{ui: ui}
+func New(cfg *config.Config, ui *ui.Service) *Service {
+	return &Service{
+		textFiles: loadTextFiles(cfg),
+		ui:        ui,
+	}
 }
 
 // Handle handles text files such as robots.txt, ads.txt, etc.
@@ -30,7 +36,7 @@ func (s *Service) Handle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if the text file exists
-	textFile, exists := s.ui.TextFiles()[r.URL.Path]
+	textFile, exists := s.textFiles[r.URL.Path]
 	if !exists {
 		slog.WarnContext(r.Context(), "text file does not exist")
 		s.ui.HTMLError(w, r, data, http.StatusNotFound)
