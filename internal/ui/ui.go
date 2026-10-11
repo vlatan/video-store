@@ -24,7 +24,7 @@ type Service struct {
 	textFiles   types.TextFiles
 	staticFiles types.StaticFiles
 	rdb         *rdb.Service
-	r2s         r2.Service
+	r2s         *r2.Service
 	config      *config.Config
 	session     *store.Service
 	catsRepo    *categories.Repository
@@ -39,7 +39,7 @@ func New(
 	usersRepo *users.Repository,
 	catsRepo *categories.Repository,
 	rdb *rdb.Service,
-	r2s r2.Service,
+	r2s *r2.Service,
 	store *store.Service,
 	config *config.Config,
 ) (*Service, error) {

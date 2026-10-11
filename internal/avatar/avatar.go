@@ -23,7 +23,7 @@ type Service struct {
 
 	config *config.Config
 	rdb    *rdb.Service
-	r2s    r2.Service
+	r2s    *r2.Service
 }
 
 type job struct {
@@ -37,7 +37,7 @@ func New(
 
 	cfg *config.Config,
 	rdb *rdb.Service,
-	r2s r2.Service) *Service {
+	r2s *r2.Service) *Service {
 
 	s := &Service{
 		active: make(map[string]struct{}),

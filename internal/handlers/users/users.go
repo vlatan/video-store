@@ -13,7 +13,7 @@ type Service struct {
 	usersRepo *usersRepo.Repository
 	avatar    *avatar.Service
 	rdb       *rdb.Service
-	r2s       r2.Service
+	r2s       *r2.Service
 	ui        *ui.Service
 	config    *config.Config
 }
@@ -22,7 +22,7 @@ func New(
 	usersRepo *usersRepo.Repository,
 	avatar *avatar.Service,
 	rdb *rdb.Service,
-	r2s r2.Service,
+	r2s *r2.Service,
 	ui *ui.Service,
 	config *config.Config,
 ) *Service {

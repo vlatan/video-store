@@ -19,7 +19,7 @@ import (
 
 type Service struct {
 	config *config.Config
-	r2s    r2.Service
+	r2s    *r2.Service
 }
 
 // For your backup use case
@@ -34,7 +34,7 @@ func init() {
 }
 
 // New creates a backup service
-func New(cfg *config.Config, r2s r2.Service) *Service {
+func New(cfg *config.Config, r2s *r2.Service) *Service {
 	return &Service{
 		config: cfg,
 		r2s:    r2s,
