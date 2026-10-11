@@ -14,9 +14,9 @@ import (
 )
 
 // loadStaticFiles walks the dir and saves minified versions of the found files in a map
-func loadStaticFiles(m *minify.M, dir string) (map[string]*types.FileInfo, error) {
+func loadStaticFiles(m *minify.M, dir string) (staticFiles, error) {
 
-	sf := make(map[string]*types.FileInfo)
+	sf := make(staticFiles)
 
 	// Function used to process each file/dir in the root, including the root
 	walkDirFunc := func(path string, info fs.DirEntry, err error) error {

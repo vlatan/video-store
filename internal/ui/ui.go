@@ -10,25 +10,11 @@ import (
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/drivers/store"
 	"github.com/vlatan/video-store/internal/repos/categories"
-	"github.com/vlatan/video-store/internal/types"
 
 	"github.com/tdewolff/minify/v2"
 	"github.com/tdewolff/minify/v2/html"
 	"github.com/tdewolff/minify/v2/xml"
 )
-
-type versioner interface {
-	AddVersion(path string) string
-}
-
-type Service struct {
-	cfg       *config.Config
-	rdb       *rdb.Service
-	session   *store.Service
-	catsRepo  *categories.Repository
-	versioner versioner
-	templates types.TemplateMap
-}
 
 var validXML = regexp.MustCompile("[/+]xml$")
 

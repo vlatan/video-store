@@ -7,8 +7,6 @@ import (
 	"github.com/vlatan/video-store/internal/config"
 )
 
-type TemplateMap map[string]*template.Template
-
 type FileInfo struct {
 	Bytes      []byte
 	Compressed []byte
