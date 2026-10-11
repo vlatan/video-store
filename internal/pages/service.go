@@ -2,32 +2,32 @@ package pages
 
 import (
 	"github.com/vlatan/video-store/internal/config"
+	"github.com/vlatan/video-store/internal/drivers/database"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/drivers/store"
-	pagesRepo "github.com/vlatan/video-store/internal/repos/pages"
 	"github.com/vlatan/video-store/internal/tmpl"
 )
 
 type Service struct {
-	pagesRepo *pagesRepo.Repository
-	rdb       *rdb.Service
-	session   *store.Service
-	tmpl      *tmpl.Service
-	config    *config.Config
+	cfg     *config.Config
+	repo    *Repository
+	rdb     *rdb.Service
+	session *store.Service
+	tmpl    *tmpl.Service
 }
 
 func New(
-	pagesRepo *pagesRepo.Repository,
+	cfg *config.Config,
+	db *database.Service,
 	rdb *rdb.Service,
 	store *store.Service,
 	tmpl *tmpl.Service,
-	config *config.Config,
 ) *Service {
 	return &Service{
-		pagesRepo: pagesRepo,
-		rdb:       rdb,
-		session:   store,
-		tmpl:      tmpl,
-		config:    config,
+		cfg:     cfg,
+		repo:    newRepo(db),
+		rdb:     rdb,
+		session: store,
+		tmpl:    tmpl,
 	}
 }

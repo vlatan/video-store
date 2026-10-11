@@ -13,7 +13,6 @@ import (
 	"github.com/vlatan/video-store/internal/drivers/database"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/drivers/store"
-	"github.com/vlatan/video-store/internal/handlers/pages"
 	"github.com/vlatan/video-store/internal/handlers/posts"
 	"github.com/vlatan/video-store/internal/handlers/sitemaps"
 	"github.com/vlatan/video-store/internal/handlers/sources"
@@ -23,8 +22,8 @@ import (
 	"github.com/vlatan/video-store/internal/integrations/r2"
 	"github.com/vlatan/video-store/internal/integrations/yt"
 	"github.com/vlatan/video-store/internal/middlewares"
+	"github.com/vlatan/video-store/internal/pages"
 	catsRepo "github.com/vlatan/video-store/internal/repos/categories"
-	pagesRepo "github.com/vlatan/video-store/internal/repos/pages"
 	postsRepo "github.com/vlatan/video-store/internal/repos/posts"
 	sourcesRepo "github.com/vlatan/video-store/internal/repos/sources"
 	usersRepo "github.com/vlatan/video-store/internal/repos/users"
@@ -99,8 +98,6 @@ func New() (*App, error) {
 		return nil, fmt.Errorf("couldn't create posts repo: %w", err)
 	}
 
-	pagesRepo := pagesRepo.New(db)
-
 	sourcesRepo, err := sourcesRepo.New(db, nil)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create sources repo: %w", err)
@@ -139,7 +136,7 @@ func New() (*App, error) {
 		auth:     auth.New(usersRepo, av, store, tmpl, cfg),
 		users:    users.New(usersRepo, av, rdb, r2s, tmpl, cfg),
 		posts:    posts.New(postsRepo, av, rdb, store, tmpl, cfg, yt, gemini),
-		pages:    pages.New(pagesRepo, rdb, store, tmpl, cfg),
+		pages:    pages.New(cfg, db, rdb, store, tmpl),
 		sources:  sources.New(cfg, rdb, store, postsRepo, sourcesRepo, tmpl, yt),
 		sitemaps: sitemaps.New(postsRepo, rdb, tmpl, cfg),
 		text:     text.New(cfg, tmpl),

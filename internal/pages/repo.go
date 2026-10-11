@@ -17,14 +17,14 @@ type Repository struct {
 	db *database.Service
 }
 
-func New(db *database.Service) *Repository {
+func newRepo(db *database.Service) *Repository {
 	return &Repository{
 		db: db,
 	}
 }
 
 // Get single page from DB
-func (r *Repository) GetSinglePage(ctx context.Context, slug string) (types.Page, error) {
+func (r *Repository) Get(ctx context.Context, slug string) (types.Page, error) {
 
 	var zero, page types.Page
 	var content sql.NullString
@@ -59,21 +59,21 @@ func (r *Repository) GetSinglePage(ctx context.Context, slug string) (types.Page
 }
 
 // Update page
-func (r *Repository) UpdatePage(ctx context.Context, slug, title, content string) (int64, error) {
+func (r *Repository) Update(ctx context.Context, slug, title, content string) (int64, error) {
 	const query = "UPDATE page SET title = $2, content = $3 WHERE slug = $1;"
 	result, err := r.db.Pool.Exec(ctx, query, slug, title, sqlnull.String(content))
 	return result.RowsAffected(), err
 }
 
 // Update page
-func (r *Repository) InsertPage(ctx context.Context, slug, title, content string) (int64, error) {
+func (r *Repository) Insert(ctx context.Context, slug, title, content string) (int64, error) {
 	const query = "INSERT INTO page (slug, title, content) VALUES ($1, $2, $3);"
 	result, err := r.db.Pool.Exec(ctx, query, slug, title, sqlnull.String(content))
 	return result.RowsAffected(), err
 }
 
 // Delete page
-func (r *Repository) DeletePage(ctx context.Context, slug string) (int64, error) {
+func (r *Repository) Delete(ctx context.Context, slug string) (int64, error) {
 	const query = "DELETE FROM page WHERE slug = $1;"
 	result, err := r.db.Pool.Exec(ctx, query, slug)
 	return result.RowsAffected(), err
