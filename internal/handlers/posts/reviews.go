@@ -16,7 +16,7 @@ func (s *Service) PostReviewsAPI(w http.ResponseWriter, r *http.Request) {
 	// Validate the YT ID
 	videoID := r.PathValue("video")
 	if validVideoID.FindStringSubmatch(videoID) == nil {
-		s.ui.JSONError(w, r, http.StatusNotFound)
+		s.tmpl.JSONError(w, r, http.StatusNotFound)
 		return
 	}
 
@@ -57,13 +57,13 @@ func (s *Service) PostReviewsAPI(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "failed get post reviews from DB",
 			"error", err,
 		)
-		s.ui.JSONError(w, r, http.StatusInternalServerError)
+		s.tmpl.JSONError(w, r, http.StatusInternalServerError)
 		return
 	}
 
 	if len(reviews.Items) == 0 {
 		slog.WarnContext(r.Context(), "no post reviews found in DB")
-		s.ui.JSONError(w, r, http.StatusNotFound)
+		s.tmpl.JSONError(w, r, http.StatusNotFound)
 		return
 	}
 
@@ -75,7 +75,7 @@ func (s *Service) PostReviewsAPI(w http.ResponseWriter, r *http.Request) {
 				r.Context(), "failed to get user avatar",
 				"error", err,
 			)
-			s.ui.JSONError(w, r, http.StatusInternalServerError)
+			s.tmpl.JSONError(w, r, http.StatusInternalServerError)
 			return
 		}
 		reviews.Items[i].User.LocalAvatarURL = localAvatarURL
@@ -88,5 +88,5 @@ func (s *Service) PostReviewsAPI(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	s.ui.WriteJSON(w, r, reviews)
+	s.tmpl.WriteJSON(w, r, reviews)
 }

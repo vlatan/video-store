@@ -18,7 +18,7 @@ func (s *Service) YearPostsHandler(w http.ResponseWriter, r *http.Request) {
 	orderBy := r.URL.Query().Get("order_by")
 
 	// Get template data
-	data := s.ui.TmplData(w, r)
+	data := s.tmpl.Data(w, r)
 
 	// Convert the release year to valid int16 year
 	var err error
@@ -28,7 +28,7 @@ func (s *Service) YearPostsHandler(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "failed to parse release year",
 			"error", err,
 		)
-		s.ui.HTMLError(w, r, data, http.StatusNotFound)
+		s.tmpl.HTMLError(w, r, data, http.StatusNotFound)
 		return
 	}
 
@@ -70,19 +70,19 @@ func (s *Service) YearPostsHandler(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "failed to get posts from DB",
 			"error", err,
 		)
-		s.ui.HTMLError(w, r, data, http.StatusInternalServerError)
+		s.tmpl.HTMLError(w, r, data, http.StatusInternalServerError)
 		return
 	}
 
 	if len(posts.Items) == 0 {
 		slog.WarnContext(r.Context(), "no posts found in DB")
-		s.ui.HTMLError(w, r, data, http.StatusNotFound)
+		s.tmpl.HTMLError(w, r, data, http.StatusNotFound)
 		return
 	}
 
 	data.Posts = &posts
 	data.Title = fmt.Sprintf("%s: %s", data.Posts.Title, year)
-	s.ui.RenderHTML(w, r, "taxonomy.html", data)
+	s.tmpl.RenderHTML(w, r, "taxonomy.html", data)
 }
 
 // YearPostsAPI handles posts in a certain release year
@@ -98,7 +98,7 @@ func (s *Service) YearPostsAPI(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "failed to parse release year",
 			"error", err,
 		)
-		s.ui.JSONError(w, r, http.StatusNotFound)
+		s.tmpl.JSONError(w, r, http.StatusNotFound)
 		return
 	}
 
@@ -152,15 +152,15 @@ func (s *Service) YearPostsAPI(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "failed to get posts from DB",
 			"error", err,
 		)
-		s.ui.JSONError(w, r, http.StatusInternalServerError)
+		s.tmpl.JSONError(w, r, http.StatusInternalServerError)
 		return
 	}
 
 	if len(posts.Items) == 0 {
 		slog.WarnContext(r.Context(), "no posts found in DB")
-		s.ui.JSONError(w, r, http.StatusNotFound)
+		s.tmpl.JSONError(w, r, http.StatusNotFound)
 		return
 	}
 
-	s.ui.WriteJSON(w, r, posts)
+	s.tmpl.WriteJSON(w, r, posts)
 }

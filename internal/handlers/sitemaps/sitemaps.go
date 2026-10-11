@@ -4,7 +4,7 @@ import (
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	postsRepo "github.com/vlatan/video-store/internal/repos/posts"
-	"github.com/vlatan/video-store/internal/ui"
+	"github.com/vlatan/video-store/internal/tmpl"
 )
 
 const (
@@ -20,7 +20,7 @@ var sitemapPartTypes = []string{
 type Service struct {
 	postsRepo *postsRepo.Repository
 	rdb       *rdb.Service
-	ui        *ui.Service
+	tmpl      *tmpl.Service
 	config    *config.Config
 	sqlArgs   []any
 }
@@ -28,7 +28,7 @@ type Service struct {
 func New(
 	postsRepo *postsRepo.Repository,
 	rdb *rdb.Service,
-	ui *ui.Service,
+	tmpl *tmpl.Service,
 	config *config.Config,
 ) *Service {
 
@@ -41,7 +41,7 @@ func New(
 	return &Service{
 		postsRepo: postsRepo,
 		rdb:       rdb,
-		ui:        ui,
+		tmpl:      tmpl,
 		config:    config,
 		sqlArgs:   args,
 	}

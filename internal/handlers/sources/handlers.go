@@ -16,7 +16,7 @@ import (
 func (s *Service) SourcesHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Get template data
-	data := s.ui.TmplData(w, r)
+	data := s.tmpl.Data(w, r)
 
 	var (
 		err     error
@@ -42,19 +42,19 @@ func (s *Service) SourcesHandler(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "failed to get sources from DB",
 			"error", err,
 		)
-		s.ui.HTMLError(w, r, data, http.StatusInternalServerError)
+		s.tmpl.HTMLError(w, r, data, http.StatusInternalServerError)
 		return
 	}
 
 	if len(sources) == 0 {
 		slog.WarnContext(r.Context(), "no sources found in DB")
-		s.ui.HTMLError(w, r, data, http.StatusNotFound)
+		s.tmpl.HTMLError(w, r, data, http.StatusNotFound)
 		return
 	}
 
 	data.Sources = sources
 	data.Title = "Sources"
-	s.ui.RenderHTML(w, r, "sources.html", data)
+	s.tmpl.RenderHTML(w, r, "sources.html", data)
 
 }
 
@@ -62,7 +62,7 @@ func (s *Service) SourcesHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Get template data
-	data := s.ui.TmplData(w, r)
+	data := s.tmpl.Data(w, r)
 
 	// Populate needed data for an empty form
 	data.Form = &types.Form{
@@ -77,7 +77,7 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
 		// Serve the page with the form
-		s.ui.RenderHTML(w, r, "form.html", data)
+		s.tmpl.RenderHTML(w, r, "form.html", data)
 
 	case "POST":
 
@@ -91,7 +91,7 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 			)
 			formError.Message = "Could not parse the form"
 			data.Form.Error = &formError
-			s.ui.RenderHTML(w, r, "form.html", data)
+			s.tmpl.RenderHTML(w, r, "form.html", data)
 			return
 		}
 
@@ -108,7 +108,7 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 			)
 			formError.Message = "Could not extract the playlist ID"
 			data.Form.Error = &formError
-			s.ui.RenderHTML(w, r, "form.html", data)
+			s.tmpl.RenderHTML(w, r, "form.html", data)
 			return
 		}
 
@@ -117,7 +117,7 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 			slog.WarnContext(r.Context(), "playlist already posted")
 			formError.Message = "Playlist already posted"
 			data.Form.Error = &formError
-			s.ui.RenderHTML(w, r, "form.html", data)
+			s.tmpl.RenderHTML(w, r, "form.html", data)
 			return
 		}
 
@@ -138,7 +138,7 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 			)
 			formError.Message = "Unable to fetch the playlist from YouTube"
 			data.Form.Error = &formError
-			s.ui.RenderHTML(w, r, "form.html", data)
+			s.tmpl.RenderHTML(w, r, "form.html", data)
 			return
 		}
 
@@ -160,7 +160,7 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 			)
 			formError.Message = "Unable to fetch channel info from YouTube"
 			data.Form.Error = &formError
-			s.ui.RenderHTML(w, r, "form.html", data)
+			s.tmpl.RenderHTML(w, r, "form.html", data)
 			return
 		}
 
@@ -177,7 +177,7 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 			)
 			formError.Message = "Could not create source"
 			data.Form.Error = &formError
-			s.ui.RenderHTML(w, r, "form.html", data)
+			s.tmpl.RenderHTML(w, r, "form.html", data)
 			return
 		}
 
@@ -186,7 +186,7 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 		redirect.Safe(w, r, redirectTo, http.StatusFound)
 
 	default:
-		s.ui.HTMLError(w, r, data, http.StatusMethodNotAllowed)
+		s.tmpl.HTMLError(w, r, data, http.StatusMethodNotAllowed)
 	}
 }
 
@@ -209,7 +209,7 @@ func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get template data
-	data := s.ui.TmplData(w, r)
+	data := s.tmpl.Data(w, r)
 	data.CurrentSource = &types.Source{PlaylistID: sourceID}
 
 	var (
@@ -240,13 +240,13 @@ func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "failed to get source posts from DB",
 			"error", err,
 		)
-		s.ui.HTMLError(w, r, data, http.StatusInternalServerError)
+		s.tmpl.HTMLError(w, r, data, http.StatusInternalServerError)
 		return
 	}
 
 	if len(posts.Items) == 0 {
 		slog.WarnContext(r.Context(), "no source posts fetched from DB")
-		s.ui.HTMLError(w, r, data, http.StatusNotFound)
+		s.tmpl.HTMLError(w, r, data, http.StatusNotFound)
 		return
 	}
 
@@ -255,7 +255,7 @@ func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
 		data.Posts.Title = "Other Uploads"
 	}
 	data.Title = data.Posts.Title
-	s.ui.RenderHTML(w, r, "taxonomy.html", data)
+	s.tmpl.RenderHTML(w, r, "taxonomy.html", data)
 }
 
 // DeleteSourceHandler deletes a source
@@ -270,15 +270,15 @@ func (s *Service) DeleteSourceHandler(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "failed to delete the source",
 			"error", err,
 		)
-		data := s.ui.TmplData(w, r)
-		s.ui.HTMLError(w, r, data, http.StatusInternalServerError)
+		data := s.tmpl.Data(w, r)
+		s.tmpl.HTMLError(w, r, data, http.StatusInternalServerError)
 		return
 	}
 
 	if rowsAffected == 0 {
 		slog.WarnContext(r.Context(), "no such source to delete")
-		data := s.ui.TmplData(w, r)
-		s.ui.HTMLError(w, r, data, http.StatusNotFound)
+		data := s.tmpl.Data(w, r)
+		s.tmpl.HTMLError(w, r, data, http.StatusNotFound)
 		return
 	}
 

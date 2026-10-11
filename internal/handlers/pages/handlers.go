@@ -23,7 +23,7 @@ func (s *Service) SinglePageHandler(w http.ResponseWriter, r *http.Request) {
 	pageSlug := r.PathValue("slug")
 
 	// Get template data
-	data := s.ui.TmplData(w, r)
+	data := s.tmpl.Data(w, r)
 
 	var (
 		err  error
@@ -49,7 +49,7 @@ func (s *Service) SinglePageHandler(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "failed to get the page from DB",
 			"error", err,
 		)
-		s.ui.HTMLError(w, r, data, http.StatusNotFound)
+		s.tmpl.HTMLError(w, r, data, http.StatusNotFound)
 		return
 	}
 
@@ -58,7 +58,7 @@ func (s *Service) SinglePageHandler(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "failed to get the page from DB",
 			"error", err,
 		)
-		s.ui.HTMLError(w, r, data, http.StatusInternalServerError)
+		s.tmpl.HTMLError(w, r, data, http.StatusInternalServerError)
 		return
 	}
 
@@ -66,7 +66,7 @@ func (s *Service) SinglePageHandler(w http.ResponseWriter, r *http.Request) {
 	data.CurrentPage = &page
 	data.Title = page.Title
 
-	s.ui.RenderHTML(w, r, "page.html", data)
+	s.tmpl.RenderHTML(w, r, "page.html", data)
 }
 
 // Update page
@@ -76,7 +76,7 @@ func (s *Service) UpdatePageHandler(w http.ResponseWriter, r *http.Request) {
 	slug := r.PathValue("slug")
 
 	// Get template data
-	data := s.ui.TmplData(w, r)
+	data := s.tmpl.Data(w, r)
 
 	// Get the page data straight from DB
 	page, err := s.pagesRepo.GetSinglePage(r.Context(), slug)
@@ -85,7 +85,7 @@ func (s *Service) UpdatePageHandler(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "failed to get the page from DB",
 			"error", err,
 		)
-		s.ui.HTMLError(w, r, data, http.StatusNotFound)
+		s.tmpl.HTMLError(w, r, data, http.StatusNotFound)
 		return
 	}
 
@@ -94,7 +94,7 @@ func (s *Service) UpdatePageHandler(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "failed to get the page from DB",
 			"error", err,
 		)
-		s.ui.HTMLError(w, r, data, http.StatusInternalServerError)
+		s.tmpl.HTMLError(w, r, data, http.StatusInternalServerError)
 		return
 	}
 
@@ -122,7 +122,7 @@ func (s *Service) UpdatePageHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
 		// Serve the page with the form
-		s.ui.RenderHTML(w, r, "form.html", data)
+		s.tmpl.RenderHTML(w, r, "form.html", data)
 
 	case "POST":
 		var formError types.FlashMessage
@@ -135,7 +135,7 @@ func (s *Service) UpdatePageHandler(w http.ResponseWriter, r *http.Request) {
 			)
 			formError.Message = "Could not parse the form"
 			data.Form.Error = &formError
-			s.ui.RenderHTML(w, r, "form.html", data)
+			s.tmpl.RenderHTML(w, r, "form.html", data)
 			return
 		}
 
@@ -158,7 +158,7 @@ func (s *Service) UpdatePageHandler(w http.ResponseWriter, r *http.Request) {
 			)
 			formError.Message = "Could not update the page"
 			data.Form.Error = &formError
-			s.ui.RenderHTML(w, r, "form.html", data)
+			s.tmpl.RenderHTML(w, r, "form.html", data)
 			return
 		}
 
@@ -171,7 +171,7 @@ func (s *Service) UpdatePageHandler(w http.ResponseWriter, r *http.Request) {
 			)
 			formError.Message = "Could not delete the cache on page"
 			data.Form.Error = &formError
-			s.ui.RenderHTML(w, r, "form.html", data)
+			s.tmpl.RenderHTML(w, r, "form.html", data)
 			return
 		}
 
@@ -180,7 +180,7 @@ func (s *Service) UpdatePageHandler(w http.ResponseWriter, r *http.Request) {
 		redirect.Safe(w, r, redirectTo, http.StatusFound)
 
 	default:
-		s.ui.HTMLError(w, r, data, http.StatusMethodNotAllowed)
+		s.tmpl.HTMLError(w, r, data, http.StatusMethodNotAllowed)
 	}
 }
 
@@ -188,7 +188,7 @@ func (s *Service) UpdatePageHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Service) NewPageHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Get template data
-	data := s.ui.TmplData(w, r)
+	data := s.tmpl.Data(w, r)
 
 	// Populate needed data for an empty form
 	data.Form = &types.Form{
@@ -208,7 +208,7 @@ func (s *Service) NewPageHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
 		// Serve the page with the form
-		s.ui.RenderHTML(w, r, "form.html", data)
+		s.tmpl.RenderHTML(w, r, "form.html", data)
 
 	case "POST":
 		var formError types.FlashMessage
@@ -221,7 +221,7 @@ func (s *Service) NewPageHandler(w http.ResponseWriter, r *http.Request) {
 			)
 			formError.Message = "Could not parse the form"
 			data.Form.Error = &formError
-			s.ui.RenderHTML(w, r, "form.html", data)
+			s.tmpl.RenderHTML(w, r, "form.html", data)
 			return
 		}
 
@@ -247,7 +247,7 @@ func (s *Service) NewPageHandler(w http.ResponseWriter, r *http.Request) {
 			)
 			formError.Message = "Could not create this page. Try changing the title."
 			data.Form.Error = &formError
-			s.ui.RenderHTML(w, r, "form.html", data)
+			s.tmpl.RenderHTML(w, r, "form.html", data)
 			return
 		}
 
@@ -256,7 +256,7 @@ func (s *Service) NewPageHandler(w http.ResponseWriter, r *http.Request) {
 		redirect.Safe(w, r, redirectTo, http.StatusFound)
 
 	default:
-		s.ui.HTMLError(w, r, data, http.StatusMethodNotAllowed)
+		s.tmpl.HTMLError(w, r, data, http.StatusMethodNotAllowed)
 	}
 }
 
@@ -266,7 +266,7 @@ func (s *Service) DeletePageHandler(w http.ResponseWriter, r *http.Request) {
 	pageSlug := r.PathValue("slug")
 
 	// Get template data
-	data := s.ui.TmplData(w, r)
+	data := s.tmpl.Data(w, r)
 
 	rowsAffected, err := s.pagesRepo.DeletePage(r.Context(), pageSlug)
 	if err != nil {
@@ -274,13 +274,13 @@ func (s *Service) DeletePageHandler(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "failed to delete the page from DB",
 			"error", err,
 		)
-		s.ui.HTMLError(w, r, data, http.StatusInternalServerError)
+		s.tmpl.HTMLError(w, r, data, http.StatusInternalServerError)
 		return
 	}
 
 	if rowsAffected == 0 {
 		slog.WarnContext(r.Context(), "no such page to delete")
-		s.ui.HTMLError(w, r, data, http.StatusNotFound)
+		s.tmpl.HTMLError(w, r, data, http.StatusNotFound)
 		return
 	}
 

@@ -38,12 +38,12 @@ func (s *Service) RecoverPanic(next http.Handler) http.Handler {
 			)
 
 			if strings.HasPrefix(r.URL.Path, "/api/") {
-				s.ui.JSONError(w, r, http.StatusInternalServerError)
+				s.tmpl.JSONError(w, r, http.StatusInternalServerError)
 				return
 			}
 
-			data := s.ui.TmplData(w, r)
-			s.ui.HTMLError(w, r, data, http.StatusInternalServerError)
+			data := s.tmpl.Data(w, r)
+			s.tmpl.HTMLError(w, r, data, http.StatusInternalServerError)
 		}()
 
 		next.ServeHTTP(w, r)

@@ -8,7 +8,7 @@ import (
 	"github.com/vlatan/video-store/internal/integrations/gemini"
 	"github.com/vlatan/video-store/internal/integrations/yt"
 	postsRepo "github.com/vlatan/video-store/internal/repos/posts"
-	"github.com/vlatan/video-store/internal/ui"
+	"github.com/vlatan/video-store/internal/tmpl"
 )
 
 type Service struct {
@@ -16,7 +16,7 @@ type Service struct {
 	avatar    *avatar.Service
 	rdb       *rdb.Service
 	session   *store.Service
-	ui        *ui.Service
+	tmpl      *tmpl.Service
 	config    *config.Config
 	yt        *yt.Service
 	gemini    *gemini.Service
@@ -27,7 +27,7 @@ func New(
 	avatar *avatar.Service,
 	rdb *rdb.Service,
 	store *store.Service,
-	ui *ui.Service,
+	tmpl *tmpl.Service,
 	config *config.Config,
 	yt *yt.Service,
 	gemini *gemini.Service,
@@ -37,7 +37,7 @@ func New(
 		avatar:    avatar,
 		rdb:       rdb,
 		session:   store,
-		ui:        ui,
+		tmpl:      tmpl,
 		config:    config,
 		yt:        yt,
 		gemini:    gemini,

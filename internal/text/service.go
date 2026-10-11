@@ -2,12 +2,12 @@ package text
 
 import (
 	"github.com/vlatan/video-store/internal/config"
-	"github.com/vlatan/video-store/internal/ui"
+	"github.com/vlatan/video-store/internal/tmpl"
 )
 
-func New(cfg *config.Config, ui *ui.Service) *Service {
+func New(cfg *config.Config, tmpl *tmpl.Service) *Service {
 	return &Service{
 		textFiles: loadTextFiles(cfg),
-		ui:        ui,
+		tmpl:      tmpl,
 	}
 }

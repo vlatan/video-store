@@ -18,7 +18,7 @@ func (s *Service) PostActionAPI(w http.ResponseWriter, r *http.Request) {
 	videoID := r.PathValue("video")
 	if validVideoID.FindStringSubmatch(videoID) == nil {
 		slog.WarnContext(r.Context(), "invalid video id")
-		s.ui.JSONError(w, r, http.StatusNotFound)
+		s.tmpl.JSONError(w, r, http.StatusNotFound)
 		return
 	}
 
@@ -27,7 +27,7 @@ func (s *Service) PostActionAPI(w http.ResponseWriter, r *http.Request) {
 	allowedActions := []string{"like", "fave", "rate", "review"}
 	if !slices.Contains(allowedActions, action) {
 		slog.WarnContext(r.Context(), "not a valid action on post")
-		s.ui.JSONError(w, r, http.StatusNotFound)
+		s.tmpl.JSONError(w, r, http.StatusNotFound)
 		return
 	}
 
@@ -44,7 +44,7 @@ func (s *Service) PostActionAPI(w http.ResponseWriter, r *http.Request) {
 	case "review":
 		s.handleReview(w, r, user.ID, videoID)
 	default:
-		s.ui.JSONError(w, r, http.StatusBadRequest)
+		s.tmpl.JSONError(w, r, http.StatusBadRequest)
 	}
 }
 
@@ -55,7 +55,7 @@ func (s *Service) UndoPostActionAPI(w http.ResponseWriter, r *http.Request) {
 	videoID := r.PathValue("video")
 	if validVideoID.FindStringSubmatch(videoID) == nil {
 		slog.WarnContext(r.Context(), "invalid video id")
-		s.ui.JSONError(w, r, http.StatusNotFound)
+		s.tmpl.JSONError(w, r, http.StatusNotFound)
 		return
 	}
 
@@ -64,7 +64,7 @@ func (s *Service) UndoPostActionAPI(w http.ResponseWriter, r *http.Request) {
 	allowedActions := []string{"unlike", "unfave", "unrate"}
 	if !slices.Contains(allowedActions, action) {
 		slog.WarnContext(r.Context(), "not a valid action on post")
-		s.ui.JSONError(w, r, http.StatusNotFound)
+		s.tmpl.JSONError(w, r, http.StatusNotFound)
 		return
 	}
 
@@ -79,7 +79,7 @@ func (s *Service) UndoPostActionAPI(w http.ResponseWriter, r *http.Request) {
 	case "unrate":
 		s.handleUnrate(w, r, user.ID, videoID)
 	default:
-		s.ui.JSONError(w, r, http.StatusBadRequest)
+		s.tmpl.JSONError(w, r, http.StatusBadRequest)
 	}
 }
 
@@ -93,13 +93,13 @@ func (s *Service) handleLike(w http.ResponseWriter, r *http.Request, userID int,
 			r.Context(), "failed to like the video",
 			"error", err,
 		)
-		s.ui.JSONError(w, r, http.StatusInternalServerError)
+		s.tmpl.JSONError(w, r, http.StatusInternalServerError)
 		return
 	}
 
 	if rowsAffected == 0 {
 		slog.WarnContext(r.Context(), "no such video to like")
-		s.ui.JSONError(w, r, http.StatusNotFound)
+		s.tmpl.JSONError(w, r, http.StatusNotFound)
 	}
 }
 
@@ -113,13 +113,13 @@ func (s *Service) handleUnlike(w http.ResponseWriter, r *http.Request, userID in
 			r.Context(), "failed to unlike the video",
 			"error", err,
 		)
-		s.ui.JSONError(w, r, http.StatusInternalServerError)
+		s.tmpl.JSONError(w, r, http.StatusInternalServerError)
 		return
 	}
 
 	if rowsAffected == 0 {
 		slog.WarnContext(r.Context(), "no such video to unlike")
-		s.ui.JSONError(w, r, http.StatusNotFound)
+		s.tmpl.JSONError(w, r, http.StatusNotFound)
 	}
 }
 
@@ -133,13 +133,13 @@ func (s *Service) handleFave(w http.ResponseWriter, r *http.Request, userID int,
 			r.Context(), "failed to fave the video",
 			"error", err,
 		)
-		s.ui.JSONError(w, r, http.StatusInternalServerError)
+		s.tmpl.JSONError(w, r, http.StatusInternalServerError)
 		return
 	}
 
 	if rowsAffected == 0 {
 		slog.WarnContext(r.Context(), "no such video to fave")
-		s.ui.JSONError(w, r, http.StatusNotFound)
+		s.tmpl.JSONError(w, r, http.StatusNotFound)
 	}
 }
 
@@ -153,13 +153,13 @@ func (s *Service) handleUnfave(w http.ResponseWriter, r *http.Request, userID in
 			r.Context(), "failed to unfave the video",
 			"error", err,
 		)
-		s.ui.JSONError(w, r, http.StatusInternalServerError)
+		s.tmpl.JSONError(w, r, http.StatusInternalServerError)
 		return
 	}
 
 	if rowsAffected == 0 {
 		slog.WarnContext(r.Context(), "no such video to unfave")
-		s.ui.JSONError(w, r, http.StatusNotFound)
+		s.tmpl.JSONError(w, r, http.StatusNotFound)
 	}
 }
 
@@ -175,7 +175,7 @@ func (s *Service) handleRate(w http.ResponseWriter, r *http.Request, userID int,
 			r.Context(), "failed to decode post rating",
 			"error", err,
 		)
-		s.ui.JSONError(w, r, http.StatusInternalServerError)
+		s.tmpl.JSONError(w, r, http.StatusInternalServerError)
 		return
 	}
 
@@ -183,7 +183,7 @@ func (s *Service) handleRate(w http.ResponseWriter, r *http.Request, userID int,
 		slog.WarnContext(
 			r.Context(), "rating out of bounds",
 		)
-		s.ui.JSONError(w, r, http.StatusBadRequest)
+		s.tmpl.JSONError(w, r, http.StatusBadRequest)
 		return
 	}
 
@@ -191,7 +191,7 @@ func (s *Service) handleRate(w http.ResponseWriter, r *http.Request, userID int,
 
 	if errors.Is(err, pgx.ErrNoRows) {
 		slog.WarnContext(r.Context(), "no such video to rate")
-		s.ui.JSONError(w, r, http.StatusNotFound)
+		s.tmpl.JSONError(w, r, http.StatusNotFound)
 		return
 	}
 
@@ -200,11 +200,11 @@ func (s *Service) handleRate(w http.ResponseWriter, r *http.Request, userID int,
 			r.Context(), "failed to rate the video",
 			"error", err,
 		)
-		s.ui.JSONError(w, r, http.StatusInternalServerError)
+		s.tmpl.JSONError(w, r, http.StatusInternalServerError)
 		return
 	}
 
-	s.ui.WriteJSON(w, r, ratingStats)
+	s.tmpl.WriteJSON(w, r, ratingStats)
 }
 
 // handleUnrate handles a deletion of a user rating/review
@@ -214,7 +214,7 @@ func (s *Service) handleUnrate(w http.ResponseWriter, r *http.Request, userID in
 
 	if errors.Is(err, pgx.ErrNoRows) {
 		slog.WarnContext(r.Context(), "no such video to unrate")
-		s.ui.JSONError(w, r, http.StatusNotFound)
+		s.tmpl.JSONError(w, r, http.StatusNotFound)
 		return
 	}
 
@@ -223,11 +223,11 @@ func (s *Service) handleUnrate(w http.ResponseWriter, r *http.Request, userID in
 			r.Context(), "failed to unrate the video",
 			"error", err,
 		)
-		s.ui.JSONError(w, r, http.StatusInternalServerError)
+		s.tmpl.JSONError(w, r, http.StatusInternalServerError)
 		return
 	}
 
-	s.ui.WriteJSON(w, r, ratingStats)
+	s.tmpl.WriteJSON(w, r, ratingStats)
 }
 
 // Handle a post favorite from user
@@ -244,13 +244,13 @@ func (s *Service) handleReview(w http.ResponseWriter, r *http.Request, userID in
 			r.Context(), "failed to decode post review",
 			"error", err,
 		)
-		s.ui.JSONError(w, r, http.StatusInternalServerError)
+		s.tmpl.JSONError(w, r, http.StatusInternalServerError)
 		return
 	}
 
 	if data.Rating < 1 || data.Rating > 10 {
 		slog.WarnContext(r.Context(), "rating out of bounds")
-		s.ui.JSONError(w, r, http.StatusBadRequest)
+		s.tmpl.JSONError(w, r, http.StatusBadRequest)
 		return
 	}
 
@@ -259,7 +259,7 @@ func (s *Service) handleReview(w http.ResponseWriter, r *http.Request, userID in
 			r.Context(), "failed to validate the review",
 			"error", err,
 		)
-		s.ui.JSONError(w, r, http.StatusBadRequest)
+		s.tmpl.JSONError(w, r, http.StatusBadRequest)
 		return
 	}
 
@@ -274,7 +274,7 @@ func (s *Service) handleReview(w http.ResponseWriter, r *http.Request, userID in
 
 	if errors.Is(err, pgx.ErrNoRows) {
 		slog.WarnContext(r.Context(), "no such video to review")
-		s.ui.JSONError(w, r, http.StatusNotFound)
+		s.tmpl.JSONError(w, r, http.StatusNotFound)
 		return
 	}
 
@@ -283,9 +283,9 @@ func (s *Service) handleReview(w http.ResponseWriter, r *http.Request, userID in
 			r.Context(), "failed to review the video",
 			"error", err,
 		)
-		s.ui.JSONError(w, r, http.StatusInternalServerError)
+		s.tmpl.JSONError(w, r, http.StatusInternalServerError)
 		return
 	}
 
-	s.ui.WriteJSON(w, r, reviewData)
+	s.tmpl.WriteJSON(w, r, reviewData)
 }

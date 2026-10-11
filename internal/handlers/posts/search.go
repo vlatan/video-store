@@ -24,7 +24,7 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get template data
-	data := s.ui.TmplData(w, r)
+	data := s.tmpl.Data(w, r)
 	data.SearchQuery = searchQuery
 
 	start := time.Now()
@@ -64,19 +64,19 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "failed to get posts from DB",
 			"error", err,
 		)
-		s.ui.HTMLError(w, r, data, http.StatusInternalServerError)
+		s.tmpl.HTMLError(w, r, data, http.StatusInternalServerError)
 		return
 	}
 	if len(posts.Items) == 0 {
 		slog.WarnContext(r.Context(), "no posts found in DB")
-		s.ui.HTMLError(w, r, data, http.StatusNotFound)
+		s.tmpl.HTMLError(w, r, data, http.StatusNotFound)
 		return
 	}
 
 	data.Posts = &posts
 	data.Posts.TimeTook = fmt.Sprintf("%.2f", end.Seconds())
 	data.Title = "Search"
-	s.ui.RenderHTML(w, r, "search.html", data)
+	s.tmpl.RenderHTML(w, r, "search.html", data)
 }
 
 // Handle the requests from the searchform
@@ -85,7 +85,7 @@ func (s *Service) SearchPostsAPI(w http.ResponseWriter, r *http.Request) {
 	// Get the search query
 	searchQuery := r.URL.Query().Get("q")
 	if searchQuery == "" {
-		s.ui.JSONError(w, r, http.StatusNotFound)
+		s.tmpl.JSONError(w, r, http.StatusNotFound)
 		return
 	}
 
@@ -131,15 +131,15 @@ func (s *Service) SearchPostsAPI(w http.ResponseWriter, r *http.Request) {
 			"path", r.URL.Path,
 			"error", err,
 		)
-		s.ui.JSONError(w, r, http.StatusInternalServerError)
+		s.tmpl.JSONError(w, r, http.StatusInternalServerError)
 		return
 	}
 
 	if len(posts.Items) == 0 {
 		slog.WarnContext(r.Context(), "no posts found in DB")
-		s.ui.JSONError(w, r, http.StatusNotFound)
+		s.tmpl.JSONError(w, r, http.StatusNotFound)
 		return
 	}
 
-	s.ui.WriteJSON(w, r, posts)
+	s.tmpl.WriteJSON(w, r, posts)
 }

@@ -30,7 +30,7 @@ import (
 	usersRepo "github.com/vlatan/video-store/internal/repos/users"
 	"github.com/vlatan/video-store/internal/static"
 	"github.com/vlatan/video-store/internal/text"
-	"github.com/vlatan/video-store/internal/ui"
+	"github.com/vlatan/video-store/internal/tmpl"
 )
 
 type App struct {
@@ -127,7 +127,7 @@ func New() (*App, error) {
 	}
 
 	// Create user interface service
-	ui, err := ui.New(cfg, rdb, store, catsRepo, static)
+	tmpl, err := tmpl.New(cfg, rdb, store, catsRepo, static)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create UI service: %w", err)
 	}
@@ -136,16 +136,16 @@ func New() (*App, error) {
 	a := &App{
 
 		// Handlers services
-		auth:     auth.New(usersRepo, av, store, ui, cfg),
-		users:    users.New(usersRepo, av, rdb, r2s, ui, cfg),
-		posts:    posts.New(postsRepo, av, rdb, store, ui, cfg, yt, gemini),
-		pages:    pages.New(pagesRepo, rdb, store, ui, cfg),
-		sources:  sources.New(cfg, rdb, store, postsRepo, sourcesRepo, ui, yt),
-		sitemaps: sitemaps.New(postsRepo, rdb, ui, cfg),
-		text:     text.New(cfg, ui),
-		health:   health.New(db, rdb, ui),
+		auth:     auth.New(usersRepo, av, store, tmpl, cfg),
+		users:    users.New(usersRepo, av, rdb, r2s, tmpl, cfg),
+		posts:    posts.New(postsRepo, av, rdb, store, tmpl, cfg, yt, gemini),
+		pages:    pages.New(pagesRepo, rdb, store, tmpl, cfg),
+		sources:  sources.New(cfg, rdb, store, postsRepo, sourcesRepo, tmpl, yt),
+		sitemaps: sitemaps.New(postsRepo, rdb, tmpl, cfg),
+		text:     text.New(cfg, tmpl),
+		health:   health.New(db, rdb, tmpl),
 		static:   static,
-		mw:       middlewares.New(cfg, store, usersRepo, av, ui),
+		mw:       middlewares.New(cfg, store, usersRepo, av, tmpl),
 
 		// The domain we're serving this app on
 		domain: cfg.Domain,

@@ -6,7 +6,7 @@ import (
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/integrations/r2"
 	usersRepo "github.com/vlatan/video-store/internal/repos/users"
-	"github.com/vlatan/video-store/internal/ui"
+	"github.com/vlatan/video-store/internal/tmpl"
 )
 
 type Service struct {
@@ -14,7 +14,7 @@ type Service struct {
 	avatar    *avatar.Service
 	rdb       *rdb.Service
 	r2s       *r2.Service
-	ui        *ui.Service
+	tmpl      *tmpl.Service
 	config    *config.Config
 }
 
@@ -23,7 +23,7 @@ func New(
 	avatar *avatar.Service,
 	rdb *rdb.Service,
 	r2s *r2.Service,
-	ui *ui.Service,
+	tmpl *tmpl.Service,
 	config *config.Config,
 ) *Service {
 	return &Service{
@@ -31,7 +31,7 @@ func New(
 		avatar:    avatar,
 		rdb:       rdb,
 		r2s:       r2s,
-		ui:        ui,
+		tmpl:      tmpl,
 		config:    config,
 	}
 }

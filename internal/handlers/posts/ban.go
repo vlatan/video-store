@@ -11,13 +11,13 @@ import (
 func (s *Service) BanPostHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Get template data
-	data := s.ui.TmplData(w, r)
+	data := s.tmpl.Data(w, r)
 
 	// Validate the YT ID
 	videoID := r.PathValue("video")
 	if validVideoID.FindStringSubmatch(videoID) == nil {
 		slog.WarnContext(r.Context(), "invalid video id")
-		s.ui.HTMLError(w, r, data, http.StatusNotFound)
+		s.tmpl.HTMLError(w, r, data, http.StatusNotFound)
 		return
 	}
 
@@ -27,13 +27,13 @@ func (s *Service) BanPostHandler(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "failed to ban/delete the video",
 			"error", err,
 		)
-		s.ui.HTMLError(w, r, data, http.StatusInternalServerError)
+		s.tmpl.HTMLError(w, r, data, http.StatusInternalServerError)
 		return
 	}
 
 	if rowsAffected == 0 {
 		slog.WarnContext(r.Context(), "no such post to ban")
-		s.ui.HTMLError(w, r, data, http.StatusNotFound)
+		s.tmpl.HTMLError(w, r, data, http.StatusNotFound)
 		return
 	}
 

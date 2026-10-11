@@ -9,7 +9,7 @@ import (
 func (s *Service) UserFavoritesHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Get template data
-	data := s.ui.TmplData(w, r)
+	data := s.tmpl.Data(w, r)
 
 	posts, err := s.usersRepo.GetUserFavedPosts(r.Context(), data.CurrentUser.ID, "")
 
@@ -18,13 +18,13 @@ func (s *Service) UserFavoritesHandler(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "failed to get user fav posts from DB",
 			"error", err,
 		)
-		s.ui.HTMLError(w, r, data, http.StatusInternalServerError)
+		s.tmpl.HTMLError(w, r, data, http.StatusInternalServerError)
 		return
 	}
 
 	data.Posts = &posts
 	data.Title = "Your Favorite Documentaries"
-	s.ui.RenderHTML(w, r, "user_library.html", data)
+	s.tmpl.RenderHTML(w, r, "user_library.html", data)
 }
 
 // Users admin dashboard
@@ -33,7 +33,7 @@ func (s *Service) UsersHandler(w http.ResponseWriter, r *http.Request) {
 	page := GetPageNum(r)
 
 	// Get template data
-	data := s.ui.TmplData(w, r)
+	data := s.tmpl.Data(w, r)
 
 	users, err := s.usersRepo.GetUsers(r.Context(), page)
 	if err != nil {
@@ -41,13 +41,13 @@ func (s *Service) UsersHandler(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "failed to get users from DB",
 			"error", err,
 		)
-		s.ui.HTMLError(w, r, data, http.StatusInternalServerError)
+		s.tmpl.HTMLError(w, r, data, http.StatusInternalServerError)
 		return
 	}
 
 	if len(users.Items) == 0 {
 		slog.WarnContext(r.Context(), "no users found in DB")
-		s.ui.HTMLError(w, r, data, http.StatusNotFound)
+		s.tmpl.HTMLError(w, r, data, http.StatusNotFound)
 		return
 	}
 
@@ -59,13 +59,13 @@ func (s *Service) UsersHandler(w http.ResponseWriter, r *http.Request) {
 				r.Context(), "failed to get user avatar",
 				"error", err,
 			)
-			s.ui.HTMLError(w, r, data, http.StatusInternalServerError)
+			s.tmpl.HTMLError(w, r, data, http.StatusInternalServerError)
 			return
 		}
 		users.Items[i].LocalAvatarURL = localAvatarURL
 	}
 
-	data.PaginationInfo = s.ui.NewPagination(
+	data.PaginationInfo = s.tmpl.NewPagination(
 		page,
 		users.TotalNum,
 		s.config.PostsPerPage,
@@ -73,5 +73,5 @@ func (s *Service) UsersHandler(w http.ResponseWriter, r *http.Request) {
 
 	data.Users = &users
 	data.Title = "Users"
-	s.ui.RenderHTML(w, r, "admin.html", data)
+	s.tmpl.RenderHTML(w, r, "admin.html", data)
 }

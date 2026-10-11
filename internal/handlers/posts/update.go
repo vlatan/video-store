@@ -22,12 +22,12 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 	videoID := r.PathValue("video")
 
 	// Get template data
-	data := s.ui.TmplData(w, r)
+	data := s.tmpl.Data(w, r)
 
 	// Validate the YT ID
 	if validVideoID.FindStringSubmatch(videoID) == nil {
 		slog.WarnContext(r.Context(), "invalid video id")
-		s.ui.HTMLError(w, r, data, http.StatusNotFound)
+		s.tmpl.HTMLError(w, r, data, http.StatusNotFound)
 		return
 	}
 
@@ -38,7 +38,7 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "no such post in DB",
 			"error", err,
 		)
-		s.ui.HTMLError(w, r, data, http.StatusNotFound)
+		s.tmpl.HTMLError(w, r, data, http.StatusNotFound)
 		return
 	}
 
@@ -47,7 +47,7 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "failed to get the post from DB",
 			"error", err,
 		)
-		s.ui.HTMLError(w, r, data, http.StatusInternalServerError)
+		s.tmpl.HTMLError(w, r, data, http.StatusInternalServerError)
 		return
 	}
 
@@ -118,7 +118,7 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
 		// Serve the page with the form
-		s.ui.RenderHTML(w, r, "form.html", data)
+		s.tmpl.RenderHTML(w, r, "form.html", data)
 
 	case "POST":
 		var formError types.FlashMessage
@@ -131,7 +131,7 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 			)
 			formError.Message = "Could not parse the form"
 			data.Form.Error = &formError
-			s.ui.RenderHTML(w, r, "form.html", data)
+			s.tmpl.RenderHTML(w, r, "form.html", data)
 			return
 		}
 
@@ -172,7 +172,7 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 			)
 			formError.Message = "Could not parse the release year"
 			data.Form.Error = &formError
-			s.ui.RenderHTML(w, r, "form.html", data)
+			s.tmpl.RenderHTML(w, r, "form.html", data)
 			return
 		}
 
@@ -185,7 +185,7 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 			)
 			formError.Message = "Could not parse the directors"
 			data.Form.Error = &formError
-			s.ui.RenderHTML(w, r, "form.html", data)
+			s.tmpl.RenderHTML(w, r, "form.html", data)
 			return
 		}
 
@@ -209,7 +209,7 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 			)
 			formError.Message = "Could not update the post in DB"
 			data.Form.Error = &formError
-			s.ui.RenderHTML(w, r, "form.html", data)
+			s.tmpl.RenderHTML(w, r, "form.html", data)
 			return
 		}
 
@@ -222,7 +222,7 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 			)
 			formError.Message = "Could not delete the cache on post"
 			data.Form.Error = &formError
-			s.ui.RenderHTML(w, r, "form.html", data)
+			s.tmpl.RenderHTML(w, r, "form.html", data)
 			return
 		}
 
@@ -231,6 +231,6 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 		redirect.Safe(w, r, redirectTo, http.StatusFound)
 
 	default:
-		s.ui.HTMLError(w, r, data, http.StatusMethodNotAllowed)
+		s.tmpl.HTMLError(w, r, data, http.StatusMethodNotAllowed)
 	}
 }

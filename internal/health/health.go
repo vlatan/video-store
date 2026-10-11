@@ -5,20 +5,20 @@ import (
 
 	"github.com/vlatan/video-store/internal/drivers/database"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
-	"github.com/vlatan/video-store/internal/ui"
+	"github.com/vlatan/video-store/internal/tmpl"
 )
 
 type Service struct {
-	db  *database.Service
-	rdb *rdb.Service
-	ui  *ui.Service
+	db   *database.Service
+	rdb  *rdb.Service
+	tmpl *tmpl.Service
 }
 
-func New(db *database.Service, rdb *rdb.Service, ui *ui.Service) *Service {
+func New(db *database.Service, rdb *rdb.Service, tmpl *tmpl.Service) *Service {
 	return &Service{
-		db:  db,
-		rdb: rdb,
-		ui:  ui,
+		db:   db,
+		rdb:  rdb,
+		tmpl: tmpl,
 	}
 }
 
@@ -32,5 +32,5 @@ func (s *Service) Handle(w http.ResponseWriter, r *http.Request) {
 		"server_status":   getServerStats(),
 	}
 
-	s.ui.WriteJSON(w, r, data)
+	s.tmpl.WriteJSON(w, r, data)
 }

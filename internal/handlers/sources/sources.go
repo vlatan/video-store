@@ -7,7 +7,7 @@ import (
 	"github.com/vlatan/video-store/internal/integrations/yt"
 	postsRepo "github.com/vlatan/video-store/internal/repos/posts"
 	sourcesRepo "github.com/vlatan/video-store/internal/repos/sources"
-	"github.com/vlatan/video-store/internal/ui"
+	"github.com/vlatan/video-store/internal/tmpl"
 )
 
 type Service struct {
@@ -16,7 +16,7 @@ type Service struct {
 	session     *store.Service
 	postsRepo   *postsRepo.Repository
 	sourcesRepo *sourcesRepo.Repository
-	ui          *ui.Service
+	tmpl        *tmpl.Service
 	yt          *yt.Service
 }
 
@@ -26,7 +26,7 @@ func New(
 	store *store.Service,
 	postsRepo *postsRepo.Repository,
 	sourcesRepo *sourcesRepo.Repository,
-	ui *ui.Service,
+	tmpl *tmpl.Service,
 	yt *yt.Service,
 ) *Service {
 	return &Service{
@@ -35,7 +35,7 @@ func New(
 		session:     store,
 		postsRepo:   postsRepo,
 		sourcesRepo: sourcesRepo,
-		ui:          ui,
+		tmpl:        tmpl,
 		yt:          yt,
 	}
 }

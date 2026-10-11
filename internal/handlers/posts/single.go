@@ -19,12 +19,12 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 	videoID := r.PathValue("video")
 
 	// Get template data
-	data := s.ui.TmplData(w, r)
+	data := s.tmpl.Data(w, r)
 
 	// Validate the YT ID
 	if validVideoID.FindStringSubmatch(videoID) == nil {
 		slog.WarnContext(r.Context(), "invalid video id")
-		s.ui.HTMLError(w, r, data, http.StatusNotFound)
+		s.tmpl.HTMLError(w, r, data, http.StatusNotFound)
 		return
 	}
 
@@ -109,7 +109,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 				r.Context(), "no such post in DB",
 				"error", err,
 			)
-			s.ui.HTMLError(w, r, data, http.StatusNotFound)
+			s.tmpl.HTMLError(w, r, data, http.StatusNotFound)
 			return
 		}
 
@@ -118,7 +118,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 			"error", err,
 		)
 
-		s.ui.HTMLError(w, r, data, http.StatusInternalServerError)
+		s.tmpl.HTMLError(w, r, data, http.StatusInternalServerError)
 		return
 	}
 
@@ -190,7 +190,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 			"error", err,
 		)
 
-		s.ui.HTMLError(w, r, data, http.StatusInternalServerError)
+		s.tmpl.HTMLError(w, r, data, http.StatusInternalServerError)
 		return
 	}
 
@@ -201,5 +201,5 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Assign the post to data
 	data.CurrentPost = &post
-	s.ui.RenderHTML(w, r, "post.html", data)
+	s.tmpl.RenderHTML(w, r, "post.html", data)
 }

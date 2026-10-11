@@ -70,15 +70,15 @@ func (s *Service) SourcePostsAPI(w http.ResponseWriter, r *http.Request) {
 			"failed to get source posts from DB",
 			"error", err,
 		)
-		s.ui.JSONError(w, r, http.StatusInternalServerError)
+		s.tmpl.JSONError(w, r, http.StatusInternalServerError)
 		return
 	}
 
 	if len(posts.Items) == 0 {
 		slog.WarnContext(r.Context(), "no source posts found in DB")
-		s.ui.JSONError(w, r, http.StatusNotFound)
+		s.tmpl.JSONError(w, r, http.StatusNotFound)
 		return
 	}
 
-	s.ui.WriteJSON(w, r, posts)
+	s.tmpl.WriteJSON(w, r, posts)
 }

@@ -16,12 +16,12 @@ import (
 func (s *Service) SitemapStyleHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Get template data
-	data := s.ui.TmplData(w, r)
+	data := s.tmpl.Data(w, r)
 	data.XMLDeclarations = []template.HTML{
 		template.HTML(`<?xml version="1.0" encoding="UTF-8"?>`),
 	}
 
-	s.ui.RenderHTML(w, r, "sitemap.xsl", data)
+	s.tmpl.RenderHTML(w, r, "sitemap.xsl", data)
 }
 
 // Handle a sitemap part
@@ -31,13 +31,13 @@ func (s *Service) SitemapPartHandler(w http.ResponseWriter, r *http.Request) {
 	partKey := r.PathValue("part")
 
 	// Get template data
-	data := s.ui.TmplData(w, r)
+	data := s.tmpl.Data(w, r)
 
 	// Check if this is xml page, base is now -> "post-19"
 	base, ok := strings.CutSuffix(partKey, ".xml")
 	if !ok {
 		slog.WarnContext(r.Context(), "sitemapt part has no xml extension")
-		s.ui.HTMLError(w, r, data, http.StatusNotFound)
+		s.tmpl.HTMLError(w, r, data, http.StatusNotFound)
 		return
 	}
 
@@ -45,7 +45,7 @@ func (s *Service) SitemapPartHandler(w http.ResponseWriter, r *http.Request) {
 	dashIdx := strings.LastIndex(base, "-")
 	if dashIdx == -1 {
 		slog.WarnContext(r.Context(), "sitemap part has no dash in its name")
-		s.ui.HTMLError(w, r, data, http.StatusNotFound)
+		s.tmpl.HTMLError(w, r, data, http.StatusNotFound)
 		return
 	}
 
@@ -53,7 +53,7 @@ func (s *Service) SitemapPartHandler(w http.ResponseWriter, r *http.Request) {
 	prefix := base[:dashIdx]
 	if !slices.Contains(sitemapPartTypes, prefix) {
 		slog.WarnContext(r.Context(), "invalid sitemap part type")
-		s.ui.HTMLError(w, r, data, http.StatusNotFound)
+		s.tmpl.HTMLError(w, r, data, http.StatusNotFound)
 		return
 	}
 
@@ -62,7 +62,7 @@ func (s *Service) SitemapPartHandler(w http.ResponseWriter, r *http.Request) {
 	partNum, err := strconv.Atoi(numStr)
 	if err != nil || partNum < 0 || partNum >= sitemapPartsNum {
 		slog.WarnContext(r.Context(), "invalid sitemap part number")
-		s.ui.HTMLError(w, r, data, http.StatusNotFound)
+		s.tmpl.HTMLError(w, r, data, http.StatusNotFound)
 		return
 	}
 
@@ -74,13 +74,13 @@ func (s *Service) SitemapPartHandler(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "failed to get the sitemap part",
 			"error", err,
 		)
-		s.ui.HTMLError(w, r, data, http.StatusInternalServerError)
+		s.tmpl.HTMLError(w, r, data, http.StatusInternalServerError)
 		return
 	}
 
 	if sitemapPart == nil {
 		slog.WarnContext(r.Context(), "no sitemap part fetched")
-		s.ui.HTMLError(w, r, data, http.StatusNotFound)
+		s.tmpl.HTMLError(w, r, data, http.StatusNotFound)
 		return
 	}
 
@@ -90,14 +90,14 @@ func (s *Service) SitemapPartHandler(w http.ResponseWriter, r *http.Request) {
 		template.HTML(`<?xml-stylesheet type="text/xsl" href="/sitemap.xsl"?>`),
 	}
 
-	s.ui.RenderHTML(w, r, "sitemap_items.xml", data)
+	s.tmpl.RenderHTML(w, r, "sitemap_items.xml", data)
 }
 
 // Handle the sitemap index
 func (s *Service) SitemapIndexHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Get template data
-	data := s.ui.TmplData(w, r)
+	data := s.tmpl.Data(w, r)
 
 	sitemap, err := s.GetSitemapIndex(r, sitemapRedisKey)
 
@@ -106,7 +106,7 @@ func (s *Service) SitemapIndexHandler(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "failed to get the sitemap index",
 			"error", err,
 		)
-		s.ui.HTMLError(w, r, data, http.StatusInternalServerError)
+		s.tmpl.HTMLError(w, r, data, http.StatusInternalServerError)
 		return
 	}
 
@@ -127,5 +127,5 @@ func (s *Service) SitemapIndexHandler(w http.ResponseWriter, r *http.Request) {
 		template.HTML(`<?xml-stylesheet type="text/xsl" href="/sitemap.xsl"?>`),
 	}
 
-	s.ui.RenderHTML(w, r, "sitemap_index.xml", data)
+	s.tmpl.RenderHTML(w, r, "sitemap_index.xml", data)
 }

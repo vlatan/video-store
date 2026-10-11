@@ -14,14 +14,14 @@ import (
 func (s *Service) Begin(w http.ResponseWriter, r *http.Request) {
 
 	// Get template data
-	data := s.ui.TmplData(w, r)
+	data := s.tmpl.Data(w, r)
 
 	// Check if the provider exists
 	providerName := r.PathValue("provider")
 	provider, ok := s.providers[providerName]
 	if !ok {
 		slog.WarnContext(r.Context(), "invalid provider name")
-		s.ui.HTMLError(w, r, data, http.StatusNotFound)
+		s.tmpl.HTMLError(w, r, data, http.StatusNotFound)
 		return
 	}
 
@@ -42,7 +42,7 @@ func (s *Service) Begin(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "failed to generate oauth state",
 			"error", err,
 		)
-		s.ui.HTMLError(w, r, data, http.StatusInternalServerError)
+		s.tmpl.HTMLError(w, r, data, http.StatusInternalServerError)
 		return
 	}
 
@@ -61,7 +61,7 @@ func (s *Service) Begin(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "failed to save state/verifier to session",
 			"error", err,
 		)
-		s.ui.HTMLError(w, r, data, http.StatusInternalServerError)
+		s.tmpl.HTMLError(w, r, data, http.StatusInternalServerError)
 		return
 	}
 
@@ -81,14 +81,14 @@ func (s *Service) Begin(w http.ResponseWriter, r *http.Request) {
 func (s *Service) Callback(w http.ResponseWriter, r *http.Request) {
 
 	// Get template data
-	data := s.ui.TmplData(w, r)
+	data := s.tmpl.Data(w, r)
 
 	// Check if the provider exists
 	providerName := r.PathValue("provider")
 	provider, ok := s.providers[providerName]
 	if !ok {
 		slog.WarnContext(r.Context(), "invalid provider name")
-		s.ui.HTMLError(w, r, data, http.StatusNotFound)
+		s.tmpl.HTMLError(w, r, data, http.StatusNotFound)
 		return
 	}
 
