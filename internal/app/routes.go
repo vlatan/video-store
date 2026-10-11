@@ -68,13 +68,13 @@ func (a *App) RegisterRoutes() *App {
 	mux.HandleFunc("GET /search/{$}", a.posts.SearchPostsHandler)
 	mux.HandleFunc("GET /api/search/{$}", a.posts.SearchPostsAPI)
 	mux.HandleFunc("GET /api/health/{$}", a.mw.IsAdmin(a.health.API))
-	mux.HandleFunc("GET /static/", a.static.Handler)
-	mux.HandleFunc("GET /ads.txt", a.mw.PublicCache(a.text.Handler))
-	mux.HandleFunc("GET /robots.txt", a.mw.PublicCache(a.text.Handler))
+	mux.HandleFunc("GET /static/", a.static.Handle)
+	mux.HandleFunc("GET /ads.txt", a.mw.PublicCache(a.text.Handle))
+	mux.HandleFunc("GET /robots.txt", a.mw.PublicCache(a.text.Handle))
 
 	// Register favicons serving from root
 	for _, favicon := range pathx.RootFavicons {
-		mux.HandleFunc("GET "+favicon, a.static.Handler)
+		mux.HandleFunc("GET "+favicon, a.static.Handle)
 	}
 
 	// Route for memory profiling

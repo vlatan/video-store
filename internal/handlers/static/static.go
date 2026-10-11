@@ -23,8 +23,8 @@ func New(ui ui.Service) *Service {
 	return &Service{ui: ui}
 }
 
-// Handle static files.
-func (s *Service) Handler(w http.ResponseWriter, r *http.Request) {
+// Handle handles static files
+func (s *Service) Handle(w http.ResponseWriter, r *http.Request) {
 
 	// Validate the path
 	if err := pathx.Validate(r.URL.Path); err != nil {

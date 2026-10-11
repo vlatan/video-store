@@ -16,8 +16,8 @@ func New(ui ui.Service) *Service {
 	return &Service{ui: ui}
 }
 
-// TextHandler handles text files such as robots.txt, ads.txt, etc.
-func (s *Service) Handler(w http.ResponseWriter, r *http.Request) {
+// Handle handles text files such as robots.txt, ads.txt, etc.
+func (s *Service) Handle(w http.ResponseWriter, r *http.Request) {
 
 	// Get template data
 	data := s.ui.TmplData(w, r)
