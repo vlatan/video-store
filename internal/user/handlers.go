@@ -11,7 +11,7 @@ func (s *Service) Favorites(w http.ResponseWriter, r *http.Request) {
 	// Get template data
 	data := s.tmpl.Data(w, r)
 
-	posts, err := s.Repo.Favorites(r.Context(), data.CurrentUser.ID, "")
+	posts, err := s.repo.Favorites(r.Context(), data.CurrentUser.ID, "")
 
 	if err != nil {
 		slog.ErrorContext(
@@ -35,7 +35,7 @@ func (s *Service) All(w http.ResponseWriter, r *http.Request) {
 	// Get template data
 	data := s.tmpl.Data(w, r)
 
-	users, err := s.Repo.All(r.Context(), page)
+	users, err := s.repo.All(r.Context(), page)
 	if err != nil {
 		slog.ErrorContext(
 			r.Context(), "failed to get users from DB",

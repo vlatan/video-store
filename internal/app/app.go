@@ -29,6 +29,7 @@ import (
 	"github.com/vlatan/video-store/internal/text"
 	"github.com/vlatan/video-store/internal/tmpl"
 	"github.com/vlatan/video-store/internal/user"
+	userRepo "github.com/vlatan/video-store/internal/user/repo"
 )
 
 type App struct {
@@ -87,6 +88,11 @@ func New() (*App, error) {
 		return nil, fmt.Errorf("couldn't create categories repo: %w", err)
 	}
 
+	userRepo, err := userRepo.New(cfg, db, nil)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't create users repo: %w", err)
+	}
+
 	postsRepo, err := postsRepo.New(db, cfg, nil)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create posts repo: %w", err)
@@ -112,7 +118,6 @@ func New() (*App, error) {
 	// Create session service
 	store := store.New(cfg, rdb, "session", 86400*30)
 
-	// Create static service
 	static, err := static.New()
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create static files service: %w", err)
@@ -122,12 +127,6 @@ func New() (*App, error) {
 	tmpl, err := tmpl.New(cfg, rdb, store, catsRepo, static)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create UI service: %w", err)
-	}
-
-	// Create user service
-	user, err := user.New(cfg, db, av, tmpl)
-	if err != nil {
-		return nil, fmt.Errorf("couldn't create user service: %w", err)
 	}
 
 	// Create sitemap service
@@ -140,8 +139,8 @@ func New() (*App, error) {
 	a := &App{
 
 		// Handlers services
-		auth:    auth.New(cfg, user.Repo, av, store, tmpl),
-		user:    user,
+		auth:    auth.New(cfg, userRepo, av, store, tmpl),
+		user:    user.New(cfg, userRepo, av, tmpl),
 		posts:   posts.New(postsRepo, av, rdb, store, tmpl, cfg, yt, gemini),
 		page:    page.New(cfg, db, rdb, store, tmpl),
 		sources: sources.New(cfg, rdb, store, postsRepo, sourcesRepo, tmpl, yt),
@@ -149,7 +148,7 @@ func New() (*App, error) {
 		text:    text.New(cfg, tmpl),
 		health:  health.New(db, rdb, tmpl),
 		static:  static,
-		mw:      middlewares.New(cfg, user.Repo, store, av, tmpl),
+		mw:      middlewares.New(cfg, userRepo, store, av, tmpl),
 
 		// The domain we're serving this app on
 		domain: cfg.Domain,
