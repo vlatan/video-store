@@ -148,7 +148,7 @@ func New() (*App, error) {
 		text:    text.New(cfg, tmpl),
 		health:  health.New(db, rdb, tmpl),
 		static:  static,
-		mw:      middlewares.New(cfg, store, userRepo, av, tmpl),
+		mw:      middlewares.New(cfg, userRepo, store, av, tmpl),
 
 		// The domain we're serving this app on
 		domain: cfg.Domain,
