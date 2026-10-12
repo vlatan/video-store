@@ -15,7 +15,6 @@ import (
 	"github.com/vlatan/video-store/internal/drivers/store"
 	"github.com/vlatan/video-store/internal/handlers/posts"
 	"github.com/vlatan/video-store/internal/handlers/sources"
-	"github.com/vlatan/video-store/internal/handlers/users"
 	"github.com/vlatan/video-store/internal/health"
 	"github.com/vlatan/video-store/internal/integrations/gemini"
 	"github.com/vlatan/video-store/internal/integrations/r2"
@@ -30,11 +29,12 @@ import (
 	"github.com/vlatan/video-store/internal/static"
 	"github.com/vlatan/video-store/internal/text"
 	"github.com/vlatan/video-store/internal/tmpl"
+	"github.com/vlatan/video-store/internal/user"
 )
 
 type App struct {
 	auth    *auth.Service
-	users   *users.Service
+	user    *user.Service
 	posts   *posts.Service
 	page    *page.Service
 	sources *sources.Service
@@ -140,7 +140,7 @@ func New() (*App, error) {
 
 		// Handlers services
 		auth:    auth.New(usersRepo, av, store, tmpl, cfg),
-		users:   users.New(usersRepo, av, rdb, r2s, tmpl, cfg),
+		user:    user.New(usersRepo, av, rdb, r2s, tmpl, cfg),
 		posts:   posts.New(postsRepo, av, rdb, store, tmpl, cfg, yt, gemini),
 		page:    page.New(cfg, db, rdb, store, tmpl),
 		sources: sources.New(cfg, rdb, store, postsRepo, sourcesRepo, tmpl, yt),

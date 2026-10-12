@@ -1,4 +1,4 @@
-package users
+package user
 
 import (
 	"github.com/vlatan/video-store/internal/avatar"

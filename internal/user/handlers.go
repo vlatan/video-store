@@ -1,4 +1,4 @@
-package users
+package user
 
 import (
 	"log/slog"
@@ -6,7 +6,7 @@ import (
 )
 
 // Handle the user favorites page
-func (s *Service) UserFavoritesHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Service) Favorites(w http.ResponseWriter, r *http.Request) {
 
 	// Get template data
 	data := s.tmpl.Data(w, r)
@@ -28,7 +28,7 @@ func (s *Service) UserFavoritesHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // Users admin dashboard
-func (s *Service) UsersHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Service) All(w http.ResponseWriter, r *http.Request) {
 	// Get the page number from the request query param
 	page := getPageNum(r)
 

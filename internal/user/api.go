@@ -1,4 +1,4 @@
-package users
+package user
 
 import (
 	"log/slog"
@@ -8,7 +8,7 @@ import (
 )
 
 // Handle the user favorites page
-func (s *Service) UserFavoritesAPI(w http.ResponseWriter, r *http.Request) {
+func (s *Service) FavoritesAPI(w http.ResponseWriter, r *http.Request) {
 
 	// Get the cursor if any
 	cursor := r.URL.Query().Get("cursor")
