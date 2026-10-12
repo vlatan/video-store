@@ -33,10 +33,10 @@ func (a *App) RegisterRoutes() *App {
 	mux.HandleFunc("GET /api/year/{year}/{$}", a.posts.YearPostsAPI)
 
 	// Pages
-	mux.HandleFunc("GET /page/{slug}/{$}", a.pages.Single)
-	mux.HandleFunc("/page/{slug}/edit", a.mw.IsAdmin(a.pages.Update))
-	mux.HandleFunc("/page/new", a.mw.IsAdmin(a.pages.New))
-	mux.HandleFunc("DELETE /page/{slug}/delete", a.mw.IsAdmin(a.pages.Delete))
+	mux.HandleFunc("GET /page/{slug}/{$}", a.page.Single)
+	mux.HandleFunc("/page/{slug}/edit", a.mw.IsAdmin(a.page.Update))
+	mux.HandleFunc("/page/new", a.mw.IsAdmin(a.page.New))
+	mux.HandleFunc("DELETE /page/{slug}/delete", a.mw.IsAdmin(a.page.Delete))
 
 	// Sources
 	mux.HandleFunc("/source/new", a.mw.IsAdmin(a.sources.NewSourceHandler))

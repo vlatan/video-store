@@ -1,4 +1,4 @@
-package pages
+package page
 
 import (
 	"github.com/vlatan/video-store/internal/config"

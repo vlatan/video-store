@@ -1,3 +1,3 @@
-package pages
+package page
 
 const pageCacheKey = "page:%s"
