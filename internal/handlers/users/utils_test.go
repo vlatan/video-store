@@ -19,7 +19,7 @@ func TestGetPageNum(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			req := httptest.NewRequest("GET", fmt.Sprintf("/?page=%s", tt.page), nil)
-			if got := GetPageNum(req); got != tt.expected {
+			if got := getPageNum(req); got != tt.expected {
 				t.Errorf("got %d, want %d", got, tt.expected)
 			}
 		})

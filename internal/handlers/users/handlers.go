@@ -30,7 +30,7 @@ func (s *Service) UserFavoritesHandler(w http.ResponseWriter, r *http.Request) {
 // Users admin dashboard
 func (s *Service) UsersHandler(w http.ResponseWriter, r *http.Request) {
 	// Get the page number from the request query param
-	page := GetPageNum(r)
+	page := getPageNum(r)
 
 	// Get template data
 	data := s.tmpl.Data(w, r)
