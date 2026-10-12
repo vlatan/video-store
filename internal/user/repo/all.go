@@ -12,7 +12,7 @@ import (
 func (r *Repository) All(ctx context.Context, page int) (types.Users, error) {
 
 	// Calculate the limit and offset
-	limit := r.config.PostsPerPage
+	limit := r.cfg.PostsPerPage
 	offset := (page - 1) * limit
 
 	var zero, users types.Users

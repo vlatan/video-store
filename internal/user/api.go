@@ -16,7 +16,7 @@ func (s *Service) FavoritesAPI(w http.ResponseWriter, r *http.Request) {
 	// Get current user
 	currentUser := ctxd.GetUser(r.Context())
 
-	posts, err := s.repo.Favorites(r.Context(), currentUser.ID, cursor)
+	posts, err := s.Repo.Favorites(r.Context(), currentUser.ID, cursor)
 
 	if err != nil {
 		slog.ErrorContext(

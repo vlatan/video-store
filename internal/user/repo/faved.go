@@ -21,7 +21,7 @@ func (r *Repository) Favorites(
 	// The user ID and the limit are the first two arguments ($1 and $2)
 	// Peek for one post beoynd the limit to see if there's next page,
 	// meaning whether to construct and send the next cursor at all.
-	args := []any{userID, r.config.PostsPerPage + 1}
+	args := []any{userID, r.cfg.PostsPerPage + 1}
 
 	// The default template variables - SQL parts
 	var where string
@@ -119,7 +119,7 @@ func (r *Repository) Favorites(
 	}
 
 	// This is the last page
-	if len(posts.Items) <= r.config.PostsPerPage {
+	if len(posts.Items) <= r.cfg.PostsPerPage {
 		return posts, nil
 	}
 
