@@ -1,4 +1,4 @@
-package users
+package repo
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 )
 
 // Get users with limit and offset
-func (r *Repository) GetUsers(ctx context.Context, page int) (types.Users, error) {
+func (r *Repository) All(ctx context.Context, page int) (types.Users, error) {
 
 	// Calculate the limit and offset
 	limit := r.config.PostsPerPage

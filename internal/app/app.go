@@ -24,12 +24,12 @@ import (
 	catsRepo "github.com/vlatan/video-store/internal/repos/categories"
 	postsRepo "github.com/vlatan/video-store/internal/repos/posts"
 	sourcesRepo "github.com/vlatan/video-store/internal/repos/sources"
-	usersRepo "github.com/vlatan/video-store/internal/repos/users"
 	"github.com/vlatan/video-store/internal/sitemap"
 	"github.com/vlatan/video-store/internal/static"
 	"github.com/vlatan/video-store/internal/text"
 	"github.com/vlatan/video-store/internal/tmpl"
 	"github.com/vlatan/video-store/internal/user"
+	userRepo "github.com/vlatan/video-store/internal/user/repo"
 )
 
 type App struct {
@@ -88,7 +88,7 @@ func New() (*App, error) {
 		return nil, fmt.Errorf("couldn't create categories repo: %w", err)
 	}
 
-	usersRepo, err := usersRepo.New(db, cfg, nil)
+	userRepo, err := userRepo.New(db, cfg, nil)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create users repo: %w", err)
 	}
@@ -139,8 +139,8 @@ func New() (*App, error) {
 	a := &App{
 
 		// Handlers services
-		auth:    auth.New(usersRepo, av, store, tmpl, cfg),
-		user:    user.New(usersRepo, av, rdb, r2s, tmpl, cfg),
+		auth:    auth.New(cfg, userRepo, av, store, tmpl),
+		user:    user.New(cfg, userRepo, av, tmpl),
 		posts:   posts.New(postsRepo, av, rdb, store, tmpl, cfg, yt, gemini),
 		page:    page.New(cfg, db, rdb, store, tmpl),
 		sources: sources.New(cfg, rdb, store, postsRepo, sourcesRepo, tmpl, yt),
@@ -148,7 +148,7 @@ func New() (*App, error) {
 		text:    text.New(cfg, tmpl),
 		health:  health.New(db, rdb, tmpl),
 		static:  static,
-		mw:      middlewares.New(cfg, store, usersRepo, av, tmpl),
+		mw:      middlewares.New(cfg, store, userRepo, av, tmpl),
 
 		// The domain we're serving this app on
 		domain: cfg.Domain,

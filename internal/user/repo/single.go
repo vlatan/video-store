@@ -1,4 +1,4 @@
-package users
+package repo
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 )
 
 // GetSingleUser gets single user based on ID
-func (r *Repository) GetSingleUser(ctx context.Context, userID int) (types.User, error) {
+func (r *Repository) Get(ctx context.Context, userID int) (types.User, error) {
 
 	var zero, user types.User
 	query, err := stringx.GetQuery(r.tmpl, "single_user.sql", nil)
@@ -45,7 +45,7 @@ func (r *Repository) GetSingleUser(ctx context.Context, userID int) (types.User,
 }
 
 // Add or update a user
-func (r *Repository) UpsertUser(ctx context.Context, u *types.User) (int, error) {
+func (r *Repository) Upsert(ctx context.Context, u *types.User) (int, error) {
 
 	query, err := stringx.GetQuery(r.tmpl, "upsert_user.sql", nil)
 	if err != nil {
@@ -67,7 +67,7 @@ func (r *Repository) UpsertUser(ctx context.Context, u *types.User) (int, error)
 	return id, err
 }
 
-func (r *Repository) DeleteUser(ctx context.Context, userID int) (int64, error) {
+func (r *Repository) Delete(ctx context.Context, userID int) (int64, error) {
 	const query = "DELETE FROM app_user WHERE id = $1;"
 	result, err := r.db.Pool.Exec(ctx, query, userID)
 	return result.RowsAffected(), err

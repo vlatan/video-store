@@ -1,4 +1,4 @@
-package users
+package repo
 
 import (
 	"context"
@@ -13,7 +13,7 @@ import (
 )
 
 // Get user's favorited posts
-func (r *Repository) GetUserFavedPosts(
+func (r *Repository) Favorites(
 	ctx context.Context,
 	userID int,
 	cursor string) (types.Posts, error) {

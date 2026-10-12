@@ -115,7 +115,7 @@ func (s *Service) githubRevokeRequest(
 	// GitHub revoke endpoint
 	url := fmt.Sprintf(
 		"https://api.github.com/applications/%s/grant",
-		s.config.GithubOAuthClientId,
+		s.cfg.GithubOAuthClientId,
 	)
 
 	// Define the JSON payload structure
@@ -131,7 +131,7 @@ func (s *Service) githubRevokeRequest(
 	}
 
 	// Add Basic Authentication with the OAuth app's client ID and client secret
-	req.SetBasicAuth(s.config.GithubOAuthClientId, s.config.GithubOAuthClientSecret)
+	req.SetBasicAuth(s.cfg.GithubOAuthClientId, s.cfg.GithubOAuthClientSecret)
 
 	// Set required headers
 	req.Header.Set("Accept", "application/vnd.github+json")

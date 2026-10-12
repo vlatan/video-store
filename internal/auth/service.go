@@ -10,33 +10,33 @@ import (
 	"github.com/vlatan/video-store/internal/types"
 )
 
-type usersRepo interface {
-	UpsertUser(context.Context, *types.User) (int, error)
-	DeleteUser(context.Context, int) (int64, error)
+type userRepo interface {
+	Upsert(context.Context, *types.User) (int, error)
+	Delete(context.Context, int) (int64, error)
 }
 
 type Service struct {
-	repo      usersRepo
+	cfg       *config.Config
+	user      userRepo
 	avatar    *avatar.Service
 	session   *store.Service
 	tmpl      *tmpl.Service
-	config    *config.Config
 	providers Providers
 }
 
 func New(
-	repo usersRepo,
+	cfg *config.Config,
+	user userRepo,
 	avatar *avatar.Service,
 	store *store.Service,
 	tmpl *tmpl.Service,
-	config *config.Config,
 ) *Service {
 	return &Service{
-		repo:      repo,
+		cfg:       cfg,
+		user:      user,
 		avatar:    avatar,
 		session:   store,
 		tmpl:      tmpl,
-		config:    config,
-		providers: NewProviders(config),
+		providers: NewProviders(cfg),
 	}
 }

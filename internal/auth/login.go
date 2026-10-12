@@ -18,7 +18,7 @@ func (s *Service) loginUser(w http.ResponseWriter, r *http.Request, user *types.
 	}
 
 	// Update or insert user
-	user.ID, err = s.repo.UpsertUser(r.Context(), user)
+	user.ID, err = s.user.Upsert(r.Context(), user)
 	if err != nil {
 		return err
 	}
