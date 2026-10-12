@@ -16,13 +16,13 @@ func (a *App) RegisterRoutes() *App {
 	mux.HandleFunc("GET /api/{$}", a.posts.HomeAPI)
 
 	// Videos
-	mux.HandleFunc("/video/new", a.mw.IsAdmin(a.posts.NewPostHandler))
+	mux.HandleFunc("/video/new", a.user.IsAdmin(a.posts.NewPostHandler))
 	mux.HandleFunc("GET /video/{video}/{$}", a.posts.SinglePostHandler)
-	mux.HandleFunc("/video/{video}/edit", a.mw.IsAdmin(a.posts.UpdatePostHandler))
-	mux.HandleFunc("DELETE /video/{video}/delete", a.mw.IsAdmin(a.posts.BanPostHandler))
+	mux.HandleFunc("/video/{video}/edit", a.user.IsAdmin(a.posts.UpdatePostHandler))
+	mux.HandleFunc("DELETE /video/{video}/delete", a.user.IsAdmin(a.posts.BanPostHandler))
 	mux.HandleFunc("GET /api/video/{video}/reviews", a.posts.PostReviewsAPI)
-	mux.HandleFunc("POST /api/video/{video}/{action}", a.mw.IsAuth(a.posts.PostActionAPI))
-	mux.HandleFunc("DELETE /api/video/{video}/{action}", a.mw.IsAuth(a.posts.UndoPostActionAPI))
+	mux.HandleFunc("POST /api/video/{video}/{action}", a.user.IsAuth(a.posts.PostActionAPI))
+	mux.HandleFunc("DELETE /api/video/{video}/{action}", a.user.IsAuth(a.posts.UndoPostActionAPI))
 
 	// Categories
 	mux.HandleFunc("GET /category/{category}/{$}", a.posts.CategoryPostsHandler)
@@ -34,22 +34,22 @@ func (a *App) RegisterRoutes() *App {
 
 	// Pages
 	mux.HandleFunc("GET /page/{slug}/{$}", a.page.Single)
-	mux.HandleFunc("/page/{slug}/edit", a.mw.IsAdmin(a.page.Update))
-	mux.HandleFunc("/page/new", a.mw.IsAdmin(a.page.New))
-	mux.HandleFunc("DELETE /page/{slug}/delete", a.mw.IsAdmin(a.page.Delete))
+	mux.HandleFunc("/page/{slug}/edit", a.user.IsAdmin(a.page.Update))
+	mux.HandleFunc("/page/new", a.user.IsAdmin(a.page.New))
+	mux.HandleFunc("DELETE /page/{slug}/delete", a.user.IsAdmin(a.page.Delete))
 
 	// Sources
-	mux.HandleFunc("/source/new", a.mw.IsAdmin(a.sources.NewSourceHandler))
+	mux.HandleFunc("/source/new", a.user.IsAdmin(a.sources.NewSourceHandler))
 	mux.HandleFunc("GET /source/{source}/{$}", a.sources.SourcePostsHandler)
-	mux.HandleFunc("DELETE /source/{source}/delete", a.mw.IsAdmin(a.sources.DeleteSourceHandler))
+	mux.HandleFunc("DELETE /source/{source}/delete", a.user.IsAdmin(a.sources.DeleteSourceHandler))
 	mux.HandleFunc("GET /api/source/{source}/{$}", a.sources.SourcePostsAPI)
 	mux.HandleFunc("GET /sources/{$}", a.sources.SourcesHandler)
 
 	// Authentication
 	mux.HandleFunc("GET /auth/{provider}", a.auth.Begin)
 	mux.HandleFunc("GET /auth/{provider}/callback", a.auth.Callback)
-	mux.HandleFunc("GET /logout/{provider}", a.mw.IsAuth(a.auth.Logout))
-	mux.HandleFunc("DELETE /account/delete", a.mw.IsAuth(a.auth.Delete))
+	mux.HandleFunc("GET /logout/{provider}", a.user.IsAuth(a.auth.Logout))
+	mux.HandleFunc("DELETE /account/delete", a.user.IsAuth(a.auth.Delete))
 
 	// Sitemaps
 	mux.HandleFunc("GET /sitemap.xsl", a.mw.PublicCache(a.sitemap.Style))
@@ -57,9 +57,9 @@ func (a *App) RegisterRoutes() *App {
 	mux.HandleFunc("GET /sitemap.xml", a.mw.PublicCache(a.sitemap.Index))
 
 	// Users
-	mux.HandleFunc("GET /user/favorites/{$}", a.mw.IsAuth(a.user.Favorites))
-	mux.HandleFunc("GET /api/user/favorites/{$}", a.mw.IsAuth(a.user.FavoritesAPI))
-	mux.HandleFunc("GET /users/{$}", a.mw.IsAdmin(a.user.All))
+	mux.HandleFunc("GET /user/favorites/{$}", a.user.IsAuth(a.user.Favorites))
+	mux.HandleFunc("GET /api/user/favorites/{$}", a.user.IsAuth(a.user.FavoritesAPI))
+	mux.HandleFunc("GET /users/{$}", a.user.IsAdmin(a.user.All))
 
 	// Search
 	mux.HandleFunc("GET /search/{$}", a.posts.SearchPostsHandler)
@@ -76,9 +76,9 @@ func (a *App) RegisterRoutes() *App {
 	mux.HandleFunc("GET /ads.txt", a.mw.PublicCache(a.text.Handle))
 
 	// Health
-	mux.HandleFunc("GET /api/health/{$}", a.mw.IsAdmin(a.health.Info))
+	mux.HandleFunc("GET /api/health/{$}", a.user.IsAdmin(a.health.Info))
 	mux.HandleFunc("GET /healthcheck", a.health.Check)
-	mux.HandleFunc("GET /debug/heap", a.mw.IsAdmin(a.health.Debug))
+	mux.HandleFunc("GET /debug/heap", a.user.IsAdmin(a.health.Debug))
 
 	// Chain middlewares that apply to all requests.
 	// The order is important.
