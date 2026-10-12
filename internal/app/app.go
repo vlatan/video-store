@@ -33,19 +33,19 @@ import (
 )
 
 type App struct {
-	auth     *auth.Service
-	users    *users.Service
-	posts    *posts.Service
-	pages    *pages.Service
-	sources  *sources.Service
-	sitemaps *sitemaps.Service
-	text     *text.Service
-	health   *health.Service
-	static   *static.Service
-	mw       *middlewares.Service
-	domain   string
-	cleanup  func() error
-	server   *http.Server
+	auth    *auth.Service
+	users   *users.Service
+	posts   *posts.Service
+	pages   *pages.Service
+	sources *sources.Service
+	sitemap *sitemaps.Service
+	text    *text.Service
+	health  *health.Service
+	static  *static.Service
+	mw      *middlewares.Service
+	domain  string
+	cleanup func() error
+	server  *http.Server
 }
 
 // New creates new app.
@@ -123,26 +123,32 @@ func New() (*App, error) {
 		return nil, fmt.Errorf("couldn't create static files service: %w", err)
 	}
 
-	// Create user interface service
+	// Create template service
 	tmpl, err := tmpl.New(cfg, rdb, store, catsRepo, static)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create UI service: %w", err)
+	}
+
+	// Create sitemap service
+	sitemap, err := sitemaps.New(cfg, db, rdb, tmpl)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't create sitemap service: %w", err)
 	}
 
 	// Create new app service
 	a := &App{
 
 		// Handlers services
-		auth:     auth.New(usersRepo, av, store, tmpl, cfg),
-		users:    users.New(usersRepo, av, rdb, r2s, tmpl, cfg),
-		posts:    posts.New(postsRepo, av, rdb, store, tmpl, cfg, yt, gemini),
-		pages:    pages.New(cfg, db, rdb, store, tmpl),
-		sources:  sources.New(cfg, rdb, store, postsRepo, sourcesRepo, tmpl, yt),
-		sitemaps: sitemaps.New(postsRepo, rdb, tmpl, cfg),
-		text:     text.New(cfg, tmpl),
-		health:   health.New(db, rdb, tmpl),
-		static:   static,
-		mw:       middlewares.New(cfg, store, usersRepo, av, tmpl),
+		auth:    auth.New(usersRepo, av, store, tmpl, cfg),
+		users:   users.New(usersRepo, av, rdb, r2s, tmpl, cfg),
+		posts:   posts.New(postsRepo, av, rdb, store, tmpl, cfg, yt, gemini),
+		pages:   pages.New(cfg, db, rdb, store, tmpl),
+		sources: sources.New(cfg, rdb, store, postsRepo, sourcesRepo, tmpl, yt),
+		sitemap: sitemap,
+		text:    text.New(cfg, tmpl),
+		health:  health.New(db, rdb, tmpl),
+		static:  static,
+		mw:      middlewares.New(cfg, store, usersRepo, av, tmpl),
 
 		// The domain we're serving this app on
 		domain: cfg.Domain,

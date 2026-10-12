@@ -1,9 +1,11 @@
 package sitemaps
 
 import (
+	"fmt"
+
 	"github.com/vlatan/video-store/internal/config"
+	"github.com/vlatan/video-store/internal/drivers/database"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
-	postsRepo "github.com/vlatan/video-store/internal/repos/posts"
 	"github.com/vlatan/video-store/internal/tmpl"
 )
 
@@ -18,19 +20,19 @@ var sitemapPartTypes = []string{
 }
 
 type Service struct {
-	postsRepo *postsRepo.Repository
-	rdb       *rdb.Service
-	tmpl      *tmpl.Service
-	config    *config.Config
-	sqlArgs   []any
+	cfg     *config.Config
+	repo    *Repository
+	rdb     *rdb.Service
+	tmpl    *tmpl.Service
+	sqlArgs []any
 }
 
 func New(
-	postsRepo *postsRepo.Repository,
+	cfg *config.Config,
+	db *database.Service,
 	rdb *rdb.Service,
 	tmpl *tmpl.Service,
-	config *config.Config,
-) *Service {
+) (*Service, error) {
 
 	args := make([]any, 0, 1+len(sitemapPartTypes))
 	args = append(args, sitemapPartsNum)
@@ -38,11 +40,16 @@ func New(
 		args = append(args, t)
 	}
 
-	return &Service{
-		postsRepo: postsRepo,
-		rdb:       rdb,
-		tmpl:      tmpl,
-		config:    config,
-		sqlArgs:   args,
+	repo, err := NewRepo(db, nil)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't create sitemap repo: %w", err)
 	}
+
+	return &Service{
+		cfg:     cfg,
+		repo:    repo,
+		rdb:     rdb,
+		tmpl:    tmpl,
+		sqlArgs: args,
+	}, nil
 }

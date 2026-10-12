@@ -13,7 +13,7 @@ import (
 )
 
 // Serve the xml style, whixh is xsl
-func (s *Service) SitemapStyleHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Service) Style(w http.ResponseWriter, r *http.Request) {
 
 	// Get template data
 	data := s.tmpl.Data(w, r)
@@ -25,7 +25,7 @@ func (s *Service) SitemapStyleHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // Handle a sitemap part
-func (s *Service) SitemapPartHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Service) Part(w http.ResponseWriter, r *http.Request) {
 
 	// Extract the part from URL, i.e. "post-19.xml"
 	partKey := r.PathValue("part")
@@ -67,7 +67,7 @@ func (s *Service) SitemapPartHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get sitemap part from Redis cache or fetch the entire index from DB
-	sitemapPart, err := s.GetSitemapPart(r, sitemapRedisKey, partKey)
+	sitemapPart, err := s.getSitemapPart(r, sitemapRedisKey, partKey)
 
 	if err != nil {
 		slog.ErrorContext(
@@ -94,12 +94,12 @@ func (s *Service) SitemapPartHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // Handle the sitemap index
-func (s *Service) SitemapIndexHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Service) Index(w http.ResponseWriter, r *http.Request) {
 
 	// Get template data
 	data := s.tmpl.Data(w, r)
 
-	sitemap, err := s.GetSitemapIndex(r, sitemapRedisKey)
+	sitemap, err := s.getSitemapIndex(r, sitemapRedisKey)
 
 	if err != nil {
 		slog.ErrorContext(

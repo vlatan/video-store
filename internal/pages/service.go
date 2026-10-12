@@ -25,7 +25,7 @@ func New(
 ) *Service {
 	return &Service{
 		cfg:     cfg,
-		repo:    newRepo(db),
+		repo:    NewRepo(db),
 		rdb:     rdb,
 		session: store,
 		tmpl:    tmpl,

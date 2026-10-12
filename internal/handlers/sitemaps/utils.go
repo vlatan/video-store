@@ -15,7 +15,7 @@ import (
 func (s *Service) getSitemapIndexFromDB(r *http.Request, args ...any) (types.SitemapIndex, error) {
 
 	// Fetch the entire sitemap data from DB
-	data, err := s.postsRepo.SitemapData(r.Context(), args...)
+	data, err := s.repo.Data(r.Context(), args...)
 	if err != nil {
 		return nil, fmt.Errorf(
 			"failed to fetch sitemap data from DB: %w",
@@ -28,7 +28,7 @@ func (s *Service) getSitemapIndexFromDB(r *http.Request, args ...any) (types.Sit
 	}
 
 	// Get base absolute URL
-	baseURL := fmt.Sprintf("%s://%s", s.config.Protocol, s.config.Domain)
+	baseURL := fmt.Sprintf("%s://%s", s.cfg.Protocol, s.cfg.Domain)
 
 	// Populate the sitemap index map, contenining sitemap parts.
 	// Additionally process the last modified time for each part,
@@ -61,7 +61,7 @@ func (s *Service) getSitemapIndexFromDB(r *http.Request, args ...any) (types.Sit
 }
 
 // Get the entire sitemap either from Redis or DB
-func (s *Service) GetSitemapIndex(r *http.Request, sitemapKey string) (types.SitemapIndex, error) {
+func (s *Service) getSitemapIndex(r *http.Request, sitemapKey string) (types.SitemapIndex, error) {
 
 	// Try to get the sitemap index from Redis.
 	// HGetAll will not return redis.Nil on no-result.
@@ -87,7 +87,7 @@ func (s *Service) GetSitemapIndex(r *http.Request, sitemapKey string) (types.Sit
 	}
 
 	// Store the sitemap in cache
-	if err = s.CacheSitemapIndex(r.Context(), sitemapKey, sitemapIndex); err != nil {
+	if err = s.cacheSitemapIndex(r.Context(), sitemapKey, sitemapIndex); err != nil {
 		return nil, err
 	}
 
@@ -95,7 +95,7 @@ func (s *Service) GetSitemapIndex(r *http.Request, sitemapKey string) (types.Sit
 }
 
 // Get sitemap part either from Redis or DB
-func (s *Service) GetSitemapPart(r *http.Request, sitemapKey, partKey string) (*types.SitemapPart, error) {
+func (s *Service) getSitemapPart(r *http.Request, sitemapKey, partKey string) (*types.SitemapPart, error) {
 
 	// Try to get the sitemap part from Redis cache
 	var part types.SitemapPart
@@ -111,7 +111,7 @@ func (s *Service) GetSitemapPart(r *http.Request, sitemapKey, partKey string) (*
 	}
 
 	// Store the sitemap index in cache
-	if err = s.CacheSitemapIndex(r.Context(), sitemapKey, sitemapIndex); err != nil {
+	if err = s.cacheSitemapIndex(r.Context(), sitemapKey, sitemapIndex); err != nil {
 		return nil, err
 	}
 
@@ -120,7 +120,7 @@ func (s *Service) GetSitemapPart(r *http.Request, sitemapKey, partKey string) (*
 }
 
 // CacheSitemapIndex saves the sitemap index in Redis
-func (s *Service) CacheSitemapIndex(ctx context.Context, sitemapKey string, sitemapIndex types.SitemapIndex) error {
+func (s *Service) cacheSitemapIndex(ctx context.Context, sitemapKey string, sitemapIndex types.SitemapIndex) error {
 
 	// Prepare hset values (key, field pairs) in a slice
 	hsetValues := make([]any, 0, len(sitemapIndex)*2)
@@ -131,7 +131,7 @@ func (s *Service) CacheSitemapIndex(ctx context.Context, sitemapKey string, site
 	// Set the sitemap to Redis
 	pipe := s.rdb.Client.Pipeline()
 	pipe.HSet(ctx, sitemapKey, hsetValues...)
-	pipe.Expire(ctx, sitemapKey, s.config.CacheTimeout)
+	pipe.Expire(ctx, sitemapKey, s.cfg.CacheTimeout)
 	if _, err := pipe.Exec(ctx); err != nil {
 		return err
 	}
