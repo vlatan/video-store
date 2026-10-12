@@ -140,7 +140,7 @@ func New() (*App, error) {
 
 		// Handlers services
 		auth:    auth.New(cfg, userRepo, av, store, tmpl),
-		user:    user.New(cfg, userRepo, av, tmpl),
+		user:    user.New(cfg, userRepo, av, store, tmpl),
 		posts:   posts.New(postsRepo, av, rdb, store, tmpl, cfg, yt, gemini),
 		page:    page.New(cfg, db, rdb, store, tmpl),
 		sources: sources.New(cfg, rdb, store, postsRepo, sourcesRepo, tmpl, yt),
@@ -148,7 +148,7 @@ func New() (*App, error) {
 		text:    text.New(cfg, tmpl),
 		health:  health.New(db, rdb, tmpl),
 		static:  static,
-		mw:      middlewares.New(cfg, userRepo, store, av, tmpl),
+		mw:      middlewares.New(cfg, tmpl),
 
 		// The domain we're serving this app on
 		domain: cfg.Domain,
