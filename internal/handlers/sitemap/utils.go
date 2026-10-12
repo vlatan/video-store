@@ -1,4 +1,4 @@
-package sitemaps
+package sitemap
 
 import (
 	"context"
