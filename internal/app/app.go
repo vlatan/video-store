@@ -20,7 +20,7 @@ import (
 	"github.com/vlatan/video-store/internal/integrations/r2"
 	"github.com/vlatan/video-store/internal/integrations/yt"
 	"github.com/vlatan/video-store/internal/middlewares"
-	"github.com/vlatan/video-store/internal/page"
+	pagehandler "github.com/vlatan/video-store/internal/page/handler"
 	catsRepo "github.com/vlatan/video-store/internal/repos/categories"
 	postsRepo "github.com/vlatan/video-store/internal/repos/posts"
 	sourcesRepo "github.com/vlatan/video-store/internal/repos/sources"
@@ -36,7 +36,7 @@ type App struct {
 	auth    *auth.Service
 	user    *user.Service
 	posts   *posts.Service
-	page    *page.Service
+	page    *pagehandler.Service
 	sources *sources.Service
 	sitemap *sitemap.Service
 	text    *text.Service
@@ -142,7 +142,7 @@ func New() (*App, error) {
 		auth:    auth.New(cfg, userRepo, av, store, tmpl),
 		user:    user.New(cfg, userRepo, av, store, tmpl),
 		posts:   posts.New(postsRepo, av, rdb, store, tmpl, cfg, yt, gemini),
-		page:    page.New(cfg, db, rdb, store, tmpl),
+		page:    pagehandler.New(cfg, db, rdb, store, tmpl),
 		sources: sources.New(cfg, rdb, store, postsRepo, sourcesRepo, tmpl, yt),
 		sitemap: sitemap,
 		text:    text.New(cfg, tmpl),
