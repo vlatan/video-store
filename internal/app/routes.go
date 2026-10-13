@@ -25,12 +25,12 @@ func (a *App) RegisterRoutes() *App {
 	mux.HandleFunc("DELETE /api/video/{video}/{action}", a.user.IsAuth(a.posts.UndoPostActionAPI))
 
 	// Categories
-	mux.HandleFunc("GET /category/{category}/{$}", a.posts.CategoryPostsHandler)
-	mux.HandleFunc("GET /api/category/{category}/{$}", a.posts.CategoryPostsAPI)
+	mux.HandleFunc("GET /category/{category}/{$}", a.taxonomy.CategoryPosts)
+	mux.HandleFunc("GET /api/category/{category}/{$}", a.taxonomy.CategoryPostsAPI)
 
 	// Release Year
-	mux.HandleFunc("GET /year/{year}/{$}", a.posts.YearPostsHandler)
-	mux.HandleFunc("GET /api/year/{year}/{$}", a.posts.YearPostsAPI)
+	mux.HandleFunc("GET /year/{year}/{$}", a.taxonomy.YearPosts)
+	mux.HandleFunc("GET /api/year/{year}/{$}", a.taxonomy.YearPostsAPI)
 
 	// Pages
 	mux.HandleFunc("GET /page/{slug}/{$}", a.page.Single)
@@ -39,11 +39,11 @@ func (a *App) RegisterRoutes() *App {
 	mux.HandleFunc("DELETE /page/{slug}/delete", a.user.IsAdmin(a.page.Delete))
 
 	// Sources
-	mux.HandleFunc("/source/new", a.user.IsAdmin(a.sources.NewSourceHandler))
-	mux.HandleFunc("GET /source/{source}/{$}", a.sources.SourcePostsHandler)
-	mux.HandleFunc("DELETE /source/{source}/delete", a.user.IsAdmin(a.sources.DeleteSourceHandler))
-	mux.HandleFunc("GET /api/source/{source}/{$}", a.sources.SourcePostsAPI)
-	mux.HandleFunc("GET /sources/{$}", a.sources.SourcesHandler)
+	mux.HandleFunc("/source/new", a.user.IsAdmin(a.taxonomy.NewSource))
+	mux.HandleFunc("DELETE /source/{source}/delete", a.user.IsAdmin(a.taxonomy.DeleteSource))
+	mux.HandleFunc("GET /source/{source}/{$}", a.taxonomy.SourcePosts)
+	mux.HandleFunc("GET /api/source/{source}/{$}", a.taxonomy.SourcePostsAPI)
+	mux.HandleFunc("GET /sources/{$}", a.taxonomy.Sources)
 
 	// Authentication
 	mux.HandleFunc("GET /auth/{provider}", a.auth.Begin)

@@ -20,7 +20,7 @@ func (w *Worker) Process(ctx context.Context) error {
 	// ###################################################################
 
 	// Fetch all the playlists from DB
-	dbSources, err := w.sourcesRepo.GetAllSources(ctx)
+	dbSources, err := w.taxonomy.Sources(ctx)
 	if err != nil || len(dbSources) == 0 {
 		return fmt.Errorf(
 			"could not fetch the sources from DB; rows: %d; %w",

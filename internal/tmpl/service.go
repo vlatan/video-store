@@ -1,6 +1,7 @@
 package tmpl
 
 import (
+	"context"
 	"html/template"
 	"regexp"
 	"strings"
@@ -9,7 +10,7 @@ import (
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/drivers/store"
-	"github.com/vlatan/video-store/internal/repos/categories"
+	"github.com/vlatan/video-store/internal/types"
 
 	"github.com/tdewolff/minify/v2"
 	"github.com/tdewolff/minify/v2/html"
@@ -19,14 +20,18 @@ import (
 var validXML = regexp.MustCompile("[/+]xml$")
 
 type versioner interface {
-	AddVersion(path string) string
+	AddVersion(string) string
+}
+
+type taxonomy interface {
+	Categories(context.Context) (types.Categories, error)
 }
 
 type Service struct {
 	cfg       *config.Config
 	rdb       *rdb.Service
 	session   *store.Service
-	catsRepo  *categories.Repository
+	taxonomy  taxonomy
 	versioner versioner
 	templates templateMap
 }
@@ -36,8 +41,8 @@ func New(
 	cfg *config.Config,
 	rdb *rdb.Service,
 	store *store.Service,
-	catsRepo *categories.Repository,
-	v versioner,
+	taxonomy taxonomy,
+	versioner versioner,
 ) (*Service, error) {
 
 	m := minify.New()
@@ -54,7 +59,7 @@ func New(
 	m.AddFuncRegexp(validXML, xml.Minify)
 
 	funcs := template.FuncMap{
-		"AddVersion": v.AddVersion,
+		"AddVersion": versioner.AddVersion,
 		"Split":      strings.Split,
 		"Now":        time.Now,
 	}
@@ -68,7 +73,7 @@ func New(
 		cfg:       cfg,
 		rdb:       rdb,
 		session:   store,
-		catsRepo:  catsRepo,
+		taxonomy:  taxonomy,
 		templates: templates,
 	}, nil
 }

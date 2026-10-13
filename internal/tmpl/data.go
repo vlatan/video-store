@@ -17,7 +17,7 @@ func (s *Service) Data(w http.ResponseWriter, r *http.Request) *types.TemplateDa
 		"categories",
 		s.cfg.CacheTimeout,
 		func() (types.Categories, error) {
-			return s.catsRepo.GetCategories(r.Context())
+			return s.taxonomy.Categories(r.Context())
 		},
 	)
 

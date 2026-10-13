@@ -1,4 +1,4 @@
-package posts
+package handler
 
 import (
 	"fmt"
@@ -7,16 +7,32 @@ import (
 
 	"github.com/vlatan/video-store/internal/ctxd"
 	"github.com/vlatan/video-store/internal/types"
+	"github.com/vlatan/video-store/internal/utils/stringx"
 )
 
-// Handle posts in a certain category
-func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
+// YearPostsHandler handles posts in a certain release year
+func (s *Service) YearPosts(w http.ResponseWriter, r *http.Request) {
 
-	slug := r.PathValue("category")
+	year := r.PathValue("year")
 	orderBy := r.URL.Query().Get("order_by")
 
+	// Get template data
+	data := s.tmpl.Data(w, r)
+
+	// Convert the release year to valid int16 year
+	var err error
+	data.CurrentYear, err = stringx.ParseYear(year)
+	if err != nil {
+		slog.WarnContext(
+			r.Context(), "failed to parse release year",
+			"error", err,
+		)
+		s.tmpl.HTMLError(w, r, data, http.StatusNotFound)
+		return
+	}
+
 	// Construct the Redis key
-	redisKey := fmt.Sprintf("category:%s:posts", slug)
+	redisKey := fmt.Sprintf("year:%s:posts", year)
 
 	switch orderBy {
 	case types.Likes:
@@ -27,28 +43,21 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 		redisKey += fmt.Sprintf(":%s", types.RatingCount)
 	}
 
-	// Get template data
-	data := s.tmpl.Data(w, r)
-	data.CurrentCategory = &types.Category{Slug: slug}
-
-	var (
-		err   error
-		posts types.Posts
-	)
-
-	// Don't cache the category posts only for the admin
-	if data.CurrentUser.IsAdmin(s.config) {
-		posts, err = s.postsRepo.GetCategoryPosts(
-			r.Context(), slug, "", orderBy,
+	// Don't cache the release year posts only for the admin.
+	// We can pass the release year as string here no problem.
+	var posts types.Posts
+	if data.CurrentUser.IsAdmin(s.cfg) {
+		posts, err = s.repo.YearPosts(
+			r.Context(), year, "", orderBy,
 		)
 	} else {
 		posts, err = s.rdb.Get(
 			r.Context(),
 			redisKey,
-			s.config.CacheTimeout,
+			s.cfg.CacheTimeout,
 			func() (types.Posts, error) {
-				return s.postsRepo.GetCategoryPosts(
-					r.Context(), slug, "", orderBy,
+				return s.repo.YearPosts(
+					r.Context(), year, "", orderBy,
 				)
 			},
 		)
@@ -70,12 +79,26 @@ func (s *Service) CategoryPostsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data.Posts = &posts
-	data.Title = data.Posts.Title
+	data.Title = fmt.Sprintf("%s: %s", data.Posts.Title, year)
 	s.tmpl.RenderHTML(w, r, "taxonomy.html", data)
 }
 
-// Handle posts in a certain category
-func (s *Service) CategoryPostsAPI(w http.ResponseWriter, r *http.Request) {
+// YearPostsAPI handles posts in a certain release year
+func (s *Service) YearPostsAPI(w http.ResponseWriter, r *http.Request) {
+
+	// Get the category slug
+	year := r.PathValue("year")
+
+	// Try to parse the relesea year
+	_, err := stringx.ParseYear(year)
+	if err != nil {
+		slog.ErrorContext(
+			r.Context(), "failed to parse release year",
+			"error", err,
+		)
+		s.tmpl.JSONError(w, r, http.StatusNotFound)
+		return
+	}
 
 	// Get the cursor from a query param
 	cursor := r.URL.Query().Get("cursor")
@@ -83,11 +106,8 @@ func (s *Service) CategoryPostsAPI(w http.ResponseWriter, r *http.Request) {
 	// Get the order_by query param if any
 	orderBy := r.URL.Query().Get("order_by")
 
-	// Get the category slug
-	slug := r.PathValue("category")
-
 	// Construct the Redis key
-	redisKey := fmt.Sprintf("category:%s:posts", slug)
+	redisKey := fmt.Sprintf("year:%s:posts", year)
 
 	switch orderBy {
 	case types.Likes:
@@ -105,24 +125,20 @@ func (s *Service) CategoryPostsAPI(w http.ResponseWriter, r *http.Request) {
 	// Get current user
 	currentUser := ctxd.GetUser(r.Context())
 
-	var (
-		err   error
-		posts types.Posts
-	)
-
 	// Don't cache the category posts only for the admin
-	if currentUser.IsAdmin(s.config) {
-		posts, err = s.postsRepo.GetCategoryPosts(
-			r.Context(), slug, cursor, orderBy,
+	var posts types.Posts
+	if currentUser.IsAdmin(s.cfg) {
+		posts, err = s.repo.YearPosts(
+			r.Context(), year, cursor, orderBy,
 		)
 	} else {
 		posts, err = s.rdb.Get(
 			r.Context(),
 			redisKey,
-			s.config.CacheTimeout,
+			s.cfg.CacheTimeout,
 			func() (types.Posts, error) {
-				return s.postsRepo.GetCategoryPosts(
-					r.Context(), slug, cursor, orderBy,
+				return s.repo.YearPosts(
+					r.Context(), year, cursor, orderBy,
 				)
 			},
 		)

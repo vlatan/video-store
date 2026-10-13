@@ -1,4 +1,4 @@
-package posts
+package repo
 
 import (
 	"context"
@@ -12,57 +12,6 @@ import (
 	"github.com/vlatan/video-store/internal/utils/stringx"
 )
 
-// Get a limited number of posts from one category with cursor
-func (r *Repository) GetCategoryPosts(
-	ctx context.Context,
-	categorySlug,
-	cursor,
-	orderBy string,
-) (types.Posts, error) {
-
-	return r.queryTaxonomyPosts(
-		ctx,
-		"category_posts.sql",
-		categorySlug,
-		cursor,
-		orderBy,
-	)
-}
-
-// Get a limited number of posts from one category with cursor
-func (r *Repository) GetSourcePosts(
-	ctx context.Context,
-	playlistID,
-	cursor,
-	orderBy string,
-) (types.Posts, error) {
-
-	return r.queryTaxonomyPosts(
-		ctx,
-		"source_posts.sql",
-		playlistID,
-		cursor,
-		orderBy,
-	)
-}
-
-// Get a limited number of posts from one category with cursor
-func (r *Repository) GetYearPosts(
-	ctx context.Context,
-	releaseYear,
-	cursor,
-	orderBy string,
-) (types.Posts, error) {
-
-	return r.queryTaxonomyPosts(
-		ctx,
-		"year_posts.sql",
-		releaseYear,
-		cursor,
-		orderBy,
-	)
-}
-
 // Query the DB for posts based on variadic arguments
 func (r *Repository) queryTaxonomyPosts(
 	ctx context.Context,
@@ -75,7 +24,7 @@ func (r *Repository) queryTaxonomyPosts(
 	// The taxonomy ID and the limit are the first two arguments ($1 and $2)
 	// Peek for one post beoynd the limit to see if there's next page,
 	// meaning whether to construct and send the next cursor at all.
-	args := []any{taxonomyID, r.config.PostsPerPage + 1}
+	args := []any{taxonomyID, r.cfg.PostsPerPage + 1}
 
 	// The default template variables - SQL parts
 	var where string
@@ -197,7 +146,7 @@ func (r *Repository) queryTaxonomyPosts(
 	}
 
 	// This is the last page
-	if len(posts.Items) <= r.config.PostsPerPage {
+	if len(posts.Items) <= r.cfg.PostsPerPage {
 		return posts, nil
 	}
 

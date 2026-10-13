@@ -1,4 +1,4 @@
-package sources
+package handler
 
 import (
 	"fmt"
@@ -6,13 +6,14 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/vlatan/video-store/internal/ctxd"
 	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/redirect"
 	"github.com/vlatan/video-store/internal/utils/retry"
 )
 
 // Handle all sources page
-func (s *Service) SourcesHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Service) Sources(w http.ResponseWriter, r *http.Request) {
 
 	// Get template data
 	data := s.tmpl.Data(w, r)
@@ -22,15 +23,15 @@ func (s *Service) SourcesHandler(w http.ResponseWriter, r *http.Request) {
 		sources types.Sources
 	)
 
-	if data.CurrentUser.IsAdmin(s.config) {
-		sources, err = s.sourcesRepo.GetAllSources(r.Context())
+	if data.CurrentUser.IsAdmin(s.cfg) {
+		sources, err = s.repo.Sources(r.Context())
 	} else {
 		sources, err = s.rdb.Get(
 			r.Context(),
 			"sources",
-			s.config.CacheTimeout,
+			s.cfg.CacheTimeout,
 			func() (types.Sources, error) {
-				return s.sourcesRepo.GetAllSources(r.Context())
+				return s.repo.Sources(r.Context())
 			},
 		)
 	}
@@ -57,7 +58,7 @@ func (s *Service) SourcesHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // Handle adding new post via form
-func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Service) NewSource(w http.ResponseWriter, r *http.Request) {
 
 	// Get template data
 	data := s.tmpl.Data(w, r)
@@ -111,7 +112,7 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Check if the playlist is already posted
-		if s.sourcesRepo.SourceExists(r.Context(), playlistID) {
+		if s.repo.SourceExists(r.Context(), playlistID) {
 			slog.WarnContext(r.Context(), "playlist already posted")
 			formError.Message = "Playlist already posted"
 			data.Form.Error = &formError
@@ -167,7 +168,7 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 		source.UserID = data.CurrentUser.ID
 
 		// Insert the source in DB
-		rowsAffected, err := s.sourcesRepo.InsertSource(r.Context(), source)
+		rowsAffected, err := s.repo.InsertSource(r.Context(), source)
 		if err != nil || rowsAffected == 0 {
 			slog.ErrorContext(
 				r.Context(), "failed to insert source in DB",
@@ -189,7 +190,7 @@ func (s *Service) NewSourceHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // Handle posts in a certain source
-func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Service) SourcePosts(w http.ResponseWriter, r *http.Request) {
 
 	sourceID := r.PathValue("source")
 	orderBy := r.URL.Query().Get("order_by")
@@ -215,17 +216,17 @@ func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
 		posts types.Posts
 	)
 
-	if data.CurrentUser.IsAdmin(s.config) {
-		posts, err = s.postsRepo.GetSourcePosts(
+	if data.CurrentUser.IsAdmin(s.cfg) {
+		posts, err = s.repo.SourcePosts(
 			r.Context(), sourceID, "", orderBy,
 		)
 	} else {
 		posts, err = s.rdb.Get(
 			r.Context(),
 			redisKey,
-			s.config.CacheTimeout,
+			s.cfg.CacheTimeout,
 			func() (types.Posts, error) {
-				return s.postsRepo.GetSourcePosts(
+				return s.repo.SourcePosts(
 					r.Context(), sourceID, "", orderBy,
 				)
 			},
@@ -256,11 +257,11 @@ func (s *Service) SourcePostsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // DeleteSourceHandler deletes a source
-func (s *Service) DeleteSourceHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Service) DeleteSource(w http.ResponseWriter, r *http.Request) {
 
 	// Get the source ID from path
 	playlistID := r.PathValue("source")
-	rowsAffected, err := s.sourcesRepo.DeleteSource(r.Context(), playlistID)
+	rowsAffected, err := s.repo.DeleteSource(r.Context(), playlistID)
 
 	if err != nil {
 		slog.ErrorContext(
@@ -286,4 +287,76 @@ func (s *Service) DeleteSourceHandler(w http.ResponseWriter, r *http.Request) {
 
 	s.session.AddFlash(w, r, &successDelete)
 	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+// Handle posts in a certain source
+func (s *Service) SourcePostsAPI(w http.ResponseWriter, r *http.Request) {
+
+	// Get the cursor from a query param
+	cursor := r.URL.Query().Get("cursor")
+
+	// Get the order_by query param if any
+	orderBy := r.URL.Query().Get("order_by")
+
+	// Get the playlist id
+	sourceID := r.PathValue("source")
+
+	// Construct the Redis key
+	redisKey := fmt.Sprintf("source:%s:posts", sourceID)
+
+	switch orderBy {
+	case types.Likes:
+		redisKey += fmt.Sprintf(":%s", types.Likes)
+	case types.AvgRating:
+		redisKey += fmt.Sprintf(":%s", types.AvgRating)
+	case types.RatingCount:
+		redisKey += fmt.Sprintf(":%s", types.RatingCount)
+	}
+
+	if cursor != "" {
+		redisKey += fmt.Sprintf(":cursor:%s", cursor)
+	}
+
+	// Get current user
+	currentUser := ctxd.GetUser(r.Context())
+
+	var (
+		err   error
+		posts types.Posts
+	)
+
+	if currentUser.IsAdmin(s.cfg) {
+		posts, err = s.repo.SourcePosts(
+			r.Context(), sourceID, cursor, orderBy,
+		)
+	} else {
+		posts, err = s.rdb.Get(
+			r.Context(),
+			redisKey,
+			s.cfg.CacheTimeout,
+			func() (types.Posts, error) {
+				return s.repo.SourcePosts(
+					r.Context(), sourceID, cursor, orderBy,
+				)
+			},
+		)
+	}
+
+	if err != nil {
+		slog.ErrorContext(
+			r.Context(),
+			"failed to get source posts from DB",
+			"error", err,
+		)
+		s.tmpl.JSONError(w, r, http.StatusInternalServerError)
+		return
+	}
+
+	if len(posts.Items) == 0 {
+		slog.WarnContext(r.Context(), "no source posts found in DB")
+		s.tmpl.JSONError(w, r, http.StatusNotFound)
+		return
+	}
+
+	s.tmpl.WriteJSON(w, r, posts)
 }
