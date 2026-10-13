@@ -7,9 +7,9 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/vlatan/video-store/internal/auth"
 	"github.com/vlatan/video-store/internal/avatar"
 	"github.com/vlatan/video-store/internal/config"
+	"github.com/vlatan/video-store/internal/domain/auth"
 	"github.com/vlatan/video-store/internal/domain/health"
 	pageHandler "github.com/vlatan/video-store/internal/domain/page/handler"
 	sitemapHandler "github.com/vlatan/video-store/internal/domain/sitemap/handler"
