@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/vlatan/video-store/internal/config"
-	"github.com/vlatan/video-store/internal/domain/sitemap/repo"
+	"github.com/vlatan/video-store/internal/domains/sitemap/repo"
 	"github.com/vlatan/video-store/internal/drivers/database"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/tmpl"

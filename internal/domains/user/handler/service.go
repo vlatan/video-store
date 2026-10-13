@@ -3,7 +3,7 @@ package handler
 import (
 	"github.com/vlatan/video-store/internal/avatar"
 	"github.com/vlatan/video-store/internal/config"
-	"github.com/vlatan/video-store/internal/domain/user/repo"
+	"github.com/vlatan/video-store/internal/domains/user/repo"
 	"github.com/vlatan/video-store/internal/drivers/store"
 	"github.com/vlatan/video-store/internal/tmpl"
 )

@@ -2,7 +2,7 @@ package handler
 
 import (
 	"github.com/vlatan/video-store/internal/config"
-	"github.com/vlatan/video-store/internal/domain/page/repo"
+	"github.com/vlatan/video-store/internal/domains/page/repo"
 	"github.com/vlatan/video-store/internal/drivers/database"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/drivers/store"
