@@ -13,8 +13,10 @@ import (
 	"github.com/vlatan/video-store/internal/domain/health"
 	pageHandler "github.com/vlatan/video-store/internal/domain/page/handler"
 	sitemapHandler "github.com/vlatan/video-store/internal/domain/sitemap/handler"
-	"github.com/vlatan/video-store/internal/domain/static"
-	"github.com/vlatan/video-store/internal/domain/text"
+	staticHandler "github.com/vlatan/video-store/internal/domain/static"
+	textHandler "github.com/vlatan/video-store/internal/domain/text"
+	userHandler "github.com/vlatan/video-store/internal/domain/user/handler"
+	userRepo "github.com/vlatan/video-store/internal/domain/user/repo"
 	"github.com/vlatan/video-store/internal/drivers/database"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/drivers/store"
@@ -28,20 +30,18 @@ import (
 	postsRepo "github.com/vlatan/video-store/internal/repos/posts"
 	sourcesRepo "github.com/vlatan/video-store/internal/repos/sources"
 	"github.com/vlatan/video-store/internal/tmpl"
-	"github.com/vlatan/video-store/internal/user"
-	userRepo "github.com/vlatan/video-store/internal/user/repo"
 )
 
 type App struct {
 	auth    *auth.Service
-	user    *user.Service
+	user    *userHandler.Service
 	posts   *posts.Service
 	page    *pageHandler.Service
 	sources *sources.Service
 	sitemap *sitemapHandler.Service
-	text    *text.Service
+	text    *textHandler.Service
 	health  *health.Service
-	static  *static.Service
+	static  *staticHandler.Service
 	mw      *middlewares.Service
 	domain  string
 	cleanup func() error
@@ -118,7 +118,7 @@ func New() (*App, error) {
 	// Create session service
 	store := store.New(cfg, rdb, "session", 86400*30)
 
-	static, err := static.New()
+	static, err := staticHandler.New()
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create static files service: %w", err)
 	}
@@ -140,12 +140,12 @@ func New() (*App, error) {
 
 		// Handlers services
 		auth:    auth.New(cfg, userRepo, av, store, tmpl),
-		user:    user.New(cfg, userRepo, av, store, tmpl),
+		user:    userHandler.New(cfg, userRepo, av, store, tmpl),
 		posts:   posts.New(postsRepo, av, rdb, store, tmpl, cfg, yt, gemini),
 		page:    pageHandler.New(cfg, db, rdb, store, tmpl),
 		sources: sources.New(cfg, rdb, store, postsRepo, sourcesRepo, tmpl, yt),
 		sitemap: sitemap,
-		text:    text.New(cfg, tmpl),
+		text:    textHandler.New(cfg, tmpl),
 		health:  health.New(db, rdb, tmpl),
 		static:  static,
 		mw:      middlewares.New(cfg, tmpl),

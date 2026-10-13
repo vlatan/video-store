@@ -1,4 +1,4 @@
-package user
+package handler
 
 import (
 	"log/slog"
