@@ -1,4 +1,4 @@
-package sitemap
+package handler
 
 import (
 	"context"

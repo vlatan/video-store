@@ -1,9 +1,10 @@
-package sitemap
+package handler
 
 import (
 	"fmt"
 
 	"github.com/vlatan/video-store/internal/config"
+	"github.com/vlatan/video-store/internal/domain/sitemap/repo"
 	"github.com/vlatan/video-store/internal/drivers/database"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/tmpl"
@@ -21,7 +22,7 @@ var sitemapPartTypes = []string{
 
 type Service struct {
 	cfg     *config.Config
-	repo    *Repository
+	repo    *repo.Repository
 	rdb     *rdb.Service
 	tmpl    *tmpl.Service
 	sqlArgs []any
@@ -40,7 +41,7 @@ func New(
 		args = append(args, t)
 	}
 
-	repo, err := NewRepo(db, nil)
+	repo, err := repo.NewRepo(db, nil)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create sitemap repo: %w", err)
 	}

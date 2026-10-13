@@ -12,6 +12,7 @@ import (
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/domain/health"
 	pageHandler "github.com/vlatan/video-store/internal/domain/page/handler"
+	sitemapHandler "github.com/vlatan/video-store/internal/domain/sitemap/handler"
 	"github.com/vlatan/video-store/internal/domain/static"
 	"github.com/vlatan/video-store/internal/domain/text"
 	"github.com/vlatan/video-store/internal/drivers/database"
@@ -26,7 +27,6 @@ import (
 	catsRepo "github.com/vlatan/video-store/internal/repos/categories"
 	postsRepo "github.com/vlatan/video-store/internal/repos/posts"
 	sourcesRepo "github.com/vlatan/video-store/internal/repos/sources"
-	"github.com/vlatan/video-store/internal/sitemap"
 	"github.com/vlatan/video-store/internal/tmpl"
 	"github.com/vlatan/video-store/internal/user"
 	userRepo "github.com/vlatan/video-store/internal/user/repo"
@@ -38,7 +38,7 @@ type App struct {
 	posts   *posts.Service
 	page    *pageHandler.Service
 	sources *sources.Service
-	sitemap *sitemap.Service
+	sitemap *sitemapHandler.Service
 	text    *text.Service
 	health  *health.Service
 	static  *static.Service
@@ -130,7 +130,7 @@ func New() (*App, error) {
 	}
 
 	// Create sitemap service
-	sitemap, err := sitemap.New(cfg, db, rdb, tmpl)
+	sitemap, err := sitemapHandler.New(cfg, db, rdb, tmpl)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create sitemap service: %w", err)
 	}
