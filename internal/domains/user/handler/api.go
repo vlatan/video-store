@@ -1,0 +1,37 @@
+package handler
+
+import (
+	"log/slog"
+	"net/http"
+
+	"github.com/vlatan/video-store/internal/ctxd"
+)
+
+// Handle the user favorites page
+func (s *Service) FavoritesAPI(w http.ResponseWriter, r *http.Request) {
+
+	// Get the cursor if any
+	cursor := r.URL.Query().Get("cursor")
+
+	// Get current user
+	currentUser := ctxd.GetUser(r.Context())
+
+	posts, err := s.repo.Favorites(r.Context(), currentUser.ID, cursor)
+
+	if err != nil {
+		slog.ErrorContext(
+			r.Context(), "failed to get user fav posts from DB",
+			"error", err,
+		)
+		s.tmpl.JSONError(w, r, http.StatusInternalServerError)
+		return
+	}
+
+	if len(posts.Items) == 0 {
+		slog.WarnContext(r.Context(), "no user fav posts found in DB")
+		s.tmpl.JSONError(w, r, http.StatusNotFound)
+		return
+	}
+
+	s.tmpl.WriteJSON(w, r, posts)
+}

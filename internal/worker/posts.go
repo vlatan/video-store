@@ -120,7 +120,7 @@ func (w *Worker) getValidSourcesVideos(
 
 			// Skip if the video is banned (manually deleted).
 			// If error is nil the post is IN the deleted_post database table.
-			err = w.postsRepo.IsPostBanned(ctx, video.Id)
+			err = w.post.IsBanned(ctx, video.Id)
 			if err == nil {
 				continue
 			}
@@ -168,7 +168,7 @@ func (w *Worker) adoptVideos(
 			continue
 		}
 
-		rowsAffected, err := w.postsRepo.UpdateSource(
+		rowsAffected, err := w.post.UpdateSource(
 			ctx, dbVideo.VideoID, ytVideo.PlaylistID,
 		)
 		w.stats.AdoptedDbVideos += rowsAffected
@@ -230,7 +230,7 @@ func (w *Worker) deleteVideos(
 		}
 
 		// Delete the video
-		_, err := w.postsRepo.DeletePost(ctx, dbVideo.VideoID)
+		_, err := w.post.Delete(ctx, dbVideo.VideoID)
 		if err == nil {
 			w.stats.DeletedDbVideos = append(w.stats.DeletedDbVideos, dbVideo.VideoID)
 			continue
@@ -314,7 +314,7 @@ func (w *Worker) insertVideos(ctx context.Context, videos []*types.Post) error {
 			}
 		}
 
-		rowsAffected, err := w.postsRepo.InsertPost(ctx, video)
+		rowsAffected, err := w.post.Insert(ctx, video)
 		w.stats.InsertedDbVideos += rowsAffected
 
 		// Exit early if context ended
@@ -421,7 +421,7 @@ func (w *Worker) updateVideos(ctx context.Context, videos []*types.Post) error {
 			continue
 		}
 
-		rowsAffected, err := w.postsRepo.UpdatePost(ctx, video)
+		rowsAffected, err := w.post.Update(ctx, video)
 		w.stats.UpdatedDbVideos += rowsAffected
 
 		// Exit early if context ended

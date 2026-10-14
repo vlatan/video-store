@@ -12,7 +12,7 @@ func TestCanonicalRedirect(t *testing.T) {
 
 	// Mock simple service
 	s := &Service{
-		config: &config.Config{
+		cfg: &config.Config{
 			Protocol: "https",
 		},
 	}

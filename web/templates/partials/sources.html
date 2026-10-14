@@ -1,11 +1,11 @@
 {{ template "base.html" . }}
 
 {{ define "extra_preload_css" }}
-<link rel="preload" href='{{ .AddVersion "/static/css/sources.css" }}' as="style">
+<link rel="preload" href='{{ AddVersion "/static/css/sources.css" }}' as="style">
 {{ end }}
 
 {{ define "extra_css" }}
-<link rel="stylesheet" type="text/css" href='{{ .AddVersion "/static/css/sources.css" }}'>
+<link rel="stylesheet" type="text/css" href='{{ AddVersion "/static/css/sources.css" }}'>
 {{ end }}
 
 {{ define "extra_meta" }}

@@ -1,10 +1,7 @@
 package app
 
 import (
-	"log/slog"
 	"net/http"
-	"runtime"
-	"runtime/pprof"
 
 	"github.com/vlatan/video-store/internal/utils/pathx"
 )
@@ -15,96 +12,73 @@ func (a *App) RegisterRoutes() *App {
 	mux := http.NewServeMux()
 
 	// Home
-	mux.HandleFunc("GET /{$}", a.posts.HomeHandler)
-	mux.HandleFunc("GET /api/{$}", a.posts.HomeAPI)
+	mux.HandleFunc("GET /{$}", a.post.Home)
+	mux.HandleFunc("GET /api/{$}", a.post.HomeAPI)
 
 	// Videos
-	mux.HandleFunc("/video/new", a.mw.IsAdmin(a.posts.NewPostHandler))
-	mux.HandleFunc("GET /video/{video}/{$}", a.posts.SinglePostHandler)
-	mux.HandleFunc("/video/{video}/edit", a.mw.IsAdmin(a.posts.UpdatePostHandler))
-	mux.HandleFunc("DELETE /video/{video}/delete", a.mw.IsAdmin(a.posts.BanPostHandler))
-	mux.HandleFunc("GET /api/video/{video}/reviews", a.posts.PostReviewsAPI)
-	mux.HandleFunc("POST /api/video/{video}/{action}", a.mw.IsAuth(a.posts.PostActionAPI))
-	mux.HandleFunc("DELETE /api/video/{video}/{action}", a.mw.IsAuth(a.posts.UndoPostActionAPI))
+	mux.HandleFunc("/video/new", a.user.IsAdmin(a.post.New))
+	mux.HandleFunc("GET /video/{video}/{$}", a.post.Single)
+	mux.HandleFunc("/video/{video}/edit", a.user.IsAdmin(a.post.Update))
+	mux.HandleFunc("DELETE /video/{video}/delete", a.user.IsAdmin(a.post.Ban))
+	mux.HandleFunc("GET /api/video/{video}/reviews", a.post.ReviewsAPI)
+	mux.HandleFunc("POST /api/video/{video}/{action}", a.user.IsAuth(a.post.ActionAPI))
+	mux.HandleFunc("DELETE /api/video/{video}/{action}", a.user.IsAuth(a.post.UndoActionAPI))
+
+	// Search
+	mux.HandleFunc("GET /search/{$}", a.post.Search)
+	mux.HandleFunc("GET /api/search/{$}", a.post.SearchAPI)
 
 	// Categories
-	mux.HandleFunc("GET /category/{category}/{$}", a.posts.CategoryPostsHandler)
-	mux.HandleFunc("GET /api/category/{category}/{$}", a.posts.CategoryPostsAPI)
+	mux.HandleFunc("GET /category/{category}/{$}", a.taxonomy.CategoryPosts)
+	mux.HandleFunc("GET /api/category/{category}/{$}", a.taxonomy.CategoryPostsAPI)
 
 	// Release Year
-	mux.HandleFunc("GET /year/{year}/{$}", a.posts.YearPostsHandler)
-	mux.HandleFunc("GET /api/year/{year}/{$}", a.posts.YearPostsAPI)
-
-	// Pages
-	mux.HandleFunc("GET /page/{slug}/{$}", a.pages.SinglePageHandler)
-	mux.HandleFunc("/page/{slug}/edit", a.mw.IsAdmin(a.pages.UpdatePageHandler))
-	mux.HandleFunc("/page/new", a.mw.IsAdmin(a.pages.NewPageHandler))
-	mux.HandleFunc("DELETE /page/{slug}/delete", a.mw.IsAdmin(a.pages.DeletePageHandler))
+	mux.HandleFunc("GET /year/{year}/{$}", a.taxonomy.YearPosts)
+	mux.HandleFunc("GET /api/year/{year}/{$}", a.taxonomy.YearPostsAPI)
 
 	// Sources
-	mux.HandleFunc("/source/new", a.mw.IsAdmin(a.sources.NewSourceHandler))
-	mux.HandleFunc("GET /source/{source}/{$}", a.sources.SourcePostsHandler)
-	mux.HandleFunc("DELETE /source/{source}/delete", a.mw.IsAdmin(a.sources.DeleteSourceHandler))
-	mux.HandleFunc("GET /api/source/{source}/{$}", a.sources.SourcePostsAPI)
-	mux.HandleFunc("GET /sources/{$}", a.sources.SourcesHandler)
+	mux.HandleFunc("/source/new", a.user.IsAdmin(a.taxonomy.NewSource))
+	mux.HandleFunc("DELETE /source/{source}/delete", a.user.IsAdmin(a.taxonomy.DeleteSource))
+	mux.HandleFunc("GET /source/{source}/{$}", a.taxonomy.SourcePosts)
+	mux.HandleFunc("GET /api/source/{source}/{$}", a.taxonomy.SourcePostsAPI)
+	mux.HandleFunc("GET /sources/{$}", a.taxonomy.Sources)
+
+	// Pages
+	mux.HandleFunc("GET /page/{slug}/{$}", a.page.Single)
+	mux.HandleFunc("/page/{slug}/edit", a.user.IsAdmin(a.page.Update))
+	mux.HandleFunc("/page/new", a.user.IsAdmin(a.page.New))
+	mux.HandleFunc("DELETE /page/{slug}/delete", a.user.IsAdmin(a.page.Delete))
 
 	// Authentication
-	mux.HandleFunc("GET /auth/{provider}", a.auth.AuthHandler)
-	mux.HandleFunc("GET /auth/{provider}/callback", a.auth.AuthCallbackHandler)
-	mux.HandleFunc("GET /logout/{provider}", a.mw.IsAuth(a.auth.LogoutHandler))
+	mux.HandleFunc("GET /auth/{provider}", a.auth.Begin)
+	mux.HandleFunc("GET /auth/{provider}/callback", a.auth.Callback)
+	mux.HandleFunc("GET /logout/{provider}", a.user.IsAuth(a.auth.Logout))
+	mux.HandleFunc("DELETE /account/delete", a.user.IsAuth(a.auth.Delete))
 
 	// Sitemaps
-	mux.HandleFunc("GET /sitemap.xsl", a.mw.PublicCache(a.sitemaps.SitemapStyleHandler))
-	mux.HandleFunc("GET /{part}", a.mw.PublicCache(a.sitemaps.SitemapPartHandler))
-	mux.HandleFunc("GET /sitemap.xml", a.mw.PublicCache(a.sitemaps.SitemapIndexHandler))
+	mux.HandleFunc("GET /sitemap.xsl", a.mw.PublicCache(a.sitemap.Style))
+	mux.HandleFunc("GET /{part}", a.mw.PublicCache(a.sitemap.Part))
+	mux.HandleFunc("GET /sitemap.xml", a.mw.PublicCache(a.sitemap.Index))
 
 	// Users
-	mux.HandleFunc("DELETE /account/delete", a.mw.IsAuth(a.auth.DeleteAccountHandler))
-	mux.HandleFunc("GET /user/favorites/{$}", a.mw.IsAuth(a.users.UserFavoritesHandler))
-	mux.HandleFunc("GET /api/user/favorites/{$}", a.mw.IsAuth(a.users.UserFavoritesAPI))
-	mux.HandleFunc("GET /users/{$}", a.mw.IsAdmin(a.users.UsersHandler))
+	mux.HandleFunc("GET /user/favorites/{$}", a.user.IsAuth(a.user.Favorites))
+	mux.HandleFunc("GET /api/user/favorites/{$}", a.user.IsAuth(a.user.FavoritesAPI))
+	mux.HandleFunc("GET /users/{$}", a.user.IsAdmin(a.user.All))
 
-	// The rest
-	mux.HandleFunc("GET /search/{$}", a.posts.SearchPostsHandler)
-	mux.HandleFunc("GET /api/search/{$}", a.posts.SearchPostsAPI)
-	mux.HandleFunc("GET /api/health/{$}", a.mw.IsAdmin(a.health.API))
-	mux.HandleFunc("GET /static/", a.static.Handler)
-	mux.HandleFunc("GET /ads.txt", a.mw.PublicCache(a.text.Handler))
-	mux.HandleFunc("GET /robots.txt", a.mw.PublicCache(a.text.Handler))
-
-	// Register favicons serving from root
+	// Static
+	mux.HandleFunc("GET /static/", a.static.Handle)
 	for _, favicon := range pathx.RootFavicons {
-		mux.HandleFunc("GET "+favicon, a.static.Handler)
+		mux.HandleFunc("GET "+favicon, a.static.Handle)
 	}
 
-	// Route for memory profiling
-	mux.HandleFunc("GET /debug/heap", a.mw.IsAdmin(
-		func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("X-Robots-Tag", "noindex")
-			w.Header().Set("Content-Type", "application/octet-stream")
-			runtime.GC()
-			if err := pprof.WriteHeapProfile(w); err != nil {
-				// Too late for recovery here, just log the error
-				slog.WarnContext(
-					r.Context(), "failed to write data to response",
-					"error", err,
-				)
-			}
-		},
-	))
+	// Text
+	mux.HandleFunc("GET /robots.txt", a.mw.PublicCache(a.text.Handle))
+	mux.HandleFunc("GET /ads.txt", a.mw.PublicCache(a.text.Handle))
 
-	// Simple health check
-	mux.HandleFunc("GET /healthcheck", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("X-Robots-Tag", "noindex")
-		w.WriteHeader(http.StatusOK)
-		if _, err := w.Write([]byte("OK")); err != nil {
-			// Too late for recovery here, just log the error
-			slog.WarnContext(
-				r.Context(), "failed to write data to response",
-				"error", err,
-			)
-		}
-	})
+	// Health
+	mux.HandleFunc("GET /api/health/{$}", a.user.IsAdmin(a.health.Info))
+	mux.HandleFunc("GET /healthcheck", a.health.Check)
+	mux.HandleFunc("GET /debug/heap", a.user.IsAdmin(a.health.Debug))
 
 	// Chain middlewares that apply to all requests.
 	// The order is important.
@@ -115,7 +89,7 @@ func (a *App) RegisterRoutes() *App {
 		a.mw.CanonicalRedirect,                  // Redirect www to non-www
 		a.mw.MethodOverride,                     // Override a POST method if needed
 		a.mw.LoadRequestId,                      // Load request ID in the context
-		a.mw.LoadUser,                           // Load user data from seesion into context
+		a.user.Load,                             // Load user data from seesion into context
 		a.mw.Logging,                            // Log the request, unless healthcheck
 		a.mw.AddHeaders,                         // Add standard headers to response
 		http.NewCrossOriginProtection().Handler, // Provide modern CSRF protection

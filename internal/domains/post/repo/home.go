@@ -1,0 +1,171 @@
+package repo
+
+import (
+	"context"
+	"database/sql"
+	"encoding/base64"
+	"errors"
+	"fmt"
+	"time"
+
+	"github.com/vlatan/video-store/internal/types"
+	"github.com/vlatan/video-store/internal/utils/stringx"
+)
+
+// Get a limited number of posts with cursor
+func (r *Repository) Home(ctx context.Context, cursor, orderBy string) (types.Posts, error) {
+
+	// The first argument is the limit ($1).
+	// Peek for one post beoynd the limit to see if there's next page,
+	// meaning whether to construct and send the next cursor at all.
+	args := []any{r.cfg.PostsPerPage + 1}
+
+	// The default template variables - SQL parts
+	var where string
+	order := "upload_date DESC, id DESC"
+
+	orderingOptions := map[string]struct{ order, where string }{
+		types.Likes: {
+			fmt.Sprintf("%s DESC, %s", types.Likes, order),
+			fmt.Sprintf("WHERE (%s, upload_date, id) < ($2, $3, $4)", types.Likes),
+		},
+		types.AvgRating: {
+			fmt.Sprintf("%s DESC NULLS LAST, %s", types.AvgRating, order),
+			fmt.Sprintf("WHERE (%s, upload_date, id) < ($2, $3, $4)", types.AvgRating),
+		},
+		types.RatingCount: {
+			fmt.Sprintf("%s DESC, %s", types.RatingCount, order),
+			fmt.Sprintf("WHERE (%s, upload_date, id) < ($2, $3, $4)", types.RatingCount),
+		},
+	}
+
+	// Change the ordering if instructed by the orderBy
+	if val, ok := orderingOptions[orderBy]; ok {
+		order = val.order
+	}
+
+	// If cursor supplied construct the additional args and WHERE clause
+	var zero, posts types.Posts
+	if cursor != "" {
+
+		cursorParts, err := stringx.DecodeCursor(cursor)
+		if err != nil {
+			return zero, err
+		}
+
+		if val, ok := orderingOptions[orderBy]; ok {
+			if len(cursorParts) != 3 {
+				return zero, errors.New("invalid cursor components")
+			}
+			args = append(args, cursorParts[0], cursorParts[1], cursorParts[2])
+			where = val.where
+		} else {
+			if len(cursorParts) != 2 {
+				return zero, fmt.Errorf("invalid cursor components")
+			}
+			args = append(args, cursorParts[0], cursorParts[1])
+			where = "WHERE (upload_date, id) < ($2, $3)"
+		}
+	}
+
+	sqlParts := struct{ WhereCondition, OrderByWhat string }{where, order}
+	query, err := stringx.GetQuery(r.tmpl, "home_posts.sql", sqlParts)
+
+	if err != nil {
+		return zero, err
+	}
+
+	// Get rows from DB
+	rows, err := r.db.Pool.Query(ctx, query, args...)
+	if err != nil {
+		return zero, err
+	}
+
+	// Close rows on exit
+	defer rows.Close()
+
+	// Iterate over the rows
+	for rows.Next() {
+
+		var (
+			post          types.Post
+			originalTitle sql.NullString
+			avgRating     sql.NullFloat64
+			ratingCount   sql.NullInt64
+		)
+
+		err = rows.Scan(
+			&post.ID,
+			&post.VideoID,
+			&post.Title,
+			&originalTitle,
+			&post.RawThumbs,
+			&post.Likes,
+			&avgRating,
+			&ratingCount,
+			&post.UploadDate,
+		)
+
+		if err != nil {
+			return zero, err
+		}
+
+		// Attach the title
+		post.OriginalTitle = originalTitle.String
+
+		// Attach ratings if any
+		if avgRating.Valid && ratingCount.Valid {
+			post.RatingStats = &types.RatingStats{
+				Avg:   avgRating.Float64,
+				Count: ratingCount.Int64,
+			}
+		}
+
+		posts.Items = append(posts.Items, post)
+	}
+
+	// If error during iteration
+	if err = rows.Err(); err != nil {
+		return zero, err
+	}
+
+	// Post-process the posts, prepare the thumbnails
+	if err = posts.ProcessThumbs(ctx); err != nil {
+		return zero, err
+	}
+
+	// This is the last page
+	if len(posts.Items) <= r.cfg.PostsPerPage {
+		return posts, nil
+	}
+
+	// Exclude the last post
+	posts.Items = posts.Items[:len(posts.Items)-1]
+
+	// Determine the next cursor
+	lastPost := posts.Items[len(posts.Items)-1]
+	uploadDate := lastPost.UploadDate.Format(time.RFC3339Nano)
+	cursorStr := fmt.Sprintf("%s,%d", uploadDate, lastPost.ID)
+
+	// Modify the cursor if there's ordering
+	switch orderBy {
+	case types.Likes:
+		cursorStr = fmt.Sprintf("%d,%s", lastPost.Likes, cursorStr)
+	case types.AvgRating:
+		var avgRating float64
+		if lastPost.RatingStats != nil {
+			avgRating = lastPost.RatingStats.Avg
+		}
+		cursorStr = fmt.Sprintf("%.2f,%s", avgRating, cursorStr)
+	case types.RatingCount:
+		var ratingCount int64
+		if lastPost.RatingStats != nil {
+			ratingCount = lastPost.RatingStats.Count
+		}
+		cursorStr = fmt.Sprintf("%d,%s", ratingCount, cursorStr)
+	}
+
+	posts.NextCursor = base64.StdEncoding.EncodeToString([]byte(cursorStr))
+
+	return posts, nil
+}

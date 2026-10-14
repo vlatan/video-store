@@ -8,10 +8,10 @@ import (
 
 const minYear = 1900
 
-// ParseReleaseYear parses a year from a string.
+// ParseYear parses a year from a string.
 // Only the canonical form is accepted: plain digits, no sign, no leading zeros,
 // and in reasonable range (1900 - time.Now().Year() + 1).
-func ParseReleaseYear(s string) (int16, error) {
+func ParseYear(s string) (int16, error) {
 
 	// Convert s to int64. bitSize=16 guarantees s fits in int16
 	year, err := strconv.ParseInt(s, 10, 16)

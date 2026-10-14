@@ -6,24 +6,24 @@
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-	{{ $app_name_words := .Split .Config.AppName " " }}
+	{{ $app_name_words := Split .Config.AppName " " }}
 
 	{{ block "preload_css" . }}
-	<link rel="preload" href='{{ .AddVersion "/static/css/shared.css" }}' as="style">
+	<link rel="preload" href='{{ AddVersion "/static/css/shared.css" }}' as="style">
 	{{ end }}
 
 	{{ block "extra_preload_css" . }}{{ end }}
 
 	{{ block "css" . }}
-	<link rel="stylesheet" type="text/css" href='{{ .AddVersion "/static/css/shared.css" }}'>
+	<link rel="stylesheet" type="text/css" href='{{ AddVersion "/static/css/shared.css" }}'>
 	{{ end }}
 
 	{{ block "extra_css" . }}{{ end }}
 
-	<link rel="apple-touch-icon" sizes="180x180" href='{{ .AddVersion "/static/favicons/apple-touch-icon.png" }}'>
-	<link rel="icon" type="image/png" sizes="32x32" href='{{ .AddVersion "/static/favicons/favicon-32x32.png" }}'>
-	<link rel="icon" type="image/png" sizes="16x16" href='{{ .AddVersion "/static/favicons/favicon-16x16.png" }}'>
-	<link rel="manifest" href='{{ .AddVersion "/static/favicons/site.webmanifest" }}'>
+	<link rel="apple-touch-icon" sizes="180x180" href='{{ AddVersion "/static/favicons/apple-touch-icon.png" }}'>
+	<link rel="icon" type="image/png" sizes="32x32" href='{{ AddVersion "/static/favicons/favicon-32x32.png" }}'>
+	<link rel="icon" type="image/png" sizes="16x16" href='{{ AddVersion "/static/favicons/favicon-16x16.png" }}'>
+	<link rel="manifest" href='{{ AddVersion "/static/favicons/site.webmanifest" }}'>
 
 	{{ block "canonical" . }}
 	<link rel="canonical" href="{{ .BaseCanonicalURL }}" />
@@ -256,7 +256,7 @@
 		{{ end }}
 
 		<footer class="site-footer">
-			<span class="site-copy">{{ .Config.AppName }} &copy; {{ .Now.Year }}</span>
+			<span class="site-copy">{{ .Config.AppName }} &copy; {{ Now.Year }}</span>
 			<a class="nav-item" href="/sources/">Sources</a>
 			<a class="nav-item" href="/page/about/">About</a>
 			<!-- Needs absolute URL for Google OAuth branding -->
@@ -265,7 +265,7 @@
 	</div>
 
 	{{ block "scripts" . }}
-	<script defer src='{{ .AddVersion "/static/js/shared.js" }}'></script>
+	<script defer src='{{ AddVersion "/static/js/shared.js" }}'></script>
 	{{ end }}
 
 	{{ block "extra_scripts" . }}{{ end }}

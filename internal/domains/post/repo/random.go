@@ -1,0 +1,81 @@
+package repo
+
+import (
+	"context"
+	"database/sql"
+	"errors"
+
+	"github.com/vlatan/video-store/internal/types"
+	"github.com/vlatan/video-store/internal/utils/stringx"
+)
+
+// Get random posts, but exclude posts with the exact title match
+func (r *Repository) Random(ctx context.Context, title string, limit int) (types.Posts, error) {
+
+	var zero, posts types.Posts
+	if title == "" {
+		return zero, errors.New("title can't be empty string")
+	}
+
+	query, err := stringx.GetQuery(r.tmpl, "random_posts.sql", nil)
+	if err != nil {
+		return zero, err
+	}
+
+	// Get rows from DB
+	rows, err := r.db.Pool.Query(ctx, query, title, limit)
+	if err != nil {
+		return zero, err
+	}
+
+	// Close rows on exit
+	defer rows.Close()
+
+	// Iterate over the rows
+	for rows.Next() {
+
+		var (
+			post          types.Post
+			originalTitle sql.NullString
+			avgRating     sql.NullFloat64
+			ratingCount   sql.NullInt64
+		)
+
+		if err = rows.Scan(
+			&post.VideoID,
+			&post.Title,
+			&originalTitle,
+			&post.RawThumbs,
+			&post.Likes,
+			&avgRating,
+			&ratingCount,
+		); err != nil {
+			return zero, err
+		}
+
+		// Include the processed post in the result
+		post.OriginalTitle = originalTitle.String
+
+		// Attach ratings if any
+		if avgRating.Valid && ratingCount.Valid {
+			post.RatingStats = &types.RatingStats{
+				Avg:   avgRating.Float64,
+				Count: ratingCount.Int64,
+			}
+		}
+
+		posts.Items = append(posts.Items, post)
+	}
+
+	// If error during iteration
+	if err = rows.Err(); err != nil {
+		return zero, err
+	}
+
+	// Post-process the posts, prepare the thumbnail
+	if err = posts.ProcessThumbs(ctx); err != nil {
+		return zero, err
+	}
+
+	return posts, nil
+}

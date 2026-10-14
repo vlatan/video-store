@@ -10,11 +10,10 @@ import (
 	"github.com/vlatan/video-store/internal/utils/ctxv"
 )
 
-// GetCachedData is generic wrapper getting and setting from cache,
+// Data is generic wrapper getting and setting from cache,
 // with provided function to call if data not in Redis cache.
-func GetCachedData[T any](
+func (s *Service) Get[T any](
 	ctx context.Context,
-	rdb *Service,
 	key string,
 	ttl time.Duration,
 	callable func() (T, error), // Function to call if cache misses
@@ -49,7 +48,7 @@ func GetCachedData[T any](
 	// Try to get value from Redis cache.
 	// The underlying data type needs to implement
 	// the encoding.BinaryUnmarshaler interface if needed.
-	err := rdb.Client.Get(ctx, key).Scan(target)
+	err := s.Client.Get(ctx, key).Scan(target)
 	if err == nil {
 		return data, nil
 	}
@@ -76,7 +75,7 @@ func GetCachedData[T any](
 	// Cache the data for later use.
 	// The underlying data type needs to implement
 	// the encoding.BinaryMarshaler interface if needed.
-	if err = rdb.Client.Set(ctx, key, data, ttl).Err(); err != nil {
+	if err = s.Client.Set(ctx, key, data, ttl).Err(); err != nil {
 		// Don't return an error if unable to set redis cache
 		slog.WarnContext(
 			ctx, "failed to set data in Redis",

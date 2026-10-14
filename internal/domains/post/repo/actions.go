@@ -1,0 +1,336 @@
+package repo
+
+import (
+	"context"
+	"database/sql"
+	"errors"
+	"fmt"
+	"html/template"
+	"log/slog"
+
+	"github.com/jackc/pgx/v5"
+	"github.com/microcosm-cc/bluemonday"
+	"github.com/vlatan/video-store/internal/types"
+	"github.com/vlatan/video-store/internal/utils/stringx"
+)
+
+// User likes a post
+func (r *Repository) Like(ctx context.Context, userID int, videoID string) (int64, error) {
+
+	query, err := stringx.GetQuery(r.tmpl, "like_post.sql", nil)
+	if err != nil {
+		return 0, err
+	}
+
+	result, err := r.db.Pool.Exec(ctx, query, userID, videoID)
+	return result.RowsAffected(), err
+}
+
+// User unlikes a post
+func (r *Repository) Unlike(ctx context.Context, userID int, videoID string) (int64, error) {
+
+	query, err := stringx.GetQuery(r.tmpl, "unlike_post.sql", nil)
+	if err != nil {
+		return 0, err
+	}
+
+	result, err := r.db.Pool.Exec(ctx, query, userID, videoID)
+	return result.RowsAffected(), err
+}
+
+// User favorites a post
+func (r *Repository) Fave(ctx context.Context, userID int, videoID string) (int64, error) {
+
+	query, err := stringx.GetQuery(r.tmpl, "fave_post.sql", nil)
+	if err != nil {
+		return 0, err
+	}
+
+	result, err := r.db.Pool.Exec(ctx, query, userID, videoID)
+	return result.RowsAffected(), err
+}
+
+// User unfavorites a post
+func (r *Repository) Unfave(ctx context.Context, userID int, videoID string) (int64, error) {
+
+	query, err := stringx.GetQuery(r.tmpl, "unfave_post.sql", nil)
+	if err != nil {
+		return 0, err
+	}
+
+	result, err := r.db.Pool.Exec(ctx, query, userID, videoID)
+	return result.RowsAffected(), err
+}
+
+// Rate records user's post rating,
+// Returns a struct with rating count and average rating for the video.
+func (r *Repository) Rate(ctx context.Context, rating uint8, userID int, videoID string) (types.RatingStats, error) {
+
+	var zero, rs types.RatingStats
+
+	// Start trannsaction
+	tx, err := r.db.Pool.Begin(ctx)
+	if err != nil {
+		return zero, err
+	}
+
+	// Rollback if something goes wrong.
+	// Release the connection in any case.
+	defer func() {
+		rbErr := tx.Rollback(ctx)
+		if rbErr != nil && !errors.Is(rbErr, pgx.ErrTxClosed) {
+			slog.ErrorContext(
+				ctx, "transaction rollback on post rating failed",
+				"error", rbErr,
+			)
+		}
+	}()
+
+	query, err := stringx.GetQuery(r.tmpl, "rate_post.sql", nil)
+	if err != nil {
+		return zero, err
+	}
+
+	var postId int64
+	err = tx.QueryRow(ctx, query, rating, userID, videoID).Scan(&postId)
+	if err != nil {
+		return zero, err
+	}
+
+	query = `
+		SELECT ROUND(AVG(rating), 2)::float8, COUNT(*)
+		FROM post_rating WHERE post_id = $1
+	`
+	var (
+		avg   sql.NullFloat64
+		count sql.NullInt64
+	)
+
+	err = tx.QueryRow(ctx, query, postId).Scan(&avg, &count)
+	if err != nil {
+		return zero, err
+	}
+
+	// Commit the changes
+	if err := tx.Commit(ctx); err != nil {
+		return zero, err
+	}
+
+	// Assign the rating stats
+	rs.Avg, rs.Count = avg.Float64, count.Int64
+
+	return rs, nil
+}
+
+// DeleteRating deletes user rating and by cascade deletes their review too.
+// Returns updated rating stats.
+func (r *Repository) Unrate(
+	ctx context.Context,
+	userID int,
+	videoID string) (types.RatingStats, error) {
+
+	var zero, rs types.RatingStats
+
+	// Start trannsaction
+	tx, err := r.db.Pool.Begin(ctx)
+	if err != nil {
+		return zero, err
+	}
+
+	// Rollback if something goes wrong.
+	// Release the connection in any case.
+	defer func() {
+		rbErr := tx.Rollback(ctx)
+		if rbErr != nil && !errors.Is(rbErr, pgx.ErrTxClosed) {
+			slog.ErrorContext(
+				ctx, "transaction rollback on delete user rating failed",
+				"error", rbErr,
+			)
+		}
+	}()
+
+	query, err := stringx.GetQuery(r.tmpl, "unrate_post.sql", nil)
+	if err != nil {
+		return zero, err
+	}
+
+	var postId int64
+	err = tx.QueryRow(ctx, query, userID, videoID).Scan(&postId)
+	if err != nil {
+		return zero, err
+	}
+
+	query = `
+		SELECT ROUND(AVG(rating), 2)::float8, COUNT(*)
+		FROM post_rating WHERE post_id = $1
+	`
+	var (
+		avg   sql.NullFloat64
+		count sql.NullInt64
+	)
+
+	err = tx.QueryRow(ctx, query, postId).Scan(&avg, &count)
+	if err != nil {
+		return zero, err
+	}
+
+	// Commit the changes
+	if err := tx.Commit(ctx); err != nil {
+		return zero, err
+	}
+
+	// Assign the rating stats
+	rs.Avg, rs.Count = avg.Float64, count.Int64
+
+	return rs, nil
+}
+
+// Review records user's post rating and review.
+// Returns a map with review data and ratings stats for the post.
+func (r *Repository) Review(
+	ctx context.Context,
+	userID int, videoID string,
+	rating uint8, headline, content string) (map[string]any, error) {
+
+	var rs types.RatingStats
+	var re types.Review
+
+	// Start trannsaction
+	tx, err := r.db.Pool.Begin(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Rollback if something goes wrong.
+	// Release the connection in any case.
+	defer func() {
+		rbErr := tx.Rollback(ctx)
+		if rbErr != nil && !errors.Is(rbErr, pgx.ErrTxClosed) {
+			slog.ErrorContext(
+				ctx, "transaction rollback on post review failed",
+				"error", rbErr,
+			)
+		}
+	}()
+
+	query, err := stringx.GetQuery(r.tmpl, "review_post.sql", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	// Insert review
+	var postId int64
+	err = tx.QueryRow(ctx, query, rating, userID, videoID, headline, content).Scan(&postId)
+	if err != nil {
+		return nil, err
+	}
+
+	query = `
+		SELECT ROUND(AVG(rating), 2)::float8, COUNT(*)
+		FROM post_rating WHERE post_id = $1
+	`
+	var (
+		avg   sql.NullFloat64
+		count sql.NullInt64
+	)
+
+	err = tx.QueryRow(ctx, query, postId).Scan(&avg, &count)
+	if err != nil {
+		return nil, err
+	}
+
+	// Commit the changes
+	if err := tx.Commit(ctx); err != nil {
+		return nil, err
+	}
+
+	// Assign the rating stats
+	rs.Avg, rs.Count = avg.Float64, count.Int64
+
+	// Define policies for review headline and content sanitization
+	strictPolicy := bluemonday.StrictPolicy()
+	simplePolicy := stringx.SimplePolicy()
+
+	// Sanitize headline
+	safeHeadline := strictPolicy.Sanitize(headline)
+	re.HTMLHeadline = template.HTML(safeHeadline) // #nosec G203
+
+	// Convert to HTML and sanitize content
+	safeHTMLcontent, err := stringx.ParseMarkdown(content, simplePolicy)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"could not parse/sanitize markdown on video %s review: %v",
+			videoID, err,
+		)
+	}
+
+	re.HTMLContent = template.HTML(safeHTMLcontent) // #nosec G203
+
+	result := map[string]any{
+		"review": re,
+		"stats":  rs,
+	}
+
+	return result, nil
+}
+
+// Update a playlist
+func (r *Repository) UpdateSource(ctx context.Context, videoID, playlistID string) (int64, error) {
+
+	query, err := stringx.GetQuery(r.tmpl, "update_post_source.sql", nil)
+	if err != nil {
+		return 0, err
+	}
+
+	result, err := r.db.Pool.Exec(ctx, query, videoID, playlistID)
+	return result.RowsAffected(), err
+}
+
+// Ban a post (move it to deleted table)
+func (r *Repository) Ban(ctx context.Context, videoID string) (int64, error) {
+
+	query, err := stringx.GetQuery(r.tmpl, "ban_post.sql", nil)
+	if err != nil {
+		return 0, err
+	}
+
+	result, err := r.db.Pool.Exec(ctx, query, videoID)
+	return result.RowsAffected(), err
+}
+
+// Delete a post
+func (r *Repository) Delete(ctx context.Context, videoID string) (int64, error) {
+	const query = "DELETE FROM post WHERE video_id = $1;"
+	result, err := r.db.Pool.Exec(ctx, query, videoID)
+	return result.RowsAffected(), err
+}
+
+// Check if the user liked and/or faved a post
+func (r *Repository) Actions(ctx context.Context, userID, postID int) (types.Actions, error) {
+
+	var zero, actions types.Actions
+	query, err := stringx.GetQuery(r.tmpl, "user_actions.sql", nil)
+	if err != nil {
+		return zero, err
+	}
+
+	var whenFaved sql.NullTime
+	row := r.db.Pool.QueryRow(ctx, query, userID, postID)
+	err = row.Scan(
+		&actions.UserID,
+		&actions.PostID,
+		&actions.Liked,
+		&actions.Faved,
+		&whenFaved,
+		&actions.Review.Rating,
+		&actions.Review.Headline,
+		&actions.Review.Content,
+	)
+
+	if err != nil {
+		return zero, err
+	}
+
+	actions.WhenFaved = whenFaved.Time
+	return actions, nil
+}

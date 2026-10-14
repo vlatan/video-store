@@ -1,9 +1,14 @@
 package types
 
 import (
+	"context"
 	"encoding/json"
 	"html/template"
+	"log/slog"
+	"runtime"
 	"time"
+
+	"golang.org/x/sync/errgroup"
 )
 
 type Post struct {
@@ -74,4 +79,45 @@ func (p Posts) MarshalBinary() (data []byte, err error) {
 // UnmarshalBinary implements the encoding.BinaryUnmarshaler interface
 func (p *Posts) UnmarshalBinary(data []byte) error {
 	return json.Unmarshal(data, p)
+}
+
+// ProcessThumbs concurrently unserialize the thumbnails on posts.
+// Prepares the srcset value and the appropriate thumbnail.
+func (p *Posts) ProcessThumbs(ctx context.Context) error {
+
+	g := new(errgroup.Group)
+	maxConcurrency := runtime.GOMAXPROCS(0) * 8
+	semaphore := make(chan struct{}, maxConcurrency)
+	for i, post := range p.Items {
+
+		g.Go(func() error {
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			case semaphore <- struct{}{}: // Semaphore will block if full
+				defer func() { <-semaphore }()
+
+				// Unmarshal the post thumbnails
+				var thumbs Thumbnails
+				err := json.Unmarshal(post.RawThumbs, &thumbs)
+
+				if err == nil {
+					p.Items[i].Thumbnail = (*Thumbnail)(thumbs.Medium)
+					p.Items[i].Srcset = thumbs.Srcset(480)
+					p.Items[i].RawThumbs = nil
+					return nil
+				}
+
+				// Just log the non-breaking error
+				slog.WarnContext(ctx, "failed to unmarshal thumbs", "error", err)
+
+				// Set empty Thumbnail so the HTML templates don't break
+				p.Items[i].Thumbnail = &Thumbnail{}
+				p.Items[i].RawThumbs = nil
+				return nil
+			}
+		})
+	}
+
+	return g.Wait()
 }

@@ -36,7 +36,7 @@ func (w *Worker) updateSources(
 			continue
 		}
 
-		rowsAffected, err := w.sourcesRepo.UpdateSource(ctx, newSource)
+		rowsAffected, err := w.taxonomy.UpdateSource(ctx, newSource)
 		w.stats.UpdatedDbSources += rowsAffected
 
 		if err == nil {

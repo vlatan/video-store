@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func TestParseReleaseYear(t *testing.T) {
+func TestParseYear(t *testing.T) {
 	thisYear := time.Now().Year()
 	maxYear := thisYear + 1
 
@@ -50,7 +50,7 @@ func TestParseReleaseYear(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := ParseReleaseYear(tt.in)
+			got, err := ParseYear(tt.in)
 			if (err != nil) != tt.wantErr {
 				t.Fatalf("ParseReleaseYear(%q) error = %v, wantErr %v", tt.in, err, tt.wantErr)
 			}

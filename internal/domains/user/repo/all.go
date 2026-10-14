@@ -1,0 +1,76 @@
+package repo
+
+import (
+	"context"
+	"database/sql"
+
+	"github.com/vlatan/video-store/internal/types"
+	"github.com/vlatan/video-store/internal/utils/stringx"
+)
+
+// Get users with limit and offset
+func (r *Repository) All(ctx context.Context, page int) (types.Users, error) {
+
+	// Calculate the limit and offset
+	limit := r.cfg.PostsPerPage
+	offset := (page - 1) * limit
+
+	var zero, users types.Users
+
+	query, err := stringx.GetQuery(r.tmpl, "offset_users.sql", nil)
+	if err != nil {
+		return zero, err
+	}
+
+	// Get rows from DB
+	rows, err := r.db.Pool.Query(ctx, query, limit, offset)
+	if err != nil {
+		return zero, err
+	}
+
+	// Close rows on exit
+	defer rows.Close()
+
+	// Iterate over the rows
+	for rows.Next() {
+
+		var totalNum int
+		var user types.User
+		var name, email, avatarURL, publicID sql.NullString
+
+		// Get user row data to destination
+		if err = rows.Scan(
+			&user.ID,
+			&user.ProviderUserId,
+			&user.Provider,
+			&name,
+			&email,
+			&avatarURL,
+			&publicID,
+			&user.LastSeen,
+			&user.CreatedAt,
+			&totalNum,
+		); err != nil {
+			return zero, err
+		}
+
+		// Convert the NullString back to string
+		user.Name = name.String
+		user.Email = email.String
+		user.AvatarURL = avatarURL.String
+		user.PublicID = publicID.String
+
+		// Include the user in the result
+		users.Items = append(users.Items, user)
+		if totalNum != 0 {
+			users.TotalNum = totalNum
+		}
+	}
+
+	// If error during iteration
+	if err = rows.Err(); err != nil {
+		return zero, err
+	}
+
+	return users, nil
+}

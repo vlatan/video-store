@@ -1,15 +1,15 @@
 {{ template "base.html" . }}
 
 {{ define "extra_preload_css" }}
-<link rel="preload" href='{{ .AddVersion "/static/css/content.css" }}' as="style">
+<link rel="preload" href='{{ AddVersion "/static/css/content.css" }}' as="style">
 {{ end }}
 
 {{ define "extra_css" }}
-<link rel="stylesheet" type="text/css" href='{{ .AddVersion "/static/css/content.css" }}'>
+<link rel="stylesheet" type="text/css" href='{{ AddVersion "/static/css/content.css" }}'>
 {{ end }}
 
 {{ define "extra_meta" }}
-{{ $large_favicon := .AddVersion "/android-chrome-512x512.png" }}
+{{ $large_favicon := AddVersion "/static/favicons/android-chrome-512x512.png" }}
 <meta name="description" content="{{ .Config.AppDescription }}">
 <meta property="og:title" content="{{ .Config.AppName }}">
 <meta property="og:type" content="website">
@@ -48,5 +48,5 @@
 {{ end }}
 
 {{ define "extra_scripts" }}
-<script defer src='{{ .AddVersion "/static/js/scroll.js" }}'></script>
+<script defer src='{{ AddVersion "/static/js/scroll.js" }}'></script>
 {{ end }}

@@ -9,37 +9,35 @@ import (
 
 	"github.com/vlatan/video-store/internal/avatar"
 	"github.com/vlatan/video-store/internal/config"
+	"github.com/vlatan/video-store/internal/domains/auth"
+	"github.com/vlatan/video-store/internal/domains/health"
+	page "github.com/vlatan/video-store/internal/domains/page/handler"
+	post "github.com/vlatan/video-store/internal/domains/post/handler"
+	postRepo "github.com/vlatan/video-store/internal/domains/post/repo"
+	sitemap "github.com/vlatan/video-store/internal/domains/sitemap/handler"
+	static "github.com/vlatan/video-store/internal/domains/static"
+	taxonomy "github.com/vlatan/video-store/internal/domains/taxonomy/handler"
+	taxonomyRepo "github.com/vlatan/video-store/internal/domains/taxonomy/repo"
+	text "github.com/vlatan/video-store/internal/domains/text"
+	user "github.com/vlatan/video-store/internal/domains/user/handler"
+	userRepo "github.com/vlatan/video-store/internal/domains/user/repo"
 	"github.com/vlatan/video-store/internal/drivers/database"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
-	"github.com/vlatan/video-store/internal/handlers/auth"
-	"github.com/vlatan/video-store/internal/handlers/health"
-	"github.com/vlatan/video-store/internal/handlers/pages"
-	"github.com/vlatan/video-store/internal/handlers/posts"
-	"github.com/vlatan/video-store/internal/handlers/sitemaps"
-	"github.com/vlatan/video-store/internal/handlers/sources"
-	"github.com/vlatan/video-store/internal/handlers/static"
-	"github.com/vlatan/video-store/internal/handlers/text"
-	"github.com/vlatan/video-store/internal/handlers/users"
+	"github.com/vlatan/video-store/internal/drivers/store"
 	"github.com/vlatan/video-store/internal/integrations/gemini"
 	"github.com/vlatan/video-store/internal/integrations/r2"
 	"github.com/vlatan/video-store/internal/integrations/yt"
 	"github.com/vlatan/video-store/internal/middlewares"
-	catsRepo "github.com/vlatan/video-store/internal/repos/categories"
-	pagesRepo "github.com/vlatan/video-store/internal/repos/pages"
-	postsRepo "github.com/vlatan/video-store/internal/repos/posts"
-	sourcesRepo "github.com/vlatan/video-store/internal/repos/sources"
-	usersRepo "github.com/vlatan/video-store/internal/repos/users"
-	"github.com/vlatan/video-store/internal/store"
-	"github.com/vlatan/video-store/internal/ui"
+	"github.com/vlatan/video-store/internal/tmpl"
 )
 
 type App struct {
 	auth     *auth.Service
-	users    *users.Service
-	posts    *posts.Service
-	pages    *pages.Service
-	sources  *sources.Service
-	sitemaps *sitemaps.Service
+	user     *user.Service
+	post     *post.Service
+	page     *page.Service
+	taxonomy *taxonomy.Service
+	sitemap  *sitemap.Service
 	text     *text.Service
 	health   *health.Service
 	static   *static.Service
@@ -83,27 +81,20 @@ func New() (*App, error) {
 	maxConcurrency := runtime.GOMAXPROCS(0) * 8
 	av := avatar.New(maxConcurrency, 500, cfg, rdb, r2s)
 
-	// Create DB repositories
-	catsRepo, err := catsRepo.New(db, nil)
+	// Create taxonomy repo
+	taxRepo, err := taxonomyRepo.New(cfg, db, nil)
 	if err != nil {
-		return nil, fmt.Errorf("couldn't create categories repo: %w", err)
+		return nil, fmt.Errorf("couldn't create taxonomy repo: %w", err)
 	}
 
-	usersRepo, err := usersRepo.New(db, cfg, nil)
+	userRepo, err := userRepo.New(cfg, db, nil)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create users repo: %w", err)
 	}
 
-	postsRepo, err := postsRepo.New(db, cfg, nil)
+	postRepo, err := postRepo.New(cfg, db, nil)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create posts repo: %w", err)
-	}
-
-	pagesRepo := pagesRepo.New(db)
-
-	sourcesRepo, err := sourcesRepo.New(db, nil)
-	if err != nil {
-		return nil, fmt.Errorf("couldn't create sources repo: %w", err)
 	}
 
 	// Create YouTube service
@@ -113,7 +104,7 @@ func New() (*App, error) {
 	}
 
 	// Create Gemini client
-	gemini, err := gemini.New(ctx, cfg, rdb, catsRepo)
+	gemini, err := gemini.New(ctx, cfg, taxRepo, rdb)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create Gemini service: %w", err)
 	}
@@ -121,26 +112,37 @@ func New() (*App, error) {
 	// Create session service
 	store := store.New(cfg, rdb, "session", 86400*30)
 
-	// Create user interface service
-	ui, err := ui.New(usersRepo, catsRepo, rdb, r2s, store, cfg)
+	static, err := static.New()
+	if err != nil {
+		return nil, fmt.Errorf("couldn't create static files service: %w", err)
+	}
+
+	// Create template service
+	tmpl, err := tmpl.New(cfg, rdb, store, taxRepo, static)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create UI service: %w", err)
+	}
+
+	// Create sitemap service
+	sitemap, err := sitemap.New(cfg, db, rdb, tmpl)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't create sitemap service: %w", err)
 	}
 
 	// Create new app service
 	a := &App{
 
 		// Handlers services
-		auth:     auth.New(usersRepo, av, store, rdb, r2s, ui, cfg),
-		users:    users.New(usersRepo, postsRepo, av, rdb, r2s, ui, cfg),
-		posts:    posts.New(postsRepo, usersRepo, av, rdb, store, ui, cfg, yt, gemini),
-		pages:    pages.New(pagesRepo, rdb, store, ui, cfg),
-		sources:  sources.New(cfg, rdb, store, postsRepo, sourcesRepo, ui, yt),
-		sitemaps: sitemaps.New(postsRepo, rdb, ui, cfg),
-		text:     text.New(ui),
-		health:   health.New(db, rdb, ui),
-		static:   static.New(ui),
-		mw:       middlewares.New(cfg, store, usersRepo, av, ui),
+		auth:     auth.New(cfg, userRepo, av, store, tmpl),
+		user:     user.New(cfg, userRepo, av, store, tmpl),
+		post:     post.New(cfg, postRepo, rdb, store, av, tmpl, yt, gemini),
+		page:     page.New(cfg, db, rdb, store, tmpl),
+		taxonomy: taxonomy.New(cfg, taxRepo, rdb, store, tmpl, yt),
+		sitemap:  sitemap,
+		text:     text.New(cfg, tmpl),
+		health:   health.New(db, rdb, tmpl),
+		static:   static,
+		mw:       middlewares.New(cfg, tmpl),
 
 		// The domain we're serving this app on
 		domain: cfg.Domain,

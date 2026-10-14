@@ -17,34 +17,12 @@ import (
 	"github.com/aws/smithy-go"
 )
 
-type Service interface {
-	// DeleteObject removes an object from bucket
-	DeleteObject(ctx context.Context, bucket, key string) error
-	// ObjectExists checks if the object exists in the bucket
-	ObjectExists(ctx context.Context, timeout time.Duration, bucket, key string) error
-	// HeadObject gets and returns the head of a given object
-	HeadObject(ctx context.Context, bucket, key string) (*s3.HeadObjectOutput, error)
-
-	// PutObject puts object to bucket having the content
-	PutObject(
-		ctx context.Context,
-		bucket string,
-		key string,
-		body io.Reader,
-		contentType string,
-		metadata map[string]string,
-	) error
-
-	// UploadFile uploads a file to bucket
-	UploadFile(ctx context.Context, bucket, rootPath, key, filePath string) error
-}
-
-type service struct {
+type Service struct {
 	client *s3.Client
 }
 
 // New creates a new R2 client
-func New(ctx context.Context, cfg *config.Config) (Service, error) {
+func New(ctx context.Context, cfg *config.Config) (*Service, error) {
 
 	// Create SDK config for an R2 service
 	// An ordinary AWS SDK config would look like:
@@ -69,11 +47,11 @@ func New(ctx context.Context, cfg *config.Config) (Service, error) {
 		o.BaseEndpoint = aws.String(baseEndpoint)
 	})
 
-	return &service{client}, nil
+	return &Service{client}, nil
 }
 
 // DeleteObject removes an object from bucket
-func (s *service) DeleteObject(ctx context.Context, bucket, key string) error {
+func (s *Service) DeleteObject(ctx context.Context, bucket, key string) error {
 	_, err := s.client.DeleteObject(ctx, &s3.DeleteObjectInput{
 		Bucket: &bucket,
 		Key:    &key,
@@ -82,7 +60,7 @@ func (s *service) DeleteObject(ctx context.Context, bucket, key string) error {
 }
 
 // ObjectExists checks if the object exists in the bucket
-func (s *service) ObjectExists(ctx context.Context, timeout time.Duration, bucket, key string) error {
+func (s *Service) ObjectExists(ctx context.Context, timeout time.Duration, bucket, key string) error {
 	return s3.NewObjectExistsWaiter(s.client).Wait(
 		ctx,
 		&s3.HeadObjectInput{
@@ -94,7 +72,7 @@ func (s *service) ObjectExists(ctx context.Context, timeout time.Duration, bucke
 }
 
 // HeadObject gets and returns the head of a given object
-func (s *service) HeadObject(ctx context.Context, bucket, key string) (*s3.HeadObjectOutput, error) {
+func (s *Service) HeadObject(ctx context.Context, bucket, key string) (*s3.HeadObjectOutput, error) {
 	return s.client.HeadObject(ctx, &s3.HeadObjectInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(key),
@@ -102,7 +80,7 @@ func (s *service) HeadObject(ctx context.Context, bucket, key string) (*s3.HeadO
 }
 
 // PutObject puts object to bucket having the content
-func (s *service) PutObject(
+func (s *Service) PutObject(
 	ctx context.Context,
 	bucket string,
 	key string,
@@ -146,7 +124,7 @@ func (s *service) PutObject(
 }
 
 // UploadFile uploads a file to bucket
-func (s *service) UploadFile(ctx context.Context, bucket, rootPath, key, filePath string) error {
+func (s *Service) UploadFile(ctx context.Context, bucket, rootPath, key, filePath string) error {
 
 	file, err := SecureOpen(rootPath, filePath)
 	if err != nil {

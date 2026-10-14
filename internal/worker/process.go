@@ -20,7 +20,7 @@ func (w *Worker) Process(ctx context.Context) error {
 	// ###################################################################
 
 	// Fetch all the playlists from DB
-	dbSources, err := w.sourcesRepo.GetAllSources(ctx)
+	dbSources, err := w.taxonomy.Sources(ctx)
 	if err != nil || len(dbSources) == 0 {
 		return fmt.Errorf(
 			"could not fetch the sources from DB; rows: %d; %w",
@@ -88,7 +88,7 @@ func (w *Worker) Process(ctx context.Context) error {
 	// ###################################################################
 
 	// Get ALL videos from DB, should be ordered by upload date
-	dbVideos, err := w.postsRepo.GetAllPosts(ctx)
+	dbVideos, err := w.post.All(ctx)
 	if err != nil || len(dbVideos) == 0 {
 		return fmt.Errorf(
 			"could not fetch the videos from DB; rows: %d; %w",

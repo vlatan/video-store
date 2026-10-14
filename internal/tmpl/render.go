@@ -1,0 +1,93 @@
+package tmpl
+
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"log/slog"
+	"net/http"
+	"path/filepath"
+
+	"github.com/vlatan/video-store/internal/types"
+)
+
+// WriteJSON converts the data into JSON-formatted string
+// and writes the output to response
+func (s *Service) WriteJSON(w http.ResponseWriter, r *http.Request, data any) {
+
+	// Encode data to JSON
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		slog.ErrorContext(
+			r.Context(), "failed to encode JSON response",
+			"error", err,
+		)
+		s.JSONError(w, r, http.StatusInternalServerError)
+		return
+	}
+
+	// Write to response
+	w.Header().Set("Content-Type", "application/json")
+	if _, err := w.Write(jsonData); err != nil {
+		// Too late for recovery here, just log the error
+		slog.ErrorContext(
+			r.Context(), "failed to write data to response",
+			"error", err,
+		)
+	}
+}
+
+// RenderHTML checks if template exists in the collection of templates (map),
+// executes the given template and writes the output to the response.
+func (s *Service) RenderHTML(
+	w http.ResponseWriter,
+	r *http.Request,
+	tmplName string,
+	data *types.TemplateData) {
+
+	tmpl, exists := s.templates[tmplName]
+	if !exists {
+		slog.WarnContext(
+			r.Context(),
+			fmt.Sprintf("invalid template %s", tmplName),
+		)
+		s.HTMLError(w, r, data, http.StatusInternalServerError)
+		return
+	}
+
+	var contentType string
+	switch filepath.Ext(tmplName) {
+	case ".xml":
+		contentType = "text/xml"
+	case ".xsl":
+		contentType = "text/xsl"
+	default:
+		data.FlashMessages = s.session.Flashes(w, r)
+		contentType = "text/html"
+	}
+	// Execute template to buffer to catch any errors before serving to client
+	var buf bytes.Buffer
+	if err := tmpl.ExecuteTemplate(&buf, tmplName, data); err != nil {
+		slog.WarnContext(
+			r.Context(),
+			fmt.Sprintf("failed to execute template %s", tmplName),
+			"error", err,
+		)
+		s.HTMLError(w, r, data, http.StatusInternalServerError)
+		return
+	}
+
+	// Set content type header
+	header := fmt.Sprintf("%s; charset=utf-8", contentType)
+	w.Header().Set("Content-Type", header)
+
+	// Write to response
+	if _, err := buf.WriteTo(w); err != nil {
+		// Too late for recovery here.
+		// Partial data already written to response, just log the error.
+		slog.WarnContext(
+			r.Context(), "failed to write to response",
+			"error", err,
+		)
+	}
+}
