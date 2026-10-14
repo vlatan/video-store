@@ -126,7 +126,7 @@ func (s *Service) Single(w http.ResponseWriter, r *http.Request) {
 		if data.CurrentUser.IsAuthenticated() {
 
 			var taskErr error
-			userActions, taskErr = s.post.UserActions(
+			userActions, taskErr = s.post.Actions(
 				r.Context(),
 				data.CurrentUser.ID,
 				post.ID,

@@ -21,7 +21,7 @@ func (s *Service) Ban(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rowsAffected, err := s.post.BanPost(r.Context(), videoID)
+	rowsAffected, err := s.post.Ban(r.Context(), videoID)
 	if err != nil {
 		slog.ErrorContext(
 			r.Context(), "failed to ban/delete the video",

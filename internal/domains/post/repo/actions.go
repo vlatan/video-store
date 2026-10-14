@@ -287,7 +287,7 @@ func (r *Repository) UpdateSource(ctx context.Context, videoID, playlistID strin
 }
 
 // Ban a post (move it to deleted table)
-func (r *Repository) BanPost(ctx context.Context, videoID string) (int64, error) {
+func (r *Repository) Ban(ctx context.Context, videoID string) (int64, error) {
 
 	query, err := stringx.GetQuery(r.tmpl, "ban_post.sql", nil)
 	if err != nil {
@@ -306,7 +306,7 @@ func (r *Repository) Delete(ctx context.Context, videoID string) (int64, error) 
 }
 
 // Check if the user liked and/or faved a post
-func (r *Repository) UserActions(ctx context.Context, userID, postID int) (types.Actions, error) {
+func (r *Repository) Actions(ctx context.Context, userID, postID int) (types.Actions, error) {
 
 	var zero, actions types.Actions
 	query, err := stringx.GetQuery(r.tmpl, "user_actions.sql", nil)
