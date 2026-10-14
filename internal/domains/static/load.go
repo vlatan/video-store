@@ -3,7 +3,8 @@ package static
 import (
 	"bytes"
 	"compress/gzip"
-	"crypto/md5"
+	"crypto/md5" // #nosec G501
+
 	"fmt"
 	"io/fs"
 	"strings"
