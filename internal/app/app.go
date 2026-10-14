@@ -11,15 +11,15 @@ import (
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/domains/auth"
 	"github.com/vlatan/video-store/internal/domains/health"
-	pageHandler "github.com/vlatan/video-store/internal/domains/page/handler"
-	postHandler "github.com/vlatan/video-store/internal/domains/post/handler"
+	page "github.com/vlatan/video-store/internal/domains/page/handler"
+	post "github.com/vlatan/video-store/internal/domains/post/handler"
 	postRepo "github.com/vlatan/video-store/internal/domains/post/repo"
-	sitemapHandler "github.com/vlatan/video-store/internal/domains/sitemap/handler"
-	staticHandler "github.com/vlatan/video-store/internal/domains/static"
-	taxonomyHandler "github.com/vlatan/video-store/internal/domains/taxonomy/handler"
+	sitemap "github.com/vlatan/video-store/internal/domains/sitemap/handler"
+	static "github.com/vlatan/video-store/internal/domains/static"
+	taxonomy "github.com/vlatan/video-store/internal/domains/taxonomy/handler"
 	taxonomyRepo "github.com/vlatan/video-store/internal/domains/taxonomy/repo"
-	textHandler "github.com/vlatan/video-store/internal/domains/text"
-	userHandler "github.com/vlatan/video-store/internal/domains/user/handler"
+	text "github.com/vlatan/video-store/internal/domains/text"
+	user "github.com/vlatan/video-store/internal/domains/user/handler"
 	userRepo "github.com/vlatan/video-store/internal/domains/user/repo"
 	"github.com/vlatan/video-store/internal/drivers/database"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
@@ -33,14 +33,14 @@ import (
 
 type App struct {
 	auth     *auth.Service
-	user     *userHandler.Service
-	post     *postHandler.Service
-	page     *pageHandler.Service
-	taxonomy *taxonomyHandler.Service
-	sitemap  *sitemapHandler.Service
-	text     *textHandler.Service
+	user     *user.Service
+	post     *post.Service
+	page     *page.Service
+	taxonomy *taxonomy.Service
+	sitemap  *sitemap.Service
+	text     *text.Service
 	health   *health.Service
-	static   *staticHandler.Service
+	static   *static.Service
 	mw       *middlewares.Service
 	domain   string
 	cleanup  func() error
@@ -112,7 +112,7 @@ func New() (*App, error) {
 	// Create session service
 	store := store.New(cfg, rdb, "session", 86400*30)
 
-	static, err := staticHandler.New()
+	static, err := static.New()
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create static files service: %w", err)
 	}
@@ -124,7 +124,7 @@ func New() (*App, error) {
 	}
 
 	// Create sitemap service
-	sitemap, err := sitemapHandler.New(cfg, db, rdb, tmpl)
+	sitemap, err := sitemap.New(cfg, db, rdb, tmpl)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create sitemap service: %w", err)
 	}
@@ -134,12 +134,12 @@ func New() (*App, error) {
 
 		// Handlers services
 		auth:     auth.New(cfg, userRepo, av, store, tmpl),
-		user:     userHandler.New(cfg, userRepo, av, store, tmpl),
-		post:     postHandler.New(cfg, postRepo, rdb, store, av, tmpl, yt, gemini),
-		page:     pageHandler.New(cfg, db, rdb, store, tmpl),
-		taxonomy: taxonomyHandler.New(cfg, taxRepo, rdb, store, tmpl, yt),
+		user:     user.New(cfg, userRepo, av, store, tmpl),
+		post:     post.New(cfg, postRepo, rdb, store, av, tmpl, yt, gemini),
+		page:     page.New(cfg, db, rdb, store, tmpl),
+		taxonomy: taxonomy.New(cfg, taxRepo, rdb, store, tmpl, yt),
 		sitemap:  sitemap,
-		text:     textHandler.New(cfg, tmpl),
+		text:     text.New(cfg, tmpl),
 		health:   health.New(db, rdb, tmpl),
 		static:   static,
 		mw:       middlewares.New(cfg, tmpl),
