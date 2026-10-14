@@ -24,6 +24,10 @@ func (a *App) RegisterRoutes() *App {
 	mux.HandleFunc("POST /api/video/{video}/{action}", a.user.IsAuth(a.post.ActionAPI))
 	mux.HandleFunc("DELETE /api/video/{video}/{action}", a.user.IsAuth(a.post.UndoActionAPI))
 
+	// Search
+	mux.HandleFunc("GET /search/{$}", a.post.Search)
+	mux.HandleFunc("GET /api/search/{$}", a.post.SearchAPI)
+
 	// Categories
 	mux.HandleFunc("GET /category/{category}/{$}", a.taxonomy.CategoryPosts)
 	mux.HandleFunc("GET /api/category/{category}/{$}", a.taxonomy.CategoryPostsAPI)
@@ -32,18 +36,18 @@ func (a *App) RegisterRoutes() *App {
 	mux.HandleFunc("GET /year/{year}/{$}", a.taxonomy.YearPosts)
 	mux.HandleFunc("GET /api/year/{year}/{$}", a.taxonomy.YearPostsAPI)
 
-	// Pages
-	mux.HandleFunc("GET /page/{slug}/{$}", a.page.Single)
-	mux.HandleFunc("/page/{slug}/edit", a.user.IsAdmin(a.page.Update))
-	mux.HandleFunc("/page/new", a.user.IsAdmin(a.page.New))
-	mux.HandleFunc("DELETE /page/{slug}/delete", a.user.IsAdmin(a.page.Delete))
-
 	// Sources
 	mux.HandleFunc("/source/new", a.user.IsAdmin(a.taxonomy.NewSource))
 	mux.HandleFunc("DELETE /source/{source}/delete", a.user.IsAdmin(a.taxonomy.DeleteSource))
 	mux.HandleFunc("GET /source/{source}/{$}", a.taxonomy.SourcePosts)
 	mux.HandleFunc("GET /api/source/{source}/{$}", a.taxonomy.SourcePostsAPI)
 	mux.HandleFunc("GET /sources/{$}", a.taxonomy.Sources)
+
+	// Pages
+	mux.HandleFunc("GET /page/{slug}/{$}", a.page.Single)
+	mux.HandleFunc("/page/{slug}/edit", a.user.IsAdmin(a.page.Update))
+	mux.HandleFunc("/page/new", a.user.IsAdmin(a.page.New))
+	mux.HandleFunc("DELETE /page/{slug}/delete", a.user.IsAdmin(a.page.Delete))
 
 	// Authentication
 	mux.HandleFunc("GET /auth/{provider}", a.auth.Begin)
@@ -60,10 +64,6 @@ func (a *App) RegisterRoutes() *App {
 	mux.HandleFunc("GET /user/favorites/{$}", a.user.IsAuth(a.user.Favorites))
 	mux.HandleFunc("GET /api/user/favorites/{$}", a.user.IsAuth(a.user.FavoritesAPI))
 	mux.HandleFunc("GET /users/{$}", a.user.IsAdmin(a.user.All))
-
-	// Search
-	mux.HandleFunc("GET /search/{$}", a.post.Search)
-	mux.HandleFunc("GET /api/search/{$}", a.post.SearchAPI)
 
 	// Static
 	mux.HandleFunc("GET /static/", a.static.Handle)
