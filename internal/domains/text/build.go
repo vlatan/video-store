@@ -56,7 +56,6 @@ func buildRobotsTxt(cfg *config.Config) []byte {
 
 	builder.WriteString("# Disallow paths\n")
 	builder.WriteString("User-agent: *\n")
-	builder.WriteString("Disallow: /search/\n")
 	builder.WriteString("Disallow: /auth/\n")
 	builder.WriteString("Disallow: /api/")
 
