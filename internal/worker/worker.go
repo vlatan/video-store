@@ -5,18 +5,27 @@ import (
 	"fmt"
 	"log"
 	"time"
+	"uuid"
 
-	"github.com/google/uuid"
 	"github.com/vlatan/video-store/internal/config"
+	postRepo "github.com/vlatan/video-store/internal/domains/post/repo"
 	taxonomyRepo "github.com/vlatan/video-store/internal/domains/taxonomy/repo"
 	"github.com/vlatan/video-store/internal/drivers/database"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/integrations/gemini"
 	"github.com/vlatan/video-store/internal/integrations/yt"
-	"github.com/vlatan/video-store/internal/repos/posts"
 	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/retry"
 )
+
+type post interface {
+	All(context.Context) ([]*types.Post, error)
+	IsBanned(context.Context, string) error
+	UpdateSource(context.Context, string, string) (int64, error)
+	Insert(context.Context, *types.Post) (int64, error)
+	Update(context.Context, *types.Post) (int64, error)
+	Delete(context.Context, string) (int64, error)
+}
 
 type taxonomy interface {
 	Categories(context.Context) (types.Categories, error)
@@ -27,7 +36,7 @@ type taxonomy interface {
 type Worker struct {
 	id                string
 	cfg               *config.Config
-	postsRepo         *posts.Repository
+	post              post
 	taxonomy          taxonomy
 	youtube           *yt.Service
 	gemini            *gemini.Service
@@ -54,7 +63,7 @@ func New(cfg *config.Config, ctx context.Context) (*Worker, error) {
 	}
 
 	// Create DB repositories
-	postsRepo, err := posts.New(db, cfg, nil)
+	postRepo, err := postRepo.New(cfg, db, nil)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create posts repo: %w", err)
 	}
@@ -78,12 +87,12 @@ func New(cfg *config.Config, ctx context.Context) (*Worker, error) {
 	}
 
 	w := &Worker{
-		id:        uuid.New().String(),
-		cfg:       cfg,
-		postsRepo: postsRepo,
-		taxonomy:  taxRepo,
-		youtube:   yt,
-		gemini:    gemini,
+		id:       uuid.New().String(),
+		cfg:      cfg,
+		post:     postRepo,
+		taxonomy: taxRepo,
+		youtube:  yt,
+		gemini:   gemini,
 		ytRetryConfig: &retry.Config{
 			MaxRetries: 3,
 			MaxJitter:  time.Second,

@@ -1,4 +1,4 @@
-package posts
+package repo
 
 import (
 	"context"
@@ -14,21 +14,21 @@ import (
 )
 
 // Check if the post exists
-func (r *Repository) PostExists(ctx context.Context, videoID string) error {
+func (r *Repository) Exists(ctx context.Context, videoID string) error {
 	var result int
 	const query = "SELECT 1 FROM post WHERE video_id = $1;"
 	return r.db.Pool.QueryRow(ctx, query, videoID).Scan(&result)
 }
 
 // Check if the post is deleted
-func (r *Repository) IsPostBanned(ctx context.Context, videoID string) error {
+func (r *Repository) IsBanned(ctx context.Context, videoID string) error {
 	var result int
 	const query = "SELECT 1 FROM deleted_post WHERE video_id = $1;"
 	return r.db.Pool.QueryRow(ctx, query, videoID).Scan(&result)
 }
 
 // Insert post in DB
-func (r *Repository) InsertPost(ctx context.Context, post *types.Post) (int64, error) {
+func (r *Repository) Insert(ctx context.Context, post *types.Post) (int64, error) {
 
 	// Marshal the thumbnails
 	thumbnails, err := json.Marshal(post.Thumbnails)
@@ -82,7 +82,7 @@ func (r *Repository) InsertPost(ctx context.Context, post *types.Post) (int64, e
 
 // UpdatePost updates post's specific data:
 // OriginalTitle, Category, Summary, ReleaseYear, Directors
-func (r *Repository) UpdatePost(ctx context.Context, post *types.Post) (int64, error) {
+func (r *Repository) Update(ctx context.Context, post *types.Post) (int64, error) {
 
 	query, err := stringx.GetQuery(r.tmpl, "update_post.sql", nil)
 	if err != nil {
@@ -115,7 +115,7 @@ func (r *Repository) UpdatePost(ctx context.Context, post *types.Post) (int64, e
 }
 
 // Get single post from DB based on a video ID
-func (r *Repository) GetSinglePost(ctx context.Context, videoID string) (types.Post, error) {
+func (r *Repository) Single(ctx context.Context, videoID string) (types.Post, error) {
 
 	var zero, post types.Post
 	query, err := stringx.GetQuery(r.tmpl, "single_post.sql", nil)

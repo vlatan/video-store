@@ -12,6 +12,8 @@ import (
 	"github.com/vlatan/video-store/internal/domains/auth"
 	"github.com/vlatan/video-store/internal/domains/health"
 	pageHandler "github.com/vlatan/video-store/internal/domains/page/handler"
+	postHandler "github.com/vlatan/video-store/internal/domains/post/handler"
+	postRepo "github.com/vlatan/video-store/internal/domains/post/repo"
 	sitemapHandler "github.com/vlatan/video-store/internal/domains/sitemap/handler"
 	staticHandler "github.com/vlatan/video-store/internal/domains/static"
 	taxonomyHandler "github.com/vlatan/video-store/internal/domains/taxonomy/handler"
@@ -22,19 +24,17 @@ import (
 	"github.com/vlatan/video-store/internal/drivers/database"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/drivers/store"
-	"github.com/vlatan/video-store/internal/handlers/posts"
 	"github.com/vlatan/video-store/internal/integrations/gemini"
 	"github.com/vlatan/video-store/internal/integrations/r2"
 	"github.com/vlatan/video-store/internal/integrations/yt"
 	"github.com/vlatan/video-store/internal/middlewares"
-	postsRepo "github.com/vlatan/video-store/internal/repos/posts"
 	"github.com/vlatan/video-store/internal/tmpl"
 )
 
 type App struct {
 	auth     *auth.Service
 	user     *userHandler.Service
-	posts    *posts.Service
+	post     *postHandler.Service
 	page     *pageHandler.Service
 	taxonomy *taxonomyHandler.Service
 	sitemap  *sitemapHandler.Service
@@ -92,7 +92,7 @@ func New() (*App, error) {
 		return nil, fmt.Errorf("couldn't create users repo: %w", err)
 	}
 
-	postsRepo, err := postsRepo.New(db, cfg, nil)
+	postRepo, err := postRepo.New(cfg, db, nil)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create posts repo: %w", err)
 	}
@@ -135,7 +135,7 @@ func New() (*App, error) {
 		// Handlers services
 		auth:     auth.New(cfg, userRepo, av, store, tmpl),
 		user:     userHandler.New(cfg, userRepo, av, store, tmpl),
-		posts:    posts.New(postsRepo, av, rdb, store, tmpl, cfg, yt, gemini),
+		post:     postHandler.New(cfg, postRepo, rdb, store, av, tmpl, yt, gemini),
 		page:     pageHandler.New(cfg, db, rdb, store, tmpl),
 		taxonomy: taxonomyHandler.New(cfg, taxRepo, rdb, store, tmpl, yt),
 		sitemap:  sitemap,

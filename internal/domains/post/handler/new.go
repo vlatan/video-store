@@ -15,7 +15,7 @@ import (
 )
 
 // Handle adding new post via form
-func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Service) New(w http.ResponseWriter, r *http.Request) {
 
 	// Get template data
 	data := s.tmpl.Data(w, r)
@@ -78,7 +78,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Check if the video is already posted
-		if err = s.postsRepo.PostExists(r.Context(), videoID); err == nil {
+		if err = s.post.Exists(r.Context(), videoID); err == nil {
 			slog.WarnContext(r.Context(), "video already posted")
 			formError.Message = "Video already posted"
 			data.Form.Error = &formError
@@ -125,7 +125,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 		post.UserActions = types.Actions{UserID: data.CurrentUser.ID}
 
 		// Insert the video
-		rowsAffected, err := s.postsRepo.InsertPost(r.Context(), post)
+		rowsAffected, err := s.post.Insert(r.Context(), post)
 		if err != nil || rowsAffected == 0 {
 			slog.WarnContext(
 				r.Context(), "failed to insert the post in DB",
@@ -179,7 +179,7 @@ func (s *Service) NewPostHandler(w http.ResponseWriter, r *http.Request) {
 				)
 			}
 
-			_, err = s.postsRepo.UpdatePost(ctx, post)
+			_, err = s.post.Update(ctx, post)
 			if err != nil {
 				slog.WarnContext(
 					r.Context(),

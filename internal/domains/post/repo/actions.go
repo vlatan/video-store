@@ -1,4 +1,4 @@
-package posts
+package repo
 
 import (
 	"context"
@@ -299,14 +299,14 @@ func (r *Repository) BanPost(ctx context.Context, videoID string) (int64, error)
 }
 
 // Delete a post
-func (r *Repository) DeletePost(ctx context.Context, videoID string) (int64, error) {
+func (r *Repository) Delete(ctx context.Context, videoID string) (int64, error) {
 	const query = "DELETE FROM post WHERE video_id = $1;"
 	result, err := r.db.Pool.Exec(ctx, query, videoID)
 	return result.RowsAffected(), err
 }
 
 // Check if the user liked and/or faved a post
-func (r *Repository) GetUserActions(ctx context.Context, userID, postID int) (types.Actions, error) {
+func (r *Repository) UserActions(ctx context.Context, userID, postID int) (types.Actions, error) {
 
 	var zero, actions types.Actions
 	query, err := stringx.GetQuery(r.tmpl, "user_actions.sql", nil)

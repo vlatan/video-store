@@ -88,7 +88,7 @@ func (w *Worker) Process(ctx context.Context) error {
 	// ###################################################################
 
 	// Get ALL videos from DB, should be ordered by upload date
-	dbVideos, err := w.postsRepo.GetAllPosts(ctx)
+	dbVideos, err := w.post.All(ctx)
 	if err != nil || len(dbVideos) == 0 {
 		return fmt.Errorf(
 			"could not fetch the videos from DB; rows: %d; %w",

@@ -1,4 +1,4 @@
-package posts
+package repo
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 )
 
 // Get random posts, but exclude posts with the exact title match
-func (r *Repository) GetRandomPosts(ctx context.Context, title string, limit int) (types.Posts, error) {
+func (r *Repository) Random(ctx context.Context, title string, limit int) (types.Posts, error) {
 
 	var zero, posts types.Posts
 	if title == "" {

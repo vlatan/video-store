@@ -1,4 +1,4 @@
-package posts
+package repo
 
 import (
 	"context"
@@ -7,13 +7,13 @@ import (
 )
 
 // Get post's related posts based on provided title as search query
-func (r *Repository) GetRelatedPosts(ctx context.Context, title string) (types.Posts, error) {
+func (r *Repository) Related(ctx context.Context, title string) (types.Posts, error) {
 
 	var zero, posts types.Posts
-	nrp := r.config.NumRelatedPosts
+	nrp := r.cfg.NumRelatedPosts
 
 	// Search the DB for posts
-	searchedPosts, err := r.SearchPosts(ctx, title, nrp+1, "")
+	searchedPosts, err := r.Search(ctx, title, nrp+1, "")
 
 	if err != nil {
 		return zero, err
@@ -37,7 +37,7 @@ func (r *Repository) GetRelatedPosts(ctx context.Context, title string) (types.P
 	// Get some random posts if not enough related posts
 	if len(posts.Items) < nrp {
 		limit := nrp - len(posts.Items)
-		randomPosts, err := r.GetRandomPosts(ctx, title, limit)
+		randomPosts, err := r.Random(ctx, title, limit)
 		if err != nil {
 			return zero, err
 		}

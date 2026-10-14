@@ -1,4 +1,4 @@
-package posts
+package repo
 
 import (
 	"context"
@@ -13,12 +13,12 @@ import (
 )
 
 // Get a limited number of posts with cursor
-func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (types.Posts, error) {
+func (r *Repository) Home(ctx context.Context, cursor, orderBy string) (types.Posts, error) {
 
 	// The first argument is the limit ($1).
 	// Peek for one post beoynd the limit to see if there's next page,
 	// meaning whether to construct and send the next cursor at all.
-	args := []any{r.config.PostsPerPage + 1}
+	args := []any{r.cfg.PostsPerPage + 1}
 
 	// The default template variables - SQL parts
 	var where string
@@ -135,7 +135,7 @@ func (r *Repository) GetHomePosts(ctx context.Context, cursor, orderBy string) (
 	}
 
 	// This is the last page
-	if len(posts.Items) <= r.config.PostsPerPage {
+	if len(posts.Items) <= r.cfg.PostsPerPage {
 		return posts, nil
 	}
 

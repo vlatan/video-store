@@ -10,7 +10,7 @@ import (
 )
 
 // Handle the Home page
-func (s *Service) HomeHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Service) Home(w http.ResponseWriter, r *http.Request) {
 
 	// Get the order_by query param if any
 	orderBy := r.URL.Query().Get("order_by")
@@ -36,17 +36,17 @@ func (s *Service) HomeHandler(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// Don't cache the home results only for the admin
-	if data.CurrentUser.IsAdmin(s.config) {
-		posts, err = s.postsRepo.GetHomePosts(
+	if data.CurrentUser.IsAdmin(s.cfg) {
+		posts, err = s.post.Home(
 			r.Context(), "", orderBy,
 		)
 	} else {
 		posts, err = s.rdb.Get(
 			r.Context(),
 			redisKey,
-			s.config.CacheTimeout,
+			s.cfg.CacheTimeout,
 			func() (types.Posts, error) {
-				return s.postsRepo.GetHomePosts(
+				return s.post.Home(
 					r.Context(), "", orderBy,
 				)
 			},
@@ -106,17 +106,17 @@ func (s *Service) HomeAPI(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// Don't cache the home results only for the admin
-	if currentUser.IsAdmin(s.config) {
-		posts, err = s.postsRepo.GetHomePosts(
+	if currentUser.IsAdmin(s.cfg) {
+		posts, err = s.post.Home(
 			r.Context(), cursor, orderBy,
 		)
 	} else {
 		posts, err = s.rdb.Get(
 			r.Context(),
 			redisKey,
-			s.config.CacheTimeout,
+			s.cfg.CacheTimeout,
 			func() (types.Posts, error) {
-				return s.postsRepo.GetHomePosts(
+				return s.post.Home(
 					r.Context(), cursor, orderBy,
 				)
 			},

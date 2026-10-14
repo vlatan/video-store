@@ -8,7 +8,7 @@ import (
 )
 
 // Handle a post ban
-func (s *Service) BanPostHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Service) Ban(w http.ResponseWriter, r *http.Request) {
 
 	// Get template data
 	data := s.tmpl.Data(w, r)
@@ -21,7 +21,7 @@ func (s *Service) BanPostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rowsAffected, err := s.postsRepo.BanPost(r.Context(), videoID)
+	rowsAffected, err := s.post.BanPost(r.Context(), videoID)
 	if err != nil {
 		slog.ErrorContext(
 			r.Context(), "failed to ban/delete the video",

@@ -1,4 +1,4 @@
-package posts
+package repo
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 )
 
 // Get all the posts from DB
-func (r *Repository) GetAllPosts(ctx context.Context) ([]*types.Post, error) {
+func (r *Repository) All(ctx context.Context) ([]*types.Post, error) {
 
 	query, err := stringx.GetQuery(r.tmpl, "all_posts.sql", nil)
 	if err != nil {

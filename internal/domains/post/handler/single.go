@@ -12,7 +12,7 @@ import (
 )
 
 // Handle a single post
-func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Service) Single(w http.ResponseWriter, r *http.Request) {
 
 	// Get video id from URL path
 	videoID := r.PathValue("video")
@@ -42,14 +42,14 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 		// Don't cache single post for logged in users
 		var taskErr error
 		if data.CurrentUser.IsAuthenticated() {
-			post, taskErr = s.postsRepo.GetSinglePost(r.Context(), videoID)
+			post, taskErr = s.post.Single(r.Context(), videoID)
 		} else {
 			post, taskErr = s.rdb.Get(
 				r.Context(),
 				fmt.Sprintf(postCacheKey, videoID),
-				s.config.CacheTimeout,
+				s.cfg.CacheTimeout,
 				func() (types.Post, error) {
-					return s.postsRepo.GetSinglePost(r.Context(), videoID)
+					return s.post.Single(r.Context(), videoID)
 				},
 			)
 		}
@@ -63,14 +63,14 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 		// Get post reviews, don't cache the reviews for logged in users
 		var taskErr error
 		if data.CurrentUser.IsAuthenticated() {
-			postReviews, taskErr = s.postsRepo.GetPostReviews(r.Context(), videoID, "")
+			postReviews, taskErr = s.post.Reviews(r.Context(), videoID, "")
 		} else {
 			postReviews, taskErr = s.rdb.Get(
 				r.Context(),
 				fmt.Sprintf(postReviewsCacheKey, videoID),
-				s.config.CacheTimeout,
+				s.cfg.CacheTimeout,
 				func() (types.Reviews, error) {
-					return s.postsRepo.GetPostReviews(r.Context(), videoID, "")
+					return s.post.Reviews(r.Context(), videoID, "")
 				},
 			)
 		}
@@ -126,7 +126,7 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 		if data.CurrentUser.IsAuthenticated() {
 
 			var taskErr error
-			userActions, taskErr = s.postsRepo.GetUserActions(
+			userActions, taskErr = s.post.UserActions(
 				r.Context(),
 				data.CurrentUser.ID,
 				post.ID,
@@ -153,15 +153,15 @@ func (s *Service) SinglePostHandler(w http.ResponseWriter, r *http.Request) {
 		)
 
 		// Don't cache the related posts only for the admin.
-		if data.CurrentUser.IsAdmin(s.config) {
-			posts, taskErr = s.postsRepo.GetRelatedPosts(r.Context(), post.GetTitle())
+		if data.CurrentUser.IsAdmin(s.cfg) {
+			posts, taskErr = s.post.Related(r.Context(), post.GetTitle())
 		} else {
 			posts, taskErr = s.rdb.Get(
 				r.Context(),
 				fmt.Sprintf(relatedPostsCacheKey, videoID),
-				s.config.CacheTimeout,
+				s.cfg.CacheTimeout,
 				func() (types.Posts, error) {
-					return s.postsRepo.GetRelatedPosts(r.Context(), post.GetTitle())
+					return s.post.Related(r.Context(), post.GetTitle())
 				},
 			)
 		}

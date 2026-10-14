@@ -12,7 +12,7 @@ import (
 )
 
 // Handle the requests from the searchform
-func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Service) Search(w http.ResponseWriter, r *http.Request) {
 
 	// Get the search query
 	searchQuery := r.URL.Query().Get("q")
@@ -38,18 +38,18 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// Don't cache the search results only for the admin
-	if data.CurrentUser.IsAdmin(s.config) {
-		posts, err = s.postsRepo.SearchPosts(
-			r.Context(), searchQuery, s.config.PostsPerPage, "",
+	if data.CurrentUser.IsAdmin(s.cfg) {
+		posts, err = s.post.Search(
+			r.Context(), searchQuery, s.cfg.PostsPerPage, "",
 		)
 	} else {
 		posts, err = s.rdb.Get(
 			r.Context(),
 			redisKey,
-			s.config.CacheTimeout,
+			s.cfg.CacheTimeout,
 			func() (types.Posts, error) {
-				return s.postsRepo.SearchPosts(
-					r.Context(), searchQuery, s.config.PostsPerPage, "",
+				return s.post.Search(
+					r.Context(), searchQuery, s.cfg.PostsPerPage, "",
 				)
 			},
 		)
@@ -78,7 +78,7 @@ func (s *Service) SearchPostsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // Handle the requests from the searchform
-func (s *Service) SearchPostsAPI(w http.ResponseWriter, r *http.Request) {
+func (s *Service) SearchAPI(w http.ResponseWriter, r *http.Request) {
 
 	// Get the search query
 	searchQuery := r.URL.Query().Get("q")
@@ -105,18 +105,18 @@ func (s *Service) SearchPostsAPI(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// Don't cache the search results only for the admin
-	if currentUser.IsAdmin(s.config) {
-		posts, err = s.postsRepo.SearchPosts(
-			r.Context(), searchQuery, s.config.PostsPerPage, cursor,
+	if currentUser.IsAdmin(s.cfg) {
+		posts, err = s.post.Search(
+			r.Context(), searchQuery, s.cfg.PostsPerPage, cursor,
 		)
 	} else {
 		posts, err = s.rdb.Get(
 			r.Context(),
 			redisKey,
-			s.config.CacheTimeout,
+			s.cfg.CacheTimeout,
 			func() (types.Posts, error) {
-				return s.postsRepo.SearchPosts(
-					r.Context(), searchQuery, s.config.PostsPerPage, cursor,
+				return s.post.Search(
+					r.Context(), searchQuery, s.cfg.PostsPerPage, cursor,
 				)
 			},
 		)

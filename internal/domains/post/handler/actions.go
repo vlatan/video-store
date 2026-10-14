@@ -12,7 +12,7 @@ import (
 )
 
 // PostActionAPI performs POST action on a video
-func (s *Service) PostActionAPI(w http.ResponseWriter, r *http.Request) {
+func (s *Service) ActionAPI(w http.ResponseWriter, r *http.Request) {
 
 	// Validate the YT ID
 	videoID := r.PathValue("video")
@@ -36,20 +36,20 @@ func (s *Service) PostActionAPI(w http.ResponseWriter, r *http.Request) {
 
 	switch action {
 	case "like":
-		s.handleLike(w, r, user.ID, videoID)
+		s.like(w, r, user.ID, videoID)
 	case "fave":
-		s.handleFave(w, r, user.ID, videoID)
+		s.fave(w, r, user.ID, videoID)
 	case "rate":
-		s.handleRate(w, r, user.ID, videoID)
+		s.rate(w, r, user.ID, videoID)
 	case "review":
-		s.handleReview(w, r, user.ID, videoID)
+		s.review(w, r, user.ID, videoID)
 	default:
 		s.tmpl.JSONError(w, r, http.StatusBadRequest)
 	}
 }
 
 // UndoPostActionAPI undoes action on a video
-func (s *Service) UndoPostActionAPI(w http.ResponseWriter, r *http.Request) {
+func (s *Service) UndoActionAPI(w http.ResponseWriter, r *http.Request) {
 
 	// Validate the YT ID
 	videoID := r.PathValue("video")
@@ -73,20 +73,20 @@ func (s *Service) UndoPostActionAPI(w http.ResponseWriter, r *http.Request) {
 
 	switch action {
 	case "unlike":
-		s.handleUnlike(w, r, user.ID, videoID)
+		s.unlike(w, r, user.ID, videoID)
 	case "unfave":
-		s.handleUnfave(w, r, user.ID, videoID)
+		s.unfave(w, r, user.ID, videoID)
 	case "unrate":
-		s.handleUnrate(w, r, user.ID, videoID)
+		s.unrate(w, r, user.ID, videoID)
 	default:
 		s.tmpl.JSONError(w, r, http.StatusBadRequest)
 	}
 }
 
 // Handle a post like from user
-func (s *Service) handleLike(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
+func (s *Service) like(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
 
-	rowsAffected, err := s.postsRepo.Like(r.Context(), userID, videoID)
+	rowsAffected, err := s.post.Like(r.Context(), userID, videoID)
 
 	if err != nil {
 		slog.ErrorContext(
@@ -104,9 +104,9 @@ func (s *Service) handleLike(w http.ResponseWriter, r *http.Request, userID int,
 }
 
 // Handle a post unlike from user
-func (s *Service) handleUnlike(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
+func (s *Service) unlike(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
 
-	rowsAffected, err := s.postsRepo.Unlike(r.Context(), userID, videoID)
+	rowsAffected, err := s.post.Unlike(r.Context(), userID, videoID)
 
 	if err != nil {
 		slog.ErrorContext(
@@ -124,9 +124,9 @@ func (s *Service) handleUnlike(w http.ResponseWriter, r *http.Request, userID in
 }
 
 // Handle a post favorite from user
-func (s *Service) handleFave(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
+func (s *Service) fave(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
 
-	rowsAffected, err := s.postsRepo.Fave(r.Context(), userID, videoID)
+	rowsAffected, err := s.post.Fave(r.Context(), userID, videoID)
 
 	if err != nil {
 		slog.ErrorContext(
@@ -144,9 +144,9 @@ func (s *Service) handleFave(w http.ResponseWriter, r *http.Request, userID int,
 }
 
 // Handle a post unfavorite from user
-func (s *Service) handleUnfave(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
+func (s *Service) unfave(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
 
-	rowsAffected, err := s.postsRepo.Unfave(r.Context(), userID, videoID)
+	rowsAffected, err := s.post.Unfave(r.Context(), userID, videoID)
 
 	if err != nil {
 		slog.ErrorContext(
@@ -164,7 +164,7 @@ func (s *Service) handleUnfave(w http.ResponseWriter, r *http.Request, userID in
 }
 
 // Handle a post favorite from user
-func (s *Service) handleRate(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
+func (s *Service) rate(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
 
 	var data struct {
 		Rating uint8 `json:"rating"`
@@ -187,7 +187,7 @@ func (s *Service) handleRate(w http.ResponseWriter, r *http.Request, userID int,
 		return
 	}
 
-	ratingStats, err := s.postsRepo.Rate(r.Context(), data.Rating, userID, videoID)
+	ratingStats, err := s.post.Rate(r.Context(), data.Rating, userID, videoID)
 
 	if errors.Is(err, pgx.ErrNoRows) {
 		slog.WarnContext(r.Context(), "no such video to rate")
@@ -208,9 +208,9 @@ func (s *Service) handleRate(w http.ResponseWriter, r *http.Request, userID int,
 }
 
 // handleUnrate handles a deletion of a user rating/review
-func (s *Service) handleUnrate(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
+func (s *Service) unrate(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
 
-	ratingStats, err := s.postsRepo.Unrate(r.Context(), userID, videoID)
+	ratingStats, err := s.post.Unrate(r.Context(), userID, videoID)
 
 	if errors.Is(err, pgx.ErrNoRows) {
 		slog.WarnContext(r.Context(), "no such video to unrate")
@@ -231,7 +231,7 @@ func (s *Service) handleUnrate(w http.ResponseWriter, r *http.Request, userID in
 }
 
 // Handle a post favorite from user
-func (s *Service) handleReview(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
+func (s *Service) review(w http.ResponseWriter, r *http.Request, userID int, videoID string) {
 
 	var data struct {
 		Headline string `json:"headline"`
@@ -263,7 +263,7 @@ func (s *Service) handleReview(w http.ResponseWriter, r *http.Request, userID in
 		return
 	}
 
-	reviewData, err := s.postsRepo.Review(
+	reviewData, err := s.post.Review(
 		r.Context(),
 		userID,
 		videoID,

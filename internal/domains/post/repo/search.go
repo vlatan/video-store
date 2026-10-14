@@ -1,4 +1,4 @@
-package posts
+package repo
 
 import (
 	"context"
@@ -15,7 +15,7 @@ import (
 
 // Get posts based on a user search query using a cursor
 // Transform the user query into two queries with words separated by '&' and '|'
-func (r *Repository) SearchPosts(
+func (r *Repository) Search(
 	ctx context.Context,
 	searchTerm string,
 	limit int,

@@ -12,17 +12,17 @@ func (a *App) RegisterRoutes() *App {
 	mux := http.NewServeMux()
 
 	// Home
-	mux.HandleFunc("GET /{$}", a.posts.HomeHandler)
-	mux.HandleFunc("GET /api/{$}", a.posts.HomeAPI)
+	mux.HandleFunc("GET /{$}", a.post.Home)
+	mux.HandleFunc("GET /api/{$}", a.post.HomeAPI)
 
 	// Videos
-	mux.HandleFunc("/video/new", a.user.IsAdmin(a.posts.NewPostHandler))
-	mux.HandleFunc("GET /video/{video}/{$}", a.posts.SinglePostHandler)
-	mux.HandleFunc("/video/{video}/edit", a.user.IsAdmin(a.posts.UpdatePostHandler))
-	mux.HandleFunc("DELETE /video/{video}/delete", a.user.IsAdmin(a.posts.BanPostHandler))
-	mux.HandleFunc("GET /api/video/{video}/reviews", a.posts.PostReviewsAPI)
-	mux.HandleFunc("POST /api/video/{video}/{action}", a.user.IsAuth(a.posts.PostActionAPI))
-	mux.HandleFunc("DELETE /api/video/{video}/{action}", a.user.IsAuth(a.posts.UndoPostActionAPI))
+	mux.HandleFunc("/video/new", a.user.IsAdmin(a.post.New))
+	mux.HandleFunc("GET /video/{video}/{$}", a.post.Single)
+	mux.HandleFunc("/video/{video}/edit", a.user.IsAdmin(a.post.Update))
+	mux.HandleFunc("DELETE /video/{video}/delete", a.user.IsAdmin(a.post.Ban))
+	mux.HandleFunc("GET /api/video/{video}/reviews", a.post.ReviewsAPI)
+	mux.HandleFunc("POST /api/video/{video}/{action}", a.user.IsAuth(a.post.ActionAPI))
+	mux.HandleFunc("DELETE /api/video/{video}/{action}", a.user.IsAuth(a.post.UndoActionAPI))
 
 	// Categories
 	mux.HandleFunc("GET /category/{category}/{$}", a.taxonomy.CategoryPosts)
@@ -62,8 +62,8 @@ func (a *App) RegisterRoutes() *App {
 	mux.HandleFunc("GET /users/{$}", a.user.IsAdmin(a.user.All))
 
 	// Search
-	mux.HandleFunc("GET /search/{$}", a.posts.SearchPostsHandler)
-	mux.HandleFunc("GET /api/search/{$}", a.posts.SearchPostsAPI)
+	mux.HandleFunc("GET /search/{$}", a.post.Search)
+	mux.HandleFunc("GET /api/search/{$}", a.post.SearchAPI)
 
 	// Static
 	mux.HandleFunc("GET /static/", a.static.Handle)

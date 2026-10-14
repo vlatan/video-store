@@ -1,4 +1,4 @@
-package posts
+package repo
 
 import (
 	"context"
@@ -15,12 +15,12 @@ import (
 )
 
 // GetPostReviews gets posts reviews
-func (r *Repository) GetPostReviews(ctx context.Context, videoID, cursor string) (types.Reviews, error) {
+func (r *Repository) Reviews(ctx context.Context, videoID, cursor string) (types.Reviews, error) {
 
 	// The video ID and the limit are the first two arguments ($1 and $2)
 	// Peek for one review beoynd the limit to see if there are more reviews,
 	// meaning whether to construct and send the next cursor at all.
-	args := []any{videoID, r.config.ReviewsPerPost + 1}
+	args := []any{videoID, r.cfg.ReviewsPerPost + 1}
 
 	// The default template variables - SQL parts
 	var andCondition string
@@ -131,7 +131,7 @@ func (r *Repository) GetPostReviews(ctx context.Context, videoID, cursor string)
 	}
 
 	// This is the last page
-	if len(reviews.Items) <= r.config.ReviewsPerPost {
+	if len(reviews.Items) <= r.cfg.ReviewsPerPost {
 		return reviews, nil
 	}
 

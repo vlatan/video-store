@@ -1,4 +1,4 @@
-package posts
+package repo
 
 import (
 	"embed"
@@ -13,12 +13,12 @@ import (
 var sqlFS embed.FS
 
 type Repository struct {
-	db     *database.Service
-	config *config.Config
-	tmpl   *template.Template
+	cfg  *config.Config
+	db   *database.Service
+	tmpl *template.Template
 }
 
-func New(db *database.Service, config *config.Config, fsys fs.FS) (*Repository, error) {
+func New(cfg *config.Config, db *database.Service, fsys fs.FS) (*Repository, error) {
 
 	if fsys == nil {
 		fsys = sqlFS
@@ -29,5 +29,5 @@ func New(db *database.Service, config *config.Config, fsys fs.FS) (*Repository, 
 		return nil, err
 	}
 
-	return &Repository{db, config, tmpl}, nil
+	return &Repository{cfg, db, tmpl}, nil
 }

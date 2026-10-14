@@ -16,7 +16,7 @@ import (
 )
 
 // UpdatePostHandler handles the post update
-func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 
 	// Get video id from URL path
 	videoID := r.PathValue("video")
@@ -32,7 +32,7 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get the post data straight from DB
-	post, err := s.postsRepo.GetSinglePost(r.Context(), videoID)
+	post, err := s.post.Single(r.Context(), videoID)
 	if errors.Is(err, pgx.ErrNoRows) {
 		slog.WarnContext(
 			r.Context(), "no such post in DB",
@@ -200,7 +200,7 @@ func (s *Service) UpdatePostHandler(w http.ResponseWriter, r *http.Request) {
 		data.CurrentPost.ReleaseYear = releaseYear
 
 		// Update the post
-		rowsAffected, err := s.postsRepo.UpdatePost(r.Context(), data.CurrentPost)
+		rowsAffected, err := s.post.Update(r.Context(), data.CurrentPost)
 
 		if err != nil || rowsAffected == 0 {
 			slog.ErrorContext(

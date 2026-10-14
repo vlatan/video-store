@@ -10,7 +10,7 @@ import (
 )
 
 // Perform an action on a video
-func (s *Service) PostReviewsAPI(w http.ResponseWriter, r *http.Request) {
+func (s *Service) ReviewsAPI(w http.ResponseWriter, r *http.Request) {
 
 	// Validate the YT ID
 	videoID := r.PathValue("video")
@@ -38,14 +38,14 @@ func (s *Service) PostReviewsAPI(w http.ResponseWriter, r *http.Request) {
 
 	// Get post reviews, don't cache sthe reviews for logged in users
 	if currentUser.IsAuthenticated() {
-		reviews, err = s.postsRepo.GetPostReviews(r.Context(), videoID, cursor)
+		reviews, err = s.post.Reviews(r.Context(), videoID, cursor)
 	} else {
 		reviews, err = s.rdb.Get(
 			r.Context(),
 			redisKey,
-			s.config.CacheTimeout,
+			s.cfg.CacheTimeout,
 			func() (types.Reviews, error) {
-				return s.postsRepo.GetPostReviews(r.Context(), videoID, cursor)
+				return s.post.Reviews(r.Context(), videoID, cursor)
 			},
 		)
 	}

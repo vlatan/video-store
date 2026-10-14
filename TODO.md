@@ -1,4 +1,5 @@
 - Continue creating domains
+  Eliminate statter in repos and handlers
 - Return Base data type from tmpl ad embed in domains data
 - Do not dissallow search/ in robots.txt use noindex, follow
 
