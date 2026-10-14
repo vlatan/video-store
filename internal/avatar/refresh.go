@@ -11,7 +11,11 @@ import (
 	"net/http"
 	"net/url"
 
+	_ "image/gif" // Register GIF decoder
+	_ "image/png" // Register PNG decoder
+
 	"github.com/vlatan/video-store/internal/types"
+	_ "golang.org/x/image/webp" // Register WebP decoder
 )
 
 const sourceHashKey = "source-hash"

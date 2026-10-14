@@ -10,11 +10,7 @@ import (
 	"fmt"
 	"time"
 
-	_ "image/gif" // Register GIF decoder
-	_ "image/png" // Register PNG decoder
-
 	"github.com/vlatan/video-store/internal/config"
-	_ "golang.org/x/image/webp" // Register WebP decoder
 )
 
 // ============================================================================= //
