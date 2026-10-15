@@ -1,11 +1,5 @@
 package types
 
-import (
-	"time"
-
-	"google.golang.org/genai"
-)
-
 // The response from the Genai API
 type GenaiResponse struct {
 	Title         string   `json:"video_title"`
@@ -14,13 +8,4 @@ type GenaiResponse struct {
 	Category      string   `json:"category"`
 	Directors     []string `json:"directors"`
 	ReleaseYear   int16    `json:"release_year"`
-}
-
-type VideoPartConfig struct {
-	Description      string
-	StartOffset      time.Duration
-	EndOffset        time.Duration
-	FPS              *float64
-	Resolutuon       genai.PartMediaResolutionLevel
-	MediaProcesssing genai.MediaProcessing
 }
