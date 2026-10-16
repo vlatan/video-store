@@ -61,8 +61,16 @@ func (s *Service) newBase(w http.ResponseWriter, r *http.Request) Base {
 	}
 }
 
+// WithBase is a middleware that adds data loader to context
+func (s *Service) WithBaseLoader(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := ctxv.WithValue(r.Context(), &baseLoader{})
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
 // Base uses newBase just once if loader in context, returns the base and
-// stores the base in the loader for any subsequent calls.
+// stores the base in the loader in context for any subsequent calls.
 func (s *Service) Base(w http.ResponseWriter, r *http.Request) Base {
 	if l := ctxv.Get[*baseLoader](r.Context()); l != nil {
 		l.once.Do(func() { l.val = s.newBase(w, r) })
