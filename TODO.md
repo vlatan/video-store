@@ -1,3 +1,5 @@
+- Ditch the base loader
+
 - Make search bar on small screens accross entire screen
 - Write tests
 - Internal linking?
