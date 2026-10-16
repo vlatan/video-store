@@ -8,7 +8,7 @@ import (
 	"uuid"
 
 	"github.com/vlatan/video-store/internal/config"
-	postRepo "github.com/vlatan/video-store/internal/domains/post/repo"
+	postRepo "github.com/vlatan/video-store/internal/domains/post"
 	taxonomyRepo "github.com/vlatan/video-store/internal/domains/taxonomy/repo"
 	"github.com/vlatan/video-store/internal/drivers/database"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
