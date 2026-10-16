@@ -35,9 +35,13 @@ func (s *Service) HTMLError(
 		return
 	}
 
+	// Get base tmpl data and clear the flash messages if any
+	base := s.Base(w, r)
+	base.FlashMessages = nil
+
 	errData := errorData{
 		Title: strconv.Itoa(status),
-		Base:  s.Base(w, r),
+		Base:  base,
 	}
 
 	// Provide few errors that should be served via template

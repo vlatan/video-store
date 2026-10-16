@@ -90,7 +90,6 @@ func (a *App) RegisterRoutes() *App {
 		a.mw.MethodOverride,                     // Override a POST method if needed
 		a.mw.LoadRequestId,                      // Load request ID in the context
 		a.user.Load,                             // Load user data from seesion into context
-		a.tmpl.WithBaseLoader,                   // Load base loader into context
 		a.mw.Logging,                            // Log the request, unless healthcheck
 		a.mw.AddHeaders,                         // Add standard headers to response
 		http.NewCrossOriginProtection().Handler, // Provide modern CSRF protection

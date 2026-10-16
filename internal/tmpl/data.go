@@ -3,12 +3,10 @@ package tmpl
 import (
 	"log/slog"
 	"net/http"
-	"sync"
 
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/ctxd"
 	"github.com/vlatan/video-store/internal/types"
-	"github.com/vlatan/video-store/internal/utils/ctxv"
 	"github.com/vlatan/video-store/internal/utils/pathx"
 )
 
@@ -22,13 +20,8 @@ type Base struct {
 	CurrentUser      *types.User
 }
 
-type baseLoader struct {
-	once sync.Once
-	val  Base
-}
-
 // newBase creates new base data struct:
-func (s *Service) newBase(w http.ResponseWriter, r *http.Request) Base {
+func (s *Service) Base(w http.ResponseWriter, r *http.Request) Base {
 
 	// Get the categories from cache
 	categories, err := s.rdb.Get(
@@ -59,22 +52,4 @@ func (s *Service) newBase(w http.ResponseWriter, r *http.Request) Base {
 		FlashMessages:    s.session.Flashes(w, r),
 		CurrentUser:      ctxd.GetUser(r.Context()),
 	}
-}
-
-// WithBase is a middleware that adds data loader to context
-func (s *Service) WithBaseLoader(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx := ctxv.WithValue(r.Context(), &baseLoader{})
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
-}
-
-// Base uses newBase just once if loader in context, returns the base and
-// stores the base in the loader in context for any subsequent calls.
-func (s *Service) Base(w http.ResponseWriter, r *http.Request) Base {
-	if l := ctxv.Get[*baseLoader](r.Context()); l != nil {
-		l.once.Do(func() { l.val = s.newBase(w, r) })
-		return l.val
-	}
-	return s.newBase(w, r)
 }
