@@ -14,22 +14,22 @@ import (
 func (s *Service) New(w http.ResponseWriter, r *http.Request) {
 
 	// Get template data
-	data := s.tmpl.Data(w, r)
-
-	// Populate needed data for an empty form
-	data.Form = &types.Form{
-		Legend: "Edit Page",
-		Title: &types.FormGroup{
-			Label:       "Title",
-			Placeholder: "Your title...",
+	data := pageData{
+		Title: "Add New Page",
+		Form: types.Form{
+			Legend: "Edit Page",
+			Title: &types.FormGroup{
+				Label:       "Title",
+				Placeholder: "Your title...",
+			},
+			Content: &types.FormGroup{
+				Type:        types.FieldTypeTextarea,
+				Label:       "Content",
+				Placeholder: "You can use markdown...",
+			},
 		},
-		Content: &types.FormGroup{
-			Type:        types.FieldTypeTextarea,
-			Label:       "Content",
-			Placeholder: "You can use markdown...",
-		},
+		Base: s.tmpl.Base(w, r),
 	}
-	data.Title = "Add New Page"
 
 	switch r.Method {
 	case "GET":
@@ -82,6 +82,6 @@ func (s *Service) New(w http.ResponseWriter, r *http.Request) {
 		redirect.Safe(w, r, redirectTo, http.StatusFound)
 
 	default:
-		s.tmpl.HTMLError(w, r, data, http.StatusMethodNotAllowed)
+		s.tmpl.HTMLError(w, r, http.StatusMethodNotAllowed)
 	}
 }

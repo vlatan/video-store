@@ -18,17 +18,15 @@ import (
 func (s *Service) New(w http.ResponseWriter, r *http.Request) {
 
 	// Get template data
-	data := s.tmpl.Data(w, r)
-
-	// Populate needed data for an empty form
-	data.Form = &types.Form{
+	data := postData{
+		Title:  "Add New Video",
 		Legend: "New Video",
 		Content: &types.FormGroup{
 			Label:       "Post YouTube Video URL",
 			Placeholder: "Video URL here...",
 		},
+		Base: s.tmpl.Base(w, r),
 	}
-	data.Title = "Add New Video"
 
 	switch r.Method {
 	case "GET":
@@ -194,6 +192,6 @@ func (s *Service) New(w http.ResponseWriter, r *http.Request) {
 		redirect.Safe(w, r, redirectTo, http.StatusFound)
 
 	default:
-		s.tmpl.HTMLError(w, r, data, http.StatusMethodNotAllowed)
+		s.tmpl.HTMLError(w, r, http.StatusMethodNotAllowed)
 	}
 }

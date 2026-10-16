@@ -16,18 +16,14 @@ func (s *Service) YearPosts(w http.ResponseWriter, r *http.Request) {
 	year := r.PathValue("year")
 	orderBy := r.URL.Query().Get("order_by")
 
-	// Get template data
-	data := s.tmpl.Data(w, r)
-
 	// Convert the release year to valid int16 year
-	var err error
-	data.CurrentYear, err = stringx.ParseYear(year)
+	currentYear, err := stringx.ParseYear(year)
 	if err != nil {
 		slog.WarnContext(
 			r.Context(), "failed to parse release year",
 			"error", err,
 		)
-		s.tmpl.HTMLError(w, r, data, http.StatusNotFound)
+		s.tmpl.HTMLError(w, r, http.StatusNotFound)
 		return
 	}
 
@@ -46,7 +42,7 @@ func (s *Service) YearPosts(w http.ResponseWriter, r *http.Request) {
 	// Don't cache the release year posts only for the admin.
 	// We can pass the release year as string here no problem.
 	var posts types.Posts
-	if data.CurrentUser.IsAdmin(s.cfg) {
+	if ctxd.GetUser(r.Context()).IsAdmin(s.cfg) {
 		posts, err = s.repo.YearPosts(
 			r.Context(), year, "", orderBy,
 		)
@@ -68,18 +64,24 @@ func (s *Service) YearPosts(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "failed to get posts from DB",
 			"error", err,
 		)
-		s.tmpl.HTMLError(w, r, data, http.StatusInternalServerError)
+		s.tmpl.HTMLError(w, r, http.StatusInternalServerError)
 		return
 	}
 
 	if len(posts.Items) == 0 {
 		slog.WarnContext(r.Context(), "no posts found in DB")
-		s.tmpl.HTMLError(w, r, data, http.StatusNotFound)
+		s.tmpl.HTMLError(w, r, http.StatusNotFound)
 		return
 	}
 
-	data.Posts = &posts
-	data.Title = fmt.Sprintf("%s: %s", data.Posts.Title, year)
+	// Get template data
+	data := taxonomyData{
+		Title:       fmt.Sprintf("%s: %s", posts.Title, year),
+		CurrentYear: currentYear,
+		Posts:       posts,
+		Base:        s.tmpl.Base(w, r),
+	}
+
 	s.tmpl.RenderHTML(w, r, "taxonomy.html", data)
 }
 

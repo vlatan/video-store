@@ -17,7 +17,7 @@ func (s *Service) Single(w http.ResponseWriter, r *http.Request) {
 	pageSlug := r.PathValue("slug")
 
 	// Get template data
-	data := s.tmpl.Data(w, r)
+	data := pageData{Base: s.tmpl.Base(w, r)}
 
 	var (
 		err  error
@@ -42,7 +42,7 @@ func (s *Service) Single(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "failed to get the page from DB",
 			"error", err,
 		)
-		s.tmpl.HTMLError(w, r, data, http.StatusNotFound)
+		s.tmpl.HTMLError(w, r, http.StatusNotFound)
 		return
 	}
 
@@ -51,7 +51,7 @@ func (s *Service) Single(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "failed to get the page from DB",
 			"error", err,
 		)
-		s.tmpl.HTMLError(w, r, data, http.StatusInternalServerError)
+		s.tmpl.HTMLError(w, r, http.StatusInternalServerError)
 		return
 	}
 

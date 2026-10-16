@@ -26,8 +26,7 @@ func (s *Service) IsAuth(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		data := s.tmpl.Data(w, r)
-		s.tmpl.HTMLError(w, r, data, http.StatusForbidden)
+		s.tmpl.HTMLError(w, r, http.StatusForbidden)
 	}
 }
 
@@ -46,8 +45,7 @@ func (s *Service) IsAdmin(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		data := s.tmpl.Data(w, r)
-		s.tmpl.HTMLError(w, r, data, http.StatusForbidden)
+		s.tmpl.HTMLError(w, r, http.StatusForbidden)
 	}
 }
 

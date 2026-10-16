@@ -10,13 +10,10 @@ import (
 // Handle handles text files such as robots.txt, ads.txt, etc.
 func (s *Service) Handle(w http.ResponseWriter, r *http.Request) {
 
-	// Get template data
-	data := s.tmpl.Data(w, r)
-
 	// Validate the path
 	if err := pathx.Validate(r.URL.Path); err != nil {
 		slog.WarnContext(r.Context(), "invalid path")
-		s.tmpl.HTMLError(w, r, data, http.StatusNotFound)
+		s.tmpl.HTMLError(w, r, http.StatusNotFound)
 		return
 	}
 
@@ -24,7 +21,7 @@ func (s *Service) Handle(w http.ResponseWriter, r *http.Request) {
 	textFile, exists := s.textFiles[r.URL.Path]
 	if !exists {
 		slog.WarnContext(r.Context(), "text file does not exist")
-		s.tmpl.HTMLError(w, r, data, http.StatusNotFound)
+		s.tmpl.HTMLError(w, r, http.StatusNotFound)
 		return
 	}
 

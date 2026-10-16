@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/vlatan/video-store/internal/ctxd"
 	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/redirect"
 	"golang.org/x/oauth2"
@@ -13,15 +14,12 @@ import (
 // Callback handles the provider auth callback
 func (s *Service) Callback(w http.ResponseWriter, r *http.Request) {
 
-	// Get template data
-	data := s.tmpl.Data(w, r)
-
 	// Check if the provider exists
 	providerName := r.PathValue("provider")
 	provider, ok := s.providers[providerName]
 	if !ok {
 		slog.WarnContext(r.Context(), "invalid provider name")
-		s.tmpl.HTMLError(w, r, data, http.StatusNotFound)
+		s.tmpl.HTMLError(w, r, http.StatusNotFound)
 		return
 	}
 
@@ -29,7 +27,7 @@ func (s *Service) Callback(w http.ResponseWriter, r *http.Request) {
 	redirectTo := s.session.RedirectURL(w, r)
 
 	// Check if the user is already logged in
-	if data.CurrentUser.IsAuthenticated() {
+	if ctxd.GetUser(r.Context()).IsAuthenticated() {
 		slog.WarnContext(r.Context(), "user already logged in")
 		redirect.Safe(w, r, redirectTo, http.StatusSeeOther)
 		return

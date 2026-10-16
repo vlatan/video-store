@@ -9,6 +9,7 @@ import (
 	"github.com/vlatan/video-store/internal/integrations/gemini"
 	"github.com/vlatan/video-store/internal/integrations/yt"
 	"github.com/vlatan/video-store/internal/tmpl"
+	"github.com/vlatan/video-store/internal/types"
 )
 
 type Service struct {
@@ -20,6 +21,14 @@ type Service struct {
 	tmpl    *tmpl.Service
 	yt      *yt.Service
 	gemini  *gemini.Service
+}
+
+type postData struct {
+	Title       string
+	CurrentPost *types.Post
+	types.Form
+	types.Posts
+	tmpl.Base
 }
 
 func New(

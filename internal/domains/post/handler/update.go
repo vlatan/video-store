@@ -21,13 +21,10 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 	// Get video id from URL path
 	videoID := r.PathValue("video")
 
-	// Get template data
-	data := s.tmpl.Data(w, r)
-
 	// Validate the YT ID
 	if validVideoID.FindStringSubmatch(videoID) == nil {
 		slog.WarnContext(r.Context(), "invalid video id")
-		s.tmpl.HTMLError(w, r, data, http.StatusNotFound)
+		s.tmpl.HTMLError(w, r, http.StatusNotFound)
 		return
 	}
 
@@ -38,7 +35,7 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "no such post in DB",
 			"error", err,
 		)
-		s.tmpl.HTMLError(w, r, data, http.StatusNotFound)
+		s.tmpl.HTMLError(w, r, http.StatusNotFound)
 		return
 	}
 
@@ -47,12 +44,17 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "failed to get the post from DB",
 			"error", err,
 		)
-		s.tmpl.HTMLError(w, r, data, http.StatusInternalServerError)
+		s.tmpl.HTMLError(w, r, http.StatusInternalServerError)
 		return
 	}
 
+	// Get template data
+	data := postData{
+		Base:        s.tmpl.Base(w, r),
+		CurrentPost: &post,
+	}
+
 	// Assign post data
-	data.CurrentPost = &post
 	if data.CurrentPost.Category == nil {
 		data.CurrentPost.Category = &types.Category{}
 	}
@@ -67,7 +69,7 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Populate needed data for the post form
-	data.Form = &types.Form{
+	data.Form = types.Form{
 		Legend: "Edit Post",
 		Title: &types.FormGroup{
 			Label:       "Title",
@@ -231,6 +233,6 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 		redirect.Safe(w, r, redirectTo, http.StatusFound)
 
 	default:
-		s.tmpl.HTMLError(w, r, data, http.StatusMethodNotAllowed)
+		s.tmpl.HTMLError(w, r, http.StatusMethodNotAllowed)
 	}
 }

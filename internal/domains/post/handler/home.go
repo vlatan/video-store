@@ -27,16 +27,13 @@ func (s *Service) Home(w http.ResponseWriter, r *http.Request) {
 		redisKey += fmt.Sprintf(":%s", types.RatingCount)
 	}
 
-	// Get template data
-	data := s.tmpl.Data(w, r)
-
 	var (
 		err   error
 		posts types.Posts
 	)
 
 	// Don't cache the home results only for the admin
-	if data.CurrentUser.IsAdmin(s.cfg) {
+	if ctxd.GetUser(r.Context()).IsAdmin(s.cfg) {
 		posts, err = s.post.Home(
 			r.Context(), "", orderBy,
 		)
@@ -58,17 +55,22 @@ func (s *Service) Home(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "failed to get posts from DB",
 			"error", err,
 		)
-		s.tmpl.HTMLError(w, r, data, http.StatusInternalServerError)
+		s.tmpl.HTMLError(w, r, http.StatusInternalServerError)
 		return
 	}
 
 	if len(posts.Items) == 0 {
 		slog.WarnContext(r.Context(), "no posts found in DB")
-		s.tmpl.HTMLError(w, r, data, http.StatusNotFound)
+		s.tmpl.HTMLError(w, r, http.StatusNotFound)
 		return
 	}
 
-	data.Posts = &posts
+	// Get template data
+	data := postData{
+		Base:  s.tmpl.Base(w, r),
+		Posts: posts,
+	}
+
 	s.tmpl.RenderHTML(w, r, "home.html", data)
 }
 

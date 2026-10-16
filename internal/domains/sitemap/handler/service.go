@@ -2,12 +2,14 @@ package handler
 
 import (
 	"fmt"
+	"html/template"
 
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/domains/sitemap/repo"
 	"github.com/vlatan/video-store/internal/drivers/database"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/tmpl"
+	"github.com/vlatan/video-store/internal/types"
 )
 
 const (
@@ -26,6 +28,12 @@ type Service struct {
 	rdb     *rdb.Service
 	tmpl    *tmpl.Service
 	sqlArgs []any
+}
+
+type sitemapData struct {
+	XMLDeclarations []template.HTML
+	SitemapItems    []*types.SitemapItem
+	tmpl.Base
 }
 
 func New(

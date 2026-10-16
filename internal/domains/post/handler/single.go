@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/vlatan/video-store/internal/ctxd"
 	"github.com/vlatan/video-store/internal/types"
 	"golang.org/x/sync/errgroup"
 )
@@ -17,13 +18,10 @@ func (s *Service) Single(w http.ResponseWriter, r *http.Request) {
 	// Get video id from URL path
 	videoID := r.PathValue("video")
 
-	// Get template data
-	data := s.tmpl.Data(w, r)
-
 	// Validate the YT ID
 	if validVideoID.FindStringSubmatch(videoID) == nil {
 		slog.WarnContext(r.Context(), "invalid video id")
-		s.tmpl.HTMLError(w, r, data, http.StatusNotFound)
+		s.tmpl.HTMLError(w, r, http.StatusNotFound)
 		return
 	}
 
@@ -32,6 +30,7 @@ func (s *Service) Single(w http.ResponseWriter, r *http.Request) {
 		postReviews  types.Reviews
 		userActions  types.Actions
 		relatedPosts []types.Post
+		currentUser  = ctxd.GetUser(r.Context())
 	)
 
 	g := new(errgroup.Group)
@@ -41,7 +40,7 @@ func (s *Service) Single(w http.ResponseWriter, r *http.Request) {
 
 		// Don't cache single post for logged in users
 		var taskErr error
-		if data.CurrentUser.IsAuthenticated() {
+		if currentUser.IsAuthenticated() {
 			post, taskErr = s.post.Single(r.Context(), videoID)
 		} else {
 			post, taskErr = s.rdb.Get(
@@ -62,7 +61,7 @@ func (s *Service) Single(w http.ResponseWriter, r *http.Request) {
 
 		// Get post reviews, don't cache the reviews for logged in users
 		var taskErr error
-		if data.CurrentUser.IsAuthenticated() {
+		if currentUser.IsAuthenticated() {
 			postReviews, taskErr = s.post.Reviews(r.Context(), videoID, "")
 		} else {
 			postReviews, taskErr = s.rdb.Get(
@@ -90,7 +89,7 @@ func (s *Service) Single(w http.ResponseWriter, r *http.Request) {
 
 		// Check if the current user owns a review
 		for i, review := range postReviews.Items {
-			if data.CurrentUser.IsAuthenticated() && data.CurrentUser.ID == review.User.ID {
+			if currentUser.IsAuthenticated() && currentUser.ID == review.User.ID {
 				postReviews.Items[i].IsCurrentUser = true
 			}
 		}
@@ -106,7 +105,7 @@ func (s *Service) Single(w http.ResponseWriter, r *http.Request) {
 				r.Context(), "no such post in DB",
 				"error", err,
 			)
-			s.tmpl.HTMLError(w, r, data, http.StatusNotFound)
+			s.tmpl.HTMLError(w, r, http.StatusNotFound)
 			return
 		}
 
@@ -115,7 +114,7 @@ func (s *Service) Single(w http.ResponseWriter, r *http.Request) {
 			"error", err,
 		)
 
-		s.tmpl.HTMLError(w, r, data, http.StatusInternalServerError)
+		s.tmpl.HTMLError(w, r, http.StatusInternalServerError)
 		return
 	}
 
@@ -123,12 +122,12 @@ func (s *Service) Single(w http.ResponseWriter, r *http.Request) {
 	g.Go(func() error {
 
 		// Check whether the current user liked, faved, rated and/or reviewed the post
-		if data.CurrentUser.IsAuthenticated() {
+		if currentUser.IsAuthenticated() {
 
 			var taskErr error
 			userActions, taskErr = s.post.Actions(
 				r.Context(),
-				data.CurrentUser.ID,
+				currentUser.ID,
 				post.ID,
 			)
 
@@ -153,7 +152,7 @@ func (s *Service) Single(w http.ResponseWriter, r *http.Request) {
 		)
 
 		// Don't cache the related posts only for the admin.
-		if data.CurrentUser.IsAdmin(s.cfg) {
+		if currentUser.IsAdmin(s.cfg) {
 			posts, taskErr = s.post.Related(r.Context(), post.GetTitle())
 		} else {
 			posts, taskErr = s.rdb.Get(
@@ -186,7 +185,7 @@ func (s *Service) Single(w http.ResponseWriter, r *http.Request) {
 			"error", err,
 		)
 
-		s.tmpl.HTMLError(w, r, data, http.StatusInternalServerError)
+		s.tmpl.HTMLError(w, r, http.StatusInternalServerError)
 		return
 	}
 
@@ -195,7 +194,11 @@ func (s *Service) Single(w http.ResponseWriter, r *http.Request) {
 	post.UserActions = userActions
 	post.RelatedPosts = relatedPosts
 
-	// Assign the post to data
-	data.CurrentPost = &post
+	// Get template data
+	data := postData{
+		Base:        s.tmpl.Base(w, r),
+		CurrentPost: &post,
+	}
+
 	s.tmpl.RenderHTML(w, r, "post.html", data)
 }

@@ -27,17 +27,13 @@ func (s *Service) CategoryPosts(w http.ResponseWriter, r *http.Request) {
 		redisKey += fmt.Sprintf(":%s", types.RatingCount)
 	}
 
-	// Get template data
-	data := s.tmpl.Data(w, r)
-	data.CurrentCategory = &types.Category{Slug: slug}
-
 	var (
 		err   error
 		posts types.Posts
 	)
 
 	// Don't cache the category posts only for the admin
-	if data.CurrentUser.IsAdmin(s.cfg) {
+	if ctxd.GetUser(r.Context()).IsAdmin(s.cfg) {
 		posts, err = s.repo.CategoryPosts(
 			r.Context(), slug, "", orderBy,
 		)
@@ -59,18 +55,24 @@ func (s *Service) CategoryPosts(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "failed to get posts from DB",
 			"error", err,
 		)
-		s.tmpl.HTMLError(w, r, data, http.StatusInternalServerError)
+		s.tmpl.HTMLError(w, r, http.StatusInternalServerError)
 		return
 	}
 
 	if len(posts.Items) == 0 {
 		slog.WarnContext(r.Context(), "no posts found in DB")
-		s.tmpl.HTMLError(w, r, data, http.StatusNotFound)
+		s.tmpl.HTMLError(w, r, http.StatusNotFound)
 		return
 	}
 
-	data.Posts = &posts
-	data.Title = data.Posts.Title
+	// Get template data
+	data := taxonomyData{
+		Title:           posts.Title,
+		Posts:           posts,
+		CurrentCategory: &types.Category{Slug: slug},
+		Base:            s.tmpl.Base(w, r),
+	}
+
 	s.tmpl.RenderHTML(w, r, "taxonomy.html", data)
 }
 

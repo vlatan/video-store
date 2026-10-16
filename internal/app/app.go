@@ -41,6 +41,7 @@ type App struct {
 	text     *text.Service
 	health   *health.Service
 	static   *static.Service
+	tmpl     *tmpl.Service
 	mw       *middlewares.Service
 	domain   string
 	cleanup  func() error
@@ -142,6 +143,7 @@ func New() (*App, error) {
 		text:     text.New(cfg, tmpl),
 		health:   health.New(db, rdb, tmpl),
 		static:   static,
+		tmpl:     tmpl,
 		mw:       middlewares.New(cfg, tmpl),
 
 		// The domain we're serving this app on

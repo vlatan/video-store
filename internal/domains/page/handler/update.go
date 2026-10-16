@@ -18,7 +18,7 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 	slug := r.PathValue("slug")
 
 	// Get template data
-	data := s.tmpl.Data(w, r)
+	data := pageData{Base: s.tmpl.Base(w, r)}
 
 	// Get the page data straight from DB
 	page, err := s.repo.Get(r.Context(), slug)
@@ -27,7 +27,7 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "failed to get the page from DB",
 			"error", err,
 		)
-		s.tmpl.HTMLError(w, r, data, http.StatusNotFound)
+		s.tmpl.HTMLError(w, r, http.StatusNotFound)
 		return
 	}
 
@@ -36,7 +36,7 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "failed to get the page from DB",
 			"error", err,
 		)
-		s.tmpl.HTMLError(w, r, data, http.StatusInternalServerError)
+		s.tmpl.HTMLError(w, r, http.StatusInternalServerError)
 		return
 	}
 
@@ -44,7 +44,7 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 	data.CurrentPage = &page
 
 	// Populate needed data for the page form
-	data.Form = &types.Form{
+	data.Form = types.Form{
 		Legend: "Edit Page",
 		Title: &types.FormGroup{
 			Label:       "Title",
@@ -122,6 +122,6 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 		redirect.Safe(w, r, redirectTo, http.StatusFound)
 
 	default:
-		s.tmpl.HTMLError(w, r, data, http.StatusMethodNotAllowed)
+		s.tmpl.HTMLError(w, r, http.StatusMethodNotAllowed)
 	}
 }

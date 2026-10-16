@@ -15,15 +15,12 @@ import (
 // Handle all sources page
 func (s *Service) Sources(w http.ResponseWriter, r *http.Request) {
 
-	// Get template data
-	data := s.tmpl.Data(w, r)
-
 	var (
 		err     error
 		sources types.Sources
 	)
 
-	if data.CurrentUser.IsAdmin(s.cfg) {
+	if ctxd.GetUser(r.Context()).IsAdmin(s.cfg) {
 		sources, err = s.repo.Sources(r.Context())
 	} else {
 		sources, err = s.rdb.Get(
@@ -41,18 +38,23 @@ func (s *Service) Sources(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "failed to get sources from DB",
 			"error", err,
 		)
-		s.tmpl.HTMLError(w, r, data, http.StatusInternalServerError)
+		s.tmpl.HTMLError(w, r, http.StatusInternalServerError)
 		return
 	}
 
 	if len(sources) == 0 {
 		slog.WarnContext(r.Context(), "no sources found in DB")
-		s.tmpl.HTMLError(w, r, data, http.StatusNotFound)
+		s.tmpl.HTMLError(w, r, http.StatusNotFound)
 		return
 	}
 
-	data.Sources = sources
-	data.Title = "Sources"
+	// Get template data
+	data := taxonomyData{
+		Title:   "Sources",
+		Sources: sources,
+		Base:    s.tmpl.Base(w, r),
+	}
+
 	s.tmpl.RenderHTML(w, r, "sources.html", data)
 
 }
@@ -61,17 +63,15 @@ func (s *Service) Sources(w http.ResponseWriter, r *http.Request) {
 func (s *Service) NewSource(w http.ResponseWriter, r *http.Request) {
 
 	// Get template data
-	data := s.tmpl.Data(w, r)
-
-	// Populate needed data for an empty form
-	data.Form = &types.Form{
+	data := taxonomyData{
+		Title:  "Add New Source",
 		Legend: "New Playlist",
 		Content: &types.FormGroup{
 			Label:       "Post YouTube Playlist URL",
 			Placeholder: "Playlist URL here...",
 		},
+		Base: s.tmpl.Base(w, r),
 	}
-	data.Title = "Add New Source"
 
 	switch r.Method {
 	case "GET":
@@ -185,7 +185,7 @@ func (s *Service) NewSource(w http.ResponseWriter, r *http.Request) {
 		redirect.Safe(w, r, redirectTo, http.StatusFound)
 
 	default:
-		s.tmpl.HTMLError(w, r, data, http.StatusMethodNotAllowed)
+		s.tmpl.HTMLError(w, r, http.StatusMethodNotAllowed)
 	}
 }
 
@@ -207,16 +207,12 @@ func (s *Service) SourcePosts(w http.ResponseWriter, r *http.Request) {
 		redisKey += fmt.Sprintf(":%s", types.RatingCount)
 	}
 
-	// Get template data
-	data := s.tmpl.Data(w, r)
-	data.CurrentSource = &types.Source{PlaylistID: sourceID}
-
 	var (
 		err   error
 		posts types.Posts
 	)
 
-	if data.CurrentUser.IsAdmin(s.cfg) {
+	if ctxd.GetUser(r.Context()).IsAdmin(s.cfg) {
 		posts, err = s.repo.SourcePosts(
 			r.Context(), sourceID, "", orderBy,
 		)
@@ -238,21 +234,28 @@ func (s *Service) SourcePosts(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "failed to get source posts from DB",
 			"error", err,
 		)
-		s.tmpl.HTMLError(w, r, data, http.StatusInternalServerError)
+		s.tmpl.HTMLError(w, r, http.StatusInternalServerError)
 		return
 	}
 
 	if len(posts.Items) == 0 {
 		slog.WarnContext(r.Context(), "no source posts fetched from DB")
-		s.tmpl.HTMLError(w, r, data, http.StatusNotFound)
+		s.tmpl.HTMLError(w, r, http.StatusNotFound)
 		return
 	}
 
-	data.Posts = &posts
 	if sourceID == "other" {
-		data.Posts.Title = "Other Uploads"
+		posts.Title = "Other Uploads"
 	}
-	data.Title = data.Posts.Title
+
+	// Get template data
+	data := taxonomyData{
+		Title:         posts.Title,
+		Posts:         posts,
+		CurrentSource: &types.Source{PlaylistID: sourceID},
+		Base:          s.tmpl.Base(w, r),
+	}
+
 	s.tmpl.RenderHTML(w, r, "taxonomy.html", data)
 }
 
@@ -268,15 +271,13 @@ func (s *Service) DeleteSource(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "failed to delete the source",
 			"error", err,
 		)
-		data := s.tmpl.Data(w, r)
-		s.tmpl.HTMLError(w, r, data, http.StatusInternalServerError)
+		s.tmpl.HTMLError(w, r, http.StatusInternalServerError)
 		return
 	}
 
 	if rowsAffected == 0 {
 		slog.WarnContext(r.Context(), "no such source to delete")
-		data := s.tmpl.Data(w, r)
-		s.tmpl.HTMLError(w, r, data, http.StatusNotFound)
+		s.tmpl.HTMLError(w, r, http.StatusNotFound)
 		return
 	}
 

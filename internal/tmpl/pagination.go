@@ -7,7 +7,7 @@ import (
 )
 
 // Create new pagination struct that contains all the info about the pagination element
-func (s *Service) NewPagination(currentPage, totalRecords, pageSize int) *types.PaginationInfo {
+func (s *Service) NewPagination(currentPage, totalRecords, pageSize int) types.PaginationInfo {
 
 	// Total pages are the celing division between total records and the records on one page
 	totalPages := int(math.Ceil(float64(totalRecords) / float64(pageSize)))
@@ -19,7 +19,7 @@ func (s *Service) NewPagination(currentPage, totalRecords, pageSize int) *types.
 	// Current page can't be greater than total pages
 	currentPage = min(currentPage, totalPages)
 
-	return &types.PaginationInfo{
+	return types.PaginationInfo{
 		CurrentPage:  currentPage,
 		TotalPages:   totalPages,
 		TotalRecords: totalRecords,

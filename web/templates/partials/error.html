@@ -9,14 +9,14 @@
 {{ end }}
 
 {{ define "title_tag" }}
-{{ .HTMLErrorData.Title }} - {{ .Config.AppName }}
+{{ .Title }} - {{ .Config.AppName }}
 {{ end }}
 
 {{ define "content" }}
 <div class="error-wrap">
     <div class="error-content">
-        <h1>{{ .HTMLErrorData.Heading }}</h1>
-        <p>{{ .HTMLErrorData.Text }}</p>
+        <h1>{{ .Heading }}</h1>
+        <p>{{ .Text }}</p>
     </div>
 </div>
 {{ end }}

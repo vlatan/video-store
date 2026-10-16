@@ -7,8 +7,6 @@ import (
 	"log/slog"
 	"net/http"
 	"path/filepath"
-
-	"github.com/vlatan/video-store/internal/types"
 )
 
 // WriteJSON converts the data into JSON-formatted string
@@ -43,7 +41,7 @@ func (s *Service) RenderHTML(
 	w http.ResponseWriter,
 	r *http.Request,
 	tmplName string,
-	data *types.TemplateData) {
+	data any) {
 
 	tmpl, exists := s.templates[tmplName]
 	if !exists {
@@ -51,7 +49,7 @@ func (s *Service) RenderHTML(
 			r.Context(),
 			fmt.Sprintf("invalid template %s", tmplName),
 		)
-		s.HTMLError(w, r, data, http.StatusInternalServerError)
+		s.HTMLError(w, r, http.StatusInternalServerError)
 		return
 	}
 
@@ -62,7 +60,6 @@ func (s *Service) RenderHTML(
 	case ".xsl":
 		contentType = "text/xsl"
 	default:
-		data.FlashMessages = s.session.Flashes(w, r)
 		contentType = "text/html"
 	}
 	// Execute template to buffer to catch any errors before serving to client
@@ -73,7 +70,7 @@ func (s *Service) RenderHTML(
 			fmt.Sprintf("failed to execute template %s", tmplName),
 			"error", err,
 		)
-		s.HTMLError(w, r, data, http.StatusInternalServerError)
+		s.HTMLError(w, r, http.StatusInternalServerError)
 		return
 	}
 

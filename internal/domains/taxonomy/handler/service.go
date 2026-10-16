@@ -7,6 +7,7 @@ import (
 	"github.com/vlatan/video-store/internal/drivers/store"
 	"github.com/vlatan/video-store/internal/integrations/yt"
 	"github.com/vlatan/video-store/internal/tmpl"
+	"github.com/vlatan/video-store/internal/types"
 )
 
 type Service struct {
@@ -16,6 +17,17 @@ type Service struct {
 	session *store.Service
 	tmpl    *tmpl.Service
 	yt      *yt.Service
+}
+
+type taxonomyData struct {
+	Title           string
+	CurrentYear     int16
+	CurrentCategory *types.Category
+	CurrentSource   *types.Source
+	Sources         []types.Source
+	types.Form
+	types.Posts
+	tmpl.Base
 }
 
 func New(
