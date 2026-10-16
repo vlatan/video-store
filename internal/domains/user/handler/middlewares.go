@@ -85,7 +85,7 @@ func (s *Service) Load(next http.Handler) http.Handler {
 				goCtx, cancel := context.WithTimeout(detachedCtx, 5*time.Second)
 				defer cancel()
 
-				if _, err := s.repo.UpdateLastSeen(goCtx, user.ID); err != nil {
+				if _, err := s.user.UpdateLastSeen(goCtx, user.ID); err != nil {
 					slog.WarnContext(
 						r.Context(),
 						"failed to update user last seen in DB",

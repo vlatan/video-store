@@ -1,18 +1,17 @@
-package repo
+package user
 
 import (
 	"context"
 	"database/sql"
 
-	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/sqlnull"
 	"github.com/vlatan/video-store/internal/utils/stringx"
 )
 
 // GetSingleUser gets single user based on ID
-func (r *Repository) Get(ctx context.Context, userID int) (types.User, error) {
+func (r *Repository) Get(ctx context.Context, userID int) (User, error) {
 
-	var zero, user types.User
+	var zero, user User
 	query, err := stringx.GetQuery(r.tmpl, "single_user.sql", nil)
 	if err != nil {
 		return zero, err
@@ -45,7 +44,7 @@ func (r *Repository) Get(ctx context.Context, userID int) (types.User, error) {
 }
 
 // Add or update a user
-func (r *Repository) Upsert(ctx context.Context, u *types.User) (int, error) {
+func (r *Repository) Upsert(ctx context.Context, u *User) (int, error) {
 
 	query, err := stringx.GetQuery(r.tmpl, "upsert_user.sql", nil)
 	if err != nil {

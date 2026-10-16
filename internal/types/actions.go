@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"html/template"
 	"time"
+
+	"github.com/vlatan/video-store/internal/domains/user"
 )
 
 type Actions struct {
@@ -49,7 +51,7 @@ type Review struct {
 	Rating        uint8         `json:"rating,omitempty"`
 	UpdatedAt     time.Time     `json:"updated_at,omitzero"`
 	CreatedAt     time.Time     `json:"created_at,omitzero"`
-	User          User          `json:"user,omitzero"`
+	User          user.User     `json:"user,omitzero"`
 	IsCurrentUser bool          `json:"is_current_user"`
 }
 

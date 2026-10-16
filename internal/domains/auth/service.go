@@ -5,13 +5,13 @@ import (
 
 	"github.com/vlatan/video-store/internal/avatar"
 	"github.com/vlatan/video-store/internal/config"
+	"github.com/vlatan/video-store/internal/domains/user"
 	"github.com/vlatan/video-store/internal/drivers/store"
 	"github.com/vlatan/video-store/internal/tmpl"
-	"github.com/vlatan/video-store/internal/types"
 )
 
 type userRepo interface {
-	Upsert(context.Context, *types.User) (int, error)
+	Upsert(context.Context, *user.User) (int, error)
 	Delete(context.Context, int) (int64, error)
 }
 

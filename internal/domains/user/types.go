@@ -1,9 +1,6 @@
-package types
+package user
 
 import (
-
-	// #nosec G501
-
 	"crypto/sha256"
 	"encoding/json"
 	"errors"
@@ -12,8 +9,6 @@ import (
 
 	"github.com/vlatan/video-store/internal/config"
 )
-
-// ============================================================================= //
 
 // User struct to store the user data
 type User struct {

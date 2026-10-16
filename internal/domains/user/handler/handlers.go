@@ -11,7 +11,7 @@ import (
 func (s *Service) Favorites(w http.ResponseWriter, r *http.Request) {
 
 	currentUser := ctxd.GetUser(r.Context())
-	posts, err := s.repo.Favorites(r.Context(), currentUser.ID, "")
+	posts, err := s.post.Favorites(r.Context(), currentUser.ID, "")
 
 	if err != nil {
 		slog.ErrorContext(
@@ -37,7 +37,7 @@ func (s *Service) All(w http.ResponseWriter, r *http.Request) {
 	// Get the page number from the request query param
 	page := getPageNum(r)
 
-	users, err := s.repo.All(r.Context(), page)
+	users, err := s.user.All(r.Context(), page)
 	if err != nil {
 		slog.ErrorContext(
 			r.Context(), "failed to get users from DB",

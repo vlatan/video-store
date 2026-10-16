@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/vlatan/video-store/internal/ctxd"
-	"github.com/vlatan/video-store/internal/types"
+	"github.com/vlatan/video-store/internal/domains/user"
 	"github.com/vlatan/video-store/internal/utils/redirect"
 	"golang.org/x/oauth2"
 )
@@ -105,7 +105,7 @@ func (s *Service) Callback(w http.ResponseWriter, r *http.Request) {
 }
 
 // Store user info in our own session
-func (s *Service) login(w http.ResponseWriter, r *http.Request, user *types.User) error {
+func (s *Service) login(w http.ResponseWriter, r *http.Request, user *user.User) error {
 
 	// Make user public ID
 	var err error

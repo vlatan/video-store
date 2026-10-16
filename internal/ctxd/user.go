@@ -3,16 +3,16 @@ package ctxd
 import (
 	"context"
 
-	"github.com/vlatan/video-store/internal/types"
+	"github.com/vlatan/video-store/internal/domains/user"
 	"github.com/vlatan/video-store/internal/utils/ctxv"
 )
 
 // WithUser adds user to context and returns the new context
-func WithUser(ctx context.Context, user *types.User) context.Context {
+func WithUser(ctx context.Context, user *user.User) context.Context {
 	return ctxv.WithValue(ctx, user)
 }
 
 // GetUser gets user from context
-func GetUser(ctx context.Context) *types.User {
-	return ctxv.Get[*types.User](ctx)
+func GetUser(ctx context.Context) *user.User {
+	return ctxv.Get[*user.User](ctx)
 }

@@ -6,6 +6,7 @@ import (
 
 	"github.com/gorilla/sessions"
 	"github.com/vlatan/video-store/internal/config"
+	"github.com/vlatan/video-store/internal/domains/user"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/types"
 )
@@ -19,7 +20,7 @@ type Service struct {
 // Exactly the same as the User but without the marshal and unmarshal binary methods,
 // so JSON marshaler is not used in Redis Scan method
 // so all the fields are encoded in Redis store by the gorillas's securecookie codec.
-type sessionUser types.User
+type sessionUser user.User
 
 func New(
 	config *config.Config,

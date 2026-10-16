@@ -4,14 +4,14 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/vlatan/video-store/internal/types"
+	"github.com/vlatan/video-store/internal/domains/user"
 )
 
 // User key to use in session values
 const userKey = "user"
 
 // AddUser adds user to session
-func (s *Service) AddUser(w http.ResponseWriter, r *http.Request, user *types.User) error {
+func (s *Service) AddUser(w http.ResponseWriter, r *http.Request, user *user.User) error {
 	session, _ := s.Get(r, s.config.UserSessionName)
 	session.Values[userKey] = new(sessionUser(*user))
 	return session.Save(r, w)
@@ -24,7 +24,7 @@ func (s *Service) DeleteUser(w http.ResponseWriter, r *http.Request) error {
 }
 
 // User gets the user from session
-func (s *Service) User(w http.ResponseWriter, r *http.Request) *types.User {
+func (s *Service) User(w http.ResponseWriter, r *http.Request) *user.User {
 
 	// Get session from store
 	session, _ := s.Get(r, s.config.UserSessionName)
@@ -42,5 +42,5 @@ func (s *Service) User(w http.ResponseWriter, r *http.Request) *types.User {
 		return nil
 	}
 
-	return new(types.User(*sessUser))
+	return new(user.User(*sessUser))
 }

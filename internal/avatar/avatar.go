@@ -10,9 +10,9 @@ import (
 
 	"github.com/redis/go-redis/v9"
 	"github.com/vlatan/video-store/internal/config"
+	"github.com/vlatan/video-store/internal/domains/user"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/integrations/r2"
-	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/ctxv"
 )
 
@@ -28,7 +28,7 @@ type Service struct {
 
 type job struct {
 	ctx  context.Context
-	user *types.User
+	user *user.User
 }
 
 func New(
@@ -62,7 +62,7 @@ func New(
 // The function will return only breaking errors,
 // in this case only if the context expired.
 // Every other error will be logged.
-func (s *Service) Get(ctx context.Context, user *types.User) (string, error) {
+func (s *Service) Get(ctx context.Context, user *user.User) (string, error) {
 
 	// Get avatar URL from Redis
 	avatarKey := avatarCachePrefix + user.PublicID
@@ -115,7 +115,7 @@ func (s *Service) Get(ctx context.Context, user *types.User) (string, error) {
 
 // Save ensures the avatar is cached, downloading it synchronously if missing.
 // Will return an error only if context ended.
-func (s *Service) Save(ctx context.Context, user *types.User) error {
+func (s *Service) Save(ctx context.Context, user *user.User) error {
 
 	avatarKey := avatarCachePrefix + user.PublicID
 	ttlKey := avatarCacheTTL + user.PublicID
@@ -194,7 +194,7 @@ func (s *Service) Save(ctx context.Context, user *types.User) error {
 }
 
 // Delete removes user avatar from object storages - R2 and Redis
-func (s *Service) Delete(ctx context.Context, user *types.User) error {
+func (s *Service) Delete(ctx context.Context, user *user.User) error {
 
 	errs := make([]error, 0, 3)
 

@@ -8,12 +8,12 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/vlatan/video-store/internal/types"
+	"github.com/vlatan/video-store/internal/domains/user"
 	"golang.org/x/oauth2"
 )
 
 // revokeLogin sends a revoke request to the provider API to self-deauthorize
-func (s *Service) revoke(ctx context.Context, user *types.User) error {
+func (s *Service) revoke(ctx context.Context, user *user.User) error {
 
 	// Get the provider config
 	provider, exists := s.providers[user.Provider]
@@ -90,7 +90,7 @@ func (s *Service) revoke(ctx context.Context, user *types.User) error {
 // googleRevokeRequest deletes Google OAuth app authorization
 func (s *Service) googleRevokeRequest(
 	ctx context.Context,
-	user *types.User) (*http.Request, error) {
+	user *user.User) (*http.Request, error) {
 
 	// Google revoke endpoint
 	url := "https://oauth2.googleapis.com/revoke"
@@ -110,7 +110,7 @@ func (s *Service) googleRevokeRequest(
 // githubRevokeRequest deletes GitHub OAuth app authorization
 func (s *Service) githubRevokeRequest(
 	ctx context.Context,
-	user *types.User) (*http.Request, error) {
+	user *user.User) (*http.Request, error) {
 
 	// GitHub revoke endpoint
 	url := fmt.Sprintf(

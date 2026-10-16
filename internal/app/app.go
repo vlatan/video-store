@@ -19,8 +19,8 @@ import (
 	taxonomy "github.com/vlatan/video-store/internal/domains/taxonomy/handler"
 	taxonomyRepo "github.com/vlatan/video-store/internal/domains/taxonomy/repo"
 	text "github.com/vlatan/video-store/internal/domains/text"
+	userRepo "github.com/vlatan/video-store/internal/domains/user"
 	user "github.com/vlatan/video-store/internal/domains/user/handler"
-	userRepo "github.com/vlatan/video-store/internal/domains/user/repo"
 	"github.com/vlatan/video-store/internal/drivers/database"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/drivers/store"
@@ -135,7 +135,7 @@ func New() (*App, error) {
 
 		// Handlers services
 		auth:     auth.New(cfg, userRepo, av, store, tmpl),
-		user:     user.New(cfg, userRepo, av, store, tmpl),
+		user:     user.New(cfg, userRepo, postRepo, av, store, tmpl),
 		post:     post.New(cfg, postRepo, rdb, store, av, tmpl, yt, gemini),
 		page:     page.New(cfg, db, rdb, store, tmpl),
 		taxonomy: taxonomy.New(cfg, taxRepo, rdb, store, tmpl, yt),

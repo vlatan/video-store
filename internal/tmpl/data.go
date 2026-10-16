@@ -6,6 +6,7 @@ import (
 
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/ctxd"
+	"github.com/vlatan/video-store/internal/domains/user"
 	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/pathx"
 )
@@ -17,7 +18,7 @@ type Base struct {
 	CurrentURI       string
 	BaseCanonicalURL string
 	FlashMessages    []*types.FlashMessage
-	CurrentUser      *types.User
+	CurrentUser      *user.User
 }
 
 // newBase creates new base data struct:

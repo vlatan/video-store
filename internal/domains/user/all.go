@@ -1,21 +1,20 @@
-package repo
+package user
 
 import (
 	"context"
 	"database/sql"
 
-	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/stringx"
 )
 
 // Get users with limit and offset
-func (r *Repository) All(ctx context.Context, page int) (types.Users, error) {
+func (r *Repository) All(ctx context.Context, page int) (Users, error) {
 
 	// Calculate the limit and offset
 	limit := r.cfg.PostsPerPage
 	offset := (page - 1) * limit
 
-	var zero, users types.Users
+	var zero, users Users
 
 	query, err := stringx.GetQuery(r.tmpl, "offset_users.sql", nil)
 	if err != nil {
@@ -35,7 +34,7 @@ func (r *Repository) All(ctx context.Context, page int) (types.Users, error) {
 	for rows.Next() {
 
 		var totalNum int
-		var user types.User
+		var user User
 		var name, email, avatarURL, publicID sql.NullString
 
 		// Get user row data to destination

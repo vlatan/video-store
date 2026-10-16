@@ -14,14 +14,14 @@ import (
 	_ "image/gif" // Register GIF decoder
 	_ "image/png" // Register PNG decoder
 
-	"github.com/vlatan/video-store/internal/types"
+	"github.com/vlatan/video-store/internal/domains/user"
 	_ "golang.org/x/image/webp" // Register WebP decoder
 )
 
 const sourceHashKey = "source-hash"
 
 // refreshAvatar reuploads the user avatar at R2 if changed
-func (s *Service) refresh(ctx context.Context, user *types.User) (string, error) {
+func (s *Service) refresh(ctx context.Context, user *user.User) (string, error) {
 
 	// Download the avatar from remote location
 	data, err := s.download(ctx, user)
@@ -99,7 +99,7 @@ func (s *Service) refresh(ctx context.Context, user *types.User) (string, error)
 }
 
 // downloadAvatar downloads avatar from a remote source
-func (s *Service) download(ctx context.Context, user *types.User) ([]byte, error) {
+func (s *Service) download(ctx context.Context, user *user.User) ([]byte, error) {
 
 	// Create a request with context
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, user.AvatarURL, nil)
