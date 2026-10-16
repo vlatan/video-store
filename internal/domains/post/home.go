@@ -1,4 +1,4 @@
-package repo
+package post
 
 import (
 	"context"
@@ -12,37 +12,30 @@ import (
 	"github.com/vlatan/video-store/internal/utils/stringx"
 )
 
-// Query the DB for posts based on variadic arguments
-func (r *Repository) queryTaxonomyPosts(
-	ctx context.Context,
-	sqlFilename,
-	taxonomyID,
-	cursor,
-	orderBy string,
-) (types.Posts, error) {
+// Get a limited number of posts with cursor
+func (r *Repository) Home(ctx context.Context, cursor, orderBy string) (types.Posts, error) {
 
-	// The taxonomy ID and the limit are the first two arguments ($1 and $2)
+	// The first argument is the limit ($1).
 	// Peek for one post beoynd the limit to see if there's next page,
 	// meaning whether to construct and send the next cursor at all.
-	args := []any{taxonomyID, r.cfg.PostsPerPage + 1}
+	args := []any{r.cfg.PostsPerPage + 1}
 
 	// The default template variables - SQL parts
 	var where string
-	total := "COUNT(*) OVER()"
 	order := "upload_date DESC, id DESC"
 
 	orderingOptions := map[string]struct{ order, where string }{
 		types.Likes: {
 			fmt.Sprintf("%s DESC, %s", types.Likes, order),
-			fmt.Sprintf("WHERE (%s, upload_date, id) < ($3, $4, $5)", types.Likes),
+			fmt.Sprintf("WHERE (%s, upload_date, id) < ($2, $3, $4)", types.Likes),
 		},
 		types.AvgRating: {
 			fmt.Sprintf("%s DESC NULLS LAST, %s", types.AvgRating, order),
-			fmt.Sprintf("WHERE (%s, upload_date, id) < ($3, $4, $5)", types.AvgRating),
+			fmt.Sprintf("WHERE (%s, upload_date, id) < ($2, $3, $4)", types.AvgRating),
 		},
 		types.RatingCount: {
 			fmt.Sprintf("%s DESC, %s", types.RatingCount, order),
-			fmt.Sprintf("WHERE (%s, upload_date, id) < ($3, $4, $5)", types.RatingCount),
+			fmt.Sprintf("WHERE (%s, upload_date, id) < ($2, $3, $4)", types.RatingCount),
 		},
 	}
 
@@ -55,7 +48,6 @@ func (r *Repository) queryTaxonomyPosts(
 	var zero, posts types.Posts
 	if cursor != "" {
 
-		total = "0"
 		cursorParts, err := stringx.DecodeCursor(cursor)
 		if err != nil {
 			return zero, err
@@ -72,16 +64,18 @@ func (r *Repository) queryTaxonomyPosts(
 				return zero, fmt.Errorf("invalid cursor components")
 			}
 			args = append(args, cursorParts[0], cursorParts[1])
-			where = "WHERE (upload_date, id) < ($3, $4)"
+			where = "WHERE (upload_date, id) < ($2, $3)"
 		}
 	}
 
-	sqlParts := struct{ TotalCount, WhereCondition, OrderByWhat string }{total, where, order}
-	query, err := stringx.GetQuery(r.tmpl, sqlFilename, sqlParts)
+	sqlParts := struct{ WhereCondition, OrderByWhat string }{where, order}
+	query, err := stringx.GetQuery(r.tmpl, "home_posts.sql", sqlParts)
+
 	if err != nil {
 		return zero, err
 	}
 
+	// Get rows from DB
 	rows, err := r.db.Pool.Query(ctx, query, args...)
 	if err != nil {
 		return zero, err
@@ -92,17 +86,15 @@ func (r *Repository) queryTaxonomyPosts(
 
 	// Iterate over the rows
 	for rows.Next() {
+
 		var (
-			post                         types.Post
-			originalTitle, taxonomyTitle sql.NullString
-			totalNum                     int
-			avgRating                    sql.NullFloat64
-			ratingCount                  sql.NullInt64
+			post          types.Post
+			originalTitle sql.NullString
+			avgRating     sql.NullFloat64
+			ratingCount   sql.NullInt64
 		)
 
-		// Paste post from row to struct, thumbnails in a separate var
-		if err = rows.Scan(
-			&taxonomyTitle,
+		err = rows.Scan(
 			&post.ID,
 			&post.VideoID,
 			&post.Title,
@@ -111,14 +103,15 @@ func (r *Repository) queryTaxonomyPosts(
 			&post.Likes,
 			&avgRating,
 			&ratingCount,
-			&totalNum,
 			&post.UploadDate,
-		); err != nil {
+		)
+
+		if err != nil {
 			return zero, err
 		}
 
+		// Attach the title
 		post.OriginalTitle = originalTitle.String
-		posts.Title = taxonomyTitle.String
 
 		// Attach ratings if any
 		if avgRating.Valid && ratingCount.Valid {
@@ -128,11 +121,7 @@ func (r *Repository) queryTaxonomyPosts(
 			}
 		}
 
-		// Include the post in the result
 		posts.Items = append(posts.Items, post)
-
-		// Assign the total num of posts
-		posts.TotalNum = max(posts.TotalNum, totalNum)
 	}
 
 	// If error during iteration

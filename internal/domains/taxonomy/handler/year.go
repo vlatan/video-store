@@ -43,7 +43,7 @@ func (s *Service) YearPosts(w http.ResponseWriter, r *http.Request) {
 	// We can pass the release year as string here no problem.
 	var posts types.Posts
 	if ctxd.GetUser(r.Context()).IsAdmin(s.cfg) {
-		posts, err = s.repo.YearPosts(
+		posts, err = s.post.Year(
 			r.Context(), year, "", orderBy,
 		)
 	} else {
@@ -52,7 +52,7 @@ func (s *Service) YearPosts(w http.ResponseWriter, r *http.Request) {
 			redisKey,
 			s.cfg.CacheTimeout,
 			func() (types.Posts, error) {
-				return s.repo.YearPosts(
+				return s.post.Year(
 					r.Context(), year, "", orderBy,
 				)
 			},
@@ -130,7 +130,7 @@ func (s *Service) YearPostsAPI(w http.ResponseWriter, r *http.Request) {
 	// Don't cache the category posts only for the admin
 	var posts types.Posts
 	if currentUser.IsAdmin(s.cfg) {
-		posts, err = s.repo.YearPosts(
+		posts, err = s.post.Year(
 			r.Context(), year, cursor, orderBy,
 		)
 	} else {
@@ -139,7 +139,7 @@ func (s *Service) YearPostsAPI(w http.ResponseWriter, r *http.Request) {
 			redisKey,
 			s.cfg.CacheTimeout,
 			func() (types.Posts, error) {
-				return s.repo.YearPosts(
+				return s.post.Year(
 					r.Context(), year, cursor, orderBy,
 				)
 			},

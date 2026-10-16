@@ -21,14 +21,14 @@ func (s *Service) Sources(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if ctxd.GetUser(r.Context()).IsAdmin(s.cfg) {
-		sources, err = s.repo.Sources(r.Context())
+		sources, err = s.taxonomy.Sources(r.Context())
 	} else {
 		sources, err = s.rdb.Get(
 			r.Context(),
 			"sources",
 			s.cfg.CacheTimeout,
 			func() (types.Sources, error) {
-				return s.repo.Sources(r.Context())
+				return s.taxonomy.Sources(r.Context())
 			},
 		)
 	}
@@ -112,7 +112,7 @@ func (s *Service) NewSource(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Check if the playlist is already posted
-		if s.repo.SourceExists(r.Context(), playlistID) {
+		if s.taxonomy.SourceExists(r.Context(), playlistID) {
 			slog.WarnContext(r.Context(), "playlist already posted")
 			formError.Message = "Playlist already posted"
 			data.Form.Error = &formError
@@ -168,7 +168,7 @@ func (s *Service) NewSource(w http.ResponseWriter, r *http.Request) {
 		source.UserID = data.CurrentUser.ID
 
 		// Insert the source in DB
-		rowsAffected, err := s.repo.InsertSource(r.Context(), source)
+		rowsAffected, err := s.taxonomy.InsertSource(r.Context(), source)
 		if err != nil || rowsAffected == 0 {
 			slog.ErrorContext(
 				r.Context(), "failed to insert source in DB",
@@ -213,7 +213,7 @@ func (s *Service) SourcePosts(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if ctxd.GetUser(r.Context()).IsAdmin(s.cfg) {
-		posts, err = s.repo.SourcePosts(
+		posts, err = s.post.Source(
 			r.Context(), sourceID, "", orderBy,
 		)
 	} else {
@@ -222,7 +222,7 @@ func (s *Service) SourcePosts(w http.ResponseWriter, r *http.Request) {
 			redisKey,
 			s.cfg.CacheTimeout,
 			func() (types.Posts, error) {
-				return s.repo.SourcePosts(
+				return s.post.Source(
 					r.Context(), sourceID, "", orderBy,
 				)
 			},
@@ -264,7 +264,7 @@ func (s *Service) DeleteSource(w http.ResponseWriter, r *http.Request) {
 
 	// Get the source ID from path
 	playlistID := r.PathValue("source")
-	rowsAffected, err := s.repo.DeleteSource(r.Context(), playlistID)
+	rowsAffected, err := s.taxonomy.DeleteSource(r.Context(), playlistID)
 
 	if err != nil {
 		slog.ErrorContext(
@@ -327,7 +327,7 @@ func (s *Service) SourcePostsAPI(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if currentUser.IsAdmin(s.cfg) {
-		posts, err = s.repo.SourcePosts(
+		posts, err = s.post.Source(
 			r.Context(), sourceID, cursor, orderBy,
 		)
 	} else {
@@ -336,7 +336,7 @@ func (s *Service) SourcePostsAPI(w http.ResponseWriter, r *http.Request) {
 			redisKey,
 			s.cfg.CacheTimeout,
 			func() (types.Posts, error) {
-				return s.repo.SourcePosts(
+				return s.post.Source(
 					r.Context(), sourceID, cursor, orderBy,
 				)
 			},

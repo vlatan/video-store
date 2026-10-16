@@ -151,20 +151,3 @@ func (r *Repository) DeleteSource(ctx context.Context, playlistID string) (int64
 	result, err := r.db.Pool.Exec(ctx, query, playlistID)
 	return result.RowsAffected(), err
 }
-
-// Get a limited number of posts from one category with cursor
-func (r *Repository) SourcePosts(
-	ctx context.Context,
-	playlistID,
-	cursor,
-	orderBy string,
-) (types.Posts, error) {
-
-	return r.queryTaxonomyPosts(
-		ctx,
-		"source_posts.sql",
-		playlistID,
-		cursor,
-		orderBy,
-	)
-}

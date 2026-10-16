@@ -34,7 +34,7 @@ func (s *Service) CategoryPosts(w http.ResponseWriter, r *http.Request) {
 
 	// Don't cache the category posts only for the admin
 	if ctxd.GetUser(r.Context()).IsAdmin(s.cfg) {
-		posts, err = s.repo.CategoryPosts(
+		posts, err = s.post.Category(
 			r.Context(), slug, "", orderBy,
 		)
 	} else {
@@ -43,7 +43,7 @@ func (s *Service) CategoryPosts(w http.ResponseWriter, r *http.Request) {
 			redisKey,
 			s.cfg.CacheTimeout,
 			func() (types.Posts, error) {
-				return s.repo.CategoryPosts(
+				return s.post.Category(
 					r.Context(), slug, "", orderBy,
 				)
 			},
@@ -114,7 +114,7 @@ func (s *Service) CategoryPostsAPI(w http.ResponseWriter, r *http.Request) {
 
 	// Don't cache the category posts only for the admin
 	if currentUser.IsAdmin(s.cfg) {
-		posts, err = s.repo.CategoryPosts(
+		posts, err = s.post.Category(
 			r.Context(), slug, cursor, orderBy,
 		)
 	} else {
@@ -123,7 +123,7 @@ func (s *Service) CategoryPostsAPI(w http.ResponseWriter, r *http.Request) {
 			redisKey,
 			s.cfg.CacheTimeout,
 			func() (types.Posts, error) {
-				return s.repo.CategoryPosts(
+				return s.post.Category(
 					r.Context(), slug, cursor, orderBy,
 				)
 			},

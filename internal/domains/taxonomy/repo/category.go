@@ -40,20 +40,3 @@ func (r *Repository) Categories(ctx context.Context) (types.Categories, error) {
 
 	return categories, nil
 }
-
-// Get a limited number of posts from one category with cursor
-func (r *Repository) CategoryPosts(
-	ctx context.Context,
-	categorySlug,
-	cursor,
-	orderBy string,
-) (types.Posts, error) {
-
-	return r.queryTaxonomyPosts(
-		ctx,
-		"category_posts.sql",
-		categorySlug,
-		cursor,
-		orderBy,
-	)
-}

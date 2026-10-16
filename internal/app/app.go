@@ -12,8 +12,8 @@ import (
 	"github.com/vlatan/video-store/internal/domains/auth"
 	"github.com/vlatan/video-store/internal/domains/health"
 	page "github.com/vlatan/video-store/internal/domains/page/handler"
+	postRepo "github.com/vlatan/video-store/internal/domains/post"
 	post "github.com/vlatan/video-store/internal/domains/post/handler"
-	postRepo "github.com/vlatan/video-store/internal/domains/post/repo"
 	sitemap "github.com/vlatan/video-store/internal/domains/sitemap/handler"
 	static "github.com/vlatan/video-store/internal/domains/static"
 	taxonomy "github.com/vlatan/video-store/internal/domains/taxonomy/handler"
@@ -138,7 +138,7 @@ func New() (*App, error) {
 		user:     user.New(cfg, userRepo, postRepo, av, store, tmpl),
 		post:     post.New(cfg, postRepo, rdb, store, av, tmpl, yt, gemini),
 		page:     page.New(cfg, db, rdb, store, tmpl),
-		taxonomy: taxonomy.New(cfg, taxRepo, rdb, store, tmpl, yt),
+		taxonomy: taxonomy.New(cfg, taxRepo, postRepo, rdb, store, tmpl, yt),
 		sitemap:  sitemap,
 		text:     text.New(cfg, tmpl),
 		health:   health.New(db, rdb, tmpl),

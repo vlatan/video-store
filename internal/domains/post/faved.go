@@ -1,4 +1,4 @@
-package repo
+package post
 
 import (
 	"context"
@@ -6,33 +6,29 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/stringx"
 )
 
-// Get posts based on a user search query using a cursor
-// Transform the user query into two queries with words separated by '&' and '|'
-func (r *Repository) Search(
+// Get user's favorited posts
+func (r *Repository) Favorites(
 	ctx context.Context,
-	searchTerm string,
-	limit int,
+	userID int,
 	cursor string) (types.Posts, error) {
 
-	// Construct the SQL parts as well as the arguments.
-	// The search term and limit are the first two arguments ($1 and $2).
-	// Peek for one post beoynd the limit.
+	// The user ID and the limit are the first two arguments ($1 and $2)
+	// Peek for one post beoynd the limit to see if there's next page,
+	// meaning whether to construct and send the next cursor at all.
+	args := []any{userID, r.cfg.PostsPerPage + 1}
+
+	// The default template variables - SQL parts
 	var where string
 	total := "COUNT(*) OVER()"
-	args := []any{searchTerm, limit + 1}
 
+	// If cursor supplied construct the additional args and WHERE clause
 	var zero, posts types.Posts
-
-	// Build args and SQL parts.
-	// If cursor (meanining this is not the first page),
-	// do not count total and supply WHERE clause
 	if cursor != "" {
 
 		total = "0"
@@ -45,17 +41,12 @@ func (r *Repository) Search(
 			return zero, errors.New("invalid cursor components")
 		}
 
-		score, err := strconv.ParseFloat(cursorParts[0], 64)
-		if err != nil {
-			return zero, err
-		}
-
-		args = append(args, score, cursorParts[1], cursorParts[2])
-		where = "WHERE (score, upload_date, id) < ($3, $4, $5)"
+		args = append(args, cursorParts[0], cursorParts[1], cursorParts[2])
+		where = "WHERE (when_faved, upload_date, id) < ($3, $4, $5)"
 	}
 
 	sqlParts := struct{ TotalCount, WhereCondition string }{total, where}
-	query, err := stringx.GetQuery(r.tmpl, "search_posts.sql", sqlParts)
+	query, err := stringx.GetQuery(r.tmpl, "faved_posts.sql", sqlParts)
 	if err != nil {
 		return zero, err
 	}
@@ -73,11 +64,12 @@ func (r *Repository) Search(
 	for rows.Next() {
 
 		var (
+			totalNum      int
 			post          types.Post
 			originalTitle sql.NullString
-			totalNum      int
 			avgRating     sql.NullFloat64
 			ratingCount   sql.NullInt64
+			whenFaved     sql.NullTime
 		)
 
 		// Paste post from row to struct, thumbnails in a separate var
@@ -92,13 +84,14 @@ func (r *Repository) Search(
 			&ratingCount,
 			&totalNum,
 			&post.UploadDate,
-			&post.SearchScore,
+			&whenFaved,
 		); err != nil {
 			return zero, err
 		}
 
-		// Include the processed post in the result
+		// Assign the values back to the fields
 		post.OriginalTitle = originalTitle.String
+		post.UserActions.WhenFaved = whenFaved.Time
 
 		// Attach ratings if any
 		if avgRating.Valid && ratingCount.Valid {
@@ -108,6 +101,7 @@ func (r *Repository) Search(
 			}
 		}
 
+		// Include the processed post in the result
 		posts.Items = append(posts.Items, post)
 
 		// Assign the total num of posts
@@ -119,13 +113,13 @@ func (r *Repository) Search(
 		return zero, err
 	}
 
-	// Post-process the posts, prepare the thumbnail
+	// Post-process the posts, prepare the thumbnails
 	if err = posts.ProcessThumbs(ctx); err != nil {
 		return zero, err
 	}
 
 	// This is the last page
-	if len(posts.Items) <= limit {
+	if len(posts.Items) <= r.cfg.PostsPerPage {
 		return posts, nil
 	}
 
@@ -135,9 +129,8 @@ func (r *Repository) Search(
 	// Determine the next cursor
 	lastPost := posts.Items[len(posts.Items)-1]
 	uploadDate := lastPost.UploadDate.Format(time.RFC3339Nano)
-
-	// Preserve the full precision of the score float, %.17g
-	cursorStr := fmt.Sprintf("%.17g,%s,%d", lastPost.SearchScore, uploadDate, lastPost.ID)
+	whenFaved := lastPost.UserActions.WhenFaved.Format(time.RFC3339Nano)
+	cursorStr := fmt.Sprintf("%s,%s,%d", whenFaved, uploadDate, lastPost.ID)
 	posts.NextCursor = base64.StdEncoding.EncodeToString([]byte(cursorStr))
 
 	return posts, nil

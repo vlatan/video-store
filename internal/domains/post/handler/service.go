@@ -3,7 +3,7 @@ package posts
 import (
 	"github.com/vlatan/video-store/internal/avatar"
 	"github.com/vlatan/video-store/internal/config"
-	"github.com/vlatan/video-store/internal/domains/post/repo"
+	"github.com/vlatan/video-store/internal/domains/post"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/drivers/store"
 	"github.com/vlatan/video-store/internal/integrations/gemini"
@@ -14,7 +14,7 @@ import (
 
 type Service struct {
 	cfg     *config.Config
-	post    *repo.Repository
+	post    *post.Repository
 	rdb     *rdb.Service
 	session *store.Service
 	avatar  *avatar.Service
@@ -33,7 +33,7 @@ type postData struct {
 
 func New(
 	cfg *config.Config,
-	post *repo.Repository,
+	post *post.Repository,
 	rdb *rdb.Service,
 	store *store.Service,
 	avatar *avatar.Service,

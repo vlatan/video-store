@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"context"
+
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/domains/taxonomy/repo"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
@@ -10,13 +12,20 @@ import (
 	"github.com/vlatan/video-store/internal/types"
 )
 
+type poster interface {
+	Category(context.Context, string, string, string) (types.Posts, error)
+	Source(context.Context, string, string, string) (types.Posts, error)
+	Year(context.Context, string, string, string) (types.Posts, error)
+}
+
 type Service struct {
-	cfg     *config.Config
-	repo    *repo.Repository
-	rdb     *rdb.Service
-	session *store.Service
-	tmpl    *tmpl.Service
-	yt      *yt.Service
+	cfg      *config.Config
+	taxonomy *repo.Repository
+	post     poster
+	rdb      *rdb.Service
+	session  *store.Service
+	tmpl     *tmpl.Service
+	yt       *yt.Service
 }
 
 type taxonomyData struct {
@@ -32,18 +41,20 @@ type taxonomyData struct {
 
 func New(
 	cfg *config.Config,
-	repo *repo.Repository,
+	taxonomy *repo.Repository,
+	post poster,
 	rdb *rdb.Service,
 	store *store.Service,
 	tmpl *tmpl.Service,
 	yt *yt.Service,
 ) *Service {
 	return &Service{
-		cfg:     cfg,
-		repo:    repo,
-		rdb:     rdb,
-		session: store,
-		tmpl:    tmpl,
-		yt:      yt,
+		cfg:      cfg,
+		taxonomy: taxonomy,
+		post:     post,
+		rdb:      rdb,
+		session:  store,
+		tmpl:     tmpl,
+		yt:       yt,
 	}
 }
