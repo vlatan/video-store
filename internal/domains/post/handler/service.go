@@ -26,6 +26,7 @@ type Service struct {
 type postData struct {
 	Title       string
 	CurrentPost *types.Post
+	CurrentPage *types.Page
 	types.Form
 	types.Posts
 	tmpl.Base
