@@ -133,7 +133,7 @@ func (s *Service) GeneratePostSummary(
 
 	if err == nil {
 		post.Summary = genaiResponse.Summary
-		post.Category = &types.Category{Name: genaiResponse.Category}
+		post.CategoryName = genaiResponse.Category
 		return nil
 	}
 
@@ -178,7 +178,7 @@ func (s *Service) GeneratePostSummary(
 	}
 
 	post.Summary = genaiResponse.Summary
-	post.Category = &types.Category{Name: genaiResponse.Category}
+	post.CategoryName = genaiResponse.Category
 
 	return nil
 }

@@ -36,10 +36,6 @@ func (r *Repository) Insert(ctx context.Context, post *types.Post) (int64, error
 		return 0, err
 	}
 
-	if post.Category == nil {
-		post.Category = &types.Category{}
-	}
-
 	// Prepare the credits - directors
 	roles := make([]string, len(post.Directors))
 	for i := range post.Directors {
@@ -68,7 +64,7 @@ func (r *Repository) Insert(ctx context.Context, post *types.Post) (int64, error
 		post.Duration,
 		post.UploadDate,
 		sqlnull.Int64(int64(post.UserActions.UserID)),
-		sqlnull.String(post.Category.Name),
+		sqlnull.String(post.CategoryName),
 		post.Directors,
 		roles,
 	).Scan(new(int64))
@@ -100,7 +96,7 @@ func (r *Repository) Update(ctx context.Context, post *types.Post) (int64, error
 		query,
 		post.VideoID,
 		sqlnull.String(post.OriginalTitle),
-		post.Category.Name,
+		post.CategoryName,
 		post.Summary,
 		sqlnull.Int16(post.ReleaseYear),
 		post.Directors,
@@ -165,30 +161,20 @@ func (r *Repository) Single(ctx context.Context, videoID string) (types.Post, er
 		return zero, err
 	}
 
-	// Assign the original title, summary, release year if any
+	// Assign back the possible null values
 	post.OriginalTitle = originalTitle.String
 	post.Summary = summary.String
 	post.ReleaseYear = releaseYear.Int16
-
-	// Gather playlist/channel info if any
-	post.Source = &types.Source{
-		PlaylistID:   playlistID.String,
-		Title:        playlistTitle.String,
-		ChannelTitle: channelTitle.String,
-	}
+	post.PlaylistID = playlistID.String
+	post.PlaylistTitle = playlistTitle.String
+	post.ChannelTitle = channelTitle.String
+	post.CategorySlug = categorySlug.String
+	post.CategoryName = categoryName.String
 
 	// Check if the video does not belong to source
 	if !playlistID.Valid {
-		post.Source.PlaylistID = "other"
-		post.Source.ChannelTitle = "Other"
-	}
-
-	// Define category if valid
-	if categorySlug.Valid && categoryName.Valid {
-		post.Category = &types.Category{
-			Slug: categorySlug.String,
-			Name: categoryName.String,
-		}
+		post.PlaylistID = "other"
+		post.ChannelTitle = "Other"
 	}
 
 	// Convert to HTML and sanitize the post summary

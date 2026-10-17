@@ -52,7 +52,7 @@ func (r *Repository) All(ctx context.Context) ([]*types.Post, error) {
 		post.PlaylistID = playlistID.String
 		post.OriginalTitle = originalTitle.String
 		post.Summary = summary.String
-		post.Category = &types.Category{Name: categoryName.String}
+		post.CategoryName = categoryName.String
 
 		// Include the processed post in the result
 		posts = append(posts, &post)

@@ -108,18 +108,24 @@
 			<div class="metadata-block">
 
 				<div class="inner-metadata-block">
-					{{ with .CurrentPost.Category }}
+					{{ with .CurrentPost }}
+					{{ if and .CategorySlug .CategoryName }}
 					<span>
 						<strong>Category:</strong>
-						<a class="nav-item" href="/category/{{ .Slug }}/">{{ .Name }}</a>
+						<a class="nav-item" href="/category/{{ .CategorySlug }}/">{{ .CategoryName }}</a>
 					</span>
 					{{ end }}
-					{{ with .CurrentPost.Source }}
+					{{ end }}
+
+					{{ with .CurrentPost }}
+					{{ if and .PlaylistID .ChannelTitle }}
 					<span>
 						<strong>Source:</strong>
 						<a class="nav-item" href="/source/{{ .PlaylistID }}/">{{ .ChannelTitle }}</a>
 					</span>
 					{{ end }}
+					{{ end }}
+
 					{{ with .CurrentPost.ReleaseYear }}
 					<span>
 						<strong>Released:</strong>
@@ -128,6 +134,7 @@
 						</a>
 					</span>
 					{{ end }}
+
 					{{ with .CurrentPost.Directors }}
 					<span>
 						<strong>Directed By:</strong>
@@ -140,6 +147,7 @@
 							{{- end -}}
 						</span>
 					</span>
+
 					{{ end }}
 					<span>
 						<strong>Duration:</strong>

@@ -344,7 +344,7 @@ func (w *Worker) updateVideos(ctx context.Context, videos []*types.Post) error {
 		var updated bool
 
 		// If post has no summary or category proceed to generate them
-		if video.Summary == "" || video.Category == nil {
+		if video.Summary == "" || video.CategoryName == "" {
 
 			// Sleep with context in mind for 60-90 seconds.
 			// Min sleep needs to be 60s to avoid the genai 250k TPM quota.

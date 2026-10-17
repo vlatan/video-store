@@ -54,11 +54,6 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 		CurrentPost: &post,
 	}
 
-	// Assign post data
-	if data.CurrentPost.Category == nil {
-		data.CurrentPost.Category = &types.Category{}
-	}
-
 	// We need these for the release year in the form
 	var released string
 	maxYear := time.Now().Year() + 1
@@ -84,7 +79,7 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 		},
 		Category: &types.FormGroup{
 			Label: "Category",
-			Value: data.CurrentPost.Category.Name,
+			Value: data.CurrentPost.CategoryName,
 		},
 		ReleaseYear: &types.FormGroup{
 			Label:       "Released",
@@ -196,7 +191,7 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 			data.Form.Title.Value,
 			normalize.VideoTitleCutoffs,
 		)
-		data.CurrentPost.Category.Name = data.Form.Category.Value
+		data.CurrentPost.CategoryName = data.Form.Category.Value
 		data.CurrentPost.Summary = normalize.Description(data.Form.Content.Value)
 		data.CurrentPost.Directors = directors
 		data.CurrentPost.ReleaseYear = releaseYear

@@ -23,8 +23,8 @@ type Post struct {
 	RawThumbs       []byte          `json:"-"`
 	Thumbnails      *Thumbnails     `json:"thumbnails,omitempty"`
 	Thumbnail       *Thumbnail      `json:"thumbnail,omitempty"`
-	Category        *Category       `json:"category,omitempty"`
-	Source          *Source         `json:"source,omitempty"`
+	CategorySlug    string          `json:"category_slug,omitempty"`
+	CategoryName    string          `json:"category_name,omitempty"`
 	Likes           int             `json:"likes,omitempty"`
 	Reviews         *Reviews        `json:"reviews,omitempty"`
 	RatingStats     *RatingStats    `json:"rating_stats,omitempty"`
@@ -38,6 +38,8 @@ type Post struct {
 	MetaDescription string          `json:"meta_description,omitempty"`
 	Tags            string          `json:"tags,omitempty"`
 	PlaylistID      string          `json:"playlist_id,omitempty"`
+	PlaylistTitle   string          `json:"playlist_title,omitempty"`
+	ChannelTitle    string          `json:"channel_title,omitempty"`
 	RelatedPosts    []Post          `json:"related_posts,omitempty"`
 	UploadDate      *time.Time      `json:"upload_date,omitempty"`
 	CreatedAt       *time.Time      `json:"created_at,omitempty"`
