@@ -21,7 +21,6 @@ type Service struct {
 type pageData struct {
 	Title       string
 	CurrentPage *types.Page
-	CurrentPost *types.Post
 	types.Form
 	tmpl.Base
 }

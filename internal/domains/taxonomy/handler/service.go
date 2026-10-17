@@ -33,8 +33,6 @@ type taxonomyData struct {
 	CurrentYear     int16
 	CurrentCategory *types.Category
 	CurrentSource   *types.Source
-	CurrentPage     *types.Page
-	CurrentPost     *types.Post
 	Sources         []types.Source
 	types.Form
 	types.Posts

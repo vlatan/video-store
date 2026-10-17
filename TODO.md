@@ -1,5 +1,5 @@
-- Flatten Post and Review structs so you don't use User type on them
-- Split up taxonomy and the forms
+- Flatten Review struct so you don't use User type on it
+- Maybe separate taxonomies
 
 - Make search bar on small screens accross entire screen
 - Write tests

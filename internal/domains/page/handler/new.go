@@ -34,7 +34,7 @@ func (s *Service) New(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
 		// Serve the page with the form
-		s.tmpl.RenderHTML(w, r, "form.html", data)
+		s.tmpl.RenderHTML(w, r, "page_form.html", data)
 
 	case "POST":
 		var formError types.FlashMessage

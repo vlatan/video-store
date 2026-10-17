@@ -1,0 +1,63 @@
+{{ template "base.html" . }}
+
+{{ define "extra_preload_css" }}
+<link rel="preload" href='{{ AddVersion "/static/css/form.css" }}' as="style">
+{{ end }}
+
+{{ define "extra_css" }}
+<link rel="stylesheet" type="text/css" href='{{ AddVersion "/static/css/form.css" }}'>
+{{ end }}
+
+{{ define "title_tag" }}
+{{ .Title }} - {{ .Config.AppName }}
+{{ end }}
+
+{{ define "content" }}
+<div class="form-content">
+    <form id="main-form" method="POST" action="">
+        <fieldset class="form-group">
+            <legend class="form-legend">{{ .Form.Legend }}</legend>
+
+            {{ with .Form.Title }}
+            <div class="form-group">
+                <label class="form-label" for="title">{{ .Label }}</label>
+                <input class="form-input" id="title" name="title" placeholder="{{ .Placeholder }}" required
+                    value="{{ .Value }}" type="text">
+            </div>
+            {{ end }}
+
+            {{ with .Form.Content }}
+            <div class="form-group">
+                <label class="form-label" for="content">{{ .Label }}</label>
+                {{ if .Type.IsInput }}
+                <input class="form-input" id="content" name="content" placeholder="{{ .Placeholder }}" required
+                    value="{{ .Value }}" type="text">
+                {{ else if .Type.IsTextarea }}
+                <textarea class="form-input" id="content" name="content" placeholder="{{ .Placeholder }}" required
+                    rows="10">{{ .Value }}</textarea>
+                {{ end }}
+            </div>
+            {{ end }}
+        </fieldset>
+        <div class="form-group button-group">
+            <button type="submit" class="form-button" id="submit" name="submit">Submit</button>
+            {{ with .CurrentPage }}
+            <a role="button" class="form-button" href="/page/{{ .Slug }}/">Cancel</a>
+            {{ end }}
+            <div class="submit-spinner"></div>
+            {{ with .Form.Error }}
+            <div class="form-invalid-feedback">
+                <span>{{ .Message }}.</span>
+            </div>
+            {{ end }}
+        </div>
+    </form>
+</div>
+{{ end }}
+
+
+{{ define "extra_scripts" }}
+{{ if .CurrentUser.IsAdmin .Config }}
+<script defer src='{{ AddVersion "/static/js/form.js" }}'></script>
+{{ end }}
+{{ end }}
