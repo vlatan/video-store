@@ -1,4 +1,4 @@
-- Ditch the base loader
+- Flatten Post and Review structs so you don't use User type on them
 
 - Make search bar on small screens accross entire screen
 - Write tests

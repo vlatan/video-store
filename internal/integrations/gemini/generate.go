@@ -17,6 +17,16 @@ import (
 	"google.golang.org/genai"
 )
 
+// The response from the Genai API
+type Response struct {
+	Title         string   `json:"video_title"`
+	OriginalTitle string   `json:"original_title"`
+	Summary       string   `json:"summary"`
+	Category      string   `json:"category"`
+	Directors     []string `json:"directors"`
+	ReleaseYear   int16    `json:"release_year"`
+}
+
 // generateContent is a wrapper around the model's GenerateContent method
 // which internally handles the daily and minutely rate limit,
 // as well as a scenario where no candidates are returned.
@@ -59,7 +69,7 @@ func (s *Service) GenerateContent(
 	contents []*genai.Content,
 	genaiConfig *genai.GenerateContentConfig,
 	retryConfig *retry.Config,
-) (*types.GenaiResponse, error) {
+) (*Response, error) {
 
 	// Make the API call
 	result, err := retry.Do(ctx, retryConfig,
@@ -77,7 +87,7 @@ func (s *Service) GenerateContent(
 		return nil, err
 	}
 
-	var response types.GenaiResponse
+	var response Response
 	if err = json.Unmarshal([]byte(result.Text()), &response); err != nil {
 		return nil, err
 	}
