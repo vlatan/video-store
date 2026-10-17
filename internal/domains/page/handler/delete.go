@@ -12,7 +12,7 @@ func (s *Service) Delete(w http.ResponseWriter, r *http.Request) {
 	// Get the page slug from URL
 	pageSlug := r.PathValue("slug")
 
-	rowsAffected, err := s.repo.Delete(r.Context(), pageSlug)
+	rowsAffected, err := s.page.Delete(r.Context(), pageSlug)
 	if err != nil {
 		slog.ErrorContext(
 			r.Context(), "failed to delete the page from DB",

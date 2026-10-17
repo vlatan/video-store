@@ -21,7 +21,7 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 	data := pageData{Base: s.tmpl.Base(w, r)}
 
 	// Get the page data straight from DB
-	page, err := s.repo.Get(r.Context(), slug)
+	page, err := s.page.Get(r.Context(), slug)
 	if errors.Is(err, pgx.ErrNoRows) {
 		slog.WarnContext(
 			r.Context(), "failed to get the page from DB",
@@ -86,7 +86,7 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 		data.Form.Title.Value = r.FormValue("title")
 
 		// Update the page
-		rowsAffected, err := s.repo.Update(
+		rowsAffected, err := s.page.Update(
 			r.Context(),
 			slug,
 			data.Form.Title.Value,

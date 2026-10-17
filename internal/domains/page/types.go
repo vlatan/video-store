@@ -1,4 +1,4 @@
-package types
+package page
 
 import (
 	"encoding/json"

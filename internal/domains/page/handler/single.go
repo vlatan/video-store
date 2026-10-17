@@ -7,7 +7,8 @@ import (
 	"net/http"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/vlatan/video-store/internal/types"
+	"github.com/vlatan/video-store/internal/ctxd"
+	"github.com/vlatan/video-store/internal/domains/page"
 )
 
 // Handle single page
@@ -16,23 +17,20 @@ func (s *Service) Single(w http.ResponseWriter, r *http.Request) {
 	// Get the page slug from URL
 	pageSlug := r.PathValue("slug")
 
-	// Get template data
-	data := pageData{Base: s.tmpl.Base(w, r)}
-
 	var (
-		err  error
-		page types.Page
+		err error
+		pg  page.Page
 	)
 
-	if data.CurrentUser.IsAdmin(s.cfg) {
-		page, err = s.repo.Get(r.Context(), pageSlug)
+	if ctxd.GetUser(r.Context()).IsAdmin(s.cfg) {
+		pg, err = s.page.Get(r.Context(), pageSlug)
 	} else {
-		page, err = s.rdb.Get(
+		pg, err = s.rdb.Get(
 			r.Context(),
 			fmt.Sprintf(pageCacheKey, pageSlug),
 			s.cfg.CacheTimeout,
-			func() (types.Page, error) {
-				return s.repo.Get(r.Context(), pageSlug)
+			func() (page.Page, error) {
+				return s.page.Get(r.Context(), pageSlug)
 			},
 		)
 	}
@@ -55,9 +53,11 @@ func (s *Service) Single(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Assign the page to data
-	data.CurrentPage = &page
-	data.Title = page.Title
+	// Get template data
+	data := pageData{
+		Title:       pg.Title,
+		CurrentPage: &pg,
+		Base:        s.tmpl.Base(w, r)}
 
 	s.tmpl.RenderHTML(w, r, "page.html", data)
 }

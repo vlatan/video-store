@@ -59,7 +59,7 @@ func (s *Service) New(w http.ResponseWriter, r *http.Request) {
 		pageSlug := slugify.Make(data.Form.Title.Value)
 
 		// Update the page
-		rowsAffected, err := s.repo.Insert(
+		rowsAffected, err := s.page.Insert(
 			r.Context(),
 			pageSlug,
 			data.Form.Title.Value,

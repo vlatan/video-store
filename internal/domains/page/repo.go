@@ -1,4 +1,4 @@
-package repo
+package page
 
 import (
 	"context"
@@ -8,7 +8,6 @@ import (
 
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/vlatan/video-store/internal/drivers/database"
-	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/sqlnull"
 	"github.com/vlatan/video-store/internal/utils/stringx"
 )
@@ -24,9 +23,9 @@ func NewRepo(db *database.Service) *Repository {
 }
 
 // Get single page from DB
-func (r *Repository) Get(ctx context.Context, slug string) (types.Page, error) {
+func (r *Repository) Get(ctx context.Context, slug string) (Page, error) {
 
-	var zero, page types.Page
+	var zero, page Page
 	var content sql.NullString
 
 	// Get single row from DB
