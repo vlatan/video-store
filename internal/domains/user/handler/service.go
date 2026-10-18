@@ -26,7 +26,7 @@ type Service struct {
 
 type userData struct {
 	Title string
-	types.PaginationInfo
+	tmpl.PaginationInfo
 	user.Users
 	types.Posts
 	tmpl.Base
