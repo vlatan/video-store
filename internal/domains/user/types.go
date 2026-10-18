@@ -60,7 +60,7 @@ func (u *User) MakePublicID() (string, error) {
 		)
 	}
 
-	publicID := fmt.Sprintf("%s:%s:%s", u.Provider, u.ProviderUserId, u.Email)
+	publicID := fmt.Sprintf("%s:%s", u.Provider, u.ProviderUserId)
 	hashBytes := sha256.Sum256([]byte(publicID))
 	return fmt.Sprintf("%x", hashBytes), nil
 }
