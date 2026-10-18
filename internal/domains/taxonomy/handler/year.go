@@ -76,7 +76,7 @@ func (s *Service) YearPosts(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get template data
-	data := taxonomyData{
+	data := tmplData{
 		Title:       fmt.Sprintf("%s: %s", posts.Title, year),
 		CurrentYear: currentYear,
 		Posts:       posts,

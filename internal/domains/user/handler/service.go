@@ -24,7 +24,7 @@ type Service struct {
 	tmpl    *tmpl.Service
 }
 
-type userData struct {
+type tmplData struct {
 	Title string
 	tmpl.PaginationInfo
 	user.Users

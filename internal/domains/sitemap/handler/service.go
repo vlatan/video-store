@@ -29,7 +29,7 @@ type Service struct {
 	sqlArgs []any
 }
 
-type data struct {
+type tmplData struct {
 	XMLDeclarations []template.HTML
 	SitemapItems    []*sitemap.Item
 	tmpl.Base

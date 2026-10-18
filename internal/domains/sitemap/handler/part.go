@@ -67,7 +67,7 @@ func (s *Service) Part(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get template data
-	data := data{
+	data := tmplData{
 		Base:         s.tmpl.Base(w, r),
 		SitemapItems: sitemapPart.Entries,
 		XMLDeclarations: []template.HTML{

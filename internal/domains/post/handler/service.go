@@ -23,7 +23,7 @@ type Service struct {
 	gemini  *gemini.Service
 }
 
-type postData struct {
+type tmplData struct {
 	Title       string
 	CurrentPost *post.Post
 	types.Form

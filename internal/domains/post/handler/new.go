@@ -19,7 +19,7 @@ import (
 func (s *Service) New(w http.ResponseWriter, r *http.Request) {
 
 	// Get template data
-	data := postData{
+	data := tmplData{
 		Title:  "Add New Video",
 		Legend: "New Video",
 		Content: &types.FormGroup{

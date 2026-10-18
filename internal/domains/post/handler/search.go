@@ -70,7 +70,7 @@ func (s *Service) Search(w http.ResponseWriter, r *http.Request) {
 	// Get template data
 	base := s.tmpl.Base(w, r)
 	base.SearchQuery = searchQuery
-	data := postData{
+	data := tmplData{
 		Base:  base,
 		Posts: posts,
 		Title: "Search",

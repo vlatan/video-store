@@ -49,7 +49,7 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get template data
-	data := postData{
+	data := tmplData{
 		Base:        s.tmpl.Base(w, r),
 		CurrentPost: &post,
 	}

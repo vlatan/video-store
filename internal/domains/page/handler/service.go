@@ -18,7 +18,7 @@ type Service struct {
 	tmpl    *tmpl.Service
 }
 
-type pageData struct {
+type tmplData struct {
 	Title       string
 	CurrentPage *page.Page
 	types.Form

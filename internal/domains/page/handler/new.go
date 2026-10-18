@@ -14,7 +14,7 @@ import (
 func (s *Service) New(w http.ResponseWriter, r *http.Request) {
 
 	// Get template data
-	data := pageData{
+	data := tmplData{
 		Title: "Add New Page",
 		Form: types.Form{
 			Legend: "Edit Page",

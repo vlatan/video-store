@@ -9,7 +9,7 @@ import (
 func (s *Service) Style(w http.ResponseWriter, r *http.Request) {
 
 	// Get template data
-	data := data{
+	data := tmplData{
 		Base: s.tmpl.Base(w, r),
 		XMLDeclarations: []template.HTML{
 			template.HTML(`<?xml version="1.0" encoding="UTF-8"?>`),

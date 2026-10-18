@@ -10,14 +10,14 @@ import (
 	"github.com/vlatan/video-store/internal/tmpl"
 )
 
-type userRepo interface {
+type upserter interface {
 	Upsert(context.Context, *user.User) (int, error)
 	Delete(context.Context, int) (int64, error)
 }
 
 type Service struct {
 	cfg       *config.Config
-	user      userRepo
+	user      upserter
 	avatar    *avatar.Service
 	session   *store.Service
 	tmpl      *tmpl.Service
@@ -26,7 +26,7 @@ type Service struct {
 
 func New(
 	cfg *config.Config,
-	user userRepo,
+	user upserter,
 	avatar *avatar.Service,
 	store *store.Service,
 	tmpl *tmpl.Service,

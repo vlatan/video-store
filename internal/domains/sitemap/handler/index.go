@@ -36,7 +36,7 @@ func (s *Service) Index(w http.ResponseWriter, r *http.Request) {
 	})
 
 	// Get template data
-	data := data{
+	data := tmplData{
 		Base:         s.tmpl.Base(w, r),
 		SitemapItems: sitemapItems,
 		XMLDeclarations: []template.HTML{

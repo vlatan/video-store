@@ -67,7 +67,7 @@ func (s *Service) CategoryPosts(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get template data
-	data := taxonomyData{
+	data := tmplData{
 		Title:           posts.Title,
 		Posts:           posts,
 		CurrentCategory: &types.Category{Slug: slug},

@@ -195,7 +195,7 @@ func (s *Service) Single(w http.ResponseWriter, r *http.Request) {
 	p.RelatedPosts = relatedPosts
 
 	// Get template data
-	data := postData{
+	data := tmplData{
 		Base:        s.tmpl.Base(w, r),
 		CurrentPost: &p,
 	}

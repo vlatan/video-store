@@ -54,7 +54,7 @@ func (s *Service) Single(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get template data
-	data := pageData{
+	data := tmplData{
 		Title:       pg.Title,
 		CurrentPage: &pg,
 		Base:        s.tmpl.Base(w, r)}

@@ -23,7 +23,7 @@ func (s *Service) Favorites(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get template data
-	data := userData{
+	data := tmplData{
 		Title: "Your Favorite Documentaries",
 		Posts: posts,
 		Base:  s.tmpl.Base(w, r),
@@ -68,7 +68,7 @@ func (s *Service) All(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get template data
-	data := userData{
+	data := tmplData{
 		Title: "Users",
 		Users: users,
 		PaginationInfo: s.tmpl.NewPagination(

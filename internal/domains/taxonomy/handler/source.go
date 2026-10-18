@@ -50,7 +50,7 @@ func (s *Service) Sources(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get template data
-	data := taxonomyData{
+	data := tmplData{
 		Title:   "Sources",
 		Sources: sources,
 		Base:    s.tmpl.Base(w, r),
@@ -64,7 +64,7 @@ func (s *Service) Sources(w http.ResponseWriter, r *http.Request) {
 func (s *Service) NewSource(w http.ResponseWriter, r *http.Request) {
 
 	// Get template data
-	data := taxonomyData{
+	data := tmplData{
 		Title:  "Add New Source",
 		Legend: "New Playlist",
 		Content: &types.FormGroup{
@@ -250,7 +250,7 @@ func (s *Service) SourcePosts(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get template data
-	data := taxonomyData{
+	data := tmplData{
 		Title:         posts.Title,
 		Posts:         posts,
 		CurrentSource: &types.Source{PlaylistID: sourceID},

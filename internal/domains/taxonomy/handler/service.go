@@ -29,7 +29,7 @@ type Service struct {
 	yt       *yt.Service
 }
 
-type taxonomyData struct {
+type tmplData struct {
 	Title           string
 	CurrentYear     int16
 	CurrentCategory *types.Category

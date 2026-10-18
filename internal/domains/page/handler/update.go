@@ -18,7 +18,7 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 	slug := r.PathValue("slug")
 
 	// Get template data
-	data := pageData{Base: s.tmpl.Base(w, r)}
+	data := tmplData{Base: s.tmpl.Base(w, r)}
 
 	// Get the page data straight from DB
 	page, err := s.page.Get(r.Context(), slug)

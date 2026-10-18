@@ -67,7 +67,7 @@ func (s *Service) Home(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get template data
-	data := postData{
+	data := tmplData{
 		Base:  s.tmpl.Base(w, r),
 		Posts: posts,
 	}
