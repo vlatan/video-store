@@ -1,4 +1,5 @@
 - Make integrations independent of types
+- Decide what to do with the rest of the types
 
 - Make search bar on small screens accross entire screen
 - Write tests
