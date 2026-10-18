@@ -10,7 +10,7 @@ import (
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/domains/post"
 	postRepo "github.com/vlatan/video-store/internal/domains/post"
-	taxonomyRepo "github.com/vlatan/video-store/internal/domains/taxonomy/repo"
+	taxonomyRepo "github.com/vlatan/video-store/internal/domains/taxonomy"
 	"github.com/vlatan/video-store/internal/drivers/database"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/integrations/gemini"
@@ -28,7 +28,7 @@ type poster interface {
 	Delete(context.Context, string) (int64, error)
 }
 
-type taxonomy interface {
+type taxer interface {
 	Categories(context.Context) (types.Categories, error)
 	Sources(context.Context) (types.Sources, error)
 	UpdateSource(context.Context, *types.Source) (int64, error)
@@ -38,7 +38,7 @@ type Worker struct {
 	id                string
 	cfg               *config.Config
 	post              poster
-	taxonomy          taxonomy
+	taxonomy          taxer
 	youtube           *yt.Service
 	gemini            *gemini.Service
 	lock              *rdb.RedisLock

@@ -5,7 +5,7 @@ import (
 
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/domains/post"
-	"github.com/vlatan/video-store/internal/domains/taxonomy/repo"
+	"github.com/vlatan/video-store/internal/domains/taxonomy"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/drivers/store"
 	"github.com/vlatan/video-store/internal/integrations/yt"
@@ -21,7 +21,7 @@ type poster interface {
 
 type Service struct {
 	cfg      *config.Config
-	taxonomy *repo.Repository
+	taxonomy *taxonomy.Repository
 	post     poster
 	rdb      *rdb.Service
 	session  *store.Service
@@ -42,7 +42,7 @@ type tmplData struct {
 
 func New(
 	cfg *config.Config,
-	taxonomy *repo.Repository,
+	taxonomy *taxonomy.Repository,
 	post poster,
 	rdb *rdb.Service,
 	store *store.Service,
