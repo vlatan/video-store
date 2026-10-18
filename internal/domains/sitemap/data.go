@@ -4,11 +4,10 @@ import (
 	"context"
 	"time"
 
-	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/stringx"
 )
 
-func (r *Repository) Data(ctx context.Context, args ...any) ([]*types.SitemapItem, error) {
+func (r *Repository) Data(ctx context.Context, args ...any) ([]*Item, error) {
 
 	// Get query
 	query, err := stringx.GetQuery(r.tmpl, "sitemap_data.sql", nil)
@@ -26,9 +25,9 @@ func (r *Repository) Data(ctx context.Context, args ...any) ([]*types.SitemapIte
 	defer rows.Close()
 
 	// Iterate over the rows
-	var data []*types.SitemapItem
+	var data []*Item
 	for rows.Next() {
-		var item types.SitemapItem
+		var item Item
 		var lastModified *time.Time
 
 		// Paste post from row to struct, thumbnails in a separate var

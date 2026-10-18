@@ -9,7 +9,6 @@ import (
 	"github.com/vlatan/video-store/internal/drivers/database"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/tmpl"
-	"github.com/vlatan/video-store/internal/types"
 )
 
 const (
@@ -30,9 +29,9 @@ type Service struct {
 	sqlArgs []any
 }
 
-type sitemapData struct {
+type data struct {
 	XMLDeclarations []template.HTML
-	SitemapItems    []*types.SitemapItem
+	SitemapItems    []*sitemap.Item
 	tmpl.Base
 }
 

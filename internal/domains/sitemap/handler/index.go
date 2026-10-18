@@ -6,13 +6,13 @@ import (
 	"net/http"
 	"sort"
 
-	"github.com/vlatan/video-store/internal/types"
+	"github.com/vlatan/video-store/internal/domains/sitemap"
 )
 
 // Handle the sitemap index
 func (s *Service) Index(w http.ResponseWriter, r *http.Request) {
 
-	sitemap, err := s.getSitemapIndex(r, sitemapRedisKey)
+	index, err := s.index(r, sitemapRedisKey)
 	if err != nil {
 		slog.ErrorContext(
 			r.Context(), "failed to get the sitemap index",
@@ -22,9 +22,9 @@ func (s *Service) Index(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var sitemapItems []*types.SitemapItem
-	for _, value := range sitemap {
-		sitemapItems = append(sitemapItems, &types.SitemapItem{
+	var sitemapItems []*sitemap.Item
+	for _, value := range index {
+		sitemapItems = append(sitemapItems, &sitemap.Item{
 			Location:     value.Location,
 			LastModified: value.LastModified,
 		})
@@ -36,7 +36,7 @@ func (s *Service) Index(w http.ResponseWriter, r *http.Request) {
 	})
 
 	// Get template data
-	data := sitemapData{
+	data := data{
 		Base:         s.tmpl.Base(w, r),
 		SitemapItems: sitemapItems,
 		XMLDeclarations: []template.HTML{

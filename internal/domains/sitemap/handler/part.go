@@ -49,7 +49,7 @@ func (s *Service) Part(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get sitemap part from Redis cache or fetch the entire index from DB
-	sitemapPart, err := s.getSitemapPart(r, sitemapRedisKey, partKey)
+	sitemapPart, err := s.part(r, sitemapRedisKey, partKey)
 
 	if err != nil {
 		slog.ErrorContext(
@@ -67,7 +67,7 @@ func (s *Service) Part(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get template data
-	data := sitemapData{
+	data := data{
 		Base:         s.tmpl.Base(w, r),
 		SitemapItems: sitemapPart.Entries,
 		XMLDeclarations: []template.HTML{
