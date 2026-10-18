@@ -15,7 +15,7 @@ import (
 func (s *Service) getSitemapIndexFromDB(r *http.Request, args ...any) (types.SitemapIndex, error) {
 
 	// Fetch the entire sitemap data from DB
-	data, err := s.repo.Data(r.Context(), args...)
+	data, err := s.sitemap.Data(r.Context(), args...)
 	if err != nil {
 		return nil, fmt.Errorf(
 			"failed to fetch sitemap data from DB: %w",
@@ -120,7 +120,10 @@ func (s *Service) getSitemapPart(r *http.Request, sitemapKey, partKey string) (*
 }
 
 // CacheSitemapIndex saves the sitemap index in Redis
-func (s *Service) cacheSitemapIndex(ctx context.Context, sitemapKey string, sitemapIndex types.SitemapIndex) error {
+func (s *Service) cacheSitemapIndex(
+	ctx context.Context,
+	sitemapKey string,
+	sitemapIndex types.SitemapIndex) error {
 
 	// Prepare hset values (key, field pairs) in a slice
 	hsetValues := make([]any, 0, len(sitemapIndex)*2)
@@ -139,17 +142,17 @@ func (s *Service) cacheSitemapIndex(ctx context.Context, sitemapKey string, site
 	return nil
 }
 
-// maxTime returns the later time from t1 and t2, all represented as strings
+// maxTime returns the later time from t1 and t2 represented as string
 func maxTime(t1, t2 string) (string, error) {
 
 	t1Time, err := time.Parse("2006-01-02", t1)
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 
 	t2Time, err := time.Parse("2006-01-02", t2)
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 
 	if t1Time.After(t2Time) {
