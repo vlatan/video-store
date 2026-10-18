@@ -67,7 +67,7 @@ func (s *Service) ReviewsAPI(w http.ResponseWriter, r *http.Request) {
 
 	// Get the user avatars
 	for i, review := range reviews.Items {
-		localAvatarURL, err := s.avatar.Get(r.Context(), review.User.PublicID, review.User.AvatarURL)
+		localAvatarURL, err := s.avatar.Get(r.Context(), review.PublicID, review.AvatarURL)
 		if err != nil {
 			slog.ErrorContext(
 				r.Context(), "failed to get user avatar",
@@ -76,12 +76,12 @@ func (s *Service) ReviewsAPI(w http.ResponseWriter, r *http.Request) {
 			s.tmpl.JSONError(w, r, http.StatusInternalServerError)
 			return
 		}
-		reviews.Items[i].User.LocalAvatarURL = localAvatarURL
+		reviews.Items[i].LocalAvatarURL = localAvatarURL
 	}
 
 	// Check if the current user owns a review
 	for i, review := range reviews.Items {
-		if currentUser.IsAuthenticated() && currentUser.ID == review.User.ID {
+		if currentUser.IsAuthenticated() && currentUser.ID == review.UserID {
 			reviews.Items[i].IsCurrentUser = true
 		}
 	}

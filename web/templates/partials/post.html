@@ -419,10 +419,10 @@
 					id="current-user-review" {{ end }} class="review-card">
 					<header class="review-header">
 						<div class="review-meta">
-							<img src="{{ .User.LocalAvatarURL }}" class=" review-user-avatar" width="20" height="20"
-								loading="lazy" alt="{{ .User.Name }}">
+							<img src="{{ .LocalAvatarURL }}" class=" review-user-avatar" width="20" height="20"
+								loading="lazy" alt="{{ .Username }}">
 							<span itemprop="author" itemscope itemtype="https://schema.org/Person">
-								<span itemprop="name" class="review-user-name">{{ .User.Name
+								<span itemprop="name" class="review-user-name">{{ .Username
 									}}</span>
 							</span>
 							<span itemprop="reviewRating" itemscope itemtype="https://schema.org/Rating"

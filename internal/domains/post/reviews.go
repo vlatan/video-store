@@ -72,8 +72,7 @@ func (r *Repository) Reviews(ctx context.Context, videoID, cursor string) (types
 		var (
 			review   types.Review
 			totalNum int
-			name,
-			email,
+			username,
 			avatarURL,
 			publicID sql.NullString
 		)
@@ -86,11 +85,8 @@ func (r *Repository) Reviews(ctx context.Context, videoID, cursor string) (types
 			&review.UpdatedAt,
 			&review.CreatedAt,
 			&totalNum,
-			&review.User.ID,
-			&review.User.ProviderUserId,
-			&review.User.Provider,
-			&name,
-			&email,
+			&review.UserID,
+			&username,
 			&avatarURL,
 			&publicID,
 		)
@@ -99,10 +95,9 @@ func (r *Repository) Reviews(ctx context.Context, videoID, cursor string) (types
 			return zero, err
 		}
 
-		review.User.Name = name.String
-		review.User.Email = email.String
-		review.User.AvatarURL = avatarURL.String
-		review.User.PublicID = publicID.String
+		review.Username = username.String
+		review.AvatarURL = avatarURL.String
+		review.PublicID = publicID.String
 
 		// Sanitize headline
 		safeHeadline := strictPolicy.Sanitize(review.Headline)

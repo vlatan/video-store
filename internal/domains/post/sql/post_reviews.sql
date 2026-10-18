@@ -7,10 +7,7 @@ SELECT
     prev.created_at,
     {{ .TotalCount }} AS total_results,
     au.id as user_id,
-    au.provider_user_id,
-    au.provider,
     au.name,
-    au.email,
     au.picture,
     au.public_id
 FROM post AS p

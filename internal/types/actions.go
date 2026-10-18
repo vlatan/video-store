@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"html/template"
 	"time"
-
-	"github.com/vlatan/video-store/internal/domains/user"
 )
 
 type Actions struct {
@@ -43,16 +41,20 @@ func (r *RatingStats) UnmarshalBinary(data []byte) error {
 }
 
 type Review struct {
-	Id            int           `json:"-"`
-	Headline      string        `json:"-"`
-	HTMLHeadline  template.HTML `json:"html_headline,omitempty"`
-	Content       string        `json:"-"`
-	HTMLContent   template.HTML `json:"html_content,omitempty"`
-	Rating        uint8         `json:"rating,omitempty"`
-	UpdatedAt     time.Time     `json:"updated_at,omitzero"`
-	CreatedAt     time.Time     `json:"created_at,omitzero"`
-	User          user.User     `json:"user,omitzero"`
-	IsCurrentUser bool          `json:"is_current_user"`
+	Id             int           `json:"-"`
+	Headline       string        `json:"-"`
+	HTMLHeadline   template.HTML `json:"html_headline,omitempty"`
+	Content        string        `json:"-"`
+	HTMLContent    template.HTML `json:"html_content,omitempty"`
+	Rating         uint8         `json:"rating,omitempty"`
+	UpdatedAt      time.Time     `json:"updated_at,omitzero"`
+	CreatedAt      time.Time     `json:"created_at,omitzero"`
+	UserID         int           `json:"-"`
+	Username       string        `json:"username,omitempty"`
+	PublicID       string        `json:"public_id,omitempty"`
+	AvatarURL      string        `json:"avatar_url,omitempty"`
+	LocalAvatarURL string        `json:"local_avatar_url,omitempty"`
+	IsCurrentUser  bool          `json:"is_current_user"`
 }
 
 // MarshalBinary implements the encoding.BinaryMarshaler interface

@@ -80,16 +80,16 @@ func (s *Service) Single(w http.ResponseWriter, r *http.Request) {
 
 		// Get the user avatars
 		for i, review := range postReviews.Items {
-			localAvatarURL, taskErr := s.avatar.Get(r.Context(), review.User.PublicID, review.User.AvatarURL)
+			localAvatarURL, taskErr := s.avatar.Get(r.Context(), review.PublicID, review.AvatarURL)
 			if taskErr != nil {
 				return taskErr
 			}
-			postReviews.Items[i].User.LocalAvatarURL = localAvatarURL
+			postReviews.Items[i].LocalAvatarURL = localAvatarURL
 		}
 
 		// Check if the current user owns a review
 		for i, review := range postReviews.Items {
-			if currentUser.IsAuthenticated() && currentUser.ID == review.User.ID {
+			if currentUser.IsAuthenticated() && currentUser.ID == review.UserID {
 				postReviews.Items[i].IsCurrentUser = true
 			}
 		}
