@@ -1,5 +1,4 @@
 - Make integrations independent of types
-- Maybe separate taxonomies
 
 - Make search bar on small screens accross entire screen
 - Write tests
