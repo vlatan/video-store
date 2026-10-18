@@ -13,7 +13,7 @@ import (
 )
 
 // Get a limited number of posts with cursor
-func (r *Repository) Home(ctx context.Context, cursor, orderBy string) (types.Posts, error) {
+func (r *Repository) Home(ctx context.Context, cursor, orderBy string) (Posts, error) {
 
 	// The first argument is the limit ($1).
 	// Peek for one post beoynd the limit to see if there's next page,
@@ -45,7 +45,7 @@ func (r *Repository) Home(ctx context.Context, cursor, orderBy string) (types.Po
 	}
 
 	// If cursor supplied construct the additional args and WHERE clause
-	var zero, posts types.Posts
+	var zero, posts Posts
 	if cursor != "" {
 
 		cursorParts, err := stringx.DecodeCursor(cursor)
@@ -88,7 +88,7 @@ func (r *Repository) Home(ctx context.Context, cursor, orderBy string) (types.Po
 	for rows.Next() {
 
 		var (
-			post          types.Post
+			post          Post
 			originalTitle sql.NullString
 			avgRating     sql.NullFloat64
 			ratingCount   sql.NullInt64
@@ -115,7 +115,7 @@ func (r *Repository) Home(ctx context.Context, cursor, orderBy string) (types.Po
 
 		// Attach ratings if any
 		if avgRating.Valid && ratingCount.Valid {
-			post.RatingStats = &types.RatingStats{
+			post.RatingStats = &RatingStats{
 				Avg:   avgRating.Float64,
 				Count: ratingCount.Int64,
 			}

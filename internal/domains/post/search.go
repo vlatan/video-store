@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/stringx"
 )
 
@@ -19,7 +18,7 @@ func (r *Repository) Search(
 	ctx context.Context,
 	searchTerm string,
 	limit int,
-	cursor string) (types.Posts, error) {
+	cursor string) (Posts, error) {
 
 	// Construct the SQL parts as well as the arguments.
 	// The search term and limit are the first two arguments ($1 and $2).
@@ -28,7 +27,7 @@ func (r *Repository) Search(
 	total := "COUNT(*) OVER()"
 	args := []any{searchTerm, limit + 1}
 
-	var zero, posts types.Posts
+	var zero, posts Posts
 
 	// Build args and SQL parts.
 	// If cursor (meanining this is not the first page),
@@ -73,7 +72,7 @@ func (r *Repository) Search(
 	for rows.Next() {
 
 		var (
-			post          types.Post
+			post          Post
 			originalTitle sql.NullString
 			totalNum      int
 			avgRating     sql.NullFloat64
@@ -102,7 +101,7 @@ func (r *Repository) Search(
 
 		// Attach ratings if any
 		if avgRating.Valid && ratingCount.Valid {
-			post.RatingStats = &types.RatingStats{
+			post.RatingStats = &RatingStats{
 				Avg:   avgRating.Float64,
 				Count: ratingCount.Int64,
 			}

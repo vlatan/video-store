@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/vlatan/video-store/internal/domains/post"
 	"github.com/vlatan/video-store/internal/integrations/gemini"
 	"github.com/vlatan/video-store/internal/integrations/yt"
 	"github.com/vlatan/video-store/internal/types"
@@ -20,7 +21,7 @@ import (
 func (w *Worker) getValidVideos(
 	ctx context.Context,
 	videoIds []string,
-	destMap map[string]*types.Post,
+	destMap map[string]*post.Post,
 ) error {
 
 	// Get orphans metadata from YT
@@ -60,7 +61,7 @@ func (w *Worker) getValidVideos(
 func (w *Worker) getValidSourcesVideos(
 	ctx context.Context,
 	playlistIds []string,
-	destMap map[string]*types.Post,
+	destMap map[string]*post.Post,
 ) error {
 
 	// Get valid videos from playlists
@@ -146,8 +147,8 @@ func (w *Worker) getValidSourcesVideos(
 // Exits with error only if context ended, any other error is just logged.
 func (w *Worker) adoptVideos(
 	ctx context.Context,
-	videos []*types.Post,
-	sourceMap map[string]*types.Post,
+	videos []*post.Post,
+	sourceMap map[string]*post.Post,
 ) error {
 
 	for _, dbVideo := range videos {
@@ -199,11 +200,11 @@ func (w *Worker) adoptVideos(
 // Exits with error only if context ended, any other error is just logged.
 func (w *Worker) deleteVideos(
 	ctx context.Context,
-	dbVideos []*types.Post,
-	destMap map[string]*types.Post,
-) ([]*types.Post, error) {
+	dbVideos []*post.Post,
+	destMap map[string]*post.Post,
+) ([]*post.Post, error) {
 
-	var validDbVideos []*types.Post
+	var validDbVideos []*post.Post
 	for _, dbVideo := range dbVideos {
 
 		// Check the context first
@@ -253,7 +254,7 @@ func (w *Worker) deleteVideos(
 }
 
 // insertVideos generates data for the videos and inserts them in database
-func (w *Worker) insertVideos(ctx context.Context, videos []*types.Post) error {
+func (w *Worker) insertVideos(ctx context.Context, videos []*post.Post) error {
 
 	// Insert new videos in DB
 	for i, video := range videos {
@@ -336,7 +337,7 @@ func (w *Worker) insertVideos(ctx context.Context, videos []*types.Post) error {
 }
 
 // updateVideos summarizes videos and updates them in database
-func (w *Worker) updateVideos(ctx context.Context, videos []*types.Post) error {
+func (w *Worker) updateVideos(ctx context.Context, videos []*post.Post) error {
 
 	// Update videos in DB
 	for _, video := range videos {

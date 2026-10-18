@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/vlatan/video-store/internal/config"
+	"github.com/vlatan/video-store/internal/domains/post"
 	"github.com/vlatan/video-store/internal/domains/taxonomy/repo"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/drivers/store"
@@ -13,9 +14,9 @@ import (
 )
 
 type poster interface {
-	Category(context.Context, string, string, string) (types.Posts, error)
-	Source(context.Context, string, string, string) (types.Posts, error)
-	Year(context.Context, string, string, string) (types.Posts, error)
+	Category(context.Context, string, string, string) (post.Posts, error)
+	Source(context.Context, string, string, string) (post.Posts, error)
+	Year(context.Context, string, string, string) (post.Posts, error)
 }
 
 type Service struct {
@@ -35,7 +36,7 @@ type taxonomyData struct {
 	CurrentSource   *types.Source
 	Sources         []types.Source
 	types.Form
-	types.Posts
+	post.Posts
 	tmpl.Base
 }
 

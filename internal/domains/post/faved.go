@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/stringx"
 )
 
@@ -16,7 +15,7 @@ import (
 func (r *Repository) Favorites(
 	ctx context.Context,
 	userID int,
-	cursor string) (types.Posts, error) {
+	cursor string) (Posts, error) {
 
 	// The user ID and the limit are the first two arguments ($1 and $2)
 	// Peek for one post beoynd the limit to see if there's next page,
@@ -28,7 +27,7 @@ func (r *Repository) Favorites(
 	total := "COUNT(*) OVER()"
 
 	// If cursor supplied construct the additional args and WHERE clause
-	var zero, posts types.Posts
+	var zero, posts Posts
 	if cursor != "" {
 
 		total = "0"
@@ -65,7 +64,7 @@ func (r *Repository) Favorites(
 
 		var (
 			totalNum      int
-			post          types.Post
+			post          Post
 			originalTitle sql.NullString
 			avgRating     sql.NullFloat64
 			ratingCount   sql.NullInt64
@@ -95,7 +94,7 @@ func (r *Repository) Favorites(
 
 		// Attach ratings if any
 		if avgRating.Valid && ratingCount.Valid {
-			post.RatingStats = &types.RatingStats{
+			post.RatingStats = &RatingStats{
 				Avg:   avgRating.Float64,
 				Count: ratingCount.Int64,
 			}

@@ -10,7 +10,6 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/microcosm-cc/bluemonday"
-	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/stringx"
 )
 
@@ -64,9 +63,13 @@ func (r *Repository) Unfave(ctx context.Context, userID int, videoID string) (in
 
 // Rate records user's post rating,
 // Returns a struct with rating count and average rating for the video.
-func (r *Repository) Rate(ctx context.Context, rating uint8, userID int, videoID string) (types.RatingStats, error) {
+func (r *Repository) Rate(
+	ctx context.Context,
+	rating uint8,
+	userID int,
+	videoID string) (RatingStats, error) {
 
-	var zero, rs types.RatingStats
+	var zero, rs RatingStats
 
 	// Start trannsaction
 	tx, err := r.db.Pool.Begin(ctx)
@@ -127,9 +130,9 @@ func (r *Repository) Rate(ctx context.Context, rating uint8, userID int, videoID
 func (r *Repository) Unrate(
 	ctx context.Context,
 	userID int,
-	videoID string) (types.RatingStats, error) {
+	videoID string) (RatingStats, error) {
 
-	var zero, rs types.RatingStats
+	var zero, rs RatingStats
 
 	// Start trannsaction
 	tx, err := r.db.Pool.Begin(ctx)
@@ -192,8 +195,8 @@ func (r *Repository) Review(
 	userID int, videoID string,
 	rating uint8, headline, content string) (map[string]any, error) {
 
-	var rs types.RatingStats
-	var re types.Review
+	var rs RatingStats
+	var re Review
 
 	// Start trannsaction
 	tx, err := r.db.Pool.Begin(ctx)
@@ -306,9 +309,9 @@ func (r *Repository) Delete(ctx context.Context, videoID string) (int64, error) 
 }
 
 // Check if the user liked and/or faved a post
-func (r *Repository) Actions(ctx context.Context, userID, postID int) (types.Actions, error) {
+func (r *Repository) Actions(ctx context.Context, userID, postID int) (Actions, error) {
 
-	var zero, actions types.Actions
+	var zero, actions Actions
 	query, err := stringx.GetQuery(r.tmpl, "user_actions.sql", nil)
 	if err != nil {
 		return zero, err

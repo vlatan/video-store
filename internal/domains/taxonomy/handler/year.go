@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/vlatan/video-store/internal/ctxd"
+	"github.com/vlatan/video-store/internal/domains/post"
 	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/stringx"
 )
@@ -41,7 +42,7 @@ func (s *Service) YearPosts(w http.ResponseWriter, r *http.Request) {
 
 	// Don't cache the release year posts only for the admin.
 	// We can pass the release year as string here no problem.
-	var posts types.Posts
+	var posts post.Posts
 	if ctxd.GetUser(r.Context()).IsAdmin(s.cfg) {
 		posts, err = s.post.Year(
 			r.Context(), year, "", orderBy,
@@ -51,7 +52,7 @@ func (s *Service) YearPosts(w http.ResponseWriter, r *http.Request) {
 			r.Context(),
 			redisKey,
 			s.cfg.CacheTimeout,
-			func() (types.Posts, error) {
+			func() (post.Posts, error) {
 				return s.post.Year(
 					r.Context(), year, "", orderBy,
 				)
@@ -128,7 +129,7 @@ func (s *Service) YearPostsAPI(w http.ResponseWriter, r *http.Request) {
 	currentUser := ctxd.GetUser(r.Context())
 
 	// Don't cache the category posts only for the admin
-	var posts types.Posts
+	var posts post.Posts
 	if currentUser.IsAdmin(s.cfg) {
 		posts, err = s.post.Year(
 			r.Context(), year, cursor, orderBy,
@@ -138,7 +139,7 @@ func (s *Service) YearPostsAPI(w http.ResponseWriter, r *http.Request) {
 			r.Context(),
 			redisKey,
 			s.cfg.CacheTimeout,
-			func() (types.Posts, error) {
+			func() (post.Posts, error) {
 				return s.post.Year(
 					r.Context(), year, cursor, orderBy,
 				)

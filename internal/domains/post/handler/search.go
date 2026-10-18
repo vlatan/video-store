@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/vlatan/video-store/internal/ctxd"
-	"github.com/vlatan/video-store/internal/types"
+	"github.com/vlatan/video-store/internal/domains/post"
 	"github.com/vlatan/video-store/internal/utils/stringx"
 )
 
@@ -30,7 +30,7 @@ func (s *Service) Search(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		err   error
-		posts types.Posts
+		posts post.Posts
 	)
 
 	// Don't cache the search results only for the admin
@@ -43,7 +43,7 @@ func (s *Service) Search(w http.ResponseWriter, r *http.Request) {
 			r.Context(),
 			redisKey,
 			s.cfg.CacheTimeout,
-			func() (types.Posts, error) {
+			func() (post.Posts, error) {
 				return s.post.Search(
 					r.Context(), searchQuery, s.cfg.PostsPerPage, "",
 				)
@@ -106,7 +106,7 @@ func (s *Service) SearchAPI(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		err   error
-		posts types.Posts
+		posts post.Posts
 	)
 
 	// Don't cache the search results only for the admin
@@ -119,7 +119,7 @@ func (s *Service) SearchAPI(w http.ResponseWriter, r *http.Request) {
 			r.Context(),
 			redisKey,
 			s.cfg.CacheTimeout,
-			func() (types.Posts, error) {
+			func() (post.Posts, error) {
 				return s.post.Search(
 					r.Context(), searchQuery, s.cfg.PostsPerPage, cursor,
 				)

@@ -5,14 +5,14 @@ import (
 
 	"github.com/vlatan/video-store/internal/avatar"
 	"github.com/vlatan/video-store/internal/config"
+	"github.com/vlatan/video-store/internal/domains/post"
 	"github.com/vlatan/video-store/internal/domains/user"
 	"github.com/vlatan/video-store/internal/drivers/store"
 	"github.com/vlatan/video-store/internal/tmpl"
-	"github.com/vlatan/video-store/internal/types"
 )
 
 type favoriter interface {
-	Favorites(context.Context, int, string) (types.Posts, error)
+	Favorites(context.Context, int, string) (post.Posts, error)
 }
 
 type Service struct {
@@ -28,7 +28,7 @@ type userData struct {
 	Title string
 	tmpl.PaginationInfo
 	user.Users
-	types.Posts
+	post.Posts
 	tmpl.Base
 }
 

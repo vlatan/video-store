@@ -8,6 +8,7 @@ import (
 	"uuid"
 
 	"github.com/vlatan/video-store/internal/config"
+	"github.com/vlatan/video-store/internal/domains/post"
 	postRepo "github.com/vlatan/video-store/internal/domains/post"
 	taxonomyRepo "github.com/vlatan/video-store/internal/domains/taxonomy/repo"
 	"github.com/vlatan/video-store/internal/drivers/database"
@@ -18,12 +19,12 @@ import (
 	"github.com/vlatan/video-store/internal/utils/retry"
 )
 
-type post interface {
-	All(context.Context) ([]*types.Post, error)
+type poster interface {
+	All(context.Context) ([]*post.Post, error)
 	IsBanned(context.Context, string) error
 	UpdateSource(context.Context, string, string) (int64, error)
-	Insert(context.Context, *types.Post) (int64, error)
-	Update(context.Context, *types.Post) (int64, error)
+	Insert(context.Context, *post.Post) (int64, error)
+	Update(context.Context, *post.Post) (int64, error)
 	Delete(context.Context, string) (int64, error)
 }
 
@@ -36,7 +37,7 @@ type taxonomy interface {
 type Worker struct {
 	id                string
 	cfg               *config.Config
-	post              post
+	post              poster
 	taxonomy          taxonomy
 	youtube           *yt.Service
 	gemini            *gemini.Service

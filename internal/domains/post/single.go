@@ -28,7 +28,7 @@ func (r *Repository) IsBanned(ctx context.Context, videoID string) error {
 }
 
 // Insert post in DB
-func (r *Repository) Insert(ctx context.Context, post *types.Post) (int64, error) {
+func (r *Repository) Insert(ctx context.Context, post *Post) (int64, error) {
 
 	// Marshal the thumbnails
 	thumbnails, err := json.Marshal(post.Thumbnails)
@@ -78,7 +78,7 @@ func (r *Repository) Insert(ctx context.Context, post *types.Post) (int64, error
 
 // UpdatePost updates post's specific data:
 // OriginalTitle, Category, Summary, ReleaseYear, Directors
-func (r *Repository) Update(ctx context.Context, post *types.Post) (int64, error) {
+func (r *Repository) Update(ctx context.Context, post *Post) (int64, error) {
 
 	query, err := stringx.GetQuery(r.tmpl, "update_post.sql", nil)
 	if err != nil {
@@ -111,9 +111,9 @@ func (r *Repository) Update(ctx context.Context, post *types.Post) (int64, error
 }
 
 // Get single post from DB based on a video ID
-func (r *Repository) Single(ctx context.Context, videoID string) (types.Post, error) {
+func (r *Repository) Single(ctx context.Context, videoID string) (Post, error) {
 
-	var zero, post types.Post
+	var zero, post Post
 	query, err := stringx.GetQuery(r.tmpl, "single_post.sql", nil)
 	if err != nil {
 		return zero, err
@@ -198,7 +198,7 @@ func (r *Repository) Single(ctx context.Context, videoID string) (types.Post, er
 
 	// Attach ratings if any
 	if avgRating.Valid && ratingCount.Valid {
-		post.RatingStats = &types.RatingStats{
+		post.RatingStats = &RatingStats{
 			Avg:   avgRating.Float64,
 			Count: ratingCount.Int64,
 		}

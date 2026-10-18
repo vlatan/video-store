@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/vlatan/video-store/internal/domains/post"
 	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/normalize"
 	"github.com/vlatan/video-store/internal/utils/retry"
@@ -116,7 +117,7 @@ func (s *Service) GenerateContent(
 // GeneratePostSummary generates post summary and category
 func (s *Service) GeneratePostSummary(
 	ctx context.Context,
-	post *types.Post,
+	post *post.Post,
 	retryConfig *retry.Config) error {
 
 	// Create summary contents
@@ -186,7 +187,7 @@ func (s *Service) GeneratePostSummary(
 // GeneratePostOCR reads original title, directors and release year from screen
 func (s *Service) GeneratePostOCR(
 	ctx context.Context,
-	post *types.Post,
+	post *post.Post,
 	retryConfig *retry.Config) error {
 
 	// Get video duration

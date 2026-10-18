@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/vlatan/video-store/internal/ctxd"
-	"github.com/vlatan/video-store/internal/types"
+	"github.com/vlatan/video-store/internal/domains/post"
 )
 
 // Perform an action on a video
@@ -33,7 +33,7 @@ func (s *Service) ReviewsAPI(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		err     error
-		reviews types.Reviews
+		reviews post.Reviews
 	)
 
 	// Get post reviews, don't cache sthe reviews for logged in users
@@ -44,7 +44,7 @@ func (s *Service) ReviewsAPI(w http.ResponseWriter, r *http.Request) {
 			r.Context(),
 			redisKey,
 			s.cfg.CacheTimeout,
-			func() (types.Reviews, error) {
+			func() (post.Reviews, error) {
 				return s.post.Reviews(r.Context(), videoID, cursor)
 			},
 		)

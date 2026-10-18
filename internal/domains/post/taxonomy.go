@@ -18,7 +18,7 @@ func (r *Repository) Category(
 	categorySlug,
 	cursor,
 	orderBy string,
-) (types.Posts, error) {
+) (Posts, error) {
 
 	return r.queryTaxonomyPosts(
 		ctx,
@@ -35,7 +35,7 @@ func (r *Repository) Source(
 	playlistID,
 	cursor,
 	orderBy string,
-) (types.Posts, error) {
+) (Posts, error) {
 
 	return r.queryTaxonomyPosts(
 		ctx,
@@ -52,7 +52,7 @@ func (r *Repository) Year(
 	releaseYear,
 	cursor,
 	orderBy string,
-) (types.Posts, error) {
+) (Posts, error) {
 
 	return r.queryTaxonomyPosts(
 		ctx,
@@ -70,7 +70,7 @@ func (r *Repository) queryTaxonomyPosts(
 	taxonomyID,
 	cursor,
 	orderBy string,
-) (types.Posts, error) {
+) (Posts, error) {
 
 	// The taxonomy ID and the limit are the first two arguments ($1 and $2)
 	// Peek for one post beoynd the limit to see if there's next page,
@@ -103,7 +103,7 @@ func (r *Repository) queryTaxonomyPosts(
 	}
 
 	// If cursor supplied construct the additional args and WHERE clause
-	var zero, posts types.Posts
+	var zero, posts Posts
 	if cursor != "" {
 
 		total = "0"
@@ -144,7 +144,7 @@ func (r *Repository) queryTaxonomyPosts(
 	// Iterate over the rows
 	for rows.Next() {
 		var (
-			post                         types.Post
+			post                         Post
 			originalTitle, taxonomyTitle sql.NullString
 			totalNum                     int
 			avgRating                    sql.NullFloat64
@@ -173,7 +173,7 @@ func (r *Repository) queryTaxonomyPosts(
 
 		// Attach ratings if any
 		if avgRating.Valid && ratingCount.Valid {
-			post.RatingStats = &types.RatingStats{
+			post.RatingStats = &RatingStats{
 				Avg:   avgRating.Float64,
 				Count: ratingCount.Int64,
 			}

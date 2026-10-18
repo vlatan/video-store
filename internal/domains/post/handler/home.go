@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/vlatan/video-store/internal/ctxd"
+	"github.com/vlatan/video-store/internal/domains/post"
 	"github.com/vlatan/video-store/internal/types"
 )
 
@@ -29,7 +30,7 @@ func (s *Service) Home(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		err   error
-		posts types.Posts
+		posts post.Posts
 	)
 
 	// Don't cache the home results only for the admin
@@ -42,7 +43,7 @@ func (s *Service) Home(w http.ResponseWriter, r *http.Request) {
 			r.Context(),
 			redisKey,
 			s.cfg.CacheTimeout,
-			func() (types.Posts, error) {
+			func() (post.Posts, error) {
 				return s.post.Home(
 					r.Context(), "", orderBy,
 				)
@@ -70,7 +71,6 @@ func (s *Service) Home(w http.ResponseWriter, r *http.Request) {
 		Base:  s.tmpl.Base(w, r),
 		Posts: posts,
 	}
-
 	s.tmpl.RenderHTML(w, r, "home.html", data)
 }
 
@@ -104,7 +104,7 @@ func (s *Service) HomeAPI(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		err   error
-		posts types.Posts
+		posts post.Posts
 	)
 
 	// Don't cache the home results only for the admin
@@ -117,7 +117,7 @@ func (s *Service) HomeAPI(w http.ResponseWriter, r *http.Request) {
 			r.Context(),
 			redisKey,
 			s.cfg.CacheTimeout,
-			func() (types.Posts, error) {
+			func() (post.Posts, error) {
 				return s.post.Home(
 					r.Context(), cursor, orderBy,
 				)

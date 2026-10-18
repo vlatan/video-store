@@ -1,4 +1,4 @@
-- Flatten Review struct so you don't use User type on it
+- Make integrations independent of types
 - Maybe separate taxonomies
 
 - Make search bar on small screens accross entire screen

@@ -4,12 +4,11 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/stringx"
 )
 
 // Get all the posts from DB
-func (r *Repository) All(ctx context.Context) ([]*types.Post, error) {
+func (r *Repository) All(ctx context.Context) ([]*Post, error) {
 
 	query, err := stringx.GetQuery(r.tmpl, "all_posts.sql", nil)
 	if err != nil {
@@ -26,9 +25,9 @@ func (r *Repository) All(ctx context.Context) ([]*types.Post, error) {
 	defer rows.Close()
 
 	// Iterate over the rows
-	var posts []*types.Post
+	var posts []*Post
 	for rows.Next() {
-		var post types.Post
+		var post Post
 		var playlistID, originalTitle, summary, categoryName sql.NullString
 
 		// Scan each row

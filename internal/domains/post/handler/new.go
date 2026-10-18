@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/vlatan/video-store/internal/domains/post"
 	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/redirect"
 	"github.com/vlatan/video-store/internal/utils/retry"
@@ -119,11 +120,11 @@ func (s *Service) New(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Create post object
-		post := s.yt.NewYouTubePost(metadata[0], "")
-		post.UserActions = types.Actions{UserID: data.CurrentUser.ID}
+		p := s.yt.NewYouTubePost(metadata[0], "")
+		p.UserActions = post.Actions{UserID: data.CurrentUser.ID}
 
 		// Insert the video
-		rowsAffected, err := s.post.Insert(r.Context(), post)
+		rowsAffected, err := s.post.Insert(r.Context(), p)
 		if err != nil || rowsAffected == 0 {
 			slog.WarnContext(
 				r.Context(), "failed to insert the post in DB",
@@ -153,7 +154,7 @@ func (s *Service) New(w http.ResponseWriter, r *http.Request) {
 				Delay:      65 * time.Second,
 			}
 
-			if err := s.gemini.GeneratePostSummary(ctx, post, retryConfig); err != nil {
+			if err := s.gemini.GeneratePostSummary(ctx, p, retryConfig); err != nil {
 				slog.WarnContext(
 					r.Context(),
 					"failed to generate/update LLM post summary/category",
@@ -169,7 +170,7 @@ func (s *Service) New(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			if err := s.gemini.GeneratePostOCR(ctx, post, retryConfig); err != nil {
+			if err := s.gemini.GeneratePostOCR(ctx, p, retryConfig); err != nil {
 				slog.WarnContext(
 					r.Context(),
 					"failed to generate/update LLM post OCR data",
@@ -177,7 +178,7 @@ func (s *Service) New(w http.ResponseWriter, r *http.Request) {
 				)
 			}
 
-			_, err = s.post.Update(ctx, post)
+			_, err = s.post.Update(ctx, p)
 			if err != nil {
 				slog.WarnContext(
 					r.Context(),

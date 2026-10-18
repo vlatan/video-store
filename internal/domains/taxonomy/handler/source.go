@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/vlatan/video-store/internal/ctxd"
+	"github.com/vlatan/video-store/internal/domains/post"
 	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/redirect"
 	"github.com/vlatan/video-store/internal/utils/retry"
@@ -209,7 +210,7 @@ func (s *Service) SourcePosts(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		err   error
-		posts types.Posts
+		posts post.Posts
 	)
 
 	if ctxd.GetUser(r.Context()).IsAdmin(s.cfg) {
@@ -221,7 +222,7 @@ func (s *Service) SourcePosts(w http.ResponseWriter, r *http.Request) {
 			r.Context(),
 			redisKey,
 			s.cfg.CacheTimeout,
-			func() (types.Posts, error) {
+			func() (post.Posts, error) {
 				return s.post.Source(
 					r.Context(), sourceID, "", orderBy,
 				)
@@ -323,7 +324,7 @@ func (s *Service) SourcePostsAPI(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		err   error
-		posts types.Posts
+		posts post.Posts
 	)
 
 	if currentUser.IsAdmin(s.cfg) {
@@ -335,7 +336,7 @@ func (s *Service) SourcePostsAPI(w http.ResponseWriter, r *http.Request) {
 			r.Context(),
 			redisKey,
 			s.cfg.CacheTimeout,
-			func() (types.Posts, error) {
+			func() (post.Posts, error) {
 				return s.post.Source(
 					r.Context(), sourceID, cursor, orderBy,
 				)

@@ -10,12 +10,11 @@ import (
 	"time"
 
 	"github.com/microcosm-cc/bluemonday"
-	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/stringx"
 )
 
 // GetPostReviews gets posts reviews
-func (r *Repository) Reviews(ctx context.Context, videoID, cursor string) (types.Reviews, error) {
+func (r *Repository) Reviews(ctx context.Context, videoID, cursor string) (Reviews, error) {
 
 	// The video ID and the limit are the first two arguments ($1 and $2)
 	// Peek for one review beoynd the limit to see if there are more reviews,
@@ -26,7 +25,7 @@ func (r *Repository) Reviews(ctx context.Context, videoID, cursor string) (types
 	var andCondition string
 	total := "COUNT(*) OVER()"
 
-	var zero, reviews types.Reviews
+	var zero, reviews Reviews
 
 	// Build args and SQL parts.
 	// If cursor (meanining this is not the first page),
@@ -70,7 +69,7 @@ func (r *Repository) Reviews(ctx context.Context, videoID, cursor string) (types
 	for rows.Next() {
 
 		var (
-			review   types.Review
+			review   Review
 			totalNum int
 			username,
 			avatarURL,

@@ -8,7 +8,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/vlatan/video-store/internal/ctxd"
-	"github.com/vlatan/video-store/internal/types"
+	"github.com/vlatan/video-store/internal/domains/post"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -26,10 +26,10 @@ func (s *Service) Single(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var (
-		post         types.Post
-		postReviews  types.Reviews
-		userActions  types.Actions
-		relatedPosts []types.Post
+		p            post.Post
+		postReviews  post.Reviews
+		userActions  post.Actions
+		relatedPosts []post.Post
 		currentUser  = ctxd.GetUser(r.Context())
 	)
 
@@ -41,13 +41,13 @@ func (s *Service) Single(w http.ResponseWriter, r *http.Request) {
 		// Don't cache single post for logged in users
 		var taskErr error
 		if currentUser.IsAuthenticated() {
-			post, taskErr = s.post.Single(r.Context(), videoID)
+			p, taskErr = s.post.Single(r.Context(), videoID)
 		} else {
-			post, taskErr = s.rdb.Get(
+			p, taskErr = s.rdb.Get(
 				r.Context(),
 				fmt.Sprintf(postCacheKey, videoID),
 				s.cfg.CacheTimeout,
-				func() (types.Post, error) {
+				func() (post.Post, error) {
 					return s.post.Single(r.Context(), videoID)
 				},
 			)
@@ -68,7 +68,7 @@ func (s *Service) Single(w http.ResponseWriter, r *http.Request) {
 				r.Context(),
 				fmt.Sprintf(postReviewsCacheKey, videoID),
 				s.cfg.CacheTimeout,
-				func() (types.Reviews, error) {
+				func() (post.Reviews, error) {
 					return s.post.Reviews(r.Context(), videoID, "")
 				},
 			)
@@ -128,7 +128,7 @@ func (s *Service) Single(w http.ResponseWriter, r *http.Request) {
 			userActions, taskErr = s.post.Actions(
 				r.Context(),
 				currentUser.ID,
-				post.ID,
+				p.ID,
 			)
 
 			if taskErr != nil {
@@ -148,19 +148,19 @@ func (s *Service) Single(w http.ResponseWriter, r *http.Request) {
 
 		var (
 			taskErr error
-			posts   types.Posts
+			posts   post.Posts
 		)
 
 		// Don't cache the related posts only for the admin.
 		if currentUser.IsAdmin(s.cfg) {
-			posts, taskErr = s.post.Related(r.Context(), post.GetTitle())
+			posts, taskErr = s.post.Related(r.Context(), p.GetTitle())
 		} else {
 			posts, taskErr = s.rdb.Get(
 				r.Context(),
 				fmt.Sprintf(relatedPostsCacheKey, videoID),
 				s.cfg.CacheTimeout,
-				func() (types.Posts, error) {
-					return s.post.Related(r.Context(), post.GetTitle())
+				func() (post.Posts, error) {
+					return s.post.Related(r.Context(), p.GetTitle())
 				},
 			)
 		}
@@ -190,14 +190,14 @@ func (s *Service) Single(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Attach the results to the post object
-	post.Reviews = &postReviews
-	post.UserActions = userActions
-	post.RelatedPosts = relatedPosts
+	p.Reviews = &postReviews
+	p.UserActions = userActions
+	p.RelatedPosts = relatedPosts
 
 	// Get template data
 	data := postData{
 		Base:        s.tmpl.Base(w, r),
-		CurrentPost: &post,
+		CurrentPost: &p,
 	}
 
 	s.tmpl.RenderHTML(w, r, "post.html", data)

@@ -6,6 +6,7 @@ import (
 	"maps"
 	"slices"
 
+	"github.com/vlatan/video-store/internal/domains/post"
 	"github.com/vlatan/video-store/internal/types"
 	"google.golang.org/api/youtube/v3"
 )
@@ -98,7 +99,7 @@ func (w *Worker) Process(ctx context.Context) error {
 	w.stats.FetchedDbVideos = len(dbVideos)
 
 	// Define map that will accumulate all valid YT videos
-	ytVideosMap := make(map[string]*types.Post)
+	ytVideosMap := make(map[string]*post.Post)
 
 	// GET THE ORPHAN VALID VIDEOS FROM YOUTUBE
 	// ###################################################################

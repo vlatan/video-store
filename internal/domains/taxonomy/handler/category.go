@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/vlatan/video-store/internal/ctxd"
+	"github.com/vlatan/video-store/internal/domains/post"
 	"github.com/vlatan/video-store/internal/types"
 )
 
@@ -29,7 +30,7 @@ func (s *Service) CategoryPosts(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		err   error
-		posts types.Posts
+		posts post.Posts
 	)
 
 	// Don't cache the category posts only for the admin
@@ -42,7 +43,7 @@ func (s *Service) CategoryPosts(w http.ResponseWriter, r *http.Request) {
 			r.Context(),
 			redisKey,
 			s.cfg.CacheTimeout,
-			func() (types.Posts, error) {
+			func() (post.Posts, error) {
 				return s.post.Category(
 					r.Context(), slug, "", orderBy,
 				)
@@ -109,7 +110,7 @@ func (s *Service) CategoryPostsAPI(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		err   error
-		posts types.Posts
+		posts post.Posts
 	)
 
 	// Don't cache the category posts only for the admin
@@ -122,7 +123,7 @@ func (s *Service) CategoryPostsAPI(w http.ResponseWriter, r *http.Request) {
 			r.Context(),
 			redisKey,
 			s.cfg.CacheTimeout,
-			func() (types.Posts, error) {
+			func() (post.Posts, error) {
 				return s.post.Category(
 					r.Context(), slug, cursor, orderBy,
 				)
