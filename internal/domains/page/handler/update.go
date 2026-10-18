@@ -64,7 +64,7 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
 		// Serve the page with the form
-		s.tmpl.RenderHTML(w, r, "page_form.html", data)
+		s.tmpl.RenderHTML(w, r, pageForm, data)
 
 	case "POST":
 		err := r.ParseForm()
@@ -74,7 +74,7 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 				"error", err,
 			)
 			data.Form.Error = "Could not parse the form"
-			s.tmpl.RenderHTML(w, r, "page_form.html", data)
+			s.tmpl.RenderHTML(w, r, pageForm, data)
 			return
 		}
 
@@ -96,7 +96,7 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 				"error", err,
 			)
 			data.Form.Error = "Could not update the page"
-			s.tmpl.RenderHTML(w, r, "page_form.html", data)
+			s.tmpl.RenderHTML(w, r, pageForm, data)
 			return
 		}
 
@@ -108,7 +108,7 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 				"error", err,
 			)
 			data.Form.Error = "Could not delete the cache on page"
-			s.tmpl.RenderHTML(w, r, "form.html", data)
+			s.tmpl.RenderHTML(w, r, pageForm, data)
 			return
 		}
 

@@ -115,7 +115,7 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
 		// Serve the page with the form
-		s.tmpl.RenderHTML(w, r, "post_form.html", data)
+		s.tmpl.RenderHTML(w, r, postForm, data)
 
 	case "POST":
 		err := r.ParseForm()
@@ -125,7 +125,7 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 				"error", err,
 			)
 			data.Form.Error = "Could not parse the form"
-			s.tmpl.RenderHTML(w, r, "form.html", data)
+			s.tmpl.RenderHTML(w, r, postForm, data)
 			return
 		}
 
@@ -165,7 +165,7 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 				"error", err,
 			)
 			data.Form.Error = "Could not parse the release year"
-			s.tmpl.RenderHTML(w, r, "form.html", data)
+			s.tmpl.RenderHTML(w, r, postForm, data)
 			return
 		}
 
@@ -177,7 +177,7 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 				"error", err,
 			)
 			data.Form.Error = "Could not parse the directors"
-			s.tmpl.RenderHTML(w, r, "form.html", data)
+			s.tmpl.RenderHTML(w, r, postForm, data)
 			return
 		}
 
@@ -200,7 +200,7 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 				"error", err,
 			)
 			data.Form.Error = "Could not update the post in DB"
-			s.tmpl.RenderHTML(w, r, "form.html", data)
+			s.tmpl.RenderHTML(w, r, postForm, data)
 			return
 		}
 
@@ -212,7 +212,7 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 				"error", err,
 			)
 			data.Form.Error = "Could not delete the cache on post"
-			s.tmpl.RenderHTML(w, r, "form.html", data)
+			s.tmpl.RenderHTML(w, r, postForm, data)
 			return
 		}
 

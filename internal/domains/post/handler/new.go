@@ -32,7 +32,7 @@ func (s *Service) New(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
 		// Serve the page with the form
-		s.tmpl.RenderHTML(w, r, "post_form.html", data)
+		s.tmpl.RenderHTML(w, r, postForm, data)
 
 	case "POST":
 
@@ -43,7 +43,7 @@ func (s *Service) New(w http.ResponseWriter, r *http.Request) {
 				"error", err,
 			)
 			data.Form.Error = "Could not parse the form"
-			s.tmpl.RenderHTML(w, r, "form.html", data)
+			s.tmpl.RenderHTML(w, r, postForm, data)
 			return
 		}
 
@@ -59,7 +59,7 @@ func (s *Service) New(w http.ResponseWriter, r *http.Request) {
 				"error", err,
 			)
 			data.Form.Error = "Could not extract the video ID"
-			s.tmpl.RenderHTML(w, r, "form.html", data)
+			s.tmpl.RenderHTML(w, r, postForm, data)
 			return
 		}
 
@@ -67,7 +67,7 @@ func (s *Service) New(w http.ResponseWriter, r *http.Request) {
 		if validVideoID.FindStringSubmatch(videoID) == nil {
 			slog.WarnContext(r.Context(), "invalid video id")
 			data.Form.Error = "Could not validate the video ID"
-			s.tmpl.RenderHTML(w, r, "form.html", data)
+			s.tmpl.RenderHTML(w, r, postForm, data)
 			return
 		}
 
@@ -75,7 +75,7 @@ func (s *Service) New(w http.ResponseWriter, r *http.Request) {
 		if err = s.post.Exists(r.Context(), videoID); err == nil {
 			slog.WarnContext(r.Context(), "video already posted")
 			data.Form.Error = "Video already posted"
-			s.tmpl.RenderHTML(w, r, "form.html", data)
+			s.tmpl.RenderHTML(w, r, postForm, data)
 			return
 		}
 
@@ -96,7 +96,7 @@ func (s *Service) New(w http.ResponseWriter, r *http.Request) {
 				"error", err,
 			)
 			data.Form.Error = "Unable to fetch the video from YouTube"
-			s.tmpl.RenderHTML(w, r, "form.html", data)
+			s.tmpl.RenderHTML(w, r, postForm, data)
 			return
 		}
 
@@ -107,7 +107,7 @@ func (s *Service) New(w http.ResponseWriter, r *http.Request) {
 				"error", err,
 			)
 			data.Form.Error = stringx.Capitalize(err.Error())
-			s.tmpl.RenderHTML(w, r, "form.html", data)
+			s.tmpl.RenderHTML(w, r, postForm, data)
 			return
 		}
 
@@ -123,7 +123,7 @@ func (s *Service) New(w http.ResponseWriter, r *http.Request) {
 				"error", err,
 			)
 			data.Form.Error = "Could not insert the video in DB"
-			s.tmpl.RenderHTML(w, r, "form.html", data)
+			s.tmpl.RenderHTML(w, r, postForm, data)
 			return
 		}
 

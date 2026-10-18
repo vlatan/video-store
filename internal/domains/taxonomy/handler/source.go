@@ -78,7 +78,7 @@ func (s *Service) NewSource(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
 		// Serve the page with the form
-		s.tmpl.RenderHTML(w, r, "source_form.html", data)
+		s.tmpl.RenderHTML(w, r, sourceForm, data)
 
 	case "POST":
 
@@ -89,7 +89,7 @@ func (s *Service) NewSource(w http.ResponseWriter, r *http.Request) {
 				"error", err,
 			)
 			data.Form.Error = "Could not parse the form"
-			s.tmpl.RenderHTML(w, r, "form.html", data)
+			s.tmpl.RenderHTML(w, r, sourceForm, data)
 			return
 		}
 
@@ -105,7 +105,7 @@ func (s *Service) NewSource(w http.ResponseWriter, r *http.Request) {
 				"error", err,
 			)
 			data.Form.Error = "Could not extract the playlist ID"
-			s.tmpl.RenderHTML(w, r, "form.html", data)
+			s.tmpl.RenderHTML(w, r, sourceForm, data)
 			return
 		}
 
@@ -113,7 +113,7 @@ func (s *Service) NewSource(w http.ResponseWriter, r *http.Request) {
 		if s.taxonomy.SourceExists(r.Context(), playlistID) {
 			slog.WarnContext(r.Context(), "playlist already posted")
 			data.Form.Error = "Playlist already posted"
-			s.tmpl.RenderHTML(w, r, "form.html", data)
+			s.tmpl.RenderHTML(w, r, sourceForm, data)
 			return
 		}
 
@@ -133,7 +133,7 @@ func (s *Service) NewSource(w http.ResponseWriter, r *http.Request) {
 				"error", err,
 			)
 			data.Form.Error = "Unable to fetch the playlist from YouTube"
-			s.tmpl.RenderHTML(w, r, "form.html", data)
+			s.tmpl.RenderHTML(w, r, sourceForm, data)
 			return
 		}
 
@@ -154,7 +154,7 @@ func (s *Service) NewSource(w http.ResponseWriter, r *http.Request) {
 				"error", err,
 			)
 			data.Form.Error = "Unable to fetch channel info from YouTube"
-			s.tmpl.RenderHTML(w, r, "form.html", data)
+			s.tmpl.RenderHTML(w, r, sourceForm, data)
 			return
 		}
 
@@ -170,7 +170,7 @@ func (s *Service) NewSource(w http.ResponseWriter, r *http.Request) {
 				"error", err,
 			)
 			data.Form.Error = "Could not create source"
-			s.tmpl.RenderHTML(w, r, "form.html", data)
+			s.tmpl.RenderHTML(w, r, sourceForm, data)
 			return
 		}
 
