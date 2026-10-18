@@ -88,7 +88,7 @@ func (s *Service) ValidateYouTubeVideo(video *youtube.Video) error {
 		return &ValidationError{"this video is not fully broadcasted"}
 	}
 
-	duration := types.ISO8601Duration(video.ContentDetails.Duration)
+	duration := post.ISO8601Duration(video.ContentDetails.Duration)
 	seconds, err := duration.Seconds()
 
 	if err != nil {
@@ -120,7 +120,7 @@ func (s *Service) NewYouTubePost(video *youtube.Video, playlistID string) *post.
 	p.Tags = normalize.Tags(video.Snippet.Tags, p.Title, p.Description)
 
 	// Get video duration
-	p.Duration = types.ISO8601Duration(video.ContentDetails.Duration)
+	p.Duration = post.ISO8601Duration(video.ContentDetails.Duration)
 
 	// Parse the upload date into an object
 	parsedTime, _ := time.Parse("2006-01-02T15:04:05Z", video.Snippet.PublishedAt)

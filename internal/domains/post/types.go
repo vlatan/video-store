@@ -3,9 +3,13 @@ package post
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"html/template"
 	"log/slog"
+	"regexp"
 	"runtime"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/vlatan/video-store/internal/types"
@@ -13,39 +17,39 @@ import (
 )
 
 type Post struct {
-	ID              int                   `json:"-"`
-	Provider        string                `json:"provider,omitempty"`
-	VideoID         string                `json:"video_id,omitempty"`
-	Title           string                `json:"title,omitempty"`
-	OriginalTitle   string                `json:"original_title,omitempty"`
-	Directors       []string              `json:"directors,omitempty"`
-	ReleaseYear     int16                 `json:"release_year,omitempty"`
-	Srcset          string                `json:"srcset,omitempty"`
-	RawThumbs       []byte                `json:"-"`
-	Thumbnails      *types.Thumbnails     `json:"thumbnails,omitempty"`
-	Thumbnail       *types.Thumbnail      `json:"thumbnail,omitempty"`
-	CategorySlug    string                `json:"category_slug,omitempty"`
-	CategoryName    string                `json:"category_name,omitempty"`
-	Likes           int                   `json:"likes,omitempty"`
-	Reviews         *Reviews              `json:"reviews,omitempty"`
-	RatingStats     *RatingStats          `json:"rating_stats,omitempty"`
-	Stars           [10]uint8             `json:"-"`
-	UserActions     Actions               `json:"user_actions,omitzero"`
-	SearchScore     float64               `json:"search_score,omitempty"`
-	LikeButtonText  string                `json:"like_button_text,omitempty"`
-	Description     string                `json:"description,omitempty"`
-	Summary         string                `json:"summary,omitempty"`
-	HTMLSummary     template.HTML         `json:"html_summary,omitempty"`
-	MetaDescription string                `json:"meta_description,omitempty"`
-	Tags            string                `json:"tags,omitempty"`
-	PlaylistID      string                `json:"playlist_id,omitempty"`
-	PlaylistTitle   string                `json:"playlist_title,omitempty"`
-	ChannelTitle    string                `json:"channel_title,omitempty"`
-	RelatedPosts    []Post                `json:"related_posts,omitempty"`
-	UploadDate      *time.Time            `json:"upload_date,omitempty"`
-	CreatedAt       *time.Time            `json:"created_at,omitempty"`
-	UpdatedAt       *time.Time            `json:"updated_at,omitempty"`
-	Duration        types.ISO8601Duration `json:"duration,omitempty"`
+	ID              int               `json:"-"`
+	Provider        string            `json:"provider,omitempty"`
+	VideoID         string            `json:"video_id,omitempty"`
+	Title           string            `json:"title,omitempty"`
+	OriginalTitle   string            `json:"original_title,omitempty"`
+	Directors       []string          `json:"directors,omitempty"`
+	ReleaseYear     int16             `json:"release_year,omitempty"`
+	Srcset          string            `json:"srcset,omitempty"`
+	RawThumbs       []byte            `json:"-"`
+	Thumbnails      *types.Thumbnails `json:"thumbnails,omitempty"`
+	Thumbnail       *types.Thumbnail  `json:"thumbnail,omitempty"`
+	CategorySlug    string            `json:"category_slug,omitempty"`
+	CategoryName    string            `json:"category_name,omitempty"`
+	Likes           int               `json:"likes,omitempty"`
+	Reviews         *Reviews          `json:"reviews,omitempty"`
+	RatingStats     *RatingStats      `json:"rating_stats,omitempty"`
+	Stars           [10]uint8         `json:"-"`
+	UserActions     Actions           `json:"user_actions,omitzero"`
+	SearchScore     float64           `json:"search_score,omitempty"`
+	LikeButtonText  string            `json:"like_button_text,omitempty"`
+	Description     string            `json:"description,omitempty"`
+	Summary         string            `json:"summary,omitempty"`
+	HTMLSummary     template.HTML     `json:"html_summary,omitempty"`
+	MetaDescription string            `json:"meta_description,omitempty"`
+	Tags            string            `json:"tags,omitempty"`
+	PlaylistID      string            `json:"playlist_id,omitempty"`
+	PlaylistTitle   string            `json:"playlist_title,omitempty"`
+	ChannelTitle    string            `json:"channel_title,omitempty"`
+	RelatedPosts    []Post            `json:"related_posts,omitempty"`
+	UploadDate      *time.Time        `json:"upload_date,omitempty"`
+	CreatedAt       *time.Time        `json:"created_at,omitempty"`
+	UpdatedAt       *time.Time        `json:"updated_at,omitempty"`
+	Duration        ISO8601Duration   `json:"duration,omitempty"`
 }
 
 // MarshalBinary implements the encoding.BinaryMarshaler interface
@@ -194,8 +198,6 @@ func (r *Review) UnmarshalBinary(data []byte) error {
 	return json.Unmarshal(data, r)
 }
 
-// ============================================================================= //
-
 type Reviews struct {
 	Items      []Review `json:"items"`
 	NextCursor string   `json:"next_cursor"`
@@ -210,4 +212,62 @@ func (r Reviews) MarshalBinary() (data []byte, err error) {
 // UnmarshalBinary implements the encoding.BinaryUnmarshaler interface
 func (r *Reviews) UnmarshalBinary(data []byte) error {
 	return json.Unmarshal(data, r)
+}
+
+// ============================================================================= //
+
+// Custom string type used to convert string duration to desirable format
+type ISO8601Duration string
+
+// Valid ISO time format
+var validISO8601 = regexp.MustCompile(`(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:\.\d+)?)S)?`)
+
+// Compile an ISO-8601 string to time components
+func (d ISO8601Duration) compile() (map[string]int, error) {
+	// Check for PT prefix
+	if !strings.HasPrefix(string(d), "PT") {
+		return nil, fmt.Errorf("invalid duration format: %s", d)
+	}
+
+	// Remove the PT prefix
+	duration := strings.TrimPrefix(string(d), "PT")
+
+	// Find the substrings (hours, minutes, seconds)
+	matches := validISO8601.FindStringSubmatch(duration)
+	if len(matches) == 0 {
+		return nil, fmt.Errorf("invalid duration format: %s", duration)
+	}
+
+	// Check for the matched regex groups
+	hours, _ := strconv.Atoi(matches[1])
+	minutes, _ := strconv.Atoi(matches[2])
+	sec, _ := strconv.ParseFloat(matches[3], 64)
+	seconds := int(sec)
+
+	return map[string]int{
+		"h": hours,
+		"m": minutes,
+		"s": seconds,
+	}, nil
+}
+
+// Get human readbale video duration
+func (d ISO8601Duration) Human() (string, error) {
+	t, err := d.compile()
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%02d:%02d:%02d", t["h"], t["m"], t["s"]), nil
+}
+
+// Get video duration in seconds
+func (d ISO8601Duration) Seconds() (time.Duration, error) {
+	t, err := d.compile()
+	if err != nil {
+		return 0, err
+	}
+
+	seconds := t["h"]*60*60 + t["m"]*60 + t["s"]
+	return time.Duration(seconds) * time.Second, nil
 }
