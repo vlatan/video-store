@@ -80,7 +80,7 @@ func (s *Service) Single(w http.ResponseWriter, r *http.Request) {
 
 		// Get the user avatars
 		for i, review := range postReviews.Items {
-			localAvatarURL, taskErr := s.avatar.Get(r.Context(), &review.User)
+			localAvatarURL, taskErr := s.avatar.Get(r.Context(), review.User.PublicID, review.User.AvatarURL)
 			if taskErr != nil {
 				return taskErr
 			}

@@ -97,7 +97,7 @@ func (s *Service) Load(next http.Handler) http.Handler {
 
 		// Try to get the user avatar
 		var err error
-		user.LocalAvatarURL, err = s.avatar.Get(r.Context(), user)
+		user.LocalAvatarURL, err = s.avatar.Get(r.Context(), user.PublicID, user.AvatarURL)
 		if err != nil {
 			slog.WarnContext(
 				r.Context(),

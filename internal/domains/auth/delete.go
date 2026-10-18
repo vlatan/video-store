@@ -48,7 +48,7 @@ func (s *Service) Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Attempt to remove the avatar from R2 and redis
-	if err = s.avatar.Delete(r.Context(), currentUser); err != nil {
+	if err = s.avatar.Delete(r.Context(), currentUser.PublicID); err != nil {
 		slog.WarnContext(
 			r.Context(), "failed to delete user avatar",
 			"error", err,

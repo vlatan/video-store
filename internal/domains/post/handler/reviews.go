@@ -67,7 +67,7 @@ func (s *Service) ReviewsAPI(w http.ResponseWriter, r *http.Request) {
 
 	// Get the user avatars
 	for i, review := range reviews.Items {
-		localAvatarURL, err := s.avatar.Get(r.Context(), &review.User)
+		localAvatarURL, err := s.avatar.Get(r.Context(), review.User.PublicID, review.User.AvatarURL)
 		if err != nil {
 			slog.ErrorContext(
 				r.Context(), "failed to get user avatar",
