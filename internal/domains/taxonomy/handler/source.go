@@ -8,6 +8,7 @@ import (
 
 	"github.com/vlatan/video-store/internal/ctxd"
 	"github.com/vlatan/video-store/internal/domains/post"
+	"github.com/vlatan/video-store/internal/domains/taxonomy"
 	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/redirect"
 	"github.com/vlatan/video-store/internal/utils/retry"
@@ -18,7 +19,7 @@ func (s *Service) Sources(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		err     error
-		sources types.Sources
+		sources taxonomy.Sources
 	)
 
 	if ctxd.GetUser(r.Context()).IsAdmin(s.cfg) {
@@ -28,7 +29,7 @@ func (s *Service) Sources(w http.ResponseWriter, r *http.Request) {
 			r.Context(),
 			"sources",
 			s.cfg.CacheTimeout,
-			func() (types.Sources, error) {
+			func() (taxonomy.Sources, error) {
 				return s.taxonomy.Sources(r.Context())
 			},
 		)
@@ -253,7 +254,7 @@ func (s *Service) SourcePosts(w http.ResponseWriter, r *http.Request) {
 	data := tmplData{
 		Title:         posts.Title,
 		Posts:         posts,
-		CurrentSource: &types.Source{PlaylistID: sourceID},
+		CurrentSource: &taxonomy.Source{PlaylistID: sourceID},
 		Base:          s.tmpl.Base(w, r),
 	}
 

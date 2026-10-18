@@ -9,13 +9,11 @@ import (
 
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/domains/post"
-	postRepo "github.com/vlatan/video-store/internal/domains/post"
-	taxonomyRepo "github.com/vlatan/video-store/internal/domains/taxonomy"
+	"github.com/vlatan/video-store/internal/domains/taxonomy"
 	"github.com/vlatan/video-store/internal/drivers/database"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/integrations/gemini"
 	"github.com/vlatan/video-store/internal/integrations/yt"
-	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/retry"
 )
 
@@ -29,9 +27,9 @@ type poster interface {
 }
 
 type taxer interface {
-	Categories(context.Context) (types.Categories, error)
-	Sources(context.Context) (types.Sources, error)
-	UpdateSource(context.Context, *types.Source) (int64, error)
+	Categories(context.Context) (taxonomy.Categories, error)
+	Sources(context.Context) (taxonomy.Sources, error)
+	UpdateSource(context.Context, *taxonomy.Source) (int64, error)
 }
 
 type Worker struct {
@@ -64,13 +62,13 @@ func New(cfg *config.Config, ctx context.Context) (*Worker, error) {
 	}
 
 	// Create DB repositories
-	postRepo, err := postRepo.New(cfg, db, nil)
+	postRepo, err := post.New(cfg, db, nil)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create posts repo: %w", err)
 	}
 
 	// Create taxonomy repo
-	taxRepo, err := taxonomyRepo.New(cfg, db, nil)
+	taxRepo, err := taxonomy.New(cfg, db, nil)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create taxonomy repo: %w", err)
 	}

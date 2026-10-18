@@ -32,9 +32,9 @@ type Service struct {
 type tmplData struct {
 	Title           string
 	CurrentYear     int16
-	CurrentCategory *types.Category
-	CurrentSource   *types.Source
-	Sources         []types.Source
+	CurrentCategory *taxonomy.Category
+	CurrentSource   *taxonomy.Source
+	Sources         []taxonomy.Source
 	types.Form
 	post.Posts
 	tmpl.Base

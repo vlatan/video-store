@@ -7,6 +7,7 @@ import (
 
 	"github.com/vlatan/video-store/internal/ctxd"
 	"github.com/vlatan/video-store/internal/domains/post"
+	"github.com/vlatan/video-store/internal/domains/taxonomy"
 	"github.com/vlatan/video-store/internal/types"
 )
 
@@ -70,7 +71,7 @@ func (s *Service) CategoryPosts(w http.ResponseWriter, r *http.Request) {
 	data := tmplData{
 		Title:           posts.Title,
 		Posts:           posts,
-		CurrentCategory: &types.Category{Slug: slug},
+		CurrentCategory: &taxonomy.Category{Slug: slug},
 		Base:            s.tmpl.Base(w, r),
 	}
 

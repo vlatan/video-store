@@ -11,7 +11,7 @@ import (
 )
 
 // Get a limited number of sources with offset
-func (r *Repository) Sources(ctx context.Context) (types.Sources, error) {
+func (r *Repository) Sources(ctx context.Context) (Sources, error) {
 
 	query, err := stringx.GetQuery(r.tmpl, "all_sources.sql", nil)
 	if err != nil {
@@ -25,10 +25,10 @@ func (r *Repository) Sources(ctx context.Context) (types.Sources, error) {
 
 	defer rows.Close()
 
-	var sources types.Sources
+	var sources Sources
 	for rows.Next() {
 		// Get categories from DB
-		var source types.Source
+		var source Source
 		var thumbnails []byte
 
 		if err := rows.Scan(
@@ -72,7 +72,7 @@ func (r *Repository) SourceExists(ctx context.Context, playlistID string) bool {
 }
 
 // Add new source to DB
-func (r *Repository) InsertSource(ctx context.Context, source *types.Source) (int64, error) {
+func (r *Repository) InsertSource(ctx context.Context, source *Source) (int64, error) {
 	// Marshal the playlist thumbnails
 	thumbnails, err := json.Marshal(source.Thumbnails)
 	if err != nil {
@@ -109,7 +109,7 @@ func (r *Repository) InsertSource(ctx context.Context, source *types.Source) (in
 }
 
 // Update a source
-func (r *Repository) UpdateSource(ctx context.Context, source *types.Source) (int64, error) {
+func (r *Repository) UpdateSource(ctx context.Context, source *Source) (int64, error) {
 
 	query, err := stringx.GetQuery(r.tmpl, "update_source.sql", nil)
 	if err != nil {

@@ -6,6 +6,7 @@ import (
 
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/ctxd"
+	"github.com/vlatan/video-store/internal/domains/taxonomy"
 	"github.com/vlatan/video-store/internal/domains/user"
 	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/pathx"
@@ -14,7 +15,7 @@ import (
 type Base struct {
 	*config.Config
 	SearchQuery      string
-	Categories       []types.Category
+	Categories       []taxonomy.Category
 	CurrentURI       string
 	BaseCanonicalURL string
 	FlashMessages    []*types.FlashMessage
@@ -29,7 +30,7 @@ func (s *Service) Base(w http.ResponseWriter, r *http.Request) Base {
 		r.Context(),
 		"categories",
 		s.cfg.CacheTimeout,
-		func() (types.Categories, error) {
+		func() (taxonomy.Categories, error) {
 			return s.taxonomy.Categories(r.Context())
 		},
 	)

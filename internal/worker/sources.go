@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 
-	"github.com/vlatan/video-store/internal/types"
+	"github.com/vlatan/video-store/internal/domains/taxonomy"
 	"github.com/vlatan/video-store/internal/utils/ctxv"
 	"google.golang.org/api/youtube/v3"
 )
@@ -15,7 +15,7 @@ func (w *Worker) updateSources(
 	ctx context.Context,
 	ytSources map[string]*youtube.Playlist,
 	ytChannels map[string]*youtube.Channel,
-	dbSources map[string]*types.Source,
+	dbSources map[string]*taxonomy.Source,
 ) error {
 
 	for playlistID, ytSource := range ytSources {

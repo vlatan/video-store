@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/vlatan/video-store/internal/config"
+	"github.com/vlatan/video-store/internal/domains/taxonomy"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/drivers/store"
-	"github.com/vlatan/video-store/internal/types"
 
 	"github.com/tdewolff/minify/v2"
 	"github.com/tdewolff/minify/v2/html"
@@ -23,15 +23,15 @@ type versioner interface {
 	AddVersion(string) string
 }
 
-type taxonomy interface {
-	Categories(context.Context) (types.Categories, error)
+type taxer interface {
+	Categories(context.Context) (taxonomy.Categories, error)
 }
 
 type Service struct {
 	cfg       *config.Config
 	rdb       *rdb.Service
 	session   *store.Service
-	taxonomy  taxonomy
+	taxonomy  taxer
 	versioner versioner
 	templates templateMap
 }
@@ -41,7 +41,7 @@ func New(
 	cfg *config.Config,
 	rdb *rdb.Service,
 	store *store.Service,
-	taxonomy taxonomy,
+	taxer taxer,
 	versioner versioner,
 ) (*Service, error) {
 
@@ -73,7 +73,7 @@ func New(
 		cfg:       cfg,
 		rdb:       rdb,
 		session:   store,
-		taxonomy:  taxonomy,
+		taxonomy:  taxer,
 		templates: templates,
 	}, nil
 }

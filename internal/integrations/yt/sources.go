@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/vlatan/video-store/internal/domains/taxonomy"
 	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/normalize"
 	"github.com/vlatan/video-store/internal/utils/retry"
@@ -144,8 +145,10 @@ func (s *Service) GetChannels(
 }
 
 // Create source object
-func (s *Service) NewYouTubeSource(playlist *youtube.Playlist, channel *youtube.Channel) *types.Source {
-	var source types.Source
+func (s *Service) NewYouTubeSource(
+	playlist *youtube.Playlist,
+	channel *youtube.Channel) *taxonomy.Source {
+	var source taxonomy.Source
 	source.PlaylistID = playlist.Id
 	source.ChannelID = playlist.Snippet.ChannelId
 

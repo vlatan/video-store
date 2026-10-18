@@ -5,20 +5,19 @@ import (
 	"context"
 
 	"github.com/vlatan/video-store/internal/config"
+	"github.com/vlatan/video-store/internal/domains/taxonomy"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
-	"github.com/vlatan/video-store/internal/types"
 
 	"google.golang.org/genai"
 )
 
-type taxonomy interface {
-	Categories(context.Context) (types.Categories, error)
+type taxer interface {
+	Categories(context.Context) (taxonomy.Categories, error)
 }
 
 // Service is Gemini struct
 type Service struct {
 	config   *config.Config
-	taxonomy taxonomy
 	client   *genai.Client
 	limiter  *GeminiLimiter
 	catNames []string
@@ -28,7 +27,7 @@ type Service struct {
 func New(
 	ctx context.Context,
 	cfg *config.Config,
-	taxonomy taxonomy,
+	taxer taxer,
 	rs *rdb.Service,
 ) (*Service, error) {
 	// Configure new client
@@ -54,10 +53,11 @@ func New(
 		ctx,
 		"categories",
 		s.config.CacheTimeout,
-		func() (types.Categories, error) {
-			return taxonomy.Categories(ctx)
+		func() (taxonomy.Categories, error) {
+			return taxer.Categories(ctx)
 		},
 	)
+
 	if err != nil {
 		return nil, err
 	}

@@ -7,7 +7,7 @@ import (
 	"slices"
 
 	"github.com/vlatan/video-store/internal/domains/post"
-	"github.com/vlatan/video-store/internal/types"
+	"github.com/vlatan/video-store/internal/domains/taxonomy"
 	"google.golang.org/api/youtube/v3"
 )
 
@@ -34,7 +34,7 @@ func (w *Worker) Process(ctx context.Context) error {
 	// ###################################################################
 
 	// Extract playlist IDs and create DB sources map
-	dbSourcesMap := make(map[string]*types.Source, len(dbSources))
+	dbSourcesMap := make(map[string]*taxonomy.Source, len(dbSources))
 	playlistIds := make([]string, len(dbSources))
 	for i, source := range dbSources {
 		dbSourcesMap[source.PlaylistID] = &source
