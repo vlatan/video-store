@@ -12,6 +12,8 @@ func (ft FieldType) IsTextarea() bool {
 	return ft == FieldTypeTextarea
 }
 
+// ============================================================================= //
+
 type FormGroup struct {
 	Type        FieldType
 	Label       string
@@ -21,6 +23,8 @@ type FormGroup struct {
 	Title       string
 }
 
+// ============================================================================= //
+
 type Form struct {
 	Legend      string
 	Title       *FormGroup
@@ -28,5 +32,5 @@ type Form struct {
 	Category    *FormGroup
 	Directors   []*FormGroup
 	ReleaseYear *FormGroup
-	Error       *FlashMessage
+	Error       string
 }

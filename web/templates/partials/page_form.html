@@ -47,7 +47,7 @@
             <div class="submit-spinner"></div>
             {{ with .Form.Error }}
             <div class="form-invalid-feedback">
-                <span>{{ .Message }}.</span>
+                <span>{{ . }}.</span>
             </div>
             {{ end }}
         </div>

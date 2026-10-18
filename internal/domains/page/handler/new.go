@@ -37,7 +37,6 @@ func (s *Service) New(w http.ResponseWriter, r *http.Request) {
 		s.tmpl.RenderHTML(w, r, "page_form.html", data)
 
 	case "POST":
-		var formError types.FlashMessage
 
 		err := r.ParseForm()
 		if err != nil {
@@ -45,9 +44,8 @@ func (s *Service) New(w http.ResponseWriter, r *http.Request) {
 				r.Context(), "failed to parse the form",
 				"error", err,
 			)
-			formError.Message = "Could not parse the form"
-			data.Form.Error = &formError
-			s.tmpl.RenderHTML(w, r, "form.html", data)
+			data.Form.Error = "Could not parse the form"
+			s.tmpl.RenderHTML(w, r, "page_form.html", data)
 			return
 		}
 
@@ -71,8 +69,7 @@ func (s *Service) New(w http.ResponseWriter, r *http.Request) {
 				r.Context(), "failed to insert the page in DB",
 				"error", err,
 			)
-			formError.Message = "Could not create this page. Try changing the title."
-			data.Form.Error = &formError
+			data.Form.Error = "Could not create this page. Try changing the title."
 			s.tmpl.RenderHTML(w, r, "form.html", data)
 			return
 		}

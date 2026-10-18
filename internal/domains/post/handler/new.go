@@ -36,16 +36,13 @@ func (s *Service) New(w http.ResponseWriter, r *http.Request) {
 
 	case "POST":
 
-		var formError types.FlashMessage
-
 		err := r.ParseForm()
 		if err != nil {
 			slog.WarnContext(
 				r.Context(), "failed to parse the form",
 				"error", err,
 			)
-			formError.Message = "Could not parse the form"
-			data.Form.Error = &formError
+			data.Form.Error = "Could not parse the form"
 			s.tmpl.RenderHTML(w, r, "form.html", data)
 			return
 		}
@@ -61,8 +58,7 @@ func (s *Service) New(w http.ResponseWriter, r *http.Request) {
 				r.Context(), "failed to extract the video ID",
 				"error", err,
 			)
-			formError.Message = "Could not extract the video ID"
-			data.Form.Error = &formError
+			data.Form.Error = "Could not extract the video ID"
 			s.tmpl.RenderHTML(w, r, "form.html", data)
 			return
 		}
@@ -70,8 +66,7 @@ func (s *Service) New(w http.ResponseWriter, r *http.Request) {
 		// Validate the YT ID
 		if validVideoID.FindStringSubmatch(videoID) == nil {
 			slog.WarnContext(r.Context(), "invalid video id")
-			formError.Message = "Could not validate the video ID"
-			data.Form.Error = &formError
+			data.Form.Error = "Could not validate the video ID"
 			s.tmpl.RenderHTML(w, r, "form.html", data)
 			return
 		}
@@ -79,8 +74,7 @@ func (s *Service) New(w http.ResponseWriter, r *http.Request) {
 		// Check if the video is already posted
 		if err = s.post.Exists(r.Context(), videoID); err == nil {
 			slog.WarnContext(r.Context(), "video already posted")
-			formError.Message = "Video already posted"
-			data.Form.Error = &formError
+			data.Form.Error = "Video already posted"
 			s.tmpl.RenderHTML(w, r, "form.html", data)
 			return
 		}
@@ -101,8 +95,7 @@ func (s *Service) New(w http.ResponseWriter, r *http.Request) {
 				r.Context(), "failed get video data from YouTube",
 				"error", err,
 			)
-			formError.Message = "Unable to fetch the video from YouTube"
-			data.Form.Error = &formError
+			data.Form.Error = "Unable to fetch the video from YouTube"
 			s.tmpl.RenderHTML(w, r, "form.html", data)
 			return
 		}
@@ -113,8 +106,7 @@ func (s *Service) New(w http.ResponseWriter, r *http.Request) {
 				r.Context(), "failed to validate the video data",
 				"error", err,
 			)
-			formError.Message = stringx.Capitalize(err.Error())
-			data.Form.Error = &formError
+			data.Form.Error = stringx.Capitalize(err.Error())
 			s.tmpl.RenderHTML(w, r, "form.html", data)
 			return
 		}
@@ -130,8 +122,7 @@ func (s *Service) New(w http.ResponseWriter, r *http.Request) {
 				r.Context(), "failed to insert the post in DB",
 				"error", err,
 			)
-			formError.Message = "Could not insert the video in DB"
-			data.Form.Error = &formError
+			data.Form.Error = "Could not insert the video in DB"
 			s.tmpl.RenderHTML(w, r, "form.html", data)
 			return
 		}

@@ -118,16 +118,13 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 		s.tmpl.RenderHTML(w, r, "post_form.html", data)
 
 	case "POST":
-		var formError types.FlashMessage
-
 		err := r.ParseForm()
 		if err != nil {
 			slog.WarnContext(
 				r.Context(), "failed to parse the form",
 				"error", err,
 			)
-			formError.Message = "Could not parse the form"
-			data.Form.Error = &formError
+			data.Form.Error = "Could not parse the form"
 			s.tmpl.RenderHTML(w, r, "form.html", data)
 			return
 		}
@@ -167,8 +164,7 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 				r.Context(), "failed to parse release year",
 				"error", err,
 			)
-			formError.Message = "Could not parse the release year"
-			data.Form.Error = &formError
+			data.Form.Error = "Could not parse the release year"
 			s.tmpl.RenderHTML(w, r, "form.html", data)
 			return
 		}
@@ -180,8 +176,7 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 				r.Context(), "failed to normalize directors",
 				"error", err,
 			)
-			formError.Message = "Could not parse the directors"
-			data.Form.Error = &formError
+			data.Form.Error = "Could not parse the directors"
 			s.tmpl.RenderHTML(w, r, "form.html", data)
 			return
 		}
@@ -204,8 +199,7 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 				r.Context(), "failed to update the post in DB",
 				"error", err,
 			)
-			formError.Message = "Could not update the post in DB"
-			data.Form.Error = &formError
+			data.Form.Error = "Could not update the post in DB"
 			s.tmpl.RenderHTML(w, r, "form.html", data)
 			return
 		}
@@ -217,8 +211,7 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 				r.Context(), "failed to delete the cache on post",
 				"error", err,
 			)
-			formError.Message = "Could not delete the cache on post"
-			data.Form.Error = &formError
+			data.Form.Error = "Could not delete the cache on post"
 			s.tmpl.RenderHTML(w, r, "form.html", data)
 			return
 		}

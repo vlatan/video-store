@@ -82,16 +82,13 @@ func (s *Service) NewSource(w http.ResponseWriter, r *http.Request) {
 
 	case "POST":
 
-		var formError types.FlashMessage
-
 		err := r.ParseForm()
 		if err != nil {
 			slog.WarnContext(
 				r.Context(), "failed to parse the form",
 				"error", err,
 			)
-			formError.Message = "Could not parse the form"
-			data.Form.Error = &formError
+			data.Form.Error = "Could not parse the form"
 			s.tmpl.RenderHTML(w, r, "form.html", data)
 			return
 		}
@@ -107,8 +104,7 @@ func (s *Service) NewSource(w http.ResponseWriter, r *http.Request) {
 				r.Context(), "failed extract playlist ID",
 				"error", err,
 			)
-			formError.Message = "Could not extract the playlist ID"
-			data.Form.Error = &formError
+			data.Form.Error = "Could not extract the playlist ID"
 			s.tmpl.RenderHTML(w, r, "form.html", data)
 			return
 		}
@@ -116,8 +112,7 @@ func (s *Service) NewSource(w http.ResponseWriter, r *http.Request) {
 		// Check if the playlist is already posted
 		if s.taxonomy.SourceExists(r.Context(), playlistID) {
 			slog.WarnContext(r.Context(), "playlist already posted")
-			formError.Message = "Playlist already posted"
-			data.Form.Error = &formError
+			data.Form.Error = "Playlist already posted"
 			s.tmpl.RenderHTML(w, r, "form.html", data)
 			return
 		}
@@ -137,8 +132,7 @@ func (s *Service) NewSource(w http.ResponseWriter, r *http.Request) {
 				r.Context(), "failed to get source metadata from YouTube",
 				"error", err,
 			)
-			formError.Message = "Unable to fetch the playlist from YouTube"
-			data.Form.Error = &formError
+			data.Form.Error = "Unable to fetch the playlist from YouTube"
 			s.tmpl.RenderHTML(w, r, "form.html", data)
 			return
 		}
@@ -159,8 +153,7 @@ func (s *Service) NewSource(w http.ResponseWriter, r *http.Request) {
 				r.Context(), "failed to get channel metadata from YouTube",
 				"error", err,
 			)
-			formError.Message = "Unable to fetch channel info from YouTube"
-			data.Form.Error = &formError
+			data.Form.Error = "Unable to fetch channel info from YouTube"
 			s.tmpl.RenderHTML(w, r, "form.html", data)
 			return
 		}
@@ -176,8 +169,7 @@ func (s *Service) NewSource(w http.ResponseWriter, r *http.Request) {
 				r.Context(), "failed to insert source in DB",
 				"error", err,
 			)
-			formError.Message = "Could not create source"
-			data.Form.Error = &formError
+			data.Form.Error = "Could not create source"
 			s.tmpl.RenderHTML(w, r, "form.html", data)
 			return
 		}
