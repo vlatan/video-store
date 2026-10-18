@@ -11,9 +11,9 @@ import (
 const userKey = "user"
 
 // AddUser adds user to session
-func (s *Service) AddUser(w http.ResponseWriter, r *http.Request, user *user.User) error {
+func (s *Service) AddUser(w http.ResponseWriter, r *http.Request, u *user.User) error {
 	session, _ := s.Get(r, s.config.UserSessionName)
-	session.Values[userKey] = new(sessionUser(*user))
+	session.Values[userKey] = new(sessionUser(*u))
 	return session.Save(r, w)
 }
 
