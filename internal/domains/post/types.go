@@ -198,6 +198,8 @@ func (r *Review) UnmarshalBinary(data []byte) error {
 	return json.Unmarshal(data, r)
 }
 
+// ============================================================================= //
+
 type Reviews struct {
 	Items      []Review `json:"items"`
 	NextCursor string   `json:"next_cursor"`

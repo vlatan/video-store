@@ -8,6 +8,23 @@ import (
 )
 
 type Thumbnail youtube.Thumbnail
+
+// Equal checks two thumbnails equality
+func (a *Thumbnail) Equal(b *Thumbnail) bool {
+	if a == nil && b == nil {
+		return true
+	}
+
+	if a == nil || b == nil {
+		return false
+	}
+
+	// Only compare the actual data fields we care about
+	return a.Height == b.Height && a.Url == b.Url && a.Width == b.Width
+}
+
+// ============================================================================= //
+
 type Thumbnails youtube.ThumbnailDetails
 
 // Create a srcset string from a struct of thumbnails
@@ -50,20 +67,6 @@ func (t *Thumbnails) MaxThumb() (result *Thumbnail) {
 	}
 
 	return result
-}
-
-// Equal checks two thumbnails equality
-func (a *Thumbnail) Equal(b *Thumbnail) bool {
-	if a == nil && b == nil {
-		return true
-	}
-
-	if a == nil || b == nil {
-		return false
-	}
-
-	// Only compare the actual data fields we care about
-	return a.Height == b.Height && a.Url == b.Url && a.Width == b.Width
 }
 
 // Equal checks two thumbnail sets equality
