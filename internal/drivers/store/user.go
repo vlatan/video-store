@@ -13,7 +13,7 @@ const userKey = "user"
 // AddUser adds user to session
 func (s *Service) AddUser(w http.ResponseWriter, r *http.Request, u *user.User) error {
 	session, _ := s.Get(r, s.config.UserSessionName)
-	session.Values[userKey] = new(sessionUser(*u))
+	session.Values[userKey] = (*sessUser)(u)
 	return session.Save(r, w)
 }
 
@@ -28,7 +28,7 @@ func (s *Service) User(w http.ResponseWriter, r *http.Request) *user.User {
 
 	// Get session from store
 	session, _ := s.Get(r, s.config.UserSessionName)
-	sessUser, _ := session.Values[userKey].(*sessionUser)
+	sessUser, _ := session.Values[userKey].(*sessUser)
 
 	// Clear the session this is anonymous user
 	if sessUser == nil || sessUser.ID == 0 {
@@ -42,5 +42,5 @@ func (s *Service) User(w http.ResponseWriter, r *http.Request) *user.User {
 		return nil
 	}
 
-	return new(user.User(*sessUser))
+	return (*user.User)(sessUser)
 }
