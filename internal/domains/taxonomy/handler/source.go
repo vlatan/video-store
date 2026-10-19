@@ -9,6 +9,7 @@ import (
 	"github.com/vlatan/video-store/internal/ctxd"
 	"github.com/vlatan/video-store/internal/domains/post"
 	"github.com/vlatan/video-store/internal/domains/taxonomy"
+	"github.com/vlatan/video-store/internal/drivers/store"
 	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/redirect"
 	"github.com/vlatan/video-store/internal/utils/retry"
@@ -275,7 +276,7 @@ func (s *Service) DeleteSource(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	successDelete := types.FlashMessage{
+	successDelete := store.FlashMessage{
 		Message:  "The source has been deleted!",
 		Category: "info",
 	}

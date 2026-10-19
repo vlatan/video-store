@@ -4,7 +4,7 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/vlatan/video-store/internal/types"
+	"github.com/vlatan/video-store/internal/drivers/store"
 )
 
 // Handle a post ban
@@ -34,7 +34,7 @@ func (s *Service) Ban(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	successDelete := types.FlashMessage{
+	successDelete := store.FlashMessage{
 		Message:  "The video has been deleted!",
 		Category: "info",
 	}

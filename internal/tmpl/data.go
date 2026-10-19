@@ -8,7 +8,7 @@ import (
 	"github.com/vlatan/video-store/internal/ctxd"
 	"github.com/vlatan/video-store/internal/domains/taxonomy"
 	"github.com/vlatan/video-store/internal/domains/user"
-	"github.com/vlatan/video-store/internal/types"
+	"github.com/vlatan/video-store/internal/drivers/store"
 	"github.com/vlatan/video-store/internal/utils/pathx"
 )
 
@@ -18,7 +18,7 @@ type Base struct {
 	Categories       []taxonomy.Category
 	CurrentURI       string
 	BaseCanonicalURL string
-	FlashMessages    []*types.FlashMessage
+	FlashMessages    []*store.FlashMessage
 	CurrentUser      *user.User
 }
 

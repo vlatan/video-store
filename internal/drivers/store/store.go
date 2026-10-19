@@ -8,7 +8,6 @@ import (
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/domains/user"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
-	"github.com/vlatan/video-store/internal/types"
 )
 
 type Service struct {
@@ -31,7 +30,7 @@ func New(
 
 	// Register types with gob to be able to use them in sessions
 	gob.Register(&sessUser{})
-	gob.Register(&types.FlashMessage{})
+	gob.Register(&FlashMessage{})
 	gob.Register(time.Time{})
 
 	return &Service{

@@ -4,7 +4,7 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/vlatan/video-store/internal/types"
+	"github.com/vlatan/video-store/internal/drivers/store"
 )
 
 func (s *Service) Delete(w http.ResponseWriter, r *http.Request) {
@@ -28,7 +28,7 @@ func (s *Service) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	successDelete := types.FlashMessage{
+	successDelete := store.FlashMessage{
 		Message:  "The page has been deleted",
 		Category: "info",
 	}
