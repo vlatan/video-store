@@ -13,7 +13,7 @@ func (s *Service) AddRedirectURL(
 	r *http.Request,
 	url string) error {
 	// Store this redirect URL in a session
-	session, _ := s.Get(r, s.config.RedirectSessionName)
+	session, _ := s.Get(r, s.cfg.RedirectSessionName)
 	session.Values[redirectKey] = url
 	return session.Save(r, w)
 }
@@ -22,7 +22,7 @@ func (s *Service) AddRedirectURL(
 func (s *Service) RedirectURL(w http.ResponseWriter, r *http.Request) string {
 
 	redirectTo := "/"
-	session, _ := s.Get(r, s.config.RedirectSessionName)
+	session, _ := s.Get(r, s.cfg.RedirectSessionName)
 	if url, _ := session.Values[redirectKey].(string); url != "" {
 		redirectTo = url
 	}

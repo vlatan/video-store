@@ -12,7 +12,7 @@ import (
 
 type Service struct {
 	sessions.Store
-	config *config.Config
+	cfg *config.Config
 }
 
 // seesUser struct to store user data in session.
@@ -22,7 +22,7 @@ type Service struct {
 type sessUser user.User
 
 func New(
-	config *config.Config,
+	cfg *config.Config,
 	rdb *rdb.Service,
 	keyPrefix string,
 	maxAge int,
@@ -34,7 +34,7 @@ func New(
 	gob.Register(time.Time{})
 
 	return &Service{
-		Store:  newRedisStore(config, rdb, keyPrefix, maxAge),
-		config: config,
+		Store: newRedisStore(cfg, rdb, keyPrefix, maxAge),
+		cfg:   cfg,
 	}
 }

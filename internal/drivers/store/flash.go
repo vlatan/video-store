@@ -18,7 +18,7 @@ func (s *Service) AddFlash(
 	r *http.Request,
 	m *FlashMessage,
 ) {
-	session, _ := s.Get(r, s.config.FlashSessionName)
+	session, _ := s.Get(r, s.cfg.FlashSessionName)
 	session.AddFlash(m)
 	if err := session.Save(r, w); err != nil {
 		slog.WarnContext(
@@ -33,7 +33,7 @@ func (s *Service) AddFlash(
 func (s *Service) Flashes(w http.ResponseWriter, r *http.Request) []*FlashMessage {
 
 	// Get any flash messages from session
-	session, _ := s.Get(r, s.config.FlashSessionName)
+	session, _ := s.Get(r, s.cfg.FlashSessionName)
 	flashes := session.Flashes()
 
 	var flashMessages []*FlashMessage
