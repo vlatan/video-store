@@ -8,9 +8,10 @@ import (
 	"html/template"
 	"strings"
 
-	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/sqlnull"
 	"github.com/vlatan/video-store/internal/utils/stringx"
+	"github.com/vlatan/video-store/internal/utils/thumbx"
+	"google.golang.org/api/youtube/v3"
 )
 
 // Check if the post exists
@@ -205,7 +206,7 @@ func (r *Repository) Single(ctx context.Context, videoID string) (Post, error) {
 	}
 
 	// Unserialize thumbnails
-	var thumbs types.Thumbnails
+	var thumbs youtube.ThumbnailDetails
 	if err = json.Unmarshal(thumbnails, &thumbs); err != nil {
 		return zero, fmt.Errorf(
 			"failed to unmarshal thumbs on video %s: %w",
@@ -214,7 +215,7 @@ func (r *Repository) Single(ctx context.Context, videoID string) (Post, error) {
 	}
 
 	// Assign the biggest thumbnail to post
-	maxThumb := thumbs.MaxThumb()
+	maxThumb := thumbx.MaxThumb(thumbs)
 	post.Thumbnail = maxThumb
 
 	// Get the first sentence of the summary to be used as meta description
@@ -223,7 +224,7 @@ func (r *Repository) Single(ctx context.Context, videoID string) (Post, error) {
 	post.MetaDescription = replacer.Replace(post.MetaDescription)
 
 	// Make srcset string
-	post.Srcset = thumbs.Srcset(maxThumb.Width)
+	post.Srcset = thumbx.Srcset(thumbs, maxThumb.Width)
 
 	// Attach the stars slice for the rating stars html iteration
 	post.Stars = [10]uint8{10, 9, 8, 7, 6, 5, 4, 3, 2, 1}

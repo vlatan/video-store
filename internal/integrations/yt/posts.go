@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/vlatan/video-store/internal/domains/post"
-	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/normalize"
 	"github.com/vlatan/video-store/internal/utils/retry"
 
@@ -112,7 +111,7 @@ func (s *Service) NewYouTubePost(video *youtube.Video, playlistID string) *post.
 	p.Provider = "YouTube"
 
 	// Assign the thumbnails
-	p.Thumbnails = (*types.Thumbnails)(video.Snippet.Thumbnails)
+	p.Thumbnails = video.Snippet.Thumbnails
 
 	// Normalize title, description and tags
 	p.Title = normalize.Title(video.Snippet.Title, normalize.VideoTitleCutoffs)

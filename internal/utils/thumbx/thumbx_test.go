@@ -1,4 +1,4 @@
-package types
+package thumbx
 
 import (
 	"testing"
@@ -6,16 +6,16 @@ import (
 	"google.golang.org/api/youtube/v3"
 )
 
-func TestThumbnailEqual(t *testing.T) {
+func TestEqual(t *testing.T) {
 
-	a := Thumbnail{Width: 10, Height: 5, Url: "foo"}
+	a := youtube.Thumbnail{Width: 10, Height: 5, Url: "foo"}
 	b := a
 	b.Url = "bar"
 
 	tests := []struct {
 		name     string
-		a        *Thumbnail
-		b        *Thumbnail
+		a        *youtube.Thumbnail
+		b        *youtube.Thumbnail
 		expected bool
 	}{
 		{"nil structs", nil, nil, true},
@@ -27,20 +27,20 @@ func TestThumbnailEqual(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.a.Equal(tt.b); got != tt.expected {
+			if got := Equal(tt.a, tt.b); got != tt.expected {
 				t.Errorf("got %t, want %t", got, tt.expected)
 			}
 		})
 	}
 }
 
-func TestThumbnailsEqual(t *testing.T) {
+func TestAllEqual(t *testing.T) {
 
 	a := youtube.Thumbnail{Width: 10, Height: 5, Url: "foo"}
 	b := a
 	b.Url = "bar"
 
-	thumbsA := Thumbnails{
+	thumbsA := youtube.ThumbnailDetails{
 		Default:  &a,
 		Medium:   &b,
 		High:     &a,
@@ -53,8 +53,8 @@ func TestThumbnailsEqual(t *testing.T) {
 
 	tests := []struct {
 		name     string
-		thumbsA  *Thumbnails
-		thumbsB  *Thumbnails
+		thumbsA  *youtube.ThumbnailDetails
+		thumbsB  *youtube.ThumbnailDetails
 		expected bool
 	}{
 		{"nil structs", nil, nil, true},
@@ -66,7 +66,7 @@ func TestThumbnailsEqual(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.thumbsA.Equal(tt.thumbsB); got != tt.expected {
+			if got := AllEqual(tt.thumbsA, tt.thumbsB); got != tt.expected {
 				t.Errorf("got %t, want %t", got, tt.expected)
 			}
 		})

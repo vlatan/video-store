@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/sqlnull"
 	"github.com/vlatan/video-store/internal/utils/stringx"
+	"google.golang.org/api/youtube/v3"
 )
 
 // Get a limited number of sources with offset
@@ -43,14 +43,14 @@ func (r *Repository) Sources(ctx context.Context) (Sources, error) {
 		}
 
 		// Unserialize thumbnails
-		var channelThumbs types.Thumbnails
+		var channelThumbs youtube.ThumbnailDetails
 		if err = json.Unmarshal(thumbnails, &channelThumbs); err != nil {
 			msg := "could not ummarshal the channel thumbs on playlist"
 			return nil, fmt.Errorf("%s: %q: %w", msg, source.PlaylistID, err)
 		}
 
 		source.ChannelThumbnails = &channelThumbs
-		source.Thumbnail = (*types.Thumbnail)(channelThumbs.Medium)
+		source.Thumbnail = channelThumbs.Medium
 
 		// Include the category in the result
 		sources = append(sources, source)

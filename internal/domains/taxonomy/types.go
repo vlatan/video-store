@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/vlatan/video-store/internal/types"
+	"google.golang.org/api/youtube/v3"
 )
 
 type Category struct {
@@ -31,18 +31,18 @@ func (cats *Categories) UnmarshalBinary(data []byte) error {
 // ============================================================================= //
 
 type Source struct {
-	PlaylistID         string            `json:"playlist_id,omitempty"`
-	ChannelID          string            `json:"channel_id,omitempty"`
-	UserID             int               `json:"-"`
-	Title              string            `json:"title,omitempty"`
-	ChannelTitle       string            `json:"channel_title,omitempty"`
-	Thumbnail          *types.Thumbnail  `json:"thumbnail,omitempty"`
-	Thumbnails         *types.Thumbnails `json:"thumbnails,omitempty"`
-	ChannelThumbnails  *types.Thumbnails `json:"channel_thumbnails,omitempty"`
-	Description        string            `json:"description,omitempty"`
-	ChannelDescription string            `json:"channel_description,omitempty"`
-	CreatedAt          *time.Time        `json:"created_at,omitempty"`
-	UpdatedAt          *time.Time        `json:"updated_at,omitempty"`
+	PlaylistID         string                    `json:"playlist_id,omitempty"`
+	ChannelID          string                    `json:"channel_id,omitempty"`
+	UserID             int                       `json:"-"`
+	Title              string                    `json:"title,omitempty"`
+	ChannelTitle       string                    `json:"channel_title,omitempty"`
+	Thumbnail          *youtube.Thumbnail        `json:"thumbnail,omitempty"`
+	Thumbnails         *youtube.ThumbnailDetails `json:"thumbnails,omitempty"`
+	ChannelThumbnails  *youtube.ThumbnailDetails `json:"channel_thumbnails,omitempty"`
+	Description        string                    `json:"description,omitempty"`
+	ChannelDescription string                    `json:"channel_description,omitempty"`
+	CreatedAt          *time.Time                `json:"created_at,omitempty"`
+	UpdatedAt          *time.Time                `json:"updated_at,omitempty"`
 }
 
 // ============================================================================= //

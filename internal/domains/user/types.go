@@ -27,16 +27,6 @@ type User struct {
 	CreatedAt      *time.Time `json:"created_at,omitempty"`
 }
 
-// MarshalBinary implements the encoding.BinaryMarshaler interface
-func (u User) MarshalBinary() (data []byte, err error) {
-	return json.Marshal(u)
-}
-
-// UnmarshalBinary implements the encoding.BinaryUnmarshaler interface
-func (u *User) UnmarshalBinary(data []byte) error {
-	return json.Unmarshal(data, u)
-}
-
 // IsAuthenticated reports whether the user is a real, loaded user
 func (u *User) IsAuthenticated() bool {
 	return u != nil &&

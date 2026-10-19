@@ -6,6 +6,7 @@ import (
 
 	"github.com/vlatan/video-store/internal/domains/taxonomy"
 	"github.com/vlatan/video-store/internal/utils/ctxv"
+	"github.com/vlatan/video-store/internal/utils/thumbx"
 	"google.golang.org/api/youtube/v3"
 )
 
@@ -31,7 +32,7 @@ func (w *Worker) updateSources(
 
 		// Check if channel thumbs or title have changed
 		dbChThumbs := dbSources[playlistID].ChannelThumbnails
-		if dbChThumbs.Equal(newSource.ChannelThumbnails) &&
+		if thumbx.AllEqual(dbChThumbs, newSource.ChannelThumbnails) &&
 			dbSources[playlistID].ChannelTitle == newSource.ChannelTitle {
 			continue
 		}

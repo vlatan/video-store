@@ -1,4 +1,4 @@
-package types
+package thumbx
 
 import (
 	"fmt"
@@ -7,10 +7,8 @@ import (
 	"google.golang.org/api/youtube/v3"
 )
 
-type Thumbnail youtube.Thumbnail
-
 // Equal checks two thumbnails equality
-func (a *Thumbnail) Equal(b *Thumbnail) bool {
+func Equal(a, b *youtube.Thumbnail) bool {
 	if a == nil && b == nil {
 		return true
 	}
@@ -23,12 +21,8 @@ func (a *Thumbnail) Equal(b *Thumbnail) bool {
 	return a.Height == b.Height && a.Url == b.Url && a.Width == b.Width
 }
 
-// ============================================================================= //
-
-type Thumbnails youtube.ThumbnailDetails
-
 // Create a srcset string from a struct of thumbnails
-func (t *Thumbnails) Srcset(maxWidth int64) (result string) {
+func Srcset(t youtube.ThumbnailDetails, maxWidth int64) (result string) {
 
 	thumbs := []*youtube.Thumbnail{
 		t.Default,
@@ -48,7 +42,7 @@ func (t *Thumbnails) Srcset(maxWidth int64) (result string) {
 }
 
 // Get the thumbnail with maximum width
-func (t *Thumbnails) MaxThumb() (result *Thumbnail) {
+func MaxThumb(t youtube.ThumbnailDetails) (result *youtube.Thumbnail) {
 
 	thumbs := []*youtube.Thumbnail{
 		t.Default,
@@ -61,7 +55,7 @@ func (t *Thumbnails) MaxThumb() (result *Thumbnail) {
 	var maxWidth int64
 	for _, thumb := range thumbs {
 		if thumb != nil && thumb.Width != 0 && thumb.Width > maxWidth {
-			result = (*Thumbnail)(thumb)
+			result = thumb
 			maxWidth = thumb.Width
 		}
 	}
@@ -69,8 +63,8 @@ func (t *Thumbnails) MaxThumb() (result *Thumbnail) {
 	return result
 }
 
-// Equal checks two thumbnail sets equality
-func (a *Thumbnails) Equal(b *Thumbnails) bool {
+// AllEqual checks two thumbnail sets equality
+func AllEqual(a, b *youtube.ThumbnailDetails) bool {
 	if a == nil && b == nil {
 		return true
 	}
@@ -79,9 +73,9 @@ func (a *Thumbnails) Equal(b *Thumbnails) bool {
 		return false
 	}
 
-	return (*Thumbnail)(a.Default).Equal((*Thumbnail)(b.Default)) &&
-		(*Thumbnail)(a.Medium).Equal((*Thumbnail)(b.Medium)) &&
-		(*Thumbnail)(a.High).Equal((*Thumbnail)(b.High)) &&
-		(*Thumbnail)(a.Standard).Equal((*Thumbnail)(b.Standard)) &&
-		(*Thumbnail)(a.Maxres).Equal((*Thumbnail)(b.Maxres))
+	return Equal(a.Default, b.Default) &&
+		Equal(a.Medium, b.Medium) &&
+		Equal(a.High, b.High) &&
+		Equal(a.Standard, b.Standard) &&
+		Equal(a.Maxres, b.Maxres)
 }

@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"github.com/vlatan/video-store/internal/domains/taxonomy"
-	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/normalize"
 	"github.com/vlatan/video-store/internal/utils/retry"
 
@@ -161,15 +160,16 @@ func (s *Service) NewYouTubeSource(
 	source.ChannelDescription = normalize.Description(channel.Snippet.Description)
 
 	// Assign the playlist thumbnails
-	source.Thumbnails = &types.Thumbnails{}
-	source.Thumbnails.Default = playlist.Snippet.Thumbnails.Default
+	source.Thumbnails = &youtube.ThumbnailDetails{
+		Default: playlist.Snippet.Thumbnails.Default,
+	}
 	source.Thumbnails.Medium = playlist.Snippet.Thumbnails.Medium
 	source.Thumbnails.High = playlist.Snippet.Thumbnails.High
 	source.Thumbnails.Standard = playlist.Snippet.Thumbnails.Standard
 	source.Thumbnails.Maxres = playlist.Snippet.Thumbnails.Maxres
 
 	// Assign the channel thumbnails
-	source.ChannelThumbnails = &types.Thumbnails{}
+	source.ChannelThumbnails = &youtube.ThumbnailDetails{}
 	source.ChannelThumbnails.Default = channel.Snippet.Thumbnails.Default
 	source.ChannelThumbnails.Medium = channel.Snippet.Thumbnails.Medium
 	source.ChannelThumbnails.High = channel.Snippet.Thumbnails.High

@@ -12,44 +12,45 @@ import (
 	"strings"
 	"time"
 
-	"github.com/vlatan/video-store/internal/types"
+	"github.com/vlatan/video-store/internal/utils/thumbx"
 	"golang.org/x/sync/errgroup"
+	"google.golang.org/api/youtube/v3"
 )
 
 type Post struct {
-	ID              int               `json:"-"`
-	Provider        string            `json:"provider,omitempty"`
-	VideoID         string            `json:"video_id,omitempty"`
-	Title           string            `json:"title,omitempty"`
-	OriginalTitle   string            `json:"original_title,omitempty"`
-	Directors       []string          `json:"directors,omitempty"`
-	ReleaseYear     int16             `json:"release_year,omitempty"`
-	Srcset          string            `json:"srcset,omitempty"`
-	RawThumbs       []byte            `json:"-"`
-	Thumbnails      *types.Thumbnails `json:"thumbnails,omitempty"`
-	Thumbnail       *types.Thumbnail  `json:"thumbnail,omitempty"`
-	CategorySlug    string            `json:"category_slug,omitempty"`
-	CategoryName    string            `json:"category_name,omitempty"`
-	Likes           int               `json:"likes,omitempty"`
-	Reviews         *Reviews          `json:"reviews,omitempty"`
-	RatingStats     *RatingStats      `json:"rating_stats,omitempty"`
-	Stars           [10]uint8         `json:"-"`
-	UserActions     Actions           `json:"user_actions,omitzero"`
-	SearchScore     float64           `json:"search_score,omitempty"`
-	LikeButtonText  string            `json:"like_button_text,omitempty"`
-	Description     string            `json:"description,omitempty"`
-	Summary         string            `json:"summary,omitempty"`
-	HTMLSummary     template.HTML     `json:"html_summary,omitempty"`
-	MetaDescription string            `json:"meta_description,omitempty"`
-	Tags            string            `json:"tags,omitempty"`
-	PlaylistID      string            `json:"playlist_id,omitempty"`
-	PlaylistTitle   string            `json:"playlist_title,omitempty"`
-	ChannelTitle    string            `json:"channel_title,omitempty"`
-	RelatedPosts    []Post            `json:"related_posts,omitempty"`
-	UploadDate      *time.Time        `json:"upload_date,omitempty"`
-	CreatedAt       *time.Time        `json:"created_at,omitempty"`
-	UpdatedAt       *time.Time        `json:"updated_at,omitempty"`
-	Duration        ISO8601Duration   `json:"duration,omitempty"`
+	ID              int                       `json:"-"`
+	Provider        string                    `json:"provider,omitempty"`
+	VideoID         string                    `json:"video_id,omitempty"`
+	Title           string                    `json:"title,omitempty"`
+	OriginalTitle   string                    `json:"original_title,omitempty"`
+	Directors       []string                  `json:"directors,omitempty"`
+	ReleaseYear     int16                     `json:"release_year,omitempty"`
+	Srcset          string                    `json:"srcset,omitempty"`
+	RawThumbs       []byte                    `json:"-"`
+	Thumbnails      *youtube.ThumbnailDetails `json:"thumbnails,omitempty"`
+	Thumbnail       *youtube.Thumbnail        `json:"thumbnail,omitempty"`
+	CategorySlug    string                    `json:"category_slug,omitempty"`
+	CategoryName    string                    `json:"category_name,omitempty"`
+	Likes           int                       `json:"likes,omitempty"`
+	Reviews         *Reviews                  `json:"reviews,omitempty"`
+	RatingStats     *RatingStats              `json:"rating_stats,omitempty"`
+	Stars           [10]uint8                 `json:"-"`
+	UserActions     Actions                   `json:"user_actions,omitzero"`
+	SearchScore     float64                   `json:"search_score,omitempty"`
+	LikeButtonText  string                    `json:"like_button_text,omitempty"`
+	Description     string                    `json:"description,omitempty"`
+	Summary         string                    `json:"summary,omitempty"`
+	HTMLSummary     template.HTML             `json:"html_summary,omitempty"`
+	MetaDescription string                    `json:"meta_description,omitempty"`
+	Tags            string                    `json:"tags,omitempty"`
+	PlaylistID      string                    `json:"playlist_id,omitempty"`
+	PlaylistTitle   string                    `json:"playlist_title,omitempty"`
+	ChannelTitle    string                    `json:"channel_title,omitempty"`
+	RelatedPosts    []Post                    `json:"related_posts,omitempty"`
+	UploadDate      *time.Time                `json:"upload_date,omitempty"`
+	CreatedAt       *time.Time                `json:"created_at,omitempty"`
+	UpdatedAt       *time.Time                `json:"updated_at,omitempty"`
+	Duration        ISO8601Duration           `json:"duration,omitempty"`
 }
 
 // MarshalBinary implements the encoding.BinaryMarshaler interface
@@ -107,12 +108,12 @@ func (p *Posts) ProcessThumbs(ctx context.Context) error {
 				defer func() { <-semaphore }()
 
 				// Unmarshal the post thumbnails
-				var thumbs types.Thumbnails
+				var thumbs youtube.ThumbnailDetails
 				err := json.Unmarshal(post.RawThumbs, &thumbs)
 
 				if err == nil {
-					p.Items[i].Thumbnail = (*types.Thumbnail)(thumbs.Medium)
-					p.Items[i].Srcset = thumbs.Srcset(480)
+					p.Items[i].Thumbnail = thumbs.Medium
+					p.Items[i].Srcset = thumbx.Srcset(thumbs, 480)
 					p.Items[i].RawThumbs = nil
 					return nil
 				}
@@ -121,7 +122,7 @@ func (p *Posts) ProcessThumbs(ctx context.Context) error {
 				slog.WarnContext(ctx, "failed to unmarshal thumbs", "error", err)
 
 				// Set empty Thumbnail so the HTML templates don't break
-				p.Items[i].Thumbnail = &types.Thumbnail{}
+				p.Items[i].Thumbnail = &youtube.Thumbnail{}
 				p.Items[i].RawThumbs = nil
 				return nil
 			}
