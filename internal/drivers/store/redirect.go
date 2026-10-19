@@ -5,6 +5,8 @@ import (
 	"net/http"
 )
 
+const redirectKey = "redirect"
+
 // AddRedirectURL adds redirect url to session
 func (s *Service) AddRedirectURL(
 	w http.ResponseWriter,
@@ -12,7 +14,7 @@ func (s *Service) AddRedirectURL(
 	url string) error {
 	// Store this redirect URL in a session
 	session, _ := s.Get(r, s.config.RedirectSessionName)
-	session.Values["redirect"] = url
+	session.Values[redirectKey] = url
 	return session.Save(r, w)
 }
 
@@ -21,7 +23,7 @@ func (s *Service) RedirectURL(w http.ResponseWriter, r *http.Request) string {
 
 	redirectTo := "/"
 	session, _ := s.Get(r, s.config.RedirectSessionName)
-	if url, _ := session.Values["redirect"].(string); url != "" {
+	if url, _ := session.Values[redirectKey].(string); url != "" {
 		redirectTo = url
 	}
 
