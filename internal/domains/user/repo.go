@@ -2,6 +2,7 @@ package user
 
 import (
 	"embed"
+	"encoding/gob"
 	"io/fs"
 	"text/template"
 
@@ -28,6 +29,9 @@ func New(cfg *config.Config, db *database.Service, fsys fs.FS) (*Repository, err
 	if err != nil {
 		return nil, err
 	}
+
+	// Register User type with gob to be able to use it in sessions
+	gob.Register(&User{})
 
 	return &Repository{cfg, db, tmpl}, nil
 }

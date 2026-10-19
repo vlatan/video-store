@@ -3,17 +3,15 @@ package store
 import (
 	"log/slog"
 	"net/http"
-
-	"github.com/vlatan/video-store/internal/domains/user"
 )
 
 // User key to use in session values
 const userKey = "user"
 
 // AddUser adds user to session
-func (s *Service) AddUser(w http.ResponseWriter, r *http.Request, u *user.User) error {
+func (s *Service) AddUser(w http.ResponseWriter, r *http.Request, user any) error {
 	session, _ := s.Get(r, s.cfg.UserSessionName)
-	session.Values[userKey] = (*sessUser)(u)
+	session.Values[userKey] = user
 	return session.Save(r, w)
 }
 
@@ -24,14 +22,12 @@ func (s *Service) DeleteUser(w http.ResponseWriter, r *http.Request) error {
 }
 
 // User gets the user from session
-func (s *Service) User(w http.ResponseWriter, r *http.Request) *user.User {
-
-	// Get session from store
+func (s *Service) User(w http.ResponseWriter, r *http.Request) any {
 	session, _ := s.Get(r, s.cfg.UserSessionName)
-	sessUser, _ := session.Values[userKey].(*sessUser)
+	user, ok := session.Values[userKey]
 
-	// Clear the session this is anonymous user
-	if sessUser == nil || sessUser.ID == 0 {
+	// Clear the session we just created, no user to be fetched
+	if !ok {
 		if err := s.Clear(r, w, session); err != nil {
 			slog.WarnContext(
 				r.Context(),
@@ -39,8 +35,7 @@ func (s *Service) User(w http.ResponseWriter, r *http.Request) *user.User {
 				"error", err,
 			)
 		}
-		return nil
 	}
 
-	return (*user.User)(sessUser)
+	return user
 }
