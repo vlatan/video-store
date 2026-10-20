@@ -7,7 +7,6 @@ import (
 
 	"github.com/vlatan/video-store/internal/ctxd"
 	"github.com/vlatan/video-store/internal/domains/post"
-	"github.com/vlatan/video-store/internal/types"
 )
 
 // Handle the Home page
@@ -20,12 +19,12 @@ func (s *Service) Home(w http.ResponseWriter, r *http.Request) {
 	redisKey := "home:posts"
 
 	switch orderBy {
-	case types.Likes:
-		redisKey += fmt.Sprintf(":%s", types.Likes)
-	case types.AvgRating:
-		redisKey += fmt.Sprintf(":%s", types.AvgRating)
-	case types.RatingCount:
-		redisKey += fmt.Sprintf(":%s", types.RatingCount)
+	case post.Likes:
+		redisKey += fmt.Sprintf(":%s", post.Likes)
+	case post.AvgRating:
+		redisKey += fmt.Sprintf(":%s", post.AvgRating)
+	case post.RatingCount:
+		redisKey += fmt.Sprintf(":%s", post.RatingCount)
 	}
 
 	var (
@@ -35,9 +34,7 @@ func (s *Service) Home(w http.ResponseWriter, r *http.Request) {
 
 	// Don't cache the home results only for the admin
 	if ctxd.GetUser(r.Context()).IsAdmin(s.cfg) {
-		posts, err = s.post.Home(
-			r.Context(), "", orderBy,
-		)
+		posts, err = s.post.Home(r.Context(), "", orderBy)
 	} else {
 		posts, err = s.rdb.Get(
 			r.Context(),
@@ -87,12 +84,12 @@ func (s *Service) HomeAPI(w http.ResponseWriter, r *http.Request) {
 	redisKey := "home:posts"
 
 	switch orderBy {
-	case types.Likes:
-		redisKey += fmt.Sprintf(":%s", types.Likes)
-	case types.AvgRating:
-		redisKey += fmt.Sprintf(":%s", types.AvgRating)
-	case types.RatingCount:
-		redisKey += fmt.Sprintf(":%s", types.RatingCount)
+	case post.Likes:
+		redisKey += fmt.Sprintf(":%s", post.Likes)
+	case post.AvgRating:
+		redisKey += fmt.Sprintf(":%s", post.AvgRating)
+	case post.RatingCount:
+		redisKey += fmt.Sprintf(":%s", post.RatingCount)
 	}
 
 	if cursor != "" {

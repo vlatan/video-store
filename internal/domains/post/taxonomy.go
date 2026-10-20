@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/stringx"
 )
 
@@ -83,17 +82,17 @@ func (r *Repository) queryTaxonomyPosts(
 	order := "upload_date DESC, id DESC"
 
 	orderingOptions := map[string]struct{ order, where string }{
-		types.Likes: {
-			fmt.Sprintf("%s DESC, %s", types.Likes, order),
-			fmt.Sprintf("WHERE (%s, upload_date, id) < ($3, $4, $5)", types.Likes),
+		Likes: {
+			fmt.Sprintf("%s DESC, %s", Likes, order),
+			fmt.Sprintf("WHERE (%s, upload_date, id) < ($3, $4, $5)", Likes),
 		},
-		types.AvgRating: {
-			fmt.Sprintf("%s DESC NULLS LAST, %s", types.AvgRating, order),
-			fmt.Sprintf("WHERE (%s, upload_date, id) < ($3, $4, $5)", types.AvgRating),
+		AvgRating: {
+			fmt.Sprintf("%s DESC NULLS LAST, %s", AvgRating, order),
+			fmt.Sprintf("WHERE (%s, upload_date, id) < ($3, $4, $5)", AvgRating),
 		},
-		types.RatingCount: {
-			fmt.Sprintf("%s DESC, %s", types.RatingCount, order),
-			fmt.Sprintf("WHERE (%s, upload_date, id) < ($3, $4, $5)", types.RatingCount),
+		RatingCount: {
+			fmt.Sprintf("%s DESC, %s", RatingCount, order),
+			fmt.Sprintf("WHERE (%s, upload_date, id) < ($3, $4, $5)", RatingCount),
 		},
 	}
 
@@ -211,15 +210,15 @@ func (r *Repository) queryTaxonomyPosts(
 
 	// Modify the cursor if there's ordering
 	switch orderBy {
-	case types.Likes:
+	case Likes:
 		cursorStr = fmt.Sprintf("%d,%s", lastPost.Likes, cursorStr)
-	case types.AvgRating:
+	case AvgRating:
 		var avgRating float64
 		if lastPost.RatingStats != nil {
 			avgRating = lastPost.RatingStats.Avg
 		}
 		cursorStr = fmt.Sprintf("%.2f,%s", avgRating, cursorStr)
-	case types.RatingCount:
+	case RatingCount:
 		var ratingCount int64
 		if lastPost.RatingStats != nil {
 			ratingCount = lastPost.RatingStats.Count

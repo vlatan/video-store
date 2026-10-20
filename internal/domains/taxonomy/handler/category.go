@@ -8,7 +8,6 @@ import (
 	"github.com/vlatan/video-store/internal/ctxd"
 	"github.com/vlatan/video-store/internal/domains/post"
 	"github.com/vlatan/video-store/internal/domains/taxonomy"
-	"github.com/vlatan/video-store/internal/types"
 )
 
 // Handle posts in a certain category
@@ -21,12 +20,12 @@ func (s *Service) CategoryPosts(w http.ResponseWriter, r *http.Request) {
 	redisKey := fmt.Sprintf("category:%s:posts", slug)
 
 	switch orderBy {
-	case types.Likes:
-		redisKey += fmt.Sprintf(":%s", types.Likes)
-	case types.AvgRating:
-		redisKey += fmt.Sprintf(":%s", types.AvgRating)
-	case types.RatingCount:
-		redisKey += fmt.Sprintf(":%s", types.RatingCount)
+	case post.Likes:
+		redisKey += fmt.Sprintf(":%s", post.Likes)
+	case post.AvgRating:
+		redisKey += fmt.Sprintf(":%s", post.AvgRating)
+	case post.RatingCount:
+		redisKey += fmt.Sprintf(":%s", post.RatingCount)
 	}
 
 	var (
@@ -94,12 +93,12 @@ func (s *Service) CategoryPostsAPI(w http.ResponseWriter, r *http.Request) {
 	redisKey := fmt.Sprintf("category:%s:posts", slug)
 
 	switch orderBy {
-	case types.Likes:
-		redisKey += fmt.Sprintf(":%s", types.Likes)
-	case types.AvgRating:
-		redisKey += fmt.Sprintf(":%s", types.AvgRating)
-	case types.RatingCount:
-		redisKey += fmt.Sprintf(":%s", types.RatingCount)
+	case post.Likes:
+		redisKey += fmt.Sprintf(":%s", post.Likes)
+	case post.AvgRating:
+		redisKey += fmt.Sprintf(":%s", post.AvgRating)
+	case post.RatingCount:
+		redisKey += fmt.Sprintf(":%s", post.RatingCount)
 	}
 
 	if cursor != "" {

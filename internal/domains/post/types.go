@@ -17,6 +17,12 @@ import (
 	"google.golang.org/api/youtube/v3"
 )
 
+const ( // Whitelisted sorting options
+	Likes       = "likes"
+	AvgRating   = "avg_rating"
+	RatingCount = "rating_count"
+)
+
 type Post struct {
 	ID              int                       `json:"-"`
 	Provider        string                    `json:"provider,omitempty"`

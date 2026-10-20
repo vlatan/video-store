@@ -7,7 +7,6 @@ import (
 
 	"github.com/vlatan/video-store/internal/ctxd"
 	"github.com/vlatan/video-store/internal/domains/post"
-	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/stringx"
 )
 
@@ -32,12 +31,12 @@ func (s *Service) YearPosts(w http.ResponseWriter, r *http.Request) {
 	redisKey := fmt.Sprintf("year:%s:posts", year)
 
 	switch orderBy {
-	case types.Likes:
-		redisKey += fmt.Sprintf(":%s", types.Likes)
-	case types.AvgRating:
-		redisKey += fmt.Sprintf(":%s", types.AvgRating)
-	case types.RatingCount:
-		redisKey += fmt.Sprintf(":%s", types.RatingCount)
+	case post.Likes:
+		redisKey += fmt.Sprintf(":%s", post.Likes)
+	case post.AvgRating:
+		redisKey += fmt.Sprintf(":%s", post.AvgRating)
+	case post.RatingCount:
+		redisKey += fmt.Sprintf(":%s", post.RatingCount)
 	}
 
 	// Don't cache the release year posts only for the admin.
@@ -113,12 +112,12 @@ func (s *Service) YearPostsAPI(w http.ResponseWriter, r *http.Request) {
 	redisKey := fmt.Sprintf("year:%s:posts", year)
 
 	switch orderBy {
-	case types.Likes:
-		redisKey += fmt.Sprintf(":%s", types.Likes)
-	case types.AvgRating:
-		redisKey += fmt.Sprintf(":%s", types.AvgRating)
-	case types.RatingCount:
-		redisKey += fmt.Sprintf(":%s", types.RatingCount)
+	case post.Likes:
+		redisKey += fmt.Sprintf(":%s", post.Likes)
+	case post.AvgRating:
+		redisKey += fmt.Sprintf(":%s", post.AvgRating)
+	case post.RatingCount:
+		redisKey += fmt.Sprintf(":%s", post.RatingCount)
 	}
 
 	if cursor != "" {

@@ -194,12 +194,12 @@ func (s *Service) SourcePosts(w http.ResponseWriter, r *http.Request) {
 	redisKey := fmt.Sprintf("source:%s:posts", sourceID)
 
 	switch orderBy {
-	case types.Likes:
-		redisKey += fmt.Sprintf(":%s", types.Likes)
-	case types.AvgRating:
-		redisKey += fmt.Sprintf(":%s", types.AvgRating)
-	case types.RatingCount:
-		redisKey += fmt.Sprintf(":%s", types.RatingCount)
+	case post.Likes:
+		redisKey += fmt.Sprintf(":%s", post.Likes)
+	case post.AvgRating:
+		redisKey += fmt.Sprintf(":%s", post.AvgRating)
+	case post.RatingCount:
+		redisKey += fmt.Sprintf(":%s", post.RatingCount)
 	}
 
 	var (
@@ -301,12 +301,12 @@ func (s *Service) SourcePostsAPI(w http.ResponseWriter, r *http.Request) {
 	redisKey := fmt.Sprintf("source:%s:posts", sourceID)
 
 	switch orderBy {
-	case types.Likes:
-		redisKey += fmt.Sprintf(":%s", types.Likes)
-	case types.AvgRating:
-		redisKey += fmt.Sprintf(":%s", types.AvgRating)
-	case types.RatingCount:
-		redisKey += fmt.Sprintf(":%s", types.RatingCount)
+	case post.Likes:
+		redisKey += fmt.Sprintf(":%s", post.Likes)
+	case post.AvgRating:
+		redisKey += fmt.Sprintf(":%s", post.AvgRating)
+	case post.RatingCount:
+		redisKey += fmt.Sprintf(":%s", post.RatingCount)
 	}
 
 	if cursor != "" {
