@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/vlatan/video-store/internal/domains/post"
-	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/types/form"
 	"github.com/vlatan/video-store/internal/utils/redirect"
 	"github.com/vlatan/video-store/internal/utils/retry"
@@ -183,8 +182,8 @@ func (s *Service) New(w http.ResponseWriter, r *http.Request) {
 				p.ReleaseYear = resp.ReleaseYear
 
 				//  Mark the OCR as done
-				if p.Summary != "" && !strings.HasSuffix(p.Summary, types.OcrFlag) {
-					p.Summary += types.OcrFlag
+				if p.Summary != "" && !strings.HasSuffix(p.Summary, post.OcrFlag) {
+					p.Summary += post.OcrFlag
 				}
 			}
 

@@ -14,10 +14,11 @@ import (
 	"google.golang.org/api/youtube/v3"
 )
 
-const ( // Whitelisted sorting options
+const (
 	Likes       = "likes"
 	AvgRating   = "avg_rating"
 	RatingCount = "rating_count"
+	OcrFlag     = "<!-- OCR Done -->"
 )
 
 type Post struct {

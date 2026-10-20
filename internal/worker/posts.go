@@ -11,7 +11,6 @@ import (
 	"github.com/vlatan/video-store/internal/domains/post"
 	"github.com/vlatan/video-store/internal/integrations/gemini"
 	"github.com/vlatan/video-store/internal/integrations/yt"
-	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/ctxv"
 	"github.com/vlatan/video-store/internal/utils/sleep"
 )
@@ -325,8 +324,8 @@ func (w *Worker) insertVideos(ctx context.Context, videos []*post.Post) error {
 				video.ReleaseYear = resp.ReleaseYear
 
 				//  Mark the OCR as done
-				if video.Summary != "" && !strings.HasSuffix(video.Summary, types.OcrFlag) {
-					video.Summary += types.OcrFlag
+				if video.Summary != "" && !strings.HasSuffix(video.Summary, post.OcrFlag) {
+					video.Summary += post.OcrFlag
 				}
 			}
 		}
@@ -400,7 +399,7 @@ func (w *Worker) updateVideos(ctx context.Context, videos []*post.Post) error {
 		}
 
 		// If video has no OCR data proceed to generate
-		if !strings.HasSuffix(video.Summary, types.OcrFlag) {
+		if !strings.HasSuffix(video.Summary, post.OcrFlag) {
 
 			// Sleep with context in mind for 60-90 seconds.
 			// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
@@ -436,8 +435,8 @@ func (w *Worker) updateVideos(ctx context.Context, videos []*post.Post) error {
 				video.ReleaseYear = resp.ReleaseYear
 
 				//  Mark the OCR as done
-				if video.Summary != "" && !strings.HasSuffix(video.Summary, types.OcrFlag) {
-					video.Summary += types.OcrFlag
+				if video.Summary != "" && !strings.HasSuffix(video.Summary, post.OcrFlag) {
+					video.Summary += post.OcrFlag
 				}
 
 				updated = true
