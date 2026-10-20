@@ -88,16 +88,16 @@ func (s *Service) GenerateContent(
 		return nil, err
 	}
 
-	var response Response
-	if err = json.Unmarshal([]byte(result.Text()), &response); err != nil {
+	var resp Response
+	if err = json.Unmarshal([]byte(result.Text()), &resp); err != nil {
 		return nil, err
 	}
 
-	response.OriginalTitle = normalize.Title(response.OriginalTitle, normalize.VideoTitleCutoffs)
-	response.Summary = normalize.Description(response.Summary)
+	resp.OriginalTitle = normalize.Title(resp.OriginalTitle, normalize.VideoTitleCutoffs)
+	resp.Summary = normalize.Description(resp.Summary)
 
 	var directors []string
-	for _, director := range response.Directors {
+	for _, director := range resp.Directors {
 		name, err := normalize.Name(director)
 		if err == nil {
 			directors = append(directors, name)
@@ -109,23 +109,23 @@ func (s *Service) GenerateContent(
 			"error", err,
 		)
 	}
-	response.Directors = directors
+	resp.Directors = directors
 
-	return &response, nil
+	return &resp, nil
 }
 
 // GeneratePostSummary generates post summary and category
 func (s *Service) GeneratePostSummary(
 	ctx context.Context,
-	post *post.Post,
-	retryConfig *retry.Config) error {
+	videoID, title, description string,
+	retryConfig *retry.Config) (*Response, error) {
 
 	// Create summary contents
-	summaryContents := s.NewSummaryContents(post.VideoID)
+	summaryContents := s.NewSummaryContents(videoID)
 	genaiConfig := s.NewGenaiConfig()
 	genaiConfig.ResponseSchema = s.NewSummarySchema()
 
-	genaiResponse, err := s.GenerateContent(
+	resp, err := s.GenerateContent(
 		ctx,
 		summaryContents,
 		genaiConfig,
@@ -133,16 +133,14 @@ func (s *Service) GeneratePostSummary(
 	)
 
 	if err == nil {
-		post.Summary = genaiResponse.Summary
-		post.CategoryName = genaiResponse.Category
-		return nil
+		return resp, nil
 	}
 
 	// Check if this is a hard block error by the model
 	if _, blocked := errors.AsType[*NoCandidatesError](err); !blocked {
-		return fmt.Errorf(
+		return nil, fmt.Errorf(
 			"failed to generate LLM content on SUMMARY on video %s: %w",
-			post.VideoID, err,
+			videoID, err,
 		)
 	}
 
@@ -150,21 +148,21 @@ func (s *Service) GeneratePostSummary(
 	slog.ErrorContext(
 		ctx,
 		"failed to generate LLM content on SUMMARY, trying again with text input",
-		"videoId", post.VideoID,
+		"videoId", videoID,
 		"error", err,
 	)
 
 	// Create text contents
-	textContents := s.NewTextContents(post)
+	textContents := s.NewTextContents(videoID, title, description)
 
 	// Sleep with context in mind for 60-90 seconds.
 	// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
-	if err := sleep.Jitter(ctx, 60*time.Second, 90*time.Second); err != nil {
-		return err
+	if err = sleep.Jitter(ctx, 60*time.Second, 90*time.Second); err != nil {
+		return nil, err
 	}
 
 	// Generate content using Gemini, but now with text contents
-	genaiResponse, err = s.GenerateContent(
+	resp, err = s.GenerateContent(
 		ctx,
 		textContents,
 		genaiConfig,
@@ -172,16 +170,13 @@ func (s *Service) GeneratePostSummary(
 	)
 
 	if err != nil {
-		return fmt.Errorf(
+		return nil, fmt.Errorf(
 			"failed to generate LLM content on SUMMARY on video %s: %w",
-			post.VideoID, err,
+			videoID, err,
 		)
 	}
 
-	post.Summary = genaiResponse.Summary
-	post.CategoryName = genaiResponse.Category
-
-	return nil
+	return resp, nil
 }
 
 // GeneratePostOCR reads original title, directors and release year from screen

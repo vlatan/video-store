@@ -268,7 +268,9 @@ func (w *Worker) insertVideos(ctx context.Context, videos []*post.Post) error {
 		}
 
 		// Generate post summary and category
-		err := w.gemini.GeneratePostSummary(ctx, video, w.geminiRetryConfig)
+		resp, err := w.gemini.GeneratePostSummary(
+			ctx, video.VideoID, video.Title, video.Description, w.geminiRetryConfig,
+		)
 
 		// Exit early only if context ended
 		if ctxv.IsContextErr(err) {
@@ -288,6 +290,9 @@ func (w *Worker) insertVideos(ctx context.Context, videos []*post.Post) error {
 
 		// If generating summary was succesfull procede to generate OCR
 		if err == nil {
+
+			video.Summary = resp.Summary
+			video.CategoryName = resp.Category
 
 			// Sleep with context in mind for 60-90 seconds.
 			// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
@@ -354,7 +359,9 @@ func (w *Worker) updateVideos(ctx context.Context, videos []*post.Post) error {
 			}
 
 			// Generate post summary and category
-			err := w.gemini.GeneratePostSummary(ctx, video, w.geminiRetryConfig)
+			resp, err := w.gemini.GeneratePostSummary(
+				ctx, video.VideoID, video.Title, video.Description, w.geminiRetryConfig,
+			)
 
 			// Exit with error only if we need to terminate the worker's job,
 			// meaning only if RPD quota reached or context ended.
@@ -376,6 +383,8 @@ func (w *Worker) updateVideos(ctx context.Context, videos []*post.Post) error {
 				continue
 			}
 
+			video.Summary = resp.Summary
+			video.CategoryName = resp.Category
 			updated = true
 		}
 

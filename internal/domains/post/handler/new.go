@@ -145,7 +145,11 @@ func (s *Service) New(w http.ResponseWriter, r *http.Request) {
 				Delay:      65 * time.Second,
 			}
 
-			if err := s.gemini.GeneratePostSummary(ctx, p, retryConfig); err != nil {
+			resp, err := s.gemini.GeneratePostSummary(
+				ctx, p.VideoID, p.Title, p.Description, retryConfig,
+			)
+
+			if err != nil {
 				slog.WarnContext(
 					r.Context(),
 					"failed to generate/update LLM post summary/category",
@@ -154,6 +158,9 @@ func (s *Service) New(w http.ResponseWriter, r *http.Request) {
 				// Exit early, do not try OCR nor DB update.
 				return
 			}
+
+			p.Summary = resp.Summary
+			p.CategoryName = resp.Category
 
 			// Sleep with context in mind for 60-90 seconds.
 			// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
