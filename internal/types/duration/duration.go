@@ -2,6 +2,7 @@ package duration
 
 import (
 	"fmt"
+	"log/slog"
 	"regexp"
 	"strconv"
 	"strings"
@@ -44,13 +45,14 @@ func (d ISO8601) compile() (map[string]int, error) {
 }
 
 // Human converts ISO-8601 string to human readbale duration
-func (d ISO8601) Human() (string, error) {
+func (d ISO8601) Human() string {
 	t, err := d.compile()
 	if err != nil {
-		return "", err
+		slog.Warn("failed to compile video duration", "duration", d)
+		return ""
 	}
 
-	return fmt.Sprintf("%02d:%02d:%02d", t["h"], t["m"], t["s"]), nil
+	return fmt.Sprintf("%02d:%02d:%02d", t["h"], t["m"], t["s"])
 }
 
 // Seconds converts ISO-8601 string to duration
