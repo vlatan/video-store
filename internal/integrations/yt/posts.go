@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/vlatan/video-store/internal/domains/post"
+	"github.com/vlatan/video-store/internal/types/duration"
 	"github.com/vlatan/video-store/internal/utils/normalize"
 	"github.com/vlatan/video-store/internal/utils/retry"
 
@@ -87,7 +88,7 @@ func (s *Service) ValidateYouTubeVideo(video *youtube.Video) error {
 		return &ValidationError{"this video is not fully broadcasted"}
 	}
 
-	duration := post.ISO8601Duration(video.ContentDetails.Duration)
+	duration := duration.ISO8601(video.ContentDetails.Duration)
 	seconds, err := duration.Seconds()
 
 	if err != nil {
@@ -119,7 +120,7 @@ func (s *Service) NewYouTubePost(video *youtube.Video, playlistID string) *post.
 	p.Tags = normalize.Tags(video.Snippet.Tags, p.Title, p.Description)
 
 	// Get video duration
-	p.Duration = post.ISO8601Duration(video.ContentDetails.Duration)
+	p.Duration = duration.ISO8601(video.ContentDetails.Duration)
 
 	// Parse the upload date into an object
 	parsedTime, _ := time.Parse("2006-01-02T15:04:05Z", video.Snippet.PublishedAt)
