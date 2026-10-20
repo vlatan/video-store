@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"log/slog"
 	"time"
 	"uuid"
 
@@ -49,7 +50,7 @@ type Worker struct {
 // Redis key to lock the worker
 const workerLockKey = "worker:lock"
 
-func New(cfg *config.Config, ctx context.Context) (*Worker, error) {
+func New(ctx context.Context, cfg *config.Config) (*Worker, error) {
 
 	db, err := database.New(cfg)
 	if err != nil {
@@ -73,6 +74,28 @@ func New(cfg *config.Config, ctx context.Context) (*Worker, error) {
 		return nil, fmt.Errorf("couldn't create taxonomy repo: %w", err)
 	}
 
+	// Get the categories from cache or DB
+	categories, err := rdb.Get(
+		ctx,
+		"categories",
+		cfg.CacheTimeout,
+		func() (taxonomy.Categories, error) {
+			return taxRepo.Categories(ctx)
+		},
+	)
+
+	// Extract the category names
+	catNames := make([]string, len(categories))
+	for i, cat := range categories {
+		catNames[i] = cat.Name
+	}
+
+	if err != nil {
+		slog.WarnContext(
+			ctx, "failed to get categories", "error", err,
+		)
+	}
+
 	// Create YouTube service
 	yt, err := yt.New(ctx, cfg)
 	if err != nil {
@@ -80,7 +103,7 @@ func New(cfg *config.Config, ctx context.Context) (*Worker, error) {
 	}
 
 	// Create Gemini client
-	gemini, err := gemini.New(ctx, cfg, taxRepo, rdb)
+	gemini, err := gemini.New(ctx, cfg, catNames, rdb)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create Gemini service: %w", err)
 	}

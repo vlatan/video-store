@@ -42,7 +42,7 @@ func (s *Service) generateContent(
 
 	response, err := s.client.Models.GenerateContent(
 		ctx,
-		s.config.GeminiModel,
+		s.cfg.GeminiModel,
 		contents,
 		genaiConfig,
 	)

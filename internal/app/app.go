@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"runtime"
 	"time"
@@ -11,16 +12,16 @@ import (
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/domains/auth"
 	"github.com/vlatan/video-store/internal/domains/health"
-	page "github.com/vlatan/video-store/internal/domains/page/handler"
-	postRepo "github.com/vlatan/video-store/internal/domains/post"
-	post "github.com/vlatan/video-store/internal/domains/post/handler"
-	sitemap "github.com/vlatan/video-store/internal/domains/sitemap/handler"
-	static "github.com/vlatan/video-store/internal/domains/static"
-	taxonomyRepo "github.com/vlatan/video-store/internal/domains/taxonomy"
-	taxonomy "github.com/vlatan/video-store/internal/domains/taxonomy/handler"
-	text "github.com/vlatan/video-store/internal/domains/text"
-	userRepo "github.com/vlatan/video-store/internal/domains/user"
-	user "github.com/vlatan/video-store/internal/domains/user/handler"
+	pageHandler "github.com/vlatan/video-store/internal/domains/page/handler"
+	"github.com/vlatan/video-store/internal/domains/post"
+	postHandler "github.com/vlatan/video-store/internal/domains/post/handler"
+	sitemapHandler "github.com/vlatan/video-store/internal/domains/sitemap/handler"
+	"github.com/vlatan/video-store/internal/domains/static"
+	"github.com/vlatan/video-store/internal/domains/taxonomy"
+	taxHandler "github.com/vlatan/video-store/internal/domains/taxonomy/handler"
+	"github.com/vlatan/video-store/internal/domains/text"
+	"github.com/vlatan/video-store/internal/domains/user"
+	userHandler "github.com/vlatan/video-store/internal/domains/user/handler"
 	"github.com/vlatan/video-store/internal/drivers/database"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/drivers/store"
@@ -32,17 +33,17 @@ import (
 )
 
 type App struct {
+	user     *userHandler.Service
+	post     *postHandler.Service
+	page     *pageHandler.Service
+	taxonomy *taxHandler.Service
+	sitemap  *sitemapHandler.Service
+	mw       *middlewares.Service
 	auth     *auth.Service
-	user     *user.Service
-	post     *post.Service
-	page     *page.Service
-	taxonomy *taxonomy.Service
-	sitemap  *sitemap.Service
 	text     *text.Service
 	health   *health.Service
 	static   *static.Service
 	tmpl     *tmpl.Service
-	mw       *middlewares.Service
 	domain   string
 	cleanup  func() error
 	server   *http.Server
@@ -83,19 +84,41 @@ func New() (*App, error) {
 	av := avatar.New(maxConcurrency, 500, cfg, rdb, r2s)
 
 	// Create taxonomy repo
-	taxRepo, err := taxonomyRepo.New(cfg, db, nil)
+	taxRepo, err := taxonomy.New(cfg, db, nil)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create taxonomy repo: %w", err)
 	}
 
-	userRepo, err := userRepo.New(cfg, db, nil)
+	userRepo, err := user.New(cfg, db, nil)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create users repo: %w", err)
 	}
 
-	postRepo, err := postRepo.New(cfg, db, nil)
+	postRepo, err := post.New(cfg, db, nil)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create posts repo: %w", err)
+	}
+
+	// Get the categories from cache or DB
+	categories, err := rdb.Get(
+		ctx,
+		"categories",
+		cfg.CacheTimeout,
+		func() (taxonomy.Categories, error) {
+			return taxRepo.Categories(ctx)
+		},
+	)
+
+	if err != nil {
+		slog.WarnContext(
+			ctx, "failed to get categories", "error", err,
+		)
+	}
+
+	// Extract the category names
+	catNames := make([]string, len(categories))
+	for i, cat := range categories {
+		catNames[i] = cat.Name
 	}
 
 	// Create YouTube service
@@ -105,7 +128,7 @@ func New() (*App, error) {
 	}
 
 	// Create Gemini client
-	gemini, err := gemini.New(ctx, cfg, taxRepo, rdb)
+	gemini, err := gemini.New(ctx, cfg, catNames, rdb)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create Gemini service: %w", err)
 	}
@@ -125,7 +148,7 @@ func New() (*App, error) {
 	}
 
 	// Create sitemap service
-	sitemap, err := sitemap.New(cfg, db, rdb, tmpl)
+	sitemap, err := sitemapHandler.New(cfg, db, rdb, tmpl)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create sitemap service: %w", err)
 	}
@@ -135,10 +158,10 @@ func New() (*App, error) {
 
 		// Handlers services
 		auth:     auth.New(cfg, userRepo, av, store, tmpl),
-		user:     user.New(cfg, userRepo, postRepo, av, store, tmpl),
-		post:     post.New(cfg, postRepo, rdb, store, av, tmpl, yt, gemini),
-		page:     page.New(cfg, db, rdb, store, tmpl),
-		taxonomy: taxonomy.New(cfg, taxRepo, postRepo, rdb, store, tmpl, yt),
+		user:     userHandler.New(cfg, userRepo, postRepo, av, store, tmpl),
+		post:     postHandler.New(cfg, postRepo, rdb, store, av, tmpl, yt, gemini),
+		page:     pageHandler.New(cfg, db, rdb, store, tmpl),
+		taxonomy: taxHandler.New(cfg, taxRepo, postRepo, rdb, store, tmpl, yt),
 		sitemap:  sitemap,
 		text:     text.New(cfg, tmpl),
 		health:   health.New(db, rdb, tmpl),

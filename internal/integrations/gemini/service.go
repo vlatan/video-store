@@ -5,19 +5,14 @@ import (
 	"context"
 
 	"github.com/vlatan/video-store/internal/config"
-	"github.com/vlatan/video-store/internal/domains/taxonomy"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 
 	"google.golang.org/genai"
 )
 
-type taxer interface {
-	Categories(context.Context) (taxonomy.Categories, error)
-}
-
 // Service is Gemini struct
 type Service struct {
-	config   *config.Config
+	cfg      *config.Config
 	client   *genai.Client
 	limiter  *GeminiLimiter
 	catNames []string
@@ -27,7 +22,7 @@ type Service struct {
 func New(
 	ctx context.Context,
 	cfg *config.Config,
-	taxer taxer,
+	catNames []string,
 	rs *rdb.Service,
 ) (*Service, error) {
 	// Configure new client
@@ -43,29 +38,10 @@ func New(
 	}
 
 	s := &Service{
-		config:  cfg,
-		client:  client,
-		limiter: limiter,
-	}
-
-	// Get the categories from cache or DB
-	categories, err := rs.Get(
-		ctx,
-		"categories",
-		s.config.CacheTimeout,
-		func() (taxonomy.Categories, error) {
-			return taxer.Categories(ctx)
-		},
-	)
-
-	if err != nil {
-		return nil, err
-	}
-
-	// Extract the category names
-	s.catNames = make([]string, len(categories))
-	for i, cat := range categories {
-		s.catNames[i] = cat.Name
+		cfg:      cfg,
+		client:   client,
+		limiter:  limiter,
+		catNames: catNames,
 	}
 
 	return s, nil
