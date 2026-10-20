@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/vlatan/video-store/internal/domains/post"
+	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/types/form"
 	"github.com/vlatan/video-store/internal/utils/redirect"
 	"github.com/vlatan/video-store/internal/utils/retry"
@@ -168,12 +170,22 @@ func (s *Service) New(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			if err := s.gemini.GeneratePostOCR(ctx, p, retryConfig); err != nil {
+			resp, err = s.gemini.GeneratePostOCR(ctx, p.VideoID, p.Duration, retryConfig)
+			if err != nil {
 				slog.WarnContext(
 					r.Context(),
 					"failed to generate/update LLM post OCR data",
 					"error", err,
 				)
+			} else {
+				p.OriginalTitle = resp.OriginalTitle
+				p.Directors = resp.Directors
+				p.ReleaseYear = resp.ReleaseYear
+
+				//  Mark the OCR as done
+				if p.Summary != "" && !strings.HasSuffix(p.Summary, types.OcrFlag) {
+					p.Summary += types.OcrFlag
+				}
 			}
 
 			_, err = s.post.Update(ctx, p)

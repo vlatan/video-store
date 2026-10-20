@@ -301,7 +301,9 @@ func (w *Worker) insertVideos(ctx context.Context, videos []*post.Post) error {
 			}
 
 			// Generate post original title, directors and release year
-			err := w.gemini.GeneratePostOCR(ctx, video, w.geminiRetryConfig)
+			resp, err := w.gemini.GeneratePostOCR(
+				ctx, video.VideoID, video.Duration, w.geminiRetryConfig,
+			)
 
 			// Exit early only if context ended
 			if ctxv.IsContextErr(err) {
@@ -317,6 +319,15 @@ func (w *Worker) insertVideos(ctx context.Context, videos []*post.Post) error {
 					"videoId", video.VideoID,
 					"error", err,
 				)
+			} else {
+				video.OriginalTitle = resp.OriginalTitle
+				video.Directors = resp.Directors
+				video.ReleaseYear = resp.ReleaseYear
+
+				//  Mark the OCR as done
+				if video.Summary != "" && !strings.HasSuffix(video.Summary, types.OcrFlag) {
+					video.Summary += types.OcrFlag
+				}
 			}
 		}
 
@@ -398,7 +409,9 @@ func (w *Worker) updateVideos(ctx context.Context, videos []*post.Post) error {
 			}
 
 			// Generate post original title, directors and release year
-			err := w.gemini.GeneratePostOCR(ctx, video, w.geminiRetryConfig)
+			resp, err := w.gemini.GeneratePostOCR(
+				ctx, video.VideoID, video.Duration, w.geminiRetryConfig,
+			)
 
 			// Exit with error only if we need to terminate the worker's job,
 			// meaning only if RPD quota reached or context ended.
@@ -417,14 +430,18 @@ func (w *Worker) updateVideos(ctx context.Context, videos []*post.Post) error {
 					"videoId", video.VideoID,
 					"error", err,
 				)
+			} else {
+				video.OriginalTitle = resp.OriginalTitle
+				video.Directors = resp.Directors
+				video.ReleaseYear = resp.ReleaseYear
 
-				// If the summary was not updated then nothing was updated, move onto the next video
-				if !updated {
-					continue
+				//  Mark the OCR as done
+				if video.Summary != "" && !strings.HasSuffix(video.Summary, types.OcrFlag) {
+					video.Summary += types.OcrFlag
 				}
-			}
 
-			updated = true
+				updated = true
+			}
 		}
 
 		if !updated {

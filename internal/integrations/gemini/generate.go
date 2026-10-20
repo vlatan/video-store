@@ -7,11 +7,9 @@ import (
 	"fmt"
 	"log/slog"
 	"slices"
-	"strings"
 	"time"
 
-	"github.com/vlatan/video-store/internal/domains/post"
-	"github.com/vlatan/video-store/internal/types"
+	"github.com/vlatan/video-store/internal/types/duration"
 	"github.com/vlatan/video-store/internal/utils/normalize"
 	"github.com/vlatan/video-store/internal/utils/retry"
 	"github.com/vlatan/video-store/internal/utils/sleep"
@@ -182,15 +180,16 @@ func (s *Service) GeneratePostSummary(
 // GeneratePostOCR reads original title, directors and release year from screen
 func (s *Service) GeneratePostOCR(
 	ctx context.Context,
-	post *post.Post,
-	retryConfig *retry.Config) error {
+	videoID string,
+	duration duration.ISO8601,
+	retryConfig *retry.Config) (*Response, error) {
 
 	// Get video duration
-	videoDuration, err := post.Duration.Parse()
+	videoDuration, err := duration.Parse()
 	if err != nil || videoDuration == 0 {
-		return fmt.Errorf(
+		return nil, fmt.Errorf(
 			"couldn't convert video %s duration %s to seconds; %w",
-			post.VideoID, post.Duration, err,
+			videoID, duration, err,
 		)
 	}
 
@@ -201,8 +200,8 @@ func (s *Service) GeneratePostOCR(
 		schema   *genai.Schema
 		contents []*genai.Content
 	}{
-		{"INTRO", s.NewIntroSchema(), s.NewIntroContents(post.VideoID, endOffset)},
-		{"OUTRO", s.NewOutroSchema(), s.NewOutroContents(post.VideoID, startOffset)},
+		{"INTRO", s.NewIntroSchema(), s.NewIntroContents(videoID, endOffset)},
+		{"OUTRO", s.NewOutroSchema(), s.NewOutroContents(videoID, startOffset)},
 	}
 
 	// Exclude the outro OCR because genai will reject very long start offset
@@ -211,63 +210,59 @@ func (s *Service) GeneratePostOCR(
 	}
 
 	// Make two calls to extract the OCR details
+	var result Response
 	genaiConfig := s.NewGenaiConfig()
 	for _, cfg := range ocrConfigs {
 
 		// Sleep with context in mind for 60-90 seconds.
 		// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
 		if err := sleep.Jitter(ctx, 60*time.Second, 90*time.Second); err != nil {
-			return err
+			return nil, err
 		}
 
 		// Use appropriate schema in the genai config
 		genaiConfig.ResponseSchema = cfg.schema
 
 		// Generate content using Gemini
-		genaiResponse, err := s.GenerateContent(ctx, cfg.contents, genaiConfig, retryConfig)
+		resp, err := s.GenerateContent(ctx, cfg.contents, genaiConfig, retryConfig)
 
 		// Move onto the next call if this is a hard block error by the model
 		if _, blocked := errors.AsType[*NoCandidatesError](err); blocked {
 			slog.ErrorContext(
 				ctx,
 				fmt.Sprintf("failed to generate LLM content on %s", cfg.desc),
-				"videoId", post.VideoID,
+				"videoId", videoID,
 				"error", err,
 			)
 			continue
 		}
 
 		if err != nil {
-			return fmt.Errorf(
+			return nil, fmt.Errorf(
 				"failed to generate LLM content on %s on video %s: %w",
-				cfg.desc, post.VideoID, err,
+				cfg.desc, videoID, err,
 			)
 		}
 
-		// Assign original title if any
-		if genaiResponse.OriginalTitle != "" {
-			post.OriginalTitle = genaiResponse.OriginalTitle
+		// Assign original title if any, do not overwrite
+		if resp.OriginalTitle != "" {
+			result.OriginalTitle = resp.OriginalTitle
 		}
 
 		// Append if any additional directors discovered
-		for _, director := range genaiResponse.Directors {
-			if !slices.Contains(post.Directors, director) {
-				post.Directors = append(post.Directors, director)
+		for _, director := range resp.Directors {
+			if !slices.Contains(result.Directors, director) {
+				result.Directors = append(result.Directors, director)
 			}
 		}
 
-		// Assign release year if any
+		// Assign release year if any, overwrite if found in outro
 		maxYear := time.Now().Year() + 1
-		if genaiResponse.ReleaseYear >= 1900 && int(genaiResponse.ReleaseYear) <= maxYear {
-			post.ReleaseYear = genaiResponse.ReleaseYear
+		if resp.ReleaseYear >= 1900 && int(resp.ReleaseYear) <= maxYear {
+			result.ReleaseYear = resp.ReleaseYear
 		}
 
 	}
 
-	//  Mark the OCR as done
-	if post.Summary != "" && !strings.HasSuffix(post.Summary, types.OcrFlag) {
-		post.Summary += types.OcrFlag
-	}
-
-	return nil
+	return &result, nil
 }
