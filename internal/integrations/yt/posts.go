@@ -88,16 +88,14 @@ func (s *Service) ValidateYouTubeVideo(video *youtube.Video) error {
 		return &ValidationError{"this video is not fully broadcasted"}
 	}
 
-	duration := duration.ISO8601(video.ContentDetails.Duration)
-	seconds, err := duration.Seconds()
-
+	duration, err := duration.ISO8601(video.ContentDetails.Duration).Parse()
 	if err != nil {
 		return fmt.Errorf(
 			"failed to convert this video's duration to seconds; %w", err,
 		)
 	}
 
-	if seconds < 30*time.Minute {
+	if duration < 30*time.Minute {
 		return &ValidationError{"this video is too short"}
 	}
 

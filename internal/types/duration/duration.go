@@ -55,13 +55,17 @@ func (d ISO8601) Human() string {
 	return fmt.Sprintf("%02d:%02d:%02d", t["h"], t["m"], t["s"])
 }
 
-// Seconds converts ISO-8601 string to duration
-func (d ISO8601) Seconds() (time.Duration, error) {
+// Parse converts ISO-8601 string to duration
+func (d ISO8601) Parse() (time.Duration, error) {
 	t, err := d.compile()
 	if err != nil {
 		return 0, err
 	}
 
-	seconds := t["h"]*60*60 + t["m"]*60 + t["s"]
-	return time.Duration(seconds) * time.Second, nil
+	duration := time.Duration(t["h"])*time.Hour +
+		time.Duration(t["m"])*time.Minute +
+		time.Duration(t["s"])*time.Second
+
+	return duration, nil
+
 }

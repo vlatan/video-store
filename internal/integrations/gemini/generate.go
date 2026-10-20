@@ -191,7 +191,7 @@ func (s *Service) GeneratePostOCR(
 	retryConfig *retry.Config) error {
 
 	// Get video duration
-	videoDuration, err := post.Duration.Seconds()
+	videoDuration, err := post.Duration.Parse()
 	if err != nil || videoDuration == 0 {
 		return fmt.Errorf(
 			"couldn't convert video %s duration %s to seconds; %w",
