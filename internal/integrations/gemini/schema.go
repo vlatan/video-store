@@ -1,8 +1,6 @@
 package gemini
 
-import (
-	"google.golang.org/genai"
-)
+import "google.golang.org/genai"
 
 // directors genai schema object
 var directors = &genai.Schema{
