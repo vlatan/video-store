@@ -1,4 +1,4 @@
-package posts
+package handler
 
 import (
 	"fmt"

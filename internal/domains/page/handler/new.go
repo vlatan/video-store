@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	slugify "github.com/gosimple/slug"
-	"github.com/vlatan/video-store/internal/types"
+	"github.com/vlatan/video-store/internal/domains/form"
 	"github.com/vlatan/video-store/internal/utils/redirect"
 )
 
@@ -16,14 +16,14 @@ func (s *Service) New(w http.ResponseWriter, r *http.Request) {
 	// Get template data
 	data := tmplData{
 		Title: "Add New Page",
-		Form: types.Form{
+		Form: Form{
 			Legend: "Edit Page",
-			Title: &types.FormGroup{
+			Title: &form.Group{
 				Label:       "Title",
 				Placeholder: "Your title...",
 			},
-			Content: &types.FormGroup{
-				Type:        types.FieldTypeTextarea,
+			Content: &form.Group{
+				Type:        form.FieldTypeTextarea,
 				Label:       "Content",
 				Placeholder: "You can use markdown...",
 			},

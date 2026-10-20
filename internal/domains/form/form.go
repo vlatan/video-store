@@ -1,6 +1,11 @@
-package types
+package form
 
 type FieldType int
+
+const ( // Form fieled types
+	FieldTypeInput FieldType = iota
+	FieldTypeTextarea
+)
 
 // Returns true if the field type is input
 func (ft FieldType) IsInput() bool {
@@ -14,23 +19,11 @@ func (ft FieldType) IsTextarea() bool {
 
 // ============================================================================= //
 
-type FormGroup struct {
+type Group struct {
 	Type        FieldType
 	Label       string
 	Placeholder string
 	Value       string
 	Pattern     string
 	Title       string
-}
-
-// ============================================================================= //
-
-type Form struct {
-	Legend      string
-	Title       *FormGroup
-	Content     *FormGroup
-	Category    *FormGroup
-	Directors   []*FormGroup
-	ReleaseYear *FormGroup
-	Error       string
 }

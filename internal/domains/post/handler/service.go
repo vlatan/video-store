@@ -1,4 +1,4 @@
-package posts
+package handler
 
 import (
 	"github.com/vlatan/video-store/internal/avatar"
@@ -9,7 +9,6 @@ import (
 	"github.com/vlatan/video-store/internal/integrations/gemini"
 	"github.com/vlatan/video-store/internal/integrations/yt"
 	"github.com/vlatan/video-store/internal/tmpl"
-	"github.com/vlatan/video-store/internal/types"
 )
 
 type Service struct {
@@ -26,9 +25,9 @@ type Service struct {
 type tmplData struct {
 	Title       string
 	CurrentPost *post.Post
-	types.Form
 	post.Posts
 	tmpl.Base
+	Form
 }
 
 func New(

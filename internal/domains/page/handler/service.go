@@ -7,7 +7,6 @@ import (
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/drivers/store"
 	"github.com/vlatan/video-store/internal/tmpl"
-	"github.com/vlatan/video-store/internal/types"
 )
 
 type Service struct {
@@ -21,8 +20,8 @@ type Service struct {
 type tmplData struct {
 	Title       string
 	CurrentPage *page.Page
-	types.Form
 	tmpl.Base
+	Form
 }
 
 func New(

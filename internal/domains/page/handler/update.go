@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/vlatan/video-store/internal/types"
+	"github.com/vlatan/video-store/internal/domains/form"
 	"github.com/vlatan/video-store/internal/utils/redirect"
 )
 
@@ -44,15 +44,15 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 	data.CurrentPage = &page
 
 	// Populate needed data for the page form
-	data.Form = types.Form{
+	data.Form = Form{
 		Legend: "Edit Page",
-		Title: &types.FormGroup{
+		Title: &form.Group{
 			Label:       "Title",
 			Placeholder: "Your title...",
 			Value:       page.Title,
 		},
-		Content: &types.FormGroup{
-			Type:        types.FieldTypeTextarea,
+		Content: &form.Group{
+			Type:        form.FieldTypeTextarea,
 			Label:       "Content",
 			Placeholder: "You can use markdown...",
 			Value:       page.Content,

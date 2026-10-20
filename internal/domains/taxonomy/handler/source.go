@@ -7,10 +7,10 @@ import (
 	"time"
 
 	"github.com/vlatan/video-store/internal/ctxd"
+	"github.com/vlatan/video-store/internal/domains/form"
 	"github.com/vlatan/video-store/internal/domains/post"
 	"github.com/vlatan/video-store/internal/domains/taxonomy"
 	"github.com/vlatan/video-store/internal/drivers/store"
-	"github.com/vlatan/video-store/internal/types"
 	"github.com/vlatan/video-store/internal/utils/redirect"
 	"github.com/vlatan/video-store/internal/utils/retry"
 )
@@ -69,7 +69,7 @@ func (s *Service) NewSource(w http.ResponseWriter, r *http.Request) {
 	data := tmplData{
 		Title:  "Add New Source",
 		Legend: "New Playlist",
-		Content: &types.FormGroup{
+		Content: &form.Group{
 			Label:       "Post YouTube Playlist URL",
 			Placeholder: "Playlist URL here...",
 		},

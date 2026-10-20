@@ -10,7 +10,6 @@ import (
 	"github.com/vlatan/video-store/internal/drivers/store"
 	"github.com/vlatan/video-store/internal/integrations/yt"
 	"github.com/vlatan/video-store/internal/tmpl"
-	"github.com/vlatan/video-store/internal/types"
 )
 
 type poster interface {
@@ -35,9 +34,9 @@ type tmplData struct {
 	CurrentCategory *taxonomy.Category
 	CurrentSource   *taxonomy.Source
 	Sources         []taxonomy.Source
-	types.Form
 	post.Posts
 	tmpl.Base
+	Form
 }
 
 func New(
