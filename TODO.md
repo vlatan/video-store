@@ -1,4 +1,4 @@
-- Make integrations independent of types
+- Make integrations independent of external types
 
 - Make search bar on small screens accross entire screen
 - Write tests
