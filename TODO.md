@@ -1,6 +1,4 @@
 - Make integrations independent of types
-- Decide what to do with the rest of the types
-  Maybe split up the form in mutltiple types per domain
 
 - Make search bar on small screens accross entire screen
 - Write tests
