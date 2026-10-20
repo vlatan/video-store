@@ -1,6 +1,6 @@
 package handler
 
-import "github.com/vlatan/video-store/internal/form"
+import "github.com/vlatan/video-store/internal/types/form"
 
 const postForm = "post_form.html"
 

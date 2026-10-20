@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/vlatan/video-store/internal/form"
+	"github.com/vlatan/video-store/internal/types/form"
 	"github.com/vlatan/video-store/internal/utils/normalize"
 	"github.com/vlatan/video-store/internal/utils/redirect"
 	"github.com/vlatan/video-store/internal/utils/stringx"
