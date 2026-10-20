@@ -23,7 +23,7 @@ func (s *Service) New(w http.ResponseWriter, r *http.Request) {
 				Placeholder: "Your title...",
 			},
 			Content: &form.Group{
-				Type:        form.FieldTypeTextarea,
+				Type:        form.Textarea,
 				Label:       "Content",
 				Placeholder: "You can use markdown...",
 			},

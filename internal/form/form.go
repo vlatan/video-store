@@ -3,18 +3,18 @@ package form
 type FieldType int
 
 const ( // Form fieled types
-	FieldTypeInput FieldType = iota
-	FieldTypeTextarea
+	Input FieldType = iota
+	Textarea
 )
 
 // Returns true if the field type is input
 func (ft FieldType) IsInput() bool {
-	return ft == FieldTypeInput
+	return ft == Input
 }
 
 // Returns true if the field type is textarea
 func (ft FieldType) IsTextarea() bool {
-	return ft == FieldTypeTextarea
+	return ft == Textarea
 }
 
 // ============================================================================= //

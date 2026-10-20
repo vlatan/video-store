@@ -52,7 +52,7 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 			Value:       page.Title,
 		},
 		Content: &form.Group{
-			Type:        form.FieldTypeTextarea,
+			Type:        form.Textarea,
 			Label:       "Content",
 			Placeholder: "You can use markdown...",
 			Value:       page.Content,
