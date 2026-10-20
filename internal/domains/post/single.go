@@ -10,7 +10,7 @@ import (
 
 	"github.com/vlatan/video-store/internal/utils/sqlnull"
 	"github.com/vlatan/video-store/internal/utils/stringx"
-	"github.com/vlatan/video-store/internal/utils/thumbx"
+	"github.com/vlatan/video-store/internal/utils/ythumb"
 	"google.golang.org/api/youtube/v3"
 )
 
@@ -215,7 +215,7 @@ func (r *Repository) Single(ctx context.Context, videoID string) (Post, error) {
 	}
 
 	// Assign the biggest thumbnail to post
-	maxThumb := thumbx.MaxThumb(thumbs)
+	maxThumb := ythumb.MaxThumb(thumbs)
 	post.Thumbnail = maxThumb
 
 	// Get the first sentence of the summary to be used as meta description
@@ -224,7 +224,7 @@ func (r *Repository) Single(ctx context.Context, videoID string) (Post, error) {
 	post.MetaDescription = replacer.Replace(post.MetaDescription)
 
 	// Make srcset string
-	post.Srcset = thumbx.Srcset(thumbs, maxThumb.Width)
+	post.Srcset = ythumb.Srcset(thumbs, maxThumb.Width)
 
 	// Attach the stars slice for the rating stars html iteration
 	post.Stars = [10]uint8{10, 9, 8, 7, 6, 5, 4, 3, 2, 1}

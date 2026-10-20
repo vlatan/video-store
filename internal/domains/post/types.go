@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/vlatan/video-store/internal/types/duration"
-	"github.com/vlatan/video-store/internal/utils/thumbx"
+	"github.com/vlatan/video-store/internal/utils/ythumb"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/api/youtube/v3"
 )
@@ -116,7 +116,7 @@ func (p *Posts) ProcessThumbs(ctx context.Context) error {
 
 				if err == nil {
 					p.Items[i].Thumbnail = thumbs.Medium
-					p.Items[i].Srcset = thumbx.Srcset(thumbs, 480)
+					p.Items[i].Srcset = ythumb.Srcset(thumbs, 480)
 					p.Items[i].RawThumbs = nil
 					return nil
 				}

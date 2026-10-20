@@ -1,4 +1,4 @@
-package thumbx
+package ythumb
 
 import (
 	"fmt"
