@@ -7,10 +7,10 @@ import (
 	"time"
 
 	"github.com/vlatan/video-store/internal/ctxd"
-	"github.com/vlatan/video-store/internal/domains/form"
 	"github.com/vlatan/video-store/internal/domains/post"
 	"github.com/vlatan/video-store/internal/domains/taxonomy"
 	"github.com/vlatan/video-store/internal/drivers/store"
+	"github.com/vlatan/video-store/internal/form"
 	"github.com/vlatan/video-store/internal/utils/redirect"
 	"github.com/vlatan/video-store/internal/utils/retry"
 )

@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/vlatan/video-store/internal/domains/form"
+	"github.com/vlatan/video-store/internal/form"
 	"github.com/vlatan/video-store/internal/utils/redirect"
 )
 

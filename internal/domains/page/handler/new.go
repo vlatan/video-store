@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	slugify "github.com/gosimple/slug"
-	"github.com/vlatan/video-store/internal/domains/form"
+	"github.com/vlatan/video-store/internal/form"
 	"github.com/vlatan/video-store/internal/utils/redirect"
 )
 

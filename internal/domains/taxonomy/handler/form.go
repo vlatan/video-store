@@ -1,6 +1,8 @@
 package handler
 
-import "github.com/vlatan/video-store/internal/domains/form"
+import "github.com/vlatan/video-store/internal/form"
+
+const sourceForm = "source_form.html"
 
 type Form struct {
 	Legend  string
