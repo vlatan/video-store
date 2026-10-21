@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/vlatan/video-store/internal/types/form"
+	"github.com/vlatan/video-store/internal/tmpl"
 	"github.com/vlatan/video-store/internal/utils/normalize"
 	"github.com/vlatan/video-store/internal/utils/redirect"
 	"github.com/vlatan/video-store/internal/utils/stringx"
@@ -66,22 +66,22 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 	// Populate needed data for the post form
 	data.Form = Form{
 		Legend: "Edit Post",
-		Title: &form.Group{
+		Title: &tmpl.Group{
 			Label:       "Title",
 			Placeholder: "Your title...",
 			Value:       data.CurrentPost.GetTitle(),
 		},
-		Content: &form.Group{
-			Type:        form.Textarea,
+		Content: &tmpl.Group{
+			Type:        tmpl.Textarea,
 			Label:       "Content",
 			Placeholder: "You can use markdown...",
 			Value:       data.CurrentPost.Summary,
 		},
-		Category: &form.Group{
+		Category: &tmpl.Group{
 			Label: "Category",
 			Value: data.CurrentPost.CategoryName,
 		},
-		ReleaseYear: &form.Group{
+		ReleaseYear: &tmpl.Group{
 			Label:       "Released",
 			Placeholder: "YYYY",
 			Value:       released,
@@ -92,7 +92,7 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 
 	for _, director := range data.CurrentPost.Directors {
 		data.Form.Directors = append(data.Form.Directors,
-			&form.Group{
+			&tmpl.Group{
 				Label:       "Director",
 				Placeholder: "Director's name...",
 				Value:       director,
@@ -103,7 +103,7 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 	// Add one empty director input if none
 	if len(data.Form.Directors) == 0 {
 		data.Form.Directors = append(data.Form.Directors,
-			&form.Group{
+			&tmpl.Group{
 				Label:       "Director",
 				Placeholder: "Director's name...",
 			},
@@ -139,7 +139,7 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 		data.Form.Directors = nil
 		for _, director := range directors {
 			data.Form.Directors = append(data.Form.Directors,
-				&form.Group{
+				&tmpl.Group{
 					Label:       "Director",
 					Placeholder: "Director's name...",
 					Value:       director,
@@ -150,7 +150,7 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 		// Add one empty director input if none
 		if len(data.Form.Directors) == 0 {
 			data.Form.Directors = append(data.Form.Directors,
-				&form.Group{
+				&tmpl.Group{
 					Label:       "Director",
 					Placeholder: "Director's name...",
 				},

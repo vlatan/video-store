@@ -9,7 +9,6 @@ import (
 	"slices"
 	"time"
 
-	"github.com/vlatan/video-store/internal/types/duration"
 	"github.com/vlatan/video-store/internal/utils/normalize"
 	"github.com/vlatan/video-store/internal/utils/retry"
 	"github.com/vlatan/video-store/internal/utils/sleep"
@@ -181,20 +180,11 @@ func (s *Service) GeneratePostSummary(
 func (s *Service) GeneratePostOCR(
 	ctx context.Context,
 	videoID string,
-	duration duration.ISO8601,
+	duration time.Duration,
 	retryConfig *retry.Config) (*Response, error) {
 
-	// Get video duration
-	videoDuration, err := duration.Parse()
-	if err != nil || videoDuration == 0 {
-		return nil, fmt.Errorf(
-			"couldn't convert video %s duration %s to seconds; %w",
-			videoID, duration, err,
-		)
-	}
-
 	// Preapare two separate configs
-	startOffset, endOffset := videoDuration-200*time.Second, 300*time.Second
+	startOffset, endOffset := duration-200*time.Second, 300*time.Second
 	ocrConfigs := []struct {
 		desc     string
 		schema   *genai.Schema

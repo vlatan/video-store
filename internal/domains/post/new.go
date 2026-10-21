@@ -3,7 +3,6 @@ package post
 import (
 	"time"
 
-	"github.com/vlatan/video-store/internal/types/duration"
 	"github.com/vlatan/video-store/internal/utils/normalize"
 	"google.golang.org/api/youtube/v3"
 )
@@ -26,7 +25,7 @@ func (r *Repository) New(video *youtube.Video, playlistID string) *Post {
 	p.Tags = normalize.Tags(video.Snippet.Tags, p.Title, p.Description)
 
 	// Get video duration
-	p.Duration = duration.ISO8601(video.ContentDetails.Duration)
+	p.Duration = ISO8601(video.ContentDetails.Duration)
 
 	// Parse the upload date into an object
 	parsedTime, _ := time.Parse("2006-01-02T15:04:05Z", video.Snippet.PublishedAt)

@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/vlatan/video-store/internal/domains/post"
-	"github.com/vlatan/video-store/internal/types/form"
+	"github.com/vlatan/video-store/internal/tmpl"
 	"github.com/vlatan/video-store/internal/utils/redirect"
 	"github.com/vlatan/video-store/internal/utils/retry"
 	"github.com/vlatan/video-store/internal/utils/sleep"
@@ -23,7 +23,7 @@ func (s *Service) New(w http.ResponseWriter, r *http.Request) {
 	data := tmplData{
 		Title:  "Add New Video",
 		Legend: "New Video",
-		Content: &form.Group{
+		Content: &tmpl.Group{
 			Label:       "Post YouTube Video URL",
 			Placeholder: "Video URL here...",
 		},
@@ -101,8 +101,20 @@ func (s *Service) New(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		video := metadata[0]
+		duration, err := post.ISO8601(video.ContentDetails.Duration).Parse()
+		if err != nil {
+			slog.WarnContext(
+				r.Context(), "failed to parse the video duration",
+				"error", err,
+			)
+			data.Form.Error = "Unable to parse the video duration"
+			s.tmpl.RenderHTML(w, r, postForm, data)
+			return
+		}
+
 		// Validate the video data
-		if err := s.yt.Validate(metadata[0]); err != nil {
+		if err := s.yt.Validate(video, duration); err != nil {
 			slog.WarnContext(
 				r.Context(), "failed to validate the video data",
 				"error", err,
@@ -113,7 +125,8 @@ func (s *Service) New(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Create post object
-		p := s.post.New(metadata[0], "")
+		p := s.post.New(video, "")
+		p.ParsedDuration = duration
 		p.UserActions = post.Actions{UserID: data.CurrentUser.ID}
 
 		// Insert the video
@@ -169,7 +182,7 @@ func (s *Service) New(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			resp, err = s.gemini.GeneratePostOCR(ctx, p.VideoID, p.Duration, retryConfig)
+			resp, err = s.gemini.GeneratePostOCR(ctx, p.VideoID, p.ParsedDuration, retryConfig)
 			if err != nil {
 				slog.WarnContext(
 					r.Context(),
