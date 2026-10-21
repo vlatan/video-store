@@ -128,7 +128,7 @@ func New() (*App, error) {
 	}
 
 	// Create Gemini client
-	gemini, err := gemini.New(ctx, cfg, catNames, rdb)
+	gemini, err := gemini.New(ctx, cfg, rdb, catNames)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create Gemini service: %w", err)
 	}
@@ -142,7 +142,7 @@ func New() (*App, error) {
 	}
 
 	// Create template service
-	tmpl, err := tmpl.New(cfg, rdb, store, taxRepo, static)
+	tmpl, err := tmpl.New(cfg, store, static, categories)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create UI service: %w", err)
 	}

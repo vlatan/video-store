@@ -22,8 +22,8 @@ type Service struct {
 func New(
 	ctx context.Context,
 	cfg *config.Config,
-	catNames []string,
 	rs *rdb.Service,
+	catNames []string,
 ) (*Service, error) {
 	// Configure new client
 	client, err := genai.NewClient(ctx, &genai.ClientConfig{APIKey: cfg.GeminiAPIKey})

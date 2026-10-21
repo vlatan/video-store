@@ -103,7 +103,7 @@ func New(ctx context.Context, cfg *config.Config) (*Worker, error) {
 	}
 
 	// Create Gemini client
-	gemini, err := gemini.New(ctx, cfg, catNames, rdb)
+	gemini, err := gemini.New(ctx, cfg, rdb, catNames)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create Gemini service: %w", err)
 	}
