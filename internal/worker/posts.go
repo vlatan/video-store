@@ -10,7 +10,6 @@ import (
 
 	"github.com/vlatan/video-store/internal/domains/post"
 	"github.com/vlatan/video-store/internal/integrations/gemini"
-	"github.com/vlatan/video-store/internal/integrations/youtube"
 	"github.com/vlatan/video-store/internal/utils/ctxv"
 	"github.com/vlatan/video-store/internal/utils/sleep"
 )
@@ -23,7 +22,7 @@ func (w *Worker) getValidVideos(
 	destMap map[string]*post.Post,
 ) error {
 
-	// Get orphans metadata from YT
+	// Get videos metadata from YT
 	videos, err := w.youtube.Videos(ctx, w.ytRetryConfig, videoIds...)
 	if err != nil {
 		return fmt.Errorf(
@@ -35,20 +34,20 @@ func (w *Worker) getValidVideos(
 	// Validate the videos
 	for _, video := range videos {
 
-		err = w.youtube.Validate(video)
-
-		// If no error this is a valid video
-		if err == nil {
-			destMap[video.Id] = w.post.New(video, "")
-			continue
+		// Parse the video duration, if unable exit, something is seriously wrong
+		duration, err := post.ISO8601(video.ContentDetails.Duration).Parse()
+		if err != nil {
+			return fmt.Errorf(
+				"failed to parse video %s duration %s: %w",
+				video.Id, video.ContentDetails.Duration, err,
+			)
 		}
 
-		// If this is NOT a validation error, stop the process
-		if _, ok := errors.AsType[*youtube.ValidationError](err); !ok {
-			return fmt.Errorf(
-				"unexpected error during video %q validation; %w",
-				video.Id, err,
-			)
+		// If no error this is a valid video
+		if err := w.youtube.Validate(video, duration); err == nil {
+			p := w.post.New(video, "")
+			p.ParsedDuration = duration
+			destMap[video.Id] = p
 		}
 	}
 
@@ -102,26 +101,24 @@ func (w *Worker) getValidSourcesVideos(
 				return err
 			}
 
-			// Validate the video
-			err = w.youtube.Validate(video)
-
-			// If this is validation error, skip the video
-			if _, ok := errors.AsType[*youtube.ValidationError](err); ok {
-				continue
-			}
-
-			// If this is any other error, stop the process
+			// Parse the video duration, if unable exit, something is seriously wrong
+			duration, err := post.ISO8601(video.ContentDetails.Duration).Parse()
 			if err != nil {
 				return fmt.Errorf(
-					"unexpected error during video %q validation; %w",
-					video.Id, err,
+					"failed to parse video %s duration %s: %w",
+					video.Id, video.ContentDetails.Duration, err,
 				)
+			}
+
+			// Skip invalid video
+			if err = w.youtube.Validate(video, duration); err != nil {
+				continue
+
 			}
 
 			// Skip if the video is banned (manually deleted).
 			// If error is nil the post is IN the deleted_post database table.
-			err = w.post.IsBanned(ctx, video.Id)
-			if err == nil {
+			if err = w.post.IsBanned(ctx, video.Id); err == nil {
 				continue
 			}
 
@@ -134,7 +131,9 @@ func (w *Worker) getValidSourcesVideos(
 			// or as a duplicate video in one or more playlists,
 			// we overwrite it, associate it with one YT playlist.
 			// If not we just add new video.
-			destMap[video.Id] = w.post.New(video, playlistId)
+			p := w.post.New(video, playlistId)
+			p.ParsedDuration = duration
+			destMap[video.Id] = p
 		}
 	}
 
@@ -295,13 +294,23 @@ func (w *Worker) insertVideos(ctx context.Context, videos []*post.Post) error {
 
 			// Sleep with context in mind for 60-90 seconds.
 			// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
-			if err := sleep.Jitter(ctx, 60*time.Second, 90*time.Second); err != nil {
+			if err = sleep.Jitter(ctx, 60*time.Second, 90*time.Second); err != nil {
 				return err
 			}
 
+			if video.ParsedDuration == 0 {
+				video.ParsedDuration, err = video.Duration.Parse()
+				if err != nil {
+					return fmt.Errorf(
+						"failed to parse video %s duration %s: %w",
+						video.VideoID, video.Duration, err,
+					)
+				}
+			}
+
 			// Generate post original title, directors and release year
-			resp, err := w.gemini.GeneratePostOCR(
-				ctx, video.VideoID, video.Duration, w.geminiRetryConfig,
+			resp, err = w.gemini.GeneratePostOCR(
+				ctx, video.VideoID, video.ParsedDuration, w.geminiRetryConfig,
 			)
 
 			// Exit early only if context ended
@@ -403,13 +412,24 @@ func (w *Worker) updateVideos(ctx context.Context, videos []*post.Post) error {
 
 			// Sleep with context in mind for 60-90 seconds.
 			// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
-			if err := sleep.Jitter(ctx, 60*time.Second, 90*time.Second); err != nil {
+			err := sleep.Jitter(ctx, 60*time.Second, 90*time.Second)
+			if err != nil {
 				return err
+			}
+
+			if video.ParsedDuration == 0 {
+				video.ParsedDuration, err = video.Duration.Parse()
+				if err != nil {
+					return fmt.Errorf(
+						"failed to parse video %s duration %s: %w",
+						video.VideoID, video.Duration, err,
+					)
+				}
 			}
 
 			// Generate post original title, directors and release year
 			resp, err := w.gemini.GeneratePostOCR(
-				ctx, video.VideoID, video.Duration, w.geminiRetryConfig,
+				ctx, video.VideoID, video.ParsedDuration, w.geminiRetryConfig,
 			)
 
 			// Exit with error only if we need to terminate the worker's job,

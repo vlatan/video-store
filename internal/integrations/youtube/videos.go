@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/vlatan/video-store/internal/types/duration"
 	"github.com/vlatan/video-store/internal/utils/retry"
 
 	"google.golang.org/api/youtube/v3"
@@ -56,7 +55,7 @@ func (s *Service) Videos(
 }
 
 // Validate a YouTube video against custom criteria.
-func (s *Service) Validate(video *youtube.Video) error {
+func (s *Service) Validate(video *youtube.Video, duration time.Duration) error {
 
 	if video.Status.PrivacyStatus != "public" {
 		return &ValidationError{"this video is not public"}
@@ -84,13 +83,6 @@ func (s *Service) Validate(video *youtube.Video) error {
 	broadcast := video.Snippet.LiveBroadcastContent
 	if broadcast != "" && broadcast != "none" {
 		return &ValidationError{"this video is not fully broadcasted"}
-	}
-
-	duration, err := duration.ISO8601(video.ContentDetails.Duration).Parse()
-	if err != nil {
-		return fmt.Errorf(
-			"failed parse this video duration: %w", err,
-		)
 	}
 
 	if duration < 30*time.Minute {
