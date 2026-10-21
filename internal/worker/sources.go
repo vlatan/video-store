@@ -26,7 +26,7 @@ func (w *Worker) updateSources(
 			return err
 		}
 
-		newSource := w.youtube.NewYouTubeSource(
+		newSource := w.taxonomy.FromYouTube(
 			ytSource, ytChannels[ytSource.Snippet.ChannelId],
 		)
 

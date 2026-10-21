@@ -33,6 +33,7 @@ type taxer interface {
 	Categories(context.Context) (taxonomy.Categories, error)
 	Sources(context.Context) (taxonomy.Sources, error)
 	UpdateSource(context.Context, *taxonomy.Source) (int64, error)
+	FromYouTube(*youtube.Playlist, *youtube.Channel) *taxonomy.Source
 }
 
 const catKey = "categories"

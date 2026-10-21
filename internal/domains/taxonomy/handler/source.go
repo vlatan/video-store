@@ -160,7 +160,7 @@ func (s *Service) NewSource(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Create a source object
-		source := s.yt.NewYouTubeSource(sources[0], channels[0])
+		source := s.taxonomy.FromYouTube(sources[0], channels[0])
 		source.UserID = data.CurrentUser.ID
 
 		// Insert the source in DB

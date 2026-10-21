@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/vlatan/video-store/internal/utils/normalize"
 	"github.com/vlatan/video-store/internal/utils/sqlnull"
 	"github.com/vlatan/video-store/internal/utils/stringx"
 	"google.golang.org/api/youtube/v3"
@@ -150,4 +151,40 @@ func (r *Repository) DeleteSource(ctx context.Context, playlistID string) (int64
 	const query = "DELETE FROM playlist WHERE playlist_id = $1;"
 	result, err := r.db.Pool.Exec(ctx, query, playlistID)
 	return result.RowsAffected(), err
+}
+
+// Create source object
+func (r *Repository) FromYouTube(
+	playlist *youtube.Playlist,
+	channel *youtube.Channel) *Source {
+	var source Source
+	source.PlaylistID = playlist.Id
+	source.ChannelID = playlist.Snippet.ChannelId
+
+	// Normalize the titles
+	source.Title = normalize.Title(playlist.Snippet.Title, normalize.SourceTitleCutoffs)
+	source.ChannelTitle = normalize.Title(channel.Snippet.Title, normalize.SourceTitleCutoffs)
+
+	// Normalize the descriptions
+	source.Description = normalize.Description(playlist.Snippet.Description)
+	source.ChannelDescription = normalize.Description(channel.Snippet.Description)
+
+	// Assign the playlist thumbnails
+	source.Thumbnails = &youtube.ThumbnailDetails{
+		Default: playlist.Snippet.Thumbnails.Default,
+	}
+	source.Thumbnails.Medium = playlist.Snippet.Thumbnails.Medium
+	source.Thumbnails.High = playlist.Snippet.Thumbnails.High
+	source.Thumbnails.Standard = playlist.Snippet.Thumbnails.Standard
+	source.Thumbnails.Maxres = playlist.Snippet.Thumbnails.Maxres
+
+	// Assign the channel thumbnails
+	source.ChannelThumbnails = &youtube.ThumbnailDetails{}
+	source.ChannelThumbnails.Default = channel.Snippet.Thumbnails.Default
+	source.ChannelThumbnails.Medium = channel.Snippet.Thumbnails.Medium
+	source.ChannelThumbnails.High = channel.Snippet.Thumbnails.High
+	source.ChannelThumbnails.Standard = channel.Snippet.Thumbnails.Standard
+	source.ChannelThumbnails.Maxres = channel.Snippet.Thumbnails.Maxres
+
+	return &source
 }
