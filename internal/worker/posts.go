@@ -10,7 +10,7 @@ import (
 
 	"github.com/vlatan/video-store/internal/domains/post"
 	"github.com/vlatan/video-store/internal/integrations/gemini"
-	"github.com/vlatan/video-store/internal/integrations/yt"
+	"github.com/vlatan/video-store/internal/integrations/youtube"
 	"github.com/vlatan/video-store/internal/utils/ctxv"
 	"github.com/vlatan/video-store/internal/utils/sleep"
 )
@@ -44,7 +44,7 @@ func (w *Worker) getValidVideos(
 		}
 
 		// If this is NOT a validation error, stop the process
-		if _, ok := errors.AsType[*yt.ValidationError](err); !ok {
+		if _, ok := errors.AsType[*youtube.ValidationError](err); !ok {
 			return fmt.Errorf(
 				"unexpected error during video %q validation; %w",
 				video.Id, err,
@@ -106,7 +106,7 @@ func (w *Worker) getValidSourcesVideos(
 			err = w.youtube.ValidateYouTubeVideo(video)
 
 			// If this is validation error, skip the video
-			if _, ok := errors.AsType[*yt.ValidationError](err); ok {
+			if _, ok := errors.AsType[*youtube.ValidationError](err); ok {
 				continue
 			}
 

@@ -7,7 +7,7 @@ import (
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/drivers/store"
 	"github.com/vlatan/video-store/internal/integrations/gemini"
-	"github.com/vlatan/video-store/internal/integrations/yt"
+	"github.com/vlatan/video-store/internal/integrations/youtube"
 	"github.com/vlatan/video-store/internal/tmpl"
 )
 
@@ -18,7 +18,7 @@ type Service struct {
 	session *store.Service
 	avatar  *avatar.Service
 	tmpl    *tmpl.Service
-	yt      *yt.Service
+	yt      *youtube.Service
 	gemini  *gemini.Service
 }
 
@@ -37,7 +37,7 @@ func New(
 	store *store.Service,
 	avatar *avatar.Service,
 	tmpl *tmpl.Service,
-	yt *yt.Service,
+	yt *youtube.Service,
 	gemini *gemini.Service,
 ) *Service {
 	return &Service{

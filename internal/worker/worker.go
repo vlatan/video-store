@@ -14,7 +14,7 @@ import (
 	"github.com/vlatan/video-store/internal/drivers/database"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/integrations/gemini"
-	"github.com/vlatan/video-store/internal/integrations/yt"
+	"github.com/vlatan/video-store/internal/integrations/youtube"
 	"github.com/vlatan/video-store/internal/utils/retry"
 )
 
@@ -38,7 +38,7 @@ type Worker struct {
 	cfg               *config.Config
 	post              poster
 	taxonomy          taxer
-	youtube           *yt.Service
+	youtube           *youtube.Service
 	gemini            *gemini.Service
 	lock              *rdb.RedisLock
 	stats             WorkerStats
@@ -97,7 +97,7 @@ func New(ctx context.Context, cfg *config.Config) (*Worker, error) {
 	}
 
 	// Create YouTube service
-	yt, err := yt.New(ctx, cfg)
+	yt, err := youtube.New(ctx, cfg)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create YouTube service: %w", err)
 	}

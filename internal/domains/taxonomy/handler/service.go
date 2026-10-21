@@ -8,7 +8,7 @@ import (
 	"github.com/vlatan/video-store/internal/domains/taxonomy"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/drivers/store"
-	"github.com/vlatan/video-store/internal/integrations/yt"
+	"github.com/vlatan/video-store/internal/integrations/youtube"
 	"github.com/vlatan/video-store/internal/tmpl"
 )
 
@@ -25,7 +25,7 @@ type Service struct {
 	rdb      *rdb.Service
 	session  *store.Service
 	tmpl     *tmpl.Service
-	yt       *yt.Service
+	yt       *youtube.Service
 }
 
 type tmplData struct {
@@ -46,7 +46,7 @@ func New(
 	rdb *rdb.Service,
 	store *store.Service,
 	tmpl *tmpl.Service,
-	yt *yt.Service,
+	yt *youtube.Service,
 ) *Service {
 	return &Service{
 		cfg:      cfg,

@@ -27,7 +27,7 @@ import (
 	"github.com/vlatan/video-store/internal/drivers/store"
 	"github.com/vlatan/video-store/internal/integrations/cloudflare"
 	"github.com/vlatan/video-store/internal/integrations/gemini"
-	"github.com/vlatan/video-store/internal/integrations/yt"
+	"github.com/vlatan/video-store/internal/integrations/youtube"
 	"github.com/vlatan/video-store/internal/middlewares"
 	"github.com/vlatan/video-store/internal/tmpl"
 )
@@ -122,7 +122,7 @@ func New() (*App, error) {
 	}
 
 	// Create YouTube service
-	yt, err := yt.New(ctx, cfg)
+	yt, err := youtube.New(ctx, cfg)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create YouTube service: %w", err)
 	}
