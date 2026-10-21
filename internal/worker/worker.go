@@ -35,6 +35,8 @@ type taxer interface {
 	UpdateSource(context.Context, *taxonomy.Source) (int64, error)
 }
 
+const catKey = "categories"
+
 type Worker struct {
 	id                string
 	cfg               *config.Config
@@ -78,8 +80,7 @@ func New(ctx context.Context, cfg *config.Config) (*Worker, error) {
 
 	// Get the categories from cache or DB
 	categories, err := rdb.Get(
-		ctx,
-		"categories",
+		ctx, catKey,
 		cfg.CacheTimeout,
 		func() (taxonomy.Categories, error) {
 			return taxRepo.Categories(ctx)

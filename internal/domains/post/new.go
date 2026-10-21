@@ -8,12 +8,14 @@ import (
 	"google.golang.org/api/youtube/v3"
 )
 
+const provider = "YouTube"
+
 // FromYouTube creates post object from youtube video object
 func (r *Repository) FromYouTube(video *youtube.Video, playlistID string) *Post {
 	var p Post
 	p.VideoID = video.Id
 	p.PlaylistID = playlistID
-	p.Provider = "YouTube"
+	p.Provider = provider
 
 	// Assign the thumbnails
 	p.Thumbnails = video.Snippet.Thumbnails

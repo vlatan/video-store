@@ -49,6 +49,8 @@ type App struct {
 	server   *http.Server
 }
 
+const catKey = "categories"
+
 // New creates new app.
 // Holds handler services and a HTTP server.
 func New() (*App, error) {
@@ -101,8 +103,7 @@ func New() (*App, error) {
 
 	// Get the categories from cache or DB
 	categories, err := rdb.Get(
-		ctx,
-		"categories",
+		ctx, catKey,
 		cfg.CacheTimeout,
 		func() (taxonomy.Categories, error) {
 			return taxRepo.Categories(ctx)
