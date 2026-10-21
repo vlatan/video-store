@@ -14,8 +14,9 @@ import (
 	"github.com/vlatan/video-store/internal/drivers/database"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/integrations/gemini"
-	"github.com/vlatan/video-store/internal/integrations/youtube"
+	yt "github.com/vlatan/video-store/internal/integrations/youtube"
 	"github.com/vlatan/video-store/internal/utils/retry"
+	"google.golang.org/api/youtube/v3"
 )
 
 type poster interface {
@@ -25,6 +26,7 @@ type poster interface {
 	Insert(context.Context, *post.Post) (int64, error)
 	Update(context.Context, *post.Post) (int64, error)
 	Delete(context.Context, string) (int64, error)
+	FromYouTube(*youtube.Video, string) *post.Post
 }
 
 type taxer interface {
@@ -38,7 +40,7 @@ type Worker struct {
 	cfg               *config.Config
 	post              poster
 	taxonomy          taxer
-	youtube           *youtube.Service
+	youtube           *yt.Service
 	gemini            *gemini.Service
 	lock              *rdb.RedisLock
 	stats             WorkerStats
@@ -97,7 +99,7 @@ func New(ctx context.Context, cfg *config.Config) (*Worker, error) {
 	}
 
 	// Create YouTube service
-	yt, err := youtube.New(ctx, cfg)
+	yt, err := yt.New(ctx, cfg)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create YouTube service: %w", err)
 	}

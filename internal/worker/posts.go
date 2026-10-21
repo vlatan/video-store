@@ -39,7 +39,7 @@ func (w *Worker) getValidVideos(
 
 		// If no error this is a valid video
 		if err == nil {
-			destMap[video.Id] = w.youtube.NewYouTubePost(video, "")
+			destMap[video.Id] = w.post.FromYouTube(video, "")
 			continue
 		}
 
@@ -134,7 +134,7 @@ func (w *Worker) getValidSourcesVideos(
 			// or as a duplicate video in one or more playlists,
 			// we overwrite it, associate it with one YT playlist.
 			// If not we just add new video.
-			destMap[video.Id] = w.youtube.NewYouTubePost(video, playlistId)
+			destMap[video.Id] = w.post.FromYouTube(video, playlistId)
 		}
 	}
 
