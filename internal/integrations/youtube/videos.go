@@ -89,7 +89,7 @@ func (s *Service) Validate(video *youtube.Video) error {
 	duration, err := duration.ISO8601(video.ContentDetails.Duration).Parse()
 	if err != nil {
 		return fmt.Errorf(
-			"failed to convert this video's duration to seconds; %w", err,
+			"failed parse this video duration: %w", err,
 		)
 	}
 
