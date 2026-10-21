@@ -24,7 +24,7 @@ func (w *Worker) getValidVideos(
 ) error {
 
 	// Get orphans metadata from YT
-	videos, err := w.youtube.GetVideos(ctx, w.ytRetryConfig, videoIds...)
+	videos, err := w.youtube.Videos(ctx, w.ytRetryConfig, videoIds...)
 	if err != nil {
 		return fmt.Errorf(
 			"could not get the orphan videos from YouTube; %w",
@@ -35,7 +35,7 @@ func (w *Worker) getValidVideos(
 	// Validate the videos
 	for _, video := range videos {
 
-		err = w.youtube.ValidateYouTubeVideo(video)
+		err = w.youtube.Validate(video)
 
 		// If no error this is a valid video
 		if err == nil {
@@ -71,7 +71,7 @@ func (w *Worker) getValidSourcesVideos(
 			return err
 		}
 
-		sourceItems, err := w.youtube.GetSourceItems(ctx, w.ytRetryConfig, playlistId)
+		sourceItems, err := w.youtube.PlaylistItems(ctx, w.ytRetryConfig, playlistId)
 		if err != nil {
 			return fmt.Errorf(
 				"couldn't get items from YouTube for source %q; %w",
@@ -86,7 +86,7 @@ func (w *Worker) getValidSourcesVideos(
 		}
 
 		// Get all the videos metadata for this source
-		videosMetadata, err := w.youtube.GetVideos(ctx, w.ytRetryConfig, videoIDs...)
+		videosMetadata, err := w.youtube.Videos(ctx, w.ytRetryConfig, videoIDs...)
 		if err != nil {
 			return fmt.Errorf(
 				"couldn't get videos from YouTube for source %s; %w",
@@ -103,7 +103,7 @@ func (w *Worker) getValidSourcesVideos(
 			}
 
 			// Validate the video
-			err = w.youtube.ValidateYouTubeVideo(video)
+			err = w.youtube.Validate(video)
 
 			// If this is validation error, skip the video
 			if _, ok := errors.AsType[*youtube.ValidationError](err); ok {

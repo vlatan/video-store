@@ -42,7 +42,7 @@ func (w *Worker) Process(ctx context.Context) error {
 	}
 
 	// Fetch playlists from YouTube
-	ytSources, err := w.youtube.GetSources(ctx, w.ytRetryConfig, playlistIds...)
+	ytSources, err := w.youtube.Playlists(ctx, w.ytRetryConfig, playlistIds...)
 	if err != nil {
 		return fmt.Errorf(
 			"could not fetch the playlists from YouTube; %w",
@@ -63,7 +63,7 @@ func (w *Worker) Process(ctx context.Context) error {
 	}
 
 	// Fetch corresponding channels
-	channels, err := w.youtube.GetChannels(ctx, w.ytRetryConfig, channelIDs...)
+	channels, err := w.youtube.Channels(ctx, w.ytRetryConfig, channelIDs...)
 	if err != nil {
 		return fmt.Errorf(
 			"could not fetch the channels from YouTube; %w",

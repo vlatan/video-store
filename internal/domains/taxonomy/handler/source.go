@@ -119,7 +119,7 @@ func (s *Service) NewSource(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Fetch playlist metadata from YouTube
-		sources, err := s.yt.GetSources(
+		sources, err := s.yt.Playlists(
 			r.Context(),
 			&retry.Config{
 				MaxRetries: 3,
@@ -140,7 +140,7 @@ func (s *Service) NewSource(w http.ResponseWriter, r *http.Request) {
 
 		// Fetch channel data from YouTube
 		channelID := sources[0].Snippet.ChannelId
-		channels, err := s.yt.GetChannels(
+		channels, err := s.yt.Channels(
 			r.Context(),
 			&retry.Config{
 				MaxRetries: 3,

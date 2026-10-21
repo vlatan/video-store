@@ -81,7 +81,7 @@ func (s *Service) New(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Fetch video data from YouTube
-		metadata, err := s.yt.GetVideos(
+		metadata, err := s.yt.Videos(
 			r.Context(),
 			&retry.Config{
 				MaxRetries: 3,
@@ -102,7 +102,7 @@ func (s *Service) New(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Validate the video data
-		if err := s.yt.ValidateYouTubeVideo(metadata[0]); err != nil {
+		if err := s.yt.Validate(metadata[0]); err != nil {
 			slog.WarnContext(
 				r.Context(), "failed to validate the video data",
 				"error", err,
