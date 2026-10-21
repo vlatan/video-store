@@ -1,23 +1,21 @@
-package cloudflare
+package secfile
 
 import (
 	"errors"
 	"os"
 )
 
-type SecureFile struct {
+type secureFile struct {
 	*os.File
 	root *os.Root
 }
 
-func (sf *SecureFile) Close() error {
-	fileErr := sf.File.Close()
-	rootErr := sf.root.Close()
-	return errors.Join(fileErr, rootErr)
+func (f *secureFile) Close() error {
+	return errors.Join(f.File.Close(), f.root.Close())
 }
 
 // SecureOpen opens a file with a given root
-func SecureOpen(rootPath, filename string) (*SecureFile, error) {
+func Open(rootPath, filename string) (*secureFile, error) {
 	root, err := os.OpenRoot(rootPath)
 	if err != nil {
 		return nil, err
@@ -29,10 +27,10 @@ func SecureOpen(rootPath, filename string) (*SecureFile, error) {
 		return nil, errors.Join(err, rootErr)
 	}
 
-	return &SecureFile{file, root}, nil
+	return &secureFile{file, root}, nil
 }
 
-func SecureCreate(rootPath, filename string) (*SecureFile, error) {
+func Create(rootPath, filename string) (*secureFile, error) {
 	root, err := os.OpenRoot(rootPath)
 	if err != nil {
 		return nil, err
@@ -44,5 +42,5 @@ func SecureCreate(rootPath, filename string) (*SecureFile, error) {
 		return nil, errors.Join(err, rootErr)
 	}
 
-	return &SecureFile{file, root}, nil
+	return &secureFile{file, root}, nil
 }

@@ -15,6 +15,7 @@ import (
 
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/integrations/cloudflare"
+	"github.com/vlatan/video-store/internal/utils/secfile"
 )
 
 type Service struct {
@@ -106,7 +107,7 @@ func (s *Service) DumpDatabase(dest string) error {
 func (s *Service) ArchiveFiles(dest string, files ...string) error {
 
 	// Create destination file
-	destFile, err := cloudflare.SecureCreate(backupRoot, dest)
+	destFile, err := secfile.Create(backupRoot, dest)
 	if err != nil {
 		return fmt.Errorf("failed to create destination file %s: %w", dest, err)
 	}
@@ -127,7 +128,7 @@ func (s *Service) ArchiveFiles(dest string, files ...string) error {
 	for _, src := range files {
 
 		// Open the source file
-		srcFile, err := cloudflare.SecureOpen(backupRoot, src)
+		srcFile, err := secfile.Open(backupRoot, src)
 		if err != nil {
 			return fmt.Errorf("failed to open source file %s: %w", src, err)
 		}

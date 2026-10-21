@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/vlatan/video-store/internal/config"
+	"github.com/vlatan/video-store/internal/utils/secfile"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awsConfig "github.com/aws/aws-sdk-go-v2/config"
@@ -126,7 +127,7 @@ func (s *Service) PutObject(
 // UploadFile uploads a file to bucket
 func (s *Service) UploadFile(ctx context.Context, bucket, rootPath, key, filePath string) error {
 
-	file, err := SecureOpen(rootPath, filePath)
+	file, err := secfile.Open(rootPath, filePath)
 	if err != nil {
 		return fmt.Errorf("couldn't open the file %s: %w", filePath, err)
 	}
