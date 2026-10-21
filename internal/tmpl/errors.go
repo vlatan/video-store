@@ -7,15 +7,20 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
-
-	"github.com/vlatan/video-store/internal/types"
 )
+
+// Specific data for the error pages
+type errorData struct {
+	Title   string
+	Heading string
+	Text    string
+	Base
+}
 
 // HTMLError executes error.html template
 func (s *Service) HTMLError(
 	w http.ResponseWriter,
 	r *http.Request,
-	data *types.TemplateData,
 	status int) {
 
 	// Check for the error template
@@ -30,27 +35,32 @@ func (s *Service) HTMLError(
 		return
 	}
 
-	data.HTMLErrorData = &types.HTMLErrorData{
+	// Get base tmpl data and clear the flash messages if any
+	base := s.Base(w, r)
+	base.FlashMessages = nil
+
+	errData := errorData{
 		Title: strconv.Itoa(status),
+		Base:  base,
 	}
 
 	// Provide few errors that should be served via template
 	switch status {
 	case http.StatusBadRequest:
-		data.HTMLErrorData.Heading = fmt.Sprintf("Bad request (%d)", http.StatusBadRequest)
-		data.HTMLErrorData.Text = "Your request was probably malformed."
+		errData.Heading = fmt.Sprintf("Bad request (%d)", http.StatusBadRequest)
+		errData.Text = "Your request was probably malformed."
 	case http.StatusForbidden:
-		data.HTMLErrorData.Heading = fmt.Sprintf("Access forbidden (%d)", http.StatusForbidden)
-		data.HTMLErrorData.Text = "Please check your account and try again."
+		errData.Heading = fmt.Sprintf("Access forbidden (%d)", http.StatusForbidden)
+		errData.Text = "Please check your account and try again."
 	case http.StatusNotFound:
-		data.HTMLErrorData.Heading = fmt.Sprintf("Page not found (%d)", http.StatusNotFound)
-		data.HTMLErrorData.Text = "That page does not exist. Please try a different location."
+		errData.Heading = fmt.Sprintf("Page not found (%d)", http.StatusNotFound)
+		errData.Text = "That page does not exist. Please try a different location."
 	case http.StatusMethodNotAllowed:
-		data.HTMLErrorData.Heading = fmt.Sprintf("Method not allowed (%d)", http.StatusMethodNotAllowed)
-		data.HTMLErrorData.Text = "Use the appropriate method and try again."
+		errData.Heading = fmt.Sprintf("Method not allowed (%d)", http.StatusMethodNotAllowed)
+		errData.Text = "Use the appropriate method and try again."
 	case http.StatusInternalServerError:
-		data.HTMLErrorData.Heading = fmt.Sprintf("Something went wrong (%d)", http.StatusInternalServerError)
-		data.HTMLErrorData.Text = "Sorry about that. We're working on fixing this."
+		errData.Heading = fmt.Sprintf("Something went wrong (%d)", http.StatusInternalServerError)
+		errData.Text = "Sorry about that. We're working on fixing this."
 	default:
 		slog.WarnContext(r.Context(), fmt.Sprintf("no template data for %d status", status))
 		http.Error(w, http.StatusText(status), status)
@@ -59,7 +69,7 @@ func (s *Service) HTMLError(
 
 	// Execute template to buffer to catch any errors before serving to client
 	var buf bytes.Buffer
-	if err := tmpl.ExecuteTemplate(&buf, tmplName, data); err != nil {
+	if err := tmpl.ExecuteTemplate(&buf, tmplName, errData); err != nil {
 		slog.WarnContext(
 			r.Context(),
 			fmt.Sprintf("failed to execute %s template", tmplName),

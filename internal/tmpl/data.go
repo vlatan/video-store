@@ -3,35 +3,37 @@ package tmpl
 import (
 	"net/http"
 
+	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/ctxd"
-	"github.com/vlatan/video-store/internal/types"
+	"github.com/vlatan/video-store/internal/domains/taxonomy"
+	"github.com/vlatan/video-store/internal/domains/user"
+	"github.com/vlatan/video-store/internal/drivers/store"
 	"github.com/vlatan/video-store/internal/utils/pathx"
 )
 
-// Data creates new default data struct to be passed to the templates
-func (s *Service) Data(w http.ResponseWriter, r *http.Request) *types.TemplateData {
+type Base struct {
+	*config.Config
+	SearchQuery      string
+	Categories       []taxonomy.Category
+	CurrentURI       string
+	BaseCanonicalURL string
+	FlashMessages    []*store.FlashMessage
+	CurrentUser      *user.User
+}
 
-	// Get the categories from cache
-	categories, _ := s.rdb.Get(
-		r.Context(),
-		"categories",
-		s.cfg.CacheTimeout,
-		func() (types.Categories, error) {
-			return s.taxonomy.Categories(r.Context())
-		},
-	)
+// newBase creates new base data struct:
+func (s *Service) Base(w http.ResponseWriter, r *http.Request) Base {
 
 	// Get the base canonical URL without queries and fragments
 	_, baseURL := pathx.CanonicalURLs(r, s.cfg.Protocol)
 
 	// Construct the data
-	data := &types.TemplateData{
+	return Base{
 		Config:           s.cfg,
-		Categories:       categories,
+		Categories:       s.categories,
 		CurrentURI:       r.RequestURI,
 		BaseCanonicalURL: baseURL,
+		FlashMessages:    s.session.Flashes(w, r),
 		CurrentUser:      ctxd.GetUser(r.Context()),
 	}
-
-	return data
 }

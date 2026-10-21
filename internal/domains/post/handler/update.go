@@ -1,4 +1,4 @@
-package posts
+package handler
 
 import (
 	"errors"
@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/vlatan/video-store/internal/types"
+	"github.com/vlatan/video-store/internal/types/form"
 	"github.com/vlatan/video-store/internal/utils/normalize"
 	"github.com/vlatan/video-store/internal/utils/redirect"
 	"github.com/vlatan/video-store/internal/utils/stringx"
@@ -21,13 +21,10 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 	// Get video id from URL path
 	videoID := r.PathValue("video")
 
-	// Get template data
-	data := s.tmpl.Data(w, r)
-
 	// Validate the YT ID
 	if validVideoID.FindStringSubmatch(videoID) == nil {
 		slog.WarnContext(r.Context(), "invalid video id")
-		s.tmpl.HTMLError(w, r, data, http.StatusNotFound)
+		s.tmpl.HTMLError(w, r, http.StatusNotFound)
 		return
 	}
 
@@ -38,7 +35,7 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "no such post in DB",
 			"error", err,
 		)
-		s.tmpl.HTMLError(w, r, data, http.StatusNotFound)
+		s.tmpl.HTMLError(w, r, http.StatusNotFound)
 		return
 	}
 
@@ -47,14 +44,14 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "failed to get the post from DB",
 			"error", err,
 		)
-		s.tmpl.HTMLError(w, r, data, http.StatusInternalServerError)
+		s.tmpl.HTMLError(w, r, http.StatusInternalServerError)
 		return
 	}
 
-	// Assign post data
-	data.CurrentPost = &post
-	if data.CurrentPost.Category == nil {
-		data.CurrentPost.Category = &types.Category{}
+	// Get template data
+	data := tmplData{
+		Base:        s.tmpl.Base(w, r),
+		CurrentPost: &post,
 	}
 
 	// We need these for the release year in the form
@@ -67,24 +64,24 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Populate needed data for the post form
-	data.Form = &types.Form{
+	data.Form = Form{
 		Legend: "Edit Post",
-		Title: &types.FormGroup{
+		Title: &form.Group{
 			Label:       "Title",
 			Placeholder: "Your title...",
 			Value:       data.CurrentPost.GetTitle(),
 		},
-		Content: &types.FormGroup{
-			Type:        types.FieldTypeTextarea,
+		Content: &form.Group{
+			Type:        form.Textarea,
 			Label:       "Content",
 			Placeholder: "You can use markdown...",
 			Value:       data.CurrentPost.Summary,
 		},
-		Category: &types.FormGroup{
+		Category: &form.Group{
 			Label: "Category",
-			Value: data.CurrentPost.Category.Name,
+			Value: data.CurrentPost.CategoryName,
 		},
-		ReleaseYear: &types.FormGroup{
+		ReleaseYear: &form.Group{
 			Label:       "Released",
 			Placeholder: "YYYY",
 			Value:       released,
@@ -95,7 +92,7 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 
 	for _, director := range data.CurrentPost.Directors {
 		data.Form.Directors = append(data.Form.Directors,
-			&types.FormGroup{
+			&form.Group{
 				Label:       "Director",
 				Placeholder: "Director's name...",
 				Value:       director,
@@ -106,7 +103,7 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 	// Add one empty director input if none
 	if len(data.Form.Directors) == 0 {
 		data.Form.Directors = append(data.Form.Directors,
-			&types.FormGroup{
+			&form.Group{
 				Label:       "Director",
 				Placeholder: "Director's name...",
 			},
@@ -118,20 +115,17 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
 		// Serve the page with the form
-		s.tmpl.RenderHTML(w, r, "form.html", data)
+		s.tmpl.RenderHTML(w, r, postForm, data)
 
 	case "POST":
-		var formError types.FlashMessage
-
 		err := r.ParseForm()
 		if err != nil {
 			slog.WarnContext(
 				r.Context(), "failed to parse the form",
 				"error", err,
 			)
-			formError.Message = "Could not parse the form"
-			data.Form.Error = &formError
-			s.tmpl.RenderHTML(w, r, "form.html", data)
+			data.Form.Error = "Could not parse the form"
+			s.tmpl.RenderHTML(w, r, postForm, data)
 			return
 		}
 
@@ -145,7 +139,7 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 		data.Form.Directors = nil
 		for _, director := range directors {
 			data.Form.Directors = append(data.Form.Directors,
-				&types.FormGroup{
+				&form.Group{
 					Label:       "Director",
 					Placeholder: "Director's name...",
 					Value:       director,
@@ -156,7 +150,7 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 		// Add one empty director input if none
 		if len(data.Form.Directors) == 0 {
 			data.Form.Directors = append(data.Form.Directors,
-				&types.FormGroup{
+				&form.Group{
 					Label:       "Director",
 					Placeholder: "Director's name...",
 				},
@@ -170,9 +164,8 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 				r.Context(), "failed to parse release year",
 				"error", err,
 			)
-			formError.Message = "Could not parse the release year"
-			data.Form.Error = &formError
-			s.tmpl.RenderHTML(w, r, "form.html", data)
+			data.Form.Error = "Could not parse the release year"
+			s.tmpl.RenderHTML(w, r, postForm, data)
 			return
 		}
 
@@ -183,9 +176,8 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 				r.Context(), "failed to normalize directors",
 				"error", err,
 			)
-			formError.Message = "Could not parse the directors"
-			data.Form.Error = &formError
-			s.tmpl.RenderHTML(w, r, "form.html", data)
+			data.Form.Error = "Could not parse the directors"
+			s.tmpl.RenderHTML(w, r, postForm, data)
 			return
 		}
 
@@ -194,7 +186,7 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 			data.Form.Title.Value,
 			normalize.VideoTitleCutoffs,
 		)
-		data.CurrentPost.Category.Name = data.Form.Category.Value
+		data.CurrentPost.CategoryName = data.Form.Category.Value
 		data.CurrentPost.Summary = normalize.Description(data.Form.Content.Value)
 		data.CurrentPost.Directors = directors
 		data.CurrentPost.ReleaseYear = releaseYear
@@ -207,9 +199,8 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 				r.Context(), "failed to update the post in DB",
 				"error", err,
 			)
-			formError.Message = "Could not update the post in DB"
-			data.Form.Error = &formError
-			s.tmpl.RenderHTML(w, r, "form.html", data)
+			data.Form.Error = "Could not update the post in DB"
+			s.tmpl.RenderHTML(w, r, postForm, data)
 			return
 		}
 
@@ -220,9 +211,8 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 				r.Context(), "failed to delete the cache on post",
 				"error", err,
 			)
-			formError.Message = "Could not delete the cache on post"
-			data.Form.Error = &formError
-			s.tmpl.RenderHTML(w, r, "form.html", data)
+			data.Form.Error = "Could not delete the cache on post"
+			s.tmpl.RenderHTML(w, r, postForm, data)
 			return
 		}
 
@@ -231,6 +221,6 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 		redirect.Safe(w, r, redirectTo, http.StatusFound)
 
 	default:
-		s.tmpl.HTMLError(w, r, data, http.StatusMethodNotAllowed)
+		s.tmpl.HTMLError(w, r, http.StatusMethodNotAllowed)
 	}
 }

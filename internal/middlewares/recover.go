@@ -42,8 +42,7 @@ func (s *Service) RecoverPanic(next http.Handler) http.Handler {
 				return
 			}
 
-			data := s.tmpl.Data(w, r)
-			s.tmpl.HTMLError(w, r, data, http.StatusInternalServerError)
+			s.tmpl.HTMLError(w, r, http.StatusInternalServerError)
 		}()
 
 		next.ServeHTTP(w, r)

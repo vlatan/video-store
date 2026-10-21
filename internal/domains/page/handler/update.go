@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/vlatan/video-store/internal/types"
+	"github.com/vlatan/video-store/internal/types/form"
 	"github.com/vlatan/video-store/internal/utils/redirect"
 )
 
@@ -18,16 +18,16 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 	slug := r.PathValue("slug")
 
 	// Get template data
-	data := s.tmpl.Data(w, r)
+	data := tmplData{Base: s.tmpl.Base(w, r)}
 
 	// Get the page data straight from DB
-	page, err := s.repo.Get(r.Context(), slug)
+	page, err := s.page.Get(r.Context(), slug)
 	if errors.Is(err, pgx.ErrNoRows) {
 		slog.WarnContext(
 			r.Context(), "failed to get the page from DB",
 			"error", err,
 		)
-		s.tmpl.HTMLError(w, r, data, http.StatusNotFound)
+		s.tmpl.HTMLError(w, r, http.StatusNotFound)
 		return
 	}
 
@@ -36,7 +36,7 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "failed to get the page from DB",
 			"error", err,
 		)
-		s.tmpl.HTMLError(w, r, data, http.StatusInternalServerError)
+		s.tmpl.HTMLError(w, r, http.StatusInternalServerError)
 		return
 	}
 
@@ -44,15 +44,15 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 	data.CurrentPage = &page
 
 	// Populate needed data for the page form
-	data.Form = &types.Form{
+	data.Form = Form{
 		Legend: "Edit Page",
-		Title: &types.FormGroup{
+		Title: &form.Group{
 			Label:       "Title",
 			Placeholder: "Your title...",
 			Value:       page.Title,
 		},
-		Content: &types.FormGroup{
-			Type:        types.FieldTypeTextarea,
+		Content: &form.Group{
+			Type:        form.Textarea,
 			Label:       "Content",
 			Placeholder: "You can use markdown...",
 			Value:       page.Content,
@@ -64,20 +64,17 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
 		// Serve the page with the form
-		s.tmpl.RenderHTML(w, r, "form.html", data)
+		s.tmpl.RenderHTML(w, r, pageForm, data)
 
 	case "POST":
-		var formError types.FlashMessage
-
 		err := r.ParseForm()
 		if err != nil {
 			slog.WarnContext(
 				r.Context(), "failed to parse the form",
 				"error", err,
 			)
-			formError.Message = "Could not parse the form"
-			data.Form.Error = &formError
-			s.tmpl.RenderHTML(w, r, "form.html", data)
+			data.Form.Error = "Could not parse the form"
+			s.tmpl.RenderHTML(w, r, pageForm, data)
 			return
 		}
 
@@ -86,7 +83,7 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 		data.Form.Title.Value = r.FormValue("title")
 
 		// Update the page
-		rowsAffected, err := s.repo.Update(
+		rowsAffected, err := s.page.Update(
 			r.Context(),
 			slug,
 			data.Form.Title.Value,
@@ -98,9 +95,8 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 				r.Context(), "failed to update the page in DB",
 				"error", err,
 			)
-			formError.Message = "Could not update the page"
-			data.Form.Error = &formError
-			s.tmpl.RenderHTML(w, r, "form.html", data)
+			data.Form.Error = "Could not update the page"
+			s.tmpl.RenderHTML(w, r, pageForm, data)
 			return
 		}
 
@@ -111,9 +107,8 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 				r.Context(), "failed to delete the cache on page",
 				"error", err,
 			)
-			formError.Message = "Could not delete the cache on page"
-			data.Form.Error = &formError
-			s.tmpl.RenderHTML(w, r, "form.html", data)
+			data.Form.Error = "Could not delete the cache on page"
+			s.tmpl.RenderHTML(w, r, pageForm, data)
 			return
 		}
 
@@ -122,6 +117,6 @@ func (s *Service) Update(w http.ResponseWriter, r *http.Request) {
 		redirect.Safe(w, r, redirectTo, http.StatusFound)
 
 	default:
-		s.tmpl.HTMLError(w, r, data, http.StatusMethodNotAllowed)
+		s.tmpl.HTMLError(w, r, http.StatusMethodNotAllowed)
 	}
 }

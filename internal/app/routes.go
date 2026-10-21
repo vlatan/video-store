@@ -85,7 +85,7 @@ func (a *App) RegisterRoutes() *App {
 	// Use this custom handler as HTTP server handler.
 	a.server.Handler = a.mw.ApplyToAll(
 		a.mw.CloseBody,                          // Safety net for body memory leaks
-		a.mw.Compress,                           // Compress the response no matter what is it
+		a.mw.Compress,                           // Compress the response
 		a.mw.CanonicalRedirect,                  // Redirect www to non-www
 		a.mw.MethodOverride,                     // Override a POST method if needed
 		a.mw.LoadRequestId,                      // Load request ID in the context

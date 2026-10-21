@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"runtime"
 	"time"
@@ -11,41 +12,44 @@ import (
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/domains/auth"
 	"github.com/vlatan/video-store/internal/domains/health"
-	page "github.com/vlatan/video-store/internal/domains/page/handler"
-	post "github.com/vlatan/video-store/internal/domains/post/handler"
-	postRepo "github.com/vlatan/video-store/internal/domains/post/repo"
-	sitemap "github.com/vlatan/video-store/internal/domains/sitemap/handler"
-	static "github.com/vlatan/video-store/internal/domains/static"
-	taxonomy "github.com/vlatan/video-store/internal/domains/taxonomy/handler"
-	taxonomyRepo "github.com/vlatan/video-store/internal/domains/taxonomy/repo"
-	text "github.com/vlatan/video-store/internal/domains/text"
-	user "github.com/vlatan/video-store/internal/domains/user/handler"
-	userRepo "github.com/vlatan/video-store/internal/domains/user/repo"
+	pageHandler "github.com/vlatan/video-store/internal/domains/page/handler"
+	"github.com/vlatan/video-store/internal/domains/post"
+	postHandler "github.com/vlatan/video-store/internal/domains/post/handler"
+	sitemapHandler "github.com/vlatan/video-store/internal/domains/sitemap/handler"
+	"github.com/vlatan/video-store/internal/domains/static"
+	"github.com/vlatan/video-store/internal/domains/taxonomy"
+	taxHandler "github.com/vlatan/video-store/internal/domains/taxonomy/handler"
+	"github.com/vlatan/video-store/internal/domains/text"
+	"github.com/vlatan/video-store/internal/domains/user"
+	userHandler "github.com/vlatan/video-store/internal/domains/user/handler"
 	"github.com/vlatan/video-store/internal/drivers/database"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/drivers/store"
+	"github.com/vlatan/video-store/internal/integrations/cloudflare"
 	"github.com/vlatan/video-store/internal/integrations/gemini"
-	"github.com/vlatan/video-store/internal/integrations/r2"
-	"github.com/vlatan/video-store/internal/integrations/yt"
+	"github.com/vlatan/video-store/internal/integrations/youtube"
 	"github.com/vlatan/video-store/internal/middlewares"
 	"github.com/vlatan/video-store/internal/tmpl"
 )
 
 type App struct {
+	user     *userHandler.Service
+	post     *postHandler.Service
+	page     *pageHandler.Service
+	taxonomy *taxHandler.Service
+	sitemap  *sitemapHandler.Service
+	mw       *middlewares.Service
 	auth     *auth.Service
-	user     *user.Service
-	post     *post.Service
-	page     *page.Service
-	taxonomy *taxonomy.Service
-	sitemap  *sitemap.Service
 	text     *text.Service
 	health   *health.Service
 	static   *static.Service
-	mw       *middlewares.Service
+	tmpl     *tmpl.Service
 	domain   string
 	cleanup  func() error
 	server   *http.Server
 }
+
+const catKey = "categories"
 
 // New creates new app.
 // Holds handler services and a HTTP server.
@@ -72,39 +76,60 @@ func New() (*App, error) {
 	}
 
 	// Create Cloudflare R2 service
-	r2s, err := r2.New(ctx, cfg)
+	r2, err := cloudflare.New(ctx, cfg)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create R2 service: %w", err)
 	}
 
 	// Create avatars service
 	maxConcurrency := runtime.GOMAXPROCS(0) * 8
-	av := avatar.New(maxConcurrency, 500, cfg, rdb, r2s)
+	av := avatar.New(maxConcurrency, 500, cfg, rdb, r2)
 
 	// Create taxonomy repo
-	taxRepo, err := taxonomyRepo.New(cfg, db, nil)
+	taxRepo, err := taxonomy.New(cfg, db, nil)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create taxonomy repo: %w", err)
 	}
 
-	userRepo, err := userRepo.New(cfg, db, nil)
+	userRepo, err := user.New(cfg, db, nil)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create users repo: %w", err)
 	}
 
-	postRepo, err := postRepo.New(cfg, db, nil)
+	postRepo, err := post.New(cfg, db, nil)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create posts repo: %w", err)
 	}
 
+	// Get the categories from cache or DB
+	categories, err := rdb.Get(
+		ctx, catKey,
+		cfg.CacheTimeout,
+		func() (taxonomy.Categories, error) {
+			return taxRepo.Categories(ctx)
+		},
+	)
+
+	if err != nil {
+		slog.WarnContext(
+			ctx, "failed to get categories", "error", err,
+		)
+	}
+
+	// Extract the category names
+	catNames := make([]string, len(categories))
+	for i, cat := range categories {
+		catNames[i] = cat.Name
+	}
+
 	// Create YouTube service
-	yt, err := yt.New(ctx, cfg)
+	yt, err := youtube.New(ctx, cfg)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create YouTube service: %w", err)
 	}
 
 	// Create Gemini client
-	gemini, err := gemini.New(ctx, cfg, taxRepo, rdb)
+	gemini, err := gemini.New(ctx, cfg, rdb, catNames)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create Gemini service: %w", err)
 	}
@@ -118,13 +143,13 @@ func New() (*App, error) {
 	}
 
 	// Create template service
-	tmpl, err := tmpl.New(cfg, rdb, store, taxRepo, static)
+	tmpl, err := tmpl.New(cfg, store, static, categories)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create UI service: %w", err)
 	}
 
 	// Create sitemap service
-	sitemap, err := sitemap.New(cfg, db, rdb, tmpl)
+	sitemap, err := sitemapHandler.New(cfg, db, rdb, tmpl)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create sitemap service: %w", err)
 	}
@@ -134,14 +159,15 @@ func New() (*App, error) {
 
 		// Handlers services
 		auth:     auth.New(cfg, userRepo, av, store, tmpl),
-		user:     user.New(cfg, userRepo, av, store, tmpl),
-		post:     post.New(cfg, postRepo, rdb, store, av, tmpl, yt, gemini),
-		page:     page.New(cfg, db, rdb, store, tmpl),
-		taxonomy: taxonomy.New(cfg, taxRepo, rdb, store, tmpl, yt),
+		user:     userHandler.New(cfg, userRepo, postRepo, av, store, tmpl),
+		post:     postHandler.New(cfg, postRepo, rdb, store, av, tmpl, yt, gemini),
+		page:     pageHandler.New(cfg, db, rdb, store, tmpl),
+		taxonomy: taxHandler.New(cfg, taxRepo, postRepo, rdb, store, tmpl, yt),
 		sitemap:  sitemap,
 		text:     text.New(cfg, tmpl),
 		health:   health.New(db, rdb, tmpl),
 		static:   static,
+		tmpl:     tmpl,
 		mw:       middlewares.New(cfg, tmpl),
 
 		// The domain we're serving this app on

@@ -1,4 +1,4 @@
-package posts
+package handler
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/vlatan/video-store/internal/ctxd"
-	"github.com/vlatan/video-store/internal/types"
+	"github.com/vlatan/video-store/internal/domains/post"
 )
 
 // Perform an action on a video
@@ -33,7 +33,7 @@ func (s *Service) ReviewsAPI(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		err     error
-		reviews types.Reviews
+		reviews post.Reviews
 	)
 
 	// Get post reviews, don't cache sthe reviews for logged in users
@@ -44,7 +44,7 @@ func (s *Service) ReviewsAPI(w http.ResponseWriter, r *http.Request) {
 			r.Context(),
 			redisKey,
 			s.cfg.CacheTimeout,
-			func() (types.Reviews, error) {
+			func() (post.Reviews, error) {
 				return s.post.Reviews(r.Context(), videoID, cursor)
 			},
 		)
@@ -67,7 +67,7 @@ func (s *Service) ReviewsAPI(w http.ResponseWriter, r *http.Request) {
 
 	// Get the user avatars
 	for i, review := range reviews.Items {
-		localAvatarURL, err := s.avatar.Get(r.Context(), &review.User)
+		localAvatarURL, err := s.avatar.Get(r.Context(), review.PublicID, review.AvatarURL)
 		if err != nil {
 			slog.ErrorContext(
 				r.Context(), "failed to get user avatar",
@@ -76,12 +76,12 @@ func (s *Service) ReviewsAPI(w http.ResponseWriter, r *http.Request) {
 			s.tmpl.JSONError(w, r, http.StatusInternalServerError)
 			return
 		}
-		reviews.Items[i].User.LocalAvatarURL = localAvatarURL
+		reviews.Items[i].LocalAvatarURL = localAvatarURL
 	}
 
 	// Check if the current user owns a review
 	for i, review := range reviews.Items {
-		if currentUser.IsAuthenticated() && currentUser.ID == review.User.ID {
+		if currentUser.IsAuthenticated() && currentUser.ID == review.UserID {
 			reviews.Items[i].IsCurrentUser = true
 		}
 	}

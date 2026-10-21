@@ -9,9 +9,11 @@ import (
 func (s *Service) Style(w http.ResponseWriter, r *http.Request) {
 
 	// Get template data
-	data := s.tmpl.Data(w, r)
-	data.XMLDeclarations = []template.HTML{
-		template.HTML(`<?xml version="1.0" encoding="UTF-8"?>`),
+	data := tmplData{
+		Base: s.tmpl.Base(w, r),
+		XMLDeclarations: []template.HTML{
+			template.HTML(`<?xml version="1.0" encoding="UTF-8"?>`),
+		},
 	}
 
 	s.tmpl.RenderHTML(w, r, "sitemap.xsl", data)

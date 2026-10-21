@@ -14,17 +14,16 @@ import (
 	_ "image/gif" // Register GIF decoder
 	_ "image/png" // Register PNG decoder
 
-	"github.com/vlatan/video-store/internal/types"
 	_ "golang.org/x/image/webp" // Register WebP decoder
 )
 
 const sourceHashKey = "source-hash"
 
 // refreshAvatar reuploads the user avatar at R2 if changed
-func (s *Service) refresh(ctx context.Context, user *types.User) (string, error) {
+func (s *Service) refresh(ctx context.Context, publicId, uri string) (string, error) {
 
 	// Download the avatar from remote location
-	data, err := s.download(ctx, user)
+	data, err := s.download(ctx, uri)
 	if err != nil {
 		return "", fmt.Errorf("failed to download avatar; %w", err)
 	}
@@ -34,17 +33,17 @@ func (s *Service) refresh(ctx context.Context, user *types.User) (string, error)
 	sourceHash := fmt.Sprintf("%x", md5.Sum(data)) // #nosec G401
 
 	// Get R2 object head
-	head, err := s.r2s.HeadObject(
+	head, err := s.r2.HeadObject(
 		ctx,
 		s.config.R2CdnBucketName,
-		fmt.Sprintf(avatarR2Path, user.PublicID),
+		fmt.Sprintf(avatarR2Path, publicId),
 	)
 
 	// Form the avatar URL
 	avatarURL := &url.URL{
 		Scheme:   "https",
 		Host:     s.config.R2CdnDomain,
-		Path:     fmt.Sprintf(avatarR2Path, user.PublicID),
+		Path:     fmt.Sprintf(avatarR2Path, publicId),
 		RawQuery: "v=" + url.QueryEscape(sourceHash),
 	}
 
@@ -63,7 +62,7 @@ func (s *Service) refresh(ctx context.Context, user *types.User) (string, error)
 	if err != nil {
 		return "", fmt.Errorf(
 			"failed to decode the file for avatar %s; %w",
-			user.AvatarURL, err,
+			uri, err,
 		)
 	}
 
@@ -73,15 +72,15 @@ func (s *Service) refresh(ctx context.Context, user *types.User) (string, error)
 	if err != nil {
 		return "", fmt.Errorf(
 			"failed to convert the avatar %s to JPEG; %w",
-			user.AvatarURL, err,
+			uri, err,
 		)
 	}
 
 	// Upload object to bucket
-	err = s.r2s.PutObject(
+	err = s.r2.PutObject(
 		ctx,
 		s.config.R2CdnBucketName,
-		fmt.Sprintf(avatarR2Path, user.PublicID),
+		fmt.Sprintf(avatarR2Path, publicId),
 		bytes.NewReader(buf.Bytes()),
 		"image/jpeg",
 		map[string]string{sourceHashKey: sourceHash},
@@ -90,7 +89,7 @@ func (s *Service) refresh(ctx context.Context, user *types.User) (string, error)
 	if err != nil {
 		return "", fmt.Errorf(
 			"failed to upload the avatar %s to bucket: %w",
-			user.PublicID, err,
+			publicId, err,
 		)
 	}
 
@@ -99,14 +98,14 @@ func (s *Service) refresh(ctx context.Context, user *types.User) (string, error)
 }
 
 // downloadAvatar downloads avatar from a remote source
-func (s *Service) download(ctx context.Context, user *types.User) ([]byte, error) {
+func (s *Service) download(ctx context.Context, uri string) ([]byte, error) {
 
 	// Create a request with context
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, user.AvatarURL, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, uri, nil)
 	if err != nil {
 		return nil, fmt.Errorf(
 			"failed to create GET request for avatar %q download; %w",
-			user.AvatarURL, err,
+			uri, err,
 		)
 	}
 
@@ -116,7 +115,7 @@ func (s *Service) download(ctx context.Context, user *types.User) ([]byte, error
 	if err != nil {
 		return nil, fmt.Errorf(
 			"failed to execute GET request for avatar %q; %w",
-			user.AvatarURL, err,
+			uri, err,
 		)
 	}
 	defer resp.Body.Close()
@@ -125,7 +124,7 @@ func (s *Service) download(ctx context.Context, user *types.User) ([]byte, error
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf(
 			"received status code %d for avatar %q",
-			resp.StatusCode, user.AvatarURL,
+			resp.StatusCode, uri,
 		)
 	}
 

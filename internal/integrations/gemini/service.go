@@ -6,19 +6,13 @@ import (
 
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
-	"github.com/vlatan/video-store/internal/types"
 
 	"google.golang.org/genai"
 )
 
-type taxonomy interface {
-	Categories(context.Context) (types.Categories, error)
-}
-
 // Service is Gemini struct
 type Service struct {
-	config   *config.Config
-	taxonomy taxonomy
+	cfg      *config.Config
 	client   *genai.Client
 	limiter  *GeminiLimiter
 	catNames []string
@@ -28,8 +22,8 @@ type Service struct {
 func New(
 	ctx context.Context,
 	cfg *config.Config,
-	taxonomy taxonomy,
 	rs *rdb.Service,
+	catNames []string,
 ) (*Service, error) {
 	// Configure new client
 	client, err := genai.NewClient(ctx, &genai.ClientConfig{APIKey: cfg.GeminiAPIKey})
@@ -44,28 +38,10 @@ func New(
 	}
 
 	s := &Service{
-		config:  cfg,
-		client:  client,
-		limiter: limiter,
-	}
-
-	// Get the categories from cache or DB
-	categories, err := rs.Get(
-		ctx,
-		"categories",
-		s.config.CacheTimeout,
-		func() (types.Categories, error) {
-			return taxonomy.Categories(ctx)
-		},
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	// Extract the category names
-	s.catNames = make([]string, len(categories))
-	for i, cat := range categories {
-		s.catNames[i] = cat.Name
+		cfg:      cfg,
+		client:   client,
+		limiter:  limiter,
+		catNames: catNames,
 	}
 
 	return s, nil

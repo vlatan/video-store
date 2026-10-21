@@ -4,40 +4,45 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"log/slog"
 	"time"
 	"uuid"
 
 	"github.com/vlatan/video-store/internal/config"
-	postRepo "github.com/vlatan/video-store/internal/domains/post/repo"
-	taxonomyRepo "github.com/vlatan/video-store/internal/domains/taxonomy/repo"
+	"github.com/vlatan/video-store/internal/domains/post"
+	"github.com/vlatan/video-store/internal/domains/taxonomy"
 	"github.com/vlatan/video-store/internal/drivers/database"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/integrations/gemini"
-	"github.com/vlatan/video-store/internal/integrations/yt"
-	"github.com/vlatan/video-store/internal/types"
+	yt "github.com/vlatan/video-store/internal/integrations/youtube"
 	"github.com/vlatan/video-store/internal/utils/retry"
+	"google.golang.org/api/youtube/v3"
 )
 
-type post interface {
-	All(context.Context) ([]*types.Post, error)
+type poster interface {
+	All(context.Context) ([]*post.Post, error)
 	IsBanned(context.Context, string) error
 	UpdateSource(context.Context, string, string) (int64, error)
-	Insert(context.Context, *types.Post) (int64, error)
-	Update(context.Context, *types.Post) (int64, error)
+	Insert(context.Context, *post.Post) (int64, error)
+	Update(context.Context, *post.Post) (int64, error)
 	Delete(context.Context, string) (int64, error)
+	New(*youtube.Video, string) *post.Post
 }
 
-type taxonomy interface {
-	Categories(context.Context) (types.Categories, error)
-	Sources(context.Context) (types.Sources, error)
-	UpdateSource(context.Context, *types.Source) (int64, error)
+type taxer interface {
+	Categories(context.Context) (taxonomy.Categories, error)
+	Sources(context.Context) (taxonomy.Sources, error)
+	UpdateSource(context.Context, *taxonomy.Source) (int64, error)
+	New(*youtube.Playlist, *youtube.Channel) *taxonomy.Source
 }
+
+const catKey = "categories"
 
 type Worker struct {
 	id                string
 	cfg               *config.Config
-	post              post
-	taxonomy          taxonomy
+	post              poster
+	taxonomy          taxer
 	youtube           *yt.Service
 	gemini            *gemini.Service
 	lock              *rdb.RedisLock
@@ -50,7 +55,7 @@ type Worker struct {
 // Redis key to lock the worker
 const workerLockKey = "worker:lock"
 
-func New(cfg *config.Config, ctx context.Context) (*Worker, error) {
+func New(ctx context.Context, cfg *config.Config) (*Worker, error) {
 
 	db, err := database.New(cfg)
 	if err != nil {
@@ -63,15 +68,36 @@ func New(cfg *config.Config, ctx context.Context) (*Worker, error) {
 	}
 
 	// Create DB repositories
-	postRepo, err := postRepo.New(cfg, db, nil)
+	postRepo, err := post.New(cfg, db, nil)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create posts repo: %w", err)
 	}
 
 	// Create taxonomy repo
-	taxRepo, err := taxonomyRepo.New(cfg, db, nil)
+	taxRepo, err := taxonomy.New(cfg, db, nil)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create taxonomy repo: %w", err)
+	}
+
+	// Get the categories from cache or DB
+	categories, err := rdb.Get(
+		ctx, catKey,
+		cfg.CacheTimeout,
+		func() (taxonomy.Categories, error) {
+			return taxRepo.Categories(ctx)
+		},
+	)
+
+	// Extract the category names
+	catNames := make([]string, len(categories))
+	for i, cat := range categories {
+		catNames[i] = cat.Name
+	}
+
+	if err != nil {
+		slog.WarnContext(
+			ctx, "failed to get categories", "error", err,
+		)
 	}
 
 	// Create YouTube service
@@ -81,7 +107,7 @@ func New(cfg *config.Config, ctx context.Context) (*Worker, error) {
 	}
 
 	// Create Gemini client
-	gemini, err := gemini.New(ctx, cfg, taxRepo, rdb)
+	gemini, err := gemini.New(ctx, cfg, rdb, catNames)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create Gemini service: %w", err)
 	}

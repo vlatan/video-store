@@ -2,7 +2,7 @@ package handler
 
 import (
 	"github.com/vlatan/video-store/internal/config"
-	"github.com/vlatan/video-store/internal/domains/page/repo"
+	"github.com/vlatan/video-store/internal/domains/page"
 	"github.com/vlatan/video-store/internal/drivers/database"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/drivers/store"
@@ -11,10 +11,17 @@ import (
 
 type Service struct {
 	cfg     *config.Config
-	repo    *repo.Repository
+	page    *page.Repository
 	rdb     *rdb.Service
 	session *store.Service
 	tmpl    *tmpl.Service
+}
+
+type tmplData struct {
+	Title       string
+	CurrentPage *page.Page
+	tmpl.Base
+	Form
 }
 
 func New(
@@ -26,7 +33,7 @@ func New(
 ) *Service {
 	return &Service{
 		cfg:     cfg,
-		repo:    repo.NewRepo(db),
+		page:    page.NewRepo(db),
 		rdb:     rdb,
 		session: store,
 		tmpl:    tmpl,

@@ -7,15 +7,24 @@ import (
 	"fmt"
 	"log/slog"
 	"slices"
-	"strings"
 	"time"
 
-	"github.com/vlatan/video-store/internal/types"
+	"github.com/vlatan/video-store/internal/types/duration"
 	"github.com/vlatan/video-store/internal/utils/normalize"
 	"github.com/vlatan/video-store/internal/utils/retry"
 	"github.com/vlatan/video-store/internal/utils/sleep"
 	"google.golang.org/genai"
 )
+
+// The response from the Genai API
+type Response struct {
+	Title         string   `json:"video_title"`
+	OriginalTitle string   `json:"original_title"`
+	Summary       string   `json:"summary"`
+	Category      string   `json:"category"`
+	Directors     []string `json:"directors"`
+	ReleaseYear   int16    `json:"release_year"`
+}
 
 // generateContent is a wrapper around the model's GenerateContent method
 // which internally handles the daily and minutely rate limit,
@@ -33,7 +42,7 @@ func (s *Service) generateContent(
 
 	response, err := s.client.Models.GenerateContent(
 		ctx,
-		s.config.GeminiModel,
+		s.cfg.GeminiModel,
 		contents,
 		genaiConfig,
 	)
@@ -59,7 +68,7 @@ func (s *Service) GenerateContent(
 	contents []*genai.Content,
 	genaiConfig *genai.GenerateContentConfig,
 	retryConfig *retry.Config,
-) (*types.GenaiResponse, error) {
+) (*Response, error) {
 
 	// Make the API call
 	result, err := retry.Do(ctx, retryConfig,
@@ -77,16 +86,16 @@ func (s *Service) GenerateContent(
 		return nil, err
 	}
 
-	var response types.GenaiResponse
-	if err = json.Unmarshal([]byte(result.Text()), &response); err != nil {
+	var resp Response
+	if err = json.Unmarshal([]byte(result.Text()), &resp); err != nil {
 		return nil, err
 	}
 
-	response.OriginalTitle = normalize.Title(response.OriginalTitle, normalize.VideoTitleCutoffs)
-	response.Summary = normalize.Description(response.Summary)
+	resp.OriginalTitle = normalize.Title(resp.OriginalTitle, normalize.VideoTitleCutoffs)
+	resp.Summary = normalize.Description(resp.Summary)
 
 	var directors []string
-	for _, director := range response.Directors {
+	for _, director := range resp.Directors {
 		name, err := normalize.Name(director)
 		if err == nil {
 			directors = append(directors, name)
@@ -98,23 +107,23 @@ func (s *Service) GenerateContent(
 			"error", err,
 		)
 	}
-	response.Directors = directors
+	resp.Directors = directors
 
-	return &response, nil
+	return &resp, nil
 }
 
 // GeneratePostSummary generates post summary and category
 func (s *Service) GeneratePostSummary(
 	ctx context.Context,
-	post *types.Post,
-	retryConfig *retry.Config) error {
+	videoID, title, description string,
+	retryConfig *retry.Config) (*Response, error) {
 
 	// Create summary contents
-	summaryContents := s.NewSummaryContents(post.VideoID)
+	summaryContents := s.NewSummaryContents(videoID)
 	genaiConfig := s.NewGenaiConfig()
 	genaiConfig.ResponseSchema = s.NewSummarySchema()
 
-	genaiResponse, err := s.GenerateContent(
+	resp, err := s.GenerateContent(
 		ctx,
 		summaryContents,
 		genaiConfig,
@@ -122,16 +131,14 @@ func (s *Service) GeneratePostSummary(
 	)
 
 	if err == nil {
-		post.Summary = genaiResponse.Summary
-		post.Category = &types.Category{Name: genaiResponse.Category}
-		return nil
+		return resp, nil
 	}
 
 	// Check if this is a hard block error by the model
 	if _, blocked := errors.AsType[*NoCandidatesError](err); !blocked {
-		return fmt.Errorf(
+		return nil, fmt.Errorf(
 			"failed to generate LLM content on SUMMARY on video %s: %w",
-			post.VideoID, err,
+			videoID, err,
 		)
 	}
 
@@ -139,21 +146,21 @@ func (s *Service) GeneratePostSummary(
 	slog.ErrorContext(
 		ctx,
 		"failed to generate LLM content on SUMMARY, trying again with text input",
-		"videoId", post.VideoID,
+		"videoId", videoID,
 		"error", err,
 	)
 
 	// Create text contents
-	textContents := s.NewTextContents(post)
+	textContents := s.NewTextContents(videoID, title, description)
 
 	// Sleep with context in mind for 60-90 seconds.
 	// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
-	if err := sleep.Jitter(ctx, 60*time.Second, 90*time.Second); err != nil {
-		return err
+	if err = sleep.Jitter(ctx, 60*time.Second, 90*time.Second); err != nil {
+		return nil, err
 	}
 
 	// Generate content using Gemini, but now with text contents
-	genaiResponse, err = s.GenerateContent(
+	resp, err = s.GenerateContent(
 		ctx,
 		textContents,
 		genaiConfig,
@@ -161,30 +168,28 @@ func (s *Service) GeneratePostSummary(
 	)
 
 	if err != nil {
-		return fmt.Errorf(
+		return nil, fmt.Errorf(
 			"failed to generate LLM content on SUMMARY on video %s: %w",
-			post.VideoID, err,
+			videoID, err,
 		)
 	}
 
-	post.Summary = genaiResponse.Summary
-	post.Category = &types.Category{Name: genaiResponse.Category}
-
-	return nil
+	return resp, nil
 }
 
 // GeneratePostOCR reads original title, directors and release year from screen
 func (s *Service) GeneratePostOCR(
 	ctx context.Context,
-	post *types.Post,
-	retryConfig *retry.Config) error {
+	videoID string,
+	duration duration.ISO8601,
+	retryConfig *retry.Config) (*Response, error) {
 
 	// Get video duration
-	videoDuration, err := post.Duration.Seconds()
+	videoDuration, err := duration.Parse()
 	if err != nil || videoDuration == 0 {
-		return fmt.Errorf(
+		return nil, fmt.Errorf(
 			"couldn't convert video %s duration %s to seconds; %w",
-			post.VideoID, post.Duration, err,
+			videoID, duration, err,
 		)
 	}
 
@@ -195,8 +200,8 @@ func (s *Service) GeneratePostOCR(
 		schema   *genai.Schema
 		contents []*genai.Content
 	}{
-		{"INTRO", s.NewIntroSchema(), s.NewIntroContents(post.VideoID, endOffset)},
-		{"OUTRO", s.NewOutroSchema(), s.NewOutroContents(post.VideoID, startOffset)},
+		{"INTRO", s.NewIntroSchema(), s.NewIntroContents(videoID, endOffset)},
+		{"OUTRO", s.NewOutroSchema(), s.NewOutroContents(videoID, startOffset)},
 	}
 
 	// Exclude the outro OCR because genai will reject very long start offset
@@ -205,63 +210,59 @@ func (s *Service) GeneratePostOCR(
 	}
 
 	// Make two calls to extract the OCR details
+	var result Response
 	genaiConfig := s.NewGenaiConfig()
 	for _, cfg := range ocrConfigs {
 
 		// Sleep with context in mind for 60-90 seconds.
 		// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
 		if err := sleep.Jitter(ctx, 60*time.Second, 90*time.Second); err != nil {
-			return err
+			return nil, err
 		}
 
 		// Use appropriate schema in the genai config
 		genaiConfig.ResponseSchema = cfg.schema
 
 		// Generate content using Gemini
-		genaiResponse, err := s.GenerateContent(ctx, cfg.contents, genaiConfig, retryConfig)
+		resp, err := s.GenerateContent(ctx, cfg.contents, genaiConfig, retryConfig)
 
 		// Move onto the next call if this is a hard block error by the model
 		if _, blocked := errors.AsType[*NoCandidatesError](err); blocked {
 			slog.ErrorContext(
 				ctx,
 				fmt.Sprintf("failed to generate LLM content on %s", cfg.desc),
-				"videoId", post.VideoID,
+				"videoId", videoID,
 				"error", err,
 			)
 			continue
 		}
 
 		if err != nil {
-			return fmt.Errorf(
+			return nil, fmt.Errorf(
 				"failed to generate LLM content on %s on video %s: %w",
-				cfg.desc, post.VideoID, err,
+				cfg.desc, videoID, err,
 			)
 		}
 
-		// Assign original title if any
-		if genaiResponse.OriginalTitle != "" {
-			post.OriginalTitle = genaiResponse.OriginalTitle
+		// Assign original title if any, do not overwrite
+		if resp.OriginalTitle != "" {
+			result.OriginalTitle = resp.OriginalTitle
 		}
 
 		// Append if any additional directors discovered
-		for _, director := range genaiResponse.Directors {
-			if !slices.Contains(post.Directors, director) {
-				post.Directors = append(post.Directors, director)
+		for _, director := range resp.Directors {
+			if !slices.Contains(result.Directors, director) {
+				result.Directors = append(result.Directors, director)
 			}
 		}
 
-		// Assign release year if any
+		// Assign release year if any, overwrite if found in outro
 		maxYear := time.Now().Year() + 1
-		if genaiResponse.ReleaseYear >= 1900 && int(genaiResponse.ReleaseYear) <= maxYear {
-			post.ReleaseYear = genaiResponse.ReleaseYear
+		if resp.ReleaseYear >= 1900 && int(resp.ReleaseYear) <= maxYear {
+			result.ReleaseYear = resp.ReleaseYear
 		}
 
 	}
 
-	//  Mark the OCR as done
-	if post.Summary != "" && !strings.HasSuffix(post.Summary, types.OcrFlag) {
-		post.Summary += types.OcrFlag
-	}
-
-	return nil
+	return &result, nil
 }

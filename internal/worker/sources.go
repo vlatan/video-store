@@ -4,8 +4,9 @@ import (
 	"context"
 	"log"
 
-	"github.com/vlatan/video-store/internal/types"
+	"github.com/vlatan/video-store/internal/domains/taxonomy"
 	"github.com/vlatan/video-store/internal/utils/ctxv"
+	"github.com/vlatan/video-store/internal/utils/ythumb"
 	"google.golang.org/api/youtube/v3"
 )
 
@@ -15,7 +16,7 @@ func (w *Worker) updateSources(
 	ctx context.Context,
 	ytSources map[string]*youtube.Playlist,
 	ytChannels map[string]*youtube.Channel,
-	dbSources map[string]*types.Source,
+	dbSources map[string]*taxonomy.Source,
 ) error {
 
 	for playlistID, ytSource := range ytSources {
@@ -25,13 +26,13 @@ func (w *Worker) updateSources(
 			return err
 		}
 
-		newSource := w.youtube.NewYouTubeSource(
+		newSource := w.taxonomy.New(
 			ytSource, ytChannels[ytSource.Snippet.ChannelId],
 		)
 
 		// Check if channel thumbs or title have changed
 		dbChThumbs := dbSources[playlistID].ChannelThumbnails
-		if dbChThumbs.Equal(newSource.ChannelThumbnails) &&
+		if ythumb.AllEqual(dbChThumbs, newSource.ChannelThumbnails) &&
 			dbSources[playlistID].ChannelTitle == newSource.ChannelTitle {
 			continue
 		}

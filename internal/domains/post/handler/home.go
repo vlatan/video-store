@@ -1,4 +1,4 @@
-package posts
+package handler
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/vlatan/video-store/internal/ctxd"
-	"github.com/vlatan/video-store/internal/types"
+	"github.com/vlatan/video-store/internal/domains/post"
 )
 
 // Handle the Home page
@@ -19,33 +19,28 @@ func (s *Service) Home(w http.ResponseWriter, r *http.Request) {
 	redisKey := "home:posts"
 
 	switch orderBy {
-	case types.Likes:
-		redisKey += fmt.Sprintf(":%s", types.Likes)
-	case types.AvgRating:
-		redisKey += fmt.Sprintf(":%s", types.AvgRating)
-	case types.RatingCount:
-		redisKey += fmt.Sprintf(":%s", types.RatingCount)
+	case post.Likes:
+		redisKey += fmt.Sprintf(":%s", post.Likes)
+	case post.AvgRating:
+		redisKey += fmt.Sprintf(":%s", post.AvgRating)
+	case post.RatingCount:
+		redisKey += fmt.Sprintf(":%s", post.RatingCount)
 	}
-
-	// Get template data
-	data := s.tmpl.Data(w, r)
 
 	var (
 		err   error
-		posts types.Posts
+		posts post.Posts
 	)
 
 	// Don't cache the home results only for the admin
-	if data.CurrentUser.IsAdmin(s.cfg) {
-		posts, err = s.post.Home(
-			r.Context(), "", orderBy,
-		)
+	if ctxd.GetUser(r.Context()).IsAdmin(s.cfg) {
+		posts, err = s.post.Home(r.Context(), "", orderBy)
 	} else {
 		posts, err = s.rdb.Get(
 			r.Context(),
 			redisKey,
 			s.cfg.CacheTimeout,
-			func() (types.Posts, error) {
+			func() (post.Posts, error) {
 				return s.post.Home(
 					r.Context(), "", orderBy,
 				)
@@ -58,17 +53,21 @@ func (s *Service) Home(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "failed to get posts from DB",
 			"error", err,
 		)
-		s.tmpl.HTMLError(w, r, data, http.StatusInternalServerError)
+		s.tmpl.HTMLError(w, r, http.StatusInternalServerError)
 		return
 	}
 
 	if len(posts.Items) == 0 {
 		slog.WarnContext(r.Context(), "no posts found in DB")
-		s.tmpl.HTMLError(w, r, data, http.StatusNotFound)
+		s.tmpl.HTMLError(w, r, http.StatusNotFound)
 		return
 	}
 
-	data.Posts = &posts
+	// Get template data
+	data := tmplData{
+		Base:  s.tmpl.Base(w, r),
+		Posts: posts,
+	}
 	s.tmpl.RenderHTML(w, r, "home.html", data)
 }
 
@@ -85,12 +84,12 @@ func (s *Service) HomeAPI(w http.ResponseWriter, r *http.Request) {
 	redisKey := "home:posts"
 
 	switch orderBy {
-	case types.Likes:
-		redisKey += fmt.Sprintf(":%s", types.Likes)
-	case types.AvgRating:
-		redisKey += fmt.Sprintf(":%s", types.AvgRating)
-	case types.RatingCount:
-		redisKey += fmt.Sprintf(":%s", types.RatingCount)
+	case post.Likes:
+		redisKey += fmt.Sprintf(":%s", post.Likes)
+	case post.AvgRating:
+		redisKey += fmt.Sprintf(":%s", post.AvgRating)
+	case post.RatingCount:
+		redisKey += fmt.Sprintf(":%s", post.RatingCount)
 	}
 
 	if cursor != "" {
@@ -102,7 +101,7 @@ func (s *Service) HomeAPI(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		err   error
-		posts types.Posts
+		posts post.Posts
 	)
 
 	// Don't cache the home results only for the admin
@@ -115,7 +114,7 @@ func (s *Service) HomeAPI(w http.ResponseWriter, r *http.Request) {
 			r.Context(),
 			redisKey,
 			s.cfg.CacheTimeout,
-			func() (types.Posts, error) {
+			func() (post.Posts, error) {
 				return s.post.Home(
 					r.Context(), cursor, orderBy,
 				)

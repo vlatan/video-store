@@ -9,11 +9,11 @@ import (
 // Enqueue returns true if queued, false if duplicate or queue is full
 func (s *Service) enqueue(job job) bool {
 	s.mu.Lock()
-	if _, exists := s.active[job.user.PublicID]; exists {
+	if _, exists := s.active[job.id]; exists {
 		s.mu.Unlock()
 		return false // Duplicate, silently drop
 	}
-	s.active[job.user.PublicID] = struct{}{}
+	s.active[job.id] = struct{}{}
 	s.mu.Unlock()
 
 	// Non-blocking send
@@ -22,7 +22,7 @@ func (s *Service) enqueue(job job) bool {
 		return true // Successfully queued
 	default:
 		// Queue is full. Must release the lock status so it can be tried later.
-		s.release(job.user.PublicID)
+		s.release(job.id)
 		return false
 	}
 }
@@ -48,14 +48,14 @@ func (s *Service) worker() {
 			defer cancel()
 
 			// Release this job after the work is done
-			defer s.release(job.user.PublicID)
+			defer s.release(job.id)
 
 			// Download and if avatar changed convert to JPEG and reupload to R2
-			r2URL, err := s.refresh(ctx, job.user)
+			r2URL, err := s.refresh(ctx, job.id, job.uri)
 
 			// Redis keys
-			ttlKey := avatarCacheTTL + job.user.PublicID
-			avatarKey := avatarCachePrefix + job.user.PublicID
+			ttlKey := avatarCacheTTL + job.id
+			avatarKey := avatarCachePrefix + job.id
 
 			// If no avatar url refreshed
 			if err != nil || r2URL == "" {

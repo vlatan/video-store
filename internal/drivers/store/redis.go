@@ -116,7 +116,7 @@ func (rs *redisStore) Save(
 	}
 
 	// Encode session data
-	encoded, err := rs.codec.Encode(session.Name(), session.Values)
+	encodedValues, err := rs.codec.Encode(session.Name(), session.Values)
 	if err != nil {
 		return fmt.Errorf("could not encode the session data: %w", err)
 	}
@@ -131,7 +131,7 @@ func (rs *redisStore) Save(
 	// Save to Redis
 	key := rs.buildKey(session.Name(), session.ID)
 	expiration := time.Duration(session.Options.MaxAge) * time.Second
-	err = rs.rdb.Client.Set(r.Context(), key, encoded, expiration).Err()
+	err = rs.rdb.Client.Set(r.Context(), key, encodedValues, expiration).Err()
 	if err != nil {
 		return fmt.Errorf("could not save the session to Redis: %w", err)
 	}

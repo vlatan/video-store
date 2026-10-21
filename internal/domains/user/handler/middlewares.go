@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/vlatan/video-store/internal/ctxd"
+	"github.com/vlatan/video-store/internal/domains/user"
 	"github.com/vlatan/video-store/internal/utils/pathx"
 )
 
@@ -26,8 +27,7 @@ func (s *Service) IsAuth(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		data := s.tmpl.Data(w, r)
-		s.tmpl.HTMLError(w, r, data, http.StatusForbidden)
+		s.tmpl.HTMLError(w, r, http.StatusForbidden)
 	}
 }
 
@@ -46,8 +46,7 @@ func (s *Service) IsAdmin(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		data := s.tmpl.Data(w, r)
-		s.tmpl.HTMLError(w, r, data, http.StatusForbidden)
+		s.tmpl.HTMLError(w, r, http.StatusForbidden)
 	}
 }
 
@@ -61,9 +60,12 @@ func (s *Service) Load(next http.Handler) http.Handler {
 			return
 		}
 
-		// Fetch the user from session
-		user := s.session.User(w, r) // Nil if anonymous or failed to fetch
-		if user == nil {
+		// Fetch the user from session.
+		// Nil if anonymous or failed to fetch.
+		user, _ := s.session.User(w, r).(*user.User)
+
+		// Exit, this is anonymous user
+		if user == nil || user.ID == 0 {
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -87,7 +89,7 @@ func (s *Service) Load(next http.Handler) http.Handler {
 				goCtx, cancel := context.WithTimeout(detachedCtx, 5*time.Second)
 				defer cancel()
 
-				if _, err := s.repo.UpdateLastSeen(goCtx, user.ID); err != nil {
+				if _, err := s.user.UpdateLastSeen(goCtx, user.ID); err != nil {
 					slog.WarnContext(
 						r.Context(),
 						"failed to update user last seen in DB",
@@ -99,7 +101,7 @@ func (s *Service) Load(next http.Handler) http.Handler {
 
 		// Try to get the user avatar
 		var err error
-		user.LocalAvatarURL, err = s.avatar.Get(r.Context(), user)
+		user.LocalAvatarURL, err = s.avatar.Get(r.Context(), user.PublicID, user.AvatarURL)
 		if err != nil {
 			slog.WarnContext(
 				r.Context(),

@@ -11,10 +11,7 @@ type Service struct {
 }
 
 // New creates new middlewares service
-func New(
-	cfg *config.Config,
-	tmpl *tmpl.Service) *Service {
-
+func New(cfg *config.Config, tmpl *tmpl.Service) *Service {
 	SetCustomLogger(cfg)
 	return &Service{
 		cfg:  cfg,

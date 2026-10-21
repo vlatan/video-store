@@ -1,4 +1,4 @@
-package posts
+package handler
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/vlatan/video-store/internal/ctxd"
-	"github.com/vlatan/video-store/internal/types"
+	"github.com/vlatan/video-store/internal/domains/post"
 	"github.com/vlatan/video-store/internal/utils/stringx"
 )
 
@@ -22,10 +22,6 @@ func (s *Service) Search(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get template data
-	data := s.tmpl.Data(w, r)
-	data.SearchQuery = searchQuery
-
 	start := time.Now()
 	encodedSearchQuery := stringx.EscapeTrancate(searchQuery, 100)
 
@@ -34,11 +30,11 @@ func (s *Service) Search(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		err   error
-		posts types.Posts
+		posts post.Posts
 	)
 
 	// Don't cache the search results only for the admin
-	if data.CurrentUser.IsAdmin(s.cfg) {
+	if ctxd.GetUser(r.Context()).IsAdmin(s.cfg) {
 		posts, err = s.post.Search(
 			r.Context(), searchQuery, s.cfg.PostsPerPage, "",
 		)
@@ -47,7 +43,7 @@ func (s *Service) Search(w http.ResponseWriter, r *http.Request) {
 			r.Context(),
 			redisKey,
 			s.cfg.CacheTimeout,
-			func() (types.Posts, error) {
+			func() (post.Posts, error) {
 				return s.post.Search(
 					r.Context(), searchQuery, s.cfg.PostsPerPage, "",
 				)
@@ -62,18 +58,27 @@ func (s *Service) Search(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "failed to get posts from DB",
 			"error", err,
 		)
-		s.tmpl.HTMLError(w, r, data, http.StatusInternalServerError)
+		s.tmpl.HTMLError(w, r, http.StatusInternalServerError)
 		return
 	}
 	if len(posts.Items) == 0 {
 		slog.WarnContext(r.Context(), "no posts found in DB")
-		s.tmpl.HTMLError(w, r, data, http.StatusNotFound)
+		s.tmpl.HTMLError(w, r, http.StatusNotFound)
 		return
 	}
 
-	data.Posts = &posts
+	// Get template data
+	base := s.tmpl.Base(w, r)
+	base.SearchQuery = searchQuery
+	data := tmplData{
+		Base:  base,
+		Posts: posts,
+		Title: "Search",
+	}
+
+	// Add time took last
 	data.Posts.TimeTook = fmt.Sprintf("%.2f", end.Seconds())
-	data.Title = "Search"
+
 	s.tmpl.RenderHTML(w, r, "search.html", data)
 }
 
@@ -101,7 +106,7 @@ func (s *Service) SearchAPI(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		err   error
-		posts types.Posts
+		posts post.Posts
 	)
 
 	// Don't cache the search results only for the admin
@@ -114,7 +119,7 @@ func (s *Service) SearchAPI(w http.ResponseWriter, r *http.Request) {
 			r.Context(),
 			redisKey,
 			s.cfg.CacheTimeout,
-			func() (types.Posts, error) {
+			func() (post.Posts, error) {
 				return s.post.Search(
 					r.Context(), searchQuery, s.cfg.PostsPerPage, cursor,
 				)

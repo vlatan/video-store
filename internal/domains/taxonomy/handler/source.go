@@ -7,7 +7,10 @@ import (
 	"time"
 
 	"github.com/vlatan/video-store/internal/ctxd"
-	"github.com/vlatan/video-store/internal/types"
+	"github.com/vlatan/video-store/internal/domains/post"
+	"github.com/vlatan/video-store/internal/domains/taxonomy"
+	"github.com/vlatan/video-store/internal/drivers/store"
+	"github.com/vlatan/video-store/internal/types/form"
 	"github.com/vlatan/video-store/internal/utils/redirect"
 	"github.com/vlatan/video-store/internal/utils/retry"
 )
@@ -15,23 +18,20 @@ import (
 // Handle all sources page
 func (s *Service) Sources(w http.ResponseWriter, r *http.Request) {
 
-	// Get template data
-	data := s.tmpl.Data(w, r)
-
 	var (
 		err     error
-		sources types.Sources
+		sources taxonomy.Sources
 	)
 
-	if data.CurrentUser.IsAdmin(s.cfg) {
-		sources, err = s.repo.Sources(r.Context())
+	if ctxd.GetUser(r.Context()).IsAdmin(s.cfg) {
+		sources, err = s.taxonomy.Sources(r.Context())
 	} else {
 		sources, err = s.rdb.Get(
 			r.Context(),
 			"sources",
 			s.cfg.CacheTimeout,
-			func() (types.Sources, error) {
-				return s.repo.Sources(r.Context())
+			func() (taxonomy.Sources, error) {
+				return s.taxonomy.Sources(r.Context())
 			},
 		)
 	}
@@ -41,18 +41,23 @@ func (s *Service) Sources(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "failed to get sources from DB",
 			"error", err,
 		)
-		s.tmpl.HTMLError(w, r, data, http.StatusInternalServerError)
+		s.tmpl.HTMLError(w, r, http.StatusInternalServerError)
 		return
 	}
 
 	if len(sources) == 0 {
 		slog.WarnContext(r.Context(), "no sources found in DB")
-		s.tmpl.HTMLError(w, r, data, http.StatusNotFound)
+		s.tmpl.HTMLError(w, r, http.StatusNotFound)
 		return
 	}
 
-	data.Sources = sources
-	data.Title = "Sources"
+	// Get template data
+	data := tmplData{
+		Title:   "Sources",
+		Sources: sources,
+		Base:    s.tmpl.Base(w, r),
+	}
+
 	s.tmpl.RenderHTML(w, r, "sources.html", data)
 
 }
@@ -61,26 +66,22 @@ func (s *Service) Sources(w http.ResponseWriter, r *http.Request) {
 func (s *Service) NewSource(w http.ResponseWriter, r *http.Request) {
 
 	// Get template data
-	data := s.tmpl.Data(w, r)
-
-	// Populate needed data for an empty form
-	data.Form = &types.Form{
+	data := tmplData{
+		Title:  "Add New Source",
 		Legend: "New Playlist",
-		Content: &types.FormGroup{
+		Content: &form.Group{
 			Label:       "Post YouTube Playlist URL",
 			Placeholder: "Playlist URL here...",
 		},
+		Base: s.tmpl.Base(w, r),
 	}
-	data.Title = "Add New Source"
 
 	switch r.Method {
 	case "GET":
 		// Serve the page with the form
-		s.tmpl.RenderHTML(w, r, "form.html", data)
+		s.tmpl.RenderHTML(w, r, sourceForm, data)
 
 	case "POST":
-
-		var formError types.FlashMessage
 
 		err := r.ParseForm()
 		if err != nil {
@@ -88,9 +89,8 @@ func (s *Service) NewSource(w http.ResponseWriter, r *http.Request) {
 				r.Context(), "failed to parse the form",
 				"error", err,
 			)
-			formError.Message = "Could not parse the form"
-			data.Form.Error = &formError
-			s.tmpl.RenderHTML(w, r, "form.html", data)
+			data.Form.Error = "Could not parse the form"
+			s.tmpl.RenderHTML(w, r, sourceForm, data)
 			return
 		}
 
@@ -105,23 +105,21 @@ func (s *Service) NewSource(w http.ResponseWriter, r *http.Request) {
 				r.Context(), "failed extract playlist ID",
 				"error", err,
 			)
-			formError.Message = "Could not extract the playlist ID"
-			data.Form.Error = &formError
-			s.tmpl.RenderHTML(w, r, "form.html", data)
+			data.Form.Error = "Could not extract the playlist ID"
+			s.tmpl.RenderHTML(w, r, sourceForm, data)
 			return
 		}
 
 		// Check if the playlist is already posted
-		if s.repo.SourceExists(r.Context(), playlistID) {
+		if s.taxonomy.SourceExists(r.Context(), playlistID) {
 			slog.WarnContext(r.Context(), "playlist already posted")
-			formError.Message = "Playlist already posted"
-			data.Form.Error = &formError
-			s.tmpl.RenderHTML(w, r, "form.html", data)
+			data.Form.Error = "Playlist already posted"
+			s.tmpl.RenderHTML(w, r, sourceForm, data)
 			return
 		}
 
 		// Fetch playlist metadata from YouTube
-		sources, err := s.yt.GetSources(
+		sources, err := s.yt.Playlists(
 			r.Context(),
 			&retry.Config{
 				MaxRetries: 3,
@@ -135,15 +133,14 @@ func (s *Service) NewSource(w http.ResponseWriter, r *http.Request) {
 				r.Context(), "failed to get source metadata from YouTube",
 				"error", err,
 			)
-			formError.Message = "Unable to fetch the playlist from YouTube"
-			data.Form.Error = &formError
-			s.tmpl.RenderHTML(w, r, "form.html", data)
+			data.Form.Error = "Unable to fetch the playlist from YouTube"
+			s.tmpl.RenderHTML(w, r, sourceForm, data)
 			return
 		}
 
 		// Fetch channel data from YouTube
 		channelID := sources[0].Snippet.ChannelId
-		channels, err := s.yt.GetChannels(
+		channels, err := s.yt.Channels(
 			r.Context(),
 			&retry.Config{
 				MaxRetries: 3,
@@ -157,26 +154,24 @@ func (s *Service) NewSource(w http.ResponseWriter, r *http.Request) {
 				r.Context(), "failed to get channel metadata from YouTube",
 				"error", err,
 			)
-			formError.Message = "Unable to fetch channel info from YouTube"
-			data.Form.Error = &formError
-			s.tmpl.RenderHTML(w, r, "form.html", data)
+			data.Form.Error = "Unable to fetch channel info from YouTube"
+			s.tmpl.RenderHTML(w, r, sourceForm, data)
 			return
 		}
 
 		// Create a source object
-		source := s.yt.NewYouTubeSource(sources[0], channels[0])
+		source := s.taxonomy.New(sources[0], channels[0])
 		source.UserID = data.CurrentUser.ID
 
 		// Insert the source in DB
-		rowsAffected, err := s.repo.InsertSource(r.Context(), source)
+		rowsAffected, err := s.taxonomy.InsertSource(r.Context(), source)
 		if err != nil || rowsAffected == 0 {
 			slog.ErrorContext(
 				r.Context(), "failed to insert source in DB",
 				"error", err,
 			)
-			formError.Message = "Could not create source"
-			data.Form.Error = &formError
-			s.tmpl.RenderHTML(w, r, "form.html", data)
+			data.Form.Error = "Could not create source"
+			s.tmpl.RenderHTML(w, r, sourceForm, data)
 			return
 		}
 
@@ -185,7 +180,7 @@ func (s *Service) NewSource(w http.ResponseWriter, r *http.Request) {
 		redirect.Safe(w, r, redirectTo, http.StatusFound)
 
 	default:
-		s.tmpl.HTMLError(w, r, data, http.StatusMethodNotAllowed)
+		s.tmpl.HTMLError(w, r, http.StatusMethodNotAllowed)
 	}
 }
 
@@ -199,25 +194,21 @@ func (s *Service) SourcePosts(w http.ResponseWriter, r *http.Request) {
 	redisKey := fmt.Sprintf("source:%s:posts", sourceID)
 
 	switch orderBy {
-	case types.Likes:
-		redisKey += fmt.Sprintf(":%s", types.Likes)
-	case types.AvgRating:
-		redisKey += fmt.Sprintf(":%s", types.AvgRating)
-	case types.RatingCount:
-		redisKey += fmt.Sprintf(":%s", types.RatingCount)
+	case post.Likes:
+		redisKey += fmt.Sprintf(":%s", post.Likes)
+	case post.AvgRating:
+		redisKey += fmt.Sprintf(":%s", post.AvgRating)
+	case post.RatingCount:
+		redisKey += fmt.Sprintf(":%s", post.RatingCount)
 	}
-
-	// Get template data
-	data := s.tmpl.Data(w, r)
-	data.CurrentSource = &types.Source{PlaylistID: sourceID}
 
 	var (
 		err   error
-		posts types.Posts
+		posts post.Posts
 	)
 
-	if data.CurrentUser.IsAdmin(s.cfg) {
-		posts, err = s.repo.SourcePosts(
+	if ctxd.GetUser(r.Context()).IsAdmin(s.cfg) {
+		posts, err = s.post.Source(
 			r.Context(), sourceID, "", orderBy,
 		)
 	} else {
@@ -225,8 +216,8 @@ func (s *Service) SourcePosts(w http.ResponseWriter, r *http.Request) {
 			r.Context(),
 			redisKey,
 			s.cfg.CacheTimeout,
-			func() (types.Posts, error) {
-				return s.repo.SourcePosts(
+			func() (post.Posts, error) {
+				return s.post.Source(
 					r.Context(), sourceID, "", orderBy,
 				)
 			},
@@ -238,21 +229,28 @@ func (s *Service) SourcePosts(w http.ResponseWriter, r *http.Request) {
 			r.Context(), "failed to get source posts from DB",
 			"error", err,
 		)
-		s.tmpl.HTMLError(w, r, data, http.StatusInternalServerError)
+		s.tmpl.HTMLError(w, r, http.StatusInternalServerError)
 		return
 	}
 
 	if len(posts.Items) == 0 {
 		slog.WarnContext(r.Context(), "no source posts fetched from DB")
-		s.tmpl.HTMLError(w, r, data, http.StatusNotFound)
+		s.tmpl.HTMLError(w, r, http.StatusNotFound)
 		return
 	}
 
-	data.Posts = &posts
 	if sourceID == "other" {
-		data.Posts.Title = "Other Uploads"
+		posts.Title = "Other Uploads"
 	}
-	data.Title = data.Posts.Title
+
+	// Get template data
+	data := tmplData{
+		Title:         posts.Title,
+		Posts:         posts,
+		CurrentSource: &taxonomy.Source{PlaylistID: sourceID},
+		Base:          s.tmpl.Base(w, r),
+	}
+
 	s.tmpl.RenderHTML(w, r, "taxonomy.html", data)
 }
 
@@ -261,26 +259,24 @@ func (s *Service) DeleteSource(w http.ResponseWriter, r *http.Request) {
 
 	// Get the source ID from path
 	playlistID := r.PathValue("source")
-	rowsAffected, err := s.repo.DeleteSource(r.Context(), playlistID)
+	rowsAffected, err := s.taxonomy.DeleteSource(r.Context(), playlistID)
 
 	if err != nil {
 		slog.ErrorContext(
 			r.Context(), "failed to delete the source",
 			"error", err,
 		)
-		data := s.tmpl.Data(w, r)
-		s.tmpl.HTMLError(w, r, data, http.StatusInternalServerError)
+		s.tmpl.HTMLError(w, r, http.StatusInternalServerError)
 		return
 	}
 
 	if rowsAffected == 0 {
 		slog.WarnContext(r.Context(), "no such source to delete")
-		data := s.tmpl.Data(w, r)
-		s.tmpl.HTMLError(w, r, data, http.StatusNotFound)
+		s.tmpl.HTMLError(w, r, http.StatusNotFound)
 		return
 	}
 
-	successDelete := types.FlashMessage{
+	successDelete := store.FlashMessage{
 		Message:  "The source has been deleted!",
 		Category: "info",
 	}
@@ -305,12 +301,12 @@ func (s *Service) SourcePostsAPI(w http.ResponseWriter, r *http.Request) {
 	redisKey := fmt.Sprintf("source:%s:posts", sourceID)
 
 	switch orderBy {
-	case types.Likes:
-		redisKey += fmt.Sprintf(":%s", types.Likes)
-	case types.AvgRating:
-		redisKey += fmt.Sprintf(":%s", types.AvgRating)
-	case types.RatingCount:
-		redisKey += fmt.Sprintf(":%s", types.RatingCount)
+	case post.Likes:
+		redisKey += fmt.Sprintf(":%s", post.Likes)
+	case post.AvgRating:
+		redisKey += fmt.Sprintf(":%s", post.AvgRating)
+	case post.RatingCount:
+		redisKey += fmt.Sprintf(":%s", post.RatingCount)
 	}
 
 	if cursor != "" {
@@ -322,11 +318,11 @@ func (s *Service) SourcePostsAPI(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		err   error
-		posts types.Posts
+		posts post.Posts
 	)
 
 	if currentUser.IsAdmin(s.cfg) {
-		posts, err = s.repo.SourcePosts(
+		posts, err = s.post.Source(
 			r.Context(), sourceID, cursor, orderBy,
 		)
 	} else {
@@ -334,8 +330,8 @@ func (s *Service) SourcePostsAPI(w http.ResponseWriter, r *http.Request) {
 			r.Context(),
 			redisKey,
 			s.cfg.CacheTimeout,
-			func() (types.Posts, error) {
-				return s.repo.SourcePosts(
+			func() (post.Posts, error) {
+				return s.post.Source(
 					r.Context(), sourceID, cursor, orderBy,
 				)
 			},

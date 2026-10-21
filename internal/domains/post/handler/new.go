@@ -1,13 +1,15 @@
-package posts
+package handler
 
 import (
 	"context"
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strings"
 	"time"
 
-	"github.com/vlatan/video-store/internal/types"
+	"github.com/vlatan/video-store/internal/domains/post"
+	"github.com/vlatan/video-store/internal/types/form"
 	"github.com/vlatan/video-store/internal/utils/redirect"
 	"github.com/vlatan/video-store/internal/utils/retry"
 	"github.com/vlatan/video-store/internal/utils/sleep"
@@ -18,26 +20,22 @@ import (
 func (s *Service) New(w http.ResponseWriter, r *http.Request) {
 
 	// Get template data
-	data := s.tmpl.Data(w, r)
-
-	// Populate needed data for an empty form
-	data.Form = &types.Form{
+	data := tmplData{
+		Title:  "Add New Video",
 		Legend: "New Video",
-		Content: &types.FormGroup{
+		Content: &form.Group{
 			Label:       "Post YouTube Video URL",
 			Placeholder: "Video URL here...",
 		},
+		Base: s.tmpl.Base(w, r),
 	}
-	data.Title = "Add New Video"
 
 	switch r.Method {
 	case "GET":
 		// Serve the page with the form
-		s.tmpl.RenderHTML(w, r, "form.html", data)
+		s.tmpl.RenderHTML(w, r, postForm, data)
 
 	case "POST":
-
-		var formError types.FlashMessage
 
 		err := r.ParseForm()
 		if err != nil {
@@ -45,9 +43,8 @@ func (s *Service) New(w http.ResponseWriter, r *http.Request) {
 				r.Context(), "failed to parse the form",
 				"error", err,
 			)
-			formError.Message = "Could not parse the form"
-			data.Form.Error = &formError
-			s.tmpl.RenderHTML(w, r, "form.html", data)
+			data.Form.Error = "Could not parse the form"
+			s.tmpl.RenderHTML(w, r, postForm, data)
 			return
 		}
 
@@ -62,32 +59,29 @@ func (s *Service) New(w http.ResponseWriter, r *http.Request) {
 				r.Context(), "failed to extract the video ID",
 				"error", err,
 			)
-			formError.Message = "Could not extract the video ID"
-			data.Form.Error = &formError
-			s.tmpl.RenderHTML(w, r, "form.html", data)
+			data.Form.Error = "Could not extract the video ID"
+			s.tmpl.RenderHTML(w, r, postForm, data)
 			return
 		}
 
 		// Validate the YT ID
 		if validVideoID.FindStringSubmatch(videoID) == nil {
 			slog.WarnContext(r.Context(), "invalid video id")
-			formError.Message = "Could not validate the video ID"
-			data.Form.Error = &formError
-			s.tmpl.RenderHTML(w, r, "form.html", data)
+			data.Form.Error = "Could not validate the video ID"
+			s.tmpl.RenderHTML(w, r, postForm, data)
 			return
 		}
 
 		// Check if the video is already posted
 		if err = s.post.Exists(r.Context(), videoID); err == nil {
 			slog.WarnContext(r.Context(), "video already posted")
-			formError.Message = "Video already posted"
-			data.Form.Error = &formError
-			s.tmpl.RenderHTML(w, r, "form.html", data)
+			data.Form.Error = "Video already posted"
+			s.tmpl.RenderHTML(w, r, postForm, data)
 			return
 		}
 
 		// Fetch video data from YouTube
-		metadata, err := s.yt.GetVideos(
+		metadata, err := s.yt.Videos(
 			r.Context(),
 			&retry.Config{
 				MaxRetries: 3,
@@ -102,38 +96,35 @@ func (s *Service) New(w http.ResponseWriter, r *http.Request) {
 				r.Context(), "failed get video data from YouTube",
 				"error", err,
 			)
-			formError.Message = "Unable to fetch the video from YouTube"
-			data.Form.Error = &formError
-			s.tmpl.RenderHTML(w, r, "form.html", data)
+			data.Form.Error = "Unable to fetch the video from YouTube"
+			s.tmpl.RenderHTML(w, r, postForm, data)
 			return
 		}
 
 		// Validate the video data
-		if err := s.yt.ValidateYouTubeVideo(metadata[0]); err != nil {
+		if err := s.yt.Validate(metadata[0]); err != nil {
 			slog.WarnContext(
 				r.Context(), "failed to validate the video data",
 				"error", err,
 			)
-			formError.Message = stringx.Capitalize(err.Error())
-			data.Form.Error = &formError
-			s.tmpl.RenderHTML(w, r, "form.html", data)
+			data.Form.Error = stringx.Capitalize(err.Error())
+			s.tmpl.RenderHTML(w, r, postForm, data)
 			return
 		}
 
 		// Create post object
-		post := s.yt.NewYouTubePost(metadata[0], "")
-		post.UserActions = types.Actions{UserID: data.CurrentUser.ID}
+		p := s.post.New(metadata[0], "")
+		p.UserActions = post.Actions{UserID: data.CurrentUser.ID}
 
 		// Insert the video
-		rowsAffected, err := s.post.Insert(r.Context(), post)
+		rowsAffected, err := s.post.Insert(r.Context(), p)
 		if err != nil || rowsAffected == 0 {
 			slog.WarnContext(
 				r.Context(), "failed to insert the post in DB",
 				"error", err,
 			)
-			formError.Message = "Could not insert the video in DB"
-			data.Form.Error = &formError
-			s.tmpl.RenderHTML(w, r, "form.html", data)
+			data.Form.Error = "Could not insert the video in DB"
+			s.tmpl.RenderHTML(w, r, postForm, data)
 			return
 		}
 
@@ -155,7 +146,11 @@ func (s *Service) New(w http.ResponseWriter, r *http.Request) {
 				Delay:      65 * time.Second,
 			}
 
-			if err := s.gemini.GeneratePostSummary(ctx, post, retryConfig); err != nil {
+			resp, err := s.gemini.GeneratePostSummary(
+				ctx, p.VideoID, p.Title, p.Description, retryConfig,
+			)
+
+			if err != nil {
 				slog.WarnContext(
 					r.Context(),
 					"failed to generate/update LLM post summary/category",
@@ -165,21 +160,34 @@ func (s *Service) New(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
+			p.Summary = resp.Summary
+			p.CategoryName = resp.Category
+
 			// Sleep with context in mind for 60-90 seconds.
 			// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
 			if err := sleep.Jitter(ctx, 60*time.Second, 90*time.Second); err != nil {
 				return
 			}
 
-			if err := s.gemini.GeneratePostOCR(ctx, post, retryConfig); err != nil {
+			resp, err = s.gemini.GeneratePostOCR(ctx, p.VideoID, p.Duration, retryConfig)
+			if err != nil {
 				slog.WarnContext(
 					r.Context(),
 					"failed to generate/update LLM post OCR data",
 					"error", err,
 				)
+			} else {
+				p.OriginalTitle = resp.OriginalTitle
+				p.Directors = resp.Directors
+				p.ReleaseYear = resp.ReleaseYear
+
+				//  Mark the OCR as done
+				if p.Summary != "" && !strings.HasSuffix(p.Summary, post.OcrFlag) {
+					p.Summary += post.OcrFlag
+				}
 			}
 
-			_, err = s.post.Update(ctx, post)
+			_, err = s.post.Update(ctx, p)
 			if err != nil {
 				slog.WarnContext(
 					r.Context(),
@@ -194,6 +202,6 @@ func (s *Service) New(w http.ResponseWriter, r *http.Request) {
 		redirect.Safe(w, r, redirectTo, http.StatusFound)
 
 	default:
-		s.tmpl.HTMLError(w, r, data, http.StatusMethodNotAllowed)
+		s.tmpl.HTMLError(w, r, http.StatusMethodNotAllowed)
 	}
 }

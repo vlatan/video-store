@@ -14,12 +14,13 @@ import (
 	"time"
 
 	"github.com/vlatan/video-store/internal/config"
-	"github.com/vlatan/video-store/internal/integrations/r2"
+	"github.com/vlatan/video-store/internal/integrations/cloudflare"
+	"github.com/vlatan/video-store/internal/utils/secfile"
 )
 
 type Service struct {
-	config *config.Config
-	r2s    *r2.Service
+	cfg *config.Config
+	r2  *cloudflare.Service
 }
 
 // For your backup use case
@@ -34,11 +35,8 @@ func init() {
 }
 
 // New creates a backup service
-func New(cfg *config.Config, r2s *r2.Service) *Service {
-	return &Service{
-		config: cfg,
-		r2s:    r2s,
-	}
+func New(cfg *config.Config, r2 *cloudflare.Service) *Service {
+	return &Service{cfg, r2}
 }
 
 // Run dumps a database to file and uploads that file to a bucket
@@ -59,9 +57,9 @@ func (s *Service) Run(ctx context.Context) error {
 
 	log.Println("Database compressed.")
 
-	if err := s.r2s.UploadFile(
+	if err := s.r2.UploadFile(
 		ctx,
-		s.config.R2BackupBucketName,
+		s.cfg.R2BackupBucketName,
 		backupRoot,
 		archive,
 		archive,
@@ -80,16 +78,16 @@ func (s *Service) DumpDatabase(dest string) error {
 
 	// The dump command
 	cmd := exec.Command("pg_dump",
-		"-h", s.config.DBHost,
-		"-p", fmt.Sprintf("%d", s.config.DBPort),
-		"-U", s.config.DBUsername,
-		"-d", s.config.DBDatabase,
+		"-h", s.cfg.DBHost,
+		"-p", fmt.Sprintf("%d", s.cfg.DBPort),
+		"-U", s.cfg.DBUsername,
+		"-d", s.cfg.DBDatabase,
 		"-Fc", // compressed
 		"-f", dest,
 	) // #nosec G204
 
 	// Set password via environment variable
-	cmd.Env = append(os.Environ(), fmt.Sprintf("PGPASSWORD=%s", s.config.DBPassword))
+	cmd.Env = append(os.Environ(), fmt.Sprintf("PGPASSWORD=%s", s.cfg.DBPassword))
 
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
@@ -109,7 +107,7 @@ func (s *Service) DumpDatabase(dest string) error {
 func (s *Service) ArchiveFiles(dest string, files ...string) error {
 
 	// Create destination file
-	destFile, err := r2.SecureCreate(backupRoot, dest)
+	destFile, err := secfile.Create(backupRoot, dest)
 	if err != nil {
 		return fmt.Errorf("failed to create destination file %s: %w", dest, err)
 	}
@@ -130,7 +128,7 @@ func (s *Service) ArchiveFiles(dest string, files ...string) error {
 	for _, src := range files {
 
 		// Open the source file
-		srcFile, err := r2.SecureOpen(backupRoot, src)
+		srcFile, err := secfile.Open(backupRoot, src)
 		if err != nil {
 			return fmt.Errorf("failed to open source file %s: %w", src, err)
 		}

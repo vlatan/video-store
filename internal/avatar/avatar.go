@@ -11,8 +11,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
-	"github.com/vlatan/video-store/internal/integrations/r2"
-	"github.com/vlatan/video-store/internal/types"
+	"github.com/vlatan/video-store/internal/integrations/cloudflare"
 	"github.com/vlatan/video-store/internal/utils/ctxv"
 )
 
@@ -23,12 +22,13 @@ type Service struct {
 
 	config *config.Config
 	rdb    *rdb.Service
-	r2s    *r2.Service
+	r2     *cloudflare.Service
 }
 
 type job struct {
-	ctx  context.Context
-	user *types.User
+	ctx context.Context
+	id  string
+	uri string
 }
 
 func New(
@@ -37,7 +37,7 @@ func New(
 
 	cfg *config.Config,
 	rdb *rdb.Service,
-	r2s *r2.Service) *Service {
+	r2 *cloudflare.Service) *Service {
 
 	s := &Service{
 		active: make(map[string]struct{}),
@@ -45,7 +45,7 @@ func New(
 
 		config: cfg,
 		rdb:    rdb,
-		r2s:    r2s,
+		r2:     r2,
 	}
 
 	// Spawn workerCount number of workers
@@ -62,10 +62,10 @@ func New(
 // The function will return only breaking errors,
 // in this case only if the context expired.
 // Every other error will be logged.
-func (s *Service) Get(ctx context.Context, user *types.User) (string, error) {
+func (s *Service) Get(ctx context.Context, publicId, uri string) (string, error) {
 
 	// Get avatar URL from Redis
-	avatarKey := avatarCachePrefix + user.PublicID
+	avatarKey := avatarCachePrefix + publicId
 	r2URL, err := s.rdb.Client.Get(ctx, avatarKey).Result()
 
 	// Return early if context error
@@ -87,7 +87,7 @@ func (s *Service) Get(ctx context.Context, user *types.User) (string, error) {
 	}
 
 	// Check if TTL for the avatar expired
-	ttlKey := avatarCacheTTL + user.PublicID
+	ttlKey := avatarCacheTTL + publicId
 	ttl, err := s.rdb.Client.Exists(ctx, ttlKey).Result()
 
 	// Return early if context error
@@ -107,7 +107,7 @@ func (s *Service) Get(ctx context.Context, user *types.User) (string, error) {
 	// Detach the context and carry it in the job.
 	if ttl <= 0 {
 		detachedCtx := context.WithoutCancel(ctx)
-		s.enqueue(job{detachedCtx, user})
+		s.enqueue(job{detachedCtx, publicId, uri})
 	}
 
 	return r2URL, nil
@@ -115,10 +115,10 @@ func (s *Service) Get(ctx context.Context, user *types.User) (string, error) {
 
 // Save ensures the avatar is cached, downloading it synchronously if missing.
 // Will return an error only if context ended.
-func (s *Service) Save(ctx context.Context, user *types.User) error {
+func (s *Service) Save(ctx context.Context, publicId, uri string) error {
 
-	avatarKey := avatarCachePrefix + user.PublicID
-	ttlKey := avatarCacheTTL + user.PublicID
+	avatarKey := avatarCachePrefix + publicId
+	ttlKey := avatarCacheTTL + publicId
 
 	// Check if already in cache (if returning user)
 	err := s.rdb.Client.Get(ctx, avatarKey).Err()
@@ -142,7 +142,7 @@ func (s *Service) Save(ctx context.Context, user *types.User) error {
 	}
 
 	// Cache miss (new user or expired/evicted cache): process synchronously
-	r2URL, err := s.refresh(ctx, user)
+	r2URL, err := s.refresh(ctx, publicId, uri)
 
 	// Return early if context error
 	if ctxv.IsContextErr(err) {
@@ -194,20 +194,20 @@ func (s *Service) Save(ctx context.Context, user *types.User) error {
 }
 
 // Delete removes user avatar from object storages - R2 and Redis
-func (s *Service) Delete(ctx context.Context, user *types.User) error {
+func (s *Service) Delete(ctx context.Context, publicId string) error {
 
 	errs := make([]error, 0, 3)
 
 	// Attempt to delete the avatar image from R2
-	objectKey := fmt.Sprintf(avatarR2Path, user.PublicID)
-	errs = append(errs, s.r2s.DeleteObject(
+	objectKey := fmt.Sprintf(avatarR2Path, publicId)
+	errs = append(errs, s.r2.DeleteObject(
 		ctx, s.config.R2CdnBucketName, objectKey),
 	)
 
 	// Delete user and admin avatar Redis cache values
-	key := avatarCacheTTL + user.PublicID
-	prefix := avatarCachePrefix + user.PublicID
-	for _, key := range []string{key, prefix} {
+	ttlKey := avatarCacheTTL + publicId
+	avatarKey := avatarCachePrefix + publicId
+	for _, key := range []string{ttlKey, avatarKey} {
 		errs = append(errs, s.rdb.Client.Del(ctx, key).Err())
 	}
 

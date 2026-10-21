@@ -3,35 +3,31 @@ package store
 import (
 	"log/slog"
 	"net/http"
-
-	"github.com/vlatan/video-store/internal/types"
 )
 
 // User key to use in session values
 const userKey = "user"
 
 // AddUser adds user to session
-func (s *Service) AddUser(w http.ResponseWriter, r *http.Request, user *types.User) error {
-	session, _ := s.Get(r, s.config.UserSessionName)
-	session.Values[userKey] = new(sessionUser(*user))
+func (s *Service) AddUser(w http.ResponseWriter, r *http.Request, user any) error {
+	session, _ := s.Get(r, s.cfg.UserSessionName)
+	session.Values[userKey] = user
 	return session.Save(r, w)
 }
 
 // DeleteUser deletes user session
 func (s *Service) DeleteUser(w http.ResponseWriter, r *http.Request) error {
-	session, _ := s.Get(r, s.config.UserSessionName)
+	session, _ := s.Get(r, s.cfg.UserSessionName)
 	return s.Clear(r, w, session)
 }
 
 // User gets the user from session
-func (s *Service) User(w http.ResponseWriter, r *http.Request) *types.User {
+func (s *Service) User(w http.ResponseWriter, r *http.Request) any {
+	session, _ := s.Get(r, s.cfg.UserSessionName)
+	user, ok := session.Values[userKey]
 
-	// Get session from store
-	session, _ := s.Get(r, s.config.UserSessionName)
-	sessUser, _ := session.Values[userKey].(*sessionUser)
-
-	// Clear the session this is anonymous user
-	if sessUser == nil || sessUser.ID == 0 {
+	// Clear the session we just created, no user to be fetched
+	if !ok {
 		if err := s.Clear(r, w, session); err != nil {
 			slog.WarnContext(
 				r.Context(),
@@ -39,8 +35,7 @@ func (s *Service) User(w http.ResponseWriter, r *http.Request) *types.User {
 				"error", err,
 			)
 		}
-		return nil
 	}
 
-	return new(types.User(*sessUser))
+	return user
 }

@@ -108,18 +108,24 @@
 			<div class="metadata-block">
 
 				<div class="inner-metadata-block">
-					{{ with .CurrentPost.Category }}
+					{{ with .CurrentPost }}
+					{{ if and .CategorySlug .CategoryName }}
 					<span>
 						<strong>Category:</strong>
-						<a class="nav-item" href="/category/{{ .Slug }}/">{{ .Name }}</a>
+						<a class="nav-item" href="/category/{{ .CategorySlug }}/">{{ .CategoryName }}</a>
 					</span>
 					{{ end }}
-					{{ with .CurrentPost.Source }}
+					{{ end }}
+
+					{{ with .CurrentPost }}
+					{{ if and .PlaylistID .ChannelTitle }}
 					<span>
 						<strong>Source:</strong>
 						<a class="nav-item" href="/source/{{ .PlaylistID }}/">{{ .ChannelTitle }}</a>
 					</span>
 					{{ end }}
+					{{ end }}
+
 					{{ with .CurrentPost.ReleaseYear }}
 					<span>
 						<strong>Released:</strong>
@@ -128,6 +134,7 @@
 						</a>
 					</span>
 					{{ end }}
+
 					{{ with .CurrentPost.Directors }}
 					<span>
 						<strong>Directed By:</strong>
@@ -140,6 +147,7 @@
 							{{- end -}}
 						</span>
 					</span>
+
 					{{ end }}
 					<span>
 						<strong>Duration:</strong>
@@ -411,10 +419,10 @@
 					id="current-user-review" {{ end }} class="review-card">
 					<header class="review-header">
 						<div class="review-meta">
-							<img src="{{ .User.LocalAvatarURL }}" class=" review-user-avatar" width="20" height="20"
-								loading="lazy" alt="{{ .User.Name }}">
+							<img src="{{ .LocalAvatarURL }}" class=" review-user-avatar" width="20" height="20"
+								loading="lazy" alt="{{ .Username }}">
 							<span itemprop="author" itemscope itemtype="https://schema.org/Person">
-								<span itemprop="name" class="review-user-name">{{ .User.Name
+								<span itemprop="name" class="review-user-name">{{ .Username
 									}}</span>
 							</span>
 							<span itemprop="reviewRating" itemscope itemtype="https://schema.org/Rating"

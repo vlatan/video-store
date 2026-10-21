@@ -8,9 +8,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/vlatan/video-store/internal/domains/post"
 	"github.com/vlatan/video-store/internal/integrations/gemini"
-	"github.com/vlatan/video-store/internal/integrations/yt"
-	"github.com/vlatan/video-store/internal/types"
+	"github.com/vlatan/video-store/internal/integrations/youtube"
 	"github.com/vlatan/video-store/internal/utils/ctxv"
 	"github.com/vlatan/video-store/internal/utils/sleep"
 )
@@ -20,11 +20,11 @@ import (
 func (w *Worker) getValidVideos(
 	ctx context.Context,
 	videoIds []string,
-	destMap map[string]*types.Post,
+	destMap map[string]*post.Post,
 ) error {
 
 	// Get orphans metadata from YT
-	videos, err := w.youtube.GetVideos(ctx, w.ytRetryConfig, videoIds...)
+	videos, err := w.youtube.Videos(ctx, w.ytRetryConfig, videoIds...)
 	if err != nil {
 		return fmt.Errorf(
 			"could not get the orphan videos from YouTube; %w",
@@ -35,16 +35,16 @@ func (w *Worker) getValidVideos(
 	// Validate the videos
 	for _, video := range videos {
 
-		err = w.youtube.ValidateYouTubeVideo(video)
+		err = w.youtube.Validate(video)
 
 		// If no error this is a valid video
 		if err == nil {
-			destMap[video.Id] = w.youtube.NewYouTubePost(video, "")
+			destMap[video.Id] = w.post.New(video, "")
 			continue
 		}
 
 		// If this is NOT a validation error, stop the process
-		if _, ok := errors.AsType[*yt.ValidationError](err); !ok {
+		if _, ok := errors.AsType[*youtube.ValidationError](err); !ok {
 			return fmt.Errorf(
 				"unexpected error during video %q validation; %w",
 				video.Id, err,
@@ -60,7 +60,7 @@ func (w *Worker) getValidVideos(
 func (w *Worker) getValidSourcesVideos(
 	ctx context.Context,
 	playlistIds []string,
-	destMap map[string]*types.Post,
+	destMap map[string]*post.Post,
 ) error {
 
 	// Get valid videos from playlists
@@ -71,7 +71,7 @@ func (w *Worker) getValidSourcesVideos(
 			return err
 		}
 
-		sourceItems, err := w.youtube.GetSourceItems(ctx, w.ytRetryConfig, playlistId)
+		sourceItems, err := w.youtube.PlaylistItems(ctx, w.ytRetryConfig, playlistId)
 		if err != nil {
 			return fmt.Errorf(
 				"couldn't get items from YouTube for source %q; %w",
@@ -86,7 +86,7 @@ func (w *Worker) getValidSourcesVideos(
 		}
 
 		// Get all the videos metadata for this source
-		videosMetadata, err := w.youtube.GetVideos(ctx, w.ytRetryConfig, videoIDs...)
+		videosMetadata, err := w.youtube.Videos(ctx, w.ytRetryConfig, videoIDs...)
 		if err != nil {
 			return fmt.Errorf(
 				"couldn't get videos from YouTube for source %s; %w",
@@ -103,10 +103,10 @@ func (w *Worker) getValidSourcesVideos(
 			}
 
 			// Validate the video
-			err = w.youtube.ValidateYouTubeVideo(video)
+			err = w.youtube.Validate(video)
 
 			// If this is validation error, skip the video
-			if _, ok := errors.AsType[*yt.ValidationError](err); ok {
+			if _, ok := errors.AsType[*youtube.ValidationError](err); ok {
 				continue
 			}
 
@@ -134,7 +134,7 @@ func (w *Worker) getValidSourcesVideos(
 			// or as a duplicate video in one or more playlists,
 			// we overwrite it, associate it with one YT playlist.
 			// If not we just add new video.
-			destMap[video.Id] = w.youtube.NewYouTubePost(video, playlistId)
+			destMap[video.Id] = w.post.New(video, playlistId)
 		}
 	}
 
@@ -146,8 +146,8 @@ func (w *Worker) getValidSourcesVideos(
 // Exits with error only if context ended, any other error is just logged.
 func (w *Worker) adoptVideos(
 	ctx context.Context,
-	videos []*types.Post,
-	sourceMap map[string]*types.Post,
+	videos []*post.Post,
+	sourceMap map[string]*post.Post,
 ) error {
 
 	for _, dbVideo := range videos {
@@ -199,11 +199,11 @@ func (w *Worker) adoptVideos(
 // Exits with error only if context ended, any other error is just logged.
 func (w *Worker) deleteVideos(
 	ctx context.Context,
-	dbVideos []*types.Post,
-	destMap map[string]*types.Post,
-) ([]*types.Post, error) {
+	dbVideos []*post.Post,
+	destMap map[string]*post.Post,
+) ([]*post.Post, error) {
 
-	var validDbVideos []*types.Post
+	var validDbVideos []*post.Post
 	for _, dbVideo := range dbVideos {
 
 		// Check the context first
@@ -253,7 +253,7 @@ func (w *Worker) deleteVideos(
 }
 
 // insertVideos generates data for the videos and inserts them in database
-func (w *Worker) insertVideos(ctx context.Context, videos []*types.Post) error {
+func (w *Worker) insertVideos(ctx context.Context, videos []*post.Post) error {
 
 	// Insert new videos in DB
 	for i, video := range videos {
@@ -267,7 +267,9 @@ func (w *Worker) insertVideos(ctx context.Context, videos []*types.Post) error {
 		}
 
 		// Generate post summary and category
-		err := w.gemini.GeneratePostSummary(ctx, video, w.geminiRetryConfig)
+		resp, err := w.gemini.GeneratePostSummary(
+			ctx, video.VideoID, video.Title, video.Description, w.geminiRetryConfig,
+		)
 
 		// Exit early only if context ended
 		if ctxv.IsContextErr(err) {
@@ -288,6 +290,9 @@ func (w *Worker) insertVideos(ctx context.Context, videos []*types.Post) error {
 		// If generating summary was succesfull procede to generate OCR
 		if err == nil {
 
+			video.Summary = resp.Summary
+			video.CategoryName = resp.Category
+
 			// Sleep with context in mind for 60-90 seconds.
 			// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
 			if err := sleep.Jitter(ctx, 60*time.Second, 90*time.Second); err != nil {
@@ -295,7 +300,9 @@ func (w *Worker) insertVideos(ctx context.Context, videos []*types.Post) error {
 			}
 
 			// Generate post original title, directors and release year
-			err := w.gemini.GeneratePostOCR(ctx, video, w.geminiRetryConfig)
+			resp, err := w.gemini.GeneratePostOCR(
+				ctx, video.VideoID, video.Duration, w.geminiRetryConfig,
+			)
 
 			// Exit early only if context ended
 			if ctxv.IsContextErr(err) {
@@ -311,6 +318,15 @@ func (w *Worker) insertVideos(ctx context.Context, videos []*types.Post) error {
 					"videoId", video.VideoID,
 					"error", err,
 				)
+			} else {
+				video.OriginalTitle = resp.OriginalTitle
+				video.Directors = resp.Directors
+				video.ReleaseYear = resp.ReleaseYear
+
+				//  Mark the OCR as done
+				if video.Summary != "" && !strings.HasSuffix(video.Summary, post.OcrFlag) {
+					video.Summary += post.OcrFlag
+				}
 			}
 		}
 
@@ -336,7 +352,7 @@ func (w *Worker) insertVideos(ctx context.Context, videos []*types.Post) error {
 }
 
 // updateVideos summarizes videos and updates them in database
-func (w *Worker) updateVideos(ctx context.Context, videos []*types.Post) error {
+func (w *Worker) updateVideos(ctx context.Context, videos []*post.Post) error {
 
 	// Update videos in DB
 	for _, video := range videos {
@@ -344,7 +360,7 @@ func (w *Worker) updateVideos(ctx context.Context, videos []*types.Post) error {
 		var updated bool
 
 		// If post has no summary or category proceed to generate them
-		if video.Summary == "" || video.Category == nil {
+		if video.Summary == "" || video.CategoryName == "" {
 
 			// Sleep with context in mind for 60-90 seconds.
 			// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
@@ -353,7 +369,9 @@ func (w *Worker) updateVideos(ctx context.Context, videos []*types.Post) error {
 			}
 
 			// Generate post summary and category
-			err := w.gemini.GeneratePostSummary(ctx, video, w.geminiRetryConfig)
+			resp, err := w.gemini.GeneratePostSummary(
+				ctx, video.VideoID, video.Title, video.Description, w.geminiRetryConfig,
+			)
 
 			// Exit with error only if we need to terminate the worker's job,
 			// meaning only if RPD quota reached or context ended.
@@ -375,11 +393,13 @@ func (w *Worker) updateVideos(ctx context.Context, videos []*types.Post) error {
 				continue
 			}
 
+			video.Summary = resp.Summary
+			video.CategoryName = resp.Category
 			updated = true
 		}
 
 		// If video has no OCR data proceed to generate
-		if !strings.HasSuffix(video.Summary, types.OcrFlag) {
+		if !strings.HasSuffix(video.Summary, post.OcrFlag) {
 
 			// Sleep with context in mind for 60-90 seconds.
 			// Min sleep needs to be 60s to avoid the genai 250k TPM quota.
@@ -388,7 +408,9 @@ func (w *Worker) updateVideos(ctx context.Context, videos []*types.Post) error {
 			}
 
 			// Generate post original title, directors and release year
-			err := w.gemini.GeneratePostOCR(ctx, video, w.geminiRetryConfig)
+			resp, err := w.gemini.GeneratePostOCR(
+				ctx, video.VideoID, video.Duration, w.geminiRetryConfig,
+			)
 
 			// Exit with error only if we need to terminate the worker's job,
 			// meaning only if RPD quota reached or context ended.
@@ -407,14 +429,18 @@ func (w *Worker) updateVideos(ctx context.Context, videos []*types.Post) error {
 					"videoId", video.VideoID,
 					"error", err,
 				)
+			} else {
+				video.OriginalTitle = resp.OriginalTitle
+				video.Directors = resp.Directors
+				video.ReleaseYear = resp.ReleaseYear
 
-				// If the summary was not updated then nothing was updated, move onto the next video
-				if !updated {
-					continue
+				//  Mark the OCR as done
+				if video.Summary != "" && !strings.HasSuffix(video.Summary, post.OcrFlag) {
+					video.Summary += post.OcrFlag
 				}
-			}
 
-			updated = true
+				updated = true
+			}
 		}
 
 		if !updated {

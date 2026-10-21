@@ -1,16 +1,14 @@
 package tmpl
 
 import (
-	"context"
 	"html/template"
 	"regexp"
 	"strings"
 	"time"
 
 	"github.com/vlatan/video-store/internal/config"
-	"github.com/vlatan/video-store/internal/drivers/rdb"
+	"github.com/vlatan/video-store/internal/domains/taxonomy"
 	"github.com/vlatan/video-store/internal/drivers/store"
-	"github.com/vlatan/video-store/internal/types"
 
 	"github.com/tdewolff/minify/v2"
 	"github.com/tdewolff/minify/v2/html"
@@ -23,26 +21,20 @@ type versioner interface {
 	AddVersion(string) string
 }
 
-type taxonomy interface {
-	Categories(context.Context) (types.Categories, error)
-}
-
 type Service struct {
-	cfg       *config.Config
-	rdb       *rdb.Service
-	session   *store.Service
-	taxonomy  taxonomy
-	versioner versioner
-	templates templateMap
+	cfg        *config.Config
+	session    *store.Service
+	versioner  versioner
+	templates  templateMap
+	categories taxonomy.Categories
 }
 
 // Walk the partials directory and parse the templates.
 func New(
 	cfg *config.Config,
-	rdb *rdb.Service,
 	store *store.Service,
-	taxonomy taxonomy,
 	versioner versioner,
+	categories taxonomy.Categories,
 ) (*Service, error) {
 
 	m := minify.New()
@@ -70,10 +62,9 @@ func New(
 	}
 
 	return &Service{
-		cfg:       cfg,
-		rdb:       rdb,
-		session:   store,
-		taxonomy:  taxonomy,
-		templates: templates,
+		cfg:        cfg,
+		session:    store,
+		templates:  templates,
+		categories: categories,
 	}, nil
 }

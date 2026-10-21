@@ -2,12 +2,30 @@ package tmpl
 
 import (
 	"math"
-
-	"github.com/vlatan/video-store/internal/types"
 )
 
+type PageInfo struct {
+	Number     int
+	IsCurrent  bool
+	IsEllipsis bool
+}
+
+type PaginationInfo struct {
+	CurrentPage  int
+	TotalPages   int
+	TotalRecords int
+	PageSize     int
+	Pages        []PageInfo
+}
+
+func (p PaginationInfo) OrdinalNumber(index int) int {
+	return (p.CurrentPage-1)*p.PageSize + index + 1
+}
+
+// ============================================================================= //
+
 // Create new pagination struct that contains all the info about the pagination element
-func (s *Service) NewPagination(currentPage, totalRecords, pageSize int) *types.PaginationInfo {
+func (s *Service) NewPagination(currentPage, totalRecords, pageSize int) PaginationInfo {
 
 	// Total pages are the celing division between total records and the records on one page
 	totalPages := int(math.Ceil(float64(totalRecords) / float64(pageSize)))
@@ -19,7 +37,7 @@ func (s *Service) NewPagination(currentPage, totalRecords, pageSize int) *types.
 	// Current page can't be greater than total pages
 	currentPage = min(currentPage, totalPages)
 
-	return &types.PaginationInfo{
+	return PaginationInfo{
 		CurrentPage:  currentPage,
 		TotalPages:   totalPages,
 		TotalRecords: totalRecords,
@@ -29,7 +47,7 @@ func (s *Service) NewPagination(currentPage, totalRecords, pageSize int) *types.
 }
 
 // Creates the page number sequence with ellipsis
-func generatePageNumbers(currentPage, totalPages int) (pages []types.PageInfo) {
+func generatePageNumbers(currentPage, totalPages int) (pages []PageInfo) {
 
 	// No pages if just one page
 	if totalPages <= 1 {
@@ -37,7 +55,7 @@ func generatePageNumbers(currentPage, totalPages int) (pages []types.PageInfo) {
 	}
 
 	// Always show the first page
-	pages = append(pages, types.PageInfo{
+	pages = append(pages, PageInfo{
 		Number:     1,
 		IsCurrent:  currentPage == 1,
 		IsEllipsis: false,
@@ -49,7 +67,7 @@ func generatePageNumbers(currentPage, totalPages int) (pages []types.PageInfo) {
 
 	// Add ellipsis after first page if needed
 	if start > 2 {
-		pages = append(pages, types.PageInfo{
+		pages = append(pages, PageInfo{
 			IsCurrent:  false,
 			IsEllipsis: true,
 		})
@@ -57,7 +75,7 @@ func generatePageNumbers(currentPage, totalPages int) (pages []types.PageInfo) {
 
 	// Add the range of pages around current page
 	for i := start; i <= end; i++ {
-		pages = append(pages, types.PageInfo{
+		pages = append(pages, PageInfo{
 			Number:     i,
 			IsCurrent:  i == currentPage,
 			IsEllipsis: false,
@@ -66,7 +84,7 @@ func generatePageNumbers(currentPage, totalPages int) (pages []types.PageInfo) {
 
 	// Add ellipsis before last page if needed
 	if end < totalPages-1 {
-		pages = append(pages, types.PageInfo{
+		pages = append(pages, PageInfo{
 			IsCurrent:  false,
 			IsEllipsis: true,
 		})
@@ -74,7 +92,7 @@ func generatePageNumbers(currentPage, totalPages int) (pages []types.PageInfo) {
 
 	// Always show last page (if it's not page 1)
 	if totalPages > 1 {
-		pages = append(pages, types.PageInfo{
+		pages = append(pages, PageInfo{
 			Number:     totalPages,
 			IsCurrent:  currentPage == totalPages,
 			IsEllipsis: false,

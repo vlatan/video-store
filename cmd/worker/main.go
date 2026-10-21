@@ -38,7 +38,7 @@ func main() {
 	}()
 
 	// Create the worker
-	w, err := worker.New(cfg, ctx)
+	w, err := worker.New(ctx, cfg)
 	if err != nil {
 		log.Fatal(err)
 	}

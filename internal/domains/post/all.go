@@ -1,0 +1,66 @@
+package post
+
+import (
+	"context"
+	"database/sql"
+
+	"github.com/vlatan/video-store/internal/utils/stringx"
+)
+
+// Get all the posts from DB
+func (r *Repository) All(ctx context.Context) ([]*Post, error) {
+
+	query, err := stringx.GetQuery(r.tmpl, "all_posts.sql", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get rows from DB
+	rows, err := r.db.Pool.Query(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+
+	// Close rows on exit
+	defer rows.Close()
+
+	// Iterate over the rows
+	var posts []*Post
+	for rows.Next() {
+		var post Post
+		var playlistID, originalTitle, summary, categoryName sql.NullString
+
+		// Scan each row
+		err = rows.Scan(
+			&post.ID,
+			&post.VideoID,
+			&playlistID,
+			&post.Title,
+			&originalTitle,
+			&summary,
+			&post.Duration,
+			&post.UploadDate,
+			&categoryName,
+		)
+
+		if err != nil {
+			return nil, err
+		}
+
+		// Asign values
+		post.PlaylistID = playlistID.String
+		post.OriginalTitle = originalTitle.String
+		post.Summary = summary.String
+		post.CategoryName = categoryName.String
+
+		// Include the processed post in the result
+		posts = append(posts, &post)
+	}
+
+	// If error during iteration
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return posts, nil
+}
