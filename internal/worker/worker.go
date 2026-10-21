@@ -26,14 +26,14 @@ type poster interface {
 	Insert(context.Context, *post.Post) (int64, error)
 	Update(context.Context, *post.Post) (int64, error)
 	Delete(context.Context, string) (int64, error)
-	FromYouTube(*youtube.Video, string) *post.Post
+	New(*youtube.Video, string) *post.Post
 }
 
 type taxer interface {
 	Categories(context.Context) (taxonomy.Categories, error)
 	Sources(context.Context) (taxonomy.Sources, error)
 	UpdateSource(context.Context, *taxonomy.Source) (int64, error)
-	FromYouTube(*youtube.Playlist, *youtube.Channel) *taxonomy.Source
+	New(*youtube.Playlist, *youtube.Channel) *taxonomy.Source
 }
 
 const catKey = "categories"

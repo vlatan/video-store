@@ -113,7 +113,7 @@ func (s *Service) New(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Create post object
-		p := s.post.FromYouTube(metadata[0], "")
+		p := s.post.New(metadata[0], "")
 		p.UserActions = post.Actions{UserID: data.CurrentUser.ID}
 
 		// Insert the video

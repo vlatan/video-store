@@ -11,7 +11,7 @@ import (
 const provider = "YouTube"
 
 // FromYouTube creates post object from youtube video object
-func (r *Repository) FromYouTube(video *youtube.Video, playlistID string) *Post {
+func (r *Repository) New(video *youtube.Video, playlistID string) *Post {
 	var p Post
 	p.VideoID = video.Id
 	p.PlaylistID = playlistID

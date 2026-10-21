@@ -154,7 +154,7 @@ func (r *Repository) DeleteSource(ctx context.Context, playlistID string) (int64
 }
 
 // Create source object
-func (r *Repository) FromYouTube(
+func (r *Repository) New(
 	playlist *youtube.Playlist,
 	channel *youtube.Channel) *Source {
 	var source Source
