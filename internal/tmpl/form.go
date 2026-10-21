@@ -1,4 +1,4 @@
-package form
+package tmpl
 
 type FieldType int
 

@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/vlatan/video-store/internal/domains/post"
-	"github.com/vlatan/video-store/internal/types/form"
+	"github.com/vlatan/video-store/internal/tmpl"
 	"github.com/vlatan/video-store/internal/utils/redirect"
 	"github.com/vlatan/video-store/internal/utils/retry"
 	"github.com/vlatan/video-store/internal/utils/sleep"
@@ -23,7 +23,7 @@ func (s *Service) New(w http.ResponseWriter, r *http.Request) {
 	data := tmplData{
 		Title:  "Add New Video",
 		Legend: "New Video",
-		Content: &form.Group{
+		Content: &tmpl.Group{
 			Label:       "Post YouTube Video URL",
 			Placeholder: "Video URL here...",
 		},

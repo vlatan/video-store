@@ -1,15 +1,17 @@
 package handler
 
-import "github.com/vlatan/video-store/internal/types/form"
+import (
+	"github.com/vlatan/video-store/internal/tmpl"
+)
 
 const postForm = "post_form.html"
 
 type Form struct {
 	Legend      string
-	Title       *form.Group
-	Content     *form.Group
-	Category    *form.Group
-	Directors   []*form.Group
-	ReleaseYear *form.Group
+	Title       *tmpl.Group
+	Content     *tmpl.Group
+	Category    *tmpl.Group
+	Directors   []*tmpl.Group
+	ReleaseYear *tmpl.Group
 	Error       string
 }
