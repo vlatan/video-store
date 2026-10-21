@@ -8,7 +8,7 @@ import (
 
 	"github.com/vlatan/video-store/internal/backup"
 	"github.com/vlatan/video-store/internal/config"
-	"github.com/vlatan/video-store/internal/integrations/r2"
+	"github.com/vlatan/video-store/internal/integrations/cloudflare"
 	"github.com/vlatan/video-store/internal/utils/logx"
 )
 
@@ -26,13 +26,13 @@ func main() {
 		log.Fatal(err)
 	}
 
-	r2Service, err := r2.New(ctx, cfg)
+	r2, err := cloudflare.New(ctx, cfg)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	backupService := backup.New(cfg, r2Service)
-	if err := backupService.Run(ctx); err != nil {
+	backup := backup.New(cfg, r2)
+	if err := backup.Run(ctx); err != nil {
 		log.Println(err)
 	}
 }

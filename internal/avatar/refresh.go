@@ -33,7 +33,7 @@ func (s *Service) refresh(ctx context.Context, publicId, uri string) (string, er
 	sourceHash := fmt.Sprintf("%x", md5.Sum(data)) // #nosec G401
 
 	// Get R2 object head
-	head, err := s.r2s.HeadObject(
+	head, err := s.r2.HeadObject(
 		ctx,
 		s.config.R2CdnBucketName,
 		fmt.Sprintf(avatarR2Path, publicId),
@@ -77,7 +77,7 @@ func (s *Service) refresh(ctx context.Context, publicId, uri string) (string, er
 	}
 
 	// Upload object to bucket
-	err = s.r2s.PutObject(
+	err = s.r2.PutObject(
 		ctx,
 		s.config.R2CdnBucketName,
 		fmt.Sprintf(avatarR2Path, publicId),

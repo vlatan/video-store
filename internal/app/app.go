@@ -25,8 +25,8 @@ import (
 	"github.com/vlatan/video-store/internal/drivers/database"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 	"github.com/vlatan/video-store/internal/drivers/store"
+	"github.com/vlatan/video-store/internal/integrations/cloudflare"
 	"github.com/vlatan/video-store/internal/integrations/gemini"
-	"github.com/vlatan/video-store/internal/integrations/r2"
 	"github.com/vlatan/video-store/internal/integrations/yt"
 	"github.com/vlatan/video-store/internal/middlewares"
 	"github.com/vlatan/video-store/internal/tmpl"
@@ -74,14 +74,14 @@ func New() (*App, error) {
 	}
 
 	// Create Cloudflare R2 service
-	r2s, err := r2.New(ctx, cfg)
+	r2, err := cloudflare.New(ctx, cfg)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create R2 service: %w", err)
 	}
 
 	// Create avatars service
 	maxConcurrency := runtime.GOMAXPROCS(0) * 8
-	av := avatar.New(maxConcurrency, 500, cfg, rdb, r2s)
+	av := avatar.New(maxConcurrency, 500, cfg, rdb, r2)
 
 	// Create taxonomy repo
 	taxRepo, err := taxonomy.New(cfg, db, nil)

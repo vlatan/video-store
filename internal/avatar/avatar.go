@@ -11,7 +11,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
-	"github.com/vlatan/video-store/internal/integrations/r2"
+	"github.com/vlatan/video-store/internal/integrations/cloudflare"
 	"github.com/vlatan/video-store/internal/utils/ctxv"
 )
 
@@ -22,7 +22,7 @@ type Service struct {
 
 	config *config.Config
 	rdb    *rdb.Service
-	r2s    *r2.Service
+	r2     *cloudflare.Service
 }
 
 type job struct {
@@ -37,7 +37,7 @@ func New(
 
 	cfg *config.Config,
 	rdb *rdb.Service,
-	r2s *r2.Service) *Service {
+	r2 *cloudflare.Service) *Service {
 
 	s := &Service{
 		active: make(map[string]struct{}),
@@ -45,7 +45,7 @@ func New(
 
 		config: cfg,
 		rdb:    rdb,
-		r2s:    r2s,
+		r2:     r2,
 	}
 
 	// Spawn workerCount number of workers
@@ -200,7 +200,7 @@ func (s *Service) Delete(ctx context.Context, publicId string) error {
 
 	// Attempt to delete the avatar image from R2
 	objectKey := fmt.Sprintf(avatarR2Path, publicId)
-	errs = append(errs, s.r2s.DeleteObject(
+	errs = append(errs, s.r2.DeleteObject(
 		ctx, s.config.R2CdnBucketName, objectKey),
 	)
 
