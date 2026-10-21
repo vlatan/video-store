@@ -12,11 +12,14 @@ import (
 // Custom string type used to convert string duration to desirable format
 type ISO8601 string
 
+// Struct to hold the compiled time
+type compiled struct{ h, m, s int }
+
 // Valid ISO time format
 var validISO8601 = regexp.MustCompile(`(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:\.\d+)?)S)?`)
 
 // compile compiles ISO-8601 string to time components
-func (d ISO8601) compile() (map[string]int, error) {
+func (d ISO8601) compile() (*compiled, error) {
 	// Check for PT prefix
 	if !strings.HasPrefix(string(d), "PT") {
 		return nil, fmt.Errorf("invalid duration format: %s", d)
@@ -34,14 +37,9 @@ func (d ISO8601) compile() (map[string]int, error) {
 	// Check for the matched regex groups
 	hours, _ := strconv.Atoi(matches[1])
 	minutes, _ := strconv.Atoi(matches[2])
-	sec, _ := strconv.ParseFloat(matches[3], 64)
-	seconds := int(sec)
+	seconds, _ := strconv.ParseFloat(matches[3], 64)
 
-	return map[string]int{
-		"h": hours,
-		"m": minutes,
-		"s": seconds,
-	}, nil
+	return &compiled{hours, minutes, int(seconds)}, nil
 }
 
 // Human converts ISO-8601 string to human readbale duration
@@ -52,7 +50,7 @@ func (d ISO8601) Human() string {
 		return ""
 	}
 
-	return fmt.Sprintf("%02d:%02d:%02d", t["h"], t["m"], t["s"])
+	return fmt.Sprintf("%02d:%02d:%02d", t.h, t.m, t.s)
 }
 
 // Parse converts ISO-8601 string to duration
@@ -62,10 +60,9 @@ func (d ISO8601) Parse() (time.Duration, error) {
 		return 0, err
 	}
 
-	duration := time.Duration(t["h"])*time.Hour +
-		time.Duration(t["m"])*time.Minute +
-		time.Duration(t["s"])*time.Second
+	duration := time.Duration(t.h)*time.Hour +
+		time.Duration(t.m)*time.Minute +
+		time.Duration(t.s)*time.Second
 
 	return duration, nil
-
 }
