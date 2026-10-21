@@ -32,7 +32,7 @@ func (s *Service) GetVideos(
 
 		response, err := retry.Do(
 			ctx, rc, func() (*youtube.VideoListResponse, error) {
-				return s.youtube.Videos.
+				return s.yt.Videos.
 					List(part).
 					Id(batch...).
 					Context(ctx).

@@ -25,9 +25,9 @@ func (s *Service) GetSourceItems(
 
 	for {
 		// Get playlist items
-		response, err := retry.Do(ctx, rc,
+		resp, err := retry.Do(ctx, rc,
 			func() (*youtube.PlaylistItemListResponse, error) {
-				return s.youtube.PlaylistItems.
+				return s.yt.PlaylistItems.
 					List(part).
 					MaxResults(50).
 					PageToken(nextPageToken).
@@ -41,8 +41,8 @@ func (s *Service) GetSourceItems(
 			return nil, err
 		}
 
-		result = append(result, response.Items...)
-		nextPageToken = response.NextPageToken
+		result = append(result, resp.Items...)
+		nextPageToken = resp.NextPageToken
 
 		// if no more pages break the loop, we're done
 		if nextPageToken == "" {
@@ -73,9 +73,9 @@ func (s *Service) GetSources(
 		end := min(i+batchSize, len(playlistIDs))
 		batch := playlistIDs[i:end]
 
-		response, err := retry.Do(ctx, rc,
+		resp, err := retry.Do(ctx, rc,
 			func() (*youtube.PlaylistListResponse, error) {
-				return s.youtube.Playlists.
+				return s.yt.Playlists.
 					List(part).
 					Id(batch...).
 					Context(ctx).
@@ -87,7 +87,7 @@ func (s *Service) GetSources(
 			return nil, err
 		}
 
-		result = append(result, response.Items...)
+		result = append(result, resp.Items...)
 	}
 
 	if len(result) == 0 {
@@ -116,9 +116,9 @@ func (s *Service) GetChannels(
 		end := min(i+batchSize, len(channelIDs))
 		batch := channelIDs[i:end]
 
-		response, err := retry.Do(ctx, rc,
+		resp, err := retry.Do(ctx, rc,
 			func() (*youtube.ChannelListResponse, error) {
-				return s.youtube.Channels.
+				return s.yt.Channels.
 					List(part).
 					Id(batch...).
 					Context(ctx).
@@ -130,7 +130,7 @@ func (s *Service) GetChannels(
 			return nil, err
 		}
 
-		result = append(result, response.Items...)
+		result = append(result, resp.Items...)
 	}
 
 	if len(result) == 0 {

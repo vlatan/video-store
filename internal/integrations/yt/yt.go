@@ -10,19 +10,18 @@ import (
 )
 
 type Service struct {
-	config  *config.Config
-	youtube *youtube.Service
+	yt *youtube.Service
 }
 
 // Create new YouTube service
-func New(ctx context.Context, config *config.Config) (*Service, error) {
+func New(ctx context.Context, cfg *config.Config) (*Service, error) {
 
-	clientOption := option.WithAPIKey(config.YouTubeAPIKey)
+	clientOption := option.WithAPIKey(cfg.YouTubeAPIKey)
 	youtube, err := youtube.NewService(ctx, clientOption)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return &Service{config, youtube}, nil
+	return &Service{youtube}, nil
 }
