@@ -9,7 +9,6 @@ import (
 	"regexp"
 	"runtime"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/vlatan/video-store/internal/utils/ythumb"
@@ -231,33 +230,46 @@ func (r *Reviews) UnmarshalBinary(data []byte) error {
 type ISO8601 string
 
 // Struct to hold the compiled time
-type compiled struct{ h, m, s int }
+type compiled struct {
+	days, hours, minutes int
+	seconds              float64
+}
 
 // Valid ISO time format
-var validISO8601 = regexp.MustCompile(`(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:\.\d+)?)S)?`)
+var validISO8601 = regexp.MustCompile(
+	`^P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:\.\d+)?)S)?)?$`,
+)
 
 // compile compiles ISO-8601 string to time components
 func (d ISO8601) compile() (*compiled, error) {
-	// Check for PT prefix
-	if !strings.HasPrefix(string(d), "PT") {
-		return nil, fmt.Errorf("invalid duration format: %s", d)
+
+	// Find the substrings (days, hours, minutes, seconds)
+	m := validISO8601.FindStringSubmatch(string(d))
+	if len(m) == 0 || m[1]+m[2]+m[3]+m[4] == "" || d[len(d)-1] == 'T' {
+		return nil, fmt.Errorf("invalid ISO 8601 duration: %s", d)
 	}
 
-	// Remove the PT prefix
-	duration := strings.TrimPrefix(string(d), "PT")
+	var (
+		result compiled
+		err    error
+	)
 
-	// Find the substrings (hours, minutes, seconds)
-	matches := validISO8601.FindStringSubmatch(duration)
-	if len(matches) == 0 {
-		return nil, fmt.Errorf("invalid duration format: %s", duration)
+	for i, dst := range []*int{&result.days, &result.hours, &result.minutes} {
+		if m[i+1] == "" {
+			continue
+		}
+		if *dst, err = strconv.Atoi(m[i+1]); err != nil {
+			return nil, err
+		}
 	}
 
-	// Check for the matched regex groups
-	hours, _ := strconv.Atoi(matches[1])
-	minutes, _ := strconv.Atoi(matches[2])
-	seconds, _ := strconv.ParseFloat(matches[3], 64)
+	if m[4] != "" {
+		if result.seconds, err = strconv.ParseFloat(m[4], 64); err != nil {
+			return nil, err
+		}
+	}
 
-	return &compiled{hours, minutes, int(seconds)}, nil
+	return &result, nil
 }
 
 // Human converts ISO-8601 string to human readbale duration
@@ -268,7 +280,7 @@ func (d ISO8601) Human() string {
 		return ""
 	}
 
-	return fmt.Sprintf("%02d:%02d:%02d", t.h, t.m, t.s)
+	return fmt.Sprintf("%02d:%02d:%02d", t.days*24+t.hours, t.minutes, int(t.seconds))
 }
 
 // Parse converts ISO-8601 string to duration
@@ -278,9 +290,10 @@ func (d ISO8601) Parse() (time.Duration, error) {
 		return 0, err
 	}
 
-	duration := time.Duration(t.h)*time.Hour +
-		time.Duration(t.m)*time.Minute +
-		time.Duration(t.s)*time.Second
+	duration := time.Duration(t.days)*24*time.Hour +
+		time.Duration(t.hours)*time.Hour +
+		time.Duration(t.minutes)*time.Minute +
+		time.Duration(t.seconds)*time.Second
 
 	return duration, nil
 }
