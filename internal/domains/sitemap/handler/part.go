@@ -72,7 +72,6 @@ func (s *Service) Part(w http.ResponseWriter, r *http.Request) {
 		SitemapItems: sitemapPart.Entries,
 		XMLDeclarations: []template.HTML{
 			template.HTML(`<?xml version="1.0" encoding="UTF-8"?>`),
-			template.HTML(`<?xml-stylesheet type="text/xsl" href="/sitemap.xsl"?>`),
 		},
 	}
 
