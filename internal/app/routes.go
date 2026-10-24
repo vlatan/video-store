@@ -56,7 +56,6 @@ func (a *App) RegisterRoutes() *App {
 	mux.HandleFunc("DELETE /account/delete", a.user.IsAuth(a.auth.Delete))
 
 	// Sitemaps
-	mux.HandleFunc("GET /sitemap.xsl", a.mw.PublicCache(a.sitemap.Style))
 	mux.HandleFunc("GET /{part}", a.mw.PublicCache(a.sitemap.Part))
 	mux.HandleFunc("GET /sitemap.xml", a.mw.PublicCache(a.sitemap.Index))
 
