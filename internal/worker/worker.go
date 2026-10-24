@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"log/slog"
 	"time"
 	"uuid"
 
@@ -35,8 +34,6 @@ type taxer interface {
 	UpdateSource(context.Context, *taxonomy.Source) (int64, error)
 	New(*youtube.Playlist, *youtube.Channel) *taxonomy.Source
 }
-
-const catKey = "categories"
 
 type Worker struct {
 	id                string
@@ -79,25 +76,27 @@ func New(ctx context.Context, cfg *config.Config) (*Worker, error) {
 		return nil, fmt.Errorf("couldn't create taxonomy repo: %w", err)
 	}
 
-	// Get the categories from cache or DB
-	categories, err := rdb.Get(
-		ctx, catKey,
-		cfg.CacheTimeout,
+	// Get the categories from DB
+	categories, err := retry.Do(ctx,
+		new(retry.Config{
+			MaxRetries: 5,
+			MaxJitter:  500 * time.Millisecond,
+			Delay:      500 * time.Millisecond,
+		}),
 		func() (taxonomy.Categories, error) {
 			return taxRepo.Categories(ctx)
 		},
 	)
 
+	// Exit the worker if error while getting the categories
+	if err != nil {
+		return nil, fmt.Errorf("failed to get the categories: %w", err)
+	}
+
 	// Extract the category names
 	catNames := make([]string, len(categories))
 	for i, cat := range categories {
 		catNames[i] = cat.Name
-	}
-
-	if err != nil {
-		slog.WarnContext(
-			ctx, "failed to get categories", "error", err,
-		)
 	}
 
 	// Create YouTube service

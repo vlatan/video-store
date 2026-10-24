@@ -3,7 +3,6 @@ package app
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"net/http"
 	"runtime"
 	"time"
@@ -30,6 +29,7 @@ import (
 	"github.com/vlatan/video-store/internal/integrations/youtube"
 	"github.com/vlatan/video-store/internal/middlewares"
 	"github.com/vlatan/video-store/internal/tmpl"
+	"github.com/vlatan/video-store/internal/utils/retry"
 )
 
 type App struct {
@@ -48,8 +48,6 @@ type App struct {
 	cleanup  func() error
 	server   *http.Server
 }
-
-const catKey = "categories"
 
 // New creates new app.
 // Holds handler services and a HTTP server.
@@ -101,19 +99,22 @@ func New() (*App, error) {
 		return nil, fmt.Errorf("couldn't create posts repo: %w", err)
 	}
 
-	// Get the categories from cache or DB
-	categories, err := rdb.Get(
-		ctx, catKey,
-		cfg.CacheTimeout,
+	// Get the categories from DB
+	categories, err := retry.Do(ctx,
+		new(retry.Config{
+			MaxRetries: 5,
+			MaxJitter:  500 * time.Millisecond,
+			Delay:      500 * time.Millisecond,
+		}),
 		func() (taxonomy.Categories, error) {
 			return taxRepo.Categories(ctx)
 		},
 	)
 
+	// Exit the app if error while getting the categories.
+	// The container should restart if the exit code is non-zero.
 	if err != nil {
-		slog.WarnContext(
-			ctx, "failed to get categories", "error", err,
-		)
+		return nil, fmt.Errorf("failed to get the categories: %w", err)
 	}
 
 	// Extract the category names
