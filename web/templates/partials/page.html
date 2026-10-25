@@ -1,39 +1,39 @@
-{{ template "base.html" . }}
+{{- template "base.html" . -}}
 
-{{ define "extra_preload_css" }}
+{{- define "extra_preload_css" -}}
 <link rel="preload" href='{{ AddVersion "/static/css/page.css" }}' as="style">
-{{ end }}
+{{- end -}}
 
-{{ define "extra_css" }}
+{{- define "extra_css" -}}
 <link rel="stylesheet" type="text/css" href='{{ AddVersion "/static/css/page.css" }}'>
-{{ end }}
+{{- end -}}
 
-{{ define "extra_meta" }}
+{{- define "extra_meta" -}}
 <meta property='og:title' content='{{ .Title }}'>
 <meta property='og:type' content='article'>
 <meta property='og:url' content='{{ .BaseCanonicalURL }}'>
-{{ end }}
+{{- end -}}
 
-{{ define "title_tag" }}
-{{ .CurrentPage.Title }} - {{ .Config.AppName }}
-{{ end }}
+{{- define "title_tag" -}}
+{{- .CurrentPage.Title }} - {{ .Config.AppName -}}
+{{- end -}}
 
-{{ define "content" }}
+{{- define "content" -}}
 <div class="page">
     <div class="page-title-wrap">
         <h1>{{ .Title }}</h1>
-        {{ if .CurrentUser.IsAdmin .Config }}
+        {{- if .CurrentUser.IsAdmin .Config -}}
         <div class="page-buttons">
             <button type="button" data-modal="page" class="modal-button">Delete</button>
             <a role="button" href="/page/{{ .CurrentPage.Slug }}/edit" class="modal-button edit-content">Edit</a>
         </div>
         {{ end }}
     </div>
-    {{ .CurrentPage.HTMLContent }}
+    {{- .CurrentPage.HTMLContent -}}
 </div>
-{{ end }}
+{{- end -}}
 
-{{ if .CurrentUser.IsAdmin .Config }}
+{{- if .CurrentUser.IsAdmin .Config -}}
 <dialog data-body="page" class="modal" closedby="any">
     <form class="modal-content" action="/page/{{ .CurrentPage.Slug }}/delete" method="POST">
         <input type="hidden" name="_method" value="DELETE">
@@ -47,4 +47,4 @@
         </div>
     </form>
 </dialog>
-{{ end }}
+{{- end -}}
