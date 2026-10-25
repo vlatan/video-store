@@ -1,18 +1,18 @@
-{{ template "base.html" . }}
+{{- template "base.html" . -}}
 
-{{ define "extra_preload_css" }}
+{{- define "extra_preload_css" -}}
 <link rel="preload" href='{{ AddVersion "/static/css/admin.css" }}' as="style">
-{{ end }}
+{{- end -}}
 
-{{ define "extra_css" }}
+{{- define "extra_css" -}}
 <link rel="stylesheet" type="text/css" href='{{ AddVersion "/static/css/admin.css" }}'>
-{{ end }}
+{{- end -}}
 
-{{ define "title_tag" }}
-{{ .Title }} - {{ .Config.AppName }}
-{{ end }}
+{{- define "title_tag" -}}
+{{- .Title }} - {{ .Config.AppName -}}
+{{- end -}}
 
-{{ define "content" }}
+{{- define "content" -}}
 <div class="dashboard-wrap">
     <header class="dashboard-title-wrap">
         <h1 class="dashboard-title">{{ .Title }}</h1>
@@ -27,9 +27,9 @@
         <div class="dashboard-item dashboard-header-item">Signup</div>
         <div class="dashboard-item dashboard-header-item">Last Seen</div>
 
-        {{ range $index, $user := .Users.Items }}
+        {{- range $index, $user := .Users.Items -}}
         <div class="dashboard-item dashboard-item-number">
-            {{ $.PaginationInfo.OrdinalNumber $index }}
+            {{- $.PaginationInfo.OrdinalNumber $index -}}
         </div>
         <div class="dashboard-item dashboard-item-img">
             <img class="dashboard-user-img" src="{{ $user.LocalAvatarURL}}">
@@ -38,34 +38,34 @@
         <div class="dashboard-item">{{ $user.Email }}</div>
         <div class="dashboard-item">{{ $user.Provider }}</div>
         <div class="dashboard-item">
-            {{ if $user.CreatedAt }}
-            {{ $user.CreatedAt.Format "2006-01-02 15:04" }}
-            {{ else }}
+            {{- if $user.CreatedAt -}}
+            {{- $user.CreatedAt.Format "2006-01-02 15:04" -}}
+            {{- else -}}
             N/A
-            {{ end }}
+            {{- end -}}
         </div>
         <div class="dashboard-item">
-            {{ if $user.LastSeen }}
-            {{ $user.LastSeen.Format "2006-01-02 15:04" }}
-            {{ else }}
+            {{- if $user.LastSeen -}}
+            {{- $user.LastSeen.Format "2006-01-02 15:04" -}}
+            {{- else -}}
             N/A
-            {{ end }}
+            {{- end -}}
         </div>
-        {{ end }}
+        {{- end -}}
     </div>
 
-    {{ if gt (len .PaginationInfo.Pages) 1 }}
+    {{- if gt (len .PaginationInfo.Pages) 1 -}}
     <div class="pagination">
-        {{ range .PaginationInfo.Pages }}
-        {{ if .IsEllipsis }}
+        {{- range .PaginationInfo.Pages -}}
+        {{- if .IsEllipsis -}}
         <span>...</span>
-        {{ else if .IsCurrent}}
+        {{- else if .IsCurrent -}}
         <span class="pagination-item pagination-item-current">{{ .Number }}</span>
-        {{ else }}
+        {{- else -}}
         <a href="/users/?page={{ .Number }}" class="pagination-item">{{ .Number }}</a>
-        {{ end }}
-        {{ end }}
+        {{- end -}}
+        {{- end -}}
     </div>
-    {{ end }}
+    {{- end -}}
 </div>
-{{ end }}
+{{- end -}}

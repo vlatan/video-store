@@ -1,22 +1,22 @@
-{{ template "base.html" . }}
+{{- template "base.html" . -}}
 
-{{ define "extra_preload_css" }}
+{{- define "extra_preload_css" -}}
 <link rel="preload" href='{{ AddVersion "/static/css/error.css" }}' as="style">
-{{ end }}
+{{- end -}}
 
-{{ define "extra_css" }}
+{{- define "extra_css" -}}
 <link rel="stylesheet" type="text/css" href='{{ AddVersion "/static/css/error.css" }}'>
-{{ end }}
+{{- end -}}
 
-{{ define "title_tag" }}
-{{ .Title }} - {{ .Config.AppName }}
-{{ end }}
+{{- define "title_tag" -}}
+{{- .Title }} - {{ .Config.AppName -}}
+{{- end -}}
 
-{{ define "content" }}
+{{- define "content" -}}
 <div class="error-wrap">
     <div class="error-content">
         <h1>{{ .Heading }}</h1>
         <p>{{ .Text }}</p>
     </div>
 </div>
-{{ end }}
+{{- end -}}

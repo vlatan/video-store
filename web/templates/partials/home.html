@@ -1,15 +1,15 @@
-{{ template "base.html" . }}
+{{- template "base.html" . -}}
 
-{{ define "extra_preload_css" }}
+{{- define "extra_preload_css" -}}
 <link rel="preload" href='{{ AddVersion "/static/css/content.css" }}' as="style">
-{{ end }}
+{{- end -}}
 
-{{ define "extra_css" }}
+{{- define "extra_css" -}}
 <link rel="stylesheet" type="text/css" href='{{ AddVersion "/static/css/content.css" }}'>
-{{ end }}
+{{- end -}}
 
-{{ define "extra_meta" }}
-{{ $large_favicon := AddVersion "/static/favicons/android-chrome-512x512.png" }}
+{{- define "extra_meta" -}}
+{{- $large_favicon := AddVersion "/static/favicons/android-chrome-512x512.png" -}}
 <meta name="description" content="{{ .Config.AppDescription }}">
 <meta property="og:title" content="{{ .Config.AppName }}">
 <meta property="og:type" content="website">
@@ -37,16 +37,16 @@
         }
     }
 </script>
-{{ end }}
+{{- end -}}
 
-{{ define "title_tag" }}
-{{ .Config.AppName }} - {{ .Config.AppTagline }}
-{{ end }}
+{{- define "title_tag" -}}
+{{- .Config.AppName }} - {{ .Config.AppTagline -}}
+{{- end -}}
 
-{{ define "content" }}
-{{ template "content.html" . }}
-{{ end }}
+{{- define "content" -}}
+{{- template "content.html" . -}}
+{{- end -}}
 
-{{ define "extra_scripts" }}
+{{- define "extra_scripts" -}}
 <script defer src='{{ AddVersion "/static/js/scroll.js" }}'></script>
-{{ end }}
+{{- end -}}

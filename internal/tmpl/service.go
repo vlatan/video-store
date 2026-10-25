@@ -41,9 +41,9 @@ func New(
 
 	// Configure a custom HTML minifier
 	htmlMinifier := &html.Minifier{
-		KeepDocumentTags: true,                  // Prevent stripping <html>, <head>, and <body>
-		KeepEndTags:      true,                  // Keep valid HTML structure
-		TemplateDelims:   [2]string{"{{", "}}"}, // Preserve context within and surrounding golang template delimiters
+		KeepDocumentTags: true, // Prevent stripping <html>, <head>, and <body>
+		KeepEndTags:      true, // Keep valid HTML structure
+		// TemplateDelims:   [2]string{"{{", "}}"}, // Preserve context within and surrounding golang template delimiters
 	}
 
 	// Use the custom HTML in a minifier function

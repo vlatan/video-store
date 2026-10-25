@@ -6,67 +6,67 @@
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-	{{ $app_name_words := Split .Config.AppName " " }}
+	{{- $app_name_words := Split .Config.AppName " " -}}
 
-	{{ block "preload_css" . }}
+	{{- block "preload_css" . -}}
 	<link rel="preload" href='{{ AddVersion "/static/css/shared.css" }}' as="style">
-	{{ end }}
+	{{- end -}}
 
-	{{ block "extra_preload_css" . }}{{ end }}
+	{{- block "extra_preload_css" . -}}{{- end -}}
 
-	{{ block "css" . }}
+	{{- block "css" . -}}
 	<link rel="stylesheet" type="text/css" href='{{ AddVersion "/static/css/shared.css" }}'>
-	{{ end }}
+	{{- end -}}
 
-	{{ block "extra_css" . }}{{ end }}
+	{{- block "extra_css" . -}}{{- end -}}
 
 	<link rel="apple-touch-icon" sizes="180x180" href='{{ AddVersion "/static/favicons/apple-touch-icon.png" }}'>
 	<link rel="icon" type="image/png" sizes="32x32" href='{{ AddVersion "/static/favicons/favicon-32x32.png" }}'>
 	<link rel="icon" type="image/png" sizes="16x16" href='{{ AddVersion "/static/favicons/favicon-16x16.png" }}'>
 	<link rel="manifest" href='{{ AddVersion "/static/favicons/site.webmanifest" }}'>
 
-	{{ block "canonical" . }}
+	{{- block "canonical" . -}}
 	<link rel="canonical" href="{{ .BaseCanonicalURL }}" />
-	{{ end }}
+	{{- end -}}
 
-	{{ block "meta" . }}
+	{{- block "meta" . -}}
 	<meta property='og:site_name' content='{{ .Config.AppName }}'>
 	<meta name='twitter:card' content='summary_large_image'>
 	<meta property="twitter:domain" content="{{ .Config.Domain }}">
-	{{ end }}
+	{{- end -}}
 
-	{{ block "extra_meta" . }}{{ end }}
+	{{- block "extra_meta" . -}}{{- end -}}
 
 	<title>
-		{{ block "title_tag" . }}
-		{{ .Config.AppName }}
-		{{ end }}
+		{{- block "title_tag" . -}}
+		{{- .Config.AppName -}}
+		{{- end -}}
 	</title>
 
-	{{ if not .Config.Debug }}
+	{{- if not .Config.Debug -}}
 	<script async src="https://www.googletagmanager.com/gtag/js?id={{ .Config.GtagID }}"></script>
-	{{ if and .CurrentUser .CurrentUser.PublicID }}
+	{{- if and .CurrentUser .CurrentUser.PublicID -}}
 	<script>
 		window.dataLayer = window.dataLayer || [];
 		function gtag() {dataLayer.push(arguments);}
 		gtag('js', new Date());
 		gtag('config', '{{ .Config.GtagID }}', {'user_id': '{{ .CurrentUser.PublicID }}'});
 	</script>
-	{{ else }}
+	{{- else -}}
 	<script>
 		window.dataLayer = window.dataLayer || [];
 		function gtag() {dataLayer.push(arguments);}
 		gtag('js', new Date());
 		gtag('config', '{{ .Config.GtagID }}');
 	</script>
-	{{ end }}
-	{{ end }}
+	{{- end -}}
+	{{- end -}}
 
-	{{ if and (not .CurrentUser.IsAuthenticated) .Config.AdSenseAccount }}
+	{{- if and (not .CurrentUser.IsAuthenticated) .Config.AdSenseAccount -}}
 	<script async
 		src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-{{ .Config.AdSenseAccount }}"
 		crossorigin="anonymous"></script>
-	{{ end }}
+	{{- end -}}
 
 </head>
 
@@ -91,30 +91,30 @@
 						</svg>
 					</div>
 					<ul class="categories-dropdown-navigation">
-						{{ range .Categories }}
+						{{- range .Categories -}}
 						<li>
 							<a class="nav-item" href="/category/{{ .Slug }}/">
-								{{ .Name }}
+								{{- .Name -}}
 							</a>
 						</li>
-						{{ end }}
+						{{- end -}}
 					</ul>
 				</div>
 			</div>
 
-			{{ if .Title }}
+			{{- if .Title -}}
 			<a class="logo" href="/">
 				<span>{{ index $app_name_words 0 }}</span>
 				<span>{{ index $app_name_words 1 }}</span>
 			</a>
-			{{ else }}
+			{{- else -}}
 			<h1>
 				<a class="logo" href="/">
 					<span>{{ index $app_name_words 0 }}</span>
 					<span>{{ index $app_name_words 1 }}</span>
 				</a>
 			</h1>
-			{{ end }}
+			{{- end -}}
 
 			<nav class="navbar">
 				<form id="searchForm" class="search-form" method="get" action="/search/">
@@ -136,7 +136,7 @@
 					<line x1="21" y1="21" x2="16.65" y2="16.65"></line>
 				</svg>
 
-				{{ if .CurrentUser.IsAuthenticated }}
+				{{- if .CurrentUser.IsAuthenticated -}}
 				<div class="dropdown">
 					<button aria-label="Drop User Menu" class="nav-item username">
 						<img src='{{ .CurrentUser.LocalAvatarURL }}' class="username-image" width="20" height="20"
@@ -144,15 +144,16 @@
 						<span class="username-text">{{ .CurrentUser.Name }}</span>
 					</button>
 					<div class="dropdown-content">
-						{{ if .CurrentUser.IsAdmin .Config }}
+						{{- if .CurrentUser.IsAdmin .Config -}}
 						<a class="nav-item" href="/users/">Users Dash</a>
 						<a class="nav-item" href="/video/new">New Video</a>
 						<a class="nav-item" href="/source/new">New Source</a>
 						<a class="nav-item" href="/page/new">New Page</a>
-						{{ end }}
+						{{- end -}}
 						<a class="nav-item" href="/user/favorites/">Watch Later</a>
-						<a class="nav-item" href="/logout/{{ .CurrentUser.Provider }}?redirect={{ .CurrentURI }}">Log
-							out</a>
+						<a class="nav-item" href="/logout/{{ .CurrentUser.Provider }}?redirect={{ .CurrentURI }}">
+							Logout
+						</a>
 						<a data-modal="account" class="nav-item delete-account" href="javascript:void(0)">
 							Delete Account
 						</a>
@@ -176,7 +177,7 @@
 					</form>
 				</dialog>
 
-				{{ else }}
+				{{- else -}}
 
 				<a class="nav-item" data-modal="login" href="javascript:void(0)">Login</a>
 
@@ -238,22 +239,22 @@
 						</div>
 					</div>
 				</dialog>
-				{{ end }}
+				{{- end -}}
 			</nav>
 		</header>
 	</div>
 
 	<main role="main" class="content-wrap">
-		{{ block "content" . }}{{ end }}
+		{{- block "content" . -}}{{- end -}}
 	</main>
 
 	<div id="footer" class="site-footer-wrap">
-		{{ range .FlashMessages }}
+		{{- range .FlashMessages -}}
 		<div class="alert alert-{{ .Category }}">
 			<span class="alert-text">{{ .Message }}</span>
 			<span class="alert-close">&times;</span>
 		</div>
-		{{ end }}
+		{{- end -}}
 
 		<footer class="site-footer">
 			<span class="site-copy">{{ .Config.AppName }} &copy; {{ Now.Year }}</span>
@@ -264,11 +265,11 @@
 		</footer>
 	</div>
 
-	{{ block "scripts" . }}
+	{{- block "scripts" . -}}
 	<script defer src='{{ AddVersion "/static/js/shared.js" }}'></script>
-	{{ end }}
+	{{- end -}}
 
-	{{ block "extra_scripts" . }}{{ end }}
+	{{- block "extra_scripts" . -}}{{- end -}}
 </body>
 
 </html>
