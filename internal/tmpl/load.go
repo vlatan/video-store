@@ -113,15 +113,12 @@ func parseFiles(
 			tmpl = tmpl.New(name)
 		}
 
-		// Get the file extension
-		var ext string = strings.Split(name, ".")[1]
-
 		// Set media type
 		var mediaType string
-		switch ext {
-		case "html":
+		switch filepath.Ext(name) {
+		case ".html":
 			mediaType = "text/html"
-		case "xml", "xsl":
+		case ".xml":
 			mediaType = "text/xml"
 		}
 

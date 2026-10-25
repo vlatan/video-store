@@ -70,9 +70,9 @@ func IsStatic(path string) bool {
 		slices.Contains(RootFavicons, path)
 }
 
-// NeedsSession checks if a route needs to read the session
+// IsFile checks if the path is file other than .txt or .xml
 func IsFile(path string) bool {
-	notFiles := []string{"", ".txt", ".xml", ".xsl"}
+	notFiles := []string{"", ".txt", ".xml"}
 	return !slices.Contains(notFiles, filepath.Ext(path))
 }
 

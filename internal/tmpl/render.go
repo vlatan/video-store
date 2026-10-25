@@ -53,15 +53,6 @@ func (s *Service) RenderHTML(
 		return
 	}
 
-	var contentType string
-	switch filepath.Ext(tmplName) {
-	case ".xml":
-		contentType = "text/xml"
-	case ".xsl":
-		contentType = "text/xsl"
-	default:
-		contentType = "text/html"
-	}
 	// Execute template to buffer to catch any errors before serving to client
 	var buf bytes.Buffer
 	if err := tmpl.ExecuteTemplate(&buf, tmplName, data); err != nil {
@@ -74,9 +65,18 @@ func (s *Service) RenderHTML(
 		return
 	}
 
-	// Set content type header
-	header := fmt.Sprintf("%s; charset=utf-8", contentType)
-	w.Header().Set("Content-Type", header)
+	var contentType string
+	switch filepath.Ext(tmplName) {
+	case ".html":
+		contentType = "text/html"
+	case ".xml":
+		contentType = "text/xml"
+	}
+
+	if contentType != "" {
+		header := fmt.Sprintf("%s; charset=utf-8", contentType)
+		w.Header().Set("Content-Type", header)
+	}
 
 	// Write to response
 	if _, err := buf.WriteTo(w); err != nil {
