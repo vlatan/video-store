@@ -1,11 +1,10 @@
-{{ range .XMLDeclarations }}{{ . }}
-{{ end }}
+{{- range .XMLDeclarations }}{{ . }}{{ end -}}
 
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-    {{ range .SitemapItems }}
+    {{- range .SitemapItems -}}
     <sitemap>
         <loc>{{ .Location }}</loc>
         <lastmod>{{ .LastModified }}</lastmod>
     </sitemap>
-    {{ end }}
+    {{- end -}}
 </sitemapindex>
