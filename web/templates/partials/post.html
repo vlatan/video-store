@@ -216,11 +216,10 @@
 							<fieldset class="rate-stars">
 								<legend class="visually-hidden">Rating</legend>
 								{{- range .CurrentPost.Stars -}}
-								{{- $starsText := "stars" -}}
-								{{- if eq . 1 }}{{ $starsText = "star" }}{{ end -}}
 								<label>
 									<input {{ if eq $userRating . }}checked{{ end }} type="radio" name="rating"
-										value="{{ . }}" aria-label="{{ . }} {{ $starsText }}" required>
+										value="{{ . }}" aria-label="{{ . }} {{ if eq . 1 }}star{{ else }}stars{{ end }}"
+										required>
 									<span>★</span>
 								</label>
 								{{- end -}}
@@ -320,11 +319,10 @@
 						<div class="review-stars-group">
 							<div class="rate-stars rate-stars-review">
 								{{- range .CurrentPost.Stars -}}
-								{{- $starsText := "stars" -}}
-								{{- if eq . 1 }}{{ $starsText = "star" }}{{ end -}}
 								<label>
 									<input {{ if eq $userRating . }}checked{{ end }} type="radio" name="rating"
-										value="{{ . }}" aria-label="{{ . }} {{ $starsText }}" required>
+										value="{{ . }}" aria-label="{{ . }} {{ if eq . 1 }}star{{ else }}stars{{ end }}"
+										required>
 									<span>★</span>
 								</label>
 								{{- end -}}
