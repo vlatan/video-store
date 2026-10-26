@@ -1,14 +1,14 @@
-{{ template "base.html" . }}
+{{- template "base.html" . -}}
 
-{{ define "extra_preload_css" }}
+{{- define "extra_preload_css" -}}
 <link rel="preload" href='{{ AddVersion "/static/css/post.css" }}' as="style">
-{{ end }}
+{{- end -}}
 
-{{ define "extra_css" }}
+{{- define "extra_css" -}}
 <link rel="stylesheet" type="text/css" href='{{ AddVersion "/static/css/post.css" }}'>
-{{ end }}
+{{- end -}}
 
-{{ define "extra_meta" }}
+{{- define "extra_meta" -}}
 <meta property='og:title' content='{{ .CurrentPost.GetTitle }}'>
 <meta property='og:type' content='video.movie'>
 <meta property='og:url' content='{{ .BaseCanonicalURL }}'>
@@ -19,32 +19,32 @@
 <meta property="twitter:url" content="{{ .BaseCanonicalURL }}">
 <meta name="twitter:image" content="{{ .CurrentPost.Thumbnail.Url  }}">
 
-{{ with .CurrentPost.MetaDescription }}
+{{- with .CurrentPost.MetaDescription -}}
 <meta name='description' content='{{ . }}.'>
 <meta property='og:description' content='{{ . }}.'>
 <meta name="twitter:description" content="{{ . }}">
-{{ end }}
-{{ end }}
+{{- end -}}
+{{- end -}}
 
-{{ define "title_tag" }}
-{{ .CurrentPost.GetTitle }} - {{ .Config.AppName }}
-{{ end }}
+{{- define "title_tag" -}}
+{{- .CurrentPost.GetTitle }} - {{ .Config.AppName -}}
+{{- end -}}
 
-{{ define "content" }}
+{{- define "content" -}}
 <article class="media-content" itemscope itemtype="https://schema.org/Movie">
 	<meta itemprop="image" content="{{ .CurrentPost.Thumbnail.Url  }}">
-	{{ with .Config.AppGenre }}
+	{{- with .Config.AppGenre -}}
 	<meta itemprop="genre" content="{{ . }}">
-	{{ end }}
+	{{- end -}}
 	<div class="video-content">
 		<div class="player" itemprop="video" itemscope itemtype="https://schema.org/VideoObject">
 			<!-- The actual video title for the video object schema -->
 			<meta itemprop="name" content="{{ .CurrentPost.Title }}">
 			<meta itemprop="thumbnailUrl" content="{{ .CurrentPost.Thumbnail.Url  }}">
 			<meta itemprop="embedUrl" content="https://www.youtube-nocookie.com/embed/{{ .CurrentPost.VideoID }}">
-			{{ with .CurrentPost.MetaDescription }}
+			{{- with .CurrentPost.MetaDescription -}}
 			<meta itemprop="description" content="{{ . }}.">
-			{{ end }}
+			{{- end -}}
 			<meta itemprop="uploadDate" content='{{ .CurrentPost.UploadDate.Format "2006-01-02T15:04:05Z07:00" }}'>
 			<div class="player-content" id="{{ .CurrentPost.VideoID }}">
 				<img alt="{{ .CurrentPost.GetTitle }}" src="{{ .CurrentPost.Thumbnail.Url  }}"
@@ -68,39 +68,39 @@
 				<h1 class="video-title" itemprop="name">{{ .CurrentPost.GetTitle }}</h1>
 				<div class="ui-inner-metadata-block">
 					<div id="social-buttons" class="social" data-video-id="{{ .CurrentPost.VideoID }}">
-						{{ if .CurrentUser.IsAuthenticated }}
-						{{ if .CurrentPost.UserActions.Liked }}
+						{{- if .CurrentUser.IsAuthenticated -}}
+						{{- if .CurrentPost.UserActions.Liked -}}
 						<button class="like like-yes">
 							<span data-liked>&#10003;</span>
 							<span data-likes>{{ .CurrentPost.LikeButtonText }}</span>
 						</button>
-						{{ else }}
+						{{- else -}}
 						<button class="like like-no">
 							<span data-likes>{{ .CurrentPost.LikeButtonText }}</span>
 						</button>
-						{{ end }}
-						{{ else }}
+						{{- end -}}
+						{{- else -}}
 						<button data-modal="login" class="like like-no">
 							<span>{{ .CurrentPost.LikeButtonText }}</span>
 						</button>
-						{{ end }}
+						{{- end -}}
 
-						{{ if .CurrentUser.IsAuthenticated }}
-						{{ if .CurrentPost.UserActions.Faved }}
+						{{- if .CurrentUser.IsAuthenticated -}}
+						{{- if .CurrentPost.UserActions.Faved -}}
 						<button class="fave fave-yes">
 							<span data-saved>&#10003;</span>
 							<span data-saves>Saved</span>
 						</button>
-						{{ else }}
+						{{- else -}}
 						<button class="fave fave-no">
 							<span data-saves>Save</span>
 						</button>
-						{{ end }}
-						{{ else }}
+						{{- end -}}
+						{{- else -}}
 						<button data-modal="login" class="fave fave-no">
 							<span data-saves>Save</span>
 						</button>
-						{{ end }}
+						{{- end -}}
 					</div>
 				</div>
 			</div>
@@ -108,51 +108,51 @@
 			<div class="metadata-block">
 
 				<div class="inner-metadata-block">
-					{{ with .CurrentPost }}
-					{{ if and .CategorySlug .CategoryName }}
+					{{- with .CurrentPost -}}
+					{{- if and .CategorySlug .CategoryName -}}
 					<span>
 						<strong>Category:</strong>
 						<a class="nav-item" href="/category/{{ .CategorySlug }}/">{{ .CategoryName }}</a>
 					</span>
-					{{ end }}
-					{{ end }}
+					{{- end -}}
+					{{- end -}}
 
-					{{ with .CurrentPost }}
-					{{ if and .PlaylistID .ChannelTitle }}
+					{{- with .CurrentPost -}}
+					{{- if and .PlaylistID .ChannelTitle -}}
 					<span>
 						<strong>Source:</strong>
 						<a class="nav-item" href="/source/{{ .PlaylistID }}/">{{ .ChannelTitle }}</a>
 					</span>
-					{{ end }}
-					{{ end }}
+					{{- end -}}
+					{{- end -}}
 
-					{{ with .CurrentPost.ReleaseYear }}
+					{{- with .CurrentPost.ReleaseYear -}}
 					<span>
 						<strong>Released:</strong>
 						<a class="nav-item" href="/year/{{ . }}/" itemprop="dateCreated" content="{{ . }}">
 							{{ . }}
 						</a>
 					</span>
-					{{ end }}
+					{{- end -}}
 
-					{{ with .CurrentPost.Directors }}
+					{{- with .CurrentPost.Directors -}}
 					<span>
 						<strong>Directed By:</strong>
 						<span>
-							{{ range $i, $name := . }}
+							{{- range $i, $name := . -}}
+							<!-- This needs to be glued like this for the comma to appear nicely -->
 							{{- if $i }}, {{ end -}}
-							<!-- This needs to be glues like this for the comma to appear nicely -->
 							<span itemprop="director" itemscope itemtype="https://schema.org/Person"><span
 									itemprop="name">{{ $name }}</span></span>
 							{{- end -}}
 						</span>
 					</span>
 
-					{{ end }}
+					{{- end -}}
 					<span>
 						<strong>Duration:</strong>
 						<time itemprop="duration" datetime="{{ .CurrentPost.Duration }}">
-							{{ .CurrentPost.Duration.Human }}
+							{{- .CurrentPost.Duration.Human -}}
 						</time>
 					</span>
 				</div>
@@ -161,7 +161,7 @@
 				<section class="rating-section opinion-section">
 
 					<!-- Avg Rating Box -->
-					{{ with .CurrentPost.RatingStats }}
+					{{- with .CurrentPost.RatingStats -}}
 					<div class="btn-open-post-dialog avg-rating-display">
 						<span class="rating-global-star">&#9733;</span>
 						<div class="rating-meta" itemprop="aggregateRating" itemscope
@@ -178,24 +178,24 @@
 							</div>
 						</div>
 					</div>
-					{{ end }}
+					{{- end -}}
 
 					{{- $userRating := .CurrentPost.UserActions.Review.Rating -}}
 
 					<!-- Open user rating dialog button -->
 					<button {{ if not .CurrentUser.IsAuthenticated }} data-modal="login" {{ end }} type="button"
 						id="btn-open-rate" class="btn-open-post-dialog" aria-haspopup="dialog">
-						{{ if $userRating }}
+						{{- if $userRating -}}
 						<span class="rating-user-star">&#9733;</span>
 						<span>{{ $userRating }}</span>
-						{{ else }}
+						{{- else -}}
 						<span class="rating-user-star">&#9734;</span>
 						<span>Rate</span>
-						{{ end }}
+						{{- end -}}
 					</button>
 
 					<!-- Rating Dialog -->
-					{{ if .CurrentUser.IsAuthenticated }}
+					{{- if .CurrentUser.IsAuthenticated -}}
 					<dialog id="rate-dialog" class="modal post-dialog opinion-dialog" closedby="any">
 						<form class="rate-form" action="/api/video/{{ .CurrentPost.VideoID }}/rate" method="POST">
 							<div class="rating-big-star-wrapper">
@@ -203,7 +203,7 @@
 									<use href="#big-hearth" />
 								</svg>
 								<span class="big-star-value rating-big-star-value">
-									{{ if $userRating }}{{ $userRating }}{{ else }}?{{ end }}
+									{{- if $userRating }}{{ $userRating }}{{ else }}?{{ end -}}
 								</span>
 							</div>
 
@@ -215,17 +215,15 @@
 
 							<fieldset class="rate-stars">
 								<legend class="visually-hidden">Rating</legend>
-								{{ range .CurrentPost.Stars }}
-								{{ $starsText := "stars" }}
-								{{ if eq . 1 }}
-								{{ $starsText = "star" }}
-								{{ end }}
+								{{- range .CurrentPost.Stars -}}
+								{{- $starsText := "stars" -}}
+								{{- if eq . 1 }}{{ $starsText = "star" }}{{ end -}}
 								<label>
 									<input {{ if eq $userRating . }}checked{{ end }} type="radio" name="rating"
 										value="{{ . }}" aria-label="{{ . }} {{ $starsText }}" required>
 									<span>★</span>
 								</label>
-								{{ end }}
+								{{- end -}}
 							</fieldset>
 
 							<!-- Default Rate Buttons State -->
@@ -237,7 +235,7 @@
 											class="btn-rate btn-rate-danger btn-opinion-delete-init" {{ if not
 											$userRating }}hidden{{ end }}>Delete</button>
 										<button type="submit" id="btn-submit-rate" class="btn-rate btn-submit-rate">
-											{{ if $userRating }}Update{{ else }}Rate{{ end }}
+											{{- if $userRating }}Update{{ else }}Rate{{ end -}}
 										</button>
 									</div>
 								</div>
@@ -263,31 +261,31 @@
 
 						</form>
 					</dialog>
-					{{ end }}
+					{{- end -}}
 
 				</section>
 			</div>
 		</header>
 
-		{{ if .CurrentPost.HTMLSummary }}
+		{{- if .CurrentPost.HTMLSummary -}}
 
 		<div class="summary_wrap">
 			<div class="video-description" itemprop="description">
-				{{ .CurrentPost.HTMLSummary }}
+				{{- .CurrentPost.HTMLSummary -}}
 			</div>
 			<!-- <span class="description_discliamer" data-nosnippet>
 				This content was generated by an AI.
 			</span> -->
 		</div>
 
-		{{ else if .CurrentUser.IsAdmin .Config }}
+		{{- else if .CurrentUser.IsAdmin .Config -}}
 		<div class="unpublished">
 			<p>UNPUBLISHED DESCRIPTION:</p>
 			<div class="video-description">
-				{{ .CurrentPost.Description }}
+				{{- .CurrentPost.Description -}}
 			</div>
 		</div>
-		{{ end }}
+		{{- end -}}
 
 		<!-- Review Widget -->
 		<section class="review-section opinion-section">
@@ -297,7 +295,7 @@
 			{{- $userHasReview := .CurrentPost.UserActions.Review.IsCurrentUser -}}
 
 			<!-- Review Dialog -->
-			{{ if .CurrentUser.IsAuthenticated }}
+			{{- if .CurrentUser.IsAuthenticated -}}
 			<dialog id="review-dialog" class="modal post-dialog opinion-dialog" closedby="any">
 				<form class="review-form" action="/api/video/{{ .CurrentPost.VideoID }}/review" method="POST">
 
@@ -321,24 +319,22 @@
 
 						<div class="review-stars-group">
 							<div class="rate-stars rate-stars-review">
-								{{ range .CurrentPost.Stars }}
-								{{ $starsText := "stars" }}
-								{{ if eq . 1 }}
-								{{ $starsText = "star" }}
-								{{ end }}
+								{{- range .CurrentPost.Stars -}}
+								{{- $starsText := "stars" -}}
+								{{- if eq . 1 }}{{ $starsText = "star" }}{{ end -}}
 								<label>
 									<input {{ if eq $userRating . }}checked{{ end }} type="radio" name="rating"
 										value="{{ . }}" aria-label="{{ . }} {{ $starsText }}" required>
 									<span>★</span>
 								</label>
-								{{ end }}
+								{{- end -}}
 							</div>
 							<div class="review-big-star-wrapper">
 								<svg>
 									<use href="#big-hearth" />
 								</svg>
 								<span class="rating-big-star-value review-big-star-value">
-									{{ if $userRating }}{{ $userRating }}{{ else }}?{{ end }}
+									{{- if $userRating }}{{ $userRating }}{{ else }}?{{ end -}}
 								</span>
 							</div>
 						</div>
@@ -355,7 +351,7 @@
 									$userHasReview }}hidden{{ end }}>Delete</button>
 								<button type="submit" id="btn-submit-review" class="btn-review btn-submit-review"
 									data-has-review="{{ $userHasReview }}">
-									{{ if $userHasReview }}Update{{ else }}Submit{{ end }}
+									{{- if $userHasReview }}Update{{ else }}Submit{{ end -}}
 								</button>
 							</div>
 						</div>
@@ -380,7 +376,7 @@
 
 				</form>
 			</dialog>
-			{{ end }}
+			{{- end -}}
 
 			<!-- Reviews List Header -->
 			<header class=" reviews-header">
@@ -390,13 +386,13 @@
 						<span id="review-count">{{ .CurrentPost.Reviews.TotalNum }}</span>
 					</span>
 					<h3>
-						{{ if eq .CurrentPost.Reviews.TotalNum 0 }}
+						{{- if eq .CurrentPost.Reviews.TotalNum 0 -}}
 						No Reviews Yet
-						{{ else if eq .CurrentPost.Reviews.TotalNum 1 }}
+						{{- else if eq .CurrentPost.Reviews.TotalNum 1 -}}
 						User Review
-						{{ else }}
+						{{- else -}}
 						User Reviews
-						{{ end }}
+						{{- end -}}
 					</h3>
 				</div>
 
@@ -405,16 +401,15 @@
 					id="btn-open-review" class="btn-open-post-dialog" aria-haspopup="dialog">
 					<span class="open-review-symbol">+</span>
 					<span id="btn-open-review-text">
-						{{ if $userHasReview }}Update Review{{ else }}Post Review{{ end}}
+						{{- if $userHasReview }}Update Review{{ else }}Post Review{{ end -}}
 					</span>
 				</button>
 			</header>
 
 			<!-- Reviews List -->
-			{{ with .CurrentPost.Reviews }}
-
+			{{- with .CurrentPost.Reviews -}}
 			<div id="reviews-list" class="reviews-list">
-				{{ range .Items }}
+				{{- range .Items -}}
 				<div itemprop="review" itemscope itemtype="https://schema.org/Review" {{ if .IsCurrentUser }}
 					id="current-user-review" {{ end }} class="review-card">
 					<header class="review-header">
@@ -422,8 +417,7 @@
 							<img src="{{ .LocalAvatarURL }}" class=" review-user-avatar" width="20" height="20"
 								loading="lazy" alt="{{ .Username }}">
 							<span itemprop="author" itemscope itemtype="https://schema.org/Person">
-								<span itemprop="name" class="review-user-name">{{ .Username
-									}}</span>
+								<span itemprop="name" class="review-user-name">{{ .Username }}</span>
 							</span>
 							<span itemprop="reviewRating" itemscope itemtype="https://schema.org/Rating"
 								class="review-user-rating">
@@ -433,58 +427,56 @@
 								<meta itemprop="bestRating" content="10">
 							</span>
 							<meta itemprop="datePublished" content="{{ .UpdatedAt }}">
-							<span class="review-date" data-utc-time="{{ .UpdatedAt }}">Loading
-								date...</span>
+							<span class="review-date" data-utc-time="{{ .UpdatedAt }}">Loading date...</span>
 						</div>
 						<h4 itemprop="name" class="review-headline">{{ .HTMLHeadline }}</h4>
 					</header>
 					<div itemprop="reviewBody" class="review-content">{{ .HTMLContent }}</div>
 				</div>
-				{{ end }}
+				{{- end -}}
 			</div>
 
-			{{ with .NextCursor }}
+			{{- with .NextCursor -}}
 			<button id="load-more-reviews-btn" class="load-more-reviews-btn" data-video-id="{{ $.CurrentPost.VideoID }}"
 				data-cursor="{{ . }}">
 				Load More
 			</button>
-			{{ end }}
-
-			{{ end }}
+			{{- end -}}
+			{{- end -}}
 		</section>
 
 	</div>
 
 	<div class="sidebar_wrap">
 
-		{{ if .CurrentUser.IsAdmin .Config }}
+		{{- if .CurrentUser.IsAdmin .Config -}}
 		<span class="admin-buttons">
 			<button data-modal="video" class="modal-button">Delete</button>
 			<a href="/video/{{ .CurrentPost.VideoID }}/edit" class="modal-button edit-content">Edit</a>
 		</span>
-		{{ end }}
+		{{- end -}}
 
 		<div class="related_videos">
-			{{ range .CurrentPost.RelatedPosts }}
+			{{- range .CurrentPost.RelatedPosts -}}
 			<a href="/video/{{ .VideoID }}/" class="related-video">
 				<img class="related-img" src="{{ .Thumbnail.Url  }}" width="{{ .Thumbnail.Width }}"
 					height="{{ .Thumbnail.Height }}" alt="{{ .GetTitle }}">
 				<h2 class="related-post-title">
-					{{ .GetTitle }}
+					{{- .GetTitle -}}
 				</h2>
 			</a>
-			{{ end }}
+			{{- end -}}
 		</div>
 
-		{{ if and (not .CurrentUser.IsAuthenticated) .Config.AdSenseAccount .Config.AdSlotSidebar }}
+		{{- if and (not .CurrentUser.IsAuthenticated) .Config.AdSenseAccount .Config.AdSlotSidebar -}}
 		<ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-{{ .Config.AdSenseAccount }}"
 			data-ad-slot="{{ .Config.AdSlotSidebar }}" data-ad-format="auto" data-full-width-responsive="true"></ins>
 		<script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
-		{{ end }}
+		{{- end -}}
 	</div>
 </article>
 
-{{ if .CurrentUser.IsAdmin .Config }}
+{{- if .CurrentUser.IsAdmin .Config -}}
 <dialog data-body="video" class="modal" closedby="any">
 	<form class="modal-content" action="/video/{{ .CurrentPost.VideoID }}/delete" method="POST">
 		<input type="hidden" name="_method" value="DELETE">
@@ -498,7 +490,7 @@
 		</div>
 	</form>
 </dialog>
-{{ end }}
+{{- end -}}
 
 
 <!-- Define the big star svg -->
@@ -509,12 +501,12 @@
 	</symbol>
 </svg>
 
-{{ end }} <!-- content end -->
+{{- end -}} <!-- content end -->
 
-{{ define "extra_scripts" }}
+{{- define "extra_scripts" -}}
 <script defer src='{{ AddVersion "/static/js/post.js" }}'></script>
-{{ if .CurrentUser.IsAuthenticated }}
+{{- if .CurrentUser.IsAuthenticated -}}
 <script defer src='{{ AddVersion "/static/js/likes.js" }}'></script>
 <script defer src='{{ AddVersion "/static/js/rating.js" }}'></script>
-{{ end }}
-{{ end }}
+{{- end -}}
+{{- end -}}
