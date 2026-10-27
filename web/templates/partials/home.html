@@ -25,16 +25,8 @@
     {
         "@context": "https://schema.org",
         "@type": "WebSite",
-        "name": "Factual Docs",
-        "url": "https://{{ .Config.Domain }}",
-        "potentialAction": {
-            "@type": "SearchAction",
-            "target": {
-                "@type": "EntryPoint",
-                "urlTemplate": "https://{{ .Config.Domain }}/search/?q={search_term}"
-            },
-            "query-input": "required name=search_term"
-        }
+        "name": "{{ .Config.AppName }}",
+        "url": "https://{{ .Config.Domain }}"
     }
 </script>
 {{- end -}}
