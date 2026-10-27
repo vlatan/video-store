@@ -1,35 +1,35 @@
-{{ template "base.html" . }}
+{{- template "base.html" . -}}
 
-{{ define "extra_preload_css" }}
+{{- define "extra_preload_css" -}}
 <link rel="preload" href='{{ AddVersion "/static/css/content.css" }}' as="style">
-{{ end }}
+{{- end -}}
 
-{{ define "extra_css" }}
+{{- define "extra_css" -}}
 <link rel="stylesheet" type="text/css" href='{{ AddVersion "/static/css/content.css" }}'>
-{{ end }}
+{{- end -}}
 
-{{ define "extra_meta" }}
+{{- define "extra_meta" -}}
 <meta property='og:title' content='{{ .Title }}'>
 <meta property='og:type' content='article'>
 <meta property='og:url' content='{{ .BaseCanonicalURL }}'>
-{{ end }}
+{{- end -}}
 
-{{ define "title_tag" }}
-{{ .Title }} - {{ .Config.AppName }}
-{{ end }}
+{{- define "title_tag" -}}
+{{- .Title }} - {{ .Config.AppName -}}
+{{- end -}}
 
-{{ define "content" }}
+{{- define "content" -}}
 <div class="content-title-wrap">
     <div class="content-title">
         <h1>{{ .Title }}</h1>
-        {{ if .Posts.TotalNum }}
+        {{- if .Posts.TotalNum -}}
         <span>&ensp;-&ensp;<span id="faved-counter">{{ .Posts.TotalNum }}</span> docs</span>
-        {{ end }}
+        {{- end -}}
     </div>
 </div>
 
 <div id="scroller" class="scroll-content" {{ with .Posts -}} data-cursor="{{ .NextCursor }}" {{- end }}>
-    {{ range $index, $item := .Posts.Items }}
+    {{- range $index, $item := .Posts.Items -}}
     <div class="video-block">
         <button type="button" data-id="{{ $item.VideoID }}" class="remove-option" aria-label="Close">&times;</button>
         <a class="video-link" href="/video/{{ $item.VideoID }}/">
@@ -40,17 +40,17 @@
             <h2 class="video-title">{{ $item.GetTitle }}</h2>
         </a>
     </div>
-    {{ end }}
+    {{- end -}}
 </div>
 
 <div class="sentinel" id="sentinel">
     <div role="status"></div>
 </div>
-{{ end }}
+{{- end -}}
 
-{{ define "extra_scripts" }}
+{{- define "extra_scripts" -}}
 <script defer src='{{ AddVersion "/static/js/list.js" }}'></script>
-{{ if and .Posts.TotalNum (gt .Posts.TotalNum .Config.PostsPerPage) }}
+{{- if and .Posts.TotalNum (gt .Posts.TotalNum .Config.PostsPerPage) -}}
 <script defer src='{{ AddVersion "/static/js/scroll.js" }}'></script>
-{{ end }}
-{{ end }}
+{{- end -}}
+{{- end -}}

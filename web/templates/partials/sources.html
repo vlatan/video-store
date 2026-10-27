@@ -1,38 +1,38 @@
-{{ template "base.html" . }}
+{{- template "base.html" . -}}
 
-{{ define "extra_preload_css" }}
+{{- define "extra_preload_css" -}}
 <link rel="preload" href='{{ AddVersion "/static/css/sources.css" }}' as="style">
-{{ end }}
+{{- end -}}
 
-{{ define "extra_css" }}
+{{- define "extra_css" -}}
 <link rel="stylesheet" type="text/css" href='{{ AddVersion "/static/css/sources.css" }}'>
-{{ end }}
+{{- end -}}
 
-{{ define "extra_meta" }}
+{{- define "extra_meta" -}}
 <meta property='og:title' content='{{ .Title }}'>
 <meta property='og:url' content='{{ .BaseCanonicalURL }}'>
 <meta property='og:type' content='article'>
-{{ end }}
+{{- end -}}
 
-{{ define "title_tag" }}
-{{ .Title }} - {{ .Config.AppName }}
-{{ end }}
+{{- define "title_tag" -}}
+{{- .Title }} - {{ .Config.AppName -}}
+{{- end -}}
 
-{{ define "content" }}
+{{- define "content" -}}
 <div class="playlists-content">
 
-    {{ range .Sources }}
+    {{- range .Sources -}}
     <a class="playlist-link" href="/source/{{ .PlaylistID }}/">
         <img class="channel-img" src="{{ .Thumbnail.Url }}" width="{{ .Thumbnail.Width }}"
             height="{{ .Thumbnail.Height }}" alt="{{ .Title }}">
-        {{ if .ChannelTitle }}
+        {{- if .ChannelTitle -}}
         <h2 class="playlist-title">{{ .ChannelTitle }}</h2>
-        {{ else }}
+        {{- else -}}
         <h2 class="playlist-title">{{ .Title }}</h2>
-        {{ end }}
+        {{- end -}}
 
     </a>
-    {{ end }}
+    {{- end -}}
 
     <a class="playlist-link" href="/source/other/">
         <span class="orphans">Other</span>
@@ -40,4 +40,4 @@
     </a>
 
 </div>
-{{ end }}
+{{- end -}}

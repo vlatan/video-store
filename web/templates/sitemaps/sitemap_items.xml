@@ -1,11 +1,10 @@
-{{ range .XMLDeclarations }}{{ . }}
-{{ end }}
+{{- range .XMLDeclarations }}{{ . }}{{ end -}}
 
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-    {{ range .SitemapItems }}
+    {{- range .SitemapItems -}}
     <url>
         <loc>{{ .Location }}</loc>
         <lastmod>{{ .LastModified }}</lastmod>
     </url>
-    {{ end }}
+    {{- end -}}
 </urlset>

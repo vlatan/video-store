@@ -1,5 +1,5 @@
 <div id="scroller" class="scroll-content" {{ with .Posts -}} data-cursor="{{ .NextCursor }}" {{- end }}>
-    {{ range $index, $item := .Posts.Items }}
+    {{- range $index, $item := .Posts.Items -}}
     <a class="video-link" href="/video/{{ $item.VideoID }}/">
         <span class="video-img-wrap">
             <img {{ if gt $index 7 }} loading="lazy" {{ end }} class="video-img" alt="{{ $item.GetTitle }}"
@@ -7,7 +7,7 @@
         </span>
         <h2 class="video-title">{{ $item.GetTitle }}</h2>
     </a>
-    {{ end }}
+    {{- end -}}
 </div>
 
 <div class="sentinel" id="sentinel">

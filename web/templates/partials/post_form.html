@@ -1,112 +1,103 @@
-{{ template "base.html" . }}
+{{- template "base.html" . -}}
 
-{{ define "extra_preload_css" }}
+{{- define "extra_preload_css" -}}
 <link rel="preload" href='{{ AddVersion "/static/css/form.css" }}' as="style">
-{{ end }}
+{{- end -}}
 
-{{ define "extra_css" }}
+{{- define "extra_css" -}}
 <link rel="stylesheet" type="text/css" href='{{ AddVersion "/static/css/form.css" }}'>
-{{ end }}
+{{- end -}}
 
-{{ define "title_tag" }}
-{{ .Title }} - {{ .Config.AppName }}
-{{ end }}
+{{- define "title_tag" -}}
+{{- .Title }} - {{ .Config.AppName -}}
+{{- end -}}
 
-{{ define "content" }}
+{{- define "content" -}}
 <div class="form-content">
     <form id="main-form" method="POST" action="">
         <fieldset class="form-group">
             <legend class="form-legend">{{ .Form.Legend }}</legend>
 
-            {{ with .Form.Title }}
+            {{- with .Form.Title -}}
             <div class="form-group">
                 <label class="form-label" for="title">{{ .Label }}</label>
                 <input class="form-input" id="title" name="title" placeholder="{{ .Placeholder }}" required
                     value="{{ .Value }}" type="text">
             </div>
-            {{ end }}
+            {{- end -}}
 
-            {{ with .Form.Content }}
+            {{- with .Form.Content -}}
             <div class="form-group">
                 <label class="form-label" for="content">{{ .Label }}</label>
-                {{ if .Type.IsInput }}
+                {{- if .Type.IsInput -}}
                 <input class="form-input" id="content" name="content" placeholder="{{ .Placeholder }}" required
                     value="{{ .Value }}" type="text">
-                {{ else if .Type.IsTextarea }}
+                {{- else if .Type.IsTextarea -}}
                 <textarea class="form-input" id="content" name="content" placeholder="{{ .Placeholder }}" required
                     rows="10">{{ .Value }}</textarea>
-                {{ end }}
+                {{- end -}}
             </div>
-            {{ end }}
+            {{- end -}}
 
-            {{ with .Form.Category }}
-            {{ $currentCatName := .Value }}
+            {{- with .Form.Category -}}
+            {{- $currentCatName := .Value -}}
             <div class="form-group">
                 <label class="form-label" for="category">{{ .Label }}</label>
                 <select id="category" class="form-select" name="category">
-                    {{ $selected := "" }}
-                    {{ if not $currentCatName }}
-                    {{ $selected = "selected" }}
-                    {{ end }}
-                    <option value="" {{ $selected }}>None</option>
-                    {{ range $.Categories }}
-                    {{ $selected := "" }}
-                    {{ if eq .Name $currentCatName }}
-                    {{ $selected = "selected" }}
-                    {{ end }}
-                    <option value="{{ .Name }}" {{ $selected }}>{{ .Name }}</option>
-                    {{ end }}
+                    <option value="" {{ if not $currentCatName }}selected{{ end }}>None</option>
+                    {{- range $.Categories -}}
+                    <option value="{{ .Name }}" {{ if eq .Name $currentCatName }}selected{{ end }}>{{ .Name }}</option>
+                    {{- end -}}
                 </select>
             </div>
-            {{ end }}
+            {{- end -}}
 
-            {{ with .Form.Directors }}
+            {{- with .Form.Directors -}}
             <fieldset class="directors-fieldset form-group">
                 <legend class="directors-legend form-label">Directors</legend>
                 <div id="directors-group" class="directors-group">
                     <div id="directors-list" class="directors-list">
-                        {{ range . }}
+                        {{- range . -}}
                         <div class="director-row">
                             <input class="form-input" name="directors" placeholder="{{ .Placeholder }}" required
                                 value="{{ .Value }}" type="text" maxlength="256">
                             <button type="button" class="remove-director-btn">&times;</button>
                         </div>
-                        {{ end }}
+                        {{- end -}}
                     </div>
-                    <button type="button" id="add-director-btn" class="add-director-btn">+ Add
-                        Director</button>
+                    <button type="button" id="add-director-btn" class="add-director-btn">+ Add Director</button>
                 </div>
             </fieldset>
-            {{ end }}
+            {{- end -}}
 
-            {{ with .Form.ReleaseYear }}
+            {{- with .Form.ReleaseYear -}}
             <div class="form-group">
                 <label class="form-label" for="released">{{ .Label }}</label>
                 <input class="form-input released-input" id="released" name="released" placeholder="{{ .Placeholder }}"
                     value="{{ .Value }}" type="text" inputmode="numeric" maxlength="4" pattern="{{ .Pattern }}"
                     title="{{ .Title }}">
             </div>
-            {{ end }}
+            {{- end -}}
         </fieldset>
         <div class="form-group button-group">
             <button type="submit" class="form-button" id="submit" name="submit">Submit</button>
-            {{ with .CurrentPost }}
+            {{- with .CurrentPost -}}
             <a role="button" class="form-button" href="/video/{{ .VideoID }}/">Cancel</a>
-            {{ end }}
+            {{- end -}}
             <div class="submit-spinner"></div>
-            {{ with .Form.Error }}
+            {{- with .Form.Error -}}
             <div class="form-invalid-feedback">
                 <span>{{ . }}.</span>
             </div>
-            {{ end }}
+            {{- end -}}
         </div>
     </form>
 </div>
-{{ end }}
+{{- end -}}
 
 
-{{ define "extra_scripts" }}
-{{ if .CurrentUser.IsAdmin .Config }}
+{{- define "extra_scripts" -}}
+{{- if .CurrentUser.IsAdmin .Config -}}
 <script defer src='{{ AddVersion "/static/js/form.js" }}'></script>
-{{ end }}
-{{ end }}
+{{- end -}}
+{{- end -}}
