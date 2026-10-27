@@ -1,48 +1,47 @@
-{{ template "base.html" . }}
+{{- template "base.html" . -}}
 
-{{ define "extra_preload_css" }}
+{{- define "extra_preload_css" -}}
 <link rel="preload" href='{{ AddVersion "/static/css/content.css" }}' as="style">
-{{ end }}
+{{- end -}}
 
-{{ define "extra_css" }}
+{{- define "extra_css" -}}
 <link rel="stylesheet" type="text/css" href='{{ AddVersion "/static/css/content.css" }}'>
-{{ end }}
+{{- end -}}
 
-{{ define "extra_meta" }}
+{{- define "extra_meta" -}}
 <meta property='og:title' content='{{ .Title }}'>
 <meta property='og:type' content='article'>
 <meta property='og:url' content='{{ .BaseCanonicalURL }}'>
-{{ if .CurrentYear }} <!-- Do not index relese year taxonomy -->
+{{- if .CurrentYear -}} <!-- Do not index relese year taxonomy -->
 <meta name="robots" content="noindex, follow">
-{{ end }}
-{{ end }}
+{{- end -}}
+{{- end -}}
 
-{{ define "title_tag" }}
-{{ .Title }} - {{ .Config.AppName }}
-{{ end }}
+{{- define "title_tag" -}}
+{{- .Title }} - {{ .Config.AppName -}}
+{{- end -}}
 
-{{ define "content" }}
+{{- define "content" -}}
 <div class="content-title-wrap">
     <div class="content-title">
         <h1>{{ .Title }}</h1>
-        {{ if .Posts.TotalNum }}
+        {{- if .Posts.TotalNum -}}
         <span>&ensp;-&ensp;{{ .Posts.TotalNum }} docs</span>
-        {{ end }}
+        {{- end -}}
     </div>
 
     <!-- Add delete button if source taxonomy -->
-    {{ if and .CurrentSource (.CurrentUser.IsAdmin .Config) (ne .CurrentSource.PlaylistID "other") }}
+    {{- if and .CurrentSource (.CurrentUser.IsAdmin .Config) (ne .CurrentSource.PlaylistID "other") -}}
     <span class="admin-buttons">
         <button data-modal="source" class="modal-button">Delete</button>
     </span>
-    {{ end }}
+    {{- end -}}
 </div>
-{{ template "content.html" . }}
-{{ end }}
 
+{{- template "content.html" . }}{{ end -}}
 
 <!-- Add delete dialog if source taxonomy -->
-{{ if and .CurrentSource (.CurrentUser.IsAdmin .Config) (ne .CurrentSource.PlaylistID "other") }}
+{{- if and .CurrentSource (.CurrentUser.IsAdmin .Config) (ne .CurrentSource.PlaylistID "other") -}}
 <dialog data-body="source" class="modal" closedby="any">
     <form class="modal-content" action="/source/{{ .CurrentSource.PlaylistID }}/delete" method="POST">
         <input type="hidden" name="_method" value="DELETE">
@@ -56,8 +55,8 @@
         </div>
     </form>
 </dialog>
-{{ end }}
+{{- end -}}
 
-{{ define "extra_scripts" }}
+{{- define "extra_scripts" -}}
 <script defer src='{{ AddVersion "/static/js/scroll.js" }}'></script>
-{{ end }}
+{{- end -}}
