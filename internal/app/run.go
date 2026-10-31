@@ -1,6 +1,7 @@
 package app
 
 import (
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -35,7 +36,7 @@ func (a *App) Run() error {
 	// s.Server.Shutdown(ctx) method was called,
 	// ListenAndServe will return ErrServerClosed.
 	err = a.server.ListenAndServe()
-	if err != nil && err != http.ErrServerClosed {
+	if err != nil && !errors.Is(err, http.ErrServerClosed) {
 		return err
 	}
 
