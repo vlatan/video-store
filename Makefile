@@ -12,6 +12,7 @@ run:
 # Clean the binary
 clean:
 	@echo "Cleaning..."
+	@go clean
 	@rm -f ./bin/*
 
 .PHONY: build run clean
