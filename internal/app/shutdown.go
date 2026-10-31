@@ -6,6 +6,8 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/vlatan/video-store/internal/utils/color"
 )
 
 // Shutdown listens for SIGINT and SIGTERM signals,
@@ -21,7 +23,7 @@ func (a *App) Shutdown(done chan<- struct{}) {
 	// This channel is closed by the sender and the program proceeds.
 	<-ctx.Done()
 
-	fmt.Println("Shutting down gracefully, press Ctrl+C again to force.")
+	color.Red("Shutting down gracefully, press Ctrl+C again to force")
 
 	// Cancel the context, stop watching for termination signals.
 	// Now if the user presses Ctrl+C again (or someone sends SIGINT, SIGTERM signal),
@@ -38,12 +40,12 @@ func (a *App) Shutdown(done chan<- struct{}) {
 	// Shutdown will wait for connections to return to idle,
 	// but in this case up to 5 seconds.
 	if err := a.server.Shutdown(ctx); err != nil {
-		fmt.Printf("Server forced to shutdown with error: %v\n", err)
+		color.Red(fmt.Sprintf("Server forced to shutdown with error: %v", err))
 	}
 
 	// Perform cleanup. Close the DB pool and Redis connections.
 	if err := a.cleanup(); err != nil {
-		fmt.Printf("Error during cleanup: %v\n", err)
+		color.Red(fmt.Sprintf("Error during cleanup: %v", err))
 	}
 
 	// Notify the main goroutine that the shutdown is complete

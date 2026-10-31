@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+
+	"github.com/vlatan/video-store/internal/utils/color"
 )
 
 // Run runs the app by making the HTTP server listen and serve
@@ -17,9 +19,9 @@ func (a *App) Run() error {
 	// Gracefully shut down the server there if needed.
 	go a.Shutdown(done)
 
-	fmt.Printf("Server running on: http://%s\n", a.server.Addr)
+	color.Yellow(fmt.Sprintf("Server running on: http://%s", a.server.Addr))
 	if a.domain != "" {
-		fmt.Printf("Website available at: https://%s\n", a.domain)
+		color.Yellow(fmt.Sprintf("Website available at: https://%s", a.domain))
 	}
 
 	// If the HTTP server was shut down, meaning
