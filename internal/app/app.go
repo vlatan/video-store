@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/http"
 	"runtime"
 	"time"
@@ -182,7 +183,7 @@ func New() (*App, error) {
 
 		// The HTTP server
 		server: &http.Server{
-			Addr:         fmt.Sprintf(":%d", cfg.Port),
+			Addr:         net.JoinHostPort(cfg.Host, cfg.Port),
 			IdleTimeout:  time.Minute,
 			ReadTimeout:  10 * time.Second,
 			WriteTimeout: 30 * time.Second,

@@ -23,10 +23,12 @@ const (
 )
 
 type Config struct {
-	// Running localy or not
+	// General settings
 	Debug    bool   `env:"DEBUG" envDefault:"false"`
 	Protocol string `env:"PROTOCOL" envDefault:"https"`
 	Target   Target `env:"TARGET" envDefault:"app"`
+	Host     string `env:"HOST" envDefault:"0.0.0.0"`
+	Port     string `env:"PORT" envDefault:"5000"`
 
 	// Sessions
 	AuthKey             Secret `env:"AUTH_KEY"`
@@ -41,7 +43,7 @@ type Config struct {
 	AppGenre        string `env:"APP_GENRE"`
 	AppTagline      string `env:"APP_TAGLINE" envDefault:"Video Library"`
 	AppDescription  string `env:"APP_DESCRIPTION"`
-	Domain          string `env:"DOMAIN" envDefault:"localhost:5000"`
+	Domain          string `env:"DOMAIN"`
 	GtagID          string `env:"GTAG_ID"`
 	PostsPerPage    int    `env:"POSTS_PER_PAGE" envDefault:"24"`
 	NumRelatedPosts int    `env:"NUM_RELATED_POSTS" envDefault:"5"`
@@ -100,9 +102,6 @@ type Config struct {
 	DBUsername string `env:"DB_USERNAME"`
 	DBPassword string `env:"DB_PASSWORD"`
 	DBMaxConns int32  `env:"DB_MAX_CONNS" envDefault:"4"`
-
-	// Local port
-	Port int `env:"PORT" envDefault:"5000"`
 
 	// Worker expected runtime
 	WorkerExpectedRuntime time.Duration `env:"WORKER_EXPECTED_RUNTIME" envDefault:"1h"`
