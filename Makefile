@@ -1,18 +1,18 @@
 # Define build flags for a static Linux amd64 binary
 BUILD_FLAGS = CGO_ENABLED=0 GOOS=linux GOARCH=amd64
 
+.PHONY: build
 build:
-	@echo "Building..."
+	@echo "building..."
 	@${BUILD_FLAGS} go build -o ./bin/app ./cmd/app
 
-# Run the application
-run:
-	@go run ./cmd/app
+.PHONY: run 
+run: build
+	@./bin/app
 
-# Clean the binary
+.PHONY: clean 
 clean:
-	@echo "Cleaning..."
+	@echo "cleaning..."
 	@go clean
 	@rm -f ./bin/*
 
-.PHONY: build run clean
