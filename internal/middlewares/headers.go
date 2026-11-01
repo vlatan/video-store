@@ -28,7 +28,7 @@ func (s *Service) AddHeaders(next http.Handler) http.Handler {
 			w.Header().Set("Vary", "Cookie")
 		}
 
-		// Add no cache headers if no static file and user is logged in
+		// Add no cache headers if this is no static file and user is logged in
 		if !pathx.IsStatic(r.URL.Path) &&
 			ctxd.GetUser(r.Context()).IsAuthenticated() {
 			w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
