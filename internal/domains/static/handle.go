@@ -25,7 +25,7 @@ func (s *Service) Handle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Set long max age cache conttrol and vary cache based on compression
-	w.Header().Set("Cache-Control", "max-age=31536000")
+	w.Header().Set("Cache-Control", "public, max-age=31536000")
 	w.Header().Set("Vary", "Accept-Encoding")
 
 	// Get the file information
