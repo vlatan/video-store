@@ -90,7 +90,8 @@ func (a *App) RegisterRoutes() *App {
 		a.mw.LoadRequestId,                      // Load request ID in the context
 		a.user.Load,                             // Load user data from seesion into context
 		a.mw.Logging,                            // Log the request, unless healthcheck
-		a.mw.AddHeaders,                         // Add standard headers to response
+		a.mw.StandardHeaders,                    // Add standard headers to response
+		a.mw.CacheHeaders,                       // Add cache headers to response
 		http.NewCrossOriginProtection().Handler, // Provide modern CSRF protection
 		a.mw.RecoverPanic,                       // Log panic in mux and return 500 error response to client
 	)(mux)

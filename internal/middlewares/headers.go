@@ -7,8 +7,8 @@ import (
 	"github.com/vlatan/video-store/internal/utils/pathx"
 )
 
-// AddHeaders adds  various headers to the response
-func (s *Service) AddHeaders(next http.Handler) http.Handler {
+// StandardHeaders adds  various headers to the response
+func (s *Service) StandardHeaders(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		// Prevent MIME type sniffing
@@ -22,6 +22,14 @@ func (s *Service) AddHeaders(next http.Handler) http.Handler {
 
 		// HSTS (HTTPS only)
 		w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload")
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+// CacheHeaders adds cache related headers to the response
+func (s *Service) CacheHeaders(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		// For no static files vary the browser cache for cookies
 		if !pathx.IsStatic(r.URL.Path) {
@@ -38,4 +46,14 @@ func (s *Service) AddHeaders(next http.Handler) http.Handler {
 
 		next.ServeHTTP(w, r)
 	})
+}
+
+// PublicCache adds cache control header for non-admin users
+func (s *Service) PublicCache(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if ctxd.GetUser(r.Context()).IsAdmin(s.cfg) {
+			w.Header().Set("Cache-Control", "public, max-age=3600")
+		}
+		next(w, r)
+	}
 }
