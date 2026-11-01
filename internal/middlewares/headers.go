@@ -7,8 +7,8 @@ import (
 	"github.com/vlatan/video-store/internal/utils/pathx"
 )
 
-// AddHeaders adds  various headers to the response
-func (s *Service) AddHeaders(next http.Handler) http.Handler {
+// StandardHeaders adds  various headers to the response
+func (s *Service) StandardHeaders(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		// Prevent MIME type sniffing
@@ -23,15 +23,26 @@ func (s *Service) AddHeaders(next http.Handler) http.Handler {
 		// HSTS (HTTPS only)
 		w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload")
 
-		// For no-files vary the browser cache for cookies
-		if !pathx.IsFile(r.URL.Path) {
+		next.ServeHTTP(w, r)
+	})
+}
+
+// CacheHeaders adds cache related headers to the response
+func (s *Service) CacheHeaders(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		// For NOT static files vary the browser cache by cookie,
+		// and set CDN cache with TTL of one day.
+		// Basically only for `html`, `.xml` and `.txt` pages.
+		if !pathx.IsStatic(r.URL.Path) {
 			w.Header().Set("Vary", "Cookie")
+			w.Header().Set("Cache-Control", "public, s-maxage=86400")
 		}
 
-		// Add no cache headers if necessary
-		if !pathx.IsFile(r.URL.Path) &&
+		// For NOT static files and logged in users do not cache the pages,
+		// override the cache control header.
+		if !pathx.IsStatic(r.URL.Path) &&
 			ctxd.GetUser(r.Context()).IsAuthenticated() {
-
 			w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 			w.Header().Set("Pragma", "no-cache")
 			w.Header().Set("Expires", "0")

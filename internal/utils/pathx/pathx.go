@@ -64,16 +64,14 @@ func Validate(p string) error {
 	return nil
 }
 
-// Check if this is a static file
+// IsStatic checks if the path has `/static/` prefix
+// or it has an extension other than `.txt` or `.xml`.
 func IsStatic(path string) bool {
 	return strings.HasPrefix(path, "/static/") ||
-		slices.Contains(RootFavicons, path)
-}
-
-// IsFile checks if the path is file other than .txt or .xml
-func IsFile(path string) bool {
-	notFiles := []string{"", ".txt", ".xml"}
-	return !slices.Contains(notFiles, filepath.Ext(path))
+		!slices.Contains(
+			[]string{"", ".txt", ".xml"},
+			filepath.Ext(path),
+		)
 }
 
 // GetProjectRoot returns the absolute path to the project root.

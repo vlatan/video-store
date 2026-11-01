@@ -56,8 +56,8 @@ func (a *App) RegisterRoutes() *App {
 	mux.HandleFunc("DELETE /account/delete", a.user.IsAuth(a.auth.Delete))
 
 	// Sitemaps
-	mux.HandleFunc("GET /{part}", a.mw.PublicCache(a.sitemap.Part))
-	mux.HandleFunc("GET /sitemap.xml", a.mw.PublicCache(a.sitemap.Index))
+	mux.HandleFunc("GET /{part}", a.sitemap.Part)
+	mux.HandleFunc("GET /sitemap.xml", a.sitemap.Index)
 
 	// Users
 	mux.HandleFunc("GET /user/favorites/{$}", a.user.IsAuth(a.user.Favorites))
@@ -71,8 +71,8 @@ func (a *App) RegisterRoutes() *App {
 	}
 
 	// Text
-	mux.HandleFunc("GET /robots.txt", a.mw.PublicCache(a.text.Handle))
-	mux.HandleFunc("GET /ads.txt", a.mw.PublicCache(a.text.Handle))
+	mux.HandleFunc("GET /robots.txt", a.text.Handle)
+	mux.HandleFunc("GET /ads.txt", a.text.Handle)
 
 	// Health
 	mux.HandleFunc("GET /api/health/{$}", a.user.IsAdmin(a.health.Info))
@@ -90,7 +90,8 @@ func (a *App) RegisterRoutes() *App {
 		a.mw.LoadRequestId,                      // Load request ID in the context
 		a.user.Load,                             // Load user data from seesion into context
 		a.mw.Logging,                            // Log the request, unless healthcheck
-		a.mw.AddHeaders,                         // Add standard headers to response
+		a.mw.StandardHeaders,                    // Add standard headers to response
+		a.mw.CacheHeaders,                       // Add cache headers to response
 		http.NewCrossOriginProtection().Handler, // Provide modern CSRF protection
 		a.mw.RecoverPanic,                       // Log panic in mux and return 500 error response to client
 	)(mux)
