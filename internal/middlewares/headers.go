@@ -39,7 +39,8 @@ func (s *Service) CacheHeaders(next http.Handler) http.Handler {
 			w.Header().Set("Cache-Control", "public, s-maxage=86400")
 		}
 
-		// For NOT static files and logged in users do not cache the pages
+		// For NOT static files and logged in users do not cache the pages,
+		// override the cache control header.
 		if !pathx.IsStatic(r.URL.Path) &&
 			ctxd.GetUser(r.Context()).IsAuthenticated() {
 			w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
