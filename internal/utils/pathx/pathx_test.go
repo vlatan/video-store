@@ -101,45 +101,18 @@ func TestIsStatic(t *testing.T) {
 
 	tests := []test{
 		{"empty path", "", false},
-		{"non static path", "/foo/bar", false},
-		{"static path", "/static/foo", true},
-	}
-
-	for _, path := range RootFavicons {
-		tests = append(tests, test{"favicon path", path, true})
+		{"non file path", "/foo/bar", false},
+		{"text file", "/foo/bar.txt", false},
+		{"sitemap file", "/sitemap/bar.xml", false},
+		{"file path", "/static/foo.bar", true},
+		{"css file", "/static/foo.css", true},
+		{"root js file", "/foo.js", true},
+		{"any file in the static dir", "/static/bar", true},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := IsStatic(tt.path); got != tt.expected {
-				t.Errorf("got %t, want %t", got, tt.expected)
-			}
-		})
-	}
-}
-
-func TestIsFile(t *testing.T) {
-
-	type test struct {
-		name, path string
-		expected   bool
-	}
-
-	tests := []test{
-		{"empty path", "", false},
-		{"non file path", "/foo/bar", false},
-		{"text file", "/foo/bar.txt", false},
-		{"sitemap file", "/sitemap/bar.xml", false},
-		{"file path", "/static/foo.bar", true},
-	}
-
-	for _, path := range RootFavicons {
-		tests = append(tests, test{"favicon path", path, true})
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := IsFile(tt.path); got != tt.expected {
 				t.Errorf("got %t, want %t", got, tt.expected)
 			}
 		})

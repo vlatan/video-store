@@ -23,15 +23,14 @@ func (s *Service) AddHeaders(next http.Handler) http.Handler {
 		// HSTS (HTTPS only)
 		w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload")
 
-		// For no-files vary the browser cache for cookies
-		if !pathx.IsFile(r.URL.Path) {
+		// For no static files vary the browser cache for cookies
+		if !pathx.IsStatic(r.URL.Path) {
 			w.Header().Set("Vary", "Cookie")
 		}
 
-		// Add no cache headers if necessary
-		if !pathx.IsFile(r.URL.Path) &&
+		// Add no cache headers if no static file and user is logged in
+		if !pathx.IsStatic(r.URL.Path) &&
 			ctxd.GetUser(r.Context()).IsAuthenticated() {
-
 			w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 			w.Header().Set("Pragma", "no-cache")
 			w.Header().Set("Expires", "0")
