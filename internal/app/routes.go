@@ -56,8 +56,8 @@ func (a *App) RegisterRoutes() *App {
 	mux.HandleFunc("DELETE /account/delete", a.user.IsAuth(a.auth.Delete))
 
 	// Sitemaps
-	mux.HandleFunc("GET /{part}", a.mw.PublicCache(a.sitemap.Part))
-	mux.HandleFunc("GET /sitemap.xml", a.mw.PublicCache(a.sitemap.Index))
+	mux.HandleFunc("GET /{part}", a.sitemap.Part)
+	mux.HandleFunc("GET /sitemap.xml", a.sitemap.Index)
 
 	// Users
 	mux.HandleFunc("GET /user/favorites/{$}", a.user.IsAuth(a.user.Favorites))
@@ -71,8 +71,8 @@ func (a *App) RegisterRoutes() *App {
 	}
 
 	// Text
-	mux.HandleFunc("GET /robots.txt", a.mw.PublicCache(a.text.Handle))
-	mux.HandleFunc("GET /ads.txt", a.mw.PublicCache(a.text.Handle))
+	mux.HandleFunc("GET /robots.txt", a.text.Handle)
+	mux.HandleFunc("GET /ads.txt", a.text.Handle)
 
 	// Health
 	mux.HandleFunc("GET /api/health/{$}", a.user.IsAdmin(a.health.Info))

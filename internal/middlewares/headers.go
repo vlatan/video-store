@@ -36,7 +36,7 @@ func (s *Service) CacheHeaders(next http.Handler) http.Handler {
 			w.Header().Set("Vary", "Cookie")
 		}
 
-		// Add no cache headers if this is no static file and user is logged in
+		// Add NO cache headers if this is NOT a static file and the user is logged in
 		if !pathx.IsStatic(r.URL.Path) &&
 			ctxd.GetUser(r.Context()).IsAuthenticated() {
 			w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
@@ -46,14 +46,4 @@ func (s *Service) CacheHeaders(next http.Handler) http.Handler {
 
 		next.ServeHTTP(w, r)
 	})
-}
-
-// PublicCache adds cache control header for non-admin users
-func (s *Service) PublicCache(next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if ctxd.GetUser(r.Context()).IsAdmin(s.cfg) {
-			w.Header().Set("Cache-Control", "public, max-age=3600")
-		}
-		next(w, r)
-	}
 }
