@@ -33,12 +33,13 @@ func (s *Service) CacheHeaders(next http.Handler) http.Handler {
 
 		// For NOT static files vary the browser cache by cookie,
 		// and set CDN cache with TTL of one day.
+		// Basically only for `/`, `.xml` and `.txt` pages.
 		if !pathx.IsStatic(r.URL.Path) {
 			w.Header().Set("Vary", "Cookie")
 			w.Header().Set("Cache-Control", "public, s-maxage=86400")
 		}
 
-		// For NOT static files and logged in users do not cache pages
+		// For NOT static files and logged in users do not cache the pages
 		if !pathx.IsStatic(r.URL.Path) &&
 			ctxd.GetUser(r.Context()).IsAuthenticated() {
 			w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
