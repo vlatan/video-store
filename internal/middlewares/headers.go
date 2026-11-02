@@ -31,9 +31,9 @@ func (s *Service) StandardHeaders(next http.Handler) http.Handler {
 func (s *Service) CacheHeaders(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		// For NOT static files set CDN cache with TTL of one day.
-		// Basically only for `html`, `.xml` and `.txt` pages.
+		// For NO static files (basically only for `html`, `.xml` and `.txt` pages).
 		if !pathx.IsStatic(r.URL.Path) {
+			// Set CDN cache with TTL of one day.
 			w.Header().Set("Cache-Control", "public, s-maxage=86400")
 			// For logged in users do not cache these pages, override the cache control header.
 			if ctxd.GetUser(r.Context()).IsAuthenticated() {
