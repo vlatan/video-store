@@ -27,14 +27,14 @@ func (s *Service) StandardHeaders(next http.Handler) http.Handler {
 	})
 }
 
-// CacheHeaders adds cache related headers to the response
+// CacheHeaders adds cache or no cache related headers to the response
 func (s *Service) CacheHeaders(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		// If NO static file - basically only if `html`, `.xml` and `.txt` pages.
 		if !pathx.IsStatic(r.URL.Path) {
 			// Set CDN cache with TTL of one day.
-			w.Header().Set("Cache-Control", "public, s-maxage=86400")
+			w.Header().Set("Cache-Control", "s-maxage=86400, must-revalidate")
 			// For logged in users do not cache, override the cache control header.
 			if ctxd.GetUser(r.Context()).IsAuthenticated() {
 				w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
