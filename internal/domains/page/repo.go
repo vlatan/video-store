@@ -29,11 +29,12 @@ func (r *Repository) Get(ctx context.Context, slug string) (Page, error) {
 	var content sql.NullString
 
 	// Get single row from DB
-	const query = "SELECT slug, title, content FROM page WHERE slug = $1;"
+	const query = "SELECT slug, title, content, updated_at FROM page WHERE slug = $1;"
 	err := r.db.Pool.QueryRow(ctx, query, slug).Scan(
 		&page.Slug,
 		&page.Title,
 		&content,
+		&page.UpdatedAt,
 	)
 
 	if err != nil {

@@ -30,6 +30,9 @@
         {{- end -}}
     </div>
     {{- .CurrentPage.HTMLContent -}}
+    <small>
+        Last updated: {{ Date .CurrentPage.UpdatedAt -}}
+    </small>
 </div>
 {{- end -}}
 

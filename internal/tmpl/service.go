@@ -54,6 +54,9 @@ func New(
 		"AddVersion": versioner.AddVersion,
 		"Split":      strings.Split,
 		"Now":        time.Now,
+		"Date": func(t time.Time) string {
+			return t.Format("01/02/2006")
+		},
 	}
 
 	templates, err := loadTemplates(m, funcs)
