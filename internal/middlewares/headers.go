@@ -31,11 +31,9 @@ func (s *Service) StandardHeaders(next http.Handler) http.Handler {
 func (s *Service) CacheHeaders(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		// For NOT static files vary the browser cache by cookie,
-		// and set CDN cache with TTL of one day.
+		// For NOT static files set CDN cache with TTL of one day.
 		// Basically only for `html`, `.xml` and `.txt` pages.
 		if !pathx.IsStatic(r.URL.Path) {
-			w.Header().Set("Vary", "Cookie")
 			w.Header().Set("Cache-Control", "public, s-maxage=86400")
 		}
 
