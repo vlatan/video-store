@@ -35,15 +35,12 @@ func (s *Service) CacheHeaders(next http.Handler) http.Handler {
 		// Basically only for `html`, `.xml` and `.txt` pages.
 		if !pathx.IsStatic(r.URL.Path) {
 			w.Header().Set("Cache-Control", "public, s-maxage=86400")
-		}
-
-		// For NOT static files and logged in users do not cache the pages,
-		// override the cache control header.
-		if !pathx.IsStatic(r.URL.Path) &&
-			ctxd.GetUser(r.Context()).IsAuthenticated() {
-			w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
-			w.Header().Set("Pragma", "no-cache")
-			w.Header().Set("Expires", "0")
+			// For logged in users do not cache these pages, override the cache control header.
+			if ctxd.GetUser(r.Context()).IsAuthenticated() {
+				w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+				w.Header().Set("Pragma", "no-cache")
+				w.Header().Set("Expires", "0")
+			}
 		}
 
 		next.ServeHTTP(w, r)
