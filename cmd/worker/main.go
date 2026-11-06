@@ -29,7 +29,7 @@ func main() {
 	}()
 
 	if err := runWorker(ctx); err != nil {
-		log.Println(err)
+		log.Printf("Worker error: %v", err)
 	}
 }
 
@@ -51,7 +51,5 @@ func runWorker(ctx context.Context) error {
 	}
 
 	// Run the worker
-	w.Run(timeoutCtx)
-
-	return nil
+	return w.Run(timeoutCtx)
 }
