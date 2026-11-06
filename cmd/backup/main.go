@@ -22,7 +22,7 @@ func main() {
 	defer fmt.Println(strings.Repeat("-", 70))
 
 	if err := runBackup(ctx); err != nil {
-		log.Println(err)
+		log.Printf("Backup error: %v", err)
 	}
 }
 
