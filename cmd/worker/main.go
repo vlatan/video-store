@@ -18,31 +18,40 @@ func main() {
 	defer fmt.Println(strings.Repeat("-", 70))
 
 	// Listen for OS interruption and termination signals
-	sigCtx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
-
-	cfg, err := config.New()
-	if err != nil {
-		log.Panic(err)
-	}
-
-	// Give the worker a reasonable time to finish
-	ctx, cancel := context.WithTimeout(sigCtx, cfg.WorkerExpectedRuntime)
-	defer cancel()
 
 	// Re-enable default signal handling once the first signal fires,
 	// so a second CTRL+C kills immediately.
 	go func() {
-		<-sigCtx.Done()
+		<-ctx.Done()
 		stop() // unregisters the handler — next signal hits the OS by default (exit)
 	}()
 
-	// Create the worker
-	w, err := worker.New(ctx, cfg)
+	if err := runWorker(ctx); err != nil {
+		log.Println(err)
+	}
+}
+
+func runWorker(ctx context.Context) error {
+
+	cfg, err := config.New()
 	if err != nil {
-		log.Panic(err)
+		return err
+	}
+
+	// Give the worker a reasonable time to finish
+	timeoutCtx, cancel := context.WithTimeout(ctx, cfg.WorkerExpectedRuntime)
+	defer cancel()
+
+	// Create the worker
+	w, err := worker.New(timeoutCtx, cfg)
+	if err != nil {
+		return err
 	}
 
 	// Run the worker
-	w.Run(ctx)
+	w.Run(timeoutCtx)
+
+	return nil
 }
