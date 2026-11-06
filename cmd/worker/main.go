@@ -14,9 +14,6 @@ import (
 
 func main() {
 
-	// Print separator at the end
-	defer fmt.Println(strings.Repeat("-", 70))
-
 	// Listen for OS interruption and termination signals
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
@@ -27,6 +24,9 @@ func main() {
 		<-ctx.Done()
 		stop() // unregisters the handler — next signal hits the OS by default (exit)
 	}()
+
+	// Print separator at the end
+	defer fmt.Println(strings.Repeat("-", 70))
 
 	if err := runWorker(ctx); err != nil {
 		log.Printf("Worker error: %v", err)
