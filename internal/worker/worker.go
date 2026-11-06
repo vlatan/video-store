@@ -37,7 +37,6 @@ type taxer interface {
 
 type Worker struct {
 	id                string
-	cfg               *config.Config
 	post              poster
 	taxonomy          taxer
 	youtube           *yt.Service
@@ -113,7 +112,6 @@ func New(ctx context.Context, cfg *config.Config) (*Worker, error) {
 
 	w := &Worker{
 		id:       uuid.New().String(),
-		cfg:      cfg,
 		post:     postRepo,
 		taxonomy: taxRepo,
 		youtube:  yt,
@@ -132,7 +130,7 @@ func New(ctx context.Context, cfg *config.Config) (*Worker, error) {
 
 	// Create new Redis lock
 	// with bigger TTL than the worker expected runtime
-	redisLockTTL := time.Duration(float64(w.cfg.WorkerExpectedRuntime) * 1.25)
+	redisLockTTL := time.Duration(float64(cfg.WorkerExpectedRuntime) * 1.25)
 	w.lock = rdb.NewLock(workerLockKey, w.id, redisLockTTL)
 
 	// Try to acquire the lock
