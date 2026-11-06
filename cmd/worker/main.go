@@ -33,6 +33,7 @@ func main() {
 	}
 }
 
+// runWorker runs the worker
 func runWorker(ctx context.Context) error {
 
 	cfg, err := config.New()
