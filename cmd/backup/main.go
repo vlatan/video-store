@@ -40,9 +40,5 @@ func runBackup(ctx context.Context) error {
 	}
 
 	backup := backup.New(cfg, r2)
-	if err := backup.Run(ctx); err != nil {
-		return err
-	}
-
-	return nil
+	return backup.Run(ctx)
 }
