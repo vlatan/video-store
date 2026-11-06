@@ -23,12 +23,12 @@ func main() {
 
 	cfg, err := config.New()
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	r2, err := cloudflare.New(ctx, cfg)
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	backup := backup.New(cfg, r2)

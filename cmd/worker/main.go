@@ -23,7 +23,7 @@ func main() {
 
 	cfg, err := config.New()
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	// Give the worker a reasonable time to finish
@@ -40,7 +40,7 @@ func main() {
 	// Create the worker
 	w, err := worker.New(ctx, cfg)
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	// Run the worker
