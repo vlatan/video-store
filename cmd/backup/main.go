@@ -14,25 +14,35 @@ import (
 
 func main() {
 
-	// Print separator at the end
-	defer fmt.Println(strings.Repeat("-", 70))
-
 	// Give the backup a reasonable time to finish
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
+	// Print separator at the end
+	defer fmt.Println(strings.Repeat("-", 70))
+
+	if err := runBackup(ctx); err != nil {
+		log.Println(err)
+	}
+}
+
+// runBackup runs the backup service
+func runBackup(ctx context.Context) error {
+
 	cfg, err := config.New()
 	if err != nil {
-		log.Panic(err)
+		return err
 	}
 
 	r2, err := cloudflare.New(ctx, cfg)
 	if err != nil {
-		log.Panic(err)
+		return err
 	}
 
 	backup := backup.New(cfg, r2)
 	if err := backup.Run(ctx); err != nil {
-		log.Println(err)
+		return err
 	}
+
+	return nil
 }
