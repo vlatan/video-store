@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -9,13 +10,12 @@ import (
 	"github.com/vlatan/video-store/internal/backup"
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/integrations/cloudflare"
-	"github.com/vlatan/video-store/internal/utils/logx"
 )
 
 func main() {
 
 	// Print separator at the end
-	defer logx.Plainln(strings.Repeat("-", 70))
+	defer fmt.Println(strings.Repeat("-", 70))
 
 	// Give the backup a reasonable time to finish
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
