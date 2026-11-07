@@ -18,12 +18,11 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	// Print separator at the end
-	defer fmt.Println(strings.Repeat("-", 70))
-
 	if err := runBackup(ctx); err != nil {
 		log.Printf("Backup error: %v", err)
 	}
+
+	fmt.Println(strings.Repeat("-", 70))
 }
 
 // runBackup runs the backup service

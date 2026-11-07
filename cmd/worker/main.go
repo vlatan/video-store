@@ -25,12 +25,11 @@ func main() {
 		stop() // unregisters the handler — next signal hits the OS by default (exit)
 	}()
 
-	// Print separator at the end
-	defer fmt.Println(strings.Repeat("-", 70))
-
 	if err := runWorker(ctx); err != nil {
 		log.Printf("Worker error: %v", err)
 	}
+
+	fmt.Println(strings.Repeat("-", 70))
 }
 
 // runWorker runs the worker
