@@ -45,7 +45,7 @@ type Worker struct {
 	stats             WorkerStats
 	ytRetryConfig     *retry.Config
 	geminiRetryConfig *retry.Config
-	cleanup           func()
+	Cleanup           func()
 }
 
 // Redis key to lock the worker
@@ -141,7 +141,7 @@ func New(ctx context.Context, cfg *config.Config) (*Worker, error) {
 	log.Println("Lock acquired!")
 
 	// Register the cleanup function
-	w.cleanup = func() {
+	w.Cleanup = func() {
 
 		log.Println("Cleaning up...")
 

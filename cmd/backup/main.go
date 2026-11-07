@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"strings"
 	"time"
 
@@ -18,11 +19,17 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	if err := runBackup(ctx); err != nil {
+	err := runBackup(ctx)
+
+	if err != nil {
 		log.Printf("Backup error: %v", err)
 	}
 
 	fmt.Println(strings.Repeat("-", 70))
+
+	if err != nil {
+		os.Exit(1)
+	}
 }
 
 // runBackup runs the backup service

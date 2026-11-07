@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"os/signal"
 	"strings"
 	"syscall"
@@ -25,19 +26,29 @@ func main() {
 		stop() // unregisters the handler — next signal hits the OS by default (exit)
 	}()
 
-	if err := runWorker(ctx); err != nil {
+	cleanup, err := runWorker(ctx)
+
+	if err != nil {
 		log.Printf("Worker error: %v", err)
 	}
 
+	if cleanup != nil {
+		cleanup()
+	}
+
 	fmt.Println(strings.Repeat("-", 70))
+
+	if err != nil {
+		os.Exit(1)
+	}
 }
 
 // runWorker runs the worker
-func runWorker(ctx context.Context) error {
+func runWorker(ctx context.Context) (func(), error) {
 
 	cfg, err := config.New()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Give the worker a reasonable time to finish
@@ -47,10 +58,9 @@ func runWorker(ctx context.Context) error {
 	// Create the worker
 	w, err := worker.New(timeoutCtx, cfg)
 	if err != nil {
-		return err
+		return w.Cleanup, err
 	}
 
 	// Run the worker
-	w.Run(timeoutCtx)
-	return nil
+	return w.Cleanup, w.Run(timeoutCtx)
 }
