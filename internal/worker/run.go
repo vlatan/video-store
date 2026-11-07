@@ -8,7 +8,7 @@ import (
 )
 
 // Run starts the worker
-func (w *Worker) Run(parentCtx context.Context) error {
+func (w *Worker) Run(parentCtx context.Context) {
 
 	// Cleanup on exit
 	defer w.cleanup()
@@ -50,5 +50,7 @@ func (w *Worker) Run(parentCtx context.Context) error {
 	log.Println("Worker running...")
 	err := w.Process(ctx)
 	w.stats.Log()
-	return err
+	if err != nil {
+		log.Printf("Worker error: %v", err)
+	}
 }

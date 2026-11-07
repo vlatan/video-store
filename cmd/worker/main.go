@@ -51,5 +51,6 @@ func runWorker(ctx context.Context) error {
 	}
 
 	// Run the worker
-	return w.Run(timeoutCtx)
+	w.Run(timeoutCtx)
+	return nil
 }
