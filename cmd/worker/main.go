@@ -26,14 +26,18 @@ func main() {
 		stop() // unregisters the handler — next signal hits the OS by default (exit)
 	}()
 
-	cleanup, err := runWorker(ctx)
+	w, err := runWorker(ctx)
+
+	if w != nil {
+		w.Log()
+	}
 
 	if err != nil {
 		log.Printf("Worker error: %v", err)
 	}
 
-	if cleanup != nil {
-		cleanup()
+	if w != nil {
+		w.Cleanup()
 	}
 
 	fmt.Println(strings.Repeat("-", 70))
@@ -44,7 +48,7 @@ func main() {
 }
 
 // runWorker runs the worker
-func runWorker(ctx context.Context) (func(), error) {
+func runWorker(ctx context.Context) (*worker.Worker, error) {
 
 	cfg, err := config.New()
 	if err != nil {
@@ -58,9 +62,10 @@ func runWorker(ctx context.Context) (func(), error) {
 	// Create the worker
 	w, err := worker.New(timeoutCtx, cfg)
 	if err != nil {
-		return w.Cleanup, err
+		return w, err
 	}
 
 	// Run the worker
-	return w.Cleanup, w.Run(timeoutCtx)
+	err = w.Run(timeoutCtx)
+	return w, err
 }

@@ -23,40 +23,40 @@ type WorkerStats struct {
 }
 
 // Log logs the worker stats
-func (ws WorkerStats) Log() {
+func (w *Worker) Log() {
 
 	stats := []stat{
-		{"Fetched playlists from DB", ws.FetchedDbSources},
-		{"Fetched playlists from YT", ws.FetchedYtSources},
-		{"Fetched channels from YT", ws.FetchedYtChannels},
+		{"Fetched playlists from DB", w.stats.FetchedDbSources},
+		{"Fetched playlists from YT", w.stats.FetchedYtSources},
+		{"Fetched channels from YT", w.stats.FetchedYtChannels},
 	}
 
-	if ws.UpdatedDbSources > 0 {
-		stats = append(stats, stat{"Updated playlists in DB", ws.UpdatedDbSources})
+	if w.stats.UpdatedDbSources > 0 {
+		stats = append(stats, stat{"Updated playlists in DB", w.stats.UpdatedDbSources})
 	}
 
-	stats = append(stats, stat{"Fetched videos from DB", ws.FetchedDbVideos})
-	stats = append(stats, stat{"Fetched videos from YT", ws.FetchedYtVideos})
+	stats = append(stats, stat{"Fetched videos from DB", w.stats.FetchedDbVideos})
+	stats = append(stats, stat{"Fetched videos from YT", w.stats.FetchedYtVideos})
 
-	if ws.AdoptedDbVideos > 0 {
-		stats = append(stats, stat{"Adopted videos in DB", ws.AdoptedDbVideos})
+	if w.stats.AdoptedDbVideos > 0 {
+		stats = append(stats, stat{"Adopted videos in DB", w.stats.AdoptedDbVideos})
 	}
 
-	if len(ws.DeletedDbVideos) > 0 {
-		stats = append(stats, stat{"Deleted videos in DB", len(ws.DeletedDbVideos)})
-		stats = append(stats, stat{"Deleted videos ids", ws.DeletedDbVideos})
+	if len(w.stats.DeletedDbVideos) > 0 {
+		stats = append(stats, stat{"Deleted videos in DB", len(w.stats.DeletedDbVideos)})
+		stats = append(stats, stat{"Deleted videos ids", w.stats.DeletedDbVideos})
 
-		if len(ws.DeletedDbVideos) >= deleteLimit {
+		if len(w.stats.DeletedDbVideos) >= deleteLimit {
 			stats = append(stats, stat{"WARNING: MAX DELETE LIMIT REACHED", ""})
 		}
 	}
 
-	if ws.InsertedDbVideos > 0 {
-		stats = append(stats, stat{"Added videos in DB", ws.InsertedDbVideos})
+	if w.stats.InsertedDbVideos > 0 {
+		stats = append(stats, stat{"Added videos in DB", w.stats.InsertedDbVideos})
 	}
 
-	if ws.UpdatedDbVideos > 0 {
-		stats = append(stats, stat{"Updated videos in DB", ws.UpdatedDbVideos})
+	if w.stats.UpdatedDbVideos > 0 {
+		stats = append(stats, stat{"Updated videos in DB", w.stats.UpdatedDbVideos})
 	}
 
 	logStats(stats)
