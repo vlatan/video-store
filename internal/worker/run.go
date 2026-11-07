@@ -48,6 +48,7 @@ func (w *Worker) Run(parentCtx context.Context) error {
 	}()
 
 	log.Println("Worker running...")
-	defer w.stats.Log()
-	return w.Process(ctx)
+	err := w.Process(ctx)
+	w.stats.Log()
+	return err
 }
