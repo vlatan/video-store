@@ -10,13 +10,6 @@ import (
 // Run starts the worker
 func (w *Worker) Run(parentCtx context.Context) error {
 
-	// Measure execution time
-	start := time.Now()
-	defer func() {
-		elapsed := time.Since(start).Round(time.Second)
-		log.Printf("Time took: %s", elapsed)
-	}()
-
 	ctx, cancel := context.WithCancel(parentCtx)
 	defer cancel()
 

@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/worker"
@@ -26,11 +27,16 @@ func main() {
 		stop() // unregisters the handler — next signal hits the OS by default (exit)
 	}()
 
+	// Measure execution time
+	start := time.Now()
 	w, err := runWorker(ctx)
+	elapsed := time.Since(start).Round(time.Second)
 
 	if w != nil {
 		w.Log()
 	}
+
+	log.Printf("Time took: %s", elapsed)
 
 	if err != nil {
 		log.Printf("Worker error: %v", err)
