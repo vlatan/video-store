@@ -3,6 +3,7 @@ package worker
 import (
 	"context"
 	"errors"
+	"log"
 	"log/slog"
 	"maps"
 	"slices"
@@ -45,6 +46,8 @@ func (w *Worker) Run(parentCtx context.Context) error {
 			}
 		}
 	}()
+
+	log.Println("Worker running...")
 
 	// GET ALL THE PLAYLISTS FROM DATABASE
 	// ###################################################################

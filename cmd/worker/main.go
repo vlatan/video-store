@@ -62,7 +62,6 @@ func runWorker(ctx context.Context) (func(), error) {
 	}
 
 	// Run the worker
-	log.Println("Worker running...")
 	start := time.Now()
 	err = w.Run(timeoutCtx)
 	elapsed := time.Since(start).Round(time.Second)
