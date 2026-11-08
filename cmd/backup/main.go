@@ -20,7 +20,6 @@ func main() {
 	defer cancel()
 
 	err := runBackup(ctx)
-
 	if err != nil {
 		log.Printf("Backup error: %v", err)
 	}
