@@ -183,7 +183,7 @@ func (w *Worker) adoptVideos(
 
 		slog.ErrorContext(
 			ctx,
-			"failed to update plaulist on video in DB",
+			"failed to update playlist on video in DB",
 			"videoId", dbVideo.VideoID,
 			"error", err,
 		)
