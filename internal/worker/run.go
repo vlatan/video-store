@@ -2,8 +2,7 @@ package worker
 
 import (
 	"context"
-	"fmt"
-	"log"
+	"errors"
 	"log/slog"
 	"maps"
 	"slices"
@@ -47,19 +46,19 @@ func (w *Worker) Run(parentCtx context.Context) error {
 		}
 	}()
 
-	log.Println("Worker running...")
-
 	// GET ALL THE PLAYLISTS FROM DATABASE
 	// ###################################################################
 
 	// Fetch all the playlists from DB
 	dbSources, err := w.taxonomy.Sources(ctx)
-	if err != nil || len(dbSources) == 0 {
-		return fmt.Errorf(
-			"could not fetch the sources from DB; rows: %d; %w",
-			len(dbSources), err,
-		)
+	if err != nil {
+		return err
 	}
+
+	if len(dbSources) == 0 {
+		return errors.New("no sources in DB")
+	}
+
 	w.stats.FetchedDbSources = len(dbSources)
 
 	// GET THE PLAYLISTS FROM YOUTUBE
@@ -76,11 +75,9 @@ func (w *Worker) Run(parentCtx context.Context) error {
 	// Fetch playlists from YouTube
 	ytSources, err := w.youtube.Playlists(ctx, w.ytRetryConfig, playlistIds...)
 	if err != nil {
-		return fmt.Errorf(
-			"could not fetch the playlists from YouTube; %w",
-			err,
-		)
+		return err
 	}
+
 	w.stats.FetchedYtSources = len(ytSources)
 
 	// GET THE CORRESPONDING CHANNELS FROM YOUTUBE
@@ -97,11 +94,9 @@ func (w *Worker) Run(parentCtx context.Context) error {
 	// Fetch corresponding channels
 	channels, err := w.youtube.Channels(ctx, w.ytRetryConfig, channelIDs...)
 	if err != nil {
-		return fmt.Errorf(
-			"could not fetch the channels from YouTube; %w",
-			err,
-		)
+		return err
 	}
+
 	w.stats.FetchedYtChannels = len(channels)
 
 	// Create channels map
@@ -113,7 +108,8 @@ func (w *Worker) Run(parentCtx context.Context) error {
 	// UPDATE THE PLAYLISTS IN DATABASE
 	// ###################################################################
 
-	if err = w.updateSources(ctx, ytSourcesMap, channelsMap, dbSourcesMap); err != nil {
+	if err = w.updateSources(
+		ctx, ytSourcesMap, channelsMap, dbSourcesMap); err != nil {
 		return err
 	}
 
@@ -122,12 +118,14 @@ func (w *Worker) Run(parentCtx context.Context) error {
 
 	// Get ALL videos from DB, should be ordered by upload date
 	dbVideos, err := w.post.All(ctx)
-	if err != nil || len(dbVideos) == 0 {
-		return fmt.Errorf(
-			"could not fetch the videos from DB; rows: %d; %w",
-			len(dbVideos), err,
-		)
+	if err != nil {
+		return err
 	}
+
+	if len(dbVideos) == 0 {
+		return errors.New("no videos in DB")
+	}
+
 	w.stats.FetchedDbVideos = len(dbVideos)
 
 	// Define map that will accumulate all valid YT videos

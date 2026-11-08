@@ -72,6 +72,7 @@ func runWorker(ctx context.Context) (*worker.Worker, error) {
 	}
 
 	// Run the worker
+	log.Println("Worker running...")
 	err = w.Run(timeoutCtx)
 	return w, err
 }
