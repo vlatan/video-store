@@ -24,7 +24,8 @@ func main() {
 		log.Printf("Backup error: %v", err)
 	}
 
-	fmt.Println(strings.Repeat("-", 70))
+	// Prints to the standard logger's current output, without timestamp or prefix.
+	fmt.Fprintln(log.Writer(), strings.Repeat("-", 70))
 
 	if err != nil {
 		os.Exit(1)
