@@ -7,7 +7,6 @@ import (
 
 	_ "time/tzdata" // embed the timezone database into the binary
 
-	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 )
 
@@ -17,22 +16,23 @@ const (
 )
 
 type GeminiLimiter struct {
-	cfg *config.Config
-	rdb *rdb.Service
-	loc *time.Location
+	rdb   *rdb.Service
+	quota *quota
+	loc   *time.Location
 }
 
 // NewLimiter creates new Gemini limiter
-func NewLimiter(cfg *config.Config, rdb *rdb.Service) (*GeminiLimiter, error) {
-	loc, err := time.LoadLocation(cfg.GeminiTimezone)
+func NewLimiter(rdb *rdb.Service, timezone string, quota *quota) (*GeminiLimiter, error) {
+
+	loc, err := time.LoadLocation(timezone)
 	if err != nil {
 		return nil, err
 	}
 
-	ErrDailyLimitReached = fmt.Errorf("gemini daily limit (%d RPD) reached", cfg.GeminiRPD)
-	ErrMinuteLimitReached = fmt.Errorf("gemini minute limit (%d RPM) reached", cfg.GeminiRPM)
+	ErrMinuteLimitReached = fmt.Errorf("gemini minute limit (%d RPM) reached", quota.rpm)
+	ErrDailyLimitReached = fmt.Errorf("gemini daily limit (%d RPD) reached", quota.rpd)
 
-	return &GeminiLimiter{cfg, rdb, loc}, nil
+	return &GeminiLimiter{rdb, quota, loc}, nil
 }
 
 // ConsumeQuota attempts to consume 1 request from the daily and minute buckets.
@@ -62,12 +62,12 @@ func (gl *GeminiLimiter) ConsumeQuota(ctx context.Context) error {
 	}
 
 	// Verify against the RPD limit
-	if dailyIncr.Val() > gl.cfg.GeminiRPD {
+	if dailyIncr.Val() > gl.quota.rpd {
 		return ErrDailyLimitReached
 	}
 
 	// Verify against the RPM limit
-	if minuteIncr.Val() > gl.cfg.GeminiRPM {
+	if minuteIncr.Val() > gl.quota.rpm {
 		return ErrMinuteLimitReached
 	}
 
@@ -83,5 +83,5 @@ func (gl *GeminiLimiter) Exhausted(ctx context.Context) bool {
 		return false
 	}
 
-	return val >= gl.cfg.GeminiRPD
+	return val >= gl.quota.rpd
 }

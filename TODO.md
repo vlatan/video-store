@@ -1,3 +1,6 @@
+- Modify limiter to plugin per model
+  Errors returned, redis keys, etc.
+
 - Make the rating/review dialogs look good on small screens
 - Make search bar on small screens accross entire screen
 - Write tests

@@ -3,6 +3,7 @@ package gemini
 
 import (
 	"context"
+	"errors"
 
 	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
@@ -10,11 +11,15 @@ import (
 	"google.golang.org/genai"
 )
 
+type model struct {
+	name    string
+	limiter *GeminiLimiter
+}
+
 // Service is Gemini struct
 type Service struct {
-	cfg      *config.Config
 	client   *genai.Client
-	limiter  *GeminiLimiter
+	models   []model
 	catNames []string
 }
 
@@ -25,35 +30,31 @@ func New(
 	rs *rdb.Service,
 	catNames []string) (*Service, error) {
 
-	// Configure new client
 	client, err := genai.NewClient(ctx, &genai.ClientConfig{APIKey: cfg.GeminiAPIKey})
 	if err != nil {
 		return nil, err
 	}
 
-	// Configure new limiter
-	limiter, err := NewLimiter(cfg, rs)
-	if err != nil {
-		return nil, err
+	models := make([]model, 0, len(cfg.GeminiModels))
+	for _, name := range cfg.GeminiModels {
+		if quota, ok := availableModels[name]; ok {
+			limiter, err := NewLimiter(rs, cfg.GeminiTimezone, &quota)
+			if err != nil {
+				return nil, err
+			}
+			models = append(models, model{name, limiter})
+		}
+	}
+
+	if len(models) == 0 {
+		return nil, errors.New("no valid model(s) supplied")
 	}
 
 	s := &Service{
-		cfg:      cfg,
 		client:   client,
-		limiter:  limiter,
+		models:   models,
 		catNames: catNames,
 	}
 
 	return s, nil
-}
-
-// ConsumeQuota attempts to consume 1 request from the daily and minute buckets.
-// It returns a sentinel error if any of the quotas are full.
-func (s *Service) ConsumeQuota(ctx context.Context) error {
-	return s.limiter.ConsumeQuota(ctx)
-}
-
-// Exhausted returns true if the daily limit has already been hit
-func (s *Service) Exhausted(ctx context.Context) bool {
-	return s.limiter.Exhausted(ctx)
 }
