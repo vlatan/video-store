@@ -10,9 +10,9 @@ func (s *Service) NewGenaiConfig() *genai.GenerateContentConfig {
 		TopP:        new(float32),
 		TopK:        new(float32(1.0)),
 
-		// Forces minimal chain-of-thought
+		// Forces low chain-of-thought
 		ThinkingConfig: &genai.ThinkingConfig{
-			ThinkingLevel: genai.ThinkingLevelMinimal,
+			ThinkingLevel: genai.ThinkingLevelLow,
 		},
 
 		// Can't return JSON if using web search
