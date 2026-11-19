@@ -384,7 +384,7 @@ func (w *Worker) updateVideos(ctx context.Context, videos []*post.Post) error {
 
 			// Exit with error only if we need to terminate the worker's job,
 			// meaning only if RPD quota reached or context ended.
-			if errors.Is(err, gemini.ErrDailyLimitReached) || ctxv.IsContextErr(err) {
+			if _, ok := errors.AsType[*gemini.DailyLimitError](err); ok || ctxv.IsContextErr(err) {
 				return fmt.Errorf(
 					"failed to generate LLM content on video %q; %w",
 					video.VideoID, err,
@@ -434,7 +434,7 @@ func (w *Worker) updateVideos(ctx context.Context, videos []*post.Post) error {
 
 			// Exit with error only if we need to terminate the worker's job,
 			// meaning only if RPD quota reached or context ended.
-			if errors.Is(err, gemini.ErrDailyLimitReached) || ctxv.IsContextErr(err) {
+			if _, ok := errors.AsType[*gemini.DailyLimitError](err); ok || ctxv.IsContextErr(err) {
 				return fmt.Errorf(
 					"failed to generate LLM content on video %q; %w",
 					video.VideoID, err,

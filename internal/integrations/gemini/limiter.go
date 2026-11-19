@@ -30,9 +30,6 @@ func NewLimiter(rdb *rdb.Service, name, timezone string, quota *quota) (*GeminiL
 		return nil, err
 	}
 
-	ErrMinuteLimitReached = fmt.Errorf("gemini minute limit (%d RPM) reached", quota.rpm)
-	ErrDailyLimitReached = fmt.Errorf("gemini daily limit (%d RPD) reached", quota.rpd)
-
 	return &GeminiLimiter{rdb, name, quota, loc}, nil
 }
 
@@ -64,12 +61,16 @@ func (gl *GeminiLimiter) ConsumeQuota(ctx context.Context) error {
 
 	// Verify against the RPD limit
 	if dailyIncr.Val() > gl.quota.rpd {
-		return ErrDailyLimitReached
+		return &DailyLimitError{
+			fmt.Sprintf("%s daily limit (%d RPD) reached", gl.name, gl.quota.rpd),
+		}
 	}
 
 	// Verify against the RPM limit
 	if minuteIncr.Val() > gl.quota.rpm {
-		return ErrMinuteLimitReached
+		return &MinuteLimitError{
+			fmt.Sprintf("%s minute limit (%d RPM) reached", gl.name, gl.quota.rpm),
+		}
 	}
 
 	return nil
