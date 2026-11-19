@@ -2,6 +2,16 @@ package gemini
 
 import "google.golang.org/genai"
 
+type quota struct{ rpm, rpd int64 }
+
+// The content generation will work only with these models
+var availableModels = map[string]quota{
+	"gemini-4-hydrogen":     {5, 20},
+	"gemini-3.8-flash":      {5, 20},
+	"gemini-3.6-flash":      {5, 20},
+	"gemini-3.5-flash-lite": {15, 500},
+}
+
 // NewGenaiConfig creates new Genau config with some hardcoded values
 func (s *Service) NewGenaiConfig() *genai.GenerateContentConfig {
 	return &genai.GenerateContentConfig{
