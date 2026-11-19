@@ -11,18 +11,19 @@ import (
 )
 
 const (
-	rpd = "gemini:rpd:"
-	rpm = "gemini:rpm:"
+	rpd = ":rpd:"
+	rpm = ":rpm:"
 )
 
 type GeminiLimiter struct {
 	rdb   *rdb.Service
+	name  string
 	quota *quota
 	loc   *time.Location
 }
 
 // NewLimiter creates new Gemini limiter
-func NewLimiter(rdb *rdb.Service, timezone string, quota *quota) (*GeminiLimiter, error) {
+func NewLimiter(rdb *rdb.Service, name, timezone string, quota *quota) (*GeminiLimiter, error) {
 
 	loc, err := time.LoadLocation(timezone)
 	if err != nil {
@@ -32,7 +33,7 @@ func NewLimiter(rdb *rdb.Service, timezone string, quota *quota) (*GeminiLimiter
 	ErrMinuteLimitReached = fmt.Errorf("gemini minute limit (%d RPM) reached", quota.rpm)
 	ErrDailyLimitReached = fmt.Errorf("gemini daily limit (%d RPD) reached", quota.rpd)
 
-	return &GeminiLimiter{rdb, quota, loc}, nil
+	return &GeminiLimiter{rdb, name, quota, loc}, nil
 }
 
 // ConsumeQuota attempts to consume 1 request from the daily and minute buckets.
@@ -45,8 +46,8 @@ func (gl *GeminiLimiter) ConsumeQuota(ctx context.Context) error {
 	ttlDaily := time.Until(nextMidnight)
 
 	// Redis Keys
-	dailyKey := rpd + now.Format("2006-01-02")
-	minuteKey := rpm + now.Format("2006-01-02-15-04")
+	dailyKey := gl.name + rpd + now.Format("2006-01-02")
+	minuteKey := gl.name + rpm + now.Format("2006-01-02-15-04")
 
 	// Atomic check using a Pipeline
 	pipe := gl.rdb.Client.Pipeline()
