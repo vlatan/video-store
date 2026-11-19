@@ -30,18 +30,19 @@ type Response struct {
 // as well as a scenario where no candidates are returned.
 func (s *Service) generateContent(
 	ctx context.Context,
+	model *model,
 	contents []*genai.Content,
 	genaiConfig *genai.GenerateContentConfig,
 ) (*genai.GenerateContentResponse, error) {
 
 	// Consume minute and daily quotas before calling the API
-	if err := s.ConsumeQuota(ctx); err != nil {
+	if err := model.limiter.ConsumeQuota(ctx); err != nil {
 		return nil, fmt.Errorf("gemini limit reached: %w", err)
 	}
 
 	response, err := s.client.Models.GenerateContent(
 		ctx,
-		s.cfg.GeminiModel,
+		model.name,
 		contents,
 		genaiConfig,
 	)
@@ -64,6 +65,7 @@ func (s *Service) generateContent(
 // Unmarshals the result if any and returns a genai response object.
 func (s *Service) GenerateContent(
 	ctx context.Context,
+	model *model,
 	contents []*genai.Content,
 	genaiConfig *genai.GenerateContentConfig,
 	retryConfig *retry.Config,
@@ -72,12 +74,13 @@ func (s *Service) GenerateContent(
 	// Make the API call
 	result, err := retry.Do(ctx, retryConfig,
 		func() (*genai.GenerateContentResponse, error) {
-			return s.generateContent(ctx, contents, genaiConfig)
+			return s.generateContent(ctx, model, contents, genaiConfig)
 		},
 		// Exit immediately if no candidates returned or RPD limit reached
 		func(err error) bool {
 			_, blocked := errors.AsType[*NoCandidatesError](err)
-			return blocked || errors.Is(err, ErrDailyLimitReached)
+			_, dailyLimit := errors.AsType[*DailyLimitError](err)
+			return blocked || dailyLimit
 		},
 	)
 
