@@ -4,7 +4,7 @@ import "google.golang.org/genai"
 
 type quota struct{ rpm, rpd int64 }
 
-// The content generation will work only with these models
+// Gemini content generation will work only with these models
 var availableModels = map[string]quota{
 	"gemini-4-hydrogen":     {5, 20},
 	"gemini-3.8-flash":      {5, 20},

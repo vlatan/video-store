@@ -23,8 +23,8 @@ func New(
 	ctx context.Context,
 	cfg *config.Config,
 	rs *rdb.Service,
-	catNames []string,
-) (*Service, error) {
+	catNames []string) (*Service, error) {
+
 	// Configure new client
 	client, err := genai.NewClient(ctx, &genai.ClientConfig{APIKey: cfg.GeminiAPIKey})
 	if err != nil {
