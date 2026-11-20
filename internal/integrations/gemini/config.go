@@ -5,7 +5,7 @@ import "google.golang.org/genai"
 type quota struct{ rpm, tpm, rpd int64 }
 
 // Gemini content generation will work only with these models
-var availableModels = map[string]quota{
+var allowedModels = map[string]quota{
 	"gemini-4-hydrogen":     {5, 250_000, 20},
 	"gemini-3.8-flash":      {5, 250_000, 20},
 	"gemini-3.6-flash":      {5, 250_000, 20},

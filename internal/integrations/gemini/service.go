@@ -37,7 +37,7 @@ func New(
 
 	models := make([]model, 0, len(cfg.GeminiModels))
 	for _, name := range cfg.GeminiModels {
-		if quota, ok := availableModels[name]; ok {
+		if quota, ok := allowedModels[name]; ok {
 			limiter, err := NewLimiter(rs, name, cfg.GeminiTimezone, &quota)
 			if err != nil {
 				return nil, err
