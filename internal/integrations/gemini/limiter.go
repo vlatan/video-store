@@ -56,7 +56,7 @@ func (gl *GeminiLimiter) ConsumeQuota(ctx context.Context) error {
 
 	_, err := pipe.Exec(ctx)
 	if err != nil {
-		return fmt.Errorf("redis failure: %w", err)
+		return fmt.Errorf("redis failure while consuming quota: %w", err)
 	}
 
 	// Verify against the RPD limit
