@@ -87,7 +87,7 @@ func (s *Service) GenerateContent(
 			},
 		)
 
-		// Break out of the loop if it's no candidates error
+		// Break out from the loop if it's no candidates error
 		_, noCandidates := errors.AsType[*NoCandidatesError](err)
 		if noCandidates {
 			break
