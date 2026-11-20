@@ -37,7 +37,7 @@ func (s *Service) generateContent(
 
 	// Consume minute and daily quotas before calling the API
 	if err := model.limiter.ConsumeQuota(ctx); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", model.name, err)
 	}
 
 	response, err := s.client.Models.GenerateContent(
@@ -48,13 +48,13 @@ func (s *Service) generateContent(
 	)
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", model.name, err)
 	}
 
 	// Check if there are candidates at all.
 	// Gemini can return zero candidates if it applies hard block.
 	if len(response.Candidates) == 0 {
-		return nil, &NoCandidatesError{response.PromptFeedback}
+		return nil, fmt.Errorf("%s: %w", model.name, &NoCandidatesError{response.PromptFeedback})
 	}
 
 	return response, nil
@@ -99,7 +99,6 @@ func (s *Service) GenerateContent(
 			if i < len(s.models)-1 {
 				slog.WarnContext(
 					ctx, "content generation failed",
-					"model", model.name,
 					"error", err,
 				)
 			}

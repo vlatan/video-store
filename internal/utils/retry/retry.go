@@ -71,7 +71,7 @@ func Do[T any](
 		// Check if we should exit early
 		for _, predicate := range shouldExitEarly {
 			if predicate(err) {
-				return zero, fmt.Errorf("no retries attempted; %w", err)
+				return zero, fmt.Errorf("no retries attempted: %w", err)
 			}
 		}
 
@@ -92,7 +92,7 @@ func Do[T any](
 		if retryDelay, ok := extractRetryDelay(lastError); ok {
 			if retryDelay > sleepTime {
 				return zero, fmt.Errorf(
-					"API requested excessive wait: %v; %w;",
+					"API requested excessive wait %s: %w;",
 					retryDelay, lastError,
 				)
 			}
@@ -105,5 +105,5 @@ func Do[T any](
 		}
 	}
 
-	return zero, fmt.Errorf("%d max retries error; %w", cfg.MaxRetries, lastError)
+	return zero, fmt.Errorf("%d max retries error: %w", cfg.MaxRetries, lastError)
 }

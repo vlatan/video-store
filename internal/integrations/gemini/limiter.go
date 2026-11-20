@@ -62,14 +62,14 @@ func (gl *GeminiLimiter) ConsumeQuota(ctx context.Context) error {
 	// Verify against the RPD limit
 	if dailyIncr.Val() > gl.quota.rpd {
 		return &DailyLimitError{
-			fmt.Sprintf("%s daily limit (%d RPD) reached", gl.name, gl.quota.rpd),
+			fmt.Sprintf("daily limit (%d RPD) reached", gl.quota.rpd),
 		}
 	}
 
 	// Verify against the RPM limit
 	if minuteIncr.Val() > gl.quota.rpm {
 		return &MinuteLimitError{
-			fmt.Sprintf("%s minute limit (%d RPM) reached", gl.name, gl.quota.rpm),
+			fmt.Sprintf("minute limit (%d RPM) reached", gl.quota.rpm),
 		}
 	}
 
