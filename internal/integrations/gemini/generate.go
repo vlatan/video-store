@@ -73,7 +73,7 @@ func (s *Service) GenerateContent(
 	var err error
 	var result *genai.GenerateContentResponse
 
-	for _, model := range s.models {
+	for i, model := range s.models {
 
 		result, err = retry.Do(ctx, retryConfig,
 			func() (*genai.GenerateContentResponse, error) {
@@ -93,8 +93,16 @@ func (s *Service) GenerateContent(
 			break
 		}
 
-		// Try the next model on any other error
+		// Try the next model if any other error
 		if err != nil {
+			// Log unless it's the last model in the slice
+			if i < len(s.models)-1 {
+				slog.WarnContext(
+					ctx, "content generation failed",
+					"model", model.name,
+					"error", err,
+				)
+			}
 			continue
 		}
 	}
