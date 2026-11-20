@@ -65,24 +65,39 @@ func (s *Service) generateContent(
 // Unmarshals the result if any and returns a genai response object.
 func (s *Service) GenerateContent(
 	ctx context.Context,
-	model *model,
 	contents []*genai.Content,
 	genaiConfig *genai.GenerateContentConfig,
 	retryConfig *retry.Config,
 ) (*Response, error) {
 
-	// Make the API call
-	result, err := retry.Do(ctx, retryConfig,
-		func() (*genai.GenerateContentResponse, error) {
-			return s.generateContent(ctx, model, contents, genaiConfig)
-		},
-		// Exit without retries if no candidates returned or RPD limit reached
-		func(err error) bool {
-			_, blocked := errors.AsType[*NoCandidatesError](err)
-			_, dailyLimit := errors.AsType[*DailyLimitError](err)
-			return blocked || dailyLimit
-		},
-	)
+	var err error
+	var result *genai.GenerateContentResponse
+
+	for _, model := range s.models {
+		// Make the API call
+		result, err = retry.Do(ctx, retryConfig,
+			func() (*genai.GenerateContentResponse, error) {
+				return s.generateContent(ctx, &model, contents, genaiConfig)
+			},
+			// Exit without retries if no candidates returned or RPD limit reached
+			func(err error) bool {
+				_, noCandidates := errors.AsType[*NoCandidatesError](err)
+				_, dailyLimit := errors.AsType[*DailyLimitError](err)
+				return noCandidates || dailyLimit
+			},
+		)
+
+		// Break out of the loop if it's no candidates error
+		_, noCandidates := errors.AsType[*NoCandidatesError](err)
+		if noCandidates {
+			break
+		}
+
+		// Try the next model on error
+		if err != nil {
+			continue
+		}
+	}
 
 	if err != nil {
 		return nil, err
