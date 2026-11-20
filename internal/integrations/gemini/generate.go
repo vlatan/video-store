@@ -30,30 +30,31 @@ type Response struct {
 // as well as a scenario where no candidates are returned.
 func (s *Service) generateContent(
 	ctx context.Context,
+	model *model,
 	contents []*genai.Content,
 	genaiConfig *genai.GenerateContentConfig,
 ) (*genai.GenerateContentResponse, error) {
 
 	// Consume minute and daily quotas before calling the API
-	if err := s.ConsumeQuota(ctx); err != nil {
-		return nil, fmt.Errorf("gemini limit reached: %w", err)
+	if err := model.limiter.ConsumeQuota(ctx); err != nil {
+		return nil, fmt.Errorf("%s: %w", model.name, err)
 	}
 
 	response, err := s.client.Models.GenerateContent(
 		ctx,
-		s.cfg.GeminiModel,
+		model.name,
 		contents,
 		genaiConfig,
 	)
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", model.name, err)
 	}
 
 	// Check if there are candidates at all.
 	// Gemini can return zero candidates if it applies hard block.
 	if len(response.Candidates) == 0 {
-		return nil, &NoCandidatesError{response.PromptFeedback}
+		return nil, fmt.Errorf("%s: %w", model.name, &NoCandidatesError{response.PromptFeedback})
 	}
 
 	return response, nil
@@ -69,17 +70,41 @@ func (s *Service) GenerateContent(
 	retryConfig *retry.Config,
 ) (*Response, error) {
 
-	// Make the API call
-	result, err := retry.Do(ctx, retryConfig,
-		func() (*genai.GenerateContentResponse, error) {
-			return s.generateContent(ctx, contents, genaiConfig)
-		},
-		// Exit immediately if no candidates returned or RPD limit reached
-		func(err error) bool {
-			_, blocked := errors.AsType[*NoCandidatesError](err)
-			return blocked || errors.Is(err, ErrDailyLimitReached)
-		},
-	)
+	var err error
+	var result *genai.GenerateContentResponse
+
+	for i, model := range s.models {
+
+		result, err = retry.Do(ctx, retryConfig,
+			func() (*genai.GenerateContentResponse, error) {
+				return s.generateContent(ctx, &model, contents, genaiConfig)
+			},
+			// Exit without retries if no candidates returned or RPD limit reached
+			func(err error) bool {
+				_, noCandidates := errors.AsType[*NoCandidatesError](err)
+				_, dailyLimit := errors.AsType[*DailyLimitError](err)
+				return noCandidates || dailyLimit
+			},
+		)
+
+		// Break out from the loop if it's no candidates error
+		_, noCandidates := errors.AsType[*NoCandidatesError](err)
+		if noCandidates {
+			break
+		}
+
+		// Try the next model if any other error
+		if err != nil {
+			// Log unless it's the last model in the slice
+			if i < len(s.models)-1 {
+				slog.WarnContext(
+					ctx, "content generation failed",
+					"error", err,
+				)
+			}
+			continue
+		}
+	}
 
 	if err != nil {
 		return nil, err

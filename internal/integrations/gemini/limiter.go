@@ -7,32 +7,30 @@ import (
 
 	_ "time/tzdata" // embed the timezone database into the binary
 
-	"github.com/vlatan/video-store/internal/config"
 	"github.com/vlatan/video-store/internal/drivers/rdb"
 )
 
 const (
-	rpd = "gemini:rpd:"
-	rpm = "gemini:rpm:"
+	rpd = ":rpd:"
+	rpm = ":rpm:"
 )
 
 type GeminiLimiter struct {
-	cfg *config.Config
-	rdb *rdb.Service
-	loc *time.Location
+	rdb   *rdb.Service
+	name  string
+	quota *quota
+	loc   *time.Location
 }
 
 // NewLimiter creates new Gemini limiter
-func NewLimiter(cfg *config.Config, rdb *rdb.Service) (*GeminiLimiter, error) {
-	loc, err := time.LoadLocation(cfg.GeminiTimezone)
+func NewLimiter(rdb *rdb.Service, name, timezone string, quota *quota) (*GeminiLimiter, error) {
+
+	loc, err := time.LoadLocation(timezone)
 	if err != nil {
 		return nil, err
 	}
 
-	ErrDailyLimitReached = fmt.Errorf("gemini daily limit (%d RPD) reached", cfg.GeminiRPD)
-	ErrMinuteLimitReached = fmt.Errorf("gemini minute limit (%d RPM) reached", cfg.GeminiRPM)
-
-	return &GeminiLimiter{cfg, rdb, loc}, nil
+	return &GeminiLimiter{rdb, name, quota, loc}, nil
 }
 
 // ConsumeQuota attempts to consume 1 request from the daily and minute buckets.
@@ -45,8 +43,8 @@ func (gl *GeminiLimiter) ConsumeQuota(ctx context.Context) error {
 	ttlDaily := time.Until(nextMidnight)
 
 	// Redis Keys
-	dailyKey := rpd + now.Format("2006-01-02")
-	minuteKey := rpm + now.Format("2006-01-02-15-04")
+	dailyKey := gl.name + rpd + now.Format("2006-01-02")
+	minuteKey := gl.name + rpm + now.Format("2006-01-02-15-04")
 
 	// Atomic check using a Pipeline
 	pipe := gl.rdb.Client.Pipeline()
@@ -58,17 +56,21 @@ func (gl *GeminiLimiter) ConsumeQuota(ctx context.Context) error {
 
 	_, err := pipe.Exec(ctx)
 	if err != nil {
-		return fmt.Errorf("redis failure: %w", err)
+		return fmt.Errorf("redis failure while consuming quota: %w", err)
 	}
 
 	// Verify against the RPD limit
-	if dailyIncr.Val() > gl.cfg.GeminiRPD {
-		return ErrDailyLimitReached
+	if dailyIncr.Val() > gl.quota.rpd {
+		return &DailyLimitError{
+			fmt.Sprintf("daily limit (%d RPD) reached", gl.quota.rpd),
+		}
 	}
 
 	// Verify against the RPM limit
-	if minuteIncr.Val() > gl.cfg.GeminiRPM {
-		return ErrMinuteLimitReached
+	if minuteIncr.Val() > gl.quota.rpm {
+		return &MinuteLimitError{
+			fmt.Sprintf("minute limit (%d RPM) reached", gl.quota.rpm),
+		}
 	}
 
 	return nil
@@ -83,5 +85,5 @@ func (gl *GeminiLimiter) Exhausted(ctx context.Context) bool {
 		return false
 	}
 
-	return val >= gl.cfg.GeminiRPD
+	return val >= gl.quota.rpd
 }

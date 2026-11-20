@@ -50,12 +50,10 @@ type Config struct {
 	ReviewsPerPost  int    `env:"REVIEWS_PER_POST" envDefault:"10"`
 
 	// Google APIs settings
-	YouTubeAPIKey  string `env:"YOUTUBE_API_KEY"`
-	GeminiAPIKey   string `env:"GEMINI_API_KEY"`
-	GeminiModel    string `env:"GEMINI_MODEL" envDefault:"gemini-2.5-flash"`
-	GeminiTimezone string `env:"GEMINI_TIMEZONE" envDefault:"America/Los_Angeles"`
-	GeminiRPD      int64  `env:"GEMINI_RPD" envDefault:"20"`
-	GeminiRPM      int64  `env:"GEMINI_RPM" envDefault:"5"`
+	YouTubeAPIKey  string   `env:"YOUTUBE_API_KEY"`
+	GeminiAPIKey   string   `env:"GEMINI_API_KEY"`
+	GeminiModels   []string `env:"GEMINI_MODELS" envDefault:"gemini-4-hydrogen"`
+	GeminiTimezone string   `env:"GEMINI_TIMEZONE" envDefault:"America/Los_Angeles"`
 
 	// Google OAuth settings
 	GoogleOAuthClientID     string   `env:"GOOGLE_OAUTH_CLIENT_ID"`

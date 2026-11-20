@@ -6,13 +6,30 @@ import (
 	"google.golang.org/genai"
 )
 
-var ErrDailyLimitReached, ErrMinuteLimitReached error
+type DailyLimitError struct {
+	msg string
+}
+
+func (e *DailyLimitError) Error() string {
+	return e.msg
+}
+
+// ###################################################################
+
+type MinuteLimitError struct {
+	msg string
+}
+
+func (e *MinuteLimitError) Error() string {
+	return e.msg
+}
+
+// ###################################################################
 
 type NoCandidatesError struct {
 	Feedback *genai.GenerateContentResponsePromptFeedback
 }
 
-// Error implements error interface for the BlockedError
 func (b *NoCandidatesError) Error() string {
 	if b.Feedback == nil {
 		return "gemini returned no candidates with no reason"
