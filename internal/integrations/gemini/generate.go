@@ -37,7 +37,7 @@ func (s *Service) generateContent(
 
 	// Consume minute and daily quotas before calling the API
 	if err := model.limiter.ConsumeQuota(ctx); err != nil {
-		return nil, fmt.Errorf("gemini limit reached: %w", err)
+		return nil, err
 	}
 
 	response, err := s.client.Models.GenerateContent(
