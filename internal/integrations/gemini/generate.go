@@ -76,7 +76,7 @@ func (s *Service) GenerateContent(
 		func() (*genai.GenerateContentResponse, error) {
 			return s.generateContent(ctx, model, contents, genaiConfig)
 		},
-		// Exit immediately if no candidates returned or RPD limit reached
+		// Exit without retries if no candidates returned or RPD limit reached
 		func(err error) bool {
 			_, blocked := errors.AsType[*NoCandidatesError](err)
 			_, dailyLimit := errors.AsType[*DailyLimitError](err)
