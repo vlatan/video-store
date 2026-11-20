@@ -74,7 +74,7 @@ func (s *Service) GenerateContent(
 	var result *genai.GenerateContentResponse
 
 	for _, model := range s.models {
-		// Make the API call
+
 		result, err = retry.Do(ctx, retryConfig,
 			func() (*genai.GenerateContentResponse, error) {
 				return s.generateContent(ctx, &model, contents, genaiConfig)
@@ -93,7 +93,7 @@ func (s *Service) GenerateContent(
 			break
 		}
 
-		// Try the next model on error
+		// Try the next model on any other error
 		if err != nil {
 			continue
 		}
