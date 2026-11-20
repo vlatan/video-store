@@ -1,4 +1,3 @@
-- Fix the generate method to iterate models
 - Make the rating/review dialogs look good on small screens
 - Make search bar on small screens accross entire screen
 - Write tests
