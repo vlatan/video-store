@@ -15,6 +15,22 @@ const (
 	rpm = ":rpm:"
 )
 
+type DailyLimitError struct {
+	msg string
+}
+
+func (e *DailyLimitError) Error() string {
+	return e.msg
+}
+
+type MinuteLimitError struct {
+	msg string
+}
+
+func (e *MinuteLimitError) Error() string {
+	return e.msg
+}
+
 type GeminiLimiter struct {
 	rdb   *rdb.Service
 	name  string

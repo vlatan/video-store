@@ -30,7 +30,13 @@ func New(
 	rs *rdb.Service,
 	catNames []string) (*Service, error) {
 
-	client, err := genai.NewClient(ctx, &genai.ClientConfig{APIKey: cfg.GeminiAPIKey})
+	client, err := genai.NewClient(
+		ctx, &genai.ClientConfig{
+			APIKey: cfg.GeminiAPIKey,
+			// Use "v1beta" until "v1" enables agentic media processing.
+			HTTPOptions: genai.HTTPOptions{APIVersion: "v1beta"},
+		})
+
 	if err != nil {
 		return nil, err
 	}
@@ -50,11 +56,5 @@ func New(
 		return nil, errors.New("no valid model(s) supplied")
 	}
 
-	s := &Service{
-		client:   client,
-		models:   models,
-		catNames: catNames,
-	}
-
-	return s, nil
+	return &Service{client, models, catNames}, nil
 }

@@ -15,6 +15,21 @@ import (
 	"google.golang.org/genai"
 )
 
+type NoCandidatesError struct {
+	Feedback *genai.GenerateContentResponsePromptFeedback
+}
+
+func (b *NoCandidatesError) Error() string {
+	if b.Feedback == nil {
+		return "gemini returned no candidates with no reason"
+	}
+
+	return fmt.Sprintf(
+		"gemini returned no candidates, reason=%s",
+		b.Feedback.BlockReason,
+	)
+}
+
 // The response from the Genai API
 type Response struct {
 	Title         string   `json:"video_title"`
@@ -41,10 +56,7 @@ func (s *Service) generateContent(
 	}
 
 	response, err := s.client.Models.GenerateContent(
-		ctx,
-		model.name,
-		contents,
-		genaiConfig,
+		ctx, model.name, contents, genaiConfig,
 	)
 
 	if err != nil {
@@ -54,7 +66,9 @@ func (s *Service) generateContent(
 	// Check if there are candidates at all.
 	// Gemini can return zero candidates if it applies hard block.
 	if len(response.Candidates) == 0 {
-		return nil, fmt.Errorf("%s: %w", model.name, &NoCandidatesError{response.PromptFeedback})
+		return nil, fmt.Errorf(
+			"%s: %w", model.name, &NoCandidatesError{response.PromptFeedback},
+		)
 	}
 
 	return response, nil
@@ -67,8 +81,7 @@ func (s *Service) GenerateContent(
 	ctx context.Context,
 	contents []*genai.Content,
 	genaiConfig *genai.GenerateContentConfig,
-	retryConfig *retry.Config,
-) (*Response, error) {
+	retryConfig *retry.Config) (*Response, error) {
 
 	var err error
 	var result *genai.GenerateContentResponse
@@ -148,10 +161,7 @@ func (s *Service) GeneratePostSummary(
 	genaiConfig.ResponseSchema = s.NewSummarySchema()
 
 	resp, err := s.GenerateContent(
-		ctx,
-		summaryContents,
-		genaiConfig,
-		retryConfig,
+		ctx, summaryContents, genaiConfig, retryConfig,
 	)
 
 	if err == nil {
@@ -185,10 +195,7 @@ func (s *Service) GeneratePostSummary(
 
 	// Generate content using Gemini, but now with text contents
 	resp, err = s.GenerateContent(
-		ctx,
-		textContents,
-		genaiConfig,
-		retryConfig,
+		ctx, textContents, genaiConfig, retryConfig,
 	)
 
 	if err != nil {
